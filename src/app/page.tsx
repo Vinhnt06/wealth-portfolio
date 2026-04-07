@@ -17,7 +17,7 @@ const Spline = dynamic(() => import('@splinetool/react-spline'), {
   ),
 });
 
-function HomeContent() {
+export default function Home() {
   const [isScrolled, setIsScrolled] = useState(false);
   const { scrollY } = useScroll();
   const { t } = useLanguage();
@@ -234,13 +234,5 @@ function HomeContent() {
         </div>
       </footer>
     </main>
-  );
-}
-
-export default function Home() {
-  return (
-    <LanguageProvider>
-      <HomeContent />
-    </LanguageProvider>
   );
 }

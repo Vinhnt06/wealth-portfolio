@@ -37,6 +37,22 @@ const translations = {
         'footer.company': 'Company',
         'footer.legal': 'Legal',
         'footer.copyright': 'All rights reserved.',
+
+        // Login Page
+        'login.back': '← Back to Home',
+        'login.title': 'Login',
+        'login.subtitle': 'Enter your credentials to continue your session.',
+        'login.email': 'Email',
+        'login.email.placeholder': 'name@example.com',
+        'login.password': 'Password',
+        'login.password.forgot': 'Forgot Password?',
+        'login.password.placeholder': '••••••••',
+        'login.remember': 'Remember Me',
+        'login.submit': 'Login',
+        'login.or': 'OR CONTINUE WITH',
+        'login.google': 'Continue with Google',
+        'login.noaccount': "Don't have an account?",
+        'login.signup': 'Sign up',
     },
     vi: {
         'nav.features': 'Tính năng',
@@ -64,6 +80,22 @@ const translations = {
         'footer.company': 'Công ty',
         'footer.legal': 'Pháp lý',
         'footer.copyright': 'Mọi quyền được bảo lưu.',
+
+        // Login Page
+        'login.back': '← Quay lại Trang chủ',
+        'login.title': 'Đăng nhập',
+        'login.subtitle': 'Nhập thông tin đăng nhập để tiếp tục phiên làm việc.',
+        'login.email': 'Email',
+        'login.email.placeholder': 'ten@vidu.com',
+        'login.password': 'Mật khẩu',
+        'login.password.forgot': 'Quên mật khẩu?',
+        'login.password.placeholder': '••••••••',
+        'login.remember': 'Ghi nhớ đăng nhập',
+        'login.submit': 'Đăng nhập',
+        'login.or': 'HOẶC TIẾP TỤC VỚI',
+        'login.google': 'Tiếp tục với Google',
+        'login.noaccount': "Chưa có tài khoản?",
+        'login.signup': 'Đăng ký',
     },
 };
 
@@ -73,7 +105,8 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     const [language, setLanguage] = useState<Language>('en');
 
     const t = (key: string): string => {
-        return translations[language][key as keyof typeof translations['en']] || key;
+        const trans = translations[language] as Record<string, string>;
+        return trans[key] || key;
     };
 
     return (
