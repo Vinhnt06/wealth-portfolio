@@ -6,6 +6,7 @@ import { DashboardLayout } from '../components/layout/DashboardLayout';
 import { motion } from 'framer-motion';
 import { User, EnvelopeSimple, Phone, MapPin, Camera, PencilSimple, FloppyDisk, X, Trash } from '@phosphor-icons/react';
 import { useLanguage } from '../components/LanguageContext';
+import { ToastContainer } from '../components/Toast';
 
 interface UserProfile {
     id: string;
@@ -32,6 +33,16 @@ export default function ProfilePage() {
     const [saving, setSaving] = useState(false);
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [formData, setFormData] = useState<Partial<UserProfile>>({});
+    const [toasts, setToasts] = useState<Array<{ id: string; message: string; type: 'success' | 'error' | 'info' | 'warning' }>>([]);
+
+    const addToast = (message: string, type: 'success' | 'error' | 'info' | 'warning') => {
+        const id = Date.now().toString();
+        setToasts(prev => [...prev, { id, message, type }]);
+    };
+
+    const removeToast = (id: string) => {
+        setToasts(prev => prev.filter(t => t.id !== id));
+    };
 
     // Fetch profile from API
     useEffect(() => {
@@ -53,20 +64,36 @@ export default function ProfilePage() {
     }, [session]);
 
     const handleSave = async () => {
+        // Validation
+        if (!formData.firstName?.trim() || !formData.lastName?.trim()) {
+            addToast('First name and last name are required', 'error');
+            return;
+        }
+
+        if (formData.age && (formData.age < 0 || formData.age > 150)) {
+            addToast('Please enter a valid age (0-150)', 'error');
+            return;
+        }
+
+        if (formData.phone && !/^[0-9+\-\s()]*$/.test(formData.phone)) {
+            addToast('Please enter a valid phone number', 'error');
+            return;
+        }
+
         setSaving(true);
         try {
             const res = await fetch('/api/profile', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    firstName: formData.firstName,
-                    lastName: formData.lastName,
-                    phone: formData.phone || null,
+                    firstName: formData.firstName.trim(),
+                    lastName: formData.lastName.trim(),
+                    phone: formData.phone?.trim() || null,
                     dateOfBirth: formData.dateOfBirth || null,
                     age: formData.age,
-                    occupation: formData.occupation || null,
-                    location: formData.location || null,
-                    bio: formData.bio || null,
+                    occupation: formData.occupation?.trim() || null,
+                    location: formData.location?.trim() || null,
+                    bio: formData.bio?.trim() || null,
                 }),
             });
 
@@ -75,15 +102,20 @@ export default function ProfilePage() {
                 setProfile({ ...profile!, ...updated });
                 setFormData({ ...formData, ...updated });
                 setIsEditing(false);
+                addToast('Profile updated successfully!', 'success');
                 // Update the session so DashboardLayout shows new name
                 await updateSession({
                     firstName: updated.firstName,
                     lastName: updated.lastName,
                     image: updated.image,
                 });
+            } else {
+                const error = await res.json();
+                addToast(error.error || 'Failed to update profile', 'error');
             }
         } catch (err) {
             console.error('Failed to update profile:', err);
+            addToast('Network error. Please try again.', 'error');
         } finally {
             setSaving(false);
         }
@@ -327,8 +359,13 @@ export default function ProfilePage() {
                             <div className="relative">
                                 <input
                                     type="number"
+                                    min="0"
+                                    max="150"
                                     value={formData.age ?? ''}
-                                    onChange={(e) => setFormData({ ...formData, age: e.target.value ? parseInt(e.target.value) : null })}
+                                    onChange={(e) => {
+                                        const val = e.target.value;
+                                        setFormData({ ...formData, age: val ? Math.max(0, Math.min(150, parseInt(val))) : null });
+                                    }}
                                     disabled={!isEditing}
                                     className={inputClasses}
                                     placeholder={t('profile.placeholder.age')}
