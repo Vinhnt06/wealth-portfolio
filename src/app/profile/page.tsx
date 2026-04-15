@@ -99,8 +99,8 @@ export default function ProfilePage() {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    firstName: formData.firstName.trim(),
-                    lastName: formData.lastName.trim(),
+                    firstName: formData.firstName?.trim() || '',
+                    lastName: formData.lastName?.trim() || '',
                     phone: formData.phone?.trim() || null,
                     dateOfBirth: formData.dateOfBirth || null,
                     age: calculateAge(formData.dateOfBirth || null),
