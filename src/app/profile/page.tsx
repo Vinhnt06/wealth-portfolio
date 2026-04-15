@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import { DashboardLayout } from '../components/layout/DashboardLayout';
 import { motion } from 'framer-motion';
 import { User, EnvelopeSimple, Phone, MapPin, Camera, PencilSimple, FloppyDisk, X, Trash } from '@phosphor-icons/react';
@@ -11,50 +12,97 @@ interface UserProfile {
     firstName: string;
     lastName: string;
     email: string;
-    phone: string;
-    dateOfBirth: string;
+    phone: string | null;
+    dateOfBirth: string | null;
     age: number | null;
-    occupation: string;
-    location: string;
-    bio: string;
-    avatar: string;
+    occupation: string | null;
+    location: string | null;
+    bio: string | null;
+    image: string | null;
+    provider: string | null;
     createdAt: string;
 }
 
 export default function ProfilePage() {
     const { t } = useLanguage();
+    const { data: session, update: updateSession } = useSession();
     const [isEditing, setIsEditing] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-    const [profile, setProfile] = useState<UserProfile>({
-        id: 'usr_123456',
-        firstName: 'John',
-        lastName: 'Doe',
-        email: 'john.doe@example.com',
-        phone: '+1 (555) 123-4567',
-        dateOfBirth: '1985-06-15',
-        age: 38,
-        occupation: 'Software Engineer',
-        location: 'San Francisco, CA',
-        bio: 'Premium investor with 5+ years experience in crypto and precious metals.',
-        avatar: '',
-        createdAt: '2024-01-15',
-    });
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+    const [profile, setProfile] = useState<UserProfile | null>(null);
+    const [formData, setFormData] = useState<Partial<UserProfile>>({});
 
-    const [formData, setFormData] = useState(profile);
+    // Fetch profile from API
+    useEffect(() => {
+        async function fetchProfile() {
+            try {
+                const res = await fetch('/api/profile');
+                if (res.ok) {
+                    const data = await res.json();
+                    setProfile(data);
+                    setFormData(data);
+                }
+            } catch (err) {
+                console.error('Failed to fetch profile:', err);
+            } finally {
+                setLoading(false);
+            }
+        }
+        if (session?.user) fetchProfile();
+    }, [session]);
 
-    const handleSave = () => {
-        setProfile(formData);
-        setIsEditing(false);
+    const handleSave = async () => {
+        setSaving(true);
+        try {
+            const res = await fetch('/api/profile', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    firstName: formData.firstName,
+                    lastName: formData.lastName,
+                    phone: formData.phone || null,
+                    dateOfBirth: formData.dateOfBirth || null,
+                    age: formData.age,
+                    occupation: formData.occupation || null,
+                    location: formData.location || null,
+                    bio: formData.bio || null,
+                }),
+            });
+
+            if (res.ok) {
+                const updated = await res.json();
+                setProfile({ ...profile!, ...updated });
+                setFormData({ ...formData, ...updated });
+                setIsEditing(false);
+                // Update the session so DashboardLayout shows new name
+                await updateSession({
+                    firstName: updated.firstName,
+                    lastName: updated.lastName,
+                    image: updated.image,
+                });
+            }
+        } catch (err) {
+            console.error('Failed to update profile:', err);
+        } finally {
+            setSaving(false);
+        }
     };
 
     const handleCancel = () => {
-        setFormData(profile);
+        setFormData(profile || {});
         setIsEditing(false);
     };
 
-    const handleDelete = () => {
-        // In real implementation, this would call API to delete account
-        console.log('Deleting account:', profile.id);
+    const handleDelete = async () => {
+        try {
+            const res = await fetch('/api/profile', { method: 'DELETE' });
+            if (res.ok) {
+                window.location.href = '/';
+            }
+        } catch (err) {
+            console.error('Failed to delete account:', err);
+        }
         setShowDeleteConfirm(false);
     };
 
@@ -63,13 +111,38 @@ export default function ProfilePage() {
         if (file) {
             const reader = new FileReader();
             reader.onloadend = () => {
-                setFormData({ ...formData, avatar: reader.result as string });
+                setFormData({ ...formData, image: reader.result as string });
             };
             reader.readAsDataURL(file);
         }
     };
 
     const inputClasses = "w-full px-4 py-3 rounded-xl bg-zinc-900/50 border border-white/10 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all text-white placeholder-zinc-500";
+
+    if (loading) {
+        return (
+            <DashboardLayout>
+                <div className="max-w-4xl mx-auto space-y-6">
+                    {[1, 2, 3].map(i => (
+                        <div key={i} className="animate-pulse rounded-2xl bg-zinc-900/50 h-40" />
+                    ))}
+                </div>
+            </DashboardLayout>
+        );
+    }
+
+    if (!profile) {
+        return (
+            <DashboardLayout>
+                <div className="max-w-4xl mx-auto text-center py-20">
+                    <p className="text-zinc-400">{t('profile.not_found') || 'Profile not found. Please log in again.'}</p>
+                </div>
+            </DashboardLayout>
+        );
+    }
+
+    const displayName = `${profile.firstName} ${profile.lastName}`;
+    const initials = `${profile.firstName?.[0] || ''}${profile.lastName?.[0] || ''}`;
 
     return (
         <DashboardLayout>
@@ -95,11 +168,11 @@ export default function ProfilePage() {
                     <div className="flex items-start justify-between mb-6">
                         <div className="flex items-center gap-6">
                             <div className="relative">
-                                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-emerald-500 to-blue-600 flex items-center justify-center text-3xl font-bold">
-                                    {profile.avatar ? (
-                                        <img src={profile.avatar} alt={`${profile.firstName} ${profile.lastName}`} className="w-full h-full rounded-full object-cover" />
+                                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-emerald-500 to-blue-600 flex items-center justify-center text-3xl font-bold overflow-hidden">
+                                    {(formData.image || profile.image) ? (
+                                        <img src={formData.image || profile.image || ''} alt={displayName} className="w-full h-full rounded-full object-cover" />
                                     ) : (
-                                        `${profile.firstName[0] || ''}${profile.lastName[0] || ''}`
+                                        initials
                                     )}
                                 </div>
                                 {isEditing && (
@@ -115,11 +188,18 @@ export default function ProfilePage() {
                                 )}
                             </div>
                             <div>
-                                <h2 className="text-2xl font-semibold mb-1">{profile.firstName} {profile.lastName}</h2>
+                                <h2 className="text-2xl font-semibold mb-1">{displayName}</h2>
                                 <p className="text-zinc-400 mb-2">{profile.email}</p>
-                                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-sm font-medium">
-                                    {t('dash.premium')}
-                                </span>
+                                <div className="flex items-center gap-2">
+                                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-sm font-medium">
+                                        {t('dash.premium')}
+                                    </span>
+                                    {profile.provider === 'google' && (
+                                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-blue-500/10 text-blue-400 text-[10px] font-bold tracking-wider uppercase">
+                                            Google
+                                        </span>
+                                    )}
+                                </div>
                             </div>
                         </div>
 
@@ -136,10 +216,11 @@ export default function ProfilePage() {
                                 <>
                                     <button
                                         onClick={handleSave}
-                                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500 text-white font-medium hover:bg-emerald-600 transition-colors"
+                                        disabled={saving}
+                                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500 text-white font-medium hover:bg-emerald-600 transition-colors disabled:opacity-50"
                                     >
                                         <FloppyDisk size={18} />
-                                        {t('profile.save')}
+                                        {saving ? '...' : t('profile.save')}
                                     </button>
                                     <button
                                         onClick={handleCancel}
@@ -161,7 +242,7 @@ export default function ProfilePage() {
                                 <User size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" />
                                 <input
                                     type="text"
-                                    value={formData.firstName}
+                                    value={formData.firstName || ''}
                                     onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                                     disabled={!isEditing}
                                     className={`${inputClasses} pl-12`}
@@ -176,7 +257,7 @@ export default function ProfilePage() {
                                 <User size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" />
                                 <input
                                     type="text"
-                                    value={formData.lastName}
+                                    value={formData.lastName || ''}
                                     onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                                     disabled={!isEditing}
                                     className={`${inputClasses} pl-12`}
@@ -191,11 +272,9 @@ export default function ProfilePage() {
                                 <EnvelopeSimple size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" />
                                 <input
                                     type="email"
-                                    value={formData.email}
-                                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                    disabled={!isEditing}
-                                    className={`${inputClasses} pl-12`}
-                                    placeholder={t('profile.placeholder.email')}
+                                    value={profile.email}
+                                    disabled
+                                    className={`${inputClasses} pl-12 opacity-50`}
                                 />
                             </div>
                         </div>
@@ -206,7 +285,7 @@ export default function ProfilePage() {
                                 <Phone size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" />
                                 <input
                                     type="tel"
-                                    value={formData.phone}
+                                    value={formData.phone || ''}
                                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                                     disabled={!isEditing}
                                     className={`${inputClasses} pl-12`}
@@ -221,7 +300,7 @@ export default function ProfilePage() {
                                 <MapPin size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" />
                                 <input
                                     type="text"
-                                    value={formData.location}
+                                    value={formData.location || ''}
                                     onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                                     disabled={!isEditing}
                                     className={`${inputClasses} pl-12`}
@@ -235,7 +314,7 @@ export default function ProfilePage() {
                             <div className="relative">
                                 <input
                                     type="date"
-                                    value={formData.dateOfBirth}
+                                    value={formData.dateOfBirth ? new Date(formData.dateOfBirth).toISOString().split('T')[0] : ''}
                                     onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
                                     disabled={!isEditing}
                                     className={inputClasses}
@@ -248,7 +327,7 @@ export default function ProfilePage() {
                             <div className="relative">
                                 <input
                                     type="number"
-                                    value={formData.age || ''}
+                                    value={formData.age ?? ''}
                                     onChange={(e) => setFormData({ ...formData, age: e.target.value ? parseInt(e.target.value) : null })}
                                     disabled={!isEditing}
                                     className={inputClasses}
@@ -275,7 +354,7 @@ export default function ProfilePage() {
                     <div className="mt-6">
                         <label className="block text-sm font-medium mb-2">{t('profile.bio')}</label>
                         <textarea
-                            value={formData.bio}
+                            value={formData.bio || ''}
                             onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
                             disabled={!isEditing}
                             rows={4}
@@ -313,9 +392,7 @@ export default function ProfilePage() {
                     className="liquid-glass rounded-2xl p-8 border border-red-500/20"
                 >
                     <h3 className="text-lg font-semibold mb-2 text-red-400">{t('profile.danger')}</h3>
-                    <p className="text-zinc-400 text-sm mb-4">
-                        {t('profile.danger.desc')}
-                    </p>
+                    <p className="text-zinc-400 text-sm mb-4">{t('profile.danger.desc')}</p>
                     <button
                         onClick={() => setShowDeleteConfirm(true)}
                         className="flex items-center gap-2 px-4 py-2 rounded-xl border border-red-500/50 text-red-400 hover:bg-red-500/10 transition-colors"
@@ -326,37 +403,33 @@ export default function ProfilePage() {
                 </motion.div>
 
                 {/* Delete Confirmation Modal */}
-                {
-                    showDeleteConfirm && (
-                        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.95 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                className="liquid-glass rounded-2xl p-6 max-w-md w-full"
-                            >
-                                <h3 className="text-xl font-semibold mb-4">{t('profile.delete.modal.title')}</h3>
-                                <p className="text-zinc-400 mb-6">
-                                    {t('profile.delete.modal.desc')}
-                                </p>
-                                <div className="flex gap-3">
-                                    <button
-                                        onClick={() => setShowDeleteConfirm(false)}
-                                        className="flex-1 px-4 py-3 rounded-xl border border-white/20 font-medium hover:bg-white/5 transition-colors"
-                                    >
-                                        {t('profile.cancel')}
-                                    </button>
-                                    <button
-                                        onClick={handleDelete}
-                                        className="flex-1 px-4 py-3 rounded-xl bg-red-500 text-white font-medium hover:bg-red-600 transition-colors"
-                                    >
-                                        {t('profile.delete')}
-                                    </button>
-                                </div>
-                            </motion.div>
-                        </div>
-                    )
-                }
-            </div >
-        </DashboardLayout >
+                {showDeleteConfirm && (
+                    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="liquid-glass rounded-2xl p-6 max-w-md w-full"
+                        >
+                            <h3 className="text-xl font-semibold mb-4">{t('profile.delete.modal.title')}</h3>
+                            <p className="text-zinc-400 mb-6">{t('profile.delete.modal.desc')}</p>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setShowDeleteConfirm(false)}
+                                    className="flex-1 px-4 py-3 rounded-xl border border-white/20 font-medium hover:bg-white/5 transition-colors"
+                                >
+                                    {t('profile.cancel')}
+                                </button>
+                                <button
+                                    onClick={handleDelete}
+                                    className="flex-1 px-4 py-3 rounded-xl bg-red-500 text-white font-medium hover:bg-red-600 transition-colors"
+                                >
+                                    {t('profile.delete')}
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </div>
+        </DashboardLayout>
     );
 }

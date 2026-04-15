@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '../LanguageContext';
 import { LanguageSwitcher } from '../LanguageSwitcher';
@@ -27,6 +28,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
     const { t } = useLanguage();
+    const { data: session } = useSession();
+
+    const user = session?.user as any;
+    const firstName = user?.firstName || user?.name?.split(' ')[0] || 'User';
+    const lastName = user?.lastName || user?.name?.split(' ').slice(1).join(' ') || '';
+    const displayName = `${firstName} ${lastName}`.trim();
+    const initials = `${firstName[0] || ''}${lastName[0] || ''}`.toUpperCase();
+    const avatarUrl = user?.image;
 
     useEffect(() => {
         const checkMobile = () => {
@@ -128,11 +137,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                                 href="/profile"
                                 className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-white/5 transition-colors group"
                             >
-                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-600 to-blue-600 flex items-center justify-center text-[10px] font-bold">
-                                    JD
+                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-600 to-blue-600 flex items-center justify-center text-[10px] font-bold overflow-hidden">
+                                    {avatarUrl ? (
+                                        <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover" />
+                                    ) : initials}
                                 </div>
                                 <div>
-                                    <p className="text-xs font-medium text-zinc-300 group-hover:text-white transition-colors">John Doe</p>
+                                    <p className="text-xs font-medium text-zinc-300 group-hover:text-white transition-colors">{displayName}</p>
                                     <p className="text-[9px] text-zinc-600">{t('dash.view_profile')}</p>
                                 </div>
                             </Link>
@@ -173,8 +184,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                             <Bell size={18} />
                             <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-emerald-500 rounded-full" />
                         </button>
-                        <Link href="/profile" className="text-zinc-500 hover:text-white transition-colors">
-                            <User size={18} />
+                        <Link href="/profile" className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors">
+                            {avatarUrl ? (
+                                <img src={avatarUrl} alt={displayName} className="w-7 h-7 rounded-full object-cover border border-white/10" />
+                            ) : (
+                                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-emerald-600 to-blue-600 flex items-center justify-center text-[8px] font-bold text-white">
+                                    {initials}
+                                </div>
+                            )}
                         </Link>
                     </div>
                 </header>
