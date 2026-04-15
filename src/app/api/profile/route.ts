@@ -4,14 +4,14 @@ import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 
 const updateProfileSchema = z.object({
-    firstName: z.string().min(1).optional(),
-    lastName: z.string().min(1).optional(),
-    phone: z.string().optional(),
-    dateOfBirth: z.string().optional(),
+    firstName: z.string().optional(),
+    lastName: z.string().optional(),
+    phone: z.string().nullable().optional(),
+    dateOfBirth: z.string().nullable().optional(),
     age: z.number().nullable().optional(),
-    occupation: z.string().optional(),
-    location: z.string().optional(),
-    bio: z.string().optional(),
+    occupation: z.string().nullable().optional(),
+    location: z.string().nullable().optional(),
+    bio: z.string().nullable().optional(),
 });
 
 // GET /api/profile — Fetch current user's profile
