@@ -44,6 +44,19 @@ export default function ProfilePage() {
         setToasts(prev => prev.filter(t => t.id !== id));
     };
 
+    // Calculate age from date of birth
+    const calculateAge = (dateOfBirth: string | null): number | null => {
+        if (!dateOfBirth) return null;
+        const today = new Date();
+        const birthDate = new Date(dateOfBirth);
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+        return age;
+    };
+
     // Fetch profile from API
     useEffect(() => {
         async function fetchProfile() {
@@ -90,7 +103,7 @@ export default function ProfilePage() {
                     lastName: formData.lastName.trim(),
                     phone: formData.phone?.trim() || null,
                     dateOfBirth: formData.dateOfBirth || null,
-                    age: formData.age,
+                    age: calculateAge(formData.dateOfBirth || null),
                     occupation: formData.occupation?.trim() || null,
                     location: formData.location?.trim() || null,
                     bio: formData.bio?.trim() || null,
@@ -358,17 +371,11 @@ export default function ProfilePage() {
                             <label className="block text-sm font-medium mb-2">{t('profile.age')}</label>
                             <div className="relative">
                                 <input
-                                    type="number"
-                                    min="0"
-                                    max="150"
-                                    value={formData.age ?? ''}
-                                    onChange={(e) => {
-                                        const val = e.target.value;
-                                        setFormData({ ...formData, age: val ? Math.max(0, Math.min(150, parseInt(val))) : null });
-                                    }}
-                                    disabled={!isEditing}
-                                    className={inputClasses}
-                                    placeholder={t('profile.placeholder.age')}
+                                    type="text"
+                                    value={formData.dateOfBirth ? `${calculateAge(formData.dateOfBirth)} years old` : 'Not set'}
+                                    disabled
+                                    className={`${inputClasses} opacity-50`}
+                                    placeholder="Auto-calculated from date of birth"
                                 />
                             </div>
                         </div>
@@ -465,7 +472,7 @@ export default function ProfilePage() {
                             </div>
                         </motion.div>
                     </div>
-                )}
+                )}\n                <ToastContainer toasts={toasts} removeToast={removeToast} />
             </div>
         </DashboardLayout>
     );
