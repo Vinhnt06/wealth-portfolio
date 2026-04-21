@@ -12,28 +12,28 @@ export function AboutSection() {
     const socialLinks = [
         {
             name: 'GitHub',
-            url: 'https://github.com/vinhh', // Placeholder
+            url: 'https://github.com/Vinhnt06',
             icon: GithubLogo,
             color: 'hover:text-white',
             bg: 'hover:bg-white/10'
         },
         {
             name: 'LinkedIn',
-            url: 'https://linkedin.com/in/vinhh', // Placeholder
+            url: 'https://linkedin.com/in/vinhnt06',
             icon: LinkedinLogo,
             color: 'hover:text-blue-500',
             bg: 'hover:bg-blue-500/10'
         },
         {
             name: 'Facebook',
-            url: 'https://facebook.com/vinhh', // Placeholder
+            url: 'https://facebook.com/vinhnt06',
             icon: FacebookLogo,
             color: 'hover:text-blue-600',
             bg: 'hover:bg-blue-600/10'
         },
         {
             name: 'Email',
-            url: 'mailto:vinhh@example.com', // Placeholder
+            url: 'mailto:tuanvinh2402@gmail.com',
             icon: EnvelopeSimple,
             color: 'hover:text-rose-500',
             bg: 'hover:bg-rose-500/10'
@@ -75,11 +75,11 @@ export function AboutSection() {
                             <div className="w-20 h-20 rounded-2xl bg-zinc-800 border border-white/10 mb-8 overflow-hidden">
                                 {/* Auto generic avatar fallback if no image */}
                                 <div className="w-full h-full bg-gradient-to-br from-zinc-700 to-zinc-900 flex items-center justify-center text-3xl font-bold text-white/50">
-                                    VH
+                                    NTV
                                 </div>
                             </div>
 
-                            <h3 className="text-2xl font-bold mb-4">{t('about.greeting') || "Hi, I'm Vinh"}</h3>
+                            <h3 className="text-2xl font-bold mb-4">{t('about.greeting') || "Hi, I'm Nguyễn Tuấn Vinh"}</h3>
                             <div className="space-y-4 text-zinc-400 leading-relaxed font-medium">
                                 <p>
                                     {t('about.p1') || 'I specialize in building scalable web applications with a focus on modern user interfaces and complex data architectures.'}
