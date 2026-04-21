@@ -56,17 +56,25 @@ export async function getYahooQuote(symbol: string): Promise<YahooQuote> {
     }
 
     const meta = result.meta;
+
+    // Manually calculate changes if Yahoo API returns undefined
+    const price = meta.regularMarketPrice || 0;
+    const prevClose = meta.chartPreviousClose || meta.previousClose || meta.regularMarketPreviousClose || price;
+
+    const calculatedChange = prevClose > 0 ? price - prevClose : 0;
+    const calculatedChangePercent = prevClose > 0 ? (calculatedChange / prevClose) * 100 : 0;
+
     const quote = {
         symbol: meta.symbol,
-        regularMarketPrice: meta.regularMarketPrice || 0,
-        regularMarketChange: meta.regularMarketChange || 0,
-        regularMarketChangePercent: meta.regularMarketChangePercent || 0,
+        regularMarketPrice: price,
+        regularMarketChange: meta.regularMarketChange ?? calculatedChange,
+        regularMarketChangePercent: meta.regularMarketChangePercent ?? calculatedChangePercent,
         regularMarketVolume: meta.regularMarketVolume || 0,
         marketCap: meta.marketCap,
         regularMarketDayHigh: meta.regularMarketDayHigh || 0,
         regularMarketDayLow: meta.regularMarketDayLow || 0,
         regularMarketOpen: meta.regularMarketOpen || 0,
-        regularMarketPreviousClose: meta.regularMarketPreviousClose || 0,
+        regularMarketPreviousClose: prevClose,
         shortName: meta.shortName || meta.symbol,
         longName: meta.longName || meta.symbol,
     };
