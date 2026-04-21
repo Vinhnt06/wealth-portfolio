@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '../LanguageContext';
 import { LanguageSwitcher } from '../LanguageSwitcher';
@@ -20,6 +20,7 @@ import {
     ChartBar,
     SignOut,
     CaretDown,
+    WarningCircle,
 } from '@phosphor-icons/react';
 
 interface DashboardLayoutProps {
@@ -30,6 +31,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+    const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
     const { t } = useLanguage();
     const { data: session } = useSession();
 
@@ -230,7 +233,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                                             <button
                                                 onClick={() => {
                                                     setIsUserMenuOpen(false);
-                                                    window.location.href = '/api/auth/signout';
+                                                    setIsLogoutModalOpen(true);
                                                 }}
                                                 className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-red-500/10 transition-colors text-sm text-zinc-300 hover:text-red-400"
                                             >
@@ -261,6 +264,55 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                         className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30"
                         onClick={() => setIsSidebarOpen(false)}
                     />
+                )}
+            </AnimatePresence>
+
+            {/* Logout Confirmation Modal */}
+            <AnimatePresence>
+                {isLogoutModalOpen && (
+                    <>
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setIsLogoutModalOpen(false)}
+                            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[60]"
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+                            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[60] w-full max-w-sm px-4"
+                        >
+                            <div className="bg-zinc-900 border border-white/10 rounded-2xl p-8 text-center shadow-2xl">
+                                <div className="w-14 h-14 mx-auto mb-5 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center">
+                                    <WarningCircle size={28} weight="duotone" className="text-rose-400" />
+                                </div>
+                                <h3 className="text-xl font-bold mb-2">{t('signout.title') || 'Sign Out'}</h3>
+                                <p className="text-zinc-500 text-sm mb-7">{t('signout.desc') || 'Are you sure you want to sign out of your account?'}</p>
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={() => setIsLogoutModalOpen(false)}
+                                        className="flex-1 py-3 px-4 rounded-xl border border-white/10 text-sm font-bold text-zinc-400 hover:text-white hover:bg-white/5 hover:border-white/20 transition-all"
+                                    >
+                                        {t('signout.cancel') || 'Cancel'}
+                                    </button>
+                                    <button
+                                        onClick={async () => {
+                                            setIsLoggingOut(true);
+                                            await signOut({ callbackUrl: '/' });
+                                        }}
+                                        disabled={isLoggingOut}
+                                        className="flex-1 py-3 px-4 rounded-xl bg-rose-500 text-white text-sm font-bold hover:bg-rose-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                    >
+                                        <SignOut size={16} weight="bold" />
+                                        {isLoggingOut ? (t('signout.loading') || 'Signing out...') : (t('signout.confirm') || 'Sign Out')}
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </>
                 )}
             </AnimatePresence>
         </div>

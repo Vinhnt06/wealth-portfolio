@@ -165,9 +165,13 @@ export default function DashboardPage() {
     useEffect(() => {
         const fetchMarketData = async () => {
             try {
-                // Fetch crypto prices (BTC, ETH)
-                const cryptoRes = await fetch('/api/market/crypto?symbols=BTCUSDT,ETHUSDT');
-                const cryptoData = await cryptoRes.json();
+                // Fetch crypto 24h tickers (BTC, ETH) - use individual 24hr ticker for proper change%
+                const [btcRes, ethRes] = await Promise.all([
+                    fetch('/api/market/crypto?symbols=BTCUSDT'),
+                    fetch('/api/market/crypto?symbols=ETHUSDT'),
+                ]);
+                const btcData = await btcRes.json();
+                const ethData = await ethRes.json();
 
                 // Fetch stocks (SPX via S&P 500 ETF)
                 const stockRes = await fetch('/api/market/stocks?symbols=SPY');
@@ -203,14 +207,14 @@ export default function DashboardPage() {
                     {
                         symbol: 'BTC/USD',
                         name: 'Bitcoin',
-                        price: cryptoData.success && cryptoData.data.BTCUSDT ? cryptoData.data.BTCUSDT : 64210.00,
-                        change: cryptoData.success && cryptoData.data.BTCUSDT ? ((cryptoData.data.BTCUSDT - 70000) / 70000 * 100) : 2.4
+                        price: btcData.success ? btcData.data.price : 64210.00,
+                        change: btcData.success ? btcData.data.changePercent : 2.4
                     },
                     {
                         symbol: 'ETH/USD',
                         name: 'Ethereum',
-                        price: cryptoData.success && cryptoData.data.ETHUSDT ? cryptoData.data.ETHUSDT : 3400.50,
-                        change: cryptoData.success && cryptoData.data.ETHUSDT ? ((cryptoData.data.ETHUSDT - 3500) / 3500 * 100) : -1.1
+                        price: ethData.success ? ethData.data.price : 3400.50,
+                        change: ethData.success ? ethData.data.changePercent : -1.1
                     },
                 ];
 
@@ -286,7 +290,7 @@ export default function DashboardPage() {
                                 <span className="text-zinc-600">{tk.name} ({tk.symbol})</span>
                                 <span className="text-white font-mono tabular-nums">{fmtPrice(tk.price)}</span>
                                 <span className={`font-bold ${tk.change >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
-                                    {tk.change >= 0 ? '+' : ''}{tk.change}%
+                                    {tk.change >= 0 ? '+' : ''}{tk.change.toFixed(2)}%
                                 </span>
                             </div>
                         ))}

@@ -9,6 +9,8 @@ import Image from 'next/image';
 import { motion, useScroll } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { AssetCoverflow } from './components/AssetCoverflow';
+import { MarketSection } from './components/MarketSection';
+import { useSession } from 'next-auth/react';
 
 // Import client-side Spline component dynamically to avoid SSR errors
 const Spline = dynamic(() => import('@splinetool/react-spline'), {
@@ -24,6 +26,7 @@ export default function Home() {
   const [isScrolled, setIsScrolled] = useState(false);
   const { scrollY } = useScroll();
   const { t } = useLanguage();
+  const { status } = useSession();
 
   useEffect(() => {
     const unsubscribe = scrollY.on('change', (y) => {
@@ -58,22 +61,33 @@ export default function Home() {
             {t('nav.pricing')}
             <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-white transition-all duration-300 group-hover:w-full" />
           </Link>
-          <Link href="#about" className="relative group hover:text-white transition-colors">
+          <Link href="/about" className="relative group hover:text-white transition-colors">
             {t('nav.about')}
             <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-white transition-all duration-300 group-hover:w-full" />
           </Link>
         </nav>
         <div className="flex items-center gap-4">
           <LanguageSwitcher />
-          <Link href="/login" className="text-sm font-medium hover:text-zinc-300 transition-colors">
-            {t('nav.signin')}
-          </Link>
-          <Link
-            href="/login"
-            className="text-sm font-medium bg-white text-black px-4 py-2 rounded-full hover:bg-zinc-200 transition-colors"
-          >
-            {t('nav.getstarted')}
-          </Link>
+          {status === 'authenticated' ? (
+            <Link
+              href="/dashboard"
+              className="text-sm font-medium bg-white text-black px-4 py-2 rounded-full hover:bg-zinc-200 transition-colors"
+            >
+              Dashboard
+            </Link>
+          ) : (
+            <>
+              <Link href="/login" className="text-sm font-medium hover:text-zinc-300 transition-colors">
+                {t('nav.signin')}
+              </Link>
+              <Link
+                href="/login"
+                className="text-sm font-medium bg-white text-black px-4 py-2 rounded-full hover:bg-zinc-200 transition-colors"
+              >
+                {t('nav.getstarted')}
+              </Link>
+            </>
+          )}
         </div>
       </motion.header>
 
@@ -118,7 +132,7 @@ export default function Home() {
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
-              href="/login"
+              href={status === 'authenticated' ? "/dashboard" : "/login"}
               className="inline-flex h-14 items-center justify-center rounded-full bg-white px-8 text-sm font-medium text-black transition-transform hover:scale-[0.98] active:scale-95"
             >
               {t('intro.cta.primary')}
@@ -311,6 +325,9 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Content Section: Realtime Market Access */}
+      <MarketSection />
+
       {/* Content Section 3: Asset Types - 3D Coverflow */}
       <section id="assets" className="relative min-h-screen w-full px-6 py-24 md:px-12 lg:px-24 bg-zinc-950">
         <motion.div
@@ -359,7 +376,7 @@ export default function Home() {
           <div>
             <h5 className="text-sm font-medium mb-4">{t('footer.company')}</h5>
             <ul className="space-y-2 text-sm text-zinc-500">
-              <li><Link href="#about" className="hover:text-white transition-colors">About</Link></li>
+              <li><Link href="/about" className="hover:text-white transition-colors">About</Link></li>
               <li><Link href="#" className="hover:text-white transition-colors">Careers</Link></li>
               <li><Link href="#" className="hover:text-white transition-colors">Contact</Link></li>
             </ul>

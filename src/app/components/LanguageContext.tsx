@@ -73,6 +73,34 @@ const translations = {
         'assets.highlight.alternative': 'Alternative Investments',
         'assets.highlight.collectibles': 'Collectibles',
 
+        // Market Section
+        'market.label': 'Realtime Access',
+        'market.title': 'Global Multi-Asset Market',
+        'market.subtitle': 'Institutional-grade real-time pricing across crypto, precious metals, and energy commodities.',
+        'market.tab.all': 'All Assets',
+        'market.tab.crypto': 'Crypto',
+        'market.tab.commodities': 'Commodities',
+        'market.updated': 'Updated',
+        'market.add': 'Add',
+        'market.view_all': 'View All Assets',
+        'market.disclaimer': 'Prices refresh every 15s. Data provided for informational purposes only.',
+
+        // Signout Page
+        'signout.title': 'Sign Out',
+        'signout.desc': 'Are you sure you want to sign out of your account?',
+        'signout.confirm': 'Yes, Sign Out',
+        'signout.cancel': 'No, Go Back',
+        'signout.loading': 'Signing out...',
+
+        // About Section
+        'about.title': 'About the Creator',
+        'about.subtitle': 'A passionate software engineer dedicated to crafting premium, high-performance digital experiences.',
+        'about.greeting': "Hi, I'm Vinh",
+        'about.p1': 'I specialize in building scalable web applications with a focus on modern user interfaces and complex data architectures.',
+        'about.p2': 'YourFin is a passion project combining my interest in financial technology with high-end digital design principles. The goal is to provide institutional-grade tools to retail investors through an immersive, lightning-fast interface.',
+        'about.status.label': 'Current Status',
+        'about.status.text': 'Open for new opportunities',
+
         'footer.product': 'Product',
         'footer.company': 'Company',
         'footer.legal': 'Legal',
@@ -284,6 +312,34 @@ const translations = {
         'assets.highlight.realestate': 'Bất động sản',
         'assets.highlight.alternative': 'Đầu tư thay thế',
         'assets.highlight.collectibles': 'Sưu tầm',
+
+        // Market Section
+        'market.label': 'Truy cập Thời gian thực',
+        'market.title': 'Thị trường Đa Tài sản Toàn cầu',
+        'market.subtitle': 'Bảng giá theo thời gian thực cho tiền mã hóa, kim loại quý và hàng hóa năng lượng.',
+        'market.tab.all': 'Tất cả',
+        'market.tab.crypto': 'Tiền mã hóa',
+        'market.tab.commodities': 'Hàng hóa',
+        'market.updated': 'Cập nhật',
+        'market.add': 'Thêm',
+        'market.view_all': 'Xem tất cả tài sản',
+        'market.disclaimer': 'Giá cập nhật mỗi 15 giây. Dữ liệu chỉ mang tính tham khảo.',
+
+        // Signout Page
+        'signout.title': 'Đăng xuất',
+        'signout.desc': 'Bạn có chắc chắn muốn đăng xuất khỏi tài khoản?',
+        'signout.confirm': 'Có, Đăng xuất',
+        'signout.cancel': 'Không, Quay lại',
+        'signout.loading': 'Đang đăng xuất...',
+
+        // About Section
+        'about.title': 'Về Tác giả',
+        'about.subtitle': 'Một kỹ sư phần mềm đam mê việc kiến tạo các trải nghiệm số cao cấp và hiệu năng cao.',
+        'about.greeting': 'Chào bạn, mình là Vinh',
+        'about.p1': 'Mình chuyên xây dựng các ứng dụng web có khả năng mở rộng cao, tập trung vào giao diện người dùng hiện đại và cấu trúc dữ liệu phức tạp.',
+        'about.p2': 'YourFin là dự án đam mê kết hợp giữa niềm yêu thích công nghệ tài chính (Fintech) và nguyên tắc thiết kế kỹ thuật số cao cấp. Mục tiêu là mang đến các công cụ đạt chuẩn tổ chức cho nhà đầu tư cá nhân thông qua một giao diện đắm chìm và tốc độ chớp nhoáng.',
+        'about.status.label': 'Trạng thái',
+        'about.status.text': 'Sẵn sàng đón nhận cơ hội mới',
 
         'footer.product': 'Sản phẩm',
         'footer.company': 'Công ty',

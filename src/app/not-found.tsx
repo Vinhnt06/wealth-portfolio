@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { House, ArrowLeft } from '@phosphor-icons/react';
 import { useLanguage } from './components/LanguageContext';
 import { LanguageSwitcher } from './components/LanguageSwitcher';
+import { useSession } from 'next-auth/react';
 
 const Spline = dynamic(() => import('@splinetool/react-spline'), {
     ssr: false,
@@ -18,6 +19,7 @@ const Spline = dynamic(() => import('@splinetool/react-spline'), {
 
 export default function NotFound() {
     const { t } = useLanguage();
+    const { status } = useSession();
 
     return (
         <main className="relative w-full h-[100dvh] bg-black text-white overflow-hidden selection:bg-white selection:text-black">
@@ -52,7 +54,7 @@ export default function NotFound() {
                     {/* Action Buttons */}
                     <div className="flex items-center gap-4">
                         <Link
-                            href="/"
+                            href={status === 'authenticated' ? '/dashboard' : '/'}
                             className="inline-flex items-center gap-2.5 h-12 px-6 rounded-full bg-white text-black text-sm font-semibold transition-transform hover:scale-[0.98] active:scale-95"
                         >
                             <House size={16} weight="bold" />
