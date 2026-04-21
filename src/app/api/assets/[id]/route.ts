@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma';
 // PUT /api/assets/[id] - Update asset
 export async function PUT(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
     const session = await auth();
     if (!session?.user?.id) {
@@ -13,7 +13,7 @@ export async function PUT(
     }
 
     try {
-        const { id } = params;
+        const { id } = await context.params;
         const body = await request.json();
         const { quantity, avgBuyPrice } = body;
 
@@ -58,7 +58,7 @@ export async function PUT(
 // DELETE /api/assets/[id] - Delete asset
 export async function DELETE(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
     const session = await auth();
     if (!session?.user?.id) {
@@ -66,7 +66,7 @@ export async function DELETE(
     }
 
     try {
-        const { id } = params;
+        const { id } = await context.params;
 
         // Check if asset belongs to user
         const existingAsset = await prisma.asset.findUnique({
