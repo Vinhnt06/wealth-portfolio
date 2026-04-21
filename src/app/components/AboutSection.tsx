@@ -19,14 +19,14 @@ export function AboutSection() {
         },
         {
             name: 'LinkedIn',
-            url: 'https://linkedin.com/in/vinhnt06',
+            url: 'https://www.linkedin.com/in/tuanvinh06/',
             icon: LinkedinLogo,
             color: 'hover:text-blue-500',
             bg: 'hover:bg-blue-500/10'
         },
         {
             name: 'Facebook',
-            url: 'https://facebook.com/vinhnt06',
+            url: 'https://www.facebook.com/whatsupitsvinh/',
             icon: FacebookLogo,
             color: 'hover:text-blue-600',
             bg: 'hover:bg-blue-600/10'
