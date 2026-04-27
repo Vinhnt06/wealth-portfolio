@@ -6,7 +6,12 @@
 - Local:         http://localhost:3000
 - Network:       http://192.168.1.11:3000
 - Environments: .env.local
-✓ Ready in 689ms
+✓ Ready in 353ms
+⚠ `images.domains` is deprecated in favor of `images.remotePatterns`. Please update next.config.js to protect your application from malicious users.
+⚠ Invalid next.config.js options detected: 
+⚠     Unrecognized key(s) in object: 'turbo' at "experimental"
+⚠     Unrecognized key(s) in object: 'swcMinify'
+⚠ See more info here: https://nextjs.org/docs/messages/invalid-next-config
 ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
  We detected multiple lockfiles and selected the directory of /Users/vinhh/package-lock.json as the root directory.
  To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
@@ -15,6 +20,8 @@
    * /Users/vinhh/Documents/Wealth Project/wealth-portfolio/frontend/package-lock.json
    * /Users/vinhh/Documents/Wealth Project/wealth-portfolio/package-lock.json
 
+- Experiments (use with caution):
+  ? turbo (invalid experimental key)
 
 Image with src "/media/landingPage/realtime_landingpage.jpg" is using quality "90" which is not configured in images.qualities [75]. Please update your config to [75, 90].
 Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
@@ -42,36 +49,6 @@ Image with src "/media/landingPage/assets/alternative_assets.jpg" is using quali
 Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
 Image with src "/media/landingPage/assets/collectivles_assets.jpg" is using quality "90" which is not configured in images.qualities [75]. Please update your config to [75, 90].
 Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
- GET / 200 in 734ms (next.js: 470ms, application-code: 264ms)
-[browser] Market data fetch failed: SyntaxError: The string did not match the expected pattern.
-    at json ([native code])
-    at <unknown> (../../../Wealth Project/wealth-portfolio/frontend/src/app/components/MarketSection.tsx:108:46)
-  106 |                 fetch('/api/market/crypto?symbols=ETHUSDT'),
-  107 |             ]);
-> 108 |             const btcData = await btcRes.json();
-      |                                              ^
-  109 |             const ethData = await ethRes.json();
-  110 |
-  111 |             // Fetch commodities (Gold, Silver, Crude Oil) - these return changePercent
-[browser] Market data fetch failed: SyntaxError: The string did not match the expected pattern.
-    at json ([native code])
-    at <unknown> (../../../Wealth Project/wealth-portfolio/frontend/src/app/components/MarketSection.tsx:108:46)
-  106 |                 fetch('/api/market/crypto?symbols=ETHUSDT'),
-  107 |             ]);
-> 108 |             const btcData = await btcRes.json();
-      |                                              ^
-  109 |             const ethData = await ethRes.json();
-  110 |
-  111 |             // Fetch commodities (Gold, Silver, Crude Oil) - these return changePercent
-[browser] Market data fetch failed: SyntaxError: The string did not match the expected pattern.
-    at json ([native code])
-    at <unknown> (../../../Wealth Project/wealth-portfolio/frontend/src/app/components/MarketSection.tsx:108:46)
-  106 |                 fetch('/api/market/crypto?symbols=ETHUSDT'),
-  107 |             ]);
-> 108 |             const btcData = await btcRes.json();
-      |                                              ^
-  109 |             const ethData = await ethRes.json();
-  110 |
-  111 |             // Fetch commodities (Gold, Silver, Crude Oil) - these return changePercent
-[browser] Market data fetch failed: SyntaxError: The string did not match the expected pattern.
- GET / 200 in 45ms (next.js: 6ms, application-code: 39ms)
+ GET / 200 in 1141ms (next.js: 845ms, application-code: 296ms)
+ GET / 200 in 42ms (next.js: 3ms, application-code: 38ms)
+⚠ The "images.domains" configuration is deprecated. Please use "images.remotePatterns" configuration instead.
