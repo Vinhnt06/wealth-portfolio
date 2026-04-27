@@ -47,12 +47,12 @@ export default function LoginPage() {
 
     return (
         <main className="min-h-screen flex flex-col md:flex-row bg-black text-white">
-            {/* Left Section: Spline 3D - Hidden on Mobile */}
+            {/* Left Section: Spline 3D */}
             <motion.section
                 initial={{ opacity: 0, x: -50 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-                className="hidden md:block relative w-full md:w-1/2 min-h-[400px] md:min-h-screen bg-zinc-950 overflow-hidden"
+                className="relative w-full md:w-1/2 min-h-[400px] md:min-h-screen bg-zinc-950 overflow-hidden"
             >
                 {/* Spline 3D Background - Fixed to container */}
                 <div className="absolute inset-0 z-0">
@@ -60,7 +60,7 @@ export default function LoginPage() {
                         <Spline scene="https://prod.spline.design/7Uld6Oz2cKWvsxOq/scene.splinecode" />
                     </div>
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
-                    {/* Spline Watermark Hider - Moved right */}
+                    {/* Spline Watermark `Hider - Moved right */}
                     <div className="absolute bottom-4 right-[-5%] w-40 h-10 bg-black z-10 pointer-events-none" />
                 </div>
 
@@ -87,7 +87,7 @@ export default function LoginPage() {
                 initial={{ opacity: 0, x: 50 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-                className="w-full md:w-1/2 bg-black flex items-center justify-center p-6 md:p-24 min-h-screen"
+                className="w-full md:w-1/2 bg-black flex items-center justify-center p-8 md:p-24"
             >
                 <div className="w-full max-w-md space-y-8">
                     {/* Header */}

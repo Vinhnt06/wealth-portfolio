@@ -178,6 +178,13 @@ export function MarketSection() {
                 },
             ];
 
+            console.log('Market data updated:', {
+                btc: btcData.success ? `$${btcData.data.price.toLocaleString()}` : 'fallback',
+                eth: ethData.success ? `$${ethData.data.price.toLocaleString()}` : 'fallback',
+                gold: goldData.success ? `$${goldData.data.price.toLocaleString()}` : 'fallback',
+                timestamp: new Date().toLocaleTimeString()
+            });
+
             setAssets(updatedAssets);
             setLastUpdated(new Date());
             setLoading(false);
@@ -189,8 +196,8 @@ export function MarketSection() {
 
     useEffect(() => {
         fetchMarketData();
-        // Auto-refresh every 15 seconds for real-time feel
-        const interval = setInterval(fetchMarketData, 15000);
+        // Auto-refresh every 10 seconds for real-time updates
+        const interval = setInterval(fetchMarketData, 10000);
         return () => clearInterval(interval);
     }, [fetchMarketData]);
 
