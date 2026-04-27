@@ -66,7 +66,7 @@ const TICKER_DATA = [
     { symbol: 'XPT/USD', name: 'Platinum', price: 1018.10, change: 1.45 },
     { symbol: 'XAU/USD', name: 'Gold', price: 2732.45, change: 0.82 },
     { symbol: 'SPX', name: 'S&P 500', price: 5123.41, change: 1.12 },
-    { symbol: 'BTC/USD', name: 'Bitcoin', price: 64210.00, change: 2.4 },
+    { symbol: 'BTC/USD', name: 'Bitcoin', price: 79217.00, change: 2.4 },
     { symbol: 'ETH/USD', name: 'Ethereum', price: 3400.50, change: -1.1 },
 ];
 

@@ -33,7 +33,7 @@ interface MarketAsset {
 // ── Fallback Data ──────────────────────────────────────────
 const FALLBACK_ASSETS: MarketAsset[] = [
     { symbol: 'XAU', ticker: 'Gold', name: 'Gold Futures', price: 2384.50, change24h: 10.02, changePercent: 0.42, marketCap: '$14.2T', icon: CurrencyCircleDollar, iconColor: 'text-yellow-500' },
-    { symbol: 'BTC', ticker: 'Bitcoin', name: 'Bitcoin', price: 64281.40, change24h: 1542.18, changePercent: 2.45, marketCap: '$1.26T', icon: CurrencyBtc, iconColor: 'text-amber-500' },
+    { symbol: 'BTC', ticker: 'Bitcoin', name: 'Bitcoin', price: 79217.00, change24h: 1856.99, changePercent: 2.40, marketCap: '$1.26T', icon: CurrencyBtc, iconColor: 'text-amber-500' },
     { symbol: 'WTI', ticker: 'Crude Oil', name: 'Crude Oil', price: 81.24, change24h: -0.94, changePercent: -1.15, marketCap: '$2.4B Vol', icon: Drop, iconColor: 'text-zinc-400' },
     { symbol: 'ETH', ticker: 'Ethereum', name: 'Ethereum', price: 3482.12, change24h: 38.72, changePercent: 1.12, marketCap: '$418.4B', icon: CurrencyEth, iconColor: 'text-blue-400' },
     { symbol: 'XAG', ticker: 'Silver', name: 'Silver Futures', price: 29.15, change24h: -0.25, changePercent: -0.84, marketCap: '$1.5T', icon: Coin, iconColor: 'text-slate-400' },
