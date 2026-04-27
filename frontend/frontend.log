@@ -2,12 +2,11 @@
 > yourfin-temp@0.1.0 dev
 > next dev
 
-⚠ Port 3000 is in use by process 69336, using available port 3001 instead.
 ▲ Next.js 16.2.2 (Turbopack)
-- Local:         http://localhost:3001
-- Network:       http://192.168.1.11:3001
+- Local:         http://localhost:3000
+- Network:       http://192.168.1.11:3000
 - Environments: .env.local
-✓ Ready in 1037ms
+✓ Ready in 378ms
 ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
  We detected multiple lockfiles and selected the directory of /Users/vinhh/package-lock.json as the root directory.
  To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
@@ -16,12 +15,54 @@
    * /Users/vinhh/Documents/Wealth Project/wealth-portfolio/frontend/package-lock.json
    * /Users/vinhh/Documents/Wealth Project/wealth-portfolio/package-lock.json
 
-⨯ Another next dev server is already running.
 
-- Local:        http://localhost:3000
-- PID:          69336
-- Dir:          /Users/vinhh/Documents/Wealth Project/wealth-portfolio/frontend
-- Log:          .next/dev/logs/next-development.log
-
-Run kill 69336 to stop it.
-[?25h
+Image with src "/media/landingPage/realtime_landingpage.jpg" is using quality "90" which is not configured in images.qualities [75]. Please update your config to [75, 90].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+Image with src "/media/landingPage/gold_landingpage.jpg" is using quality "90" which is not configured in images.qualities [75]. Please update your config to [75, 90].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+Image with src "/media/landingPage/profit_landingpage.jpg" is using quality "90" which is not configured in images.qualities [75]. Please update your config to [75, 90].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+Image with src "/media/landingPage/HandBot_landingPage.jpg" is using quality "90" which is not configured in images.qualities [75]. Please update your config to [75, 90].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+Image with src "/media/landingPage/News_landingpage.jpg" is using quality "90" which is not configured in images.qualities [75]. Please update your config to [75, 90].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+⨯ Error: [next-auth]: `useSession` must be wrapped in a <SessionProvider />
+    at MarketSection (src/app/components/MarketSection.tsx:96:34)
+  94 | export function MarketSection() {
+  95 |     const { t } = useLanguage();
+> 96 |     const { status } = useSession();
+     |                                  ^
+  97 |     const isAuthenticated = status === 'authenticated';
+  98 |     const [assets, setAssets] = useState<MarketAsset[]>(FALLBACK_ASSETS);
+  99 |     const [loading, setLoading] = useState(true); {
+  digest: '549538217'
+}
+ GET / 500 in 1067ms (next.js: 781ms, application-code: 286ms)
+⨯ Error: [next-auth]: `useSession` must be wrapped in a <SessionProvider />
+    at MarketSection (src/app/components/MarketSection.tsx:96:34)
+  94 | export function MarketSection() {
+  95 |     const { t } = useLanguage();
+> 96 |     const { status } = useSession();
+     |                                  ^
+  97 |     const isAuthenticated = status === 'authenticated';
+  98 |     const [assets, setAssets] = useState<MarketAsset[]>(FALLBACK_ASSETS);
+  99 |     const [loading, setLoading] = useState(true); {
+  digest: '549538217'
+}
+ GET / 500 in 45ms (next.js: 4ms, application-code: 42ms)
+[browser] Image with src "/media/landingPage/realtime_landingpage.jpg" is using quality "90" which is not configured in images.qualities [75]. Please update your config to [75, 90].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+[browser] Image with src "/media/landingPage/gold_landingpage.jpg" is using quality "90" which is not configured in images.qualities [75]. Please update your config to [75, 90].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+[browser] Image with src "/media/landingPage/profit_landingpage.jpg" is using quality "90" which is not configured in images.qualities [75]. Please update your config to [75, 90].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+[browser] Image with src "/media/landingPage/HandBot_landingPage.jpg" is using quality "90" which is not configured in images.qualities [75]. Please update your config to [75, 90].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+[browser] Image with src "/media/landingPage/News_landingpage.jpg" is using quality "90" which is not configured in images.qualities [75]. Please update your config to [75, 90].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+[browser] Your .splinecode file is more recent than the library. Please upgrade @splinetool/runtime to the latest version.
+[browser] Your .splinecode file is more recent than the library. Please upgrade @splinetool/runtime to the latest version.
+ GET / 200 in 13ms (next.js: 5ms, application-code: 8ms)
+ GET / 200 in 20ms (next.js: 5ms, application-code: 14ms)
+ GET / 200 in 5ms (next.js: 2ms, application-code: 3ms)
+ GET / 200 in 15ms (next.js: 4ms, application-code: 11ms)

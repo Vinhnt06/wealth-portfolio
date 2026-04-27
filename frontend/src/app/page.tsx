@@ -10,7 +10,6 @@ import { motion, useScroll } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { AssetCoverflow } from './components/AssetCoverflow';
 import { MarketSection } from './components/MarketSection';
-import { useSession } from 'next-auth/react';
 
 // Import client-side Spline component dynamically to avoid SSR errors
 const Spline = dynamic(() => import('@splinetool/react-spline'), {
@@ -26,7 +25,6 @@ export default function Home() {
   const [isScrolled, setIsScrolled] = useState(false);
   const { scrollY } = useScroll();
   const { t } = useLanguage();
-  const { status } = useSession();
 
   useEffect(() => {
     const unsubscribe = scrollY.on('change', (y) => {
@@ -68,26 +66,15 @@ export default function Home() {
         </nav>
         <div className="flex items-center gap-4">
           <LanguageSwitcher />
-          {status === 'authenticated' ? (
-            <Link
-              href="/dashboard"
-              className="text-sm font-medium bg-white text-black px-4 py-2 rounded-full hover:bg-zinc-200 transition-colors"
-            >
-              Dashboard
-            </Link>
-          ) : (
-            <>
-              <Link href="/login" className="text-sm font-medium hover:text-zinc-300 transition-colors">
-                {t('nav.signin')}
-              </Link>
-              <Link
-                href="/login"
-                className="text-sm font-medium bg-white text-black px-4 py-2 rounded-full hover:bg-zinc-200 transition-colors"
-              >
-                {t('nav.getstarted')}
-              </Link>
-            </>
-          )}
+          <Link href="/login" className="text-sm font-medium hover:text-zinc-300 transition-colors">
+            {t('nav.signin')}
+          </Link>
+          <Link
+            href="/login"
+            className="text-sm font-medium bg-white text-black px-4 py-2 rounded-full hover:bg-zinc-200 transition-colors"
+          >
+            {t('nav.getstarted')}
+          </Link>
         </div>
       </motion.header>
 
@@ -132,7 +119,7 @@ export default function Home() {
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
-              href={status === 'authenticated' ? "/dashboard" : "/login"}
+              href="/login"
               className="inline-flex h-14 items-center justify-center rounded-full bg-white px-8 text-sm font-medium text-black transition-transform hover:scale-[0.98] active:scale-95"
             >
               {t('intro.cta.primary')}
