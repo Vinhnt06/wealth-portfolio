@@ -6,7 +6,7 @@
 - Local:         http://localhost:3000
 - Network:       http://192.168.1.11:3000
 - Environments: .env.local
-✓ Ready in 457ms
+✓ Ready in 559ms
 ⚠ `images.domains` is deprecated in favor of `images.remotePatterns`. Please update next.config.js to protect your application from malicious users.
 ⚠ Invalid next.config.js options detected: 
 ⚠     Unrecognized key(s) in object: 'turbo' at "experimental"
@@ -49,53 +49,4 @@ Image with src "/media/landingPage/assets/alternative_assets.jpg" is using quali
 Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
 Image with src "/media/landingPage/assets/collectivles_assets.jpg" is using quality "90" which is not configured in images.qualities [75]. Please update your config to [75, 90].
 Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
- GET / 200 in 730ms (next.js: 442ms, application-code: 288ms)
- GET / 200 in 37ms (next.js: 1765µs, application-code: 36ms)
-⚠ The "images.domains" configuration is deprecated. Please use "images.remotePatterns" configuration instead.
-[browser] Image with src "/media/landingPage/realtime_landingpage.jpg" is using quality "90" which is not configured in images.qualities [75]. Please update your config to [75, 90].
-Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
-[browser] Image with src "/media/landingPage/gold_landingpage.jpg" is using quality "90" which is not configured in images.qualities [75]. Please update your config to [75, 90].
-Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
-[browser] Image with src "/media/landingPage/profit_landingpage.jpg" is using quality "90" which is not configured in images.qualities [75]. Please update your config to [75, 90].
-Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
-[browser] Image with src "/media/landingPage/HandBot_landingPage.jpg" is using quality "90" which is not configured in images.qualities [75]. Please update your config to [75, 90].
-Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
-[browser] Image with src "/media/landingPage/News_landingpage.jpg" is using quality "90" which is not configured in images.qualities [75]. Please update your config to [75, 90].
-Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
-[browser] Image with src "/media/landingPage/assets/crypto_assets.jpg" is using quality "90" which is not configured in images.qualities [75]. Please update your config to [75, 90].
-Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
-[browser] Image with src "/media/landingPage/assets/forex_asstes.jpg" is using quality "90" which is not configured in images.qualities [75]. Please update your config to [75, 90].
-Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
-[browser] Image with src "/media/landingPage/assets/stocks_assets.jpg" is using quality "90" which is not configured in images.qualities [75]. Please update your config to [75, 90].
-Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
-[browser] Image with src "/media/landingPage/assets/cash_assets.jpg" is using quality "90" which is not configured in images.qualities [75]. Please update your config to [75, 90].
-Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
-[browser] Image with src "/media/landingPage/assets/saving_assets.jpg" is using quality "90" which is not configured in images.qualities [75]. Please update your config to [75, 90].
-Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
-[browser] Image with src "/media/landingPage/assets/realestate_assets.jpg" is using quality "90" which is not configured in images.qualities [75]. Please update your config to [75, 90].
-Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
-[browser] Image with src "/media/landingPage/assets/alternative_assets.jpg" is using quality "90" which is not configured in images.qualities [75]. Please update your config to [75, 90].
-Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
-[browser] Image with src "/media/landingPage/assets/collectivles_assets.jpg" is using quality "90" which is not configured in images.qualities [75]. Please update your config to [75, 90].
-Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
-[browser] Image with src "/media/landingPage/News_landingpage.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
-[browser] Image with src "/media/landingPage/HandBot_landingPage.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
-[browser] Image with src "/media/landingPage/assets/stocks_assets.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
-[browser] Image with src "/media/landingPage/assets/cash_assets.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
-[browser] Image with src "/media/landingPage/assets/forex_asstes.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
-[browser] Image with src "/media/landingPage/assets/crypto_assets.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
-[browser] Image with src "/media/landingPage/profit_landingpage.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
-[browser] Image with src "/media/landingPage/gold_landingpage.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
-[browser] Image with src "/media/landingPage/assets/alternative_assets.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
-[browser] Image with src "/media/landingPage/assets/collectivles_assets.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
-[browser] Image with src "/media/landingPage/assets/realestate_assets.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
-[browser] Image with src "/media/landingPage/assets/saving_assets.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
-[browser] Your .splinecode file is more recent than the library. Please upgrade @splinetool/runtime to the latest version.
-[browser] Image with src "/media/landingPage/realtime_landingpage.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
- GET /login 200 in 103ms (next.js: 70ms, application-code: 34ms)
-[browser] Missing property 
-Error: aborted
-    at ignore-listed frames {
-  code: 'ECONNRESET'
-}
-  Reload env: .env.local
+ GET / 200 in 456ms (next.js: 130ms, application-code: 326ms)

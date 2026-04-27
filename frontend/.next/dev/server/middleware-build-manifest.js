@@ -1,30 +1,6 @@
 globalThis.__BUILD_MANIFEST = {
   "pages": {
-    "/_app": [
-      "static/chunks/04_n_next_dist_compiled_110gpqt._.js",
-      "static/chunks/04_n_next_dist_shared_lib_0q.1vd3._.js",
-      "static/chunks/04_n_next_dist_client_0z-p0n.._.js",
-      "static/chunks/04_n_next_dist_0rew-9k._.js",
-      "static/chunks/06e8_next_03dnp8l._.js",
-      "static/chunks/[next]_entry_page-loader_ts_0k22z_j._.js",
-      "static/chunks/04_n_react-dom_0y73dm4._.js",
-      "static/chunks/04_n_0vy4s0h._.js",
-      "static/chunks/[root-of-the-server]__0kopxqu._.js",
-      "static/chunks/Documents_Wealth Project_wealth-portfolio_frontend_pages__app_07xvfw~._.js",
-      "static/chunks/turbopack-Documents_Wealth Project_wealth-portfolio_frontend_pages__app_0sqgrs4._.js"
-    ],
-    "/_error": [
-      "static/chunks/04_n_next_dist_compiled_110gpqt._.js",
-      "static/chunks/04_n_next_dist_shared_lib_0jo.i2j._.js",
-      "static/chunks/04_n_next_dist_client_0z-p0n.._.js",
-      "static/chunks/04_n_next_dist_0t9ewql._.js",
-      "static/chunks/[next]_entry_page-loader_ts_132msh-._.js",
-      "static/chunks/04_n_react-dom_0y73dm4._.js",
-      "static/chunks/04_n_0vy4s0h._.js",
-      "static/chunks/[root-of-the-server]__0xb1kuq._.js",
-      "static/chunks/Documents_Wealth Project_wealth-portfolio_frontend_pages__error_07xvfw~._.js",
-      "static/chunks/097~_Wealth Project_wealth-portfolio_frontend_pages__error_0gh6r-k._.js"
-    ]
+    "/_app": []
   },
   "devFiles": [],
   "polyfillFiles": [
