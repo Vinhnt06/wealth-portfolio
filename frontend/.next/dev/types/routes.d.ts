@@ -6,15 +6,17 @@ type AppRouteHandlerRoutes = "/api/auth/[...nextauth]"
 type PageRoutes = never
 type LayoutRoutes = "/"
 type RedirectRoutes = never
-type RewriteRoutes = "/api/[[...path]]"
+type RewriteRoutes = "/api/health" | "/api/market/[[...path]]" | "/api/status"
 type Routes = AppRoutes | PageRoutes | LayoutRoutes | RedirectRoutes | RewriteRoutes | AppRouteHandlerRoutes
 
 
 interface ParamMap {
   "/": {}
   "/about": {}
-  "/api/[[...path]]": { "path"?: string[]; }
   "/api/auth/[...nextauth]": { "nextauth": string[]; }
+  "/api/health": {}
+  "/api/market/[[...path]]": { "path"?: string[]; }
+  "/api/status": {}
   "/dashboard": {}
   "/login": {}
   "/profile": {}

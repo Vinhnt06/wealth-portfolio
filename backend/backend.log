@@ -197,3 +197,17 @@ Caused by: java.net.ConnectException: Connection refused
 2026-04-27T22:06:30.529+07:00  INFO 90370 --- [yourfin-api] [nio-8080-exec-2] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
 2026-04-27T22:06:30.530+07:00  INFO 90370 --- [yourfin-api] [nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
 2026-04-27T22:06:30.531+07:00  INFO 90370 --- [yourfin-api] [nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2026-04-27T22:07:25.934+07:00  INFO 90370 --- [yourfin-api] [nio-8080-exec-4] c.y.api.controller.MarketController      : Received crypto price request for symbol: ETHUSDT
+2026-04-27T22:07:25.933+07:00  INFO 90370 --- [yourfin-api] [nio-8080-exec-1] c.y.api.controller.MarketController      : Received crypto price request for symbol: BTCUSDT
+2026-04-27T22:07:27.112+07:00 ERROR 90370 --- [yourfin-api] [nio-8080-exec-4] i.n.r.d.DnsServerAddressStreamProviders  : Unable to load io.netty.resolver.dns.macos.MacOSDnsServerAddressStreamProvider, fallback to system defaults. This may result in incorrect DNS resolutions on MacOS. Check whether you have a dependency on 'io.netty:netty-resolver-dns-native-macos'. Use DEBUG level to see the full stack: java.lang.UnsatisfiedLinkError: failed to load the required native library
+2026-04-27T22:07:27.785+07:00  INFO 90370 --- [yourfin-api] [nio-8080-exec-4] c.y.api.controller.MarketController      : Successfully fetched crypto data for ETHUSDT: price=$2296.28
+2026-04-27T22:07:27.785+07:00  INFO 90370 --- [yourfin-api] [nio-8080-exec-1] c.y.api.controller.MarketController      : Successfully fetched crypto data for BTCUSDT: price=$77432.85
+2026-04-27T22:07:27.816+07:00  INFO 90370 --- [yourfin-api] [nio-8080-exec-5] c.y.api.controller.MarketController      : Received stock price request - symbols: null, gold: true, silver: false
+2026-04-27T22:07:27.816+07:00  INFO 90370 --- [yourfin-api] [nio-8080-exec-6] c.y.api.controller.MarketController      : Received stock price request - symbols: null, gold: false, silver: true
+2026-04-27T22:07:27.816+07:00  INFO 90370 --- [yourfin-api] [nio-8080-exec-7] c.y.api.controller.MarketController      : Received stock price request - symbols: CL=F, gold: false, silver: false
+2026-04-27T22:07:27.816+07:00  INFO 90370 --- [yourfin-api] [nio-8080-exec-6] c.y.api.controller.MarketController      : Fetching stock data for symbol: SI=F
+2026-04-27T22:07:27.816+07:00  INFO 90370 --- [yourfin-api] [nio-8080-exec-5] c.y.api.controller.MarketController      : Fetching stock data for symbol: GC=F
+2026-04-27T22:07:27.816+07:00  INFO 90370 --- [yourfin-api] [nio-8080-exec-7] c.y.api.controller.MarketController      : Fetching stock data for symbol: CL=F
+2026-04-27T22:07:28.030+07:00  INFO 90370 --- [yourfin-api] [nio-8080-exec-5] c.y.api.controller.MarketController      : Successfully fetched stock data for GC=F: price=$4694.4
+2026-04-27T22:07:28.030+07:00  INFO 90370 --- [yourfin-api] [nio-8080-exec-6] c.y.api.controller.MarketController      : Successfully fetched stock data for SI=F: price=$74.955
+2026-04-27T22:07:28.031+07:00  INFO 90370 --- [yourfin-api] [nio-8080-exec-7] c.y.api.controller.MarketController      : Successfully fetched stock data for CL=F: price=$96.72

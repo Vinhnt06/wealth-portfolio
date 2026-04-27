@@ -1,11 +1,19 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    // API proxy to backend
+    // API proxy to backend (exclude /api/auth for NextAuth)
     async rewrites() {
         return [
             {
-                source: '/api/:path*',
-                destination: 'http://localhost:8080/api/:path*', // Proxy to Backend
+                source: '/api/market/:path*',
+                destination: 'http://localhost:8080/api/market/:path*',
+            },
+            {
+                source: '/api/health',
+                destination: 'http://localhost:8080/api/health',
+            },
+            {
+                source: '/api/status',
+                destination: 'http://localhost:8080/api/status',
             },
         ];
     },
