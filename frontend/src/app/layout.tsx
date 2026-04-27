@@ -3,6 +3,7 @@ import { Be_Vietnam_Pro, Geist_Mono, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { LanguageProvider } from "./components/LanguageContext";
 import { AuthProvider } from "./components/AuthProvider";
+import { Analytics } from "@vercel/analytics/next";
 
 const beVietnamPro = Be_Vietnam_Pro({
   variable: "--font-be-vietnam-pro",
@@ -42,6 +43,7 @@ export default function RootLayout({
             {children}
           </LanguageProvider>
         </AuthProvider>
+        <Analytics />
       </body>
     </html>
   );
