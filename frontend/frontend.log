@@ -133,3 +133,44 @@ Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
 Image with src "/media/landingPage/assets/collectivles_assets.jpg" is using quality "90" which is not configured in images.qualities [75]. Please update your config to [75, 90].
 Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
  GET / 200 in 320ms (next.js: 8ms, application-code: 313ms)
+ GET / 200 in 78ms (next.js: 22ms, application-code: 56ms)
+ GET / 200 in 54ms (next.js: 4ms, application-code: 50ms)
+ GET / 200 in 50ms (next.js: 2ms, application-code: 47ms)
+ GET /login 200 in 92ms (next.js: 50ms, application-code: 42ms)
+[browser] Missing property 
+⨯ Error: [next-auth]: `useSession` must be wrapped in a <SessionProvider />
+    at NotFound (src/app/not-found.tsx:22:34)
+  20 | export default function NotFound() {
+  21 |     const { t } = useLanguage();
+> 22 |     const { status } = useSession();
+     |                                  ^
+  23 |
+  24 |     return (
+  25 |         <main className="relative w-full h-[100dvh] bg-black text-white overflow-hidden se... {
+  digest: '3688155489'
+}
+⨯ Error: [next-auth]: `useSession` must be wrapped in a <SessionProvider />
+    at NotFound (src/app/not-found.tsx:22:34)
+  20 | export default function NotFound() {
+  21 |     const { t } = useLanguage();
+> 22 |     const { status } = useSession();
+     |                                  ^
+  23 |
+  24 |     return (
+  25 |         <main className="relative w-full h-[100dvh] bg-black text-white overflow-hidden se... {
+  digest: '3688155489'
+}
+ GET /apple-touch-icon-precomposed.png 500 in 174ms (next.js: 43ms, application-code: 130ms)
+ GET /apple-touch-icon.png 500 in 173ms (next.js: 137ms, application-code: 36ms)
+ GET /login 200 in 69ms (next.js: 6ms, application-code: 63ms)
+ GET / 200 in 58ms (next.js: 4ms, application-code: 54ms)
+✓ Compiled in 158ms
+ GET /login 200 in 186ms (next.js: 101ms, application-code: 85ms)
+ GET /login 200 in 28ms (next.js: 4ms, application-code: 24ms)
+[browser] Missing property 
+ GET / 200 in 65ms (next.js: 35ms, application-code: 29ms)
+[browser] Your .splinecode file is more recent than the library. Please upgrade @splinetool/runtime to the latest version.
+[browser] Your .splinecode file is more recent than the library. Please upgrade @splinetool/runtime to the latest version.
+ GET / 200 in 28ms (next.js: 5ms, application-code: 23ms)
+ GET / 200 in 17ms (next.js: 3ms, application-code: 14ms)
+✓ Compiled in 80ms

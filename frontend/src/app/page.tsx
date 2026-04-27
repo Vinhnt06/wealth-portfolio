@@ -4,7 +4,6 @@ import dynamic from 'next/dynamic';
 import { LanguageSwitcher } from './components/LanguageSwitcher';
 import { LanguageProvider, useLanguage } from './components/LanguageContext';
 import { AnimatedButton } from './components/ButtonAnimations';
-import { BackendStatus } from './components/BackendStatus';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, useScroll } from 'framer-motion';
@@ -66,7 +65,6 @@ export default function Home() {
           </Link>
         </nav>
         <div className="flex items-center gap-4">
-          <BackendStatus />
           <LanguageSwitcher />
           <Link href="/login" className="text-sm font-medium hover:text-zinc-300 transition-colors">
             {t('nav.signin')}
