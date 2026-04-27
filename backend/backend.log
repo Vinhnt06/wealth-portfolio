@@ -8,21 +8,21 @@
 
  :: Spring Boot ::                (v4.0.6)
 
-2026-04-27T22:11:08.084+07:00  INFO 92725 --- [yourfin-api] [           main] com.yourfin.api.YourfinApiApplication    : Starting YourfinApiApplication v0.0.1-SNAPSHOT using Java 21.0.9 with PID 92725 (/Users/vinhh/Documents/Wealth Project/wealth-portfolio/backend/target/api-0.0.1-SNAPSHOT.jar started by vinhh in /Users/vinhh/Documents/Wealth Project/wealth-portfolio/backend)
-2026-04-27T22:11:08.086+07:00  INFO 92725 --- [yourfin-api] [           main] com.yourfin.api.YourfinApiApplication    : No active profile set, falling back to 1 default profile: "default"
-2026-04-27T22:11:08.733+07:00  INFO 92725 --- [yourfin-api] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
-2026-04-27T22:11:08.834+07:00  INFO 92725 --- [yourfin-api] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 96 ms. Found 3 JPA repository interfaces.
-2026-04-27T22:11:09.402+07:00  INFO 92725 --- [yourfin-api] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat initialized with port 8080 (http)
-2026-04-27T22:11:09.413+07:00  INFO 92725 --- [yourfin-api] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
-2026-04-27T22:11:09.413+07:00  INFO 92725 --- [yourfin-api] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/11.0.21]
-2026-04-27T22:11:09.432+07:00  INFO 92725 --- [yourfin-api] [           main] b.w.c.s.WebApplicationContextInitializer : Root WebApplicationContext: initialization completed in 1310 ms
-2026-04-27T22:11:09.530+07:00  INFO 92725 --- [yourfin-api] [           main] org.hibernate.orm.jpa                    : HHH008540: Processing PersistenceUnitInfo [name: default]
-2026-04-27T22:11:09.561+07:00  INFO 92725 --- [yourfin-api] [           main] org.hibernate.orm.core                   : HHH000001: Hibernate ORM core version 7.2.12.Final
-2026-04-27T22:11:09.858+07:00  INFO 92725 --- [yourfin-api] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
-2026-04-27T22:11:09.878+07:00  INFO 92725 --- [yourfin-api] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
-2026-04-27T22:11:10.923+07:00  WARN 92725 --- [yourfin-api] [           main] org.hibernate.orm.jdbc.error             : HHH000247: ErrorCode: 0, SQLState: 08001
-2026-04-27T22:11:10.923+07:00  WARN 92725 --- [yourfin-api] [           main] org.hibernate.orm.jdbc.error             : Connection to localhost:5432 refused. Check that the hostname and port are correct and that the postmaster is accepting TCP/IP connections.
-2026-04-27T22:11:10.923+07:00  WARN 92725 --- [yourfin-api] [           main] org.hibernate.orm.jdbc                   : HHH100046: Could not obtain connection to query JDBC database metadata
+2026-04-27T22:17:50.617+07:00  INFO 94051 --- [yourfin-api] [           main] com.yourfin.api.YourfinApiApplication    : Starting YourfinApiApplication v0.0.1-SNAPSHOT using Java 21.0.9 with PID 94051 (/Users/vinhh/Documents/Wealth Project/wealth-portfolio/backend/target/api-0.0.1-SNAPSHOT.jar started by vinhh in /Users/vinhh/Documents/Wealth Project/wealth-portfolio/backend)
+2026-04-27T22:17:50.619+07:00  INFO 94051 --- [yourfin-api] [           main] com.yourfin.api.YourfinApiApplication    : No active profile set, falling back to 1 default profile: "default"
+2026-04-27T22:17:51.090+07:00  INFO 94051 --- [yourfin-api] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-04-27T22:17:51.185+07:00  INFO 94051 --- [yourfin-api] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 89 ms. Found 3 JPA repository interfaces.
+2026-04-27T22:17:51.517+07:00  INFO 94051 --- [yourfin-api] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat initialized with port 8080 (http)
+2026-04-27T22:17:51.526+07:00  INFO 94051 --- [yourfin-api] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-04-27T22:17:51.526+07:00  INFO 94051 --- [yourfin-api] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/11.0.21]
+2026-04-27T22:17:51.546+07:00  INFO 94051 --- [yourfin-api] [           main] b.w.c.s.WebApplicationContextInitializer : Root WebApplicationContext: initialization completed in 885 ms
+2026-04-27T22:17:51.637+07:00  INFO 94051 --- [yourfin-api] [           main] org.hibernate.orm.jpa                    : HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-04-27T22:17:51.672+07:00  INFO 94051 --- [yourfin-api] [           main] org.hibernate.orm.core                   : HHH000001: Hibernate ORM core version 7.2.12.Final
+2026-04-27T22:17:51.966+07:00  INFO 94051 --- [yourfin-api] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-04-27T22:17:51.983+07:00  INFO 94051 --- [yourfin-api] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-04-27T22:17:53.019+07:00  WARN 94051 --- [yourfin-api] [           main] org.hibernate.orm.jdbc.error             : HHH000247: ErrorCode: 0, SQLState: 08001
+2026-04-27T22:17:53.019+07:00  WARN 94051 --- [yourfin-api] [           main] org.hibernate.orm.jdbc.error             : Connection to localhost:5432 refused. Check that the hostname and port are correct and that the postmaster is accepting TCP/IP connections.
+2026-04-27T22:17:53.020+07:00  WARN 94051 --- [yourfin-api] [           main] org.hibernate.orm.jdbc                   : HHH100046: Could not obtain connection to query JDBC database metadata
 
 org.hibernate.exception.JDBCConnectionException: Unable to obtain isolated JDBC connection [Connection to localhost:5432 refused. Check that the hostname and port are correct and that the postmaster is accepting TCP/IP connections.] [n/a]
 	at org.hibernate.exception.internal.SQLStateConversionDelegate.convert(SQLStateConversionDelegate.java:80) ~[hibernate-core-7.2.12.Final.jar!/:7.2.12.Final]
@@ -173,8 +173,8 @@ Caused by: java.net.ConnectException: Connection refused
 	at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:289) ~[postgresql-42.7.10.jar!/:42.7.10]
 	... 127 common frames omitted
 
-2026-04-27T22:11:10.934+07:00  WARN 92725 --- [yourfin-api] [           main] org.hibernate.orm.deprecation            : HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
-2026-04-27T22:11:10.939+07:00  INFO 92725 --- [yourfin-api] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+2026-04-27T22:17:53.034+07:00  WARN 94051 --- [yourfin-api] [           main] org.hibernate.orm.deprecation            : HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-04-27T22:17:53.039+07:00  INFO 94051 --- [yourfin-api] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
 	Database JDBC URL [undefined/unknown]
 	Database driver: undefined/unknown
 	Database dialect: PostgreSQLDialect
@@ -186,14 +186,28 @@ Caused by: java.net.ConnectException: Connection refused
 	Pool: DataSourceConnectionProvider
 	Minimum pool size: undefined/unknown
 	Maximum pool size: undefined/unknown
-2026-04-27T22:11:11.537+07:00  INFO 92725 --- [yourfin-api] [           main] org.hibernate.orm.core                   : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
-2026-04-27T22:11:11.541+07:00  INFO 92725 --- [yourfin-api] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
-2026-04-27T22:11:11.576+07:00  INFO 92725 --- [yourfin-api] [           main] o.s.d.j.r.query.QueryEnhancerFactories   : Hibernate is in classpath; If applicable, HQL parser will be used.
-2026-04-27T22:11:11.950+07:00  INFO 92725 --- [yourfin-api] [           main] c.y.api.controller.MarketController      : MarketController initialized
-2026-04-27T22:11:12.055+07:00  WARN 92725 --- [yourfin-api] [           main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
-2026-04-27T22:11:12.297+07:00  INFO 92725 --- [yourfin-api] [           main] o.s.b.w.a.WelcomePageHandlerMapping      : Adding welcome page template: index
-2026-04-27T22:11:12.580+07:00  INFO 92725 --- [yourfin-api] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat started on port 8080 (http) with context path '/'
-2026-04-27T22:11:12.607+07:00  INFO 92725 --- [yourfin-api] [           main] com.yourfin.api.YourfinApiApplication    : Started YourfinApiApplication in 4.73 seconds (process running for 5.126)
-2026-04-27T22:11:13.193+07:00  INFO 92725 --- [yourfin-api] [nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
-2026-04-27T22:11:13.193+07:00  INFO 92725 --- [yourfin-api] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
-2026-04-27T22:11:13.194+07:00  INFO 92725 --- [yourfin-api] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2026-04-27T22:17:53.663+07:00  INFO 94051 --- [yourfin-api] [           main] org.hibernate.orm.core                   : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-04-27T22:17:53.667+07:00  INFO 94051 --- [yourfin-api] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-04-27T22:17:53.704+07:00  INFO 94051 --- [yourfin-api] [           main] o.s.d.j.r.query.QueryEnhancerFactories   : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-04-27T22:17:54.088+07:00  INFO 94051 --- [yourfin-api] [           main] c.y.api.controller.MarketController      : MarketController initialized
+2026-04-27T22:17:54.168+07:00  WARN 94051 --- [yourfin-api] [           main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-04-27T22:17:54.362+07:00  INFO 94051 --- [yourfin-api] [           main] o.s.b.w.a.WelcomePageHandlerMapping      : Adding welcome page template: index
+2026-04-27T22:17:54.585+07:00  INFO 94051 --- [yourfin-api] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat started on port 8080 (http) with context path '/'
+2026-04-27T22:17:54.597+07:00  INFO 94051 --- [yourfin-api] [           main] com.yourfin.api.YourfinApiApplication    : Started YourfinApiApplication in 4.194 seconds (process running for 4.542)
+2026-04-27T22:17:56.115+07:00  INFO 94051 --- [yourfin-api] [nio-8080-exec-2] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-04-27T22:17:56.115+07:00  INFO 94051 --- [yourfin-api] [nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-04-27T22:17:56.116+07:00  INFO 94051 --- [yourfin-api] [nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2026-04-27T22:19:38.771+07:00  INFO 94051 --- [yourfin-api] [io-8080-exec-10] c.y.api.controller.MarketController      : Received crypto price request for symbol: BTCUSDT
+2026-04-27T22:19:38.771+07:00  INFO 94051 --- [yourfin-api] [nio-8080-exec-2] c.y.api.controller.MarketController      : Received crypto price request for symbol: ETHUSDT
+2026-04-27T22:19:40.011+07:00 ERROR 94051 --- [yourfin-api] [io-8080-exec-10] i.n.r.d.DnsServerAddressStreamProviders  : Unable to load io.netty.resolver.dns.macos.MacOSDnsServerAddressStreamProvider, fallback to system defaults. This may result in incorrect DNS resolutions on MacOS. Check whether you have a dependency on 'io.netty:netty-resolver-dns-native-macos'. Use DEBUG level to see the full stack: java.lang.UnsatisfiedLinkError: failed to load the required native library
+2026-04-27T22:19:40.795+07:00  INFO 94051 --- [yourfin-api] [nio-8080-exec-2] c.y.api.controller.MarketController      : Successfully fetched crypto data for ETHUSDT: price=$2283.08
+2026-04-27T22:19:40.795+07:00  INFO 94051 --- [yourfin-api] [io-8080-exec-10] c.y.api.controller.MarketController      : Successfully fetched crypto data for BTCUSDT: price=$76976.99
+2026-04-27T22:19:40.909+07:00  INFO 94051 --- [yourfin-api] [nio-8080-exec-4] c.y.api.controller.MarketController      : Received stock price request - symbols: CL=F, gold: false, silver: false
+2026-04-27T22:19:40.909+07:00  INFO 94051 --- [yourfin-api] [nio-8080-exec-1] c.y.api.controller.MarketController      : Received stock price request - symbols: null, gold: true, silver: false
+2026-04-27T22:19:40.909+07:00  INFO 94051 --- [yourfin-api] [nio-8080-exec-3] c.y.api.controller.MarketController      : Received stock price request - symbols: null, gold: false, silver: true
+2026-04-27T22:19:40.909+07:00  INFO 94051 --- [yourfin-api] [nio-8080-exec-1] c.y.api.controller.MarketController      : Fetching stock data for symbol: GC=F
+2026-04-27T22:19:40.909+07:00  INFO 94051 --- [yourfin-api] [nio-8080-exec-3] c.y.api.controller.MarketController      : Fetching stock data for symbol: SI=F
+2026-04-27T22:19:40.909+07:00  INFO 94051 --- [yourfin-api] [nio-8080-exec-4] c.y.api.controller.MarketController      : Fetching stock data for symbol: CL=F
+2026-04-27T22:19:41.126+07:00  INFO 94051 --- [yourfin-api] [nio-8080-exec-3] c.y.api.controller.MarketController      : Successfully fetched stock data for SI=F: price=$74.83
+2026-04-27T22:19:41.131+07:00  INFO 94051 --- [yourfin-api] [nio-8080-exec-1] c.y.api.controller.MarketController      : Successfully fetched stock data for GC=F: price=$4685.1
+2026-04-27T22:19:41.132+07:00  INFO 94051 --- [yourfin-api] [nio-8080-exec-4] c.y.api.controller.MarketController      : Successfully fetched stock data for CL=F: price=$96.98

@@ -6,7 +6,7 @@
 - Local:         http://localhost:3000
 - Network:       http://192.168.1.11:3000
 - Environments: .env.local
-✓ Ready in 432ms
+✓ Ready in 516ms
 ⚠ `images.domains` is deprecated in favor of `images.remotePatterns`. Please update next.config.js to protect your application from malicious users.
 ⚠ Invalid next.config.js options detected: 
 ⚠     Unrecognized key(s) in object: 'turbo' at "experimental"
@@ -49,6 +49,62 @@ Image with src "/media/landingPage/assets/alternative_assets.jpg" is using quali
 Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
 Image with src "/media/landingPage/assets/collectivles_assets.jpg" is using quality "90" which is not configured in images.qualities [75]. Please update your config to [75, 90].
 Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
- GET / 200 in 481ms (next.js: 142ms, application-code: 339ms)
- GET /api/auth/providers 200 in 1559ms (next.js: 1540ms, application-code: 19ms)
- HEAD /api/auth/signin 400 in 9ms (next.js: 4ms, application-code: 5ms)
+ GET / 200 in 993ms (next.js: 649ms, application-code: 344ms)
+ GET / 200 in 102ms (next.js: 11ms, application-code: 91ms)
+[browser] Image with src "/media/landingPage/realtime_landingpage.jpg" is using quality "90" which is not configured in images.qualities [75]. Please update your config to [75, 90].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+[browser] Image with src "/media/landingPage/gold_landingpage.jpg" is using quality "90" which is not configured in images.qualities [75]. Please update your config to [75, 90].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+[browser] Image with src "/media/landingPage/profit_landingpage.jpg" is using quality "90" which is not configured in images.qualities [75]. Please update your config to [75, 90].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+[browser] Image with src "/media/landingPage/HandBot_landingPage.jpg" is using quality "90" which is not configured in images.qualities [75]. Please update your config to [75, 90].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+[browser] Image with src "/media/landingPage/News_landingpage.jpg" is using quality "90" which is not configured in images.qualities [75]. Please update your config to [75, 90].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+[browser] Image with src "/media/landingPage/assets/crypto_assets.jpg" is using quality "90" which is not configured in images.qualities [75]. Please update your config to [75, 90].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+[browser] Image with src "/media/landingPage/assets/forex_asstes.jpg" is using quality "90" which is not configured in images.qualities [75]. Please update your config to [75, 90].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+[browser] Image with src "/media/landingPage/assets/stocks_assets.jpg" is using quality "90" which is not configured in images.qualities [75]. Please update your config to [75, 90].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+[browser] Image with src "/media/landingPage/assets/cash_assets.jpg" is using quality "90" which is not configured in images.qualities [75]. Please update your config to [75, 90].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+[browser] Image with src "/media/landingPage/assets/saving_assets.jpg" is using quality "90" which is not configured in images.qualities [75]. Please update your config to [75, 90].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+[browser] Image with src "/media/landingPage/assets/realestate_assets.jpg" is using quality "90" which is not configured in images.qualities [75]. Please update your config to [75, 90].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+[browser] Image with src "/media/landingPage/assets/alternative_assets.jpg" is using quality "90" which is not configured in images.qualities [75]. Please update your config to [75, 90].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+[browser] Image with src "/media/landingPage/assets/collectivles_assets.jpg" is using quality "90" which is not configured in images.qualities [75]. Please update your config to [75, 90].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+[browser] Your .splinecode file is more recent than the library. Please upgrade @splinetool/runtime to the latest version.
+ GET /login 200 in 86ms (next.js: 41ms, application-code: 45ms)
+[browser] Missing property 
+ GET /api/auth/providers 200 in 710ms (next.js: 695ms, application-code: 16ms)
+ GET /api/auth/csrf 200 in 9ms (next.js: 4ms, application-code: 6ms)
+(node:94080) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+ POST /api/auth/signin/google 200 in 211ms (next.js: 1740µs, application-code: 210ms)
+ GET /api/auth/callback/google?state=cgpkPvb2J0WHXdwQdsqkubYs_sLjCMEgl5C8WUtYrmc&iss=https%3A%2F%2Faccounts.google.com&code=4%2F0AeoWuM-oNIZq2Cfy37lwP84BRQFLFTbDPV-PWoUm1U2Gyj3mdWPcH7my3Rqet3vvPrHwvg&scope=email+profile+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile+openid&authuser=1&prompt=none 302 in 599ms (next.js: 4ms, application-code: 596ms)
+○ Compiling /dashboard ...
+⨯ Error: [next-auth]: `useSession` must be wrapped in a <SessionProvider />
+    at DashboardLayout (src/app/components/layout/DashboardLayout.tsx:37:41)
+  35 |     const [isLoggingOut, setIsLoggingOut] = useState(false);
+  36 |     const { t } = useLanguage();
+> 37 |     const { data: session } = useSession();
+     |                                         ^
+  38 |
+  39 |     const user = session?.user as any;
+  40 |     const firstName = user?.firstName || user?.name?.split(' ')[0] || 'User'; {
+  digest: '675329495'
+}
+ GET /dashboard 500 in 3.9s (next.js: 3.5s, application-code: 357ms)
+[browser] Your .splinecode file is more recent than the library. Please upgrade @splinetool/runtime to the latest version.
+⚠ Fast Refresh had to perform a full reload when ./Documents/Wealth Project/wealth-portfolio/frontend/src/app/components/AuthProvider.tsx changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ GET /dashboard 200 in 570ms (next.js: 495ms, application-code: 75ms)
+ GET /dashboard 200 in 530ms (next.js: 439ms, application-code: 91ms)
+ GET /dashboard 200 in 519ms (next.js: 408ms, application-code: 111ms)
+ GET /dashboard 200 in 313ms (next.js: 176ms, application-code: 136ms)
+ GET /dashboard 200 in 290ms (next.js: 94ms, application-code: 197ms)
+ GET /dashboard 200 in 328ms (next.js: 58ms, application-code: 270ms)
+ GET /dashboard 200 in 54ms (next.js: 1475µs, application-code: 52ms)

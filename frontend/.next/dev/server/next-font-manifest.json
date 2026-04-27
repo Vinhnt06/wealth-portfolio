@@ -1,5 +1,35 @@
 {
   "app": {
+    "[project]/Documents/Wealth Project/wealth-portfolio/frontend/src/app/dashboard/page": [
+      "static/media/5f841e19a104a2f1-s.p.0kyb12by50ral.woff2",
+      "static/media/9d978ba009f47915-s.p.0lydepa~d1qv1.woff2",
+      "static/media/53e45098eac42afb-s.p.0l2qk94b1u89y.woff2",
+      "static/media/3c285486269019b7-s.p.0sn2213rkw2e_.woff2",
+      "static/media/625a092f804baad3-s.p.0mrp_qm_8jqq_.woff2",
+      "static/media/a4f4f75ad654963f-s.p.0h6jagi-ln9qy.woff2",
+      "static/media/a3bcb02a0e9e5d11-s.p.0p40-daftjh_g.woff2",
+      "static/media/8f46d218c8f79e34-s.p.0xhl7b6zs4.~j.woff2",
+      "static/media/8ffc259da9d23054-s.p.0b_.2~bprftx..woff2",
+      "static/media/6f42e0a3b0519c4d-s.p.0czffigx~77c..woff2",
+      "static/media/32687112bd2dd8db-s.p.0gspg~~t9nou8.woff2",
+      "static/media/0c89a48fa5027cee-s.p.0rd3rjvnnhw7n.woff2",
+      "static/media/797e433ab948586e-s.p.0.q-h669a_dqa.woff2"
+    ],
+    "[project]/Documents/Wealth Project/wealth-portfolio/frontend/src/app/login/page": [
+      "static/media/5f841e19a104a2f1-s.p.0kyb12by50ral.woff2",
+      "static/media/9d978ba009f47915-s.p.0lydepa~d1qv1.woff2",
+      "static/media/53e45098eac42afb-s.p.0l2qk94b1u89y.woff2",
+      "static/media/3c285486269019b7-s.p.0sn2213rkw2e_.woff2",
+      "static/media/625a092f804baad3-s.p.0mrp_qm_8jqq_.woff2",
+      "static/media/a4f4f75ad654963f-s.p.0h6jagi-ln9qy.woff2",
+      "static/media/a3bcb02a0e9e5d11-s.p.0p40-daftjh_g.woff2",
+      "static/media/8f46d218c8f79e34-s.p.0xhl7b6zs4.~j.woff2",
+      "static/media/8ffc259da9d23054-s.p.0b_.2~bprftx..woff2",
+      "static/media/6f42e0a3b0519c4d-s.p.0czffigx~77c..woff2",
+      "static/media/32687112bd2dd8db-s.p.0gspg~~t9nou8.woff2",
+      "static/media/0c89a48fa5027cee-s.p.0rd3rjvnnhw7n.woff2",
+      "static/media/797e433ab948586e-s.p.0.q-h669a_dqa.woff2"
+    ],
     "[project]/Documents/Wealth Project/wealth-portfolio/frontend/src/app/page": [
       "static/media/5f841e19a104a2f1-s.p.0kyb12by50ral.woff2",
       "static/media/9d978ba009f47915-s.p.0lydepa~d1qv1.woff2",
