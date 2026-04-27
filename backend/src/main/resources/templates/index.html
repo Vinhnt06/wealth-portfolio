@@ -209,12 +209,10 @@
             </div>
 
             <div class="endpoints">
-                <div class="endpoint"
-                    onclick="window.open('//api/health', '_blank')">
+                <div class="endpoint" onclick="window.open('//api/health', '_blank')">
                     GET /api/health
                 </div>
-                <div class="endpoint"
-                    onclick="window.open('//api/status', '_blank')">
+                <div class="endpoint" onclick="window.open('//api/status', '_blank')">
                     GET /api/status
                 </div>
             </div>
@@ -234,7 +232,7 @@
             statusText.textContent = 'Checking...';
 
             try {
-                const response = await fetch(`${API_URL}/api/status`);
+                const response = await fetch(`${API_URL}/api/health`);
                 const data = await response.json();
 
                 if (response.ok) {
