@@ -2,8 +2,8 @@
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
-import { signIn, useSession } from 'next-auth/react';
+import { useState } from 'react';
+import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useLanguage } from '../components/LanguageContext';
 import dynamic from 'next/dynamic';
@@ -22,14 +22,7 @@ export default function LoginPage() {
     const [password, setPassword] = useState('');
     const [rememberMe, setRememberMe] = useState(false);
     const { t } = useLanguage();
-    const { status } = useSession();
     const router = useRouter();
-
-    useEffect(() => {
-        if (status === 'authenticated') {
-            router.push('/dashboard');
-        }
-    }, [status, router]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

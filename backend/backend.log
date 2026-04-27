@@ -213,3 +213,267 @@ Caused by: java.net.ConnectException: Connection refused
 2026-04-27T21:15:25.804+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-4] c.y.api.controller.MarketController      : Successfully fetched stock data for GC=F: price=$4707.1
 2026-04-27T21:15:48.376+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-7] c.y.api.controller.MarketController      : Received crypto price request for symbol: ETHUSDT
 2026-04-27T21:15:48.483+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-7] c.y.api.controller.MarketController      : Successfully fetched crypto data for ETHUSDT: price=$2314.69
+2026-04-27T21:19:57.745+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-8] c.y.api.controller.MarketController      : Received crypto price request for symbol: BTCUSDT
+2026-04-27T21:19:57.745+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-9] c.y.api.controller.MarketController      : Received crypto price request for symbol: ETHUSDT
+2026-04-27T21:19:57.914+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-8] c.y.api.controller.MarketController      : Successfully fetched crypto data for BTCUSDT: price=$77890.79
+2026-04-27T21:19:57.913+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-9] c.y.api.controller.MarketController      : Successfully fetched crypto data for ETHUSDT: price=$2313.92
+2026-04-27T21:19:58.415+07:00  INFO 79221 --- [yourfin-api] [io-8080-exec-10] c.y.api.controller.MarketController      : Received crypto price request for symbol: BTCUSDT
+2026-04-27T21:19:58.417+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-1] c.y.api.controller.MarketController      : Received crypto price request for symbol: ETHUSDT
+2026-04-27T21:19:58.418+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-1] c.y.api.controller.MarketController      : Successfully fetched crypto data for ETHUSDT: price=$2313.92
+2026-04-27T21:19:58.418+07:00  INFO 79221 --- [yourfin-api] [io-8080-exec-10] c.y.api.controller.MarketController      : Successfully fetched crypto data for BTCUSDT: price=$77890.79
+2026-04-27T21:19:58.467+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-3] c.y.api.controller.MarketController      : Received stock price request - symbols: null, gold: true, silver: false
+2026-04-27T21:19:58.468+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-3] c.y.api.controller.MarketController      : Fetching stock data for symbol: GC=F
+2026-04-27T21:19:58.468+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-2] c.y.api.controller.MarketController      : Received stock price request - symbols: null, gold: false, silver: true
+2026-04-27T21:19:58.468+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-2] c.y.api.controller.MarketController      : Fetching stock data for symbol: SI=F
+2026-04-27T21:19:58.469+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-5] c.y.api.controller.MarketController      : Received stock price request - symbols: CL=F, gold: false, silver: false
+2026-04-27T21:19:58.469+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-5] c.y.api.controller.MarketController      : Fetching stock data for symbol: CL=F
+2026-04-27T21:19:58.634+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-2] c.y.api.controller.MarketController      : Successfully fetched stock data for SI=F: price=$75.3
+2026-04-27T21:19:58.673+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-3] c.y.api.controller.MarketController      : Successfully fetched stock data for GC=F: price=$4704.0
+2026-04-27T21:19:58.686+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-5] c.y.api.controller.MarketController      : Successfully fetched stock data for CL=F: price=$95.72
+2026-04-27T21:20:08.401+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-6] c.y.api.controller.MarketController      : Received crypto price request for symbol: BTCUSDT
+2026-04-27T21:20:08.401+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-4] c.y.api.controller.MarketController      : Received crypto price request for symbol: ETHUSDT
+2026-04-27T21:20:08.402+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-6] c.y.api.controller.MarketController      : Successfully fetched crypto data for BTCUSDT: price=$77890.79
+2026-04-27T21:20:08.402+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-4] c.y.api.controller.MarketController      : Successfully fetched crypto data for ETHUSDT: price=$2313.92
+2026-04-27T21:20:08.417+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-7] c.y.api.controller.MarketController      : Received stock price request - symbols: null, gold: true, silver: false
+2026-04-27T21:20:08.418+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-7] c.y.api.controller.MarketController      : Fetching stock data for symbol: GC=F
+2026-04-27T21:20:08.418+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-7] c.y.api.controller.MarketController      : Successfully fetched stock data for GC=F: price=$4704.0
+2026-04-27T21:20:08.418+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-8] c.y.api.controller.MarketController      : Received stock price request - symbols: null, gold: false, silver: true
+2026-04-27T21:20:08.418+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-8] c.y.api.controller.MarketController      : Fetching stock data for symbol: SI=F
+2026-04-27T21:20:08.418+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-8] c.y.api.controller.MarketController      : Successfully fetched stock data for SI=F: price=$75.3
+2026-04-27T21:20:08.421+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-9] c.y.api.controller.MarketController      : Received stock price request - symbols: CL=F, gold: false, silver: false
+2026-04-27T21:20:08.421+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-9] c.y.api.controller.MarketController      : Fetching stock data for symbol: CL=F
+2026-04-27T21:20:08.421+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-9] c.y.api.controller.MarketController      : Successfully fetched stock data for CL=F: price=$95.72
+2026-04-27T21:20:18.395+07:00  INFO 79221 --- [yourfin-api] [io-8080-exec-10] c.y.api.controller.MarketController      : Received crypto price request for symbol: ETHUSDT
+2026-04-27T21:20:18.395+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-1] c.y.api.controller.MarketController      : Received crypto price request for symbol: BTCUSDT
+2026-04-27T21:20:18.511+07:00  INFO 79221 --- [yourfin-api] [io-8080-exec-10] c.y.api.controller.MarketController      : Successfully fetched crypto data for ETHUSDT: price=$2313.11
+2026-04-27T21:20:18.514+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-1] c.y.api.controller.MarketController      : Successfully fetched crypto data for BTCUSDT: price=$77876.89
+2026-04-27T21:20:18.529+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-2] c.y.api.controller.MarketController      : Received stock price request - symbols: null, gold: true, silver: false
+2026-04-27T21:20:18.529+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-2] c.y.api.controller.MarketController      : Fetching stock data for symbol: GC=F
+2026-04-27T21:20:18.532+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-3] c.y.api.controller.MarketController      : Received stock price request - symbols: null, gold: false, silver: true
+2026-04-27T21:20:18.532+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-3] c.y.api.controller.MarketController      : Fetching stock data for symbol: SI=F
+2026-04-27T21:20:18.535+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-5] c.y.api.controller.MarketController      : Received stock price request - symbols: CL=F, gold: false, silver: false
+2026-04-27T21:20:18.535+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-5] c.y.api.controller.MarketController      : Fetching stock data for symbol: CL=F
+2026-04-27T21:20:18.608+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-2] c.y.api.controller.MarketController      : Successfully fetched stock data for GC=F: price=$4703.7
+2026-04-27T21:20:18.624+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-5] c.y.api.controller.MarketController      : Successfully fetched stock data for CL=F: price=$95.88
+2026-04-27T21:20:18.624+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-3] c.y.api.controller.MarketController      : Successfully fetched stock data for SI=F: price=$75.225
+2026-04-27T21:20:28.402+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-6] c.y.api.controller.MarketController      : Received crypto price request for symbol: ETHUSDT
+2026-04-27T21:20:28.402+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-4] c.y.api.controller.MarketController      : Received crypto price request for symbol: BTCUSDT
+2026-04-27T21:20:28.403+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-4] c.y.api.controller.MarketController      : Successfully fetched crypto data for BTCUSDT: price=$77876.89
+2026-04-27T21:20:28.403+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-6] c.y.api.controller.MarketController      : Successfully fetched crypto data for ETHUSDT: price=$2313.11
+2026-04-27T21:20:28.423+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-8] c.y.api.controller.MarketController      : Received stock price request - symbols: null, gold: true, silver: false
+2026-04-27T21:20:28.423+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-8] c.y.api.controller.MarketController      : Fetching stock data for symbol: GC=F
+2026-04-27T21:20:28.423+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-8] c.y.api.controller.MarketController      : Successfully fetched stock data for GC=F: price=$4703.7
+2026-04-27T21:20:28.425+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-9] c.y.api.controller.MarketController      : Received stock price request - symbols: CL=F, gold: false, silver: false
+2026-04-27T21:20:28.426+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-7] c.y.api.controller.MarketController      : Received stock price request - symbols: null, gold: false, silver: true
+2026-04-27T21:20:28.426+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-9] c.y.api.controller.MarketController      : Fetching stock data for symbol: CL=F
+2026-04-27T21:20:28.426+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-7] c.y.api.controller.MarketController      : Fetching stock data for symbol: SI=F
+2026-04-27T21:20:28.426+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-7] c.y.api.controller.MarketController      : Successfully fetched stock data for SI=F: price=$75.225
+2026-04-27T21:20:28.426+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-9] c.y.api.controller.MarketController      : Successfully fetched stock data for CL=F: price=$95.88
+2026-04-27T21:20:38.399+07:00  INFO 79221 --- [yourfin-api] [io-8080-exec-10] c.y.api.controller.MarketController      : Received crypto price request for symbol: BTCUSDT
+2026-04-27T21:20:38.401+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-1] c.y.api.controller.MarketController      : Received crypto price request for symbol: ETHUSDT
+2026-04-27T21:20:38.516+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-1] c.y.api.controller.MarketController      : Successfully fetched crypto data for ETHUSDT: price=$2312.53
+2026-04-27T21:20:38.516+07:00  INFO 79221 --- [yourfin-api] [io-8080-exec-10] c.y.api.controller.MarketController      : Successfully fetched crypto data for BTCUSDT: price=$77861.0
+2026-04-27T21:20:38.538+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-2] c.y.api.controller.MarketController      : Received stock price request - symbols: null, gold: true, silver: false
+2026-04-27T21:20:38.539+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-2] c.y.api.controller.MarketController      : Fetching stock data for symbol: GC=F
+2026-04-27T21:20:38.541+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-3] c.y.api.controller.MarketController      : Received stock price request - symbols: null, gold: false, silver: true
+2026-04-27T21:20:38.542+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-3] c.y.api.controller.MarketController      : Fetching stock data for symbol: SI=F
+2026-04-27T21:20:38.542+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-5] c.y.api.controller.MarketController      : Received stock price request - symbols: CL=F, gold: false, silver: false
+2026-04-27T21:20:38.542+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-5] c.y.api.controller.MarketController      : Fetching stock data for symbol: CL=F
+2026-04-27T21:20:38.624+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-2] c.y.api.controller.MarketController      : Successfully fetched stock data for GC=F: price=$4703.8
+2026-04-27T21:20:38.632+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-5] c.y.api.controller.MarketController      : Successfully fetched stock data for CL=F: price=$95.9
+2026-04-27T21:20:38.632+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-3] c.y.api.controller.MarketController      : Successfully fetched stock data for SI=F: price=$75.235
+2026-04-27T21:22:01.151+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-6] c.y.api.controller.MarketController      : Received crypto price request for symbol: ETHUSDT
+2026-04-27T21:22:01.151+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-4] c.y.api.controller.MarketController      : Received crypto price request for symbol: BTCUSDT
+2026-04-27T21:22:01.276+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-6] c.y.api.controller.MarketController      : Successfully fetched crypto data for ETHUSDT: price=$2312.91
+2026-04-27T21:22:01.276+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-4] c.y.api.controller.MarketController      : Successfully fetched crypto data for BTCUSDT: price=$77881.18
+2026-04-27T21:22:01.591+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-8] c.y.api.controller.MarketController      : Received stock price request - symbols: null, gold: true, silver: false
+2026-04-27T21:22:01.592+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-8] c.y.api.controller.MarketController      : Fetching stock data for symbol: GC=F
+2026-04-27T21:22:01.596+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-7] c.y.api.controller.MarketController      : Received stock price request - symbols: null, gold: false, silver: true
+2026-04-27T21:22:01.596+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-7] c.y.api.controller.MarketController      : Fetching stock data for symbol: SI=F
+2026-04-27T21:22:01.602+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-9] c.y.api.controller.MarketController      : Received stock price request - symbols: CL=F, gold: false, silver: false
+2026-04-27T21:22:01.602+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-9] c.y.api.controller.MarketController      : Fetching stock data for symbol: CL=F
+2026-04-27T21:22:01.675+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-8] c.y.api.controller.MarketController      : Successfully fetched stock data for GC=F: price=$4707.4
+2026-04-27T21:22:01.694+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-7] c.y.api.controller.MarketController      : Successfully fetched stock data for SI=F: price=$75.34
+2026-04-27T21:22:01.730+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-9] c.y.api.controller.MarketController      : Successfully fetched stock data for CL=F: price=$95.67
+2026-04-27T21:23:34.953+07:00  INFO 79221 --- [yourfin-api] [io-8080-exec-10] c.y.api.controller.MarketController      : Received crypto price request for symbol: ETHUSDT
+2026-04-27T21:23:34.953+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-1] c.y.api.controller.MarketController      : Received crypto price request for symbol: BTCUSDT
+2026-04-27T21:23:35.085+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-1] c.y.api.controller.MarketController      : Successfully fetched crypto data for BTCUSDT: price=$77881.84
+2026-04-27T21:23:35.085+07:00  INFO 79221 --- [yourfin-api] [io-8080-exec-10] c.y.api.controller.MarketController      : Successfully fetched crypto data for ETHUSDT: price=$2313.5
+2026-04-27T21:23:35.292+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-5] c.y.api.controller.MarketController      : Received stock price request - symbols: CL=F, gold: false, silver: false
+2026-04-27T21:23:35.292+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-2] c.y.api.controller.MarketController      : Received stock price request - symbols: null, gold: true, silver: false
+2026-04-27T21:23:35.292+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-3] c.y.api.controller.MarketController      : Received stock price request - symbols: null, gold: false, silver: true
+2026-04-27T21:23:35.292+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-5] c.y.api.controller.MarketController      : Fetching stock data for symbol: CL=F
+2026-04-27T21:23:35.293+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-2] c.y.api.controller.MarketController      : Fetching stock data for symbol: GC=F
+2026-04-27T21:23:35.293+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-3] c.y.api.controller.MarketController      : Fetching stock data for symbol: SI=F
+2026-04-27T21:23:35.482+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-2] c.y.api.controller.MarketController      : Successfully fetched stock data for GC=F: price=$4705.4
+2026-04-27T21:23:35.482+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-5] c.y.api.controller.MarketController      : Successfully fetched stock data for CL=F: price=$95.99
+2026-04-27T21:23:35.498+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-3] c.y.api.controller.MarketController      : Successfully fetched stock data for SI=F: price=$75.285
+2026-04-27T21:23:44.915+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-6] c.y.api.controller.MarketController      : Received crypto price request for symbol: BTCUSDT
+2026-04-27T21:23:44.915+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-8] c.y.api.controller.MarketController      : Received crypto price request for symbol: ETHUSDT
+2026-04-27T21:23:44.916+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-8] c.y.api.controller.MarketController      : Successfully fetched crypto data for ETHUSDT: price=$2313.5
+2026-04-27T21:23:44.916+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-6] c.y.api.controller.MarketController      : Successfully fetched crypto data for BTCUSDT: price=$77881.84
+2026-04-27T21:23:44.927+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-7] c.y.api.controller.MarketController      : Received stock price request - symbols: null, gold: true, silver: false
+2026-04-27T21:23:44.927+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-7] c.y.api.controller.MarketController      : Fetching stock data for symbol: GC=F
+2026-04-27T21:23:44.927+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-9] c.y.api.controller.MarketController      : Received stock price request - symbols: null, gold: false, silver: true
+2026-04-27T21:23:44.927+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-7] c.y.api.controller.MarketController      : Successfully fetched stock data for GC=F: price=$4705.4
+2026-04-27T21:23:44.927+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-9] c.y.api.controller.MarketController      : Fetching stock data for symbol: SI=F
+2026-04-27T21:23:44.928+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-9] c.y.api.controller.MarketController      : Successfully fetched stock data for SI=F: price=$75.285
+2026-04-27T21:23:44.929+07:00  INFO 79221 --- [yourfin-api] [io-8080-exec-10] c.y.api.controller.MarketController      : Received stock price request - symbols: CL=F, gold: false, silver: false
+2026-04-27T21:23:44.929+07:00  INFO 79221 --- [yourfin-api] [io-8080-exec-10] c.y.api.controller.MarketController      : Fetching stock data for symbol: CL=F
+2026-04-27T21:23:44.929+07:00  INFO 79221 --- [yourfin-api] [io-8080-exec-10] c.y.api.controller.MarketController      : Successfully fetched stock data for CL=F: price=$95.99
+2026-04-27T21:23:54.979+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-1] c.y.api.controller.MarketController      : Received crypto price request for symbol: BTCUSDT
+2026-04-27T21:23:54.986+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-5] c.y.api.controller.MarketController      : Received crypto price request for symbol: ETHUSDT
+2026-04-27T21:23:55.091+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-1] c.y.api.controller.MarketController      : Successfully fetched crypto data for BTCUSDT: price=$77849.45
+2026-04-27T21:23:55.092+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-5] c.y.api.controller.MarketController      : Successfully fetched crypto data for ETHUSDT: price=$2312.18
+2026-04-27T21:23:55.110+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-2] c.y.api.controller.MarketController      : Received stock price request - symbols: null, gold: true, silver: false
+2026-04-27T21:23:55.111+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-2] c.y.api.controller.MarketController      : Fetching stock data for symbol: GC=F
+2026-04-27T21:23:55.114+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-3] c.y.api.controller.MarketController      : Received stock price request - symbols: null, gold: false, silver: true
+2026-04-27T21:23:55.114+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-3] c.y.api.controller.MarketController      : Fetching stock data for symbol: SI=F
+2026-04-27T21:23:55.119+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-4] c.y.api.controller.MarketController      : Received stock price request - symbols: CL=F, gold: false, silver: false
+2026-04-27T21:23:55.119+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-4] c.y.api.controller.MarketController      : Fetching stock data for symbol: CL=F
+2026-04-27T21:23:55.193+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-2] c.y.api.controller.MarketController      : Successfully fetched stock data for GC=F: price=$4706.4
+2026-04-27T21:23:55.197+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-3] c.y.api.controller.MarketController      : Successfully fetched stock data for SI=F: price=$75.305
+2026-04-27T21:23:55.217+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-4] c.y.api.controller.MarketController      : Successfully fetched stock data for CL=F: price=$95.99
+2026-04-27T21:24:05.110+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-6] c.y.api.controller.MarketController      : Received crypto price request for symbol: ETHUSDT
+2026-04-27T21:24:05.110+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-8] c.y.api.controller.MarketController      : Received crypto price request for symbol: BTCUSDT
+2026-04-27T21:24:05.112+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-6] c.y.api.controller.MarketController      : Successfully fetched crypto data for ETHUSDT: price=$2312.18
+2026-04-27T21:24:05.112+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-8] c.y.api.controller.MarketController      : Successfully fetched crypto data for BTCUSDT: price=$77849.45
+2026-04-27T21:24:05.132+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-7] c.y.api.controller.MarketController      : Received stock price request - symbols: null, gold: true, silver: false
+2026-04-27T21:24:05.133+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-7] c.y.api.controller.MarketController      : Fetching stock data for symbol: GC=F
+2026-04-27T21:24:05.133+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-7] c.y.api.controller.MarketController      : Successfully fetched stock data for GC=F: price=$4706.4
+2026-04-27T21:24:05.136+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-9] c.y.api.controller.MarketController      : Received stock price request - symbols: null, gold: false, silver: true
+2026-04-27T21:24:05.136+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-9] c.y.api.controller.MarketController      : Fetching stock data for symbol: SI=F
+2026-04-27T21:24:05.137+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-9] c.y.api.controller.MarketController      : Successfully fetched stock data for SI=F: price=$75.305
+2026-04-27T21:24:05.142+07:00  INFO 79221 --- [yourfin-api] [io-8080-exec-10] c.y.api.controller.MarketController      : Received stock price request - symbols: CL=F, gold: false, silver: false
+2026-04-27T21:24:05.142+07:00  INFO 79221 --- [yourfin-api] [io-8080-exec-10] c.y.api.controller.MarketController      : Fetching stock data for symbol: CL=F
+2026-04-27T21:24:05.143+07:00  INFO 79221 --- [yourfin-api] [io-8080-exec-10] c.y.api.controller.MarketController      : Successfully fetched stock data for CL=F: price=$95.99
+2026-04-27T21:24:15.190+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-3] c.y.api.controller.MarketController      : Received crypto price request for symbol: BTCUSDT
+2026-04-27T21:24:15.200+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-4] c.y.api.controller.MarketController      : Received crypto price request for symbol: ETHUSDT
+2026-04-27T21:24:15.341+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-3] c.y.api.controller.MarketController      : Successfully fetched crypto data for BTCUSDT: price=$77855.43
+2026-04-27T21:24:15.341+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-4] c.y.api.controller.MarketController      : Successfully fetched crypto data for ETHUSDT: price=$2312.69
+2026-04-27T21:24:15.360+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-6] c.y.api.controller.MarketController      : Received stock price request - symbols: null, gold: true, silver: false
+2026-04-27T21:24:15.360+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-6] c.y.api.controller.MarketController      : Fetching stock data for symbol: GC=F
+2026-04-27T21:24:15.366+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-8] c.y.api.controller.MarketController      : Received stock price request - symbols: null, gold: false, silver: true
+2026-04-27T21:24:15.366+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-8] c.y.api.controller.MarketController      : Fetching stock data for symbol: SI=F
+2026-04-27T21:24:15.372+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-7] c.y.api.controller.MarketController      : Received stock price request - symbols: CL=F, gold: false, silver: false
+2026-04-27T21:24:15.372+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-7] c.y.api.controller.MarketController      : Fetching stock data for symbol: CL=F
+2026-04-27T21:24:15.444+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-8] c.y.api.controller.MarketController      : Successfully fetched stock data for SI=F: price=$75.305
+2026-04-27T21:24:15.446+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-6] c.y.api.controller.MarketController      : Successfully fetched stock data for GC=F: price=$4706.6
+2026-04-27T21:24:15.460+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-7] c.y.api.controller.MarketController      : Successfully fetched stock data for CL=F: price=$95.97
+2026-04-27T21:24:25.286+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-9] c.y.api.controller.MarketController      : Received crypto price request for symbol: BTCUSDT
+2026-04-27T21:24:25.286+07:00  INFO 79221 --- [yourfin-api] [io-8080-exec-10] c.y.api.controller.MarketController      : Received crypto price request for symbol: ETHUSDT
+2026-04-27T21:24:25.288+07:00  INFO 79221 --- [yourfin-api] [io-8080-exec-10] c.y.api.controller.MarketController      : Successfully fetched crypto data for ETHUSDT: price=$2312.69
+2026-04-27T21:24:25.288+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-9] c.y.api.controller.MarketController      : Successfully fetched crypto data for BTCUSDT: price=$77855.43
+2026-04-27T21:24:25.318+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-1] c.y.api.controller.MarketController      : Received stock price request - symbols: null, gold: false, silver: true
+2026-04-27T21:24:25.318+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-5] c.y.api.controller.MarketController      : Received stock price request - symbols: null, gold: true, silver: false
+2026-04-27T21:24:25.318+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-1] c.y.api.controller.MarketController      : Fetching stock data for symbol: SI=F
+2026-04-27T21:24:25.318+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-5] c.y.api.controller.MarketController      : Fetching stock data for symbol: GC=F
+2026-04-27T21:24:25.318+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-1] c.y.api.controller.MarketController      : Successfully fetched stock data for SI=F: price=$75.305
+2026-04-27T21:24:25.318+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-5] c.y.api.controller.MarketController      : Successfully fetched stock data for GC=F: price=$4706.6
+2026-04-27T21:24:25.326+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-2] c.y.api.controller.MarketController      : Received stock price request - symbols: CL=F, gold: false, silver: false
+2026-04-27T21:24:25.326+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-2] c.y.api.controller.MarketController      : Fetching stock data for symbol: CL=F
+2026-04-27T21:24:25.326+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-2] c.y.api.controller.MarketController      : Successfully fetched stock data for CL=F: price=$95.97
+2026-04-27T21:24:35.384+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-4] c.y.api.controller.MarketController      : Received crypto price request for symbol: BTCUSDT
+2026-04-27T21:24:35.385+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-3] c.y.api.controller.MarketController      : Received crypto price request for symbol: ETHUSDT
+2026-04-27T21:24:35.494+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-3] c.y.api.controller.MarketController      : Successfully fetched crypto data for ETHUSDT: price=$2313.87
+2026-04-27T21:24:35.496+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-4] c.y.api.controller.MarketController      : Successfully fetched crypto data for BTCUSDT: price=$77887.21
+2026-04-27T21:24:35.524+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-8] c.y.api.controller.MarketController      : Received stock price request - symbols: null, gold: true, silver: false
+2026-04-27T21:24:35.524+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-8] c.y.api.controller.MarketController      : Fetching stock data for symbol: GC=F
+2026-04-27T21:24:35.526+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-6] c.y.api.controller.MarketController      : Received stock price request - symbols: null, gold: false, silver: true
+2026-04-27T21:24:35.526+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-6] c.y.api.controller.MarketController      : Fetching stock data for symbol: SI=F
+2026-04-27T21:24:35.532+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-7] c.y.api.controller.MarketController      : Received stock price request - symbols: CL=F, gold: false, silver: false
+2026-04-27T21:24:35.532+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-7] c.y.api.controller.MarketController      : Fetching stock data for symbol: CL=F
+2026-04-27T21:24:35.608+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-8] c.y.api.controller.MarketController      : Successfully fetched stock data for GC=F: price=$4706.5
+2026-04-27T21:24:35.608+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-6] c.y.api.controller.MarketController      : Successfully fetched stock data for SI=F: price=$75.305
+2026-04-27T21:24:35.725+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-7] c.y.api.controller.MarketController      : Successfully fetched stock data for CL=F: price=$96.01
+2026-04-27T21:24:50.929+07:00  INFO 79221 --- [yourfin-api] [io-8080-exec-10] c.y.api.controller.MarketController      : Received crypto price request for symbol: ETHUSDT
+2026-04-27T21:24:50.929+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-9] c.y.api.controller.MarketController      : Received crypto price request for symbol: BTCUSDT
+2026-04-27T21:24:51.057+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-9] c.y.api.controller.MarketController      : Successfully fetched crypto data for BTCUSDT: price=$77904.99
+2026-04-27T21:24:51.057+07:00  INFO 79221 --- [yourfin-api] [io-8080-exec-10] c.y.api.controller.MarketController      : Successfully fetched crypto data for ETHUSDT: price=$2314.88
+2026-04-27T21:24:51.085+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-5] c.y.api.controller.MarketController      : Received stock price request - symbols: null, gold: true, silver: false
+2026-04-27T21:24:51.086+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-5] c.y.api.controller.MarketController      : Fetching stock data for symbol: GC=F
+2026-04-27T21:24:51.087+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-2] c.y.api.controller.MarketController      : Received stock price request - symbols: CL=F, gold: false, silver: false
+2026-04-27T21:24:51.088+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-2] c.y.api.controller.MarketController      : Fetching stock data for symbol: CL=F
+2026-04-27T21:24:51.089+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-1] c.y.api.controller.MarketController      : Received stock price request - symbols: null, gold: false, silver: true
+2026-04-27T21:24:51.089+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-1] c.y.api.controller.MarketController      : Fetching stock data for symbol: SI=F
+2026-04-27T21:24:51.170+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-2] c.y.api.controller.MarketController      : Successfully fetched stock data for CL=F: price=$95.96
+2026-04-27T21:24:51.170+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-5] c.y.api.controller.MarketController      : Successfully fetched stock data for GC=F: price=$4707.5
+2026-04-27T21:24:51.184+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-1] c.y.api.controller.MarketController      : Successfully fetched stock data for SI=F: price=$75.29
+2026-04-27T21:25:00.999+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-3] c.y.api.controller.MarketController      : Received crypto price request for symbol: BTCUSDT
+2026-04-27T21:25:00.999+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-4] c.y.api.controller.MarketController      : Received crypto price request for symbol: ETHUSDT
+2026-04-27T21:25:01.003+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-4] c.y.api.controller.MarketController      : Successfully fetched crypto data for ETHUSDT: price=$2314.88
+2026-04-27T21:25:01.003+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-3] c.y.api.controller.MarketController      : Successfully fetched crypto data for BTCUSDT: price=$77904.99
+2026-04-27T21:25:01.068+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-8] c.y.api.controller.MarketController      : Received stock price request - symbols: null, gold: true, silver: false
+2026-04-27T21:25:01.068+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-8] c.y.api.controller.MarketController      : Fetching stock data for symbol: GC=F
+2026-04-27T21:25:01.068+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-8] c.y.api.controller.MarketController      : Successfully fetched stock data for GC=F: price=$4707.5
+2026-04-27T21:25:01.071+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-6] c.y.api.controller.MarketController      : Received stock price request - symbols: null, gold: false, silver: true
+2026-04-27T21:25:01.072+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-6] c.y.api.controller.MarketController      : Fetching stock data for symbol: SI=F
+2026-04-27T21:25:01.072+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-6] c.y.api.controller.MarketController      : Successfully fetched stock data for SI=F: price=$75.29
+2026-04-27T21:25:01.077+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-7] c.y.api.controller.MarketController      : Received stock price request - symbols: CL=F, gold: false, silver: false
+2026-04-27T21:25:01.077+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-7] c.y.api.controller.MarketController      : Fetching stock data for symbol: CL=F
+2026-04-27T21:25:01.077+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-7] c.y.api.controller.MarketController      : Successfully fetched stock data for CL=F: price=$95.96
+2026-04-27T21:25:15.422+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-9] c.y.api.controller.MarketController      : Received crypto price request for symbol: BTCUSDT
+2026-04-27T21:25:15.423+07:00  INFO 79221 --- [yourfin-api] [io-8080-exec-10] c.y.api.controller.MarketController      : Received crypto price request for symbol: ETHUSDT
+2026-04-27T21:25:15.526+07:00  INFO 79221 --- [yourfin-api] [io-8080-exec-10] c.y.api.controller.MarketController      : Successfully fetched crypto data for ETHUSDT: price=$2314.43
+2026-04-27T21:25:15.526+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-9] c.y.api.controller.MarketController      : Successfully fetched crypto data for BTCUSDT: price=$77905.0
+2026-04-27T21:25:15.548+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-5] c.y.api.controller.MarketController      : Received stock price request - symbols: null, gold: true, silver: false
+2026-04-27T21:25:15.548+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-5] c.y.api.controller.MarketController      : Fetching stock data for symbol: GC=F
+2026-04-27T21:25:15.551+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-2] c.y.api.controller.MarketController      : Received stock price request - symbols: null, gold: false, silver: true
+2026-04-27T21:25:15.551+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-2] c.y.api.controller.MarketController      : Fetching stock data for symbol: SI=F
+2026-04-27T21:25:15.557+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-1] c.y.api.controller.MarketController      : Received stock price request - symbols: CL=F, gold: false, silver: false
+2026-04-27T21:25:15.557+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-1] c.y.api.controller.MarketController      : Fetching stock data for symbol: CL=F
+2026-04-27T21:25:15.636+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-5] c.y.api.controller.MarketController      : Successfully fetched stock data for GC=F: price=$4708.2
+2026-04-27T21:25:15.636+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-2] c.y.api.controller.MarketController      : Successfully fetched stock data for SI=F: price=$75.305
+2026-04-27T21:25:15.640+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-1] c.y.api.controller.MarketController      : Successfully fetched stock data for CL=F: price=$95.95
+2026-04-27T21:25:30.139+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-3] c.y.api.controller.MarketController      : Received crypto price request for symbol: BTCUSDT
+2026-04-27T21:25:30.140+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-4] c.y.api.controller.MarketController      : Received crypto price request for symbol: ETHUSDT
+2026-04-27T21:25:30.141+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-3] c.y.api.controller.MarketController      : Successfully fetched crypto data for BTCUSDT: price=$77905.0
+2026-04-27T21:25:30.141+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-4] c.y.api.controller.MarketController      : Successfully fetched crypto data for ETHUSDT: price=$2314.43
+2026-04-27T21:25:30.169+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-8] c.y.api.controller.MarketController      : Received stock price request - symbols: null, gold: true, silver: false
+2026-04-27T21:25:30.170+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-8] c.y.api.controller.MarketController      : Fetching stock data for symbol: GC=F
+2026-04-27T21:25:30.170+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-8] c.y.api.controller.MarketController      : Successfully fetched stock data for GC=F: price=$4708.2
+2026-04-27T21:25:30.173+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-6] c.y.api.controller.MarketController      : Received stock price request - symbols: null, gold: false, silver: true
+2026-04-27T21:25:30.174+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-6] c.y.api.controller.MarketController      : Fetching stock data for symbol: SI=F
+2026-04-27T21:25:30.174+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-6] c.y.api.controller.MarketController      : Successfully fetched stock data for SI=F: price=$75.305
+2026-04-27T21:25:30.178+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-7] c.y.api.controller.MarketController      : Received stock price request - symbols: CL=F, gold: false, silver: false
+2026-04-27T21:25:30.178+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-7] c.y.api.controller.MarketController      : Fetching stock data for symbol: CL=F
+2026-04-27T21:25:30.179+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-7] c.y.api.controller.MarketController      : Successfully fetched stock data for CL=F: price=$95.95
+2026-04-27T21:25:40.128+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-9] c.y.api.controller.MarketController      : Received crypto price request for symbol: ETHUSDT
+2026-04-27T21:25:40.128+07:00  INFO 79221 --- [yourfin-api] [io-8080-exec-10] c.y.api.controller.MarketController      : Received crypto price request for symbol: BTCUSDT
+2026-04-27T21:25:40.253+07:00  INFO 79221 --- [yourfin-api] [io-8080-exec-10] c.y.api.controller.MarketController      : Successfully fetched crypto data for BTCUSDT: price=$77909.77
+2026-04-27T21:25:40.254+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-9] c.y.api.controller.MarketController      : Successfully fetched crypto data for ETHUSDT: price=$2314.65
+2026-04-27T21:25:40.268+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-2] c.y.api.controller.MarketController      : Received stock price request - symbols: null, gold: true, silver: false
+2026-04-27T21:25:40.268+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-5] c.y.api.controller.MarketController      : Received stock price request - symbols: null, gold: false, silver: true
+2026-04-27T21:25:40.268+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-2] c.y.api.controller.MarketController      : Fetching stock data for symbol: GC=F
+2026-04-27T21:25:40.268+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-5] c.y.api.controller.MarketController      : Fetching stock data for symbol: SI=F
+2026-04-27T21:25:40.269+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-1] c.y.api.controller.MarketController      : Received stock price request - symbols: CL=F, gold: false, silver: false
+2026-04-27T21:25:40.269+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-1] c.y.api.controller.MarketController      : Fetching stock data for symbol: CL=F
+2026-04-27T21:25:40.348+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-2] c.y.api.controller.MarketController      : Successfully fetched stock data for GC=F: price=$4706.7
+2026-04-27T21:25:40.356+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-5] c.y.api.controller.MarketController      : Successfully fetched stock data for SI=F: price=$75.2
+2026-04-27T21:25:40.358+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-1] c.y.api.controller.MarketController      : Successfully fetched stock data for CL=F: price=$96.05
+2026-04-27T21:35:08.983+07:00  INFO 79221 --- [yourfin-api] [io-8080-exec-10] c.y.api.controller.MarketController      : Received crypto price request for symbol: ETHUSDT
+2026-04-27T21:35:08.983+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-7] c.y.api.controller.MarketController      : Received crypto price request for symbol: BTCUSDT
+2026-04-27T21:35:08.983+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-8] c.y.api.controller.MarketController      : Received crypto price request for symbol: BTCUSDT
+2026-04-27T21:35:08.983+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-6] c.y.api.controller.MarketController      : Received crypto price request for symbol: ETHUSDT
+2026-04-27T21:35:09.185+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-6] c.y.api.controller.MarketController      : Successfully fetched crypto data for ETHUSDT: price=$2315.82
+2026-04-27T21:35:09.188+07:00  INFO 79221 --- [yourfin-api] [io-8080-exec-10] c.y.api.controller.MarketController      : Successfully fetched crypto data for ETHUSDT: price=$2315.82
+2026-04-27T21:35:09.192+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-8] c.y.api.controller.MarketController      : Successfully fetched crypto data for BTCUSDT: price=$77951.93
+2026-04-27T21:35:09.195+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-7] c.y.api.controller.MarketController      : Successfully fetched crypto data for BTCUSDT: price=$77951.93
+2026-04-27T21:35:09.255+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-2] c.y.api.controller.MarketController      : Received stock price request - symbols: null, gold: false, silver: true
+2026-04-27T21:35:09.255+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-9] c.y.api.controller.MarketController      : Received stock price request - symbols: null, gold: true, silver: false
+2026-04-27T21:35:09.255+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-2] c.y.api.controller.MarketController      : Fetching stock data for symbol: SI=F
+2026-04-27T21:35:09.255+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-9] c.y.api.controller.MarketController      : Fetching stock data for symbol: GC=F
+2026-04-27T21:35:09.255+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-5] c.y.api.controller.MarketController      : Received stock price request - symbols: CL=F, gold: false, silver: false
+2026-04-27T21:35:09.255+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-5] c.y.api.controller.MarketController      : Fetching stock data for symbol: CL=F
+2026-04-27T21:35:09.259+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-1] c.y.api.controller.MarketController      : Received stock price request - symbols: null, gold: true, silver: false
+2026-04-27T21:35:09.259+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-1] c.y.api.controller.MarketController      : Fetching stock data for symbol: GC=F
+2026-04-27T21:35:09.260+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-3] c.y.api.controller.MarketController      : Received stock price request - symbols: null, gold: false, silver: true
+2026-04-27T21:35:09.260+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-3] c.y.api.controller.MarketController      : Fetching stock data for symbol: SI=F
+2026-04-27T21:35:09.261+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-4] c.y.api.controller.MarketController      : Received stock price request - symbols: CL=F, gold: false, silver: false
+2026-04-27T21:35:09.261+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-4] c.y.api.controller.MarketController      : Fetching stock data for symbol: CL=F
+2026-04-27T21:35:09.433+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-3] c.y.api.controller.MarketController      : Successfully fetched stock data for SI=F: price=$75.31
+2026-04-27T21:35:09.433+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-1] c.y.api.controller.MarketController      : Successfully fetched stock data for GC=F: price=$4709.5
+2026-04-27T21:35:09.440+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-2] c.y.api.controller.MarketController      : Successfully fetched stock data for SI=F: price=$75.31
+2026-04-27T21:35:09.442+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-9] c.y.api.controller.MarketController      : Successfully fetched stock data for GC=F: price=$4709.5
+2026-04-27T21:35:09.446+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-4] c.y.api.controller.MarketController      : Successfully fetched stock data for CL=F: price=$96.07
+2026-04-27T21:35:09.459+07:00  INFO 79221 --- [yourfin-api] [nio-8080-exec-5] c.y.api.controller.MarketController      : Successfully fetched stock data for CL=F: price=$96.07

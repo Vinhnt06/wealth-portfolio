@@ -51,3 +51,627 @@
 {"timestamp":"00:00:05.064","source":"Browser","level":"ASSERT","message":"true"}
 {"timestamp":"00:00:05.064","source":"Browser","level":"ASSERT","message":"true"}
 {"timestamp":"00:00:06.615","source":"Browser","level":"LOG","message":"Market data updated: {\"btc\":\"$77,915\",\"eth\":\"$2,315.25\",\"gold\":\"$4,707.1\",\"timestamp\":\"21:15:25\"}"}
+{"timestamp":"00:04:38.649","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/realtime_landingpage.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:04:38.650","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/realtime_landingpage.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:04:38.650","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/gold_landingpage.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:04:38.650","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/gold_landingpage.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:04:38.650","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/profit_landingpage.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:04:38.650","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/profit_landingpage.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:04:38.650","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/HandBot_landingPage.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:04:38.650","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/HandBot_landingPage.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:04:38.650","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/News_landingpage.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:04:38.650","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/News_landingpage.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:04:38.650","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/assets/crypto_assets.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:04:38.650","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/crypto_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:04:38.651","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/assets/forex_asstes.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:04:38.651","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/forex_asstes.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:04:38.651","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/assets/stocks_assets.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:04:38.651","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/stocks_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:04:38.651","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/assets/cash_assets.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:04:38.651","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/cash_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:04:38.651","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/assets/saving_assets.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:04:38.651","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/saving_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:04:38.651","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/assets/realestate_assets.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:04:38.651","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/realestate_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:04:38.651","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/assets/alternative_assets.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:04:38.651","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/alternative_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:04:38.651","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/assets/collectivles_assets.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:04:38.651","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/collectivles_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:04:38.659","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/HandBot_landingPage.jpg\\\" has \\\"fill\\\" but is missing \\\"sizes\\\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes\""}
+{"timestamp":"00:04:38.659","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/HandBot_landingPage.jpg\" has \"fill\" but is missing \"sizes\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes"}
+{"timestamp":"00:04:38.659","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/realtime_landingpage.jpg\\\" has \\\"fill\\\" but is missing \\\"sizes\\\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes\""}
+{"timestamp":"00:04:38.659","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/realtime_landingpage.jpg\" has \"fill\" but is missing \"sizes\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes"}
+{"timestamp":"00:04:38.659","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/profit_landingpage.jpg\\\" has \\\"fill\\\" but is missing \\\"sizes\\\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes\""}
+{"timestamp":"00:04:38.659","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/profit_landingpage.jpg\" has \"fill\" but is missing \"sizes\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes"}
+{"timestamp":"00:04:38.659","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/gold_landingpage.jpg\\\" has \\\"fill\\\" but is missing \\\"sizes\\\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes\""}
+{"timestamp":"00:04:38.659","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/gold_landingpage.jpg\" has \"fill\" but is missing \"sizes\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes"}
+{"timestamp":"00:04:38.662","source":"Server","level":"WARN","message":"[browser] \"Your .splinecode file is more recent than the library. Please upgrade @splinetool/runtime to the latest version.\""}
+{"timestamp":"00:04:38.662","source":"Browser","level":"WARN","message":"Your .splinecode file is more recent than the library. Please upgrade @splinetool/runtime to the latest version."}
+{"timestamp":"00:04:38.664","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:04:38.664","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:04:38.665","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:04:38.665","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:04:38.665","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:04:38.665","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:04:38.665","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:04:38.665","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:04:38.665","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:04:38.666","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:04:38.666","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:04:38.666","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:04:38.666","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:04:38.666","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:04:38.666","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:04:38.666","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:04:38.666","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:04:38.666","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:04:38.666","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:04:38.666","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:04:38.666","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:04:38.666","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:04:38.666","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:04:38.666","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:04:38.666","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:04:38.666","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:04:38.666","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:04:38.666","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:04:38.666","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:04:38.666","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:04:38.666","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:04:38.666","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:04:38.914","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/realtime_landingpage.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:04:38.914","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/realtime_landingpage.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:04:38.914","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/gold_landingpage.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:04:38.914","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/gold_landingpage.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:04:38.914","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/profit_landingpage.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:04:38.915","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/profit_landingpage.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:04:38.915","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/HandBot_landingPage.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:04:38.915","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/HandBot_landingPage.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:04:38.915","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/News_landingpage.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:04:38.915","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/News_landingpage.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:04:38.915","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/realtime_landingpage.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:04:38.915","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/gold_landingpage.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:04:38.915","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/profit_landingpage.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:04:38.915","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/HandBot_landingPage.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:04:38.915","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/News_landingpage.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:04:38.950","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/crypto_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:04:38.950","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/forex_asstes.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:04:38.950","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/stocks_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:04:38.950","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/cash_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:04:38.950","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/saving_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:04:38.950","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/realestate_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:04:38.950","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/alternative_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:04:38.950","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/collectivles_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:04:38.951","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/assets/crypto_assets.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:04:38.951","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/crypto_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:04:38.951","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/assets/forex_asstes.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:04:38.951","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/forex_asstes.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:04:38.951","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/assets/stocks_assets.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:04:38.952","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/stocks_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:04:38.952","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/assets/cash_assets.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:04:38.952","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/cash_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:04:38.952","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/assets/saving_assets.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:04:38.952","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/saving_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:04:38.953","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/assets/realestate_assets.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:04:38.954","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/realestate_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:04:38.955","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/assets/alternative_assets.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:04:38.956","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/alternative_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:04:38.957","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/assets/collectivles_assets.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:04:38.957","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/collectivles_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:04:38.957","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/HandBot_landingPage.jpg\" has \"fill\" but is missing \"sizes\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes"}
+{"timestamp":"00:04:38.958","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/HandBot_landingPage.jpg\\\" has \\\"fill\\\" but is missing \\\"sizes\\\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes\""}
+{"timestamp":"00:04:38.958","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/HandBot_landingPage.jpg\" has \"fill\" but is missing \"sizes\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes"}
+{"timestamp":"00:04:38.964","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/realtime_landingpage.jpg\" has \"fill\" but is missing \"sizes\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes"}
+{"timestamp":"00:04:38.964","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/realtime_landingpage.jpg\\\" has \\\"fill\\\" but is missing \\\"sizes\\\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes\""}
+{"timestamp":"00:04:38.964","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/realtime_landingpage.jpg\" has \"fill\" but is missing \"sizes\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes"}
+{"timestamp":"00:04:38.971","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/profit_landingpage.jpg\" has \"fill\" but is missing \"sizes\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes"}
+{"timestamp":"00:04:38.971","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/gold_landingpage.jpg\" has \"fill\" but is missing \"sizes\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes"}
+{"timestamp":"00:04:38.971","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/profit_landingpage.jpg\\\" has \\\"fill\\\" but is missing \\\"sizes\\\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes\""}
+{"timestamp":"00:04:38.971","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/profit_landingpage.jpg\" has \"fill\" but is missing \"sizes\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes"}
+{"timestamp":"00:04:38.971","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/gold_landingpage.jpg\\\" has \\\"fill\\\" but is missing \\\"sizes\\\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes\""}
+{"timestamp":"00:04:38.971","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/gold_landingpage.jpg\" has \"fill\" but is missing \"sizes\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes"}
+{"timestamp":"00:04:39.038","source":"Server","level":"WARN","message":"[browser] \"Your .splinecode file is more recent than the library. Please upgrade @splinetool/runtime to the latest version.\""}
+{"timestamp":"00:04:39.038","source":"Browser","level":"WARN","message":"Your .splinecode file is more recent than the library. Please upgrade @splinetool/runtime to the latest version."}
+{"timestamp":"00:04:39.038","source":"Browser","level":"WARN","message":"Your .splinecode file is more recent than the library. Please upgrade @splinetool/runtime to the latest version."}
+{"timestamp":"00:04:39.355","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:04:39.355","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:04:39.355","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:04:39.355","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:04:39.355","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:04:39.355","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:04:39.355","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:04:39.355","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:04:39.355","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:04:39.355","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:04:39.355","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:04:39.355","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:04:39.355","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:04:39.355","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:04:39.355","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:04:39.355","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:04:39.355","source":"Browser","level":"LOG","message":"Market data updated: {\"btc\":\"$77,890.79\",\"eth\":\"$2,313.92\",\"gold\":\"$4,704\",\"timestamp\":\"21:19:58\"}"}
+{"timestamp":"00:04:39.355","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:04:39.355","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:04:39.356","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:04:39.356","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:04:39.356","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:04:39.356","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:04:39.356","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:04:39.356","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:04:39.356","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:04:39.356","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:04:39.356","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:04:39.357","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:04:39.357","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:04:39.357","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:04:39.357","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:04:39.357","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:04:39.357","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:04:39.357","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:04:39.357","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:04:39.357","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:04:39.358","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:04:39.358","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:04:39.358","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:04:39.358","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:04:39.358","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:04:39.358","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:04:39.358","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:04:39.358","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:04:39.358","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:04:39.358","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:04:39.359","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:04:39.359","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:04:42.665","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/News_landingpage.jpg\" has \"fill\" but is missing \"sizes\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes"}
+{"timestamp":"00:04:42.665","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/News_landingpage.jpg\\\" has \\\"fill\\\" but is missing \\\"sizes\\\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes\""}
+{"timestamp":"00:04:42.665","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/News_landingpage.jpg\" has \"fill\" but is missing \"sizes\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes"}
+{"timestamp":"00:04:44.998","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/assets/cash_assets.jpg\\\" has \\\"fill\\\" but is missing \\\"sizes\\\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes\""}
+{"timestamp":"00:04:44.998","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/cash_assets.jpg\" has \"fill\" but is missing \"sizes\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes"}
+{"timestamp":"00:04:44.998","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/cash_assets.jpg\" has \"fill\" but is missing \"sizes\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes"}
+{"timestamp":"00:04:46.065","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/stocks_assets.jpg\" has \"fill\" but is missing \"sizes\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes"}
+{"timestamp":"00:04:46.065","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/assets/stocks_assets.jpg\\\" has \\\"fill\\\" but is missing \\\"sizes\\\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes\""}
+{"timestamp":"00:04:46.065","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/stocks_assets.jpg\" has \"fill\" but is missing \"sizes\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes"}
+{"timestamp":"00:04:46.131","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/assets/forex_asstes.jpg\\\" has \\\"fill\\\" but is missing \\\"sizes\\\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes\""}
+{"timestamp":"00:04:46.131","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/forex_asstes.jpg\" has \"fill\" but is missing \"sizes\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes"}
+{"timestamp":"00:04:46.131","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/assets/crypto_assets.jpg\\\" has \\\"fill\\\" but is missing \\\"sizes\\\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes\""}
+{"timestamp":"00:04:46.132","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/crypto_assets.jpg\" has \"fill\" but is missing \"sizes\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes"}
+{"timestamp":"00:04:46.132","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/forex_asstes.jpg\" has \"fill\" but is missing \"sizes\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes"}
+{"timestamp":"00:04:46.132","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/crypto_assets.jpg\" has \"fill\" but is missing \"sizes\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes"}
+{"timestamp":"00:04:48.984","source":"Browser","level":"LOG","message":"Market data updated: {\"btc\":\"$77,890.79\",\"eth\":\"$2,313.92\",\"gold\":\"$4,704\",\"timestamp\":\"21:20:08\"}"}
+{"timestamp":"00:04:59.199","source":"Browser","level":"LOG","message":"Market data updated: {\"btc\":\"$77,876.89\",\"eth\":\"$2,313.11\",\"gold\":\"$4,703.7\",\"timestamp\":\"21:20:18\"}"}
+{"timestamp":"00:05:08.988","source":"Browser","level":"LOG","message":"Market data updated: {\"btc\":\"$77,876.89\",\"eth\":\"$2,313.11\",\"gold\":\"$4,703.7\",\"timestamp\":\"21:20:28\"}"}
+{"timestamp":"00:05:19.200","source":"Browser","level":"LOG","message":"Market data updated: {\"btc\":\"$77,861\",\"eth\":\"$2,312.53\",\"gold\":\"$4,703.8\",\"timestamp\":\"21:20:38\"}"}
+{"timestamp":"00:05:28.249","source":"Browser","level":"WARN","message":"Your .splinecode file is more recent than the library. Please upgrade @splinetool/runtime to the latest version."}
+{"timestamp":"00:05:28.249","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:05:28.249","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:05:28.249","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:05:28.249","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:05:28.249","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:05:28.249","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:05:28.249","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:05:28.250","source":"Server","level":"WARN","message":"[browser] \"Your .splinecode file is more recent than the library. Please upgrade @splinetool/runtime to the latest version.\""}
+{"timestamp":"00:05:28.250","source":"Browser","level":"WARN","message":"Your .splinecode file is more recent than the library. Please upgrade @splinetool/runtime to the latest version."}
+{"timestamp":"00:05:28.250","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:05:28.250","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:05:28.250","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:05:28.250","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:05:28.250","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:05:28.250","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:05:28.251","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:05:28.251","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:05:28.251","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:05:28.251","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:05:28.251","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:05:28.251","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:05:28.251","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:05:28.251","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:06:41.659","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/realtime_landingpage.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:06:41.659","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/gold_landingpage.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:06:41.659","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/profit_landingpage.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:06:41.659","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/HandBot_landingPage.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:06:41.659","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/News_landingpage.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:06:41.659","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/crypto_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:06:41.659","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/forex_asstes.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:06:41.659","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/realtime_landingpage.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:06:41.660","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/realtime_landingpage.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:06:41.660","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/gold_landingpage.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:06:41.660","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/gold_landingpage.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:06:41.660","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/profit_landingpage.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:06:41.660","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/profit_landingpage.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:06:41.661","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/HandBot_landingPage.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:06:41.661","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/HandBot_landingPage.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:06:41.661","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/News_landingpage.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:06:41.661","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/News_landingpage.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:06:41.662","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/assets/crypto_assets.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:06:41.662","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/crypto_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:06:41.662","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/assets/forex_asstes.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:06:41.662","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/forex_asstes.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:06:41.680","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/stocks_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:06:41.680","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/cash_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:06:41.680","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/saving_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:06:41.680","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/realestate_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:06:41.680","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/alternative_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:06:41.680","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/collectivles_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:06:41.680","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/assets/stocks_assets.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:06:41.680","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/stocks_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:06:41.681","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/assets/cash_assets.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:06:41.681","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/cash_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:06:41.681","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/assets/saving_assets.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:06:41.681","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/saving_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:06:41.681","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/assets/realestate_assets.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:06:41.681","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/realestate_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:06:41.681","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/assets/alternative_assets.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:06:41.681","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/alternative_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:06:41.681","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/assets/collectivles_assets.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:06:41.681","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/collectivles_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:06:41.772","source":"Server","level":"WARN","message":"[browser] \"Your .splinecode file is more recent than the library. Please upgrade @splinetool/runtime to the latest version.\""}
+{"timestamp":"00:06:41.772","source":"Browser","level":"WARN","message":"Your .splinecode file is more recent than the library. Please upgrade @splinetool/runtime to the latest version."}
+{"timestamp":"00:06:41.772","source":"Browser","level":"WARN","message":"Your .splinecode file is more recent than the library. Please upgrade @splinetool/runtime to the latest version."}
+{"timestamp":"00:06:42.142","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:06:42.142","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:06:42.142","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:06:42.142","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:06:42.142","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:06:42.142","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:06:42.142","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:06:42.142","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:06:42.143","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:06:42.143","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:06:42.143","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:06:42.143","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:06:42.143","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:06:42.143","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:06:42.143","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:06:42.143","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:06:42.147","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:06:42.147","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:06:42.148","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:06:42.148","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:06:42.148","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:06:42.148","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:06:42.148","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:06:42.149","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:06:42.149","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:06:42.149","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:06:42.149","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:06:42.149","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:06:42.149","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:06:42.149","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:06:42.149","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:06:42.149","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:06:42.149","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:06:42.149","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:06:42.149","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:06:42.150","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:06:42.150","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:06:42.150","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:06:42.150","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:06:42.150","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:06:42.150","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:06:42.151","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:06:42.151","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:06:42.151","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:06:42.151","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:06:42.151","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:06:42.151","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:06:42.151","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:06:42.302","source":"Browser","level":"LOG","message":"Market data updated: {\"btc\":\"$77,881.18\",\"eth\":\"$2,312.91\",\"gold\":\"$4,707.4\",\"timestamp\":\"21:22:01\"}"}
+{"timestamp":"00:08:15.451","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/realtime_landingpage.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:08:15.451","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/gold_landingpage.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:08:15.451","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/profit_landingpage.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:08:15.451","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/HandBot_landingPage.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:08:15.451","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/News_landingpage.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:08:15.451","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/crypto_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:08:15.451","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/forex_asstes.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:08:15.451","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/stocks_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:08:15.451","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/cash_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:08:15.451","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/saving_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:08:15.451","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/realestate_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:08:15.451","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/alternative_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:08:15.451","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/collectivles_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:08:15.452","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/realtime_landingpage.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:08:15.453","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/realtime_landingpage.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:08:15.456","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/gold_landingpage.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:08:15.456","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/gold_landingpage.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:08:15.457","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/profit_landingpage.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:08:15.457","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/profit_landingpage.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:08:15.457","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/HandBot_landingPage.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:08:15.457","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/HandBot_landingPage.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:08:15.458","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/News_landingpage.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:08:15.458","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/News_landingpage.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:08:15.458","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/assets/crypto_assets.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:08:15.458","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/crypto_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:08:15.458","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/assets/forex_asstes.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:08:15.458","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/forex_asstes.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:08:15.459","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/assets/stocks_assets.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:08:15.459","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/stocks_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:08:15.459","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/assets/cash_assets.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:08:15.459","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/cash_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:08:15.459","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/assets/saving_assets.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:08:15.459","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/saving_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:08:15.459","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/assets/realestate_assets.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:08:15.459","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/realestate_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:08:15.459","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/assets/alternative_assets.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:08:15.459","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/alternative_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:08:15.460","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/assets/collectivles_assets.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:08:15.460","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/collectivles_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:08:15.535","source":"Browser","level":"WARN","message":"Your .splinecode file is more recent than the library. Please upgrade @splinetool/runtime to the latest version."}
+{"timestamp":"00:08:15.535","source":"Server","level":"WARN","message":"[browser] \"Your .splinecode file is more recent than the library. Please upgrade @splinetool/runtime to the latest version.\""}
+{"timestamp":"00:08:15.536","source":"Browser","level":"WARN","message":"Your .splinecode file is more recent than the library. Please upgrade @splinetool/runtime to the latest version."}
+{"timestamp":"00:08:15.826","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:08:15.826","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:08:15.827","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:08:15.827","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:08:15.827","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:08:15.828","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:08:15.829","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:08:15.830","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:08:15.830","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:08:15.831","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:08:15.831","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:08:15.831","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:08:15.831","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:08:15.831","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:08:15.831","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:08:15.831","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:08:15.831","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:08:15.831","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:08:15.832","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:08:15.832","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:08:15.832","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:08:15.832","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:08:15.832","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:08:15.832","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:08:15.832","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:08:15.832","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:08:15.832","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:08:15.833","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:08:15.833","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:08:15.833","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:08:15.833","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:08:15.833","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:08:15.834","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:08:15.834","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:08:15.834","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:08:15.834","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:08:15.834","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:08:15.834","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:08:15.834","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:08:15.834","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:08:15.834","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:08:15.834","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:08:15.834","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:08:15.834","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:08:15.834","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:08:15.834","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:08:15.834","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:08:15.834","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:08:16.087","source":"Browser","level":"LOG","message":"Market data updated: {\"btc\":\"$77,881.84\",\"eth\":\"$2,313.5\",\"gold\":\"$4,705.4\",\"timestamp\":\"21:23:35\"}"}
+{"timestamp":"00:08:16.123","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/realtime_landingpage.jpg\" has \"fill\" but is missing \"sizes\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes"}
+{"timestamp":"00:08:16.123","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/gold_landingpage.jpg\" has \"fill\" but is missing \"sizes\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes"}
+{"timestamp":"00:08:16.123","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/realtime_landingpage.jpg\\\" has \\\"fill\\\" but is missing \\\"sizes\\\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes\""}
+{"timestamp":"00:08:16.123","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/realtime_landingpage.jpg\" has \"fill\" but is missing \"sizes\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes"}
+{"timestamp":"00:08:16.123","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/gold_landingpage.jpg\\\" has \\\"fill\\\" but is missing \\\"sizes\\\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes\""}
+{"timestamp":"00:08:16.123","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/gold_landingpage.jpg\" has \"fill\" but is missing \"sizes\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes"}
+{"timestamp":"00:08:16.138","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/HandBot_landingPage.jpg\" has \"fill\" but is missing \"sizes\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes"}
+{"timestamp":"00:08:16.138","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/News_landingpage.jpg\" has \"fill\" but is missing \"sizes\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes"}
+{"timestamp":"00:08:16.138","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/profit_landingpage.jpg\" has \"fill\" but is missing \"sizes\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes"}
+{"timestamp":"00:08:16.138","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/HandBot_landingPage.jpg\\\" has \\\"fill\\\" but is missing \\\"sizes\\\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes\""}
+{"timestamp":"00:08:16.138","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/HandBot_landingPage.jpg\" has \"fill\" but is missing \"sizes\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes"}
+{"timestamp":"00:08:16.139","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/News_landingpage.jpg\\\" has \\\"fill\\\" but is missing \\\"sizes\\\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes\""}
+{"timestamp":"00:08:16.139","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/News_landingpage.jpg\" has \"fill\" but is missing \"sizes\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes"}
+{"timestamp":"00:08:16.139","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/profit_landingpage.jpg\\\" has \\\"fill\\\" but is missing \\\"sizes\\\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes\""}
+{"timestamp":"00:08:16.139","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/profit_landingpage.jpg\" has \"fill\" but is missing \"sizes\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes"}
+{"timestamp":"00:08:16.242","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/cash_assets.jpg\" has \"fill\" but is missing \"sizes\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes"}
+{"timestamp":"00:08:16.242","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/stocks_assets.jpg\" has \"fill\" but is missing \"sizes\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes"}
+{"timestamp":"00:08:16.243","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/assets/cash_assets.jpg\\\" has \\\"fill\\\" but is missing \\\"sizes\\\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes\""}
+{"timestamp":"00:08:16.243","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/cash_assets.jpg\" has \"fill\" but is missing \"sizes\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes"}
+{"timestamp":"00:08:16.243","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/assets/stocks_assets.jpg\\\" has \\\"fill\\\" but is missing \\\"sizes\\\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes\""}
+{"timestamp":"00:08:16.243","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/stocks_assets.jpg\" has \"fill\" but is missing \"sizes\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes"}
+{"timestamp":"00:08:16.268","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/forex_asstes.jpg\" has \"fill\" but is missing \"sizes\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes"}
+{"timestamp":"00:08:16.268","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/crypto_assets.jpg\" has \"fill\" but is missing \"sizes\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes"}
+{"timestamp":"00:08:16.268","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/assets/forex_asstes.jpg\\\" has \\\"fill\\\" but is missing \\\"sizes\\\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes\""}
+{"timestamp":"00:08:16.268","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/forex_asstes.jpg\" has \"fill\" but is missing \"sizes\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes"}
+{"timestamp":"00:08:16.269","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/assets/crypto_assets.jpg\\\" has \\\"fill\\\" but is missing \\\"sizes\\\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes\""}
+{"timestamp":"00:08:16.269","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/crypto_assets.jpg\" has \"fill\" but is missing \"sizes\" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes"}
+{"timestamp":"00:08:25.585","source":"Browser","level":"LOG","message":"Market data updated: {\"btc\":\"$77,881.84\",\"eth\":\"$2,313.5\",\"gold\":\"$4,705.4\",\"timestamp\":\"21:23:44\"}"}
+{"timestamp":"00:08:35.971","source":"Browser","level":"LOG","message":"Market data updated: {\"btc\":\"$77,849.45\",\"eth\":\"$2,312.18\",\"gold\":\"$4,706.4\",\"timestamp\":\"21:23:55\"}"}
+{"timestamp":"00:08:45.890","source":"Browser","level":"LOG","message":"Market data updated: {\"btc\":\"$77,849.45\",\"eth\":\"$2,312.18\",\"gold\":\"$4,706.4\",\"timestamp\":\"21:24:05\"}"}
+{"timestamp":"00:08:56.213","source":"Browser","level":"LOG","message":"Market data updated: {\"btc\":\"$77,855.43\",\"eth\":\"$2,312.69\",\"gold\":\"$4,706.6\",\"timestamp\":\"21:24:15\"}"}
+{"timestamp":"00:09:06.079","source":"Browser","level":"LOG","message":"Market data updated: {\"btc\":\"$77,855.43\",\"eth\":\"$2,312.69\",\"gold\":\"$4,706.6\",\"timestamp\":\"21:24:25\"}"}
+{"timestamp":"00:09:16.484","source":"Browser","level":"LOG","message":"Market data updated: {\"btc\":\"$77,887.21\",\"eth\":\"$2,313.87\",\"gold\":\"$4,706.5\",\"timestamp\":\"21:24:35\"}"}
+{"timestamp":"00:09:31.756","source":"Browser","level":"LOG","message":"Market data updated: {\"btc\":\"$77,904.99\",\"eth\":\"$2,314.88\",\"gold\":\"$4,707.5\",\"timestamp\":\"21:24:51\"}"}
+{"timestamp":"00:09:41.768","source":"Browser","level":"LOG","message":"Market data updated: {\"btc\":\"$77,904.99\",\"eth\":\"$2,314.88\",\"gold\":\"$4,707.5\",\"timestamp\":\"21:25:01\"}"}
+{"timestamp":"00:09:56.434","source":"Browser","level":"LOG","message":"Market data updated: {\"btc\":\"$77,905\",\"eth\":\"$2,314.43\",\"gold\":\"$4,708.2\",\"timestamp\":\"21:25:15\"}"}
+{"timestamp":"00:10:10.929","source":"Browser","level":"LOG","message":"Market data updated: {\"btc\":\"$77,905\",\"eth\":\"$2,314.43\",\"gold\":\"$4,708.2\",\"timestamp\":\"21:25:30\"}"}
+{"timestamp":"00:10:20.933","source":"Browser","level":"LOG","message":"Market data updated: {\"btc\":\"$77,909.77\",\"eth\":\"$2,314.65\",\"gold\":\"$4,706.7\",\"timestamp\":\"21:25:40\"}"}
+{"timestamp":"00:10:29.742","source":"Server","level":"WARN","message":"[browser] \"Your .splinecode file is more recent than the library. Please upgrade @splinetool/runtime to the latest version.\""}
+{"timestamp":"00:10:29.742","source":"Browser","level":"WARN","message":"Your .splinecode file is more recent than the library. Please upgrade @splinetool/runtime to the latest version."}
+{"timestamp":"00:10:29.743","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:10:29.743","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:10:29.743","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:10:29.743","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:10:29.743","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:10:29.743","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:10:29.743","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:10:29.743","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:10:29.744","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:10:29.744","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:10:29.744","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:10:29.744","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:10:29.744","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:10:29.744","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:10:29.744","source":"Browser","level":"WARN","message":"Your .splinecode file is more recent than the library. Please upgrade @splinetool/runtime to the latest version."}
+{"timestamp":"00:10:29.744","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:10:29.744","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:10:29.744","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:10:29.744","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:10:29.744","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:10:29.744","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:10:29.744","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:42.157","source":"Server","level":"ERROR","message":"⨯ Error: [next-auth]: `useSession` must be wrapped in a <SessionProvider />"}
+{"timestamp":"00:19:42.850","source":"Browser","level":"WARN","message":"Your .splinecode file is more recent than the library. Please upgrade @splinetool/runtime to the latest version."}
+{"timestamp":"00:19:42.850","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:42.850","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:42.850","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:42.850","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:42.850","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:42.850","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:42.850","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:45.519","source":"Server","level":"WARN","message":"[browser] \"Your .splinecode file is more recent than the library. Please upgrade @splinetool/runtime to the latest version.\""}
+{"timestamp":"00:19:45.519","source":"Browser","level":"WARN","message":"Your .splinecode file is more recent than the library. Please upgrade @splinetool/runtime to the latest version."}
+{"timestamp":"00:19:45.520","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:19:45.520","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:45.520","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:19:45.520","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:45.520","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:19:45.520","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:45.520","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:19:45.520","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:45.520","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:19:45.521","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:45.521","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:19:45.521","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:45.521","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:19:45.521","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:47.396","source":"Browser","level":"WARN","message":"Your .splinecode file is more recent than the library. Please upgrade @splinetool/runtime to the latest version."}
+{"timestamp":"00:19:47.396","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:47.396","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:47.396","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:47.397","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:47.397","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:47.397","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:47.397","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:47.398","source":"Server","level":"WARN","message":"[browser] \"Your .splinecode file is more recent than the library. Please upgrade @splinetool/runtime to the latest version.\""}
+{"timestamp":"00:19:47.398","source":"Browser","level":"WARN","message":"Your .splinecode file is more recent than the library. Please upgrade @splinetool/runtime to the latest version."}
+{"timestamp":"00:19:47.398","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:19:47.398","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:47.398","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:19:47.398","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:47.398","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:19:47.398","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:47.398","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:19:47.398","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:47.398","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:19:47.398","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:47.398","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:19:47.398","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:47.398","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:19:47.399","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:49.400","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/realtime_landingpage.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:19:49.400","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/gold_landingpage.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:19:49.400","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/profit_landingpage.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:19:49.400","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/HandBot_landingPage.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:19:49.400","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/News_landingpage.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:19:49.400","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/realtime_landingpage.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:19:49.400","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/realtime_landingpage.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:19:49.400","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/gold_landingpage.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:19:49.400","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/gold_landingpage.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:19:49.400","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/profit_landingpage.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:19:49.400","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/profit_landingpage.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:19:49.400","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/HandBot_landingPage.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:19:49.400","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/HandBot_landingPage.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:19:49.400","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/News_landingpage.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:19:49.400","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/News_landingpage.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:19:49.414","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/crypto_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:19:49.414","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/forex_asstes.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:19:49.414","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/stocks_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:19:49.414","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/cash_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:19:49.414","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/assets/crypto_assets.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:19:49.414","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/crypto_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:19:49.415","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/assets/forex_asstes.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:19:49.415","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/forex_asstes.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:19:49.415","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/assets/stocks_assets.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:19:49.415","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/stocks_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:19:49.415","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/assets/cash_assets.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:19:49.415","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/cash_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:19:49.428","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/assets/saving_assets.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:19:49.428","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/saving_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:19:49.428","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/assets/realestate_assets.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:19:49.428","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/realestate_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:19:49.428","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/assets/alternative_assets.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:19:49.428","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/alternative_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:19:49.428","source":"Server","level":"WARN","message":"[browser] \"Image with src \\\"/media/landingPage/assets/collectivles_assets.jpg\\\" is using quality \\\"90\\\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\""}
+{"timestamp":"00:19:49.429","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/collectivles_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:19:49.429","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/saving_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:19:49.429","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/realestate_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:19:49.429","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/alternative_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:19:49.429","source":"Browser","level":"WARN","message":"Image with src \"/media/landingPage/assets/collectivles_assets.jpg\" is using quality \"90\" which is not configured in images.qualities [75]. Please update your config to [75, 90].\nRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities"}
+{"timestamp":"00:19:49.489","source":"Browser","level":"WARN","message":"Your .splinecode file is more recent than the library. Please upgrade @splinetool/runtime to the latest version."}
+{"timestamp":"00:19:49.489","source":"Server","level":"WARN","message":"[browser] \"Your .splinecode file is more recent than the library. Please upgrade @splinetool/runtime to the latest version.\""}
+{"timestamp":"00:19:49.489","source":"Browser","level":"WARN","message":"Your .splinecode file is more recent than the library. Please upgrade @splinetool/runtime to the latest version."}
+{"timestamp":"00:19:49.783","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:49.783","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:49.783","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:49.783","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:49.783","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:49.783","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:49.783","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:49.783","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:49.783","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:49.783","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:49.783","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:49.783","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:49.783","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:49.783","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:49.783","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:49.783","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:49.784","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:19:49.784","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:49.784","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:19:49.784","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:49.784","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:19:49.784","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:49.784","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:19:49.784","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:49.784","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:19:49.784","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:49.784","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:19:49.784","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:49.784","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:19:49.784","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:49.784","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:19:49.784","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:49.784","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:19:49.784","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:49.785","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:19:49.785","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:49.785","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:19:49.785","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:49.785","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:19:49.785","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:49.785","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:19:49.785","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:49.785","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:19:49.785","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:49.785","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:19:49.785","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:49.785","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:19:49.785","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:49.974","source":"Browser","level":"LOG","message":"Market data updated: {\"btc\":\"$77,951.93\",\"eth\":\"$2,315.82\",\"gold\":\"$4,709.5\",\"timestamp\":\"21:35:09\"}"}
+{"timestamp":"00:19:49.986","source":"Browser","level":"LOG","message":"Market data updated: {\"btc\":\"$77,951.93\",\"eth\":\"$2,315.82\",\"gold\":\"$4,709.5\",\"timestamp\":\"21:35:09\"}"}
+{"timestamp":"00:19:51.857","source":"Browser","level":"WARN","message":"Your .splinecode file is more recent than the library. Please upgrade @splinetool/runtime to the latest version."}
+{"timestamp":"00:19:51.857","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:51.857","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:51.857","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:51.857","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:51.857","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:51.857","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:51.857","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:51.859","source":"Server","level":"WARN","message":"[browser] \"Your .splinecode file is more recent than the library. Please upgrade @splinetool/runtime to the latest version.\""}
+{"timestamp":"00:19:51.859","source":"Browser","level":"WARN","message":"Your .splinecode file is more recent than the library. Please upgrade @splinetool/runtime to the latest version."}
+{"timestamp":"00:19:51.859","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:19:51.859","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:51.859","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:19:51.859","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:51.859","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:19:51.860","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:51.860","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:19:51.860","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:51.860","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:19:51.860","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:51.861","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:19:51.861","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:19:51.861","source":"Server","level":"ASSERT","message":"[browser] true"}
+{"timestamp":"00:19:51.861","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:21:07.962","source":"Server","level":"LOG","message":"✓ Compiled in 576ms"}
