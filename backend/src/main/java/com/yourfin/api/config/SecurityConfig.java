@@ -9,6 +9,8 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import com.yourfin.api.security.JwtAuthenticationFilter;
 
 /**
  * Security configuration that disables authentication for development.
@@ -18,16 +20,30 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 public class SecurityConfig {
 
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+    }
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .anyRequest().permitAll())
+                        // Public endpoints
+                        .requestMatchers("/", "/api/health", "/api/status").permitAll()
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/market/**").permitAll() // Market data is public
+                        // Protected endpoints - require authentication
+                        .requestMatchers("/api/assets/**").authenticated()
+                        .requestMatchers("/api/profile/**").authenticated()
+                        .anyRequest().authenticated())
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(
-                                org.springframework.security.config.http.SessionCreationPolicy.STATELESS));
+                                org.springframework.security.config.http.SessionCreationPolicy.STATELESS))
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

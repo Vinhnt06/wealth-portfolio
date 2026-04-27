@@ -3,6 +3,7 @@ package com.yourfin.api.controller;
 import com.yourfin.api.dto.MarketDataResponse;
 import com.yourfin.api.service.BinanceClient;
 import com.yourfin.api.service.YahooFinanceClient;
+import com.yourfin.api.validation.ValidSymbol;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -27,7 +28,8 @@ public class MarketController {
     }
 
     @GetMapping("/crypto")
-    public ResponseEntity<Map<String, Object>> getCryptoPrice(@RequestParam String symbols) {
+    public ResponseEntity<Map<String, Object>> getCryptoPrice(
+            @RequestParam @ValidSymbol String symbols) {
         logger.info("Received crypto price request for symbol: {}", symbols);
         try {
             MarketDataResponse data = binanceClient.get24hrTicker(symbols);
