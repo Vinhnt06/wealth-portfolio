@@ -1,13 +1,50 @@
 globalThis.__BUILD_MANIFEST = {
   "pages": {
-    "/_app": []
+    "/_app": [
+      "static/chunks/06e8_next_dist_compiled_11y5u1j._.js",
+      "static/chunks/06e8_next_dist_shared_lib_01ne6sz._.js",
+      "static/chunks/06e8_next_dist_client_11abl.~._.js",
+      "static/chunks/06e8_next_dist_109w2su._.js",
+      "static/chunks/06e8_next_app_0eth61e.js",
+      "static/chunks/[next]_entry_page-loader_ts_0k22z_j._.js",
+      "static/chunks/06e8_react-dom_0_cwh4-._.js",
+      "static/chunks/06e8_039t55_._.js",
+      "static/chunks/[root-of-the-server]__0kopxqu._.js",
+      "static/chunks/Documents_Wealth Project_wealth-portfolio_frontend_pages__app_07xvfw~._.js",
+      "static/chunks/turbopack-Documents_Wealth Project_wealth-portfolio_frontend_pages__app_0hqtete._.js"
+    ],
+    "/_error": [
+      "static/chunks/06e8_next_dist_compiled_11y5u1j._.js",
+      "static/chunks/06e8_next_dist_shared_lib_0ep4-gz._.js",
+      "static/chunks/06e8_next_dist_client_11abl.~._.js",
+      "static/chunks/06e8_next_dist_0p2jy0t._.js",
+      "static/chunks/[next]_entry_page-loader_ts_0rfg-t.._.js",
+      "static/chunks/06e8_react-dom_0_cwh4-._.js",
+      "static/chunks/06e8_039t55_._.js",
+      "static/chunks/[root-of-the-server]__0xb1kuq._.js",
+      "static/chunks/Documents_Wealth Project_wealth-portfolio_frontend_pages__error_07xvfw~._.js",
+      "static/chunks/097~_Wealth Project_wealth-portfolio_frontend_pages__error_0_btb-j._.js"
+    ]
   },
   "devFiles": [],
-  "polyfillFiles": [],
+  "polyfillFiles": [
+    "static/chunks/06e8_next_dist_build_polyfills_polyfill-nomodule.js"
+  ],
   "lowPriorityFiles": [
     "static/development/_buildManifest.js",
     "static/development/_ssgManifest.js",
     "static/development/_clientMiddlewareManifest.js"
   ],
-  "rootMainFiles": []
+  "rootMainFiles": [
+    "static/chunks/[turbopack]_browser_dev_hmr-client_hmr-client_ts_0tcv8r3._.js",
+    "static/chunks/06e8_next_dist_compiled_next-devtools_index_01iuufs.js",
+    "static/chunks/06e8_next_dist_compiled_react-dom_0e9d6b-._.js",
+    "static/chunks/06e8_next_dist_compiled_react-server-dom-turbopack_0o.4l~m._.js",
+    "static/chunks/06e8_next_dist_compiled_09-9mh3._.js",
+    "static/chunks/06e8_next_dist_client_0krczwa._.js",
+    "static/chunks/06e8_next_dist_0_rp~xk._.js",
+    "static/chunks/06e8_@swc_helpers_cjs_04c38mb._.js",
+    "static/chunks/Documents_Wealth Project_wealth-portfolio_frontend_0rqeker._.js",
+    "static/chunks/turbopack-Documents_Wealth Project_wealth-portfolio_frontend_0.3vsy7._.js"
+  ]
 };
