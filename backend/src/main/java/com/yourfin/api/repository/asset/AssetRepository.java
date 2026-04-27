@@ -12,11 +12,11 @@ import java.util.UUID;
 @Repository
 public interface AssetRepository extends JpaRepository<Asset, UUID> {
 
-    List<Asset> findByUserId(UUID userId);
+    List<Asset> findByUserId(String userId);
 
-    List<Asset> findByUserIdAndType(UUID userId, AssetType type);
+    List<Asset> findByUserIdAndType(String userId, AssetType type);
 
-    Optional<Asset> findByUserIdAndSymbol(UUID userId, String symbol);
+    Optional<Asset> findByUserIdAndSymbol(String userId, String symbol);
 
-    boolean existsByUserIdAndSymbol(UUID userId, String symbol);
+    boolean existsByUserIdAndSymbol(String userId, String symbol);
 }

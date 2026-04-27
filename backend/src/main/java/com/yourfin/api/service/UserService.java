@@ -7,8 +7,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.UUID;
-
 @Service
 public class UserService {
 
@@ -35,7 +33,7 @@ public class UserService {
     /**
      * Get user by ID
      */
-    public User getUserById(UUID userId) {
+    public User getUserById(String userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
@@ -44,7 +42,7 @@ public class UserService {
      * Update user profile
      */
     @Transactional
-    public User updateProfile(UUID userId, User updates) {
+    public User updateProfile(String userId, User updates) {
         User user = getUserById(userId);
 
         // Update allowed fields
@@ -77,7 +75,7 @@ public class UserService {
      * Delete user account
      */
     @Transactional
-    public void deleteAccount(UUID userId) {
+    public void deleteAccount(String userId) {
         User user = getUserById(userId);
         userRepository.delete(user);
     }

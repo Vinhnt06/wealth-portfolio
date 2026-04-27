@@ -26,14 +26,14 @@ public class AssetService {
     /**
      * Get all assets for a user
      */
-    public List<Asset> getUserAssets(UUID userId) {
+    public List<Asset> getUserAssets(String userId) {
         return assetRepository.findByUserId(userId);
     }
 
     /**
      * Get assets by type
      */
-    public List<Asset> getUserAssetsByType(UUID userId, AssetType type) {
+    public List<Asset> getUserAssetsByType(String userId, AssetType type) {
         return assetRepository.findByUserIdAndType(userId, type);
     }
 
@@ -49,7 +49,7 @@ public class AssetService {
      * Create new asset
      */
     @Transactional
-    public Asset createAsset(UUID userId, Asset asset) {
+    public Asset createAsset(String userId, Asset asset) {
         User user = userService.getUserById(userId);
 
         // Check if asset already exists
@@ -95,7 +95,7 @@ public class AssetService {
      * Calculate portfolio summary with current prices
      * Note: This is a placeholder. In Phase 4, we'll integrate real market data.
      */
-    public PortfolioSummary getPortfolioSummary(UUID userId) {
+    public PortfolioSummary getPortfolioSummary(String userId) {
         List<Asset> assets = getUserAssets(userId);
 
         // For now, use mock prices (will be replaced with real API calls in Phase 4)
