@@ -69,3 +69,6 @@
 {"timestamp":"00:00:14.572","source":"Browser","level":"ASSERT","message":"true"}
 {"timestamp":"00:00:14.573","source":"Server","level":"ASSERT","message":"[browser] true"}
 {"timestamp":"00:00:14.573","source":"Browser","level":"ASSERT","message":"true"}
+{"timestamp":"00:00:31.918","source":"Server","level":"ERROR","message":"⨯ Error: [next-auth]: `useSession` must be wrapped in a <SessionProvider />"}
+{"timestamp":"00:01:46.776","source":"Server","level":"LOG","message":"✓ Compiled in 323ms"}
+{"timestamp":"00:02:36.144","source":"Server","level":"LOG","message":"✓ Compiled in 38ms"}

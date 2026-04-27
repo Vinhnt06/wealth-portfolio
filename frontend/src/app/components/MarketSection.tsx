@@ -93,8 +93,6 @@ function LiveDot() {
 // ══════════════════════════════════════════════════════════════
 export function MarketSection() {
     const { t } = useLanguage();
-    const { status } = useSession();
-    const isAuthenticated = status === 'authenticated';
     const [assets, setAssets] = useState<MarketAsset[]>(FALLBACK_ASSETS);
     const [loading, setLoading] = useState(true);
     const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
@@ -374,7 +372,7 @@ export function MarketSection() {
                         {t('market.disclaimer') || 'Prices refresh every 15s. Data provided for informational purposes only.'}
                     </p>
                     <Link
-                        href={isAuthenticated ? '/dashboard' : '/login'}
+                        href="/login"
                         className="flex items-center gap-2 text-xs font-bold text-zinc-400 hover:text-white transition-colors group"
                     >
                         {t('market.view_all') || 'View All Assets'}
