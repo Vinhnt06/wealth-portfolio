@@ -2,7 +2,7 @@ var R=require("../../chunks/ssr/[turbopack]_runtime.js")("server/app/dashboard/p
 R.c("server/chunks/ssr/[root-of-the-server]__0g36ksj._.js")
 R.c("server/chunks/ssr/04_n_next_dist_0fp3zbo._.js")
 R.c("server/chunks/ssr/04_n_next_dist_esm_build_templates_app-page_0q92xu3.js")
-R.c("server/chunks/ssr/[root-of-the-server]__0hmkj_y._.js")
+R.c("server/chunks/ssr/[root-of-the-server]__07u9roi._.js")
 R.c("server/chunks/ssr/04_n_next_dist_0e04mzj._.js")
 R.c("server/chunks/ssr/[root-of-the-server]__0liy_3a._.js")
 R.c("server/chunks/ssr/Documents_Wealth Project_wealth-portfolio_frontend_src_app_error_tsx_048mzwn._.js")

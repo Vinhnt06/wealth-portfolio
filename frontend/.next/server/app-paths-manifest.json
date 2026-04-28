@@ -3,6 +3,7 @@
   "/_not-found/page": "app/_not-found/page.js",
   "/about/page": "app/about/page.js",
   "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
+  "/api/market/crypto/route": "app/api/market/crypto/route.js",
   "/dashboard/page": "app/dashboard/page.js",
   "/icon.png/route": "app/icon.png/route.js",
   "/login/page": "app/login/page.js",
