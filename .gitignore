@@ -1,13 +1,21 @@
 # Dependencies
 node_modules/
+frontend/node_modules/
 /.pnp
 .pnp.js
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
 
 # Testing
 /coverage
 
 # Next.js
+.next/
 /.next/
+frontend/.next/
 /out/
 
 # Production
@@ -24,6 +32,8 @@ node_modules/
 .env.test.local
 .env.production.local
 .env*.local
+frontend/.env
+frontend/.env.local
 
 # Vercel
 .vercel
@@ -37,4 +47,3 @@ next-env.d.ts
 /media/
 *.backup
 /src/generated/prisma
-frontend/.next

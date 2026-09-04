@@ -1,22 +1,18 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    // Other Next.js config...
-    reactStrictMode: true,
-    swcMinify: true,
-    images: {
-        domains: ['prod.spline.design', 'localhost'],
-    },
-    // Fix for turbopack cache issues
-    experimental: {
-        turbo: {
-            rules: {
-                '*.svg': {
-                    loaders: ['@svgr/webpack'],
-                    as: 'js',
-                },
-            },
-        },
-    },
+  reactStrictMode: true,
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'prod.spline.design',
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+      },
+    ],
+  },
 };
 
 module.exports = nextConfig;

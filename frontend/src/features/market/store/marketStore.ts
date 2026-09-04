@@ -13,9 +13,18 @@ interface MarketState {
   ohlc: Record<string, OHLCCandle[]>; // key: `${symbol}_${resolution}`
   indexes: Record<string, MarketIndexData>;
 
+  // Search & Navigation state
+  searchQuery: string;
+  watchlistSymbols: string[];
+  isChartExpanded: boolean;
+
   // Actions
   setWsStatus: (status: WsStatus) => void;
   setSelectedSymbol: (symbol: string) => void;
+  setSearchQuery: (query: string) => void;
+  toggleWatchlistSymbol: (symbol: string) => void;
+  setChartExpanded: (expanded: boolean) => void;
+  toggleChartExpanded: () => void;
   updateTick: (tick: TickData) => void;
   updateQuotes: (quotes: QuotesData) => void;
   appendOHLC: (symbol: string, resolution: string, candle: OHLCCandle) => void;
@@ -28,15 +37,26 @@ export const useMarketStore = create<MarketState>((set) => ({
   wsStatus: 'disconnected',
   lastHeartbeat: null,
   selectedSymbol: 'HPG',
+  searchQuery: '',
+  watchlistSymbols: ['HPG', 'VCB', 'SSI', 'VHM', 'TCB', 'FPT', 'MBB', 'MWG', 'VNM', 'VIC'],
+  isChartExpanded: false,
+
+  setWsStatus: (wsStatus) => set({ wsStatus }),
+  setSelectedSymbol: (selectedSymbol) => set({ selectedSymbol }),
+  setSearchQuery: (searchQuery) => set({ searchQuery }),
+  toggleWatchlistSymbol: (symbol) =>
+    set((state) => ({
+      watchlistSymbols: state.watchlistSymbols.includes(symbol)
+        ? state.watchlistSymbols.filter((s) => s !== symbol)
+        : [...state.watchlistSymbols, symbol],
+    })),
+  setChartExpanded: (isChartExpanded) => set({ isChartExpanded }),
+  toggleChartExpanded: () => set((state) => ({ isChartExpanded: !state.isChartExpanded })),
 
   ticks: {},
   quotes: {},
   ohlc: {},
   indexes: {},
-
-  setWsStatus: (wsStatus) => set({ wsStatus }),
-  
-  setSelectedSymbol: (selectedSymbol) => set({ selectedSymbol }),
 
   updateTick: (tick) =>
     set((state) => ({

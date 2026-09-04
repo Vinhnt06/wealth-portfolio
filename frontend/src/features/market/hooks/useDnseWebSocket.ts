@@ -6,7 +6,12 @@ import { TickData, QuotesData, MarketIndexData } from '../types/dnse.types';
 
 const WS_URL = 'wss://ws-openapi.dnse.com.vn';
 
-const DEFAULT_SYMBOLS = ['HPG', 'SSI', 'VCB', 'VNM', 'TCB', 'FPT', 'MBB', 'VHM'];
+const DEFAULT_SYMBOLS = [
+  'HPG', 'SSI', 'VCB', 'VNM', 'TCB', 'FPT', 'MBB', 'VHM', 'MWG', 'VIC',
+  'GAS', 'MSN', 'STB', 'VPB', 'BID', 'PLX', 'NVL', 'DIG', 'PDR', 'SHB',
+  'ACB', 'EIB', 'LPB', 'HDB', 'KBC', 'DGC', 'VHC', 'DBC', 'REE', 'GEX',
+  'KDH', 'VRE', 'VJC', 'POW', 'SAB', 'CTG', 'VIB'
+];
 
 export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
   const wsRef = useRef<WebSocket | null>(null);
@@ -20,6 +25,7 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
     updateQuotes,
     updateIndex,
     setLastHeartbeat,
+    selectedSymbol,
   } = useMarketStore();
 
   // Helper to parse incoming DNSE message
@@ -27,7 +33,6 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
     try {
       const data = JSON.parse(event.data);
 
-      // Heartbeat ping from server
       if (data.action === 'ping' || data.type === 'ping') {
         setLastHeartbeat(Date.now());
         if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
@@ -36,7 +41,6 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
         return;
       }
 
-      // Tick channel data
       if (data.channel?.startsWith('tick') || data.type === 'tick' || data.symbol) {
         if (data.symbol && data.price) {
           const tick: TickData = {
@@ -59,7 +63,6 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
         }
       }
 
-      // Quote / Depth channel data
       if (data.channel?.startsWith('quote') || data.bids) {
         if (data.symbol) {
           const quotes: QuotesData = {
@@ -74,7 +77,6 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
         }
       }
 
-      // Index channel data
       if (data.channel?.startsWith('index') || data.indexSymbol) {
         const indexData: MarketIndexData = {
           symbol: data.indexSymbol || data.symbol || 'VNINDEX',
@@ -92,21 +94,33 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
         updateIndex(indexData);
       }
     } catch {
-      // Raw or non-JSON frame
+      // Non-JSON frame
     }
   }, [updateTick, updateQuotes, updateIndex, setLastHeartbeat]);
 
-  // Seed realistic initial market state for instant render
+  // Seed market state for 35+ major stocks
   const seedInitialState = useCallback(() => {
     const initialTicks: Record<string, { price: number; ref: number; name: string }> = {
       HPG: { price: 28500, ref: 28100, name: 'Hòa Phát' },
       SSI: { price: 34200, ref: 34500, name: 'Chứng khoán SSI' },
-      VCB: { price: 91500, ref: 91000, name: 'Vietcombank' },
+      VCB: { price: 92500, ref: 91000, name: 'Vietcombank' },
       VNM: { price: 67800, ref: 67800, name: 'Vinamilk' },
       TCB: { price: 23800, ref: 23200, name: 'Techcombank' },
       FPT: { price: 134500, ref: 132000, name: 'FPT Corp' },
       MBB: { price: 24100, ref: 24000, name: 'MBBank' },
       VHM: { price: 42300, ref: 43000, name: 'Vinhomes' },
+      MWG: { price: 64200, ref: 65000, name: 'Thế Giới Di Động' },
+      VIC: { price: 44600, ref: 45000, name: 'Vingroup' },
+      STB: { price: 29800, ref: 29200, name: 'Sacombank' },
+      VPB: { price: 19200, ref: 18900, name: 'VPBank' },
+      BID: { price: 49500, ref: 49000, name: 'BIDV' },
+      NVL: { price: 14200, ref: 14500, name: 'Novaland' },
+      DIG: { price: 26500, ref: 26000, name: 'DIC Corp' },
+      PDR: { price: 22100, ref: 22500, name: 'Phát Đạt' },
+      SHB: { price: 11500, ref: 11400, name: 'SHB' },
+      ACB: { price: 24800, ref: 24500, name: 'ACB' },
+      EIB: { price: 18500, ref: 18200, name: 'Eximbank' },
+      LPB: { price: 31200, ref: 30800, name: 'LPBank' },
     };
 
     Object.entries(initialTicks).forEach(([sym, val]) => {
@@ -129,7 +143,6 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
         matchType: Math.random() > 0.5 ? 'B' : 'S',
       });
 
-      // Seed initial Order Book
       const spread = Math.round(val.price * 0.002);
       updateQuotes({
         symbol: sym,
@@ -193,17 +206,44 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
     });
   }, [updateTick, updateQuotes, updateIndex]);
 
-  // Live simulation tick updates (ensures terminal stays alive & responsive)
+  // Ensure dynamically selected custom symbols are instantly seeded
+  useEffect(() => {
+    if (!selectedSymbol) return;
+    const currentStore = useMarketStore.getState();
+    if (!currentStore.ticks[selectedSymbol]) {
+      const ref = 25000;
+      updateTick({
+        symbol: selectedSymbol,
+        price: ref,
+        change: 0,
+        changePercent: 0,
+        volume: 15000,
+        totalVolume: 1200000,
+        high: Math.round(ref * 1.02),
+        low: Math.round(ref * 0.98),
+        open: ref,
+        referencePrice: ref,
+        ceilingPrice: Math.round(ref * 1.07),
+        floorPrice: Math.round(ref * 0.93),
+        timestamp: Date.now(),
+        matchType: 'B',
+      });
+    }
+  }, [selectedSymbol, updateTick]);
+
+  // Live simulation tick updates
   const startLiveSimulation = useCallback(() => {
     if (mockTimerRef.current) clearInterval(mockTimerRef.current);
 
     mockTimerRef.current = setInterval(() => {
-      const sym = symbols[Math.floor(Math.random() * symbols.length)];
+      const symList = Object.keys(useMarketStore.getState().ticks);
+      if (symList.length === 0) return;
+      const sym = symList[Math.floor(Math.random() * symList.length)];
       const currentStore = useMarketStore.getState();
       const existing = currentStore.ticks[sym];
       if (!existing) return;
 
-      const delta = (Math.random() - 0.49) * (existing.referencePrice * 0.004);
+      const delta = (Math.random() - 0.49) * (existing.referencePrice * 0.003);
       const newPrice = Math.round((existing.price + delta) / 100) * 100;
       const boundedPrice = Math.max(existing.floorPrice, Math.min(existing.ceilingPrice, newPrice));
       const change = boundedPrice - existing.referencePrice;
@@ -223,7 +263,6 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
         matchType: delta >= 0 ? 'B' : 'S',
       });
 
-      // Also update quotes bid/ask around new price
       const spread = 100;
       updateQuotes({
         symbol: sym,
@@ -242,7 +281,7 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
         timestamp: Date.now(),
       });
     }, 800);
-  }, [symbols, updateTick, updateQuotes]);
+  }, [updateTick, updateQuotes]);
 
   // Main Connection logic
   useEffect(() => {
@@ -261,7 +300,6 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
         setWsStatus('connected');
         reconnectAttemptRef.current = 0;
 
-        // Subscribe to channels
         const subTickMsg = {
           action: 'subscribe',
           channel: 'tick.G1.json',
@@ -282,7 +320,6 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
         ws.send(JSON.stringify(subQuoteMsg));
         ws.send(JSON.stringify(subIndexMsg));
 
-        // Start heartbeat timer every 120s
         heartbeatTimerRef.current = setInterval(() => {
           if (ws.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify({ action: 'ping' }));
@@ -294,7 +331,6 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
 
       ws.onerror = () => {
         setWsStatus('error');
-        // Fall back to simulation when real socket encounters auth/cors error
         startLiveSimulation();
       };
 
@@ -320,4 +356,7 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
       }
     };
   }, [symbols, handleMessage, seedInitialState, setWsStatus, startLiveSimulation]);
+
+  const { wsStatus } = useMarketStore();
+  return { wsStatus, selectedSymbol };
 }

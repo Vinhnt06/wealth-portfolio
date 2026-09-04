@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '../LanguageContext';
@@ -56,19 +57,24 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
     const navItems = [
         { icon: House, labelKey: 'dash.nav.overview', href: '/dashboard' },
+        { icon: ChartBar, labelKey: 'Thị Trường Realtime', href: '/market' },
+        { icon: Newspaper, labelKey: 'Tin Tức Tài Chính', href: '/news' },
         { icon: TrendUp, labelKey: 'dash.nav.markets', href: '/dashboard/markets' },
-        { icon: Newspaper, labelKey: 'dash.nav.news', href: '/dashboard/news' },
         { icon: GraduationCap, labelKey: 'dash.nav.learn', href: '/dashboard/learn' },
         { icon: ClockCounterClockwise, labelKey: 'dash.nav.history', href: '/dashboard/history' },
     ];
 
+    const currentPathname = usePathname();
+
     const topNavItems = [
-        { labelKey: 'dash.nav.portfolio', href: '/dashboard', active: true },
-        { labelKey: 'dash.nav.analytics', href: '/dashboard/analytics', active: false },
-        { labelKey: 'dash.nav.settings', href: '/dashboard/settings', active: false },
+        { labelKey: 'dash.nav.portfolio', href: '/dashboard' },
+        { labelKey: 'Thị Trường Realtime', href: '/market' },
+        { labelKey: 'Tin Tức (21+ Nguồn)', href: '/news' },
+        { labelKey: 'dash.nav.analytics', href: '/dashboard/analytics' },
+        { labelKey: 'dash.nav.settings', href: '/dashboard/settings' },
     ];
 
-    const isActive = (href: string) => href === '/dashboard';
+    const isActive = (href: string) => currentPathname === href;
 
     return (
         <div className="min-h-[100dvh] bg-black text-white">
@@ -130,7 +136,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                                             className={active ? 'text-white' : 'text-zinc-600 group-hover:text-zinc-400 transition-colors'}
                                         />
                                         <span className={`text-[13px] font-medium ${active ? 'text-white' : 'text-zinc-500 group-hover:text-zinc-300'} transition-colors`}>
-                                            {t(item.labelKey)}
+                                            {item.labelKey.startsWith('dash.') ? t(item.labelKey) : item.labelKey}
                                         </span>
                                     </Link>
                                 );
@@ -165,18 +171,21 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                     <div className="flex items-center gap-10">
                         <Link href="/dashboard" className="text-xl font-semibold tracking-tighter">YourFin.</Link>
                         <nav className="flex items-center gap-8 h-16" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
-                            {topNavItems.map((item) => (
-                                <Link
-                                    key={item.href}
-                                    href={item.href}
-                                    className={`relative flex items-center h-full text-sm font-semibold transition-colors group ${item.active ? 'text-white' : 'text-zinc-400 hover:text-white'
-                                        }`}
-                                >
-                                    {t(item.labelKey)}
-                                    <span className={`absolute bottom-0 left-0 h-[2px] bg-white transition-all duration-300 ${item.active ? 'w-full' : 'w-0 group-hover:w-full'
-                                        }`} />
-                                </Link>
-                            ))}
+                            {topNavItems.map((item) => {
+                                const active = isActive(item.href);
+                                return (
+                                    <Link
+                                        key={item.href}
+                                        href={item.href}
+                                        className={`relative flex items-center h-full text-sm font-semibold transition-colors group ${active ? 'text-white' : 'text-zinc-400 hover:text-white'
+                                            }`}
+                                    >
+                                        {item.labelKey.startsWith('dash.') ? t(item.labelKey) : item.labelKey}
+                                        <span className={`absolute bottom-0 left-0 h-[2px] bg-white transition-all duration-300 ${active ? 'w-full' : 'w-0 group-hover:w-full'
+                                            }`} />
+                                    </Link>
+                                );
+                            })}
                         </nav>
                     </div>
                     <div className="flex items-center gap-5">

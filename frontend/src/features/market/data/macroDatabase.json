@@ -1,0 +1,105 @@
+{
+  "gdp": [
+    {
+      "period": "Q1/2026",
+      "growthRate": 6.82,
+      "target": 6.5,
+      "value": "1,920,000 tỷ VNĐ"
+    },
+    {
+      "period": "Q4/2025",
+      "growthRate": 7.15,
+      "target": 6.5,
+      "value": "2,450,000 tỷ VNĐ"
+    },
+    {
+      "period": "Q3/2025",
+      "growthRate": 6.88,
+      "target": 6.5,
+      "value": "2,180,000 tỷ VNĐ"
+    },
+    {
+      "period": "Q2/2025",
+      "growthRate": 6.93,
+      "target": 6.5,
+      "value": "2,050,000 tỷ VNĐ"
+    }
+  ],
+  "cpi": [
+    {
+      "period": "T8/2026",
+      "yoy": 3.45,
+      "mom": 0.12,
+      "target": 4.5
+    },
+    {
+      "period": "T7/2026",
+      "yoy": 3.52,
+      "mom": 0.18,
+      "target": 4.5
+    },
+    {
+      "period": "T6/2026",
+      "yoy": 3.6,
+      "mom": 0.22,
+      "target": 4.5
+    }
+  ],
+  "exchangeRate": [
+    {
+      "pair": "USD/VND",
+      "buy": 25240,
+      "sell": 25420,
+      "change": 15
+    },
+    {
+      "pair": "EUR/VND",
+      "buy": 27150,
+      "sell": 27480,
+      "change": -30
+    },
+    {
+      "pair": "JPY/VND",
+      "buy": 164.2,
+      "sell": 167.5,
+      "change": 0.4
+    }
+  ],
+  "commodities": [
+    {
+      "item": "Vàng SJC (Triệu/Lượng)",
+      "buy": 84.5,
+      "sell": 86.5,
+      "change": 0.5
+    },
+    {
+      "item": "Vàng Thế Giới (USD/Oz)",
+      "price": 2514.8,
+      "change": 12.4
+    },
+    {
+      "item": "Dầu Brent (USD/Thùng)",
+      "price": 78.42,
+      "change": -0.85
+    },
+    {
+      "item": "Thép HRC (USD/Tấn)",
+      "price": 542.0,
+      "change": 4.5
+    }
+  ],
+  "interestRate": [
+    {
+      "bank": "Lãi suất Liên Ngân hàng (ON)",
+      "rate": "4.25%"
+    },
+    {
+      "bank": "Lãi suất Tái cấp vốn NHNN",
+      "rate": "4.50%"
+    },
+    {
+      "bank": "Lãi suất Tiết kiệm VCB (12 Tháng)",
+      "rate": "4.70%"
+    }
+  ]
+}

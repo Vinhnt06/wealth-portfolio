@@ -47,11 +47,11 @@ export function DnseMarketModule() {
               <Lightning size={18} weight="fill" />
             </span>
             <h2 className="text-xl font-bold text-zinc-100 tracking-tight">
-              Thị Trường Chứng Khoán DNSE Live
+              Thị Trường Chứng Khoán
             </h2>
           </div>
           <p className="text-xs text-zinc-400 mt-1">
-            Dữ liệu thời gian thực được kết nối trực tiếp qua DNSE WebSocket API (In-Memory Streaming).
+            Dữ liệu thời gian thực được kết nối trực tiếp (In-Memory Streaming).
           </p>
         </div>
 

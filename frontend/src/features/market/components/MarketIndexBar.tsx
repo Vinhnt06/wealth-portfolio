@@ -15,7 +15,7 @@ export function MarketIndexBar() {
         <div className="relative flex items-center justify-center w-6 h-6 rounded-full bg-zinc-900 border border-zinc-800">
           <Broadcast size={14} className={wsStatus === 'connected' ? 'text-emerald-400 animate-pulse' : 'text-amber-400'} />
         </div>
-        <span className="font-semibold tracking-wide text-zinc-300 uppercase text-[11px]">DNSE Live</span>
+        <span className="font-semibold tracking-wide text-zinc-300 uppercase text-[11px]">Trực Tuyến</span>
         <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-medium ${
           wsStatus === 'connected' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
         }`}>
