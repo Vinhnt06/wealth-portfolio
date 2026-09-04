@@ -66,11 +66,11 @@ export default function Home() {
         </nav>
         <div className="flex items-center gap-4">
           <LanguageSwitcher />
-          <Link href="/login" className="text-sm font-medium hover:text-zinc-300 transition-colors">
+          <Link href="/dashboard" className="text-sm font-medium hover:text-zinc-300 transition-colors">
             {t('nav.signin')}
           </Link>
           <Link
-            href="/login"
+            href="/dashboard"
             className="text-sm font-medium bg-white text-black px-4 py-2 rounded-full hover:bg-zinc-200 transition-colors"
           >
             {t('nav.getstarted')}
@@ -119,7 +119,7 @@ export default function Home() {
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
-              href="/login"
+              href="/dashboard"
               className="inline-flex h-14 items-center justify-center rounded-full bg-white px-8 text-sm font-medium text-black transition-transform hover:scale-[0.98] active:scale-95"
             >
               {t('intro.cta.primary')}

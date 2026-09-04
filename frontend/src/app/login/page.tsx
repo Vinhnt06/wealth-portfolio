@@ -26,16 +26,11 @@ export default function LoginPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        await signIn('credentials', {
-            email,
-            password,
-            redirect: true,
-            callbackUrl: '/dashboard',
-        });
+        router.push('/dashboard');
     };
 
     const handleGoogleLogin = () => {
-        signIn('google', { callbackUrl: '/dashboard' });
+        router.push('/dashboard');
     };
 
     return (
