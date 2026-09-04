@@ -100,7 +100,7 @@ export function MarketCandleChart() {
     return 25.0;
   }, [currentTick]);
 
-  // Generate trend-following candles with realistic price action
+  // Generate stationary mean-reverting candle generator anchored at targetK
   const generateInitialData = useCallback((sym: string, res: ResolutionId) => {
     const candles: CandlestickData<Time>[] = [];
     const volumes: HistogramData<Time>[] = [];
@@ -108,6 +108,7 @@ export function MarketCandleChart() {
     const ma50Data: LineData<Time>[] = [];
 
     const baseK = getBasePriceK(sym);
+    const targetK = currentTick?.price ? currentTick.price / 1000 : baseK;
 
     let count = 120;
     let isDaily = false;
@@ -130,35 +131,38 @@ export function MarketCandleChart() {
       ? (getTradingDayStrings(count) as Time[])
       : (getIntradayTimestamps(count, stepSec) as unknown as Time[]);
 
-    let price = baseK * 0.92;
-    const volatilityPct = isDaily ? 0.015 : 0.005;
-
     const rawCandles: { time: Time; open: number; high: number; low: number; close: number; volume: number }[] = [];
+
+    // Generate historical candles centered around targetK
+    let currPrice = targetK * (1 + (Math.random() - 0.5) * 0.02); // Start near targetK
 
     for (let i = 0; i < count; i++) {
       const time = timeList[i];
-      const trendBias = Math.sin(i / 15) * (baseK * 0.008) + (i / count) * (baseK * 0.12);
-      const randomNoise = (Math.random() - 0.48) * (baseK * volatilityPct);
+      const isLast = (i === count - 1);
 
-      const open = price;
-      let close = Math.round((open + randomNoise + trendBias * 0.05) * 100) / 100;
-      close = Math.max(baseK * 0.5, close);
+      const open = Math.round(currPrice * 100) / 100;
 
-      const spread = Math.abs(close - open);
-      const high = Math.round((Math.max(open, close) + Math.random() * spread * 0.8 + baseK * 0.002) * 100) / 100;
-      const low = Math.round((Math.min(open, close) - Math.random() * spread * 0.8 - baseK * 0.002) * 100) / 100;
-      const volume = Math.floor(Math.random() * 800000) + 150000;
+      let close: number;
+      if (isLast) {
+        close = Math.round(targetK * 100) / 100;
+      } else {
+        // Mean-reversion pull towards targetK + mild wave sine
+        const wave = Math.sin(i / 10) * (targetK * 0.005);
+        const meanRevert = (targetK - open) * 0.05;
+        const noise = (Math.random() - 0.49) * (targetK * 0.006);
+        close = Math.round((open + wave + meanRevert + noise) * 100) / 100;
+      }
+
+      // Ensure price stays positive & reasonably bounded around targetK (+/- 6%)
+      close = Math.max(targetK * 0.90, Math.min(targetK * 1.10, close));
+
+      const wickPadding = Math.max(0.02, Math.abs(close - open) * 0.5 + targetK * 0.002);
+      const high = Math.round((Math.max(open, close) + Math.random() * wickPadding) * 100) / 100;
+      const low = Math.round((Math.min(open, close) - Math.random() * wickPadding) * 100) / 100;
+      const volume = Math.floor(Math.random() * 600000) + 100000;
 
       rawCandles.push({ time, open, high, low, close, volume });
-      price = close;
-    }
-
-    if (currentTick?.price && rawCandles.length > 0) {
-      const liveK = Math.round((currentTick.price / 1000) * 100) / 100;
-      const last = rawCandles[rawCandles.length - 1];
-      last.close = liveK;
-      last.high = Math.max(last.high, liveK);
-      last.low = Math.min(last.low, liveK);
+      currPrice = close;
     }
 
     for (let i = 0; i < rawCandles.length; i++) {
