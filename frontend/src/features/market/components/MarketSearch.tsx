@@ -74,7 +74,7 @@ export const MarketSearch: React.FC = () => {
   };
 
   return (
-    <div ref={containerRef} className="relative w-64 sm:w-80">
+    <div ref={containerRef} className="relative w-64 sm:w-80 z-[9999]">
       {/* Inline Direct Header Search Input */}
       <div
         className={`flex items-center px-3 py-1.5 bg-zinc-900 border rounded-xl transition-all shadow-inner ${
@@ -114,7 +114,7 @@ export const MarketSearch: React.FC = () => {
 
       {/* Floating Autocomplete Dropdown List */}
       {isOpen && (
-        <div className="absolute left-0 right-0 top-full mt-2 z-50 bg-zinc-900/95 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden backdrop-blur-xl animate-in fade-in duration-150 ring-1 ring-white/10">
+        <div className="absolute left-0 right-0 top-full mt-2 z-[99999] bg-zinc-950/98 border border-zinc-700/80 rounded-2xl shadow-[0_25px_60px_rgba(0,0,0,0.9)] overflow-hidden backdrop-blur-2xl animate-in fade-in duration-150 ring-1 ring-white/10 min-w-[300px]">
           <div className="max-h-72 overflow-y-auto p-1 divide-y divide-zinc-800/40 scrollbar-none">
             {filtered.length === 0 ? (
               <div

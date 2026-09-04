@@ -74,9 +74,6 @@ export default function MarketTerminalPage() {
         {/* Full-Width Market Index Banner (VNINDEX, VN30, HNX) */}
         <IndexBanner />
 
-        {/* Macro Data Section (GDP, CPI, Rates, Commodities) */}
-        <MacroDataSection />
-
         {/* Main Terminal Workspace (Balanced 8:4 Grid) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Main K-Line TradingView Chart (8 cols) */}
