@@ -12,6 +12,7 @@ import {
     PieChart, Pie, Cell, Legend, LabelList
 } from 'recharts';
 import { Shield, Target, Plus, TrendUp } from '@phosphor-icons/react';
+import { DnseMarketModule } from '../../features/market/components/DnseMarketModule';
 
 // ── Data Configuration ──────────────────────────────────────
 const generateMockData = (): CandlestickData[] => {
@@ -247,6 +248,9 @@ export default function DashboardPage() {
     return (
         <DashboardLayout>
             <div className="space-y-10 max-w-[1440px] mx-auto">
+
+                {/* ── DNSE Real-time Market Streaming Section ── */}
+                <DnseMarketModule />
 
                 {/* ── Net Worth Hero ── */}
                 <motion.section
