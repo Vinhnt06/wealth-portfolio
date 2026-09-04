@@ -1,107 +1,213 @@
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { createChart, ColorType, IChartApi, ISeriesApi, CandlestickSeries, HistogramSeries, CandlestickData, HistogramData, Time } from 'lightweight-charts';
+import {
+  createChart,
+  ColorType,
+  IChartApi,
+  ISeriesApi,
+  CandlestickSeries,
+  HistogramSeries,
+  LineSeries,
+  CandlestickData,
+  HistogramData,
+  LineData,
+  Time,
+} from 'lightweight-charts';
 import { useMarketStore } from '../store/marketStore';
-import { TrendUp, Clock, ArrowsOutSimple } from '@phosphor-icons/react';
+import { TrendUp, TrendDown, Clock, ArrowsOutSimple, Eye, EyeSlash } from '@phosphor-icons/react';
 
-const RESOLUTIONS = ['1m', '5m', '15m', '1h', '1D', '1Mo', '3Mo', '5Mo', '1Y', '3Y'] as const;
-type Resolution = typeof RESOLUTIONS[number];
+const RESOLUTIONS = [
+  { id: '1m', label: '1M' },
+  { id: '5m', label: '5M' },
+  { id: '15m', label: '15M' },
+  { id: '1h', label: '1H' },
+  { id: '1D', label: '1D' },
+  { id: '1Mo', label: '1Tháng' },
+  { id: '3Mo', label: '3Tháng' },
+  { id: '6Mo', label: '6Tháng' },
+  { id: '1Y', label: '1Năm' },
+  { id: 'ALL', label: 'Tất cả' },
+] as const;
+
+type ResolutionId = typeof RESOLUTIONS[number]['id'];
+
+// Helper to generate N trading day strings (YYYY-MM-DD) excluding weekends
+function getTradingDayStrings(count: number): string[] {
+  const dates: string[] = [];
+  const curr = new Date();
+
+  while (dates.length < count) {
+    const day = curr.getDay();
+    if (day !== 0 && day !== 6) { // Skip Sunday (0) and Saturday (6)
+      const yyyy = curr.getFullYear();
+      const mm = String(curr.getMonth() + 1).padStart(2, '0');
+      const dd = String(curr.getDate()).padStart(2, '0');
+      dates.push(`${yyyy}-${mm}-${dd}`);
+    }
+    curr.setDate(curr.getDate() - 1);
+  }
+  return dates.reverse();
+}
+
+// Generate intraday timestamps (in seconds)
+function getIntradayTimestamps(count: number, stepSec: number): number[] {
+  const times: number[] = [];
+  const nowSec = Math.floor(Date.now() / 1000);
+  const alignedNow = Math.floor(nowSec / stepSec) * stepSec;
+
+  for (let i = count - 1; i >= 0; i--) {
+    times.push(alignedNow - i * stepSec);
+  }
+  return times;
+}
 
 export function MarketCandleChart() {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const candleSeriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
   const volumeSeriesRef = useRef<ISeriesApi<'Histogram'> | null>(null);
-  const lastCandleRef = useRef<{ time: number; open: number; high: number; low: number; close: number } | null>(null);
+  const ma20SeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
+  const ma50SeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
+  const lastCandleRef = useRef<{ time: Time; open: number; high: number; low: number; close: number } | null>(null);
 
   const { selectedSymbol, ticks } = useMarketStore();
-  const [resolution, setResolution] = useState<Resolution>('15m');
+  const [resolution, setResolution] = useState<ResolutionId>('15m');
+  const [showMA20, setShowMA20] = useState(true);
+  const [showMA50, setShowMA50] = useState(true);
+  const [hoveredData, setHoveredData] = useState<{
+    open?: number;
+    high?: number;
+    low?: number;
+    close?: number;
+    volume?: number;
+    change?: number;
+    changePct?: number;
+  } | null>(null);
+
   const currentTick = ticks[selectedSymbol];
 
-  const getResolutionConfig = useCallback((res: Resolution) => {
-    switch (res) {
-      case '1m': return { step: 60, count: 120, isDaily: false };       // 2 hours of 1m candles
-      case '5m': return { step: 300, count: 120, isDaily: false };      // 10 hours of 5m candles
-      case '15m': return { step: 900, count: 120, isDaily: false };     // 30 hours of 15m candles
-      case '1h': return { step: 3600, count: 120, isDaily: false };     // 5 days of 1h candles
-      case '1D': return { step: 86400, count: 120, isDaily: true };     // 120 daily candles
-      case '1Mo': return { step: 86400, count: 30, isDaily: true };     // 30 daily candles (1 Month)
-      case '3Mo': return { step: 86400, count: 90, isDaily: true };     // 90 daily candles (3 Months)
-      case '5Mo': return { step: 86400, count: 150, isDaily: true };    // 150 daily candles (5 Months)
-      case '1Y': return { step: 86400 * 7, count: 52, isDaily: true };  // 52 weekly candles (1 Year)
-      case '3Y': return { step: 86400 * 30, count: 36, isDaily: true }; // 36 monthly candles (3 Years)
-    }
-  }, []);
+  // Base prices in thousands (e.g., HPG = 28.5k, VCB = 92.5k)
+  const getBasePriceK = useCallback((sym: string) => {
+    const defaultPricesK: Record<string, number> = {
+      HPG: 28.5, VCB: 92.5, SSI: 34.2, VHM: 42.3, TCB: 23.8,
+      FPT: 134.5, MBB: 24.1, MWG: 64.2, VNM: 67.8, VIC: 44.6,
+      STB: 29.8, VPB: 19.2, BID: 49.5, NVL: 14.2, DIG: 26.5,
+      PDR: 22.1, SHB: 11.5, ACB: 24.8, EIB: 18.5, LPB: 31.2,
+    };
+    if (defaultPricesK[sym]) return defaultPricesK[sym];
+    if (currentTick?.price) return currentTick.price / 1000;
+    return 25.0;
+  }, [currentTick]);
 
-  // Generate historical candles for all resolutions (1m up to 3 Years)
-  const generateInitialData = useCallback((sym: string, res: Resolution) => {
+  // Generate trend-following candles with realistic price action
+  const generateInitialData = useCallback((sym: string, res: ResolutionId) => {
     const candles: CandlestickData<Time>[] = [];
     const volumes: HistogramData<Time>[] = [];
+    const ma20Data: LineData<Time>[] = [];
+    const ma50Data: LineData<Time>[] = [];
 
-    const basePrices: Record<string, number> = {
-      HPG: 28500, VCB: 92500, SSI: 35000, VHM: 41800, TCB: 23800,
-      FPT: 132000, MBB: 24000, MWG: 64500, VNM: 67800, VIC: 44500,
-      STB: 29800, VPB: 19200, BID: 49500, NVL: 14200, DIG: 26500,
-      PDR: 22100, SHB: 11500, ACB: 24800, EIB: 18500, LPB: 31200,
-    };
-    const endPrice = basePrices[sym] || (currentTick?.price ? currentTick.price : 25000);
+    const baseK = getBasePriceK(sym);
 
-    const { step } = getResolutionConfig(res);
-    const isDaily = res === '1D' || res.includes('Mo') || res.includes('Y');
+    let count = 120;
+    let isDaily = false;
+    let stepSec = 900;
 
-    const countMap: Record<Resolution, number> = {
-      '1m': 120, '5m': 120, '15m': 120, '1h': 120,
-      '1D': 120, '1Mo': 30, '3Mo': 90, '5Mo': 150, '1Y': 52, '3Y': 36
-    };
-    const count = countMap[res];
-
-    const nowSec = Math.floor(Date.now() / 1000);
-    const alignedNow = isDaily ? Math.floor(nowSec / 86400) * 86400 : Math.floor(nowSec / step) * step;
-
-    let current = endPrice;
-    const rawList: { time: Time; open: number; high: number; low: number; close: number; volume: number }[] = [];
-
-    for (let i = 0; i < count; i++) {
-      const time = (alignedNow - i * step) as Time;
-      const volatility = Math.max(10, Math.round(endPrice * (res.includes('Y') ? 0.015 : 0.004)));
-      const change = Math.round((Math.random() - 0.49) * volatility);
-
-      const close = current;
-      const open = close - change;
-      const high = Math.max(open, close) + Math.round(Math.random() * volatility * 0.5);
-      const low = Math.min(open, close) - Math.round(Math.random() * volatility * 0.5);
-      const volume = Math.floor(Math.random() * 150000) + 25000;
-
-      rawList.push({ time, open, high, low, close, volume });
-      current = open;
+    switch (res) {
+      case '1m': count = 120; stepSec = 60; break;
+      case '5m': count = 120; stepSec = 300; break;
+      case '15m': count = 120; stepSec = 900; break;
+      case '1h': count = 120; stepSec = 3600; break;
+      case '1D': count = 120; isDaily = true; break;
+      case '1Mo': count = 30; isDaily = true; break;
+      case '3Mo': count = 90; isDaily = true; break;
+      case '6Mo': count = 150; isDaily = true; break;
+      case '1Y': count = 250; isDaily = true; break;
+      case 'ALL': count = 400; isDaily = true; break;
     }
 
-    const sorted = rawList.reverse();
+    const timeList: Time[] = isDaily
+      ? (getTradingDayStrings(count) as Time[])
+      : (getIntradayTimestamps(count, stepSec) as unknown as Time[]);
 
-    sorted.forEach((item) => {
-      candles.push({ time: item.time, open: item.open, high: item.high, low: item.low, close: item.close });
+    let price = baseK * 0.92;
+    const volatilityPct = isDaily ? 0.015 : 0.005;
+
+    const rawCandles: { time: Time; open: number; high: number; low: number; close: number; volume: number }[] = [];
+
+    for (let i = 0; i < count; i++) {
+      const time = timeList[i];
+      const trendBias = Math.sin(i / 15) * (baseK * 0.008) + (i / count) * (baseK * 0.12);
+      const randomNoise = (Math.random() - 0.48) * (baseK * volatilityPct);
+
+      const open = price;
+      let close = Math.round((open + randomNoise + trendBias * 0.05) * 100) / 100;
+      close = Math.max(baseK * 0.5, close);
+
+      const spread = Math.abs(close - open);
+      const high = Math.round((Math.max(open, close) + Math.random() * spread * 0.8 + baseK * 0.002) * 100) / 100;
+      const low = Math.round((Math.min(open, close) - Math.random() * spread * 0.8 - baseK * 0.002) * 100) / 100;
+      const volume = Math.floor(Math.random() * 800000) + 150000;
+
+      rawCandles.push({ time, open, high, low, close, volume });
+      price = close;
+    }
+
+    if (currentTick?.price && rawCandles.length > 0) {
+      const liveK = Math.round((currentTick.price / 1000) * 100) / 100;
+      const last = rawCandles[rawCandles.length - 1];
+      last.close = liveK;
+      last.high = Math.max(last.high, liveK);
+      last.low = Math.min(last.low, liveK);
+    }
+
+    for (let i = 0; i < rawCandles.length; i++) {
+      const item = rawCandles[i];
+      candles.push({
+        time: item.time,
+        open: item.open,
+        high: item.high,
+        low: item.low,
+        close: item.close,
+      });
+
       volumes.push({
         time: item.time,
         value: item.volume,
         color: item.close >= item.open ? 'rgba(16, 185, 129, 0.4)' : 'rgba(244, 63, 94, 0.4)',
       });
-    });
 
-    if (sorted.length > 0) {
-      const last = sorted[sorted.length - 1];
-      lastCandleRef.current = { time: Number(last.time), open: last.open, high: last.high, low: last.low, close: last.close };
+      if (i >= 19) {
+        const slice = rawCandles.slice(i - 19, i + 1);
+        const sum = slice.reduce((acc, c) => acc + c.close, 0);
+        ma20Data.push({ time: item.time, value: Math.round((sum / 20) * 100) / 100 });
+      }
+
+      if (i >= 49) {
+        const slice = rawCandles.slice(i - 49, i + 1);
+        const sum = slice.reduce((acc, c) => acc + c.close, 0);
+        ma50Data.push({ time: item.time, value: Math.round((sum / 50) * 100) / 100 });
+      }
     }
 
-    return { candles, volumes };
-  }, [currentTick, getResolutionConfig]);
+    if (candles.length > 0) {
+      const last = candles[candles.length - 1];
+      lastCandleRef.current = {
+        time: last.time,
+        open: last.open,
+        high: last.high,
+        low: last.low,
+        close: last.close,
+      };
+    }
 
-  // Chart setup effect — ONLY runs when selectedSymbol or resolution changes!
+    return { candles, volumes, ma20Data, ma50Data };
+  }, [getBasePriceK, currentTick]);
+
   useEffect(() => {
     if (!chartContainerRef.current) return;
-
     const container = chartContainerRef.current;
-    const isDaily = resolution === '1D' || resolution.includes('Mo') || resolution.includes('Y');
+    const isDaily = resolution === '1D' || resolution.includes('Mo') || resolution.includes('Y') || resolution === 'ALL';
 
     const chart = createChart(container, {
       layout: {
@@ -111,23 +217,24 @@ export function MarketCandleChart() {
         fontFamily: 'JetBrains Mono, monospace',
       },
       grid: {
-        vertLines: { color: 'rgba(255, 255, 255, 0.02)' },
-        horzLines: { color: 'rgba(255, 255, 255, 0.02)' },
+        vertLines: { color: 'rgba(255, 255, 255, 0.03)' },
+        horzLines: { color: 'rgba(255, 255, 255, 0.03)' },
       },
       crosshair: {
         vertLine: { color: '#10b981', labelBackgroundColor: '#18181b' },
         horzLine: { color: '#10b981', labelBackgroundColor: '#18181b' },
       },
       rightPriceScale: {
-        borderColor: 'rgba(255, 255, 255, 0.06)',
+        borderColor: 'rgba(255, 255, 255, 0.08)',
+        alignLabels: true,
       },
       timeScale: {
-        borderColor: 'rgba(255, 255, 255, 0.06)',
+        borderColor: 'rgba(255, 255, 255, 0.08)',
         timeVisible: !isDaily,
         secondsVisible: false,
       },
       width: container.clientWidth,
-      height: 380,
+      height: 400,
     });
 
     chartRef.current = chart;
@@ -138,6 +245,11 @@ export function MarketCandleChart() {
       borderVisible: false,
       wickUpColor: '#10b981',
       wickDownColor: '#f43f5e',
+      priceFormat: {
+        type: 'price',
+        precision: 2,
+        minMove: 0.05,
+      },
     });
     candleSeriesRef.current = candlestickSeries;
 
@@ -150,10 +262,51 @@ export function MarketCandleChart() {
     });
     volumeSeriesRef.current = volumeSeries;
 
-    const { candles, volumes } = generateInitialData(selectedSymbol, resolution);
+    const ma20Series = chart.addSeries(LineSeries, {
+      color: '#f59e0b',
+      lineWidth: 1,
+      priceFormat: { type: 'price', precision: 2, minMove: 0.05 },
+      title: 'MA20',
+    });
+    ma20SeriesRef.current = ma20Series;
+
+    const ma50Series = chart.addSeries(LineSeries, {
+      color: '#06b6d4',
+      lineWidth: 1,
+      priceFormat: { type: 'price', precision: 2, minMove: 0.05 },
+      title: 'MA50',
+    });
+    ma50SeriesRef.current = ma50Series;
+
+    const { candles, volumes, ma20Data, ma50Data } = generateInitialData(selectedSymbol, resolution);
     candlestickSeries.setData(candles);
     volumeSeries.setData(volumes);
+    if (showMA20) ma20Series.setData(ma20Data);
+    if (showMA50) ma50Series.setData(ma50Data);
+
     chart.timeScale().fitContent();
+
+    chart.subscribeCrosshairMove((param) => {
+      if (!param.time || !param.seriesData) {
+        setHoveredData(null);
+        return;
+      }
+      const candleData = param.seriesData.get(candlestickSeries) as any;
+      const volData = param.seriesData.get(volumeSeries) as any;
+      if (candleData) {
+        const change = candleData.close - candleData.open;
+        const changePct = candleData.open ? (change / candleData.open) * 100 : 0;
+        setHoveredData({
+          open: candleData.open,
+          high: candleData.high,
+          low: candleData.low,
+          close: candleData.close,
+          volume: volData?.value,
+          change,
+          changePct,
+        });
+      }
+    });
 
     const handleResize = () => {
       if (chartContainerRef.current && chartRef.current) {
@@ -167,115 +320,146 @@ export function MarketCandleChart() {
       window.removeEventListener('resize', handleResize);
       chart.remove();
     };
-  }, [selectedSymbol, resolution, generateInitialData]);
+  }, [selectedSymbol, resolution, generateInitialData, showMA20, showMA50]);
 
-  // Smooth live tick updates
   useEffect(() => {
     if (!candleSeriesRef.current || !volumeSeriesRef.current || !currentTick) return;
 
-    const isDaily = resolution === '1D' || resolution.includes('Mo') || resolution.includes('Y');
-    const { step } = getResolutionConfig(resolution);
-    const nowSec = Math.floor(Date.now() / 1000);
-    const bucketTime = (isDaily ? Math.floor(nowSec / 86400) * 86400 : Math.floor(nowSec / step) * step) as Time;
-    const price = currentTick.price;
+    const livePriceK = Math.round((currentTick.price / 1000) * 100) / 100;
     const tickVol = currentTick.volume || 1000;
 
-    let updatedOpen = price;
-    let updatedHigh = price;
-    let updatedLow = price;
+    if (lastCandleRef.current) {
+      const updatedOpen = lastCandleRef.current.open;
+      const updatedHigh = Math.max(lastCandleRef.current.high, livePriceK);
+      const updatedLow = Math.min(lastCandleRef.current.low, livePriceK);
 
-    if (lastCandleRef.current && lastCandleRef.current.time === Number(bucketTime)) {
-      updatedOpen = lastCandleRef.current.open;
-      updatedHigh = Math.max(lastCandleRef.current.high, price);
-      updatedLow = Math.min(lastCandleRef.current.low, price);
-    } else if (lastCandleRef.current) {
-      updatedOpen = lastCandleRef.current.close;
-      updatedHigh = Math.max(updatedOpen, price);
-      updatedLow = Math.min(updatedOpen, price);
+      lastCandleRef.current = {
+        ...lastCandleRef.current,
+        high: updatedHigh,
+        low: updatedLow,
+        close: livePriceK,
+      };
+
+      candleSeriesRef.current.update({
+        time: lastCandleRef.current.time,
+        open: updatedOpen,
+        high: updatedHigh,
+        low: updatedLow,
+        close: livePriceK,
+      });
+
+      volumeSeriesRef.current.update({
+        time: lastCandleRef.current.time,
+        value: tickVol,
+        color: livePriceK >= updatedOpen ? 'rgba(16, 185, 129, 0.4)' : 'rgba(244, 63, 94, 0.4)',
+      });
     }
+  }, [currentTick]);
 
-    lastCandleRef.current = {
-      time: Number(bucketTime),
-      open: updatedOpen,
-      high: updatedHigh,
-      low: updatedLow,
-      close: price,
-    };
-
-    candleSeriesRef.current.update({
-      time: bucketTime,
-      open: updatedOpen,
-      high: updatedHigh,
-      low: updatedLow,
-      close: price,
-    });
-
-    volumeSeriesRef.current.update({
-      time: bucketTime,
-      value: tickVol,
-      color: price >= updatedOpen ? 'rgba(16, 185, 129, 0.4)' : 'rgba(244, 63, 94, 0.4)',
-    });
-  }, [currentTick, resolution, getResolutionConfig]);
+  const priceDisplayK = currentTick?.price ? (currentTick.price / 1000).toFixed(2) : '--';
+  const changeK = currentTick?.change ? (currentTick.change / 1000).toFixed(2) : '0.00';
+  const changePct = currentTick?.changePercent ? currentTick.changePercent.toFixed(2) : '0.00';
+  const isPositive = currentTick ? currentTick.change >= 0 : true;
 
   return (
-    <div className="bg-zinc-950/90 border border-zinc-800/60 rounded-2xl p-5 backdrop-blur-xl flex flex-col h-full relative overflow-hidden">
+    <div className="bg-zinc-950/90 border border-zinc-800/60 rounded-2xl p-4 backdrop-blur-xl flex flex-col h-full relative overflow-hidden">
       {/* Background Watermark Ticker Symbol */}
-      <div className="absolute right-8 bottom-12 text-7xl font-mono font-black text-white/[0.02] select-none pointer-events-none tracking-tighter">
+      <div className="absolute right-6 bottom-10 text-8xl font-mono font-black text-white/[0.02] select-none pointer-events-none tracking-tighter">
         {selectedSymbol}
       </div>
 
-      {/* Chart Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-800/60 pb-3 mb-4 z-10">
+      {/* Chart Top Control Header */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-800/60 pb-3 mb-3 z-10">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
-            <TrendUp size={18} weight="bold" />
+            {isPositive ? <TrendUp size={18} weight="bold" /> : <TrendDown size={18} weight="bold" />}
           </div>
           <div>
             <div className="flex items-center gap-2">
               <h3 className="font-mono font-bold text-zinc-100 text-sm tracking-tight">{selectedSymbol}</h3>
-              <span className="text-[10px] font-mono text-zinc-500 bg-zinc-900 border border-zinc-800 px-1.5 py-0.5 rounded">
+              <span className="text-[10px] font-mono text-zinc-400 bg-zinc-900 border border-zinc-800 px-1.5 py-0.5 rounded">
                 HOSE
               </span>
             </div>
-            {currentTick && (
-              <div className="flex items-center gap-2 font-mono text-xs mt-0.5">
-                <span className="text-zinc-100 font-bold">{(currentTick.price / 1000).toFixed(2)}k</span>
-                <span className={currentTick.change >= 0 ? 'text-emerald-400 font-semibold' : 'text-rose-400 font-semibold'}>
-                  {currentTick.change >= 0 ? '+' : ''}{(currentTick.change / 1000).toFixed(2)} ({currentTick.changePercent.toFixed(2)}%)
-                </span>
-              </div>
-            )}
+            <div className="flex items-center gap-2 font-mono text-xs mt-0.5">
+              <span className="text-zinc-100 font-extrabold">{priceDisplayK}k</span>
+              <span className={isPositive ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}>
+                {isPositive ? '+' : ''}{changeK} ({isPositive ? '+' : ''}{changePct}%)
+              </span>
+            </div>
           </div>
         </div>
 
-        {/* Timeframe Selector Tabs (1m, 5m, 15m, 1h, 1D, 1Mo, 3Mo, 1Y, 3Y) */}
-        <div className="flex items-center gap-1 bg-zinc-900/80 p-1 rounded-xl border border-zinc-800/80 overflow-x-auto max-w-full">
-          <Clock size={14} className="text-zinc-500 ml-1.5 mr-0.5 shrink-0" />
-          {RESOLUTIONS.map((res) => (
+        {/* Technical Indicators & Timeframe Selector */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Moving Average Toggles */}
+          <div className="flex items-center gap-1 bg-zinc-900/80 p-1 rounded-xl border border-zinc-800/80">
             <button
-              key={res}
-              onClick={() => setResolution(res)}
-              className={`px-2 py-1 text-[10px] font-mono font-medium rounded-lg transition-all shrink-0 ${
-                resolution === res
-                  ? 'bg-zinc-800 text-emerald-400 border border-zinc-700 shadow-sm'
-                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
+              onClick={() => setShowMA20(!showMA20)}
+              className={`flex items-center gap-1 px-2 py-1 text-[10px] font-mono font-semibold rounded-lg transition-colors ${
+                showMA20 ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'text-zinc-500 hover:text-zinc-300'
               }`}
             >
-              {res}
+              {showMA20 ? <Eye size={12} /> : <EyeSlash size={12} />}
+              <span>MA20</span>
             </button>
-          ))}
-          <button
-            onClick={() => chartRef.current?.timeScale().fitContent()}
-            className="p-1 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded-lg ml-1 shrink-0"
-            title="Reset Chart View"
-          >
-            <ArrowsOutSimple size={14} />
-          </button>
+
+            <button
+              onClick={() => setShowMA50(!showMA50)}
+              className={`flex items-center gap-1 px-2 py-1 text-[10px] font-mono font-semibold rounded-lg transition-colors ${
+                showMA50 ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'text-zinc-500 hover:text-zinc-300'
+              }`}
+            >
+              {showMA50 ? <Eye size={12} /> : <EyeSlash size={12} />}
+              <span>MA50</span>
+            </button>
+          </div>
+
+          {/* Timeframe Presets */}
+          <div className="flex items-center gap-1 bg-zinc-900/80 p-1 rounded-xl border border-zinc-800/80 overflow-x-auto max-w-full">
+            <Clock size={13} className="text-zinc-500 ml-1 mr-0.5 shrink-0" />
+            {RESOLUTIONS.map((res) => (
+              <button
+                key={res.id}
+                onClick={() => setResolution(res.id)}
+                className={`px-2 py-1 text-[10px] font-mono font-medium rounded-lg transition-all shrink-0 ${
+                  resolution === res.id
+                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold shadow-sm'
+                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
+                }`}
+              >
+                {res.label}
+              </button>
+            ))}
+            <button
+              onClick={() => chartRef.current?.timeScale().fitContent()}
+              className="p-1 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded-lg ml-0.5 shrink-0"
+              title="Căn chỉnh biểu đồ"
+            >
+              <ArrowsOutSimple size={14} />
+            </button>
+          </div>
         </div>
       </div>
 
+      {/* Realtime OHLC Crosshair Bar */}
+      <div className="flex flex-wrap items-center gap-4 px-3 py-1.5 mb-2 bg-zinc-900/40 border border-zinc-800/40 rounded-xl text-[11px] font-mono z-10 text-zinc-400">
+        <div>O: <span className="text-zinc-200 font-bold">{hoveredData?.open ? hoveredData.open.toFixed(2) : priceDisplayK}</span></div>
+        <div>H: <span className="text-emerald-400 font-bold">{hoveredData?.high ? hoveredData.high.toFixed(2) : (currentTick?.high ? (currentTick.high/1000).toFixed(2) : priceDisplayK)}</span></div>
+        <div>L: <span className="text-rose-400 font-bold">{hoveredData?.low ? hoveredData.low.toFixed(2) : (currentTick?.low ? (currentTick.low/1000).toFixed(2) : priceDisplayK)}</span></div>
+        <div>C: <span className="text-zinc-100 font-bold">{hoveredData?.close ? hoveredData.close.toFixed(2) : priceDisplayK}</span></div>
+        {hoveredData?.changePct !== undefined && (
+          <div className={hoveredData.changePct >= 0 ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}>
+            {hoveredData.changePct >= 0 ? '+' : ''}{hoveredData.changePct.toFixed(2)}%
+          </div>
+        )}
+        {hoveredData?.volume && (
+          <div className="ml-auto text-zinc-500">Vol: <span className="text-zinc-300 font-bold">{hoveredData.volume.toLocaleString()}</span></div>
+        )}
+      </div>
+
       {/* Lightweight TradingView Chart Container */}
-      <div ref={chartContainerRef} className="w-full flex-1 min-h-[360px] rounded-xl overflow-hidden z-10" />
+      <div ref={chartContainerRef} className="w-full flex-1 min-h-[380px] rounded-xl overflow-hidden z-10" />
     </div>
   );
 }
