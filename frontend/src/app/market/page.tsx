@@ -20,7 +20,7 @@ export default function MarketTerminalPage() {
     <DashboardLayout>
       <div className="space-y-6 pb-12">
         {/* Top Header Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-4 p-4 bg-zinc-900/60 border border-zinc-800/80 rounded-2xl backdrop-blur-md">
+        <div className="relative z-50 flex flex-wrap items-center justify-between gap-4 p-4 bg-zinc-900/60 border border-zinc-800/80 rounded-2xl backdrop-blur-md">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
               <Sparkle className="w-5 h-5 animate-pulse" />
