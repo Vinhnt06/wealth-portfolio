@@ -72,7 +72,10 @@ function getIntradayTimestamps(count: number, stepSec: number): number[] {
 // ── Official TradingView Pro Embed Component ──────────────────────────
 function TradingViewProEmbed({ symbol }: { symbol: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const containerId = `tv_widget_${symbol.toLowerCase()}`;
+
+  // Format exact symbol for TradingView: HOSE:HPG, HOSE:VCG, HNX:SHB
+  const tvSymbol = symbol.includes(':') ? symbol.toUpperCase() : `HOSE:${symbol.toUpperCase()}`;
+  const containerId = `tv_widget_${symbol.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -85,7 +88,7 @@ function TradingViewProEmbed({ symbol }: { symbol: string }) {
       if (typeof (window as any).TradingView !== 'undefined' && containerRef.current) {
         new (window as any).TradingView.widget({
           autosize: true,
-          symbol: `HOSE:${symbol.toUpperCase()}`,
+          symbol: tvSymbol,
           interval: 'D',
           timezone: 'Asia/Ho_Chi_Minh',
           theme: 'dark',
@@ -93,19 +96,22 @@ function TradingViewProEmbed({ symbol }: { symbol: string }) {
           locale: 'vi',
           toolbar_bg: '#09090b',
           enable_publishing: false,
-          allow_symbol_change: false,
+          allow_symbol_change: true,
           container_id: containerId,
           hide_side_toolbar: false,
-          studies: ['MASimple@tv-basicstudies', 'RSI@tv-basicstudies'],
+          studies: [
+            'MASimple@tv-basicstudies',
+            'RSI@tv-basicstudies',
+          ],
         });
       }
     };
     containerRef.current.appendChild(script);
-  }, [symbol, containerId]);
+  }, [tvSymbol, containerId]);
 
   return (
-    <div className="w-full h-[460px] min-h-[460px] rounded-xl overflow-hidden bg-zinc-950 border border-zinc-800/80">
-      <div id={containerId} ref={containerRef} className="w-full h-[460px] min-h-[460px]" />
+    <div className="w-full h-[500px] min-h-[500px] rounded-xl overflow-hidden bg-zinc-950 border border-zinc-800/80 shadow-2xl relative">
+      <div id={containerId} ref={containerRef} className="w-full h-full min-h-[500px]" />
     </div>
   );
 }
@@ -121,7 +127,7 @@ export function MarketCandleChart() {
   const lastCandleRef = useRef<{ time: Time; open: number; high: number; low: number; close: number } | null>(null);
 
   const { selectedSymbol, ticks } = useMarketStore();
-  const [chartMode, setChartMode] = useState<'tradingview' | 'native'>('native');
+  const [chartMode, setChartMode] = useState<'tradingview' | 'native'>('tradingview');
   const [resolution, setResolution] = useState<ResolutionId>('1D');
   const [showMA20, setShowMA20] = useState(true);
   const [showMA50, setShowMA50] = useState(true);
