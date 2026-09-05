@@ -104,8 +104,8 @@ function TradingViewProEmbed({ symbol }: { symbol: string }) {
   }, [symbol, containerId]);
 
   return (
-    <div className="w-full h-full min-h-[420px] rounded-xl overflow-hidden bg-zinc-950 border border-zinc-800/80">
-      <div id={containerId} ref={containerRef} className="w-full h-full min-h-[420px]" />
+    <div className="w-full h-[460px] min-h-[460px] rounded-xl overflow-hidden bg-zinc-950 border border-zinc-800/80">
+      <div id={containerId} ref={containerRef} className="w-full h-[460px] min-h-[460px]" />
     </div>
   );
 }
@@ -121,7 +121,7 @@ export function MarketCandleChart() {
   const lastCandleRef = useRef<{ time: Time; open: number; high: number; low: number; close: number } | null>(null);
 
   const { selectedSymbol, ticks } = useMarketStore();
-  const [chartMode, setChartMode] = useState<'tradingview' | 'native'>('tradingview');
+  const [chartMode, setChartMode] = useState<'tradingview' | 'native'>('native');
   const [resolution, setResolution] = useState<ResolutionId>('1D');
   const [showMA20, setShowMA20] = useState(true);
   const [showMA50, setShowMA50] = useState(true);
@@ -144,6 +144,7 @@ export function MarketCandleChart() {
       FPT: 134.5, MBB: 24.1, MWG: 64.2, VNM: 67.8, VIC: 44.6,
       STB: 29.8, VPB: 19.2, BID: 49.5, NVL: 14.2, DIG: 26.5,
       PDR: 22.1, SHB: 11.5, ACB: 24.8, EIB: 18.5, LPB: 31.2,
+      VCG: 25.0, GEX: 21.8, POW: 11.8, KBC: 29.5, DGC: 98.5,
     };
     if (defaultPricesK[sym]) return defaultPricesK[sym];
     if (currentTick?.price) return currentTick.price / 1000;
