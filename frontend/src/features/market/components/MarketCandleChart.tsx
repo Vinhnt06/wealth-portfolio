@@ -15,8 +15,9 @@ import {
   Time,
 } from 'lightweight-charts';
 import { useMarketStore } from '../store/marketStore';
-import { TrendUp, TrendDown, Clock, ArrowsOutSimple, Eye, EyeSlash } from '@phosphor-icons/react';
+import { TrendUp, TrendDown, Clock, ArrowsOutSimple, Eye, EyeSlash, ChartLine, Sparkle } from '@phosphor-icons/react';
 
+// Timeframe Resolution Presets
 const RESOLUTIONS = [
   { id: '1m', label: '1M' },
   { id: '5m', label: '5M' },
@@ -32,14 +33,20 @@ const RESOLUTIONS = [
 
 type ResolutionId = typeof RESOLUTIONS[number]['id'];
 
-// Helper to generate N trading day strings (YYYY-MM-DD) excluding weekends
+// Seeded PRNG for 100% deterministic, consistent historical bars per symbol
+function seededRandom(seed: number) {
+  const x = Math.sin(seed++) * 10000;
+  return x - Math.floor(x);
+}
+
+// Generate N trading day strings (YYYY-MM-DD) excluding weekends (Saturday/Sunday)
 function getTradingDayStrings(count: number): string[] {
   const dates: string[] = [];
   const curr = new Date();
 
   while (dates.length < count) {
     const day = curr.getDay();
-    if (day !== 0 && day !== 6) { // Skip Sunday (0) and Saturday (6)
+    if (day !== 0 && day !== 6) { // Exclude Sunday (0) & Saturday (6)
       const yyyy = curr.getFullYear();
       const mm = String(curr.getMonth() + 1).padStart(2, '0');
       const dd = String(curr.getDate()).padStart(2, '0');
@@ -62,6 +69,48 @@ function getIntradayTimestamps(count: number, stepSec: number): number[] {
   return times;
 }
 
+// ── Official TradingView Pro Embed Component ──────────────────────────
+function TradingViewProEmbed({ symbol }: { symbol: string }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const containerId = `tv_widget_${symbol.toLowerCase()}`;
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    containerRef.current.innerHTML = '';
+
+    const script = document.createElement('script');
+    script.src = 'https://s3.tradingview.com/tv.js';
+    script.async = true;
+    script.onload = () => {
+      if (typeof (window as any).TradingView !== 'undefined' && containerRef.current) {
+        new (window as any).TradingView.widget({
+          autosize: true,
+          symbol: `HOSE:${symbol.toUpperCase()}`,
+          interval: 'D',
+          timezone: 'Asia/Ho_Chi_Minh',
+          theme: 'dark',
+          style: '1',
+          locale: 'vi',
+          toolbar_bg: '#09090b',
+          enable_publishing: false,
+          allow_symbol_change: false,
+          container_id: containerId,
+          hide_side_toolbar: false,
+          studies: ['MASimple@tv-basicstudies', 'RSI@tv-basicstudies'],
+        });
+      }
+    };
+    containerRef.current.appendChild(script);
+  }, [symbol, containerId]);
+
+  return (
+    <div className="w-full h-full min-h-[420px] rounded-xl overflow-hidden bg-zinc-950 border border-zinc-800/80">
+      <div id={containerId} ref={containerRef} className="w-full h-full min-h-[420px]" />
+    </div>
+  );
+}
+
+// ── Main MarketCandleChart Component ─────────────────────────────────
 export function MarketCandleChart() {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
@@ -72,7 +121,8 @@ export function MarketCandleChart() {
   const lastCandleRef = useRef<{ time: Time; open: number; high: number; low: number; close: number } | null>(null);
 
   const { selectedSymbol, ticks } = useMarketStore();
-  const [resolution, setResolution] = useState<ResolutionId>('15m');
+  const [chartMode, setChartMode] = useState<'tradingview' | 'native'>('tradingview');
+  const [resolution, setResolution] = useState<ResolutionId>('1D');
   const [showMA20, setShowMA20] = useState(true);
   const [showMA50, setShowMA50] = useState(true);
   const [hoveredData, setHoveredData] = useState<{
@@ -87,7 +137,7 @@ export function MarketCandleChart() {
 
   const currentTick = ticks[selectedSymbol];
 
-  // Base prices in thousands (e.g., HPG = 28.5k, VCB = 92.5k)
+  // Base reference prices in thousands (e.g., HPG = 28.5k, VCB = 92.5k)
   const getBasePriceK = useCallback((sym: string) => {
     const defaultPricesK: Record<string, number> = {
       HPG: 28.5, VCB: 92.5, SSI: 34.2, VHM: 42.3, TCB: 23.8,
@@ -100,7 +150,7 @@ export function MarketCandleChart() {
     return 25.0;
   }, [currentTick]);
 
-  // Generate stationary mean-reverting candle generator anchored at targetK
+  // Seeded deterministic candle generator (0% randomness shift on re-render)
   const generateInitialData = useCallback((sym: string, res: ResolutionId) => {
     const candles: CandlestickData<Time>[] = [];
     const volumes: HistogramData<Time>[] = [];
@@ -131,35 +181,35 @@ export function MarketCandleChart() {
       ? (getTradingDayStrings(count) as Time[])
       : (getIntradayTimestamps(count, stepSec) as unknown as Time[]);
 
+    // Seed PRNG using symbol string code to ensure 100% deterministic consistency
+    let seed = 0;
+    for (let s = 0; s < sym.length; s++) seed += sym.charCodeAt(s);
+
     const rawCandles: { time: Time; open: number; high: number; low: number; close: number; volume: number }[] = [];
 
-    // Generate historical candles centered around targetK
-    let currPrice = targetK * (1 + (Math.random() - 0.5) * 0.02); // Start near targetK
+    let currPrice = targetK * (0.95 + seededRandom(seed++) * 0.05);
 
     for (let i = 0; i < count; i++) {
       const time = timeList[i];
       const isLast = (i === count - 1);
-
       const open = Math.round(currPrice * 100) / 100;
 
       let close: number;
       if (isLast) {
         close = Math.round(targetK * 100) / 100;
       } else {
-        // Mean-reversion pull towards targetK + mild wave sine
-        const wave = Math.sin(i / 10) * (targetK * 0.005);
-        const meanRevert = (targetK - open) * 0.05;
-        const noise = (Math.random() - 0.49) * (targetK * 0.006);
+        const wave = Math.sin(i / 8) * (targetK * 0.008);
+        const meanRevert = (targetK - open) * 0.04;
+        const noise = (seededRandom(seed++) - 0.495) * (targetK * 0.006);
         close = Math.round((open + wave + meanRevert + noise) * 100) / 100;
       }
 
-      // Ensure price stays positive & reasonably bounded around targetK (+/- 6%)
-      close = Math.max(targetK * 0.90, Math.min(targetK * 1.10, close));
+      close = Math.max(targetK * 0.88, Math.min(targetK * 1.12, close));
 
       const wickPadding = Math.max(0.02, Math.abs(close - open) * 0.5 + targetK * 0.002);
-      const high = Math.round((Math.max(open, close) + Math.random() * wickPadding) * 100) / 100;
-      const low = Math.round((Math.min(open, close) - Math.random() * wickPadding) * 100) / 100;
-      const volume = Math.floor(Math.random() * 600000) + 100000;
+      const high = Math.round((Math.max(open, close) + seededRandom(seed++) * wickPadding) * 100) / 100;
+      const low = Math.round((Math.min(open, close) - seededRandom(seed++) * wickPadding) * 100) / 100;
+      const volume = Math.floor(seededRandom(seed++) * 600000) + 120000;
 
       rawCandles.push({ time, open, high, low, close, volume });
       currPrice = close;
@@ -208,8 +258,9 @@ export function MarketCandleChart() {
     return { candles, volumes, ma20Data, ma50Data };
   }, [getBasePriceK, currentTick]);
 
+  // Mount Lightweight Chart for Native Mode
   useEffect(() => {
-    if (!chartContainerRef.current) return;
+    if (chartMode !== 'native' || !chartContainerRef.current) return;
     const container = chartContainerRef.current;
     const isDaily = resolution === '1D' || resolution.includes('Mo') || resolution.includes('Y') || resolution === 'ALL';
 
@@ -249,11 +300,7 @@ export function MarketCandleChart() {
       borderVisible: false,
       wickUpColor: '#10b981',
       wickDownColor: '#f43f5e',
-      priceFormat: {
-        type: 'price',
-        precision: 2,
-        minMove: 0.05,
-      },
+      priceFormat: { type: 'price', precision: 2, minMove: 0.05 },
     });
     candleSeriesRef.current = candlestickSeries;
 
@@ -261,9 +308,7 @@ export function MarketCandleChart() {
       priceFormat: { type: 'volume' },
       priceScaleId: '',
     });
-    volumeSeries.priceScale().applyOptions({
-      scaleMargins: { top: 0.8, bottom: 0 },
-    });
+    volumeSeries.priceScale().applyOptions({ scaleMargins: { top: 0.8, bottom: 0 } });
     volumeSeriesRef.current = volumeSeries;
 
     const ma20Series = chart.addSeries(LineSeries, {
@@ -324,10 +369,11 @@ export function MarketCandleChart() {
       window.removeEventListener('resize', handleResize);
       chart.remove();
     };
-  }, [selectedSymbol, resolution, generateInitialData, showMA20, showMA50]);
+  }, [chartMode, selectedSymbol, resolution, generateInitialData, showMA20, showMA50]);
 
+  // Live WebSocket Tick Update for Native Mode
   useEffect(() => {
-    if (!candleSeriesRef.current || !volumeSeriesRef.current || !currentTick) return;
+    if (chartMode !== 'native' || !candleSeriesRef.current || !volumeSeriesRef.current || !currentTick) return;
 
     const livePriceK = Math.round((currentTick.price / 1000) * 100) / 100;
     const tickVol = currentTick.volume || 1000;
@@ -358,7 +404,7 @@ export function MarketCandleChart() {
         color: livePriceK >= updatedOpen ? 'rgba(16, 185, 129, 0.4)' : 'rgba(244, 63, 94, 0.4)',
       });
     }
-  }, [currentTick]);
+  }, [chartMode, currentTick]);
 
   const priceDisplayK = currentTick?.price ? (currentTick.price / 1000).toFixed(2) : '--';
   const changeK = currentTick?.change ? (currentTick.change / 1000).toFixed(2) : '0.00';
@@ -372,7 +418,7 @@ export function MarketCandleChart() {
         {selectedSymbol}
       </div>
 
-      {/* Chart Top Control Header */}
+      {/* Chart Control Bar Header */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-800/60 pb-3 mb-3 z-10">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
@@ -394,76 +440,114 @@ export function MarketCandleChart() {
           </div>
         </div>
 
-        {/* Technical Indicators & Timeframe Selector */}
+        {/* Engine Switcher & Indicator Controls */}
         <div className="flex flex-wrap items-center gap-2">
-          {/* Moving Average Toggles */}
-          <div className="flex items-center gap-1 bg-zinc-900/80 p-1 rounded-xl border border-zinc-800/80">
+          {/* Chart Engine Mode Toggle */}
+          <div className="flex items-center bg-zinc-900 p-1 rounded-xl border border-zinc-800">
             <button
-              onClick={() => setShowMA20(!showMA20)}
-              className={`flex items-center gap-1 px-2 py-1 text-[10px] font-mono font-semibold rounded-lg transition-colors ${
-                showMA20 ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'text-zinc-500 hover:text-zinc-300'
+              onClick={() => setChartMode('tradingview')}
+              className={`flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-mono font-bold rounded-lg transition-all ${
+                chartMode === 'tradingview'
+                  ? 'bg-emerald-500 text-zinc-950 shadow-sm'
+                  : 'text-zinc-400 hover:text-zinc-200'
               }`}
             >
-              {showMA20 ? <Eye size={12} /> : <EyeSlash size={12} />}
-              <span>MA20</span>
+              <Sparkle size={12} weight="bold" />
+              <span>TradingView Pro (100% Real)</span>
             </button>
 
             <button
-              onClick={() => setShowMA50(!showMA50)}
-              className={`flex items-center gap-1 px-2 py-1 text-[10px] font-mono font-semibold rounded-lg transition-colors ${
-                showMA50 ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'text-zinc-500 hover:text-zinc-300'
+              onClick={() => setChartMode('native')}
+              className={`flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-mono font-bold rounded-lg transition-all ${
+                chartMode === 'native'
+                  ? 'bg-emerald-500 text-zinc-950 shadow-sm'
+                  : 'text-zinc-400 hover:text-zinc-200'
               }`}
             >
-              {showMA50 ? <Eye size={12} /> : <EyeSlash size={12} />}
-              <span>MA50</span>
+              <ChartLine size={12} weight="bold" />
+              <span>Native Stream</span>
             </button>
           </div>
 
-          {/* Timeframe Presets */}
-          <div className="flex items-center gap-1 bg-zinc-900/80 p-1 rounded-xl border border-zinc-800/80 overflow-x-auto max-w-full">
-            <Clock size={13} className="text-zinc-500 ml-1 mr-0.5 shrink-0" />
-            {RESOLUTIONS.map((res) => (
-              <button
-                key={res.id}
-                onClick={() => setResolution(res.id)}
-                className={`px-2 py-1 text-[10px] font-mono font-medium rounded-lg transition-all shrink-0 ${
-                  resolution === res.id
-                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold shadow-sm'
-                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
-                }`}
-              >
-                {res.label}
-              </button>
-            ))}
-            <button
-              onClick={() => chartRef.current?.timeScale().fitContent()}
-              className="p-1 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded-lg ml-0.5 shrink-0"
-              title="Căn chỉnh biểu đồ"
-            >
-              <ArrowsOutSimple size={14} />
-            </button>
-          </div>
+          {/* Controls specific to Native mode */}
+          {chartMode === 'native' && (
+            <>
+              <div className="flex items-center gap-1 bg-zinc-900/80 p-1 rounded-xl border border-zinc-800/80">
+                <button
+                  onClick={() => setShowMA20(!showMA20)}
+                  className={`flex items-center gap-1 px-2 py-1 text-[10px] font-mono font-semibold rounded-lg transition-colors ${
+                    showMA20 ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'text-zinc-500 hover:text-zinc-300'
+                  }`}
+                >
+                  {showMA20 ? <Eye size={12} /> : <EyeSlash size={12} />}
+                  <span>MA20</span>
+                </button>
+
+                <button
+                  onClick={() => setShowMA50(!showMA50)}
+                  className={`flex items-center gap-1 px-2 py-1 text-[10px] font-mono font-semibold rounded-lg transition-colors ${
+                    showMA50 ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'text-zinc-500 hover:text-zinc-300'
+                  }`}
+                >
+                  {showMA50 ? <Eye size={12} /> : <EyeSlash size={12} />}
+                  <span>MA50</span>
+                </button>
+              </div>
+
+              <div className="flex items-center gap-1 bg-zinc-900/80 p-1 rounded-xl border border-zinc-800/80 overflow-x-auto max-w-full">
+                <Clock size={13} className="text-zinc-500 ml-1 mr-0.5 shrink-0" />
+                {RESOLUTIONS.map((res) => (
+                  <button
+                    key={res.id}
+                    onClick={() => setResolution(res.id)}
+                    className={`px-2 py-1 text-[10px] font-mono font-medium rounded-lg transition-all shrink-0 ${
+                      resolution === res.id
+                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold shadow-sm'
+                        : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
+                    }`}
+                  >
+                    {res.label}
+                  </button>
+                ))}
+                <button
+                  onClick={() => chartRef.current?.timeScale().fitContent()}
+                  className="p-1 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded-lg ml-0.5 shrink-0"
+                  title="Căn chỉnh biểu đồ"
+                >
+                  <ArrowsOutSimple size={14} />
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
-      {/* Realtime OHLC Crosshair Bar */}
-      <div className="flex flex-wrap items-center gap-4 px-3 py-1.5 mb-2 bg-zinc-900/40 border border-zinc-800/40 rounded-xl text-[11px] font-mono z-10 text-zinc-400">
-        <div>O: <span className="text-zinc-200 font-bold">{hoveredData?.open ? hoveredData.open.toFixed(2) : priceDisplayK}</span></div>
-        <div>H: <span className="text-emerald-400 font-bold">{hoveredData?.high ? hoveredData.high.toFixed(2) : (currentTick?.high ? (currentTick.high/1000).toFixed(2) : priceDisplayK)}</span></div>
-        <div>L: <span className="text-rose-400 font-bold">{hoveredData?.low ? hoveredData.low.toFixed(2) : (currentTick?.low ? (currentTick.low/1000).toFixed(2) : priceDisplayK)}</span></div>
-        <div>C: <span className="text-zinc-100 font-bold">{hoveredData?.close ? hoveredData.close.toFixed(2) : priceDisplayK}</span></div>
-        {hoveredData?.changePct !== undefined && (
-          <div className={hoveredData.changePct >= 0 ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}>
-            {hoveredData.changePct >= 0 ? '+' : ''}{hoveredData.changePct.toFixed(2)}%
-          </div>
-        )}
-        {hoveredData?.volume && (
-          <div className="ml-auto text-zinc-500">Vol: <span className="text-zinc-300 font-bold">{hoveredData.volume.toLocaleString()}</span></div>
+      {/* Native Mode Crosshair Inspection Bar */}
+      {chartMode === 'native' && (
+        <div className="flex flex-wrap items-center gap-4 px-3 py-1.5 mb-2 bg-zinc-900/40 border border-zinc-800/40 rounded-xl text-[11px] font-mono z-10 text-zinc-400">
+          <div>O: <span className="text-zinc-200 font-bold">{hoveredData?.open ? hoveredData.open.toFixed(2) : priceDisplayK}</span></div>
+          <div>H: <span className="text-emerald-400 font-bold">{hoveredData?.high ? hoveredData.high.toFixed(2) : (currentTick?.high ? (currentTick.high/1000).toFixed(2) : priceDisplayK)}</span></div>
+          <div>L: <span className="text-rose-400 font-bold">{hoveredData?.low ? hoveredData.low.toFixed(2) : (currentTick?.low ? (currentTick.low/1000).toFixed(2) : priceDisplayK)}</span></div>
+          <div>C: <span className="text-zinc-100 font-bold">{hoveredData?.close ? hoveredData.close.toFixed(2) : priceDisplayK}</span></div>
+          {hoveredData?.changePct !== undefined && (
+            <div className={hoveredData.changePct >= 0 ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}>
+              {hoveredData.changePct >= 0 ? '+' : ''}{hoveredData.changePct.toFixed(2)}%
+            </div>
+          )}
+          {hoveredData?.volume && (
+            <div className="ml-auto text-zinc-500">Vol: <span className="text-zinc-300 font-bold">{hoveredData.volume.toLocaleString()}</span></div>
+          )}
+        </div>
+      )}
+
+      {/* Main Chart Area */}
+      <div className="w-full flex-1 min-h-[420px] rounded-xl overflow-hidden z-10">
+        {chartMode === 'tradingview' ? (
+          <TradingViewProEmbed symbol={selectedSymbol} />
+        ) : (
+          <div ref={chartContainerRef} className="w-full h-full min-h-[420px]" />
         )}
       </div>
-
-      {/* Lightweight TradingView Chart Container */}
-      <div ref={chartContainerRef} className="w-full flex-1 min-h-[380px] rounded-xl overflow-hidden z-10" />
     </div>
   );
 }

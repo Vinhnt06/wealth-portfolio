@@ -14,9 +14,11 @@ export const ExpandableChart: React.FC = () => {
     <>
       {/* Expand/Collapse Header Bar */}
       <div className="bg-zinc-900/80 border border-zinc-800/80 rounded-2xl overflow-hidden backdrop-blur-md transition-all">
-        <button
+        <div
+          role="button"
+          tabIndex={0}
           onClick={toggleChartExpanded}
-          className="w-full px-5 py-3.5 flex items-center justify-between hover:bg-zinc-800/50 transition-colors group"
+          className="w-full px-5 py-3.5 flex items-center justify-between hover:bg-zinc-800/50 transition-colors group cursor-pointer"
         >
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 group-hover:scale-105 transition-transform">
@@ -51,7 +53,7 @@ export const ExpandableChart: React.FC = () => {
               {isChartExpanded ? <CaretUp className="w-4 h-4" /> : <CaretDown className="w-4 h-4" />}
             </div>
           </div>
-        </button>
+        </div>
 
         {/* Inline Expanded Chart */}
         <AnimatePresence>
