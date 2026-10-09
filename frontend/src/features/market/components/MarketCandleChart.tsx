@@ -104,6 +104,8 @@ export function MarketCandleChart() {
   const volumeSeriesRef = useRef<ISeriesApi<'Histogram'> | null>(null);
   const ma20SeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
   const ma50SeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
+  const ma150SeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
+  const ma200SeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
   const bbUpperSeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
   const bbLowerSeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
   const lastCandleRef = useRef<{ time: Time; open: number; high: number; low: number; close: number } | null>(null);
@@ -123,8 +125,10 @@ export function MarketCandleChart() {
 
   // Indicators toggle
   const [showIndicatorsModal, setShowIndicatorsModal] = useState(false);
-  const [showMA20, setShowMA20] = useState(true);
+  const [showMA20, setShowMA20] = useState(false);
   const [showMA50, setShowMA50] = useState(true);
+  const [showMA150, setShowMA150] = useState(true);
+  const [showMA200, setShowMA200] = useState(true);
   const [showBB, setShowBB] = useState(false);
   const [showVolume, setShowVolume] = useState(true);
 
@@ -469,6 +473,22 @@ export function MarketCandleChart() {
     });
     ma50SeriesRef.current = ma50Series;
 
+    const ma150Series = chart.addSeries(LineSeries, {
+      color: '#f97316',
+      lineWidth: 1,
+      priceFormat: { type: 'price', precision: 2, minMove: 0.05 },
+      title: 'MA150',
+    });
+    ma150SeriesRef.current = ma150Series;
+
+    const ma200Series = chart.addSeries(LineSeries, {
+      color: '#f43f5e',
+      lineWidth: 2,
+      priceFormat: { type: 'price', precision: 2, minMove: 0.05 },
+      title: 'MA200',
+    });
+    ma200SeriesRef.current = ma200Series;
+
     const bbUpperSeries = chart.addSeries(LineSeries, {
       color: 'rgba(168, 85, 247, 0.7)',
       lineWidth: 1,
@@ -537,6 +557,8 @@ export function MarketCandleChart() {
 
         const realMa20: LineData<Time>[] = [];
         const realMa50: LineData<Time>[] = [];
+        const realMa150: LineData<Time>[] = [];
+        const realMa200: LineData<Time>[] = [];
         const bbUpperData: LineData<Time>[] = [];
         const bbLowerData: LineData<Time>[] = [];
 
@@ -557,6 +579,14 @@ export function MarketCandleChart() {
             const sum50 = uniqueCandles.slice(i - 49, i + 1).reduce((acc, x) => acc + x.close, 0);
             realMa50.push({ time: uniqueCandles[i].time, value: Math.round((sum50 / 50) * 100) / 100 });
           }
+          if (i >= 149) {
+            const sum150 = uniqueCandles.slice(i - 149, i + 1).reduce((acc, x) => acc + x.close, 0);
+            realMa150.push({ time: uniqueCandles[i].time, value: Math.round((sum150 / 150) * 100) / 100 });
+          }
+          if (i >= 199) {
+            const sum200 = uniqueCandles.slice(i - 199, i + 1).reduce((acc, x) => acc + x.close, 0);
+            realMa200.push({ time: uniqueCandles[i].time, value: Math.round((sum200 / 200) * 100) / 100 });
+          }
         }
 
         if (uniqueCandles.length > 0) {
@@ -564,6 +594,8 @@ export function MarketCandleChart() {
           if (showVolume) volumeSeries.setData(uniqueVolumes);
           if (showMA20) ma20Series.setData(realMa20);
           if (showMA50) ma50Series.setData(realMa50);
+          if (showMA150) ma150Series.setData(realMa150);
+          if (showMA200) ma200Series.setData(realMa200);
           if (showBB) {
             bbUpperSeries.setData(bbUpperData);
             bbLowerSeries.setData(bbLowerData);
@@ -631,7 +663,7 @@ export function MarketCandleChart() {
       chart.remove();
       chartRef.current = null;
     };
-  }, [resolution, selectedSymbol, showMA20, showMA50, showBB, showVolume, redrawCanvas, updateCanvasSize]);
+  }, [resolution, selectedSymbol, showMA20, showMA50, showMA150, showMA200, showBB, showVolume, redrawCanvas, updateCanvasSize]);
 
   // Real-time tick update to candle
   useEffect(() => {
@@ -914,9 +946,31 @@ export function MarketCandleChart() {
                   >
                     <span className="flex items-center gap-2">
                       <span className="w-2.5 h-2.5 rounded-full bg-cyan-400" />
-                      Đường MA50
+                      Đường MA50 (Minervini)
                     </span>
                     <span className={`text-[10px] ${showMA50 ? 'text-emerald-400 font-bold' : 'text-zinc-500'}`}>{showMA50 ? 'BẬT' : 'TẮT'}</span>
+                  </button>
+
+                  <button
+                    onClick={() => setShowMA150(!showMA150)}
+                    className="flex items-center justify-between px-2 py-1.5 rounded-lg text-xs font-mono text-zinc-200 hover:bg-zinc-800"
+                  >
+                    <span className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-orange-500" />
+                      Đường MA150 (Minervini)
+                    </span>
+                    <span className={`text-[10px] ${showMA150 ? 'text-emerald-400 font-bold' : 'text-zinc-500'}`}>{showMA150 ? 'BẬT' : 'TẮT'}</span>
+                  </button>
+
+                  <button
+                    onClick={() => setShowMA200(!showMA200)}
+                    className="flex items-center justify-between px-2 py-1.5 rounded-lg text-xs font-mono text-zinc-200 hover:bg-zinc-800"
+                  >
+                    <span className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
+                      Đường MA200 (Minervini)
+                    </span>
+                    <span className={`text-[10px] ${showMA200 ? 'text-emerald-400 font-bold' : 'text-zinc-500'}`}>{showMA200 ? 'BẬT' : 'TẮT'}</span>
                   </button>
 
                   <button
@@ -924,7 +978,7 @@ export function MarketCandleChart() {
                     className="flex items-center justify-between px-2 py-1.5 rounded-lg text-xs font-mono text-zinc-200 hover:bg-zinc-800"
                   >
                     <span className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-purple-400" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-indigo-400" />
                       Bollinger Bands
                     </span>
                     <span className={`text-[10px] ${showBB ? 'text-emerald-400 font-bold' : 'text-zinc-500'}`}>{showBB ? 'BẬT' : 'TẮT'}</span>

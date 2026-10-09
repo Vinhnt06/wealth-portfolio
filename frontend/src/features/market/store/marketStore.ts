@@ -19,12 +19,12 @@ interface MarketState {
   isChartExpanded: boolean;
   activeTab: 'orderbook' | 'info' | 'foreign';
   isQuickViewOpen: boolean;
-  viewMode: 'overview' | 'detail';
+  viewMode: 'overview' | 'detail' | 'screener';
 
   // Actions
   setWsStatus: (status: WsStatus) => void;
   setSelectedSymbol: (symbol: string) => void;
-  setViewMode: (viewMode: 'overview' | 'detail') => void;
+  setViewMode: (viewMode: 'overview' | 'detail' | 'screener') => void;
   setActiveTab: (tab: 'orderbook' | 'info' | 'foreign') => void;
   openQuickView: (symbol?: string) => void;
   closeQuickView: () => void;

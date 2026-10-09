@@ -18,12 +18,14 @@ import {
   CheckCircle,
   Database,
   Fish,
-  ListNumbers
+  ListNumbers,
+  Sparkle,
 } from '@phosphor-icons/react';
 import { useMarketStore } from '../store/marketStore';
 import { MarketCandleChart } from './MarketCandleChart';
 import { OrderBook } from './OrderBook';
 import { InvestorFlowAnalysis } from './InvestorFlowAnalysis';
+import { MinerviniStrategyPanel } from './MinerviniStrategyPanel';
 import stockDatabase from '../data/stockDatabase.json';
 
 interface StockMetadata {
@@ -77,7 +79,7 @@ interface StockDetailSectionProps {
 export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackToOverview }) => {
   const { selectedSymbol, ticks, watchlistSymbols, toggleWatchlistSymbol } = useMarketStore();
   const [activeTab, setActiveTab] = useState<'profile' | 'shareholders' | 'officers' | 'financials' | 'foreign' | 'investor_flow'>('profile');
-  const [sidebarMode, setSidebarMode] = useState<'investor_flow' | 'orderbook'>('investor_flow');
+  const [sidebarMode, setSidebarMode] = useState<'minervini' | 'investor_flow' | 'orderbook'>('minervini');
   const [companyData, setCompanyData] = useState<CompanyData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -228,35 +230,53 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
           <MarketCandleChart />
         </div>
         <div className="lg:col-span-4 min-h-[500px] flex flex-col gap-3">
-          {/* Quick Sub-tab Toggle between Phân loại nhà đầu tư (DNSE Whale Flow) & Sổ lệnh */}
-          <div className="flex items-center justify-between p-1 rounded-xl bg-zinc-900 border border-zinc-800">
+          {/* Quick Sub-tab Toggle between Minervini 8/8, Phân loại NĐT & Sổ lệnh */}
+          <div className="grid grid-cols-3 gap-1 p-1 rounded-xl bg-zinc-900 border border-zinc-800">
+            <button
+              onClick={() => setSidebarMode('minervini')}
+              className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-mono font-bold transition-all ${
+                sidebarMode === 'minervini'
+                  ? 'bg-amber-400 text-zinc-950 shadow-sm'
+                  : 'text-zinc-400 hover:text-zinc-200'
+              }`}
+            >
+              <Sparkle className="w-3.5 h-3.5" weight="fill" />
+              <span>Minervini 8/8</span>
+            </button>
+
             <button
               onClick={() => setSidebarMode('investor_flow')}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-mono font-bold transition-all ${
+              className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-mono font-bold transition-all ${
                 sidebarMode === 'investor_flow'
                   ? 'bg-emerald-500 text-zinc-950 shadow-sm'
                   : 'text-zinc-400 hover:text-zinc-200'
               }`}
             >
               <Fish className="w-3.5 h-3.5" />
-              <span>Phân Loại NĐT</span>
+              <span>Cá Mập/NĐT</span>
             </button>
 
             <button
               onClick={() => setSidebarMode('orderbook')}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-mono font-bold transition-all ${
+              className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-mono font-bold transition-all ${
                 sidebarMode === 'orderbook'
                   ? 'bg-emerald-500 text-zinc-950 shadow-sm'
                   : 'text-zinc-400 hover:text-zinc-200'
               }`}
             >
               <ListNumbers className="w-3.5 h-3.5" />
-              <span>Sổ Lệnh (OrderBook)</span>
+              <span>Sổ Lệnh</span>
             </button>
           </div>
 
           <div className="flex-1">
-            {sidebarMode === 'investor_flow' ? <InvestorFlowAnalysis /> : <OrderBook />}
+            {sidebarMode === 'minervini' ? (
+              <MinerviniStrategyPanel symbol={selectedSymbol} />
+            ) : sidebarMode === 'investor_flow' ? (
+              <InvestorFlowAnalysis />
+            ) : (
+              <OrderBook />
+            )}
           </div>
         </div>
       </div>

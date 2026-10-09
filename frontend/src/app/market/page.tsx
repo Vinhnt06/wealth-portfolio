@@ -7,13 +7,15 @@ import { useMarketStore } from '../../features/market/store/marketStore';
 import { MarketSearch } from '../../features/market/components/MarketSearch';
 import { MarketOverviewSection } from '../../features/market/components/MarketOverviewSection';
 import { StockDetailSection } from '../../features/market/components/StockDetailSection';
+import { MarkMinerviniScreener } from '../../features/market/components/MarkMinerviniScreener';
 import {
   ChartPieSlice,
   Buildings,
   WifiHigh,
   WifiSlash,
   Sparkle,
-  TrendUp
+  TrendUp,
+  Funnel,
 } from '@phosphor-icons/react';
 
 export default function MarketTerminalPage() {
@@ -30,8 +32,8 @@ export default function MarketTerminalPage() {
         <div className="relative z-50 flex flex-wrap items-center justify-between gap-4 p-4 bg-zinc-950/80 border border-zinc-800/80 rounded-2xl backdrop-blur-xl shadow-xl">
           {/* Left Title & System Status */}
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
-              <Sparkle className="w-5 h-5 animate-pulse" />
+            <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
+              <Sparkle className="w-5 h-5 animate-pulse" weight="fill" />
             </div>
             <div>
               <div className="flex items-center gap-2">
@@ -41,9 +43,12 @@ export default function MarketTerminalPage() {
                 <span className="px-2 py-0.5 text-[10px] font-mono font-bold rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                   REALTIME TERMINAL
                 </span>
+                <span className="px-2 py-0.5 text-[10px] font-mono font-bold rounded-full bg-amber-400/10 text-amber-400 border border-amber-400/20 hidden md:inline-block">
+                  MINERVINI SYSTEM
+                </span>
               </div>
               <p className="text-xs text-zinc-400">
-                Hệ thống dữ liệu giao dịch trực tiếp Lightspeed & Phân tích chuyên sâu
+                Hệ thống dữ liệu giao dịch trực tiếp Lightspeed & Bộ lọc Mark Minervini SEPA
               </p>
             </div>
           </div>
@@ -52,26 +57,38 @@ export default function MarketTerminalPage() {
           <div className="flex items-center p-1 rounded-xl bg-zinc-900 border border-zinc-800/80">
             <button
               onClick={() => setViewMode('overview')}
-              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold transition-all ${
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all ${
                 viewMode === 'overview'
                   ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20'
                   : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
               }`}
             >
               <ChartPieSlice className="w-4 h-4" />
-              <span>Tổng Quan Thị Trường</span>
+              <span>Tổng Quan</span>
+            </button>
+
+            <button
+              onClick={() => setViewMode('screener')}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all ${
+                viewMode === 'screener'
+                  ? 'bg-amber-400 text-zinc-950 shadow-md shadow-amber-400/20'
+                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
+              }`}
+            >
+              <Funnel className="w-4 h-4" weight="fill" />
+              <span>Bộ Lọc Minervini</span>
             </button>
 
             <button
               onClick={() => setViewMode('detail')}
-              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold transition-all ${
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all ${
                 viewMode === 'detail'
                   ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20'
                   : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
               }`}
             >
               <Buildings className="w-4 h-4" />
-              <span>Chi Tiết Mã: {selectedSymbol}</span>
+              <span>Chart & Chi Tiết: {selectedSymbol}</span>
             </button>
           </div>
 
@@ -111,9 +128,11 @@ export default function MarketTerminalPage() {
           </div>
         </div>
 
-        {/* Dynamic Context View: Clean separation between Macro Overview & Stock Deep-Dive */}
+        {/* Dynamic Context View: Macro Overview vs Minervini Screener vs Stock Deep-Dive */}
         {viewMode === 'overview' ? (
           <MarketOverviewSection />
+        ) : viewMode === 'screener' ? (
+          <MarkMinerviniScreener />
         ) : (
           <StockDetailSection onBackToOverview={() => setViewMode('overview')} />
         )}
