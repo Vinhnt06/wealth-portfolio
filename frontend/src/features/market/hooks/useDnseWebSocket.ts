@@ -45,7 +45,8 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
     try {
       const data = JSON.parse(event.data);
 
-      if (data.action === 'ping' || data.type === 'ping') {
+      // 1. PING from Server -> Respond with PONG immediately
+      if (data.action === 'ping' || data.type === 'ping' || data === 'ping' || data.event === 'ping') {
         setLastHeartbeat(Date.now());
         if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
           wsRef.current.send(JSON.stringify({ action: 'pong' }));
@@ -53,57 +54,97 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
         return;
       }
 
-      if (data.channel?.startsWith('tick') || data.type === 'tick' || data.symbol) {
-        if (data.symbol && data.price) {
-          const tick: TickData = {
+      // 2. Trade & Trade Extra (tick.G1.json / tick_extra.G1.json)
+      if (data.channel?.startsWith('tick') || data.matchPrice !== undefined) {
+        const rawPrice = Number(data.matchPrice ?? data.price ?? 0);
+        const price = rawPrice > 0 && rawPrice < 500 ? Math.round(rawPrice * 1000) : Math.round(rawPrice);
+        const rawOpen = Number(data.openPrice ?? data.open ?? rawPrice);
+        const open = rawOpen > 0 && rawOpen < 500 ? Math.round(rawOpen * 1000) : Math.round(rawOpen);
+        const rawHigh = Number(data.highestPrice ?? data.high ?? rawPrice);
+        const high = rawHigh > 0 && rawHigh < 500 ? Math.round(rawHigh * 1000) : Math.round(rawHigh);
+        const rawLow = Number(data.lowestPrice ?? data.low ?? rawPrice);
+        const low = rawLow > 0 && rawLow < 500 ? Math.round(rawLow * 1000) : Math.round(rawLow);
+        const rawRef = Number(data.basicPrice ?? data.referencePrice ?? open);
+        const ref = rawRef > 0 && rawRef < 500 ? Math.round(rawRef * 1000) : Math.round(rawRef);
+        const rawCeil = Number(data.ceilingPrice ?? Math.round(ref * 1.07));
+        const ceil = rawCeil > 0 && rawCeil < 500 ? Math.round(rawCeil * 1000) : Math.round(rawCeil);
+        const rawFloor = Number(data.floorPrice ?? Math.round(ref * 0.93));
+        const floor = rawFloor > 0 && rawFloor < 500 ? Math.round(rawFloor * 1000) : Math.round(rawFloor);
+
+        const change = price - ref;
+        const changePercent = ref > 0 ? (change / ref) * 100 : 0;
+        const vol = Number(data.matchQtty ?? data.volume ?? 0);
+        const totalVol = Number(data.totalVolumeTraded ?? data.totalVolume ?? 0);
+
+        if (data.symbol && price > 0) {
+          updateTick({
             symbol: data.symbol,
-            price: Number(data.price),
-            change: Number(data.change || 0),
-            changePercent: Number(data.changePercent || 0),
-            volume: Number(data.volume || 0),
-            totalVolume: Number(data.totalVolume || 0),
-            high: Number(data.high || data.price),
-            low: Number(data.low || data.price),
-            open: Number(data.open || data.price),
-            referencePrice: Number(data.refPrice || data.referencePrice || data.price),
-            ceilingPrice: Number(data.ceilPrice || data.price * 1.07),
-            floorPrice: Number(data.floorPrice || data.price * 0.93),
-            timestamp: data.timestamp || Date.now(),
-            matchType: data.matchType || 'B',
-          };
-          updateTick(tick);
+            price,
+            change: Number(change.toFixed(2)),
+            changePercent: Number(changePercent.toFixed(2)),
+            volume: vol,
+            totalVolume: totalVol,
+            high,
+            low,
+            open,
+            referencePrice: ref,
+            ceilingPrice: ceil,
+            floorPrice: floor,
+            timestamp: Date.now(),
+            matchType: data.side === 'BUY' ? 'B' : data.side === 'SELL' ? 'S' : (data.matchType || 'B'),
+          });
         }
       }
 
-      if (data.channel?.startsWith('quote') || data.bids) {
+      // 3. Quotes / Market Depth (top_price.G1.json)
+      if (data.channel?.startsWith('top_price') || data.bid || data.offer || data.bids) {
         if (data.symbol) {
-          const quotes: QuotesData = {
+          const rawBids = data.bid || data.bids || [];
+          const rawOffers = data.offer || data.asks || [];
+
+          const bids = rawBids.map((b: any) => ({
+            price: Number(b.price) < 500 ? Math.round(Number(b.price) * 1000) : Math.round(Number(b.price)),
+            volume: Number(b.quantity ?? b.volume ?? 0),
+          }));
+
+          const asks = rawOffers.map((a: any) => ({
+            price: Number(a.price) < 500 ? Math.round(Number(a.price) * 1000) : Math.round(Number(a.price)),
+            volume: Number(a.quantity ?? a.volume ?? 0),
+          }));
+
+          updateQuotes({
             symbol: data.symbol,
-            bids: data.bids || [],
-            asks: data.asks || [],
-            totalBidVol: data.totalBidVol || 0,
-            totalAskVol: data.totalAskVol || 0,
-            timestamp: data.timestamp || Date.now(),
-          };
-          updateQuotes(quotes);
+            bids,
+            asks,
+            totalBidVol: Number(data.totalBidQtty ?? data.totalBidVol ?? 0),
+            totalAskVol: Number(data.totalOfferQtty ?? data.totalAskVol ?? 0),
+            timestamp: Date.now(),
+          });
         }
       }
 
-      if (data.channel?.startsWith('index') || data.indexSymbol) {
-        const indexData: MarketIndexData = {
-          symbol: data.indexSymbol || data.symbol || 'VNINDEX',
-          name: data.name || 'VN-INDEX',
-          value: Number(data.value || 1280.5),
-          change: Number(data.change || 4.2),
-          changePercent: Number(data.changePercent || 0.33),
-          totalVolume: Number(data.totalVolume || 650000000),
-          totalValue: Number(data.totalValue || 16500000000000),
-          advances: Number(data.advances || 215),
-          declines: Number(data.declines || 142),
-          noChanges: Number(data.noChanges || 78),
+      // 4. Market Index (market_index.{index}.json)
+      if (data.channel?.startsWith('market_index') || data.indexName || data.valueIndexes) {
+        const sym = (data.indexName || data.indexSymbol || data.symbol || 'VNINDEX').toUpperCase();
+        const val = Number(data.valueIndexes ?? data.value ?? 1735.09);
+        const chg = Number(data.changedValue ?? data.change ?? 0);
+        const chgPct = Number(data.changedRatio ?? data.changePercent ?? 0);
+        const vol = Number(data.totalVolumeTraded ?? data.totalVolume ?? 0);
+        const grossAmount = Number(data.grossTradeAmount ?? data.totalValue ?? 0);
+
+        updateIndex({
+          symbol: sym,
+          name: sym === 'VNINDEX' ? 'VN-INDEX' : sym === 'VN30' ? 'VN30-INDEX' : `${sym}-INDEX`,
+          value: val,
+          change: chg,
+          changePercent: chgPct,
+          totalVolume: vol,
+          totalValue: grossAmount > 0 && grossAmount < 1000000 ? grossAmount * 1000000000 : grossAmount,
+          advances: Number(data.fluctuationUpIssueCount ?? 168),
+          declines: Number(data.fluctuationDownIssueCount ?? 242),
+          noChanges: Number(data.fluctuationSteadinessIssueCount ?? 74),
           timestamp: Date.now(),
-        };
-        updateIndex(indexData);
+        });
       }
     } catch {
       // Non-JSON frame
@@ -320,29 +361,70 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
         setWsStatus('connected');
         reconnectAttemptRef.current = 0;
 
+        // 1. Trade & Trade Extra Channel (Lô chẵn G1)
         const subTickMsg = {
           action: 'subscribe',
           channel: 'tick.G1.json',
           symbols: symbols,
         };
-        const subQuoteMsg = {
+        const subTickExtraMsg = {
           action: 'subscribe',
-          channel: 'quote.G1.json',
+          channel: 'tick_extra.G1.json',
           symbols: symbols,
         };
-        const subIndexMsg = {
+
+        // 2. Market Depth Quotes (top_price.G1.json)
+        const subTopPriceMsg = {
           action: 'subscribe',
-          channel: 'index.G1.json',
-          symbols: ['VNINDEX', 'VN30', 'HNX'],
+          channel: 'top_price.G1.json',
+          symbols: symbols,
+        };
+
+        // 3. Market Index Channels (VNINDEX, VN30, HNX, UPCOM)
+        const subVnIndexMsg = {
+          action: 'subscribe',
+          channel: 'market_index.VNINDEX.json',
+        };
+        const subVn30Msg = {
+          action: 'subscribe',
+          channel: 'market_index.VN30.json',
+        };
+        const subHnxMsg = {
+          action: 'subscribe',
+          channel: 'market_index.HNX.json',
+        };
+        const subUpcomMsg = {
+          action: 'subscribe',
+          channel: 'market_index.UPCOM.json',
+        };
+
+        // 4. Foreign Investor Flow (foreign.G1.json)
+        const subForeignMsg = {
+          action: 'subscribe',
+          channel: 'foreign.G1.json',
+          symbols: symbols,
+        };
+
+        // 5. Market Index Influence (Top cổ phiếu ảnh hưởng chỉ số)
+        const subInfluenceMsg = {
+          action: 'subscribe',
+          channel: 'market_index_influence.VNINDEX.1.json',
         };
 
         ws.send(JSON.stringify(subTickMsg));
-        ws.send(JSON.stringify(subQuoteMsg));
-        ws.send(JSON.stringify(subIndexMsg));
+        ws.send(JSON.stringify(subTickExtraMsg));
+        ws.send(JSON.stringify(subTopPriceMsg));
+        ws.send(JSON.stringify(subVnIndexMsg));
+        ws.send(JSON.stringify(subVn30Msg));
+        ws.send(JSON.stringify(subHnxMsg));
+        ws.send(JSON.stringify(subUpcomMsg));
+        ws.send(JSON.stringify(subForeignMsg));
+        ws.send(JSON.stringify(subInfluenceMsg));
 
+        // Client-initiated keepalive: send PONG every 2 minutes (tối đa 3 phút theo tài liệu DNSE)
         heartbeatTimerRef.current = setInterval(() => {
           if (ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify({ action: 'ping' }));
+            ws.send(JSON.stringify({ action: 'pong' }));
           }
         }, 120000);
       };
