@@ -20,46 +20,56 @@ import {
   TrendDown,
   Clock,
   ArrowsOutSimple,
-  Eye,
-  EyeSlash,
   ChartLine,
-  Sparkle,
   Cursor,
   Minus,
   Percent,
   Square,
   Ruler,
   ArrowCounterClockwise,
+  ArrowClockwise,
   Trash,
   Palette,
   X,
   SpinnerGap,
+  Function as FxIcon,
+  TextT,
+  ChartBar,
+  ArrowsOut,
 } from '@phosphor-icons/react';
 import stockDatabase from '../data/stockDatabase.json';
 
-const EXCHANGE_MAP = new Map<string, string>();
+const STOCK_MAP = new Map<string, { name: string; exchange: string }>();
 (stockDatabase as any[]).forEach((item) => {
-  EXCHANGE_MAP.set(item.symbol.toUpperCase(), item.exchange);
+  STOCK_MAP.set(item.symbol.toUpperCase(), { name: item.name, exchange: item.exchange });
 });
 
-// Timeframe Resolution Presets for Native Mode
+// Timeframe Resolution Presets
 const RESOLUTIONS = [
-  { id: '1m', label: '1M' },
-  { id: '5m', label: '5M' },
-  { id: '15m', label: '15M' },
+  { id: '1m', label: '1m' },
+  { id: '5m', label: '5m' },
+  { id: '15m', label: '15m' },
   { id: '1h', label: '1H' },
-  { id: '1D', label: '1D' },
-  { id: '1Mo', label: '1Tháng' },
-  { id: '3Mo', label: '3Tháng' },
-  { id: '6Mo', label: '6Tháng' },
-  { id: '1Y', label: '1Năm' },
-  { id: 'ALL', label: 'Tất cả' },
+  { id: '1D', label: 'D' },
+  { id: '1W', label: 'W' },
 ] as const;
 
 type ResolutionId = typeof RESOLUTIONS[number]['id'];
 
+// Quick Date Ranges (TradingView bottom bar)
+const DATE_RANGES = [
+  { id: '1d', label: '1n', bars: 1 },
+  { id: '5d', label: '5n', bars: 5 },
+  { id: '1m', label: '1t', bars: 22 },
+  { id: '3m', label: '3t', bars: 66 },
+  { id: '6m', label: '6t', bars: 130 },
+  { id: '1y', label: '1y', bars: 250 },
+  { id: '5y', label: '5y', bars: 1250 },
+  { id: 'all', label: 'Tất cả', bars: 99999 },
+] as const;
+
 // Drawing Tool Types & Schema
-export type DrawingTool = 'cursor' | 'trendline' | 'horizontal' | 'fibonacci' | 'rectangle' | 'measure';
+export type DrawingTool = 'cursor' | 'trendline' | 'horizontal' | 'fibonacci' | 'rectangle' | 'measure' | 'text';
 
 export interface DrawingItem {
   id: string;
@@ -69,105 +79,24 @@ export interface DrawingItem {
   width: number;
   p1: { time: Time; price: number };
   p2?: { time: Time; price: number };
+  text?: string;
 }
 
 const TOOL_LABELS: Record<DrawingTool, string> = {
-  cursor: 'Con trỏ chuột',
+  cursor: 'Con trỏ chuột (Crosshair)',
   trendline: 'Đường xu hướng (Trendline)',
   horizontal: 'Đường ngang Hỗ trợ / Kháng cự',
-  fibonacci: 'Thoái lui Fibonacci',
+  fibonacci: 'Thoái lui Fibonacci (Tỷ lệ vàng)',
   rectangle: 'Hộp vùng giá (Supply / Demand)',
   measure: 'Thước đo biến động (% & Giá)',
+  text: 'Ghi chú văn bản (Text note)',
 };
 
 const PALETTE = ['#10b981', '#f43f5e', '#f59e0b', '#0ea5e9', '#f4f4f5'];
 
-// ── Official TradingView Pro Advanced Real-Time Chart ─────────────────
-function TradingViewProEmbed({ symbol }: { symbol: string }) {
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  const cleanSym = symbol.toUpperCase().trim();
-  const exchange = EXCHANGE_MAP.get(cleanSym) || 'HOSE';
-  // TradingView accepts HOSE:SYM, HNX:SYM, UPCOM:SYM for Vietnam equities
-  const tvSymbol = cleanSym.includes(':') ? cleanSym : `${exchange}:${cleanSym}`;
-  const containerId = useMemo(() => `tv_chart_${cleanSym.toLowerCase()}`, [cleanSym]);
-
-  useEffect(() => {
-    let isCancelled = false;
-    const container = containerRef.current;
-    if (!container) return;
-
-    container.innerHTML = '';
-    const innerDiv = document.createElement('div');
-    innerDiv.id = containerId;
-    innerDiv.style.width = '100%';
-    innerDiv.style.height = '100%';
-    container.appendChild(innerDiv);
-
-    const initWidget = () => {
-      if (isCancelled || !containerRef.current) return;
-      if (typeof (window as any).TradingView !== 'undefined') {
-        new (window as any).TradingView.widget({
-          autosize: true,
-          symbol: tvSymbol,
-          interval: 'D',
-          timezone: 'Asia/Ho_Chi_Minh',
-          theme: 'dark',
-          style: '1',
-          locale: 'vi',
-          toolbar_bg: '#09090b',
-          enable_publishing: false,
-          allow_symbol_change: true,
-          container_id: containerId,
-          hide_side_toolbar: false, // Hiện đầy đủ thanh công cụ vẽ bên trái chuẩn TradingView
-          hide_top_toolbar: false,  // Hiện đầy đủ thanh fx Chỉ báo & Khung thời gian
-          withdateranges: true,     // Hiện thanh chọn 5y 1y 6t 3t 1t ở đáy
-          save_image: true,
-          details: true,
-          hotlist: false,
-          calendar: false,
-          show_popup_button: true,
-          popup_width: '1000',
-          popup_height: '650',
-          studies: [
-            'Volume@tv-basicstudies',
-          ],
-        });
-      }
-    };
-
-    if (typeof (window as any).TradingView !== 'undefined') {
-      initWidget();
-    } else {
-      const scriptId = 'tradingview-tv-js';
-      let script = document.getElementById(scriptId) as HTMLScriptElement;
-      if (!script) {
-        script = document.createElement('script');
-        script.id = scriptId;
-        script.src = 'https://s3.tradingview.com/tv.js';
-        script.async = true;
-        document.head.appendChild(script);
-      }
-      script.addEventListener('load', initWidget);
-    }
-
-    return () => {
-      isCancelled = true;
-      if (container) {
-        container.innerHTML = '';
-      }
-    };
-  }, [tvSymbol, containerId]);
-
-  return (
-    <div className="w-full h-[600px] min-h-[600px] rounded-xl overflow-hidden bg-zinc-950 border border-zinc-800/80 shadow-2xl relative">
-      <div ref={containerRef} className="w-full h-full min-h-[600px]" />
-    </div>
-  );
-}
-
-// ── Main MarketCandleChart Component ─────────────────────────────────
+// ── Native Stream MarketCandleChart Component ────────────────────────
 export function MarketCandleChart() {
+  const fullWrapperRef = useRef<HTMLDivElement>(null);
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
@@ -175,26 +104,40 @@ export function MarketCandleChart() {
   const volumeSeriesRef = useRef<ISeriesApi<'Histogram'> | null>(null);
   const ma20SeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
   const ma50SeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
+  const bbUpperSeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
+  const bbLowerSeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
   const lastCandleRef = useRef<{ time: Time; open: number; high: number; low: number; close: number } | null>(null);
+  const loadedCandlesRef = useRef<CandlestickData<Time>[]>([]);
 
   const { selectedSymbol, ticks } = useMarketStore();
-  const exchange = EXCHANGE_MAP.get(selectedSymbol.toUpperCase()) || 'HOSE';
+  const stockInfo = STOCK_MAP.get(selectedSymbol.toUpperCase()) || {
+    name: `Công ty CP ${selectedSymbol}`,
+    exchange: 'HOSE',
+  };
 
-  // Default to 'tradingview' so user immediately enjoys the full TradingView layout from screenshot
-  const [chartMode, setChartMode] = useState<'tradingview' | 'native'>('tradingview');
   const [resolution, setResolution] = useState<ResolutionId>('1D');
+  const [activeRange, setActiveRange] = useState<string>('all');
+  const [chartType, setChartType] = useState<'candles' | 'line'>('candles');
+  const [isLoading, setIsLoading] = useState(false);
+  const [currentTimeStr, setCurrentTimeStr] = useState('');
+
+  // Indicators toggle
+  const [showIndicatorsModal, setShowIndicatorsModal] = useState(false);
   const [showMA20, setShowMA20] = useState(true);
   const [showMA50, setShowMA50] = useState(true);
-  const [isLoadingNative, setIsLoadingNative] = useState(false);
+  const [showBB, setShowBB] = useState(false);
+  const [showVolume, setShowVolume] = useState(true);
 
-  // Drawing Tools State for Native Mode
+  // Drawing Tools State
   const [activeTool, setActiveTool] = useState<DrawingTool>('cursor');
   const [activeColor, setActiveColor] = useState<string>('#10b981');
   const [activeWidth, setActiveWidth] = useState<number>(2);
   const [showPalette, setShowPalette] = useState<boolean>(false);
   const [drawings, setDrawings] = useState<DrawingItem[]>([]);
   const [draftDrawing, setDraftDrawing] = useState<DrawingItem | null>(null);
+  const [undoStack, setUndoStack] = useState<DrawingItem[][]>([]);
 
+  // Hovered Crosshair inspection data
   const [hoveredData, setHoveredData] = useState<{
     open?: number;
     high?: number;
@@ -207,6 +150,22 @@ export function MarketCandleChart() {
 
   const currentTick = ticks[selectedSymbol];
 
+  // Clock timer (Vietnam UTC+7)
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date();
+      setCurrentTimeStr(
+        now.toLocaleTimeString('vi-VN', {
+          timeZone: 'Asia/Ho_Chi_Minh',
+          hour12: false,
+        }) + ' (UTC+7)'
+      );
+    };
+    updateTime();
+    const interval = setInterval(updateTime, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   // Load saved drawings per symbol from localStorage
   useEffect(() => {
     try {
@@ -217,6 +176,7 @@ export function MarketCandleChart() {
         setDrawings([]);
       }
       setDraftDrawing(null);
+      setUndoStack([]);
     } catch {
       setDrawings([]);
     }
@@ -228,13 +188,14 @@ export function MarketCandleChart() {
     } catch {}
   };
 
-  // Keyboard shortcut listener: Esc cancels current drawing & returns to cursor
+  // Keyboard shortcut listener: Esc cancels current drawing
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setDraftDrawing(null);
         setActiveTool('cursor');
         setShowPalette(false);
+        setShowIndicatorsModal(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -292,12 +253,12 @@ export function MarketCandleChart() {
           // Price Tag on right axis
           ctx.setLineDash([]);
           ctx.fillStyle = item.color;
-          ctx.fillRect(w - 68, y - 10, 64, 20);
+          ctx.fillRect(w - 72, y - 10, 68, 20);
           ctx.fillStyle = '#09090b';
           ctx.font = 'bold 10px JetBrains Mono, monospace';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
-          ctx.fillText(`${item.p1.price.toFixed(2)}k`, w - 36, y);
+          ctx.fillText(`${item.p1.price.toFixed(2)}k`, w - 38, y);
         }
       } else if (item.type === 'trendline' && item.p2) {
         const c1 = toCoord(item.p1);
@@ -399,6 +360,20 @@ export function MarketCandleChart() {
           ctx.textBaseline = 'middle';
           ctx.fillText(`${isUp ? '+' : ''}${deltaP.toFixed(2)}k (${isUp ? '+' : ''}${deltaPct.toFixed(2)}%)`, midX, midY);
         }
+      } else if (item.type === 'text' && item.text) {
+        const c1 = toCoord(item.p1);
+        if (c1.x !== null && c1.y !== null) {
+          ctx.font = 'bold 11px JetBrains Mono, monospace';
+          const textMetrics = ctx.measureText(item.text);
+          ctx.fillStyle = 'rgba(9, 9, 11, 0.9)';
+          ctx.fillRect(c1.x - 4, c1.y - 14, textMetrics.width + 8, 18);
+          ctx.strokeStyle = item.color;
+          ctx.strokeRect(c1.x - 4, c1.y - 14, textMetrics.width + 8, 18);
+
+          ctx.fillStyle = item.color;
+          ctx.textAlign = 'left';
+          ctx.fillText(item.text, c1.x, c1.y);
+        }
       }
       ctx.restore();
     });
@@ -406,7 +381,7 @@ export function MarketCandleChart() {
     ctx.restore();
   }, [drawings, draftDrawing]);
 
-  // Adjust canvas size to match container with High-DPI support
+  // Adjust canvas size to match container
   const updateCanvasSize = useCallback(() => {
     const canvas = canvasRef.current;
     const container = chartContainerRef.current;
@@ -425,11 +400,11 @@ export function MarketCandleChart() {
     redrawCanvas();
   }, [redrawCanvas]);
 
-  // Mount Lightweight Chart for Native Mode (NO FAKE MOCK CANDLES)
+  // Mount Lightweight Chart
   useEffect(() => {
-    if (chartMode !== 'native' || !chartContainerRef.current) return;
     const container = chartContainerRef.current;
-    const isDaily = resolution === '1D' || resolution.includes('Mo') || resolution.includes('Y') || resolution === 'ALL';
+    if (!container) return;
+    const isDaily = resolution === '1D' || resolution === '1W';
 
     const chart = createChart(container, {
       layout: {
@@ -494,7 +469,22 @@ export function MarketCandleChart() {
     });
     ma50SeriesRef.current = ma50Series;
 
-    // Hook chart panning & zooming to re-render overlay drawings instantly
+    const bbUpperSeries = chart.addSeries(LineSeries, {
+      color: 'rgba(168, 85, 247, 0.7)',
+      lineWidth: 1,
+      priceFormat: { type: 'price', precision: 2, minMove: 0.05 },
+      title: 'BB Upper',
+    });
+    bbUpperSeriesRef.current = bbUpperSeries;
+
+    const bbLowerSeries = chart.addSeries(LineSeries, {
+      color: 'rgba(168, 85, 247, 0.7)',
+      lineWidth: 1,
+      priceFormat: { type: 'price', precision: 2, minMove: 0.05 },
+      title: 'BB Lower',
+    });
+    bbLowerSeriesRef.current = bbLowerSeries;
+
     chart.timeScale().subscribeVisibleLogicalRangeChange(() => {
       requestAnimationFrame(redrawCanvas);
     });
@@ -502,27 +492,22 @@ export function MarketCandleChart() {
       requestAnimationFrame(redrawCanvas);
     });
 
-    // Fetch REAL historical candles from DNSE API (days=0 returns full history since listing)
     let isCancelled = false;
     let daysToFetch = 0;
     if (resolution === '1m') daysToFetch = 2;
     else if (resolution === '5m') daysToFetch = 5;
     else if (resolution === '15m') daysToFetch = 14;
     else if (resolution === '1h') daysToFetch = 60;
-    else if (resolution === '1Mo') daysToFetch = 30;
-    else if (resolution === '3Mo') daysToFetch = 90;
-    else if (resolution === '6Mo') daysToFetch = 180;
-    else if (resolution === '1Y') daysToFetch = 365;
-    else if (resolution === 'ALL' || resolution === '1D') daysToFetch = 0;
+    else if (resolution === '1D' || resolution === '1W') daysToFetch = 0; // Từ ngày đầu tiên niêm yết
 
-    setIsLoadingNative(true);
+    setIsLoading(true);
     fetch(`/api/market/history?symbol=${selectedSymbol}&resolution=${resolution}&days=${daysToFetch}`)
       .then((res) => res.json())
       .then((resData) => {
         if (isCancelled) return;
-        setIsLoadingNative(false);
+        setIsLoading(false);
         if (!resData.success || !resData.data || resData.data.length === 0) return;
-        const isDaily = resolution === '1D' || resolution.includes('Mo') || resolution.includes('Y') || resolution === 'ALL';
+        const isDaily = resolution === '1D' || resolution === '1W';
 
         const realCandles: CandlestickData<Time>[] = [];
         const realVolumes: HistogramData<Time>[] = [];
@@ -548,13 +533,25 @@ export function MarketCandleChart() {
         realCandles.sort((a, b) => (a.time > b.time ? 1 : -1));
         const uniqueCandles = realCandles.filter((item, idx, arr) => idx === 0 || item.time !== arr[idx - 1].time);
         const uniqueVolumes = realVolumes.filter((item, idx, arr) => idx === 0 || item.time !== arr[idx - 1].time);
+        loadedCandlesRef.current = uniqueCandles;
 
         const realMa20: LineData<Time>[] = [];
         const realMa50: LineData<Time>[] = [];
+        const bbUpperData: LineData<Time>[] = [];
+        const bbLowerData: LineData<Time>[] = [];
+
         for (let i = 0; i < uniqueCandles.length; i++) {
           if (i >= 19) {
-            const sum20 = uniqueCandles.slice(i - 19, i + 1).reduce((acc, x) => acc + x.close, 0);
-            realMa20.push({ time: uniqueCandles[i].time, value: Math.round((sum20 / 20) * 100) / 100 });
+            const slice20 = uniqueCandles.slice(i - 19, i + 1);
+            const sum20 = slice20.reduce((acc, x) => acc + x.close, 0);
+            const mean20 = sum20 / 20;
+            realMa20.push({ time: uniqueCandles[i].time, value: Math.round(mean20 * 100) / 100 });
+
+            // Bollinger Bands (20, 2)
+            const variance = slice20.reduce((acc, x) => acc + Math.pow(x.close - mean20, 2), 0) / 20;
+            const std = Math.sqrt(variance);
+            bbUpperData.push({ time: uniqueCandles[i].time, value: Math.round((mean20 + 2 * std) * 100) / 100 });
+            bbLowerData.push({ time: uniqueCandles[i].time, value: Math.round((mean20 - 2 * std) * 100) / 100 });
           }
           if (i >= 49) {
             const sum50 = uniqueCandles.slice(i - 49, i + 1).reduce((acc, x) => acc + x.close, 0);
@@ -564,11 +561,14 @@ export function MarketCandleChart() {
 
         if (uniqueCandles.length > 0) {
           candlestickSeries.setData(uniqueCandles);
-          volumeSeries.setData(uniqueVolumes);
+          if (showVolume) volumeSeries.setData(uniqueVolumes);
           if (showMA20) ma20Series.setData(realMa20);
           if (showMA50) ma50Series.setData(realMa50);
+          if (showBB) {
+            bbUpperSeries.setData(bbUpperData);
+            bbLowerSeries.setData(bbLowerData);
+          }
 
-          // Focus on recent 150 candles so bars look spacious, while user can scroll back to day 1
           if (uniqueCandles.length > 150) {
             chart.timeScale().setVisibleLogicalRange({
               from: uniqueCandles.length - 140,
@@ -591,7 +591,7 @@ export function MarketCandleChart() {
         }
       })
       .catch(() => {
-        setIsLoadingNative(false);
+        setIsLoading(false);
       });
 
     chart.subscribeCrosshairMove((param) => {
@@ -631,11 +631,11 @@ export function MarketCandleChart() {
       chart.remove();
       chartRef.current = null;
     };
-  }, [chartMode, resolution, selectedSymbol, showMA20, showMA50, redrawCanvas, updateCanvasSize]);
+  }, [resolution, selectedSymbol, showMA20, showMA50, showBB, showVolume, redrawCanvas, updateCanvasSize]);
 
-  // Real-time tick update to candle in Native Mode
+  // Real-time tick update to candle
   useEffect(() => {
-    if (chartMode !== 'native' || !currentTick?.price || !candleSeriesRef.current || !volumeSeriesRef.current) return;
+    if (!currentTick?.price || !candleSeriesRef.current || !volumeSeriesRef.current) return;
     const livePriceK = Math.round((currentTick.price / 1000) * 100) / 100;
     const tickVol = currentTick.volume || 10000;
 
@@ -667,9 +667,38 @@ export function MarketCandleChart() {
 
       requestAnimationFrame(redrawCanvas);
     }
-  }, [chartMode, currentTick, redrawCanvas]);
+  }, [currentTick, redrawCanvas]);
 
-  // Canvas Mouse Event Handlers for Interactive Drawing
+  // Switch Quick Date Ranges instantaneously
+  const handleRangeSelect = (rangeId: string, bars: number) => {
+    setActiveRange(rangeId);
+    const chart = chartRef.current;
+    const total = loadedCandlesRef.current.length;
+    if (!chart || total === 0) return;
+
+    if (rangeId === 'all') {
+      chart.timeScale().fitContent();
+    } else {
+      const fromIdx = Math.max(0, total - bars);
+      chart.timeScale().setVisibleLogicalRange({
+        from: fromIdx,
+        to: total + 5,
+      });
+    }
+  };
+
+  // Fullscreen Handler
+  const toggleFullscreen = () => {
+    const el = fullWrapperRef.current;
+    if (!el) return;
+    if (!document.fullscreenElement) {
+      el.requestFullscreen().catch(() => {});
+    } else {
+      document.exitFullscreen().catch(() => {});
+    }
+  };
+
+  // Interactive Drawing Handlers
   const handleCanvasMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (activeTool === 'cursor') return;
     const canvas = canvasRef.current;
@@ -688,6 +717,7 @@ export function MarketCandleChart() {
     const point = { time, price: Math.round(price * 100) / 100 };
 
     if (activeTool === 'horizontal') {
+      setUndoStack((prev) => [...prev, drawings]);
       const newDrawing: DrawingItem = {
         id: `draw_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
         type: 'horizontal',
@@ -702,6 +732,27 @@ export function MarketCandleChart() {
       return;
     }
 
+    if (activeTool === 'text') {
+      const note = window.prompt('Nhập ghi chú giá:', 'Vùng cản kỹ thuật');
+      if (note) {
+        setUndoStack((prev) => [...prev, drawings]);
+        const newDrawing: DrawingItem = {
+          id: `draw_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+          type: 'text',
+          symbol: selectedSymbol,
+          color: activeColor,
+          width: activeWidth,
+          p1: point,
+          text: note,
+        };
+        const updated = [...drawings, newDrawing];
+        setDrawings(updated);
+        saveDrawings(updated);
+      }
+      setActiveTool('cursor');
+      return;
+    }
+
     if (!draftDrawing) {
       setDraftDrawing({
         id: `draw_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
@@ -713,6 +764,7 @@ export function MarketCandleChart() {
         p2: point,
       });
     } else {
+      setUndoStack((prev) => [...prev, drawings]);
       const finalDrawing: DrawingItem = {
         ...draftDrawing,
         p2: point,
@@ -753,12 +805,16 @@ export function MarketCandleChart() {
 
   const handleUndo = () => {
     if (drawings.length === 0) return;
+    const last = drawings[drawings.length - 1];
+    setUndoStack((prev) => [...prev, [last]]);
     const updated = drawings.slice(0, drawings.length - 1);
     setDrawings(updated);
     saveDrawings(updated);
   };
 
   const handleClearAll = () => {
+    if (drawings.length === 0) return;
+    setUndoStack((prev) => [...prev, drawings]);
     setDrawings([]);
     setDraftDrawing(null);
     saveDrawings([]);
@@ -770,323 +826,366 @@ export function MarketCandleChart() {
   const isPositive = currentTick ? currentTick.change >= 0 : true;
 
   return (
-    <div className="bg-zinc-950/90 border border-zinc-800/60 rounded-2xl p-4 backdrop-blur-xl flex flex-col h-full relative overflow-hidden">
-      {/* Background Watermark Ticker Symbol */}
-      <div className="absolute right-6 bottom-10 text-8xl font-mono font-black text-white/[0.02] select-none pointer-events-none tracking-tighter">
-        {selectedSymbol}
-      </div>
-
-      {/* Chart Control Bar Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-800/60 pb-3 mb-3 z-10">
+    <div
+      ref={fullWrapperRef}
+      className="bg-zinc-950 border border-zinc-800/80 rounded-2xl flex flex-col h-full relative overflow-hidden select-none"
+    >
+      {/* ── TradingView-Style Top Navigation & Header Bar ────────── */}
+      <div className="flex flex-wrap items-center justify-between px-3 py-2 border-b border-zinc-800/70 bg-zinc-950 text-zinc-300 text-xs gap-2 z-30">
+        {/* Left: Ticker & Live Legend */}
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
-            {isPositive ? <TrendUp size={18} weight="bold" /> : <TrendDown size={18} weight="bold" />}
+          <div className="flex items-center gap-1.5 font-sans">
+            <span className="font-bold text-zinc-100 text-sm tracking-tight">{stockInfo.name}</span>
+            <span className="text-zinc-500">·</span>
+            <span className="font-mono font-extrabold text-emerald-400 text-xs px-1.5 py-0.5 bg-emerald-500/10 rounded border border-emerald-500/20">
+              {selectedSymbol}
+            </span>
+            <span className="text-zinc-500">·</span>
+            <span className="font-mono text-zinc-400 text-xs">{resolution}</span>
+            <span className="text-zinc-500">·</span>
+            <span className="font-mono text-zinc-400 text-xs">{stockInfo.exchange}</span>
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="font-mono font-bold text-zinc-100 text-sm tracking-tight">{selectedSymbol}</h3>
-              <span className="text-[10px] font-mono text-zinc-400 bg-zinc-900 border border-zinc-800 px-1.5 py-0.5 rounded">
-                {exchange}
-              </span>
+
+          {/* Real-time OHLC Legend */}
+          <div className="hidden lg:flex items-center gap-2 font-mono text-[11px] text-zinc-400 ml-2">
+            <div>O <span className="text-zinc-200 font-bold">{hoveredData?.open ? hoveredData.open.toFixed(2) : priceDisplayK}</span></div>
+            <div>H <span className="text-emerald-400 font-bold">{hoveredData?.high ? hoveredData.high.toFixed(2) : priceDisplayK}</span></div>
+            <div>L <span className="text-rose-400 font-bold">{hoveredData?.low ? hoveredData.low.toFixed(2) : priceDisplayK}</span></div>
+            <div>C <span className="text-zinc-100 font-bold">{hoveredData?.close ? hoveredData.close.toFixed(2) : priceDisplayK}</span></div>
+            <div className={isPositive ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}>
+              {hoveredData?.change ? `${hoveredData.change >= 0 ? '+' : ''}${hoveredData.change.toFixed(2)} (${hoveredData.changePct?.toFixed(2)}%)` : `${isPositive ? '+' : ''}${changeK} (${isPositive ? '+' : ''}${changePct}%)`}
             </div>
-            <div className="flex items-center gap-2 font-mono text-xs mt-0.5">
-              <span className="text-zinc-100 font-extrabold">{priceDisplayK}k</span>
-              <span className={isPositive ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}>
-                {isPositive ? '+' : ''}{changeK} ({isPositive ? '+' : ''}{changePct}%)
-              </span>
-            </div>
+            {hoveredData?.volume && (
+              <div className="text-zinc-500 ml-1">Vol: <span className="text-zinc-300 font-bold">{hoveredData.volume.toLocaleString()}</span></div>
+            )}
           </div>
         </div>
 
-        {/* Engine Switcher & Indicator Controls */}
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Chart Engine Mode Toggle */}
-          <div className="flex items-center bg-zinc-900 p-1 rounded-xl border border-zinc-800">
-            <button
-              onClick={() => setChartMode('tradingview')}
-              className={`flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-mono font-bold rounded-lg transition-all ${
-                chartMode === 'tradingview'
-                  ? 'bg-emerald-500 text-zinc-950 shadow-sm'
-                  : 'text-zinc-400 hover:text-zinc-200'
-              }`}
-            >
-              <Sparkle size={12} weight="bold" />
-              <span>TradingView Pro (Toàn bộ công cụ)</span>
-            </button>
-
-            <button
-              onClick={() => setChartMode('native')}
-              className={`flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-mono font-bold rounded-lg transition-all ${
-                chartMode === 'native'
-                  ? 'bg-emerald-500 text-zinc-950 shadow-sm'
-                  : 'text-zinc-400 hover:text-zinc-200'
-              }`}
-            >
-              <ChartLine size={12} weight="bold" />
-              <span>Native Stream (WebSocket DNSE)</span>
-            </button>
+        {/* Center / Right: Indicators, Resolutions, Actions */}
+        <div className="flex items-center gap-1.5">
+          {/* Resolution buttons */}
+          <div className="flex items-center bg-zinc-900 border border-zinc-800 rounded-lg p-0.5">
+            {RESOLUTIONS.map((res) => (
+              <button
+                key={res.id}
+                onClick={() => setResolution(res.id)}
+                className={`px-2 py-0.5 text-[11px] font-mono font-medium rounded transition-all ${
+                  resolution === res.id
+                    ? 'bg-emerald-500 text-zinc-950 font-bold shadow'
+                    : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
+                }`}
+              >
+                {res.label}
+              </button>
+            ))}
           </div>
 
-          {/* Controls specific to Native mode */}
-          {chartMode === 'native' && (
-            <>
-              <div className="flex items-center gap-1 bg-zinc-900/80 p-1 rounded-xl border border-zinc-800/80">
-                <button
-                  onClick={() => setShowMA20(!showMA20)}
-                  className={`flex items-center gap-1 px-2 py-1 text-[10px] font-mono font-semibold rounded-lg transition-colors ${
-                    showMA20 ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'text-zinc-500 hover:text-zinc-300'
-                  }`}
-                >
-                  {showMA20 ? <Eye size={12} /> : <EyeSlash size={12} />}
-                  <span>MA20</span>
-                </button>
+          <div className="w-px h-4 bg-zinc-800 mx-0.5" />
 
-                <button
-                  onClick={() => setShowMA50(!showMA50)}
-                  className={`flex items-center gap-1 px-2 py-1 text-[10px] font-mono font-semibold rounded-lg transition-colors ${
-                    showMA50 ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'text-zinc-500 hover:text-zinc-300'
-                  }`}
-                >
-                  {showMA50 ? <Eye size={12} /> : <EyeSlash size={12} />}
-                  <span>MA50</span>
-                </button>
-              </div>
+          {/* Indicators Button */}
+          <div className="relative">
+            <button
+              onClick={() => setShowIndicatorsModal(!showIndicatorsModal)}
+              className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-mono font-semibold bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-200 rounded-lg transition-all"
+            >
+              <FxIcon size={14} className="text-emerald-400" />
+              <span>Các chỉ báo</span>
+            </button>
 
-              <div className="flex items-center gap-1 bg-zinc-900/80 p-1 rounded-xl border border-zinc-800/80 overflow-x-auto max-w-full">
-                <Clock size={13} className="text-zinc-500 ml-1 mr-0.5 shrink-0" />
-                {RESOLUTIONS.map((res) => (
+            {/* Indicators Popover */}
+            {showIndicatorsModal && (
+              <div className="absolute right-0 top-full mt-2 w-56 bg-zinc-900 border border-zinc-800 rounded-xl p-2.5 shadow-2xl z-50 backdrop-blur-xl animate-in fade-in">
+                <div className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 mb-2 px-1">Chỉ báo kỹ thuật</div>
+                <div className="flex flex-col gap-1">
                   <button
-                    key={res.id}
-                    onClick={() => setResolution(res.id)}
-                    className={`px-2 py-1 text-[10px] font-mono font-medium rounded-lg transition-all shrink-0 ${
-                      resolution === res.id
-                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold shadow-sm'
-                        : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
-                    }`}
+                    onClick={() => setShowMA20(!showMA20)}
+                    className="flex items-center justify-between px-2 py-1.5 rounded-lg text-xs font-mono text-zinc-200 hover:bg-zinc-800"
                   >
-                    {res.label}
+                    <span className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+                      Đường MA20
+                    </span>
+                    <span className={`text-[10px] ${showMA20 ? 'text-emerald-400 font-bold' : 'text-zinc-500'}`}>{showMA20 ? 'BẬT' : 'TẮT'}</span>
                   </button>
-                ))}
-                <button
-                  onClick={() => chartRef.current?.timeScale().fitContent()}
-                  className="p-1 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded-lg ml-0.5 shrink-0"
-                  title="Căn chỉnh biểu đồ"
-                >
-                  <ArrowsOutSimple size={14} />
-                </button>
+
+                  <button
+                    onClick={() => setShowMA50(!showMA50)}
+                    className="flex items-center justify-between px-2 py-1.5 rounded-lg text-xs font-mono text-zinc-200 hover:bg-zinc-800"
+                  >
+                    <span className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-cyan-400" />
+                      Đường MA50
+                    </span>
+                    <span className={`text-[10px] ${showMA50 ? 'text-emerald-400 font-bold' : 'text-zinc-500'}`}>{showMA50 ? 'BẬT' : 'TẮT'}</span>
+                  </button>
+
+                  <button
+                    onClick={() => setShowBB(!showBB)}
+                    className="flex items-center justify-between px-2 py-1.5 rounded-lg text-xs font-mono text-zinc-200 hover:bg-zinc-800"
+                  >
+                    <span className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-purple-400" />
+                      Bollinger Bands
+                    </span>
+                    <span className={`text-[10px] ${showBB ? 'text-emerald-400 font-bold' : 'text-zinc-500'}`}>{showBB ? 'BẬT' : 'TẮT'}</span>
+                  </button>
+
+                  <button
+                    onClick={() => setShowVolume(!showVolume)}
+                    className="flex items-center justify-between px-2 py-1.5 rounded-lg text-xs font-mono text-zinc-200 hover:bg-zinc-800"
+                  >
+                    <span className="flex items-center gap-2">
+                      <ChartBar size={12} className="text-zinc-400" />
+                      Khối lượng (Volume)
+                    </span>
+                    <span className={`text-[10px] ${showVolume ? 'text-emerald-400 font-bold' : 'text-zinc-500'}`}>{showVolume ? 'BẬT' : 'TẮT'}</span>
+                  </button>
+                </div>
               </div>
-            </>
+            )}
+          </div>
+
+          <div className="w-px h-4 bg-zinc-800 mx-0.5" />
+
+          {/* Undo / Redo for drawings */}
+          <button
+            onClick={handleUndo}
+            disabled={drawings.length === 0}
+            title="Hoàn tác nét vẽ (Undo)"
+            className="p-1.5 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900 rounded-lg disabled:opacity-30"
+          >
+            <ArrowCounterClockwise size={14} />
+          </button>
+
+          <button
+            onClick={() => chartRef.current?.timeScale().fitContent()}
+            title="Căn chỉnh toàn bộ (Fit Content)"
+            className="p-1.5 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900 rounded-lg"
+          >
+            <ArrowsOutSimple size={14} />
+          </button>
+
+          <button
+            onClick={toggleFullscreen}
+            title="Toàn màn hình"
+            className="p-1.5 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900 rounded-lg"
+          >
+            <ArrowsOut size={14} />
+          </button>
+        </div>
+      </div>
+
+      {/* ── Main Chart Body with Left Drawing Toolbar ─────────────── */}
+      <div className="w-full flex-1 min-h-[580px] flex relative bg-zinc-950 overflow-hidden">
+        {/* Left Vertical Drawing Toolbar (TradingView Style) */}
+        <div className="flex flex-col items-center gap-1 py-2 px-1 bg-zinc-950 border-r border-zinc-800/70 z-30 shrink-0">
+          <button
+            onClick={() => { setActiveTool('cursor'); setDraftDrawing(null); }}
+            title="Con trỏ chuột (Crosshair)"
+            className={`p-2 rounded-lg transition-all ${
+              activeTool === 'cursor'
+                ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20'
+                : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900'
+            }`}
+          >
+            <Cursor size={16} weight="bold" />
+          </button>
+
+          <button
+            onClick={() => { setActiveTool('trendline'); setDraftDrawing(null); }}
+            title="Đường xu hướng (Trendline)"
+            className={`p-2 rounded-lg transition-all ${
+              activeTool === 'trendline'
+                ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20'
+                : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900'
+            }`}
+          >
+            <TrendUp size={16} weight="bold" />
+          </button>
+
+          <button
+            onClick={() => { setActiveTool('horizontal'); setDraftDrawing(null); }}
+            title="Đường ngang (Hỗ trợ / Kháng cự)"
+            className={`p-2 rounded-lg transition-all ${
+              activeTool === 'horizontal'
+                ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20'
+                : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900'
+            }`}
+          >
+            <Minus size={16} weight="bold" />
+          </button>
+
+          <button
+            onClick={() => { setActiveTool('fibonacci'); setDraftDrawing(null); }}
+            title="Thoái lui Fibonacci"
+            className={`p-2 rounded-lg transition-all ${
+              activeTool === 'fibonacci'
+                ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20'
+                : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900'
+            }`}
+          >
+            <Percent size={16} weight="bold" />
+          </button>
+
+          <button
+            onClick={() => { setActiveTool('rectangle'); setDraftDrawing(null); }}
+            title="Vùng giá (Hộp Supply / Demand)"
+            className={`p-2 rounded-lg transition-all ${
+              activeTool === 'rectangle'
+                ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20'
+                : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900'
+            }`}
+          >
+            <Square size={16} weight="bold" />
+          </button>
+
+          <button
+            onClick={() => { setActiveTool('text'); setDraftDrawing(null); }}
+            title="Ghi chú văn bản (Text Annotation)"
+            className={`p-2 rounded-lg transition-all ${
+              activeTool === 'text'
+                ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20'
+                : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900'
+            }`}
+          >
+            <TextT size={16} weight="bold" />
+          </button>
+
+          <button
+            onClick={() => { setActiveTool('measure'); setDraftDrawing(null); }}
+            title="Thước đo biên độ & %"
+            className={`p-2 rounded-lg transition-all ${
+              activeTool === 'measure'
+                ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20'
+                : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900'
+            }`}
+          >
+            <Ruler size={16} weight="bold" />
+          </button>
+
+          <div className="w-4 h-px bg-zinc-800 my-1" />
+
+          {/* Palette popover */}
+          <div className="relative">
+            <button
+              onClick={() => setShowPalette(!showPalette)}
+              title="Chọn màu nét vẽ"
+              className="p-2 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900 relative"
+            >
+              <Palette size={16} weight="bold" />
+              <span
+                className="absolute bottom-1 right-1 w-1.5 h-1.5 rounded-full"
+                style={{ backgroundColor: activeColor }}
+              />
+            </button>
+
+            {showPalette && (
+              <div className="absolute left-full ml-2 top-0 bg-zinc-900 border border-zinc-800 rounded-xl p-2 flex flex-col gap-2 z-50 shadow-2xl backdrop-blur-xl">
+                <div className="text-[9px] font-mono text-zinc-400 uppercase tracking-wider px-1">Màu sắc</div>
+                <div className="flex items-center gap-1.5">
+                  {PALETTE.map((c) => (
+                    <button
+                      key={c}
+                      onClick={() => { setActiveColor(c); setShowPalette(false); }}
+                      className={`w-5 h-5 rounded-md border transition-transform ${
+                        activeColor === c ? 'border-white scale-110 shadow' : 'border-transparent hover:scale-105'
+                      }`}
+                      style={{ backgroundColor: c }}
+                    />
+                  ))}
+                </div>
+                <div className="text-[9px] font-mono text-zinc-400 uppercase tracking-wider px-1 mt-1">Độ dày</div>
+                <div className="flex items-center gap-1">
+                  {[1, 2, 3].map((w) => (
+                    <button
+                      key={w}
+                      onClick={() => { setActiveWidth(w); setShowPalette(false); }}
+                      className={`px-2 py-0.5 text-[10px] font-mono rounded ${
+                        activeWidth === w ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'text-zinc-400 hover:bg-zinc-800'
+                      }`}
+                    >
+                      {w}px
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <button
+            onClick={handleClearAll}
+            title="Xóa tất cả nét vẽ"
+            disabled={drawings.length === 0}
+            className="p-2 rounded-lg text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 disabled:opacity-30 disabled:hover:bg-transparent mt-auto mb-1"
+          >
+            <Trash size={16} />
+          </button>
+        </div>
+
+        {/* Chart Canvas Area */}
+        <div className="flex-1 h-full min-h-[580px] relative overflow-hidden">
+          <div ref={chartContainerRef} className="w-full h-full min-h-[580px]" />
+          <canvas
+            ref={canvasRef}
+            onMouseDown={handleCanvasMouseDown}
+            onMouseMove={handleCanvasMouseMove}
+            className={`absolute inset-0 z-20 ${
+              activeTool === 'cursor' ? 'pointer-events-none' : 'pointer-events-auto cursor-crosshair'
+            }`}
+          />
+
+          {/* Loading Overlay */}
+          {isLoading && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-950/80 backdrop-blur-sm z-30">
+              <SpinnerGap size={28} className="text-emerald-400 animate-spin mb-2" />
+              <p className="text-xs font-mono text-zinc-300">Đang đồng bộ nến lịch sử DNSE từ ngày đầu tiên...</p>
+            </div>
+          )}
+
+          {/* Active Tool Floating Banner */}
+          {activeTool !== 'cursor' && (
+            <div className="absolute top-3 left-4 z-30 flex items-center gap-2 px-3 py-1.5 bg-zinc-900/90 border border-emerald-500/30 rounded-xl text-[11px] font-mono text-emerald-400 backdrop-blur-md shadow-xl">
+              <span className="font-bold">{TOOL_LABELS[activeTool]}</span>
+              <span className="text-zinc-400 text-[10px]">
+                ({draftDrawing ? 'Nhấp điểm thứ 2 để chốt' : 'Nhấp điểm trên nến để bắt đầu'})
+              </span>
+              <button
+                onClick={() => { setDraftDrawing(null); setActiveTool('cursor'); }}
+                className="ml-1 p-0.5 hover:bg-zinc-800 rounded text-zinc-400 hover:text-zinc-200"
+                title="Hủy vẽ (Esc)"
+              >
+                <X size={13} />
+              </button>
+            </div>
           )}
         </div>
       </div>
 
-      {/* Native Mode Crosshair Inspection Bar */}
-      {chartMode === 'native' && (
-        <div className="flex flex-wrap items-center gap-4 px-3 py-1.5 mb-2 bg-zinc-900/40 border border-zinc-800/40 rounded-xl text-[11px] font-mono z-10 text-zinc-400">
-          <div>O: <span className="text-zinc-200 font-bold">{hoveredData?.open ? hoveredData.open.toFixed(2) : priceDisplayK}</span></div>
-          <div>H: <span className="text-emerald-400 font-bold">{hoveredData?.high ? hoveredData.high.toFixed(2) : (currentTick?.high ? (currentTick.high/1000).toFixed(2) : priceDisplayK)}</span></div>
-          <div>L: <span className="text-rose-400 font-bold">{hoveredData?.low ? hoveredData.low.toFixed(2) : (currentTick?.low ? (currentTick.low/1000).toFixed(2) : priceDisplayK)}</span></div>
-          <div>C: <span className="text-zinc-100 font-bold">{hoveredData?.close ? hoveredData.close.toFixed(2) : priceDisplayK}</span></div>
-          {hoveredData?.changePct !== undefined && (
-            <div className={hoveredData.changePct >= 0 ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}>
-              {hoveredData.changePct >= 0 ? '+' : ''}{hoveredData.changePct.toFixed(2)}%
-            </div>
-          )}
-          {hoveredData?.volume && (
-            <div className="ml-auto text-zinc-500">Vol: <span className="text-zinc-300 font-bold">{hoveredData.volume.toLocaleString()}</span></div>
-          )}
+      {/* ── TradingView-Style Bottom Range Selector Bar ──────────── */}
+      <div className="flex items-center justify-between px-3 py-1.5 border-t border-zinc-800/70 bg-zinc-950 text-zinc-400 text-xs font-mono z-30">
+        <div className="flex items-center gap-1">
+          {DATE_RANGES.map((r) => (
+            <button
+              key={r.id}
+              onClick={() => handleRangeSelect(r.id, r.bars)}
+              className={`px-2 py-0.5 rounded text-[11px] transition-all ${
+                activeRange === r.id
+                  ? 'text-emerald-400 font-bold bg-emerald-500/10 border border-emerald-500/20'
+                  : 'hover:text-zinc-200 hover:bg-zinc-900'
+              }`}
+            >
+              {r.label}
+            </button>
+          ))}
         </div>
-      )}
 
-      {/* Main Chart Area */}
-      <div className="w-full flex-1 min-h-[600px] rounded-xl overflow-hidden z-10 flex border border-zinc-800/80 bg-zinc-950 relative">
-        {chartMode === 'tradingview' ? (
-          <TradingViewProEmbed
-            key={selectedSymbol}
-            symbol={selectedSymbol}
-          />
-        ) : (
-          <>
-            {/* Left Vertical Drawing Toolbar for Native Mode */}
-            <div className="flex flex-col items-center gap-1.5 py-2.5 px-1.5 bg-zinc-950/90 border-r border-zinc-800/80 z-30 shrink-0">
-              <button
-                onClick={() => { setActiveTool('cursor'); setDraftDrawing(null); }}
-                title="Con trỏ chuột (Crosshair)"
-                className={`p-2 rounded-lg transition-all ${
-                  activeTool === 'cursor'
-                    ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20'
-                    : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900'
-                }`}
-              >
-                <Cursor size={16} weight="bold" />
-              </button>
-
-              <button
-                onClick={() => { setActiveTool('trendline'); setDraftDrawing(null); }}
-                title="Đường xu hướng (Trend Line)"
-                className={`p-2 rounded-lg transition-all ${
-                  activeTool === 'trendline'
-                    ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20'
-                    : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900'
-                }`}
-              >
-                <TrendUp size={16} weight="bold" />
-              </button>
-
-              <button
-                onClick={() => { setActiveTool('horizontal'); setDraftDrawing(null); }}
-                title="Đường ngang (Hỗ trợ / Kháng cự)"
-                className={`p-2 rounded-lg transition-all ${
-                  activeTool === 'horizontal'
-                    ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20'
-                    : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900'
-                }`}
-              >
-                <Minus size={16} weight="bold" />
-              </button>
-
-              <button
-                onClick={() => { setActiveTool('fibonacci'); setDraftDrawing(null); }}
-                title="Thoái lui Fibonacci"
-                className={`p-2 rounded-lg transition-all ${
-                  activeTool === 'fibonacci'
-                    ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20'
-                    : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900'
-                }`}
-              >
-                <Percent size={16} weight="bold" />
-              </button>
-
-              <button
-                onClick={() => { setActiveTool('rectangle'); setDraftDrawing(null); }}
-                title="Vùng giá (Hộp Supply / Demand)"
-                className={`p-2 rounded-lg transition-all ${
-                  activeTool === 'rectangle'
-                    ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20'
-                    : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900'
-                }`}
-              >
-                <Square size={16} weight="bold" />
-              </button>
-
-              <button
-                onClick={() => { setActiveTool('measure'); setDraftDrawing(null); }}
-                title="Thước đo biến động & %"
-                className={`p-2 rounded-lg transition-all ${
-                  activeTool === 'measure'
-                    ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20'
-                    : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900'
-                }`}
-              >
-                <Ruler size={16} weight="bold" />
-              </button>
-
-              <div className="w-4 h-px bg-zinc-800 my-1" />
-
-              <div className="relative">
-                <button
-                  onClick={() => setShowPalette(!showPalette)}
-                  title="Chọn màu nét vẽ"
-                  className="p-2 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900 relative"
-                >
-                  <Palette size={16} weight="bold" />
-                  <span
-                    className="absolute bottom-1.5 right-1.5 w-1.5 h-1.5 rounded-full"
-                    style={{ backgroundColor: activeColor }}
-                  />
-                </button>
-
-                {showPalette && (
-                  <div className="absolute left-full ml-2 top-0 bg-zinc-900 border border-zinc-800 rounded-xl p-2 flex flex-col gap-2 z-40 shadow-2xl backdrop-blur-xl">
-                    <div className="text-[9px] font-mono text-zinc-400 uppercase tracking-wider px-1">Màu sắc</div>
-                    <div className="flex items-center gap-1.5">
-                      {PALETTE.map((c) => (
-                        <button
-                          key={c}
-                          onClick={() => { setActiveColor(c); setShowPalette(false); }}
-                          className={`w-5 h-5 rounded-md border transition-transform ${
-                            activeColor === c ? 'border-white scale-110 shadow' : 'border-transparent hover:scale-105'
-                          }`}
-                          style={{ backgroundColor: c }}
-                        />
-                      ))}
-                    </div>
-                    <div className="text-[9px] font-mono text-zinc-400 uppercase tracking-wider px-1 mt-1">Độ dày</div>
-                    <div className="flex items-center gap-1">
-                      {[1, 2, 3].map((w) => (
-                        <button
-                          key={w}
-                          onClick={() => { setActiveWidth(w); setShowPalette(false); }}
-                          className={`px-2 py-0.5 text-[10px] font-mono rounded ${
-                            activeWidth === w ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'text-zinc-400 hover:bg-zinc-800'
-                          }`}
-                        >
-                          {w}px
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <button
-                onClick={handleUndo}
-                title="Hoàn tác nét vẽ (Undo)"
-                disabled={drawings.length === 0}
-                className="p-2 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900 disabled:opacity-30 disabled:hover:bg-transparent"
-              >
-                <ArrowCounterClockwise size={16} />
-              </button>
-
-              <button
-                onClick={handleClearAll}
-                title="Xóa tất cả nét vẽ"
-                disabled={drawings.length === 0}
-                className="p-2 rounded-lg text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 disabled:opacity-30 disabled:hover:bg-transparent mt-auto"
-              >
-                <Trash size={16} />
-              </button>
-            </div>
-
-            {/* Native Canvas Container */}
-            <div className="flex-1 h-full min-h-[600px] relative overflow-hidden">
-              <div ref={chartContainerRef} className="w-full h-full min-h-[600px]" />
-              <canvas
-                ref={canvasRef}
-                onMouseDown={handleCanvasMouseDown}
-                onMouseMove={handleCanvasMouseMove}
-                className={`absolute inset-0 z-20 ${
-                  activeTool === 'cursor' ? 'pointer-events-none' : 'pointer-events-auto cursor-crosshair'
-                }`}
-              />
-
-              {/* Native Loading State */}
-              {isLoadingNative && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-950/80 backdrop-blur-sm z-30">
-                  <SpinnerGap size={28} className="text-emerald-400 animate-spin mb-2" />
-                  <p className="text-xs font-mono text-zinc-300">Đang tải nến thời gian thực từ DNSE...</p>
-                </div>
-              )}
-
-              {/* Floating Active Tool Banner */}
-              {activeTool !== 'cursor' && (
-                <div className="absolute top-3 left-4 z-30 flex items-center gap-2 px-3 py-1.5 bg-zinc-900/90 border border-emerald-500/30 rounded-xl text-[11px] font-mono text-emerald-400 backdrop-blur-md shadow-xl">
-                  <span className="font-bold">{TOOL_LABELS[activeTool]}</span>
-                  <span className="text-zinc-400 text-[10px]">
-                    ({draftDrawing ? 'Nhấp điểm thứ 2 để chốt' : 'Nhấp điểm trên nến để bắt đầu'})
-                  </span>
-                  <button
-                    onClick={() => { setDraftDrawing(null); setActiveTool('cursor'); }}
-                    className="ml-1 p-0.5 hover:bg-zinc-800 rounded text-zinc-400 hover:text-zinc-200"
-                    title="Hủy vẽ (Esc)"
-                  >
-                    <X size={13} />
-                  </button>
-                </div>
-              )}
-            </div>
-          </>
-        )}
+        <div className="flex items-center gap-3 text-[11px]">
+          <span className="text-zinc-500">{currentTimeStr}</span>
+          <span className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-[10px] text-emerald-400">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            DNSE Realtime
+          </span>
+        </div>
       </div>
     </div>
   );
