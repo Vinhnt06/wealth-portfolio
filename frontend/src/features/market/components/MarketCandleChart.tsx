@@ -413,7 +413,18 @@ export function MarketCandleChart() {
 
     // Fetch real historical candles from DNSE Lightspeed API
     let isCancelled = false;
-    fetch(`/api/market/history?symbol=${selectedSymbol}&resolution=${resolution}&days=365`)
+    let daysToFetch = 1825; // Default 5 years (~1,250 sessions) for daily view
+    if (resolution === '1m') daysToFetch = 2;
+    else if (resolution === '5m') daysToFetch = 5;
+    else if (resolution === '15m') daysToFetch = 14;
+    else if (resolution === '1h') daysToFetch = 60;
+    else if (resolution === '1Mo') daysToFetch = 30;
+    else if (resolution === '3Mo') daysToFetch = 90;
+    else if (resolution === '6Mo') daysToFetch = 180;
+    else if (resolution === '1Y') daysToFetch = 365;
+    else if (resolution === 'ALL') daysToFetch = 3650; // 10 years (~2,500 sessions since 2016)
+
+    fetch(`/api/market/history?symbol=${selectedSymbol}&resolution=${resolution}&days=${daysToFetch}`)
       .then((res) => res.json())
       .then((resData) => {
         if (isCancelled || !resData.success || !resData.data || resData.data.length === 0) return;

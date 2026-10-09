@@ -10,7 +10,8 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const symbol = (searchParams.get('symbol') || 'HPG').toUpperCase().trim();
   const rawRes = searchParams.get('resolution') || '1D';
-  const days = parseInt(searchParams.get('days') || '365', 10);
+  const daysParam = searchParams.get('days');
+  const days = daysParam ? parseInt(daysParam, 10) : 1825; // Default 5 years (~1,250 trading sessions)
 
   // Map resolution format to DNSE acceptable parameter
   let dnseRes = '1D';
@@ -19,6 +20,7 @@ export async function GET(request: Request) {
     case '5m': dnseRes = '5'; break;
     case '15m': dnseRes = '15'; break;
     case '1h': dnseRes = '1H'; break;
+    case '1W': dnseRes = '1W'; break;
     case '1D':
     default:
       dnseRes = '1D';
@@ -26,7 +28,7 @@ export async function GET(request: Request) {
   }
 
   const nowSec = Math.floor(Date.now() / 1000);
-  const fromSec = nowSec - (days > 0 ? days : 365) * 24 * 3600;
+  const fromSec = nowSec - (days > 0 ? days : 1825) * 24 * 3600;
 
   try {
     const url = `https://services.entrade.com.vn/chart-api/v2/ohlcs/stock?from=${fromSec}&to=${nowSec}&symbol=${encodeURIComponent(
