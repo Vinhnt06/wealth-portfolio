@@ -18,11 +18,14 @@ interface MarketState {
   watchlistSymbols: string[];
   isChartExpanded: boolean;
   activeTab: 'orderbook' | 'info' | 'foreign';
+  isQuickViewOpen: boolean;
 
   // Actions
   setWsStatus: (status: WsStatus) => void;
   setSelectedSymbol: (symbol: string) => void;
   setActiveTab: (tab: 'orderbook' | 'info' | 'foreign') => void;
+  openQuickView: (symbol?: string) => void;
+  closeQuickView: () => void;
   setSearchQuery: (query: string) => void;
   toggleWatchlistSymbol: (symbol: string) => void;
   setChartExpanded: (expanded: boolean) => void;
@@ -43,10 +46,18 @@ export const useMarketStore = create<MarketState>((set) => ({
   watchlistSymbols: ['HPG', 'VCB', 'SSI', 'VHM', 'TCB', 'FPT', 'MBB', 'MWG', 'VNM', 'VIC'],
   isChartExpanded: true,
   activeTab: 'info',
+  isQuickViewOpen: false,
 
   setWsStatus: (wsStatus) => set({ wsStatus }),
   setSelectedSymbol: (selectedSymbol) => set({ selectedSymbol, isChartExpanded: true, activeTab: 'info' }),
   setActiveTab: (activeTab) => set({ activeTab }),
+  openQuickView: (symbol) =>
+    set((state) => ({
+      selectedSymbol: symbol ? symbol.toUpperCase() : state.selectedSymbol,
+      isQuickViewOpen: true,
+      activeTab: 'info',
+    })),
+  closeQuickView: () => set({ isQuickViewOpen: false }),
   setSearchQuery: (searchQuery) => set({ searchQuery }),
   toggleWatchlistSymbol: (symbol) =>
     set((state) => ({

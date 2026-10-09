@@ -10,6 +10,7 @@ import { MarketTabbedSidebar } from '../../features/market/components/MarketTabb
 import { WatchlistTable } from '../../features/market/components/WatchlistTable';
 import { MarketSummaryBar } from '../../features/market/components/MarketSummaryBar';
 import { MacroDataSection } from '../../features/market/components/MacroDataSection';
+import { StockQuickViewModal } from '../../features/market/components/StockQuickViewModal';
 import { WifiHigh, WifiSlash, Sparkle } from '@phosphor-icons/react';
 
 export default function MarketTerminalPage() {
@@ -99,6 +100,9 @@ export default function MarketTerminalPage() {
             <MarketSummaryBar />
           </div>
         </div>
+
+        {/* Global Stock QuickView Modal Popup */}
+        <StockQuickViewModal />
       </div>
     </DashboardLayout>
   );
