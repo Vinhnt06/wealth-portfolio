@@ -76,16 +76,18 @@ function getIntradayTimestamps(count: number, stepSec: number): number[] {
 }
 
 // ── Official TradingView Pro Embed Component ──────────────────────────
-function TradingViewProEmbed({ symbol }: { symbol: string }) {
+function TradingViewProEmbed({ symbol, onFallbackToNative }: { symbol: string; onFallbackToNative?: () => void }) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Format exact symbol with accurate exchange: HOSE:HPG, HNX:SHB, UPCOM:VGI
   const cleanSym = symbol.toUpperCase().trim();
   const exchange = EXCHANGE_MAP.get(cleanSym) || 'HOSE';
+  const isUpcom = exchange === 'UPCOM';
   const tvSymbol = cleanSym.includes(':') ? cleanSym : `${exchange}:${cleanSym}`;
   const containerId = `tv_widget_${cleanSym.toLowerCase()}_${Date.now()}`;
 
   useEffect(() => {
+    if (isUpcom) return;
     if (!containerRef.current) return;
     containerRef.current.innerHTML = '';
 
@@ -127,7 +129,31 @@ function TradingViewProEmbed({ symbol }: { symbol: string }) {
         document.head.appendChild(script);
       }
     }
-  }, [tvSymbol, containerId]);
+  }, [tvSymbol, containerId, isUpcom]);
+
+  if (isUpcom) {
+    return (
+      <div className="w-full h-[500px] min-h-[500px] rounded-xl flex flex-col items-center justify-center p-6 bg-zinc-950 border border-zinc-800 text-center">
+        <div className="p-3 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-2xl mb-3">
+          <Sparkle size={28} />
+        </div>
+        <h4 className="font-mono font-bold text-zinc-100 text-base mb-1">
+          Mã {cleanSym} thuộc sàn UPCOM
+        </h4>
+        <p className="text-xs text-zinc-400 max-w-md mb-4 leading-relaxed">
+          Nền tảng TradingView quốc tế chưa hỗ trợ trực tiếp các mã sàn UPCOM Việt Nam. Vui lòng chuyển sang chế độ <strong>Native DNSE Lightspeed</strong> để xem toàn bộ nến thật thời gian thực.
+        </p>
+        {onFallbackToNative && (
+          <button
+            onClick={onFallbackToNative}
+            className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-zinc-950 font-bold text-xs rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)]"
+          >
+            Chuyển sang Biểu Đồ DNSE (100% Khả Dụng)
+          </button>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="w-full h-[500px] min-h-[500px] rounded-xl overflow-hidden bg-zinc-950 border border-zinc-800/80 shadow-2xl relative">
@@ -147,7 +173,7 @@ export function MarketCandleChart() {
   const lastCandleRef = useRef<{ time: Time; open: number; high: number; low: number; close: number } | null>(null);
 
   const { selectedSymbol, ticks } = useMarketStore();
-  const [chartMode, setChartMode] = useState<'tradingview' | 'native'>('tradingview');
+  const [chartMode, setChartMode] = useState<'tradingview' | 'native'>('native');
   const [resolution, setResolution] = useState<ResolutionId>('1D');
   const [showMA20, setShowMA20] = useState(true);
   const [showMA50, setShowMA50] = useState(true);
@@ -362,6 +388,71 @@ export function MarketCandleChart() {
 
     chart.timeScale().fitContent();
 
+    // Fetch real historical candles from DNSE Lightspeed API
+    let isCancelled = false;
+    fetch(`/api/market/history?symbol=${selectedSymbol}&resolution=${resolution}&days=365`)
+      .then((res) => res.json())
+      .then((resData) => {
+        if (isCancelled || !resData.success || !resData.data || resData.data.length === 0) return;
+        const isDaily = resolution === '1D' || resolution.includes('Mo') || resolution.includes('Y') || resolution === 'ALL';
+
+        const realCandles: CandlestickData<Time>[] = [];
+        const realVolumes: HistogramData<Time>[] = [];
+
+        resData.data.forEach((c: any) => {
+          const timeVal = isDaily
+            ? (new Date(c.time * 1000).toISOString().split('T')[0] as unknown as Time)
+            : (c.time as unknown as Time);
+          realCandles.push({
+            time: timeVal,
+            open: c.open,
+            high: c.high,
+            low: c.low,
+            close: c.close,
+          });
+          realVolumes.push({
+            time: timeVal,
+            value: c.volume,
+            color: c.close >= c.open ? 'rgba(16, 185, 129, 0.4)' : 'rgba(244, 63, 94, 0.4)',
+          });
+        });
+
+        realCandles.sort((a, b) => (a.time > b.time ? 1 : -1));
+        const uniqueCandles = realCandles.filter((item, idx, arr) => idx === 0 || item.time !== arr[idx - 1].time);
+        const uniqueVolumes = realVolumes.filter((item, idx, arr) => idx === 0 || item.time !== arr[idx - 1].time);
+
+        const realMa20: LineData<Time>[] = [];
+        const realMa50: LineData<Time>[] = [];
+        for (let i = 0; i < uniqueCandles.length; i++) {
+          if (i >= 19) {
+            const sum20 = uniqueCandles.slice(i - 19, i + 1).reduce((acc, x) => acc + x.close, 0);
+            realMa20.push({ time: uniqueCandles[i].time, value: Math.round((sum20 / 20) * 100) / 100 });
+          }
+          if (i >= 49) {
+            const sum50 = uniqueCandles.slice(i - 49, i + 1).reduce((acc, x) => acc + x.close, 0);
+            realMa50.push({ time: uniqueCandles[i].time, value: Math.round((sum50 / 50) * 100) / 100 });
+          }
+        }
+
+        if (uniqueCandles.length > 0) {
+          candlestickSeries.setData(uniqueCandles);
+          volumeSeries.setData(uniqueVolumes);
+          if (showMA20) ma20Series.setData(realMa20);
+          if (showMA50) ma50Series.setData(realMa50);
+          chart.timeScale().fitContent();
+
+          const last = uniqueCandles[uniqueCandles.length - 1];
+          lastCandleRef.current = {
+            time: last.time,
+            open: last.open,
+            high: last.high,
+            low: last.low,
+            close: last.close,
+          };
+        }
+      })
+      .catch(() => {});
+
     chart.subscribeCrosshairMove((param) => {
       if (!param.time || !param.seriesData) {
         setHoveredData(null);
@@ -393,6 +484,7 @@ export function MarketCandleChart() {
     window.addEventListener('resize', handleResize);
 
     return () => {
+      isCancelled = true;
       window.removeEventListener('resize', handleResize);
       chart.remove();
     };
@@ -570,7 +662,11 @@ export function MarketCandleChart() {
       {/* Main Chart Area */}
       <div className="w-full flex-1 min-h-[420px] rounded-xl overflow-hidden z-10">
         {chartMode === 'tradingview' ? (
-          <TradingViewProEmbed key={selectedSymbol} symbol={selectedSymbol} />
+          <TradingViewProEmbed
+            key={selectedSymbol}
+            symbol={selectedSymbol}
+            onFallbackToNative={() => setChartMode('native')}
+          />
         ) : (
           <div ref={chartContainerRef} className="w-full h-full min-h-[420px]" />
         )}
