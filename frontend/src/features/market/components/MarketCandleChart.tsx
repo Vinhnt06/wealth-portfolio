@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import {
   createChart,
   ColorType,
@@ -84,7 +84,7 @@ function TradingViewProEmbed({ symbol, onFallbackToNative }: { symbol: string; o
   const exchange = EXCHANGE_MAP.get(cleanSym) || 'HOSE';
   const isUpcom = exchange === 'UPCOM';
   const tvSymbol = cleanSym.includes(':') ? cleanSym : `${exchange}:${cleanSym}`;
-  const containerId = `tv_widget_${cleanSym.toLowerCase()}_${Date.now()}`;
+  const containerId = useMemo(() => `tv_widget_${cleanSym.toLowerCase()}`, [cleanSym]);
 
   useEffect(() => {
     if (isUpcom) return;
@@ -106,9 +106,19 @@ function TradingViewProEmbed({ symbol, onFallbackToNative }: { symbol: string; o
           allow_symbol_change: true,
           container_id: containerId,
           hide_side_toolbar: false,
+          hide_top_toolbar: false,
+          withdateranges: true,
+          range: '12M',
+          details: true,
+          hotlist: false,
+          calendar: false,
+          show_popup_button: true,
+          popup_width: '1000',
+          popup_height: '650',
           studies: [
             'MASimple@tv-basicstudies',
             'RSI@tv-basicstudies',
+            'Volume@tv-basicstudies',
           ],
         });
       }
@@ -173,7 +183,15 @@ export function MarketCandleChart() {
   const lastCandleRef = useRef<{ time: Time; open: number; high: number; low: number; close: number } | null>(null);
 
   const { selectedSymbol, ticks } = useMarketStore();
-  const [chartMode, setChartMode] = useState<'tradingview' | 'native'>('native');
+  const exchange = EXCHANGE_MAP.get(selectedSymbol.toUpperCase()) || 'HOSE';
+  const isUpcom = exchange === 'UPCOM';
+  const [chartMode, setChartMode] = useState<'tradingview' | 'native'>(isUpcom ? 'native' : 'tradingview');
+
+  useEffect(() => {
+    if (isUpcom) {
+      setChartMode('native');
+    }
+  }, [isUpcom, selectedSymbol]);
   const [resolution, setResolution] = useState<ResolutionId>('1D');
   const [showMA20, setShowMA20] = useState(true);
   const [showMA50, setShowMA50] = useState(true);

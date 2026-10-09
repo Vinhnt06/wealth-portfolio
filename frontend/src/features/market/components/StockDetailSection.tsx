@@ -16,11 +16,14 @@ import {
   ChartBar,
   ShieldCheck,
   CheckCircle,
-  Database
+  Database,
+  Fish,
+  ListNumbers
 } from '@phosphor-icons/react';
 import { useMarketStore } from '../store/marketStore';
 import { MarketCandleChart } from './MarketCandleChart';
 import { OrderBook } from './OrderBook';
+import { InvestorFlowAnalysis } from './InvestorFlowAnalysis';
 import stockDatabase from '../data/stockDatabase.json';
 
 interface StockMetadata {
@@ -73,7 +76,8 @@ interface StockDetailSectionProps {
 
 export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackToOverview }) => {
   const { selectedSymbol, ticks, watchlistSymbols, toggleWatchlistSymbol } = useMarketStore();
-  const [activeTab, setActiveTab] = useState<'profile' | 'shareholders' | 'officers' | 'financials' | 'foreign'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'shareholders' | 'officers' | 'financials' | 'foreign' | 'investor_flow'>('profile');
+  const [sidebarMode, setSidebarMode] = useState<'investor_flow' | 'orderbook'>('investor_flow');
   const [companyData, setCompanyData] = useState<CompanyData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -218,13 +222,42 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
         </div>
       </div>
 
-      {/* Main Terminal Grid: Candlestick Chart (8 Cols) + Order Book Depth (4 Cols) */}
+      {/* Main Terminal Grid: Candlestick Chart (8 Cols) + Investor Flow / Order Book (4 Cols) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className="lg:col-span-8 min-h-[500px]">
           <MarketCandleChart />
         </div>
-        <div className="lg:col-span-4 min-h-[500px]">
-          <OrderBook />
+        <div className="lg:col-span-4 min-h-[500px] flex flex-col gap-3">
+          {/* Quick Sub-tab Toggle between Phân loại nhà đầu tư (DNSE Whale Flow) & Sổ lệnh */}
+          <div className="flex items-center justify-between p-1 rounded-xl bg-zinc-900 border border-zinc-800">
+            <button
+              onClick={() => setSidebarMode('investor_flow')}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-mono font-bold transition-all ${
+                sidebarMode === 'investor_flow'
+                  ? 'bg-emerald-500 text-zinc-950 shadow-sm'
+                  : 'text-zinc-400 hover:text-zinc-200'
+              }`}
+            >
+              <Fish className="w-3.5 h-3.5" />
+              <span>Phân Loại NĐT</span>
+            </button>
+
+            <button
+              onClick={() => setSidebarMode('orderbook')}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-mono font-bold transition-all ${
+                sidebarMode === 'orderbook'
+                  ? 'bg-emerald-500 text-zinc-950 shadow-sm'
+                  : 'text-zinc-400 hover:text-zinc-200'
+              }`}
+            >
+              <ListNumbers className="w-3.5 h-3.5" />
+              <span>Sổ Lệnh (OrderBook)</span>
+            </button>
+          </div>
+
+          <div className="flex-1">
+            {sidebarMode === 'investor_flow' ? <InvestorFlowAnalysis /> : <OrderBook />}
+          </div>
         </div>
       </div>
 
@@ -290,6 +323,18 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
           >
             <CurrencyCircleDollar className="w-4 h-4" />
             <span>Khối Ngoại Giao Dịch</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('investor_flow')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all ${
+              activeTab === 'investor_flow'
+                ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20'
+                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
+            }`}
+          >
+            <Fish className="w-4 h-4" />
+            <span>Phân Loại Nhà Đầu Tư (Cá Mập)</span>
           </button>
         </div>
 
@@ -492,6 +537,12 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
               <p className="text-xs text-zinc-500 font-mono">
                 Dòng tiền khối ngoại duy trì vị thế tích cực đối với {selectedSymbol} trong các phiên giao dịch gần đây.
               </p>
+            </div>
+          )}
+
+          {!isLoading && activeTab === 'investor_flow' && (
+            <div className="p-1">
+              <InvestorFlowAnalysis />
             </div>
           )}
         </div>

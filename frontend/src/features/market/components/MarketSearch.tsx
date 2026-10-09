@@ -48,13 +48,38 @@ export const MarketSearch: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen]);
 
-  const filtered = query.trim()
+  const q = query.trim().toLowerCase();
+  const filtered = q
     ? VN_STOCK_DATABASE.filter(
         (item) =>
-          item.symbol.toLowerCase().includes(query.toLowerCase()) ||
-          item.name.toLowerCase().includes(query.toLowerCase()) ||
-          item.sector.toLowerCase().includes(query.toLowerCase())
-      ).slice(0, 12)
+          item.symbol.toLowerCase().includes(q) ||
+          item.name.toLowerCase().includes(q) ||
+          item.sector.toLowerCase().includes(q)
+      )
+        .sort((a, b) => {
+          const aSym = a.symbol.toLowerCase();
+          const bSym = b.symbol.toLowerCase();
+          // 1. Exact match on symbol takes absolute highest priority
+          if (aSym === q && bSym !== q) return -1;
+          if (bSym === q && aSym !== q) return 1;
+          // 2. Symbol starts with query
+          if (aSym.startsWith(q) && !bSym.startsWith(q)) return -1;
+          if (bSym.startsWith(q) && !aSym.startsWith(q)) return 1;
+          // 3. Shorter symbol length prioritized
+          if (aSym.includes(q) && bSym.includes(q)) {
+            if (aSym.length !== bSym.length) return aSym.length - bSym.length;
+          }
+          // 4. Symbol match prioritized over name match
+          if (aSym.includes(q) && !bSym.includes(q)) return -1;
+          if (bSym.includes(q) && !aSym.includes(q)) return 1;
+          // 5. Name starts with query
+          const aName = a.name.toLowerCase();
+          const bName = b.name.toLowerCase();
+          if (aName.startsWith(q) && !bName.startsWith(q)) return -1;
+          if (bName.startsWith(q) && !aName.startsWith(q)) return 1;
+          return 0;
+        })
+        .slice(0, 16)
     : VN_STOCK_DATABASE.slice(0, 10);
 
   const handleSelect = (symbol: string) => {
