@@ -15,7 +15,25 @@ import {
   Time,
 } from 'lightweight-charts';
 import { useMarketStore } from '../store/marketStore';
-import { TrendUp, TrendDown, Clock, ArrowsOutSimple, Eye, EyeSlash, ChartLine, Sparkle } from '@phosphor-icons/react';
+import {
+  TrendUp,
+  TrendDown,
+  Clock,
+  ArrowsOutSimple,
+  Eye,
+  EyeSlash,
+  ChartLine,
+  Sparkle,
+  Cursor,
+  Minus,
+  Percent,
+  Square,
+  Ruler,
+  ArrowCounterClockwise,
+  Trash,
+  Palette,
+  X,
+} from '@phosphor-icons/react';
 import stockDatabase from '../data/stockDatabase.json';
 
 const EXCHANGE_MAP = new Map<string, string>();
@@ -39,7 +57,31 @@ const RESOLUTIONS = [
 
 type ResolutionId = typeof RESOLUTIONS[number]['id'];
 
-// Seeded PRNG for 100% deterministic, consistent historical bars per symbol
+// Drawing Tool Types & Schema
+export type DrawingTool = 'cursor' | 'trendline' | 'horizontal' | 'fibonacci' | 'rectangle' | 'measure';
+
+export interface DrawingItem {
+  id: string;
+  type: DrawingTool;
+  symbol: string;
+  color: string;
+  width: number;
+  p1: { time: Time; price: number };
+  p2?: { time: Time; price: number };
+}
+
+const TOOL_LABELS: Record<DrawingTool, string> = {
+  cursor: 'Con trỏ chuột',
+  trendline: 'Đường xu hướng (Trendline)',
+  horizontal: 'Đường ngang Hỗ trợ / Kháng cự',
+  fibonacci: 'Thoái lui Fibonacci',
+  rectangle: 'Hộp vùng giá (Supply / Demand)',
+  measure: 'Thước đo biến động (% & Giá)',
+};
+
+const PALETTE = ['#10b981', '#f43f5e', '#f59e0b', '#0ea5e9', '#f4f4f5'];
+
+// Seeded PRNG for initial bar placeholder consistency
 function seededRandom(seed: number) {
   const x = Math.sin(seed++) * 10000;
   return x - Math.floor(x);
@@ -79,7 +121,6 @@ function getIntradayTimestamps(count: number, stepSec: number): number[] {
 function TradingViewProEmbed({ symbol, onFallbackToNative }: { symbol: string; onFallbackToNative?: () => void }) {
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Format exact symbol with accurate exchange: HOSE:HPG, HNX:SHB, UPCOM:VGI
   const cleanSym = symbol.toUpperCase().trim();
   const exchange = EXCHANGE_MAP.get(cleanSym) || 'HOSE';
   const isUpcom = exchange === 'UPCOM';
@@ -179,6 +220,7 @@ function TradingViewProEmbed({ symbol, onFallbackToNative }: { symbol: string; o
 // ── Main MarketCandleChart Component ─────────────────────────────────
 export function MarketCandleChart() {
   const chartContainerRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const candleSeriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
   const volumeSeriesRef = useRef<ISeriesApi<'Histogram'> | null>(null);
@@ -188,18 +230,21 @@ export function MarketCandleChart() {
 
   const { selectedSymbol, ticks } = useMarketStore();
   const exchange = EXCHANGE_MAP.get(selectedSymbol.toUpperCase()) || 'HOSE';
-  const isUpcom = exchange === 'UPCOM';
-  const isRestrictedByTV = isUpcom || selectedSymbol.toUpperCase() === 'TAL';
-  const [chartMode, setChartMode] = useState<'tradingview' | 'native'>(isRestrictedByTV ? 'native' : 'tradingview');
 
-  useEffect(() => {
-    if (isRestrictedByTV) {
-      setChartMode('native');
-    }
-  }, [isRestrictedByTV, selectedSymbol]);
+  // Default chart mode to 'native' as requested by user
+  const [chartMode, setChartMode] = useState<'native' | 'tradingview'>('native');
   const [resolution, setResolution] = useState<ResolutionId>('1D');
   const [showMA20, setShowMA20] = useState(true);
   const [showMA50, setShowMA50] = useState(true);
+
+  // Drawing Tools State
+  const [activeTool, setActiveTool] = useState<DrawingTool>('cursor');
+  const [activeColor, setActiveColor] = useState<string>('#10b981');
+  const [activeWidth, setActiveWidth] = useState<number>(2);
+  const [showPalette, setShowPalette] = useState<boolean>(false);
+  const [drawings, setDrawings] = useState<DrawingItem[]>([]);
+  const [draftDrawing, setDraftDrawing] = useState<DrawingItem | null>(null);
+
   const [hoveredData, setHoveredData] = useState<{
     open?: number;
     high?: number;
@@ -212,7 +257,7 @@ export function MarketCandleChart() {
 
   const currentTick = ticks[selectedSymbol];
 
-  // Base reference prices in thousands (e.g., HPG = 28.5k, VCB = 92.5k)
+  // Base reference prices in thousands
   const getBasePriceK = useCallback((sym: string) => {
     const defaultPricesK: Record<string, number> = {
       HPG: 28.5, VCB: 92.5, SSI: 34.2, VHM: 42.3, TCB: 23.8,
@@ -226,7 +271,41 @@ export function MarketCandleChart() {
     return 25.0;
   }, [currentTick]);
 
-  // Seeded deterministic candle generator (0% randomness shift on re-render)
+  // Load saved drawings per symbol from localStorage
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(`yf_drawings_${selectedSymbol}`);
+      if (raw) {
+        setDrawings(JSON.parse(raw));
+      } else {
+        setDrawings([]);
+      }
+      setDraftDrawing(null);
+    } catch {
+      setDrawings([]);
+    }
+  }, [selectedSymbol]);
+
+  const saveDrawings = (items: DrawingItem[]) => {
+    try {
+      localStorage.setItem(`yf_drawings_${selectedSymbol}`, JSON.stringify(items));
+    } catch {}
+  };
+
+  // Keyboard shortcut listener: Esc cancels current drawing & returns to cursor
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setDraftDrawing(null);
+        setActiveTool('cursor');
+        setShowPalette(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Seeded deterministic candle generator for placeholder
   const generateInitialData = useCallback((sym: string, res: ResolutionId) => {
     const candles: CandlestickData<Time>[] = [];
     const volumes: HistogramData<Time>[] = [];
@@ -257,12 +336,10 @@ export function MarketCandleChart() {
       ? (getTradingDayStrings(count) as Time[])
       : (getIntradayTimestamps(count, stepSec) as unknown as Time[]);
 
-    // Seed PRNG using symbol string code to ensure 100% deterministic consistency
     let seed = 0;
     for (let s = 0; s < sym.length; s++) seed += sym.charCodeAt(s);
 
     const rawCandles: { time: Time; open: number; high: number; low: number; close: number; volume: number }[] = [];
-
     let currPrice = targetK * (0.95 + seededRandom(seed++) * 0.05);
 
     for (let i = 0; i < count; i++) {
@@ -281,7 +358,6 @@ export function MarketCandleChart() {
       }
 
       close = Math.max(targetK * 0.88, Math.min(targetK * 1.12, close));
-
       const wickPadding = Math.max(0.02, Math.abs(close - open) * 0.5 + targetK * 0.002);
       const high = Math.round((Math.max(open, close) + seededRandom(seed++) * wickPadding) * 100) / 100;
       const low = Math.round((Math.min(open, close) - seededRandom(seed++) * wickPadding) * 100) / 100;
@@ -334,6 +410,194 @@ export function MarketCandleChart() {
     return { candles, volumes, ma20Data, ma50Data };
   }, [getBasePriceK, currentTick]);
 
+  // Redraw Canvas Drawings overlay
+  const redrawCanvas = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const dpr = window.devicePixelRatio || 1;
+    const w = canvas.width / dpr;
+    const h = canvas.height / dpr;
+
+    ctx.save();
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, w, h);
+
+    const chart = chartRef.current;
+    const series = candleSeriesRef.current;
+    if (!chart || !series) {
+      ctx.restore();
+      return;
+    }
+
+    const toCoord = (p: { time: Time; price: number }) => {
+      const x = chart.timeScale().timeToCoordinate(p.time);
+      const y = series.priceToCoordinate(p.price);
+      return { x, y };
+    };
+
+    const allItems: DrawingItem[] = [...drawings];
+    if (draftDrawing && draftDrawing.p2) {
+      allItems.push(draftDrawing);
+    }
+
+    allItems.forEach((item) => {
+      ctx.save();
+      ctx.strokeStyle = item.color;
+      ctx.lineWidth = item.width || 2;
+      ctx.fillStyle = item.color;
+
+      if (item.type === 'horizontal') {
+        const y = series.priceToCoordinate(item.p1.price);
+        if (y !== null) {
+          ctx.setLineDash([4, 4]);
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(w, y);
+          ctx.stroke();
+
+          // Price Tag on right axis
+          ctx.setLineDash([]);
+          ctx.fillStyle = item.color;
+          ctx.fillRect(w - 68, y - 10, 64, 20);
+          ctx.fillStyle = '#09090b';
+          ctx.font = 'bold 10px JetBrains Mono, monospace';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(`${item.p1.price.toFixed(2)}k`, w - 36, y);
+        }
+      } else if (item.type === 'trendline' && item.p2) {
+        const c1 = toCoord(item.p1);
+        const c2 = toCoord(item.p2);
+        if (c1.x !== null && c1.y !== null && c2.x !== null && c2.y !== null) {
+          ctx.beginPath();
+          ctx.moveTo(c1.x, c1.y);
+          ctx.lineTo(c2.x, c2.y);
+          ctx.stroke();
+
+          // Anchor Dots
+          ctx.beginPath();
+          ctx.arc(c1.x, c1.y, 3, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(c2.x, c2.y, 3, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      } else if (item.type === 'rectangle' && item.p2) {
+        const c1 = toCoord(item.p1);
+        const c2 = toCoord(item.p2);
+        if (c1.x !== null && c1.y !== null && c2.x !== null && c2.y !== null) {
+          const minX = Math.min(c1.x, c2.x);
+          const minY = Math.min(c1.y, c2.y);
+          const boxW = Math.abs(c2.x - c1.x);
+          const boxH = Math.abs(c2.y - c1.y);
+
+          ctx.fillStyle = item.color + '26'; // 15% opacity fill
+          ctx.fillRect(minX, minY, boxW, boxH);
+          ctx.strokeRect(minX, minY, boxW, boxH);
+        }
+      } else if (item.type === 'fibonacci' && item.p2) {
+        const c1 = toCoord(item.p1);
+        const c2 = toCoord(item.p2);
+        if (c1.x !== null && c1.y !== null && c2.x !== null && c2.y !== null) {
+          const startX = Math.min(c1.x, c2.x);
+          const endX = Math.max(c1.x, c2.x, w - 80);
+          const p1 = item.p1.price;
+          const p2 = item.p2.price;
+          const levels = [
+            { ratio: 0, label: '0.0%', color: '#f43f5e' },
+            { ratio: 0.236, label: '23.6%', color: '#f59e0b' },
+            { ratio: 0.382, label: '38.2%', color: '#10b981' },
+            { ratio: 0.5, label: '50.0%', color: '#06b6d4' },
+            { ratio: 0.618, label: '61.8% (Golden)', color: '#eab308' },
+            { ratio: 0.786, label: '78.6%', color: '#818cf8' },
+            { ratio: 1.0, label: '100.0%', color: '#f43f5e' },
+          ];
+
+          levels.forEach((lvl) => {
+            const priceLvl = p1 + (p2 - p1) * lvl.ratio;
+            const y = series.priceToCoordinate(priceLvl);
+            if (y !== null) {
+              ctx.strokeStyle = lvl.color;
+              ctx.lineWidth = 1;
+              ctx.setLineDash([2, 2]);
+              ctx.beginPath();
+              ctx.moveTo(startX, y);
+              ctx.lineTo(endX, y);
+              ctx.stroke();
+
+              // Fibonacci Level Label
+              ctx.fillStyle = lvl.color;
+              ctx.font = '9px JetBrains Mono, monospace';
+              ctx.textAlign = 'left';
+              ctx.fillText(`${lvl.label} - ${priceLvl.toFixed(2)}k`, startX + 4, y - 3);
+            }
+          });
+        }
+      } else if (item.type === 'measure' && item.p2) {
+        const c1 = toCoord(item.p1);
+        const c2 = toCoord(item.p2);
+        if (c1.x !== null && c1.y !== null && c2.x !== null && c2.y !== null) {
+          const minX = Math.min(c1.x, c2.x);
+          const minY = Math.min(c1.y, c2.y);
+          const boxW = Math.abs(c2.x - c1.x);
+          const boxH = Math.abs(c2.y - c1.y);
+
+          const deltaP = item.p2.price - item.p1.price;
+          const deltaPct = item.p1.price !== 0 ? (deltaP / item.p1.price) * 100 : 0;
+          const isUp = deltaP >= 0;
+
+          ctx.fillStyle = isUp ? 'rgba(16, 185, 129, 0.15)' : 'rgba(244, 63, 94, 0.15)';
+          ctx.fillRect(minX, minY, boxW, boxH);
+          ctx.strokeStyle = isUp ? '#10b981' : '#f43f5e';
+          ctx.setLineDash([4, 4]);
+          ctx.strokeRect(minX, minY, boxW, boxH);
+
+          // Center HUD Pill
+          const midX = minX + boxW / 2;
+          const midY = minY + boxH / 2;
+          ctx.setLineDash([]);
+          ctx.fillStyle = '#09090b';
+          ctx.fillRect(midX - 60, midY - 13, 120, 26);
+          ctx.strokeStyle = isUp ? '#10b981' : '#f43f5e';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(midX - 60, midY - 13, 120, 26);
+
+          ctx.fillStyle = isUp ? '#10b981' : '#f43f5e';
+          ctx.font = 'bold 10px JetBrains Mono, monospace';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(`${isUp ? '+' : ''}${deltaP.toFixed(2)}k (${isUp ? '+' : ''}${deltaPct.toFixed(2)}%)`, midX, midY);
+        }
+      }
+      ctx.restore();
+    });
+
+    ctx.restore();
+  }, [drawings, draftDrawing]);
+
+  // Adjust canvas size to match container with High-DPI support
+  const updateCanvasSize = useCallback(() => {
+    const canvas = canvasRef.current;
+    const container = chartContainerRef.current;
+    if (!canvas || !container) return;
+    const dpr = window.devicePixelRatio || 1;
+    const w = container.clientWidth;
+    const h = container.clientHeight;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    canvas.style.width = `${w}px`;
+    canvas.style.height = `${h}px`;
+    redrawCanvas();
+  }, [redrawCanvas]);
+
+  // Trigger canvas redraw on drawing updates
+  useEffect(() => {
+    redrawCanvas();
+  }, [redrawCanvas]);
+
   // Mount Lightweight Chart for Native Mode
   useEffect(() => {
     if (chartMode !== 'native' || !chartContainerRef.current) return;
@@ -365,7 +629,7 @@ export function MarketCandleChart() {
         secondsVisible: false,
       },
       width: container.clientWidth,
-      height: 400,
+      height: 480,
     });
 
     chartRef.current = chart;
@@ -411,9 +675,17 @@ export function MarketCandleChart() {
 
     chart.timeScale().fitContent();
 
-    // Fetch real historical candles from DNSE Lightspeed API
+    // Hook chart panning & zooming to re-render overlay drawings instantly
+    chart.timeScale().subscribeVisibleLogicalRangeChange(() => {
+      requestAnimationFrame(redrawCanvas);
+    });
+    chart.timeScale().subscribeVisibleTimeRangeChange(() => {
+      requestAnimationFrame(redrawCanvas);
+    });
+
+    // Fetch real historical candles from DNSE API (days=0 returns full history since day 1)
     let isCancelled = false;
-    let daysToFetch = 1825; // Default 5 years (~1,250 sessions) for daily view
+    let daysToFetch = 0; // 0 = Lấy từ phiên đầu tiên lên sàn
     if (resolution === '1m') daysToFetch = 2;
     else if (resolution === '5m') daysToFetch = 5;
     else if (resolution === '15m') daysToFetch = 14;
@@ -422,7 +694,7 @@ export function MarketCandleChart() {
     else if (resolution === '3Mo') daysToFetch = 90;
     else if (resolution === '6Mo') daysToFetch = 180;
     else if (resolution === '1Y') daysToFetch = 365;
-    else if (resolution === 'ALL') daysToFetch = 3650; // 10 years (~2,500 sessions since 2016)
+    else if (resolution === 'ALL' || resolution === '1D') daysToFetch = 0;
 
     fetch(`/api/market/history?symbol=${selectedSymbol}&resolution=${resolution}&days=${daysToFetch}`)
       .then((res) => res.json())
@@ -473,7 +745,16 @@ export function MarketCandleChart() {
           volumeSeries.setData(uniqueVolumes);
           if (showMA20) ma20Series.setData(realMa20);
           if (showMA50) ma50Series.setData(realMa50);
-          chart.timeScale().fitContent();
+
+          // Focus on recent 150 candles so bars look spacious, while user can scroll back to day 1
+          if (uniqueCandles.length > 150) {
+            chart.timeScale().setVisibleLogicalRange({
+              from: uniqueCandles.length - 140,
+              to: uniqueCandles.length + 5,
+            });
+          } else {
+            chart.timeScale().fitContent();
+          }
 
           const last = uniqueCandles[uniqueCandles.length - 1];
           lastCandleRef.current = {
@@ -483,6 +764,8 @@ export function MarketCandleChart() {
             low: last.low,
             close: last.close,
           };
+
+          requestAnimationFrame(redrawCanvas);
         }
       })
       .catch(() => {});
@@ -492,49 +775,50 @@ export function MarketCandleChart() {
         setHoveredData(null);
         return;
       }
-      const candleData = param.seriesData.get(candlestickSeries) as any;
-      const volData = param.seriesData.get(volumeSeries) as any;
-      if (candleData) {
-        const change = candleData.close - candleData.open;
-        const changePct = candleData.open ? (change / candleData.open) * 100 : 0;
+      const candle = param.seriesData.get(candlestickSeries) as any;
+      const vol = param.seriesData.get(volumeSeries) as any;
+      if (candle) {
+        const change = candle.close - candle.open;
+        const changePct = candle.open ? (change / candle.open) * 100 : 0;
         setHoveredData({
-          open: candleData.open,
-          high: candleData.high,
-          low: candleData.low,
-          close: candleData.close,
-          volume: volData?.value,
+          open: candle.open,
+          high: candle.high,
+          low: candle.low,
+          close: candle.close,
+          volume: vol?.value,
           change,
           changePct,
         });
       }
     });
 
-    const handleResize = () => {
-      if (chartContainerRef.current && chartRef.current) {
-        chartRef.current.applyOptions({ width: chartContainerRef.current.clientWidth });
+    const resizeObserver = new ResizeObserver(() => {
+      if (container) {
+        chart.applyOptions({ width: container.clientWidth, height: container.clientHeight });
+        updateCanvasSize();
       }
-    };
-
-    window.addEventListener('resize', handleResize);
+    });
+    resizeObserver.observe(container);
+    updateCanvasSize();
 
     return () => {
       isCancelled = true;
-      window.removeEventListener('resize', handleResize);
+      resizeObserver.disconnect();
       chart.remove();
+      chartRef.current = null;
     };
-  }, [chartMode, selectedSymbol, resolution, generateInitialData, showMA20, showMA50]);
+  }, [chartMode, resolution, selectedSymbol, generateInitialData, showMA20, showMA50, redrawCanvas, updateCanvasSize]);
 
-  // Live WebSocket Tick Update for Native Mode
+  // Real-time tick update to candle
   useEffect(() => {
-    if (chartMode !== 'native' || !candleSeriesRef.current || !volumeSeriesRef.current || !currentTick) return;
-
+    if (chartMode !== 'native' || !currentTick?.price || !candleSeriesRef.current || !volumeSeriesRef.current) return;
     const livePriceK = Math.round((currentTick.price / 1000) * 100) / 100;
-    const tickVol = currentTick.volume || 1000;
+    const tickVol = currentTick.volume || 10000;
 
     if (lastCandleRef.current) {
-      const updatedOpen = lastCandleRef.current.open;
       const updatedHigh = Math.max(lastCandleRef.current.high, livePriceK);
       const updatedLow = Math.min(lastCandleRef.current.low, livePriceK);
+      const updatedOpen = lastCandleRef.current.open;
 
       lastCandleRef.current = {
         ...lastCandleRef.current,
@@ -556,8 +840,106 @@ export function MarketCandleChart() {
         value: tickVol,
         color: livePriceK >= updatedOpen ? 'rgba(16, 185, 129, 0.4)' : 'rgba(244, 63, 94, 0.4)',
       });
+
+      requestAnimationFrame(redrawCanvas);
     }
-  }, [chartMode, currentTick]);
+  }, [chartMode, currentTick, redrawCanvas]);
+
+  // Canvas Mouse Event Handlers for Interactive Drawing
+  const handleCanvasMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (activeTool === 'cursor') return;
+    const canvas = canvasRef.current;
+    const chart = chartRef.current;
+    const series = candleSeriesRef.current;
+    if (!canvas || !chart || !series) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    const time = chart.timeScale().coordinateToTime(x);
+    const price = series.coordinateToPrice(y);
+    if (!time || price === null) return;
+
+    const point = { time, price: Math.round(price * 100) / 100 };
+
+    if (activeTool === 'horizontal') {
+      const newDrawing: DrawingItem = {
+        id: `draw_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+        type: 'horizontal',
+        symbol: selectedSymbol,
+        color: activeColor,
+        width: activeWidth,
+        p1: point,
+      };
+      const updated = [...drawings, newDrawing];
+      setDrawings(updated);
+      saveDrawings(updated);
+      return;
+    }
+
+    // 2-point tools
+    if (!draftDrawing) {
+      setDraftDrawing({
+        id: `draw_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+        type: activeTool,
+        symbol: selectedSymbol,
+        color: activeColor,
+        width: activeWidth,
+        p1: point,
+        p2: point,
+      });
+    } else {
+      const finalDrawing: DrawingItem = {
+        ...draftDrawing,
+        p2: point,
+      };
+      const updated = [...drawings, finalDrawing];
+      setDrawings(updated);
+      saveDrawings(updated);
+      setDraftDrawing(null);
+    }
+  };
+
+  const handleCanvasMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!draftDrawing) return;
+    const canvas = canvasRef.current;
+    const chart = chartRef.current;
+    const series = candleSeriesRef.current;
+    if (!canvas || !chart || !series) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    const time = chart.timeScale().coordinateToTime(x);
+    const price = series.coordinateToPrice(y);
+    if (price === null) return;
+
+    setDraftDrawing((prev) => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        p2: {
+          time: time || prev.p1.time,
+          price: Math.round(price * 100) / 100,
+        },
+      };
+    });
+  };
+
+  const handleUndo = () => {
+    if (drawings.length === 0) return;
+    const updated = drawings.slice(0, drawings.length - 1);
+    setDrawings(updated);
+    saveDrawings(updated);
+  };
+
+  const handleClearAll = () => {
+    setDrawings([]);
+    setDraftDrawing(null);
+    saveDrawings([]);
+  };
 
   const priceDisplayK = currentTick?.price ? (currentTick.price / 1000).toFixed(2) : '--';
   const changeK = currentTick?.change ? (currentTick.change / 1000).toFixed(2) : '0.00';
@@ -581,7 +963,7 @@ export function MarketCandleChart() {
             <div className="flex items-center gap-2">
               <h3 className="font-mono font-bold text-zinc-100 text-sm tracking-tight">{selectedSymbol}</h3>
               <span className="text-[10px] font-mono text-zinc-400 bg-zinc-900 border border-zinc-800 px-1.5 py-0.5 rounded">
-                HOSE
+                {exchange}
               </span>
             </div>
             <div className="flex items-center gap-2 font-mono text-xs mt-0.5">
@@ -598,18 +980,6 @@ export function MarketCandleChart() {
           {/* Chart Engine Mode Toggle */}
           <div className="flex items-center bg-zinc-900 p-1 rounded-xl border border-zinc-800">
             <button
-              onClick={() => setChartMode('tradingview')}
-              className={`flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-mono font-bold rounded-lg transition-all ${
-                chartMode === 'tradingview'
-                  ? 'bg-emerald-500 text-zinc-950 shadow-sm'
-                  : 'text-zinc-400 hover:text-zinc-200'
-              }`}
-            >
-              <Sparkle size={12} weight="bold" />
-              <span>TradingView Pro (100% Real)</span>
-            </button>
-
-            <button
               onClick={() => setChartMode('native')}
               className={`flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-mono font-bold rounded-lg transition-all ${
                 chartMode === 'native'
@@ -618,7 +988,19 @@ export function MarketCandleChart() {
               }`}
             >
               <ChartLine size={12} weight="bold" />
-              <span>Native Stream</span>
+              <span>Native Stream (Bộ vẽ Pro)</span>
+            </button>
+
+            <button
+              onClick={() => setChartMode('tradingview')}
+              className={`flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-mono font-bold rounded-lg transition-all ${
+                chartMode === 'tradingview'
+                  ? 'bg-emerald-500 text-zinc-950 shadow-sm'
+                  : 'text-zinc-400 hover:text-zinc-200'
+              }`}
+            >
+              <Sparkle size={12} weight="bold" />
+              <span>TradingView Pro</span>
             </button>
           </div>
 
@@ -693,8 +1075,8 @@ export function MarketCandleChart() {
         </div>
       )}
 
-      {/* Main Chart Area */}
-      <div className="w-full flex-1 min-h-[420px] rounded-xl overflow-hidden z-10">
+      {/* Main Chart Area with TradingView-Style Left Drawing Toolbar */}
+      <div className="w-full flex-1 min-h-[480px] rounded-xl overflow-hidden z-10 flex border border-zinc-800/80 bg-zinc-950 relative">
         {chartMode === 'tradingview' ? (
           <TradingViewProEmbed
             key={selectedSymbol}
@@ -702,7 +1084,187 @@ export function MarketCandleChart() {
             onFallbackToNative={() => setChartMode('native')}
           />
         ) : (
-          <div ref={chartContainerRef} className="w-full h-full min-h-[420px]" />
+          <>
+            {/* Left Vertical Drawing Toolbar */}
+            <div className="flex flex-col items-center gap-1.5 py-2.5 px-1.5 bg-zinc-950/90 border-r border-zinc-800/80 z-30 shrink-0">
+              {/* Cursor / Select */}
+              <button
+                onClick={() => { setActiveTool('cursor'); setDraftDrawing(null); }}
+                title="Con trỏ chuột (Crosshair)"
+                className={`p-2 rounded-lg transition-all ${
+                  activeTool === 'cursor'
+                    ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20'
+                    : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900'
+                }`}
+              >
+                <Cursor size={16} weight="bold" />
+              </button>
+
+              {/* Trendline */}
+              <button
+                onClick={() => { setActiveTool('trendline'); setDraftDrawing(null); }}
+                title="Đường xu hướng (Trend Line)"
+                className={`p-2 rounded-lg transition-all ${
+                  activeTool === 'trendline'
+                    ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20'
+                    : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900'
+                }`}
+              >
+                <TrendUp size={16} weight="bold" />
+              </button>
+
+              {/* Horizontal Line */}
+              <button
+                onClick={() => { setActiveTool('horizontal'); setDraftDrawing(null); }}
+                title="Đường ngang (Hỗ trợ / Kháng cự)"
+                className={`p-2 rounded-lg transition-all ${
+                  activeTool === 'horizontal'
+                    ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20'
+                    : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900'
+                }`}
+              >
+                <Minus size={16} weight="bold" />
+              </button>
+
+              {/* Fibonacci Retracement */}
+              <button
+                onClick={() => { setActiveTool('fibonacci'); setDraftDrawing(null); }}
+                title="Thoái lui Fibonacci"
+                className={`p-2 rounded-lg transition-all ${
+                  activeTool === 'fibonacci'
+                    ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20'
+                    : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900'
+                }`}
+              >
+                <Percent size={16} weight="bold" />
+              </button>
+
+              {/* Rectangle Zone */}
+              <button
+                onClick={() => { setActiveTool('rectangle'); setDraftDrawing(null); }}
+                title="Vùng giá (Hộp Supply / Demand)"
+                className={`p-2 rounded-lg transition-all ${
+                  activeTool === 'rectangle'
+                    ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20'
+                    : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900'
+                }`}
+              >
+                <Square size={16} weight="bold" />
+              </button>
+
+              {/* Measure */}
+              <button
+                onClick={() => { setActiveTool('measure'); setDraftDrawing(null); }}
+                title="Thước đo biên độ & %"
+                className={`p-2 rounded-lg transition-all ${
+                  activeTool === 'measure'
+                    ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20'
+                    : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900'
+                }`}
+              >
+                <Ruler size={16} weight="bold" />
+              </button>
+
+              <div className="w-4 h-px bg-zinc-800 my-1" />
+
+              {/* Color Palette Toggle */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowPalette(!showPalette)}
+                  title="Chọn màu nét vẽ"
+                  className="p-2 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900 relative"
+                >
+                  <Palette size={16} weight="bold" />
+                  <span
+                    className="absolute bottom-1.5 right-1.5 w-1.5 h-1.5 rounded-full"
+                    style={{ backgroundColor: activeColor }}
+                  />
+                </button>
+
+                {showPalette && (
+                  <div className="absolute left-full ml-2 top-0 bg-zinc-900 border border-zinc-800 rounded-xl p-2 flex flex-col gap-2 z-40 shadow-2xl backdrop-blur-xl">
+                    <div className="text-[9px] font-mono text-zinc-400 uppercase tracking-wider px-1">Màu sắc</div>
+                    <div className="flex items-center gap-1.5">
+                      {PALETTE.map((c) => (
+                        <button
+                          key={c}
+                          onClick={() => { setActiveColor(c); setShowPalette(false); }}
+                          className={`w-5 h-5 rounded-md border transition-transform ${
+                            activeColor === c ? 'border-white scale-110 shadow' : 'border-transparent hover:scale-105'
+                          }`}
+                          style={{ backgroundColor: c }}
+                        />
+                      ))}
+                    </div>
+                    <div className="text-[9px] font-mono text-zinc-400 uppercase tracking-wider px-1 mt-1">Độ dày</div>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3].map((w) => (
+                        <button
+                          key={w}
+                          onClick={() => { setActiveWidth(w); setShowPalette(false); }}
+                          className={`px-2 py-0.5 text-[10px] font-mono rounded ${
+                            activeWidth === w ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'text-zinc-400 hover:bg-zinc-800'
+                          }`}
+                        >
+                          {w}px
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Undo */}
+              <button
+                onClick={handleUndo}
+                title="Hoàn tác nét vẽ (Undo)"
+                disabled={drawings.length === 0}
+                className="p-2 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900 disabled:opacity-30 disabled:hover:bg-transparent"
+              >
+                <ArrowCounterClockwise size={16} />
+              </button>
+
+              {/* Clear All */}
+              <button
+                onClick={handleClearAll}
+                title="Xóa tất cả nét vẽ"
+                disabled={drawings.length === 0}
+                className="p-2 rounded-lg text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 disabled:opacity-30 disabled:hover:bg-transparent mt-auto"
+              >
+                <Trash size={16} />
+              </button>
+            </div>
+
+            {/* Canvas Container */}
+            <div className="flex-1 h-full min-h-[480px] relative overflow-hidden">
+              <div ref={chartContainerRef} className="w-full h-full min-h-[480px]" />
+              <canvas
+                ref={canvasRef}
+                onMouseDown={handleCanvasMouseDown}
+                onMouseMove={handleCanvasMouseMove}
+                className={`absolute inset-0 z-20 ${
+                  activeTool === 'cursor' ? 'pointer-events-none' : 'pointer-events-auto cursor-crosshair'
+                }`}
+              />
+
+              {/* Floating Active Tool Banner */}
+              {activeTool !== 'cursor' && (
+                <div className="absolute top-3 left-4 z-30 flex items-center gap-2 px-3 py-1.5 bg-zinc-900/90 border border-emerald-500/30 rounded-xl text-[11px] font-mono text-emerald-400 backdrop-blur-md shadow-xl">
+                  <span className="font-bold">{TOOL_LABELS[activeTool]}</span>
+                  <span className="text-zinc-400 text-[10px]">
+                    ({draftDrawing ? 'Nhấp điểm thứ 2 để chốt' : 'Nhấp điểm trên nến để bắt đầu'})
+                  </span>
+                  <button
+                    onClick={() => { setDraftDrawing(null); setActiveTool('cursor'); }}
+                    className="ml-1 p-0.5 hover:bg-zinc-800 rounded text-zinc-400 hover:text-zinc-200"
+                    title="Hủy vẽ (Esc)"
+                  >
+                    <X size={13} />
+                  </button>
+                </div>
+              )}
+            </div>
+          </>
         )}
       </div>
     </div>

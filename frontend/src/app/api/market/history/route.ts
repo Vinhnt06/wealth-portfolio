@@ -28,7 +28,12 @@ export async function GET(request: Request) {
   }
 
   const nowSec = Math.floor(Date.now() / 1000);
-  const fromSec = nowSec - (days > 0 ? days : 1825) * 24 * 3600;
+  let fromSec = 0;
+  if (daysParam === 'all' || daysParam === '0' || days === 0 || rawRes === 'ALL') {
+    fromSec = 0; // Lấy toàn bộ lịch sử từ ngày giao dịch đầu tiên
+  } else {
+    fromSec = Math.max(0, nowSec - days * 24 * 3600);
+  }
 
   try {
     const url = `https://services.entrade.com.vn/chart-api/v2/ohlcs/stock?from=${fromSec}&to=${nowSec}&symbol=${encodeURIComponent(
