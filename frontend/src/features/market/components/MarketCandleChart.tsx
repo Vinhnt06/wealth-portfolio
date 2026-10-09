@@ -16,6 +16,12 @@ import {
 } from 'lightweight-charts';
 import { useMarketStore } from '../store/marketStore';
 import { TrendUp, TrendDown, Clock, ArrowsOutSimple, Eye, EyeSlash, ChartLine, Sparkle } from '@phosphor-icons/react';
+import stockDatabase from '../data/stockDatabase.json';
+
+const EXCHANGE_MAP = new Map<string, string>();
+(stockDatabase as any[]).forEach((item) => {
+  EXCHANGE_MAP.set(item.symbol.toUpperCase(), item.exchange);
+});
 
 // Timeframe Resolution Presets
 const RESOLUTIONS = [
@@ -73,18 +79,17 @@ function getIntradayTimestamps(count: number, stepSec: number): number[] {
 function TradingViewProEmbed({ symbol }: { symbol: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Format exact symbol for TradingView: HOSE:HPG, HOSE:VCG, HNX:SHB
-  const tvSymbol = symbol.includes(':') ? symbol.toUpperCase() : `HOSE:${symbol.toUpperCase()}`;
-  const containerId = `tv_widget_${symbol.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
+  // Format exact symbol with accurate exchange: HOSE:HPG, HNX:SHB, UPCOM:VGI
+  const cleanSym = symbol.toUpperCase().trim();
+  const exchange = EXCHANGE_MAP.get(cleanSym) || 'HOSE';
+  const tvSymbol = cleanSym.includes(':') ? cleanSym : `${exchange}:${cleanSym}`;
+  const containerId = `tv_widget_${cleanSym.toLowerCase()}_${Date.now()}`;
 
   useEffect(() => {
     if (!containerRef.current) return;
     containerRef.current.innerHTML = '';
 
-    const script = document.createElement('script');
-    script.src = 'https://s3.tradingview.com/tv.js';
-    script.async = true;
-    script.onload = () => {
+    const createWidget = () => {
       if (typeof (window as any).TradingView !== 'undefined' && containerRef.current) {
         new (window as any).TradingView.widget({
           autosize: true,
@@ -106,7 +111,22 @@ function TradingViewProEmbed({ symbol }: { symbol: string }) {
         });
       }
     };
-    containerRef.current.appendChild(script);
+
+    if (typeof (window as any).TradingView !== 'undefined') {
+      createWidget();
+    } else {
+      const existingScript = document.getElementById('tradingview-tv-js');
+      if (existingScript) {
+        existingScript.addEventListener('load', createWidget);
+      } else {
+        const script = document.createElement('script');
+        script.id = 'tradingview-tv-js';
+        script.src = 'https://s3.tradingview.com/tv.js';
+        script.async = true;
+        script.onload = createWidget;
+        document.head.appendChild(script);
+      }
+    }
   }, [tvSymbol, containerId]);
 
   return (
@@ -550,7 +570,7 @@ export function MarketCandleChart() {
       {/* Main Chart Area */}
       <div className="w-full flex-1 min-h-[420px] rounded-xl overflow-hidden z-10">
         {chartMode === 'tradingview' ? (
-          <TradingViewProEmbed symbol={selectedSymbol} />
+          <TradingViewProEmbed key={selectedSymbol} symbol={selectedSymbol} />
         ) : (
           <div ref={chartContainerRef} className="w-full h-full min-h-[420px]" />
         )}
