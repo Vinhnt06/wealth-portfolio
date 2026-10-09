@@ -264,13 +264,13 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
       </div>
 
       {/* Main Terminal Grid: Candlestick Chart (8 Cols) + Investor Flow / Order Book (4 Cols) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div className="lg:col-span-8 min-h-[500px]">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <div className="lg:col-span-8">
           <MarketCandleChart />
         </div>
-        <div className="lg:col-span-4 min-h-[500px] flex flex-col gap-3">
+        <div className="lg:col-span-4 h-[480px] lg:h-[500px] flex flex-col gap-3 overflow-hidden">
           {/* Quick Sub-tab Toggle between Minervini 8/8, Phân loại NĐT & Sổ lệnh */}
-          <div className="grid grid-cols-3 gap-1 p-1 rounded-xl bg-zinc-900 border border-zinc-800">
+          <div className="grid grid-cols-3 gap-1 p-1 rounded-xl bg-zinc-900 border border-zinc-800 shrink-0">
             <button
               onClick={() => setSidebarMode('minervini')}
               className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-mono font-bold transition-all ${
@@ -308,7 +308,7 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
             </button>
           </div>
 
-          <div className="flex-1">
+          <div className="flex-1 overflow-y-auto scrollbar-none">
             {sidebarMode === 'minervini' ? (
               <MinerviniStrategyPanel symbol={selectedSymbol} />
             ) : sidebarMode === 'investor_flow' ? (

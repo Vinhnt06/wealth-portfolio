@@ -36,6 +36,7 @@ import {
   TextT,
   ChartBar,
   ArrowsOut,
+  ArrowsIn,
 } from '@phosphor-icons/react';
 import stockDatabase from '../data/stockDatabase.json';
 
@@ -122,6 +123,7 @@ export function MarketCandleChart() {
   const [chartType, setChartType] = useState<'candles' | 'line'>('candles');
   const [isLoading, setIsLoading] = useState(false);
   const [currentTimeStr, setCurrentTimeStr] = useState('');
+  const [isExpanded, setIsExpanded] = useState(false);
 
   // Indicators toggle
   const [showIndicatorsModal, setShowIndicatorsModal] = useState(false);
@@ -218,10 +220,21 @@ export function MarketCandleChart() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
+        setIsExpanded(false);
         setDraftDrawing(null);
         setActiveTool('cursor');
         setShowPalette(false);
         setShowIndicatorsModal(false);
+        setTimeout(() => {
+          if (chartRef.current && chartContainerRef.current) {
+            chartRef.current.applyOptions({
+              width: chartContainerRef.current.clientWidth,
+              height: chartContainerRef.current.clientHeight,
+            });
+            chartRef.current.timeScale().fitContent();
+            updateCanvasSize();
+          }
+        }, 80);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -741,15 +754,22 @@ export function MarketCandleChart() {
     }
   };
 
-  // Fullscreen Handler
+  // Fullscreen / Expand Handler
   const toggleFullscreen = () => {
-    const el = fullWrapperRef.current;
-    if (!el) return;
-    if (!document.fullscreenElement) {
-      el.requestFullscreen().catch(() => {});
-    } else {
-      document.exitFullscreen().catch(() => {});
-    }
+    setIsExpanded((prev) => {
+      const next = !prev;
+      setTimeout(() => {
+        if (chartRef.current && chartContainerRef.current) {
+          chartRef.current.applyOptions({
+            width: chartContainerRef.current.clientWidth,
+            height: chartContainerRef.current.clientHeight,
+          });
+          chartRef.current.timeScale().fitContent();
+          updateCanvasSize();
+        }
+      }, 80);
+      return next;
+    });
   };
 
   // Interactive Drawing Handlers
@@ -882,7 +902,11 @@ export function MarketCandleChart() {
   return (
     <div
       ref={fullWrapperRef}
-      className="bg-zinc-950 border border-zinc-800/80 rounded-2xl flex flex-col h-full relative overflow-hidden select-none"
+      className={`bg-zinc-950 border border-zinc-800/80 flex flex-col relative select-none transition-all duration-200 ${
+        isExpanded
+          ? 'fixed inset-0 z-[100] w-screen h-screen rounded-none p-2 sm:p-3 shadow-2xl'
+          : 'w-full h-[480px] lg:h-[500px] rounded-2xl shadow-xl overflow-hidden'
+      }`}
     >
       {/* ── TradingView-Style Top Navigation & Header Bar ────────── */}
       <div className="flex flex-wrap items-center justify-between px-3 py-2 border-b border-zinc-800/70 bg-zinc-950 text-zinc-300 text-xs gap-2 z-30">
@@ -1062,16 +1086,32 @@ export function MarketCandleChart() {
 
           <button
             onClick={toggleFullscreen}
-            title="Toàn màn hình"
-            className="p-1.5 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900 rounded-lg"
+            title={isExpanded ? 'Thu nhỏ biểu đồ (Esc)' : 'Phóng to toàn màn hình'}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-semibold transition-all ${
+              isExpanded
+                ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20'
+                : 'bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-emerald-400 hover:border-emerald-500/40'
+            }`}
           >
-            <ArrowsOut size={14} />
+            {isExpanded ? (
+              <>
+                <ArrowsIn size={14} weight="bold" />
+                <span>Thu nhỏ</span>
+              </>
+            ) : (
+              <>
+                <ArrowsOut size={14} weight="bold" />
+                <span className="hidden sm:inline">Phóng to</span>
+              </>
+            )}
           </button>
         </div>
       </div>
 
       {/* ── Main Chart Body with Left Drawing Toolbar ─────────────── */}
-      <div className="w-full flex-1 min-h-[580px] flex relative bg-zinc-950 overflow-hidden">
+      <div className={`w-full flex-1 flex relative bg-zinc-950 overflow-hidden ${
+        isExpanded ? 'h-full min-h-0' : 'h-[420px] lg:h-[440px] min-h-[360px]'
+      }`}>
         {/* Left Vertical Drawing Toolbar (TradingView Style) */}
         <div className="flex flex-col items-center gap-1 py-2 px-1 bg-zinc-950 border-r border-zinc-800/70 z-30 shrink-0">
           <button
@@ -1218,8 +1258,8 @@ export function MarketCandleChart() {
         </div>
 
         {/* Chart Canvas Area */}
-        <div className="flex-1 h-full min-h-[580px] relative overflow-hidden">
-          <div ref={chartContainerRef} className="w-full h-full min-h-[580px]" />
+        <div className="flex-1 h-full w-full min-h-0 relative overflow-hidden">
+          <div ref={chartContainerRef} className="w-full h-full min-h-0" />
           <canvas
             ref={canvasRef}
             onMouseDown={handleCanvasMouseDown}
