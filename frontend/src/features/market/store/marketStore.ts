@@ -19,10 +19,12 @@ interface MarketState {
   isChartExpanded: boolean;
   activeTab: 'orderbook' | 'info' | 'foreign';
   isQuickViewOpen: boolean;
+  viewMode: 'overview' | 'detail';
 
   // Actions
   setWsStatus: (status: WsStatus) => void;
   setSelectedSymbol: (symbol: string) => void;
+  setViewMode: (viewMode: 'overview' | 'detail') => void;
   setActiveTab: (tab: 'orderbook' | 'info' | 'foreign') => void;
   openQuickView: (symbol?: string) => void;
   closeQuickView: () => void;
@@ -47,9 +49,12 @@ export const useMarketStore = create<MarketState>((set) => ({
   isChartExpanded: true,
   activeTab: 'info',
   isQuickViewOpen: false,
+  viewMode: 'overview',
 
   setWsStatus: (wsStatus) => set({ wsStatus }),
-  setSelectedSymbol: (selectedSymbol) => set({ selectedSymbol, isChartExpanded: true, activeTab: 'info' }),
+  setSelectedSymbol: (selectedSymbol) =>
+    set({ selectedSymbol, isChartExpanded: true, activeTab: 'info', viewMode: 'detail' }),
+  setViewMode: (viewMode) => set({ viewMode }),
   setActiveTab: (activeTab) => set({ activeTab }),
   openQuickView: (symbol) =>
     set((state) => ({

@@ -19,7 +19,7 @@ export const MarketSearch: React.FC = () => {
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   
-  const { setSelectedSymbol, selectedSymbol, ticks, toggleWatchlistSymbol, watchlistSymbols, updateTick, openQuickView } = useMarketStore();
+  const { setSelectedSymbol, selectedSymbol, ticks, toggleWatchlistSymbol, watchlistSymbols, updateTick, openQuickView, closeQuickView } = useMarketStore();
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -60,7 +60,7 @@ export const MarketSearch: React.FC = () => {
   const handleSelect = (symbol: string) => {
     const s = symbol.toUpperCase();
     setSelectedSymbol(s);
-    openQuickView(s);
+    closeQuickView();
     setIsOpen(false);
     setQuery('');
 

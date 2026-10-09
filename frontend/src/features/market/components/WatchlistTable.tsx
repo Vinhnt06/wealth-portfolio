@@ -171,7 +171,7 @@ export const WatchlistTable: React.FC = () => {
               return (
                 <tr
                   key={stock.symbol}
-                  onClick={() => openQuickView(stock.symbol)}
+                  onClick={() => setSelectedSymbol(stock.symbol)}
                   className={`cursor-pointer transition-colors duration-150 group ${
                     isSelected ? 'bg-emerald-950/30 font-semibold' : 'hover:bg-zinc-800/40'
                   }`}

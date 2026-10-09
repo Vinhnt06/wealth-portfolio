@@ -1,0 +1,2345 @@
+{
+  "HPG": {
+    "symbol": "HPG",
+    "info": {
+      "business_model": "\n- Sản xuất thép xây dựng, thép cuộn cán nóng.\n- Buôn bán và xuất nhập khẩu sắt thép, vật tư thiết bị luyện, cán thép.\n- Sản xuất cán kéo thép, sản xuất tôn lợp, tôn mạ kẽm, tôn mạ lạnh, tôn mạ màu.\n- Sản xuất ống thép không mạ và có mạ.\n- Sản xuất và mua bán kim loại màu các loại, phế liệu kim loại màu.\n- Luyện gang, thép; Đúc gang, sắt, thép...",
+      "symbol": "HPG",
+      "founded_date": "",
+      "charter_capital": 84430,
+      "number_of_employees": 31574,
+      "listing_date": "15/11/2007",
+      "par_value": 10000,
+      "exchange": "HOSE",
+      "listing_price": 127000,
+      "listed_volume": 8443,
+      "ceo_name": "Mr. Nguyễn Việt Thắng",
+      "ceo_position": "Tổng Giám đốc",
+      "inspector_name": "Mr. Nguyễn Việt Thắng",
+      "inspector_position": "Tổng Giám đốc",
+      "establishment_license": null,
+      "business_code": "0900189284",
+      "tax_id": "0900189284",
+      "auditor": "KPMG",
+      "company_type": "Công ty cổ phần",
+      "address": "KCN Phố Nối A - X. Nguyễn Văn Linh - T. Hưng Yên",
+      "phone": "(84.24) 6284 8666",
+      "fax": "(84.24) 6283 3456",
+      "email": "hoaphatgroup@hoaphat.com.vn   ",
+      "website": "https://www.hoaphat.com.vn/",
+      "branches": "Tại Lào: Phòng 7 - Tầng 4 Vientiane Commercial Bank Building - Phố Lanxang - Vientiane.\r\nTel: 00856. 207612525\r\nFax: 00856. 21240313",
+      "history": "\n- Năm 1992: Thành lập Công ty TNHH Thiết bị Phụ tùng Hòa Phát; Công ty đầu tiên mang thương hiệu Hòa Phát.\n- Năm 1995: Thành lập Công ty CP Nội thất Hòa Phát. .\n- Năm 1996: Thành lập Công ty TNHH Ống thép Hòa Phát.\n- Năm 2000: Thành lập Công ty CP Thép Hòa Phát, nay là Công ty TNHH Một thành viên Thép Hòa Phát.\n- Tháng 7/2001: Thành lập Công ty TNHH Điện lạnh Hòa Phát.\n- Tháng 9/2001: Thành lập Công ty CP Xây dựng và Phát triển Đô thị Hòa Phát.\n- Năm 2004: Thành lập Công ty TNHH Thương mại Hòa Phát.\n- Tháng 1/2007: Tái cấu trúc theo mô hình Tập đoàn, với Công ty mẹ là Công ty CP Tập đoàn Hòa Phát và các Công ty thành viên.\n- Tháng 6/2007: Thành lập Công ty CP Khoáng sản Hòa Phát.\n- Tháng 8/2007: Thành lập Công ty CP Thép Hòa Phát, triển khai Khu liên hợp sản xuất gang thép tại Kinh Môn, Hải Dương.\n- 15/11/2007: Niêm yết cổ phiếu mã HPG trên thị trường chứng khoán Việt Nam.\n- Tháng 6/2009: Mua lại Công ty CP Đầu tư khoáng sản An Thông.\n- Tháng 6/2009: Mua lại Công ty CP Năng lượng Hòa Phát.\n- Tháng 12/2009: KLH Gang thép Hòa Phát hoàn thành đầu tư giai đoạn 1.\n- Tháng 7/2010: Công ty CP Golden Gain Việt Nam trở thành Công ty thành viên.\n- Tháng 1/2011: Cấu trúc mô hình hoạt động Công ty mẹ với việc tách mảng sản xuất và kinh doanh thép.\n- Tháng 1/2012: Triển khai giai đoạn 2 Khu liên hợp sản xuất gang thép tại Kinh Môn, Hải Dương.\n- Tháng 8/2012: Tập đoàn Hòa Phát tròn 20 năm hình thành và phát triển.\n- Ngày 25/02/2015: Tăng vốn điều lệ lên 4,886 tỷ đồng.\n- Ngày 26/04/2017: Tăng vốn điều lệ lên 12,642,554,170,000 đồng.\n- Ngày 10/07/2018: Tăng vốn điều lệ lên 21,239,071,660,000 đồng.\n- Ngày 04/07/2019: Tăng vốn điều lệ lên 27,610,741,150,000 đồng.\n- Ngày 01/09/2020: Tăng vốn điều lệ lên 33,132,826,590,000 đồng.\n- Ngày 30/06/2021: Tăng vốn điều lệ lên 44,729,227,060,000 đồng.\n- Ngày 17/06/2022: Tăng vốn điều lệ lên 58,147,857,000,000 đồng.\n- Ngày 18/12/2024: Tăng vốn điều lệ lên 63,962,502,000,000 đồng.\n- Ngày 11/08/2025: Tăng vốn điều lệ lên 76,754,658,550,000 đồng.\n- Tháng 07/2026: Tăng vốn điều lệ lên 84,429,645,200,000 đồng.",
+      "free_float_percentage": 84429645200000,
+      "free_float": 10000,
+      "outstanding_shares": 8442964520,
+      "as_of_date": "2025-12-31T00:00:00"
+    },
+    "shareholders": [
+      {
+        "name": "Trần Đình Long",
+        "update_date": "2025-06-30T00:00:00",
+        "shares_owned": 1980000000,
+        "ownership_percentage": 25.8
+      },
+      {
+        "name": "Vũ Thị Hiền",
+        "update_date": "2025-06-30T00:00:00",
+        "shares_owned": 528000000,
+        "ownership_percentage": 6.88
+      }
+    ],
+    "officers": [
+      {
+        "from_date": "1992",
+        "position": "CTHĐQT",
+        "name": "Ông Trần Đình Long",
+        "position_en": "CTHĐQT (Chairman of BOD)",
+        "owner_code": "CTHĐQT"
+      },
+      {
+        "from_date": "1996",
+        "position": "Phó CTHĐQT",
+        "name": "Ông Nguyễn Mạnh Tuấn",
+        "position_en": "Phó CTHĐQT (Vice Chairman of BOD)",
+        "owner_code": "Phó CTHĐQT"
+      },
+      {
+        "from_date": "1992",
+        "position": "Phó CTHĐQT",
+        "name": "Ông Trần Tuấn Dương",
+        "position_en": "Phó CTHĐQT (Vice Chairman of BOD)",
+        "owner_code": "Phó CTHĐQT"
+      },
+      {
+        "from_date": "TV Độc lập",
+        "position": "TVHĐQT",
+        "name": "Ông Chu Quang Vũ",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "TV Độc lập",
+        "position": "TVHĐQT",
+        "name": "Ông Đặng Ngọc Khánh",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "1999",
+        "position": "TVHĐQT",
+        "name": "Ông Doãn Gia Cường",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "2001",
+        "position": "TVHĐQT",
+        "name": "Ông Hoàng Quang Việt",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "2003",
+        "position": "TGĐ/TVHĐQT",
+        "name": "Ông Nguyễn Việt Thắng",
+        "position_en": "TGĐ (CEO)",
+        "owner_code": "TGĐ"
+      },
+      {
+        "from_date": "TV Độc lập",
+        "position": "TVHĐQT",
+        "name": "Ông Tạ Tuấn Quang",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "1998",
+        "position": "Phó TGĐ",
+        "name": "Bà Nguyễn Thị Thảo Nguyên",
+        "position_en": "Phó TGĐ (Deputy CEO)",
+        "owner_code": "Phó TGĐ"
+      },
+      {
+        "from_date": "N/A",
+        "position": "Phó TGĐ",
+        "name": "Bà Trần Thị Thu Hiền",
+        "position_en": "Phó TGĐ (Deputy CEO)",
+        "owner_code": "Phó TGĐ"
+      },
+      {
+        "from_date": "2008",
+        "position": "KTT/GĐ Tài chính",
+        "name": "Bà Phạm Thị Kim Oanh",
+        "position_en": "KTT (Chief Accountant)",
+        "owner_code": "KTT"
+      },
+      {
+        "from_date": "2008",
+        "position": "Trưởng BKS",
+        "name": "Bà Bùi Thị Hải Vân",
+        "position_en": "Trưởng BKS (Chief of Supervisory Board)",
+        "owner_code": "Trưởng BKS"
+      },
+      {
+        "from_date": "2015",
+        "position": "Thành viên BKS",
+        "name": "Bà Ngô Lan Anh",
+        "position_en": "Thành viên BKS (Member of Supervisory Board)",
+        "owner_code": "Thành viên BKS"
+      },
+      {
+        "from_date": "2015",
+        "position": "Thành viên BKS",
+        "name": "Bà Thái Thị Lộc",
+        "position_en": "Thành viên BKS (Member of Supervisory Board)",
+        "owner_code": "Thành viên BKS"
+      }
+    ]
+  },
+  "VCB": {
+    "symbol": "VCB",
+    "info": {
+      "business_model": "\n- Dịch vụ tài khoản; huy động vốn (tiền gửi tiết kiệm, trái phiếu, kỳ phiếu); cho vay (ngăn, trung, dài hạn); bảo lãnh; chiết khấu chứng từ; thanh toán quốc tế; chuyển tiền; thẻ; nhờ thu; mua bán ngoại tệ; ngân hàng đại lý; bao thanh toán; Các dịch vụ khác theo Giấy chứng nhân đăng ký kinh doanh.",
+      "symbol": "VCB",
+      "founded_date": "23/05/2008",
+      "charter_capital": 83557,
+      "number_of_employees": 23457,
+      "listing_date": "30/06/2009",
+      "par_value": 10000,
+      "exchange": "HOSE",
+      "listing_price": 60000,
+      "listed_volume": 8356,
+      "ceo_name": "Mr. Nguyễn Thanh Tùng",
+      "ceo_position": "Tổng giám đốc",
+      "inspector_name": "Ms. Phùng Nguyễn Hải Yến",
+      "inspector_position": "Phó TGĐ",
+      "establishment_license": "138/GP-NHNN",
+      "business_code": "0103024468",
+      "tax_id": "0100112437",
+      "auditor": "Ernst & Young",
+      "company_type": "Ngân hàng",
+      "address": "Số 198 Trần Quang Khải - P. Hoàn Kiếm - Tp. Hà Nội",
+      "phone": "(84.24) 3934 3137",
+      "fax": "(84.24) 3824 1395 - 3936 0049 - 3825 1322",
+      "email": "webmaster@vietcombank.com.vn",
+      "website": "https://vietcombank.com.vn",
+      "branches": "",
+      "history": "\n- Ngày 01/04/1963: Ngân hàng chính thức được thành lập theo Quyết định số 115/CP do Hội đồng Chính phủ ban hành ngày 30/10/1962.\n- Ngày 01/04/1963: chính thức khai trương hoạt động như là một ngân hàng đối ngoại độc quyền.\n- Năm 1978: Thành lập Công ty Tài chính ở Hồng Kông – Vinafico Hong Kong.\n- Ngày 14/11/1990: Chính thức chuyển từ ngân hàng chuyên doanh, độc quyền trong hoạt động kinh tế đối ngoại sang một NHTM Nhà nước hoạt động đa năng theo Quyết định số 403-CT ngày 14/11/1990 của Chủ tịch Hội đồng Bộ trưởng.\n- Năm 1993: Thành lập ngân hàng liên doanh với đối tác Hàn Quốc \n- First Vina Bank, nay là ShinhanVina Bank.\n- Ngày 21/09/1996: Thống đốc NHNN đã ký Quyết định số 286/QĐ-NH5 về việc thành lập lại Ngân Hàng Ngoại Thương theo mô hình Tổng công ty 90: 91 với tên giao dịch quốc tế Bank for Foreign Trade of Viet Nam, tên viết tắt là Vietcombank. Thành lập Văn phòng đại diện tại Paris (Pháp) và tại Moscow (Cộng hòa Liên bang Nga), khai trương Công ty liên doanh Vietcombank Tower 198 với đối tác Singapore.\n- 26/12/2007: Phát hành cổ phiếu lần đầu ra công chúng (IPO).\n- 02/06/2008 chính thức chuyển thành Ngân hàng Thương mại Cổ phần Ngoại thương Việt Nam.\n- 30/6/2009: Cổ phiếu Vietcombank (mã chứng khoán VCB) chính thức được niêm yết tại Sở giao dịch Chứng khoán TPHCM.\n- Ngày 30/9/2011: Vietcombank đã ký kết thoả thuận hợp tác chiến lược với Ngân hàng TNHH Mizuho (MHCB) \n- một thành viên của Tập đoàn tài chính Mizuho (Nhật Bản) – thông qua việc bán cho đối tác 15% vốn cổ phần.\n- Ngày 15/7/2015: Vietcombank đã thực hiện Lễ khởi động triển khai Hiệp ước Vốn Basel II.\n- Năm 2016: Vietcombank là ngân hàng đầu tiên trong ngành xử lý hết dư nợ tại VAMC.\n- Năm 2017-2018: Thoái vốn đầu tư tại Ngân hàng TMCP Sài Gòn Công Thương (Saigonbank), Công ty TNHH Cao ốc Vietcombank 198, Ngân hàng TMCP Phương Đông (OCB).\n- Ngày 16/01/2019: Tăng vốn điều lệ lên 37,088,774,480,000 đồng.\n- Tháng 04/2022: Tăng vốn điều lệ lên 47,325,166,000,000 đồng.\n- Tháng 09/2023: Tăng vốn điều lệ lên 55,890,913,000,000 đồng.\n- Tháng 01/2025: Tăng vốn điều lệ lên 83,556,750,940,000 đồng.",
+      "free_float_percentage": 83556750940000,
+      "free_float": 10000,
+      "outstanding_shares": 8355675094,
+      "as_of_date": "2025-12-31T00:00:00"
+    },
+    "shareholders": [
+      {
+        "name": "Ngân hàng Nhà nước Việt Nam",
+        "update_date": "2025-03-17T00:00:00",
+        "shares_owned": 6250338579,
+        "ownership_percentage": 74.8
+      },
+      {
+        "name": "Mizuho Bank, Ltd",
+        "update_date": "2025-03-17T00:00:00",
+        "shares_owned": 1253366534,
+        "ownership_percentage": 15.0
+      },
+      {
+        "name": "Quỹ đầu tư chính phủ Singapore (GIC)",
+        "update_date": "2025-07-23T00:00:00",
+        "shares_owned": 84503639,
+        "ownership_percentage": 1.01
+      }
+    ],
+    "officers": [
+      {
+        "from_date": "2021",
+        "position": "CTHĐQT",
+        "name": "Ông Nguyễn Thanh Tùng",
+        "position_en": "CTHĐQT (Chairman of BOD)",
+        "owner_code": "CTHĐQT"
+      },
+      {
+        "from_date": "2017",
+        "position": "TGĐ/TVHĐQT",
+        "name": "Ông Lê Quang Vinh",
+        "position_en": "TGĐ (CEO)",
+        "owner_code": "TGĐ"
+      },
+      {
+        "from_date": "N/A",
+        "position": "TVHĐQT",
+        "name": "Ông Đỗ Việt Hùng",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "2025",
+        "position": "TVHĐQT",
+        "name": "Bà Hoàng Thanh Nhàn",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "N/A",
+        "position": "TVHĐQT",
+        "name": "Ông Hồng Quang",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "2025",
+        "position": "TVHĐQT",
+        "name": "Ông Kohei Matsuoka",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "2014",
+        "position": "TVHĐQT",
+        "name": "Ông Nguyễn Mạnh Hùng",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "2013",
+        "position": "TVHĐQT",
+        "name": "Bà Nguyễn Thị Kim Oanh",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "2024",
+        "position": "TVHĐQT",
+        "name": "Ông Nguyễn Tuấn Anh",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "TV Độc lập",
+        "position": "TVHĐQT",
+        "name": "Ông Vũ Viết Ngoạn",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "2019",
+        "position": "Phó TGĐ",
+        "name": "Ông Đặng Hoài Đức",
+        "position_en": "Phó TGĐ (Deputy CEO)",
+        "owner_code": "Phó TGĐ"
+      },
+      {
+        "from_date": "N/A",
+        "position": "Phó TGĐ",
+        "name": "Ông Hồ Văn Tuấn",
+        "position_en": "Phó TGĐ (Deputy CEO)",
+        "owner_code": "Phó TGĐ"
+      },
+      {
+        "from_date": "2017",
+        "position": "Phó TGĐ",
+        "name": "Ông Lê Hoàng Tùng",
+        "position_en": "Phó TGĐ (Deputy CEO)",
+        "owner_code": "Phó TGĐ"
+      },
+      {
+        "from_date": "2025",
+        "position": "Phó TGĐ",
+        "name": "Ông Nguyễn Văn Tuân",
+        "position_en": "Phó TGĐ (Deputy CEO)",
+        "owner_code": "Phó TGĐ"
+      },
+      {
+        "from_date": "2022",
+        "position": "Phó TGĐ",
+        "name": "Ông Nguyễn Việt Cường",
+        "position_en": "Phó TGĐ (Deputy CEO)",
+        "owner_code": "Phó TGĐ"
+      }
+    ]
+  },
+  "SSI": {
+    "symbol": "SSI",
+    "info": {
+      "business_model": "\n- Dịch vụ chứng khoán.\n- Dịch vụ ngân hàng đầu tư.\n- Quản lý quỹ, nguồn vốn và kinh doanh tài chính",
+      "symbol": "SSI",
+      "founded_date": "27/12/1999",
+      "charter_capital": 30033,
+      "number_of_employees": 1433,
+      "listing_date": "29/10/2007",
+      "par_value": 10000,
+      "exchange": "HOSE",
+      "listing_price": 165900,
+      "listed_volume": 3003,
+      "ceo_name": "Mr. Nguyễn Duy Hưng",
+      "ceo_position": "Chủ tịch HĐQT",
+      "inspector_name": "Mr. Nguyễn Kim Long",
+      "inspector_position": "Người phụ trách quản trị kiêm Thư ký công ty, Giám đốc Luật và Kiểm soát tuân thủ",
+      "establishment_license": "3041/GP-UB",
+      "business_code": "056679",
+      "tax_id": "0301955155",
+      "auditor": "Ernst & Young",
+      "company_type": "Công ty chứng khoán",
+      "address": "Số 72 Nguyễn Huệ - P. Sài Gòn - Tp. Hồ Chí Minh",
+      "phone": "(84.28) 3824 2897",
+      "fax": "(84.28) 3824 2997",
+      "email": "investorrelation@ssi.com.vn",
+      "website": "https://www.ssi.com.vn",
+      "branches": "",
+      "history": "\n- Ngày 10/12/1999: Công ty Cổ phần Chứng khoán Sài Gòn được thành lập, đặt trụ sở chính tại TP. Hồ Chí Minh với hai nghiệp vụ chính là dịch vụ chứng khoán và tư vấn đầu tư. Vốn điều lệ ban đầu là 6 tỷ đồng.\n- Tháng 01/2001: Tăng vốn điều lệ lên 20 tỷ đồng.\n- Tháng 06/2005: SSI tăng vốn điều lệ lên 52 tỷ đồng.\n- Ngày 20/11/2006: Được chấp thuận niêm yết trên Trung tâm Giao dịch Chứng khoán Hà Nội.\n- Ngày 10/08/2007: Được chấp thuận chuyển sang giao dịch tại Trung tâm Giao dịch Chứng khoán TP. Hồ Chí Minh.\n- Ngày 29/10/2007: Cổ phiếu của công ty chính thức niêm yết trên HOSE.\n- Tháng 03/2008: Tăng vốn điều lệ lên 1,199 tỷ đồng.\n- Tháng 04/2008: Tăng vốn điều lệ lên 1,366 tỷ đồng.\n- Tháng 01/2009: Tăng vốn điều lệ lên 1,533 tỷ đồng.\n- Tháng 03/2010: Tăng vốn điều lệ lên 1,755 tỷ đồng.\n- Tháng 05/2010: Tăng vốn điều lệ lên 3,511 tỷ đồng.\n- Tháng 01/2012: Tăng vốn điều lệ lên 3,526 tỷ đồng.\n- Tháng 03/2013: Tăng vốn điều lệ lên 3,537 tỷ đồng.\n- Ngày 12/01/2017: Tăng vốn điều lệ lên 4,900 tỷ đồng.\n- Ngày 30/01/2018: Tăng vốn điều lệ lên 5,000 tỷ đồng.\n- Ngày 17/12/2018: Đổi tên thành Công ty Cổ phần Chứng khoán SSI.\n- Ngày 23/01/2019: Tăng vốn điều lệ lên 5,100 tỷ đồng.\n- Ngày 18/02/2020: Tăng vốn điều lệ lên 5,200 tỷ đồng.\n- Ngày 08/05/2020: Tăng vốn điều lệ lên 6,029 tỷ đồng.\n- Ngày 09/04/2021: Tăng vốn điều lệ lên 6,498 tỷ đồng.\n- Ngày 22/06/2021: Tăng vốn điều lệ lên 6,573 tỷ đồng.\n- Ngày 08/10/2021: Tăng vốn điều lệ lên 8,755 tỷ đồng.\n- Ngày 23/11/2021: Tăng vốn điều lệ lên 9,847 tỷ đồng.\n- Ngày 04/08/2022: Tăng vốn điều lệ lên 9,947 tỷ đồng.\n- Ngày 02/11/2022: Tăng vốn điều lệ lên 14,911 tỷ đồng.\n- Ngày 02/11/2022: Tăng vốn điều lệ lên 15,011 tỷ đồng.\n- Ngày 28/05/2024: Tăng vốn điều lệ lên 15,111 tỷ đồng.\n- Ngày 04/11/2024: Tăng vốn điều lệ lên 18,129 tỷ đồng.\n- Ngày 25/12/2024: Tăng vốn điều lệ lên 19,638 tỷ đồng.\n- Ngày 22/07/2025: Tăng vốn điều lệ lên 19,738 tỷ đồng.\n- Ngày 26/09/2025: Tăng vốn điều lệ lên 20,779 tỷ đồng.\n- Ngày 03/02/2026: Tăng vốn điều lệ lên 24,930 tỷ đồng.\n- Ngày 25/06/2026: Tăng vốn điều lệ lên 25,030 tỷ đồng.\n- Ngày 09/09/2026: Tăng vốn điều lệ lên 30,032 tỷ đồng.",
+      "free_float_percentage": 30032938010000,
+      "free_float": 10000,
+      "outstanding_shares": 3001302333,
+      "as_of_date": "2025-12-31T00:00:00"
+    },
+    "shareholders": [
+      {
+        "name": "Daiwa Securities Group Inc",
+        "update_date": "2025-08-29T00:00:00",
+        "shares_owned": 317154673,
+        "ownership_percentage": 15.26
+      },
+      {
+        "name": "Công ty TNHH Đầu tư NDH",
+        "update_date": "2025-12-31T00:00:00",
+        "shares_owned": 164263488,
+        "ownership_percentage": 7.91
+      }
+    ],
+    "officers": [
+      {
+        "from_date": "1999",
+        "position": "CTHĐQT",
+        "name": "Ông Nguyễn Duy Hưng",
+        "position_en": "CTHĐQT (Chairman of BOD)",
+        "owner_code": "CTHĐQT"
+      },
+      {
+        "from_date": "2020",
+        "position": "TVHĐQT",
+        "name": "Ông Nguyễn Duy Khánh",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "1999",
+        "position": "TVHĐQT",
+        "name": "Ông Nguyễn Hồng Nam",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "TV Độc lập",
+        "position": "TVHĐQT/TV Ủy ban Kiểm toán",
+        "name": "Ông Nguyễn Quốc Cường",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "TV Độc lập",
+        "position": "TVHĐQT/Chủ tịch Ủy ban Kiểm toán",
+        "name": "Ông Phạm Viết Muôn",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "2026",
+        "position": "TVHĐQT",
+        "name": "Ông Tsutomu Hiramatsu",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "2019",
+        "position": "TGĐ",
+        "name": "Ông Nguyễn Đức Thông",
+        "position_en": "TGĐ (CEO)",
+        "owner_code": "TGĐ"
+      },
+      {
+        "from_date": "2003",
+        "position": "GĐ Tài chính",
+        "name": "Bà Nguyễn Thị Thanh Hà",
+        "position_en": "GĐ Tài chính (Finance Director)",
+        "owner_code": "GĐ Tài chính"
+      },
+      {
+        "from_date": "2026",
+        "position": "KTT",
+        "name": "Ông Từ Cẩm Huê",
+        "position_en": "KTT (Chief Accountant)",
+        "owner_code": "KTT"
+      }
+    ]
+  },
+  "VNM": {
+    "symbol": "VNM",
+    "info": {
+      "business_model": "\n- Chế biến, sản xuất kinh doanh sữa và các sản phẩm từ sữa.",
+      "symbol": "VNM",
+      "founded_date": "01/10/2003",
+      "charter_capital": 20900,
+      "number_of_employees": 9906,
+      "listing_date": "19/01/2006",
+      "par_value": 10000,
+      "exchange": "HOSE",
+      "listing_price": 53000,
+      "listed_volume": 2090,
+      "ceo_name": "Ms. Mai Kiều Liên",
+      "ceo_position": "Tổng Giám Đốc",
+      "inspector_name": "Ms. Mai Kiều Liên",
+      "inspector_position": "Tổng Giám Đốc",
+      "establishment_license": " 155/2003QĐ-BCN",
+      "business_code": "0300588569",
+      "tax_id": "0300588569",
+      "auditor": "KPMG",
+      "company_type": "Công ty cổ phần",
+      "address": "Tòa nhà Vinamilk - Số 10 Tân Trào - P. Tân Mỹ - Tp. Hồ Chí Minh",
+      "phone": "(84.28) 5415 5555",
+      "fax": "(84.28) 5416 1226 - 5416 1230",
+      "email": "vinamilk@vinamilk.com.vn",
+      "website": "https://www.vinamilk.com.vn",
+      "branches": "- Tại Hà Nội: 57 Trần Duy Hưng - P. Trung Hòa - Q. Cầu Giấy - Tp. Hà Nội\r\nTel: (84.4) 3556 3638 \r\n- Tại Đà Nẵng: 175 Triệu Nữ Vương - TP. Đà Nẵng\r\nTel: (84.511) 389 7222\r\n- Tại Cần Thơ: 86D Hùng Vương – P. Thới Bình – Q. Ninh Kiều - TP. Cần Thơ  \r\nTel: (84.71) 381 1274",
+      "history": "\n- Năm 1976: Tiền thân của công ty là Công ty Sữa \n- Cà Phê Miền Nam, trực thuộc Tổng Cục thực phẩm được thành lập.\n- Năm 1982: Công ty Sữa \n- Cà phê Miền Nam được chuyển giao về Bộ Công nghiệp Thực phẩm và đổi tên thành Xí nghiệp Liên hiệp Sữa \n- Cà phê \n- Bánh kẹo I.\n- Tháng 03/1992: Xí nghiệp Liên hiệp Sữa \n- Cà phê \n- Bánh kẹo I chính thức đổi tên thành Công ty Sữa Việt Nam, trực thuộc Bộ Công nghiệp nhẹ.\n- Ngày 01/10/2003: Chính thức chuyển đổi và hoạt động dưới hình thức CTCP với tên gọi là CTCP Sữa Việt Nam.\n- Tháng 12/2003: Vốn điều lệ của công ty là 1,500 tỷ đồng.\n- Năm 2004: Mua thâu tóm CTCP Sữa Sài Gòn (là Nhà máy sữa Sài Gòn hiện nay).\n- Tháng 04/2004: Vốn điều lệ của công ty là 1,590 tỷ đồng.\n- Ngày 19/01/2006: Niêm yết trên HOSE. Thành lập Phòng khám An Khang tại TP.HCM.\n- Tháng 01/2007: Vốn điều lệ của công ty là 1,670 tỷ đồng.\n- Tháng 04/2007: Vốn điều lệ của công ty là 1,753 tỷ đồng.\n- Năm 2009: Vốn điều lệ của công ty là 3,513 tỷ đồng.\n- Năm 2010: Góp vốn 10 triệu USD (19.3% vốn điều lệ) vào công ty Miraka Limited.\n- Tháng 03/2010: Vốn điều lệ của công ty là 3,531 tỷ đồng.\n- Tháng 12/2011: Vốn điều lệ của công ty là 5,561 tỷ đồng.\n- Năm 2012: Thành lập nhà máy sữa Đà Nẵng.\n- Tháng 12/2012: Vốn điều lệ của công ty là 8,340 tỷ đồng.\n- Năm 2013: Khánh thành Nhà máy sữa bột Việt Nam, Nhà máy sữa Việt Nam (Mega); Công ty TNHH Bò sữa Thống Nhất Thanh Hóa trở thành một công ty con của Vinamilk với 96.11% VĐL do Vinamilk nắm giữ; Mua 70% cổ phần Driftwood Dairy Holdings Corporation tại bang California, Mỹ.\n- Năm 2014: Góp 100% vốn thành lập công ty con Vinamilk Europe Spostka Z Ograniczona Odpowiedzialnoscia tại Ba Lan. Góp 51% vốn thành lập Công ty AngkorMilk tại Campuchia.\n- Tháng 09/2014: Vốn điều lệ của công ty là 10,006 tỷ đồng.\n- Năm 2015: Vinamilk tăng cổ phần tại Công ty Sữa Miraka (New Zealand) từ 19.3% lên 22.8%.\n- Tháng 09/2015: Vốn điều lệ của công ty là 12,006 tỷ đồng.\n- Năm 2016: Mua nốt 30% cổ phần của công ty Driftwood của Mỹ, tăng sở hữu lên 100%. Khánh thành Nhà máy Sữa Angkormilk tại Campuchia. Chính thức ra mắt thương hiệu Vinamilk tại Myanmar, Thái Lan và mở rộng hoạt động ở khu vực ASEAN; Góp 18% vào CTCP APIS.\n- Tháng 08/2016: Vốn điều lệ của công ty là 12,095 tỷ đồng.\n- Tháng 09/2016: Vốn điều lệ của công ty là 14,515 tỷ đồng.\n- Năm 2017: Đầu tư nắm giữ 65% cổ phần của CTCP Đường Việt Nam và 25% góp vốn vào CTCP Chế Biến Dừa Á Châu.\n- Năm 2018: Là công ty đầu tiên sản xuất sữa A2 tại Việt Nam; Đầu tư nắm giữ 51% cổ phần của Lao-Jagro Development Xiengkhouang Co., Ltd.\n- Tháng 10/2018: Vốn điều lệ của công ty là 17,417 tỷ đồng.\n- Năm 2019: Đầu tư nắm giữ 75% cổ phần của Công ty Cổ phần GTNFoods, qua đó tham gia điều hành Công ty Cổ phần Sữa Mộc Châu; Tăng gấp đôi vốn đầu tư vào Driftwood Dairy Holding Corporation từ 10 triệu USD lên 20 triệu USD.\n- Nă",
+      "free_float_percentage": 20899554450000,
+      "free_float": 10000,
+      "outstanding_shares": 2089955445,
+      "as_of_date": "2025-12-31T00:00:00"
+    },
+    "shareholders": [
+      {
+        "name": "Tổng Công ty Đầu tư và Kinh doanh Vốn Nhà nước",
+        "update_date": "2025-08-29T00:00:00",
+        "shares_owned": 752476602,
+        "ownership_percentage": 36.0
+      },
+      {
+        "name": "F&N Dairy Investments Pte Ltd",
+        "update_date": "2025-12-22T00:00:00",
+        "shares_owned": 465847490,
+        "ownership_percentage": 22.29
+      },
+      {
+        "name": "Nhóm CĐL - N'TCA.I DFC EMERCINC MARKETS EQUITY FUND",
+        "update_date": "2026-04-14T00:00:00",
+        "shares_owned": 105225627,
+        "ownership_percentage": 5.03
+      }
+    ],
+    "officers": [
+      {
+        "from_date": "TV Độc lập",
+        "position": "CTHĐQT",
+        "name": "Ông Nguyễn Hạnh Phúc",
+        "position_en": "CTHĐQT (Chairman of BOD)",
+        "owner_code": "CTHĐQT"
+      },
+      {
+        "from_date": "TV Độc lập",
+        "position": "TVHĐQT/Chủ tịch Ủy ban Kiểm toán",
+        "name": "Ông Đỗ Lê Hùng",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "2018",
+        "position": "TVHĐQT/TV Ủy ban Kiểm toán",
+        "name": "Ông Alain Xavier Cany",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "2017",
+        "position": "TVHĐQT/TV Ủy ban Kiểm toán",
+        "name": "Bà Đặng Thị Thu Hà",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "2017",
+        "position": "TVHĐQT/TV Ủy ban Kiểm toán",
+        "name": "Ông Michael Chye Hin Fah",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "1994",
+        "position": "TVHĐQT/GĐ Tài chính",
+        "name": "Ông Lê Thành Liêm",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "1976",
+        "position": "TGĐ/TVHĐQT",
+        "name": "Bà Mai Kiều Liên",
+        "position_en": "TGĐ (CEO)",
+        "owner_code": "TGĐ"
+      },
+      {
+        "from_date": "TV Độc lập",
+        "position": "TVHĐQT",
+        "name": "Bà Tiêu Yến Trinh",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "2025",
+        "position": "TVHĐQT",
+        "name": "Bà Tongjai ThanaCHanan",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "2025",
+        "position": "TVHĐQT",
+        "name": "Ông Vũ Trí Thức",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "2005",
+        "position": "GĐ Điều hành",
+        "name": "Bà Bùi Thị Hương",
+        "position_en": "GĐ Điều hành (Executive Director)",
+        "owner_code": "GĐ Điều hành"
+      },
+      {
+        "from_date": "1999",
+        "position": "GĐ Điều hành",
+        "name": "Ông Đoàn Quốc Khánh",
+        "position_en": "GĐ Điều hành (Executive Director)",
+        "owner_code": "GĐ Điều hành"
+      },
+      {
+        "from_date": "N/A",
+        "position": "GĐ Điều hành",
+        "name": "Ông Lê Hoàng Minh",
+        "position_en": "GĐ Điều hành (Executive Director)",
+        "owner_code": "GĐ Điều hành"
+      },
+      {
+        "from_date": "N/A",
+        "position": "GĐ Điều hành",
+        "name": "Ông Nguyễn Quang Trí",
+        "position_en": "GĐ Điều hành (Executive Director)",
+        "owner_code": "GĐ Điều hành"
+      },
+      {
+        "from_date": "2009",
+        "position": "GĐ Điều hành",
+        "name": "Ông Nguyễn Quốc Khánh",
+        "position_en": "GĐ Điều hành (Executive Director)",
+        "owner_code": "GĐ Điều hành"
+      }
+    ]
+  },
+  "FPT": {
+    "symbol": "FPT",
+    "info": {
+      "business_model": "\n- Công nghệ:+ Nhóm dịch vụ: Tư vấn Chuyển đổi số, Chuyển đổi xanh và Chuyển đổi trí tuệ nhân tạo; Thiết kế, triển khai, tích hợp, vận hành, bảo trì, kiểm thử... các hệ thống CNTT; Dịch vụ an toàn, an ninh mạng; Cung cấp các giải pháp dựa trên các nền tảng công nghệ: NVIDIA, Landing AI, SAP, Oracle, Microsoft, ESRI…+ Nhóm sản phẩm, giải pháp: Cung cấp các nền tảng công nghệ tiên tiến như: nền tảng trí tuệ nhân tạo FPT.AI, nền tảng điện toán đám mây FPT Cloud, nền tảng quản trị doanh nghiệp Base.vn; Phát triển chip nguồn và chip IoT; Sản phẩm, giải pháp chuyển đổi số tích hợp công nghệ AI, AI tạo sinh (Generative AI), tự động hóa (RPA), kết nối vạn vật (IoT)… chuyên sâu cho các lĩnh vực như: Chính phủ, Viễn thông, Ngân hàng \n- Tài chính, Y tế, Giao thông vận tải, Tài chính công, Năng lượng, Doanh nghiệp, Ô tô…; Sản phẩm, giải pháp tiên tiến giải quyết các bài toán nghiệp vụ chuyên sâu của doanh nghiệp như: quản lý chuỗi cung ứng, quản lý tài chính, quản lý nguồn nhân lực, quản lý quan hệ khách hàng & trải nghiệm người dùng, quản lý phát triển bền vững, chuyển đổi quy trình kinh doanh…\n- Viễn thông: Dịch vụ Viễn thông; Dịch vụ truyền hình FPT Play; Dịch vụ họp trực tuyến; Hệ sinh thái truyền thông số; Hệ thống các sản phẩm FPT Smart Home.\n- Giáo dục: Bao gồm các khối đào tạo Giáo dục Phổ thông; Giáo dục Nghề nghiệp và Giáo dục Đại học.",
+      "symbol": "FPT",
+      "founded_date": "28/02/2002",
+      "charter_capital": 17413,
+      "number_of_employees": 54110,
+      "listing_date": "13/12/2006",
+      "par_value": 10000,
+      "exchange": "HOSE",
+      "listing_price": 400000,
+      "listed_volume": 1714,
+      "ceo_name": "Mr. Trương Gia Bình",
+      "ceo_position": "Chủ tịch HĐQT",
+      "inspector_name": "Ms. Mai Thị Lan Anh",
+      "inspector_position": "Phó Giám đốc Marketing và Truyền thông FPT",
+      "establishment_license": "178/QĐ-TTG",
+      "business_code": "0101248141",
+      "tax_id": "0101248141",
+      "auditor": "Deloitte",
+      "company_type": "Công ty cổ phần",
+      "address": "Số 10 - Phố Phạm Văn Bạch - P.  Cầu Giấy - Tp. Hà Nội",
+      "phone": "(84.24) 7300 7300",
+      "fax": "(84.24) 768 7410",
+      "email": "Ir@fpt.com",
+      "website": "https://fpt.com",
+      "branches": "- VPĐD tại Cần Thơ: 69 Hùng Vương - P.THới Bình - Q.Ninh Kiều - Tp.Cần Thơ\r\n- VPĐD tại Đà Nẵng: Tòa nhà FPT - 01 KCN Đà Nẵng - P.An Hải Bắc - Q.Sơn Trà - Tp.Đà Nẵng",
+      "history": "\n- Ngày 13/09/1988: Tiền thân là Công ty Công nghệ thực phẩm thành lập.\n- Ngày 27/10/1990: Đổi tên thành Công ty Phát triển đầu tư công nghệ FPT.\n- Năm 1999: Tiến ra thị trường nước ngoài với hướng đi chiến lược là xuất khẩu phần mềm.\n- Năm 2001: Ra mắt báo điện tử VnExpress, tờ báo điện tử đầu tiên của Việt Nam.\n- Tháng 03/2002: Công ty tiến hành cổ phần hóa; Sản xuất sản phẩm công nghệ thương hiệu FPT.\n- Năm 2006: Niêm yết trên thị trường chứng khoán; Thành lập trường ĐH FPT.\n- Ngày 25/09/2008: Đổi tên thành CTCP FPT.\n- Năm 2012: Đầu tư mở rộng chuỗi bán lẻ sản phẩm công nghệ FPT (FPT Shop) và Đầu tư vào thương mại điện tử.\n- Năm 2014: Tiến hành thương vụ M&A đầu tiên trong lĩnh vực CNTT của Việt Nam tại thị trường nước ngoài. Trong nước, công ty bắt đầu cung cấp dịch vụ truyền hình trả tiền.\n- Ngày 14/04/2017: Tăng vốn điều lệ lên 4,617,230,540,000 đồng.\n- Ngày 22/06/2017: Tăng vốn điều lệ lên 5,309,611,050,000 đồng.\n- Ngày 23/04/2018: Tăng vốn điều lệ lên 5,336,156,610,000 đồng.\n- Ngày 19/06/2018: Tăng vốn điều lệ lên 6,136,367,720,000 đồng.\n- Ngày 16/04/2019: Tăng vốn điều lệ lên 6,167,039,720,000 đồng.\n- Ngày 11/06/2019: Tăng vốn điều lệ lên 6,783,586,880,000 đồng.\n- Ngày 13/04/2020: Tăng vốn điều lệ lên 6,817,504,780.000 đồng.\n- Ngày 04/06/2020: Tăng vốn điều lệ lên 7,839,874,860,000 đồng.\n- Ngày 06/05/2021: Tăng vốn điều lệ lên 7,891,972,540,000 đồng.\n- Ngày 06/07/2021: Tăng vốn điều lệ lên 9,075,516,490,000 đồng.\n- Tháng 05/2022: Tăng vốn điều lệ lên 9,141,959,000,000 đồng.\n- Tháng 07/2022: Tăng vốn điều lệ lên 10,970,266,000,000 đồng.\n- Tháng 05/2023: Tăng vốn điều lệ lên 11,043,316,000,000 đồng.\n- Tháng 06/2024: Tăng vốn điều lệ lên 14,604,480,660,000 đồng.\n- Tháng 10/2024: Tăng vốn điều lệ lên 14,710,691,830,000 đồng.\n- Tháng 05/2025: Tăng vốn điều lệ lên 14,813,301,220,000 đồng.\n- Tháng 08/2025: Tăng vốn điều lệ lên 17,035,071,210,000 đồng.\n- Tháng 07/2026: Tăng vốn điều lệ lên 17,413,264,220,000 đồng.",
+      "free_float_percentage": 17413264220000,
+      "free_float": 10000,
+      "outstanding_shares": 1714326422,
+      "as_of_date": "2025-12-31T00:00:00"
+    },
+    "shareholders": [
+      {
+        "name": "Trương Gia Bình",
+        "update_date": "2025-12-31T00:00:00",
+        "shares_owned": 117347966,
+        "ownership_percentage": 6.89
+      },
+      {
+        "name": "Tổng Công ty Đầu tư và Kinh doanh vốn Nhà nước",
+        "update_date": "2025-12-31T00:00:00",
+        "shares_owned": 96585637,
+        "ownership_percentage": 5.67
+      }
+    ],
+    "officers": [
+      {
+        "from_date": "1988",
+        "position": "CTHĐQT",
+        "name": "Ông Trương Gia Bình",
+        "position_en": "CTHĐQT (Chairman of BOD)",
+        "owner_code": "CTHĐQT"
+      },
+      {
+        "from_date": "1988",
+        "position": "Phó CTHĐQT",
+        "name": "Ông Bùi Quang Ngọc",
+        "position_en": "Phó CTHĐQT (Vice Chairman of BOD)",
+        "owner_code": "Phó CTHĐQT"
+      },
+      {
+        "from_date": "1994",
+        "position": "TVHĐQT",
+        "name": "Ông Đỗ Cao Bảo",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "TV Độc lập",
+        "position": "TVHĐQT",
+        "name": "Ông Hampapur Rangadore Binod",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "TV Độc lập",
+        "position": "TVHĐQT",
+        "name": "Ông Hiroshi Yokotsuka",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "TV Độc lập",
+        "position": "TVHĐQT",
+        "name": "Ông Jean-Charles Belliol",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "2022",
+        "position": "TVHĐQT",
+        "name": "Bà Trần Thị Hồng Lĩnh",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "2019",
+        "position": "TGĐ",
+        "name": "Ông Nguyễn Văn Khoa",
+        "position_en": "TGĐ (CEO)",
+        "owner_code": "TGĐ"
+      },
+      {
+        "from_date": "2000",
+        "position": "Phó TGĐ",
+        "name": "Ông Nguyễn Thế Phương",
+        "position_en": "Phó TGĐ (Deputy CEO)",
+        "owner_code": "Phó TGĐ"
+      },
+      {
+        "from_date": "2024",
+        "position": "Phó TGĐ",
+        "name": "Ông Phạm Minh Tuấn",
+        "position_en": "Phó TGĐ (Deputy CEO)",
+        "owner_code": "Phó TGĐ"
+      },
+      {
+        "from_date": "2010",
+        "position": "KTT",
+        "name": "Ông Hoàng Hữu Chiến",
+        "position_en": "KTT (Chief Accountant)",
+        "owner_code": "KTT"
+      },
+      {
+        "from_date": "1992",
+        "position": "Trưởng BKS",
+        "name": "Ông Nguyễn Việt Thắng",
+        "position_en": "Trưởng BKS (Chief of Supervisory Board)",
+        "owner_code": "Trưởng BKS"
+      },
+      {
+        "from_date": "2022",
+        "position": "Thành viên BKS",
+        "name": "Bà Dương Thùy Dương",
+        "position_en": "Thành viên BKS (Member of Supervisory Board)",
+        "owner_code": "Thành viên BKS"
+      },
+      {
+        "from_date": "2017",
+        "position": "Thành viên BKS",
+        "name": "Ông Nguyễn Khải Hoàn",
+        "position_en": "Thành viên BKS (Member of Supervisory Board)",
+        "owner_code": "Thành viên BKS"
+      }
+    ]
+  },
+  "VIC": {
+    "symbol": "VIC",
+    "info": {
+      "business_model": "\n- Kinh doanh BĐS.\n- Dịch vụ cho thuê văn phòng, nhà ở, máy móc thiết bị công trình.\n- Kinh doanh khách sạn, Dịch vụ vui chơi giải trí, làm đẹp, ăn uống.\n- Hoạt động sáng tác, nghệ thuật và giải trí.\n- Hoạt động tư vấn quản lý.\n- Hoạt động hỗ trợ dịch vụ tài chính chưa được phân vào đâu.",
+      "symbol": "VIC",
+      "founded_date": "03/05/2002",
+      "charter_capital": 77622,
+      "number_of_employees": 104253,
+      "listing_date": "19/09/2007",
+      "par_value": 10000,
+      "exchange": "HOSE",
+      "listing_price": 125000,
+      "listed_volume": 7762,
+      "ceo_name": "Mr. Nguyễn Việt Quang",
+      "ceo_position": "Tổng giám đốc",
+      "inspector_name": "Ms. Nguyễn Diệu Linh",
+      "inspector_position": "Phó Chủ tịch HĐQT",
+      "establishment_license": null,
+      "business_code": "0103001016 ",
+      "tax_id": "0101245486",
+      "auditor": "Ernst & Young",
+      "company_type": "Công ty cổ phần",
+      "address": "Số 07 đường Bằng Lăng 1 - Khu đô thị Vinhomes Riverside - P. Phúc Lợi - Tp. Hà Nội",
+      "phone": "(84.24) 3974 9999 - 3974 9999",
+      "fax": "(84.24) 3974 8888",
+      "email": "info@vingroup.net",
+      "website": "https://www.vingroup.net/",
+      "branches": "",
+      "history": "\n- Ngày 03/05/2002: Tiền thân là Công ty Cổ phần Thương mại Tổng hợp Việt Nam (được thành lập với vốn điều lệ ban đầu là 196 tỷ VNĐ).\n- Tháng 12/2006: Tăng vốn điều lệ lên 313.5 tỷ đồng.\n- Ngày 22/06/2007: Tăng vốn điều lệ lên 800 tỷ đồng.\n- Ngày 07/09/2007: Niêm yết trên Sở Giao dịch Chứng khoán Thành phố Hồ Chí Minh (HOSE).\n- Ngày 19/09/2007: Giao dịch trên Sở Giao dịch Chứng khoán Thành phố Hồ Chí Minh (HOSE).\n- Tháng 03/2008 : Tăng vốn điều lệ lên 1,199.83 tỷ đồng.\n- Tháng 10/2009: Tăng vốn điều lệ lên 1,996.27 tỷ đồng.\n- Tháng 06/2010: Tăng vốn điều lệ lên 3,196.33 tỷ đồng.\n- Tháng 06/2011: Tăng vốn điều lệ lên 3,911.49 tỷ đồng.\n- Tháng 06/2012: Tăng vốn điều lệ lên 7,004.62 tỷ đồng.\n- Năm 2012: Chuyển đổi thành Tập đoàn Vingroup \n- Công ty Cổ phần trên cơ sở sáp nhập Công ty Cổ phần Vinpearl vào Công ty Cổ phần Vincom.\n- Tháng 03/2013: Tăng vốn điều lệ lên 9,281.1 tỷ đồng.\n- Tháng 07/2013: Tăng vốn điều lệ lên 9,286 tỷ đồng.\n- Tháng 11/2013: Phát hành thành công 200 triệu USD trái phiếu quốc tế.\n- Tháng 12/2013: Phát hành thêm cổ phần để sáp nhập CTCP Đầu tư và Thương mại PFV.\n- Tháng 05/2014: Tăng vốn điều lệ lên 14,545.55 tỷ đồng.\n- Tháng 07/2015: Tăng vốn điều lệ lên 18,427.03 tỷ đồng.\n- Tháng 11/2015: Tăng vốn điều lệ lên 18,620.52 tỷ đồng.\n- Tháng 12/2015: Tăng vốn điều lệ lên 18,639.4 tỷ đồng.\n- Tháng 03/2016: Tăng vốn điều lệ lên 19,398.54 tỷ đồng.\n- Tháng 08/2016: Tăng vốn điều lệ lên 21,532.34 tỷ đồng.\n- Tháng 11/2016: Tăng vốn điều lệ lên 26,377.08 tỷ đồng.\n- Ngày 18/07/2018: Tăng vốn điều lệ lên 31,916.21 tỷ đồng.\n- Ngày 29/08/2018: Tăng vốn điều lệ lên 32,756.21 tỷ đồng.\n- Ngày 10/06/2019: Tăng vốn điều lệ lên 34,299.35 tỷ đồng.\n- Ngày 18/12/2019: Tăng vốn điều lệ lên 34,309.14 tỷ đồng.\n- Ngày 31/01/2020: Tăng vốn điều lệ lên 34,447.69 tỷ đồng.\n- Ngày 10/09/2021: Tăng vốn điều lệ lên 38,675.53 tỷ đồng.\n- Tháng 08/2022: Tăng vốn điều lệ lên 38,688.57 tỷ đồng.\n- Tháng 01/2024: Tăng vốn điều lệ lên 38,785.83 tỷ đồng.\n- Tháng 08/2025: Tăng vốn điều lệ lên 38,804.76 tỷ đồng.\n- Tháng 12/2025: Tăng vốn điều lệ lên 77,334.91 tỷ đồng.\n- Tháng 07/2026: Tăng vốn điều lệ lên 77,621.86 tỷ đồng.",
+      "free_float_percentage": 77621864290000,
+      "free_float": 10000,
+      "outstanding_shares": 7762186429,
+      "as_of_date": "2024-12-31T00:00:00"
+    },
+    "shareholders": [
+      {
+        "name": "CTCP Tập đoàn Đầu tư Việt Nam",
+        "update_date": "2023-12-31T00:00:00",
+        "shares_owned": 1260132658,
+        "ownership_percentage": 32.49
+      },
+      {
+        "name": "CTCP Đầu tư và Phát triển Đường sắt Cao tốc Vinspeed",
+        "update_date": "2026-06-30T00:00:00",
+        "shares_owned": 834212369,
+        "ownership_percentage": 10.75
+      },
+      {
+        "name": "Phạm Nhật Vượng",
+        "update_date": "2025-12-24T00:00:00",
+        "shares_owned": 703848781,
+        "ownership_percentage": 9.1
+      },
+      {
+        "name": "CTCP Quản lý và Đầu tư BĐS VMI",
+        "update_date": "2023-12-31T00:00:00",
+        "shares_owned": 243462578,
+        "ownership_percentage": 6.28
+      }
+    ],
+    "officers": [
+      {
+        "from_date": "2001",
+        "position": "CTHĐQT",
+        "name": "Ông Phạm Nhật Vượng",
+        "position_en": "CTHĐQT (Chairman of BOD)",
+        "owner_code": "CTHĐQT"
+      },
+      {
+        "from_date": "2008",
+        "position": "Phó CTHĐQT",
+        "name": "Bà Nguyễn Diệu Linh",
+        "position_en": "Phó CTHĐQT (Vice Chairman of BOD)",
+        "owner_code": "Phó CTHĐQT"
+      },
+      {
+        "from_date": "2017",
+        "position": "TGĐ/Phó CTHĐQT",
+        "name": "Ông Nguyễn Việt Quang",
+        "position_en": "TGĐ (CEO)",
+        "owner_code": "TGĐ"
+      },
+      {
+        "from_date": "2001",
+        "position": "Phó CTHĐQT",
+        "name": "Bà Phạm Thu Hương",
+        "position_en": "Phó CTHĐQT (Vice Chairman of BOD)",
+        "owner_code": "Phó CTHĐQT"
+      },
+      {
+        "from_date": "2001",
+        "position": "Phó CTHĐQT",
+        "name": "Bà Phạm Thúy Hằng",
+        "position_en": "Phó CTHĐQT (Vice Chairman of BOD)",
+        "owner_code": "Phó CTHĐQT"
+      },
+      {
+        "from_date": "TV Độc lập",
+        "position": "TVHĐQT",
+        "name": "Ông Adil Ahmad",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "TV Độc lập",
+        "position": "TVHĐQT",
+        "name": "Ông Chin Michael Jaewuk",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "TV Độc lập",
+        "position": "TVHĐQT",
+        "name": "Ông Ronaldo Dy-Liacco Ibasco",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "N/A",
+        "position": "Phó TGĐ",
+        "name": "Bà Dương Thị Hoàn",
+        "position_en": "Phó TGĐ (Deputy CEO)",
+        "owner_code": "Phó TGĐ"
+      },
+      {
+        "from_date": "2008",
+        "position": "KTT",
+        "name": "Bà Nguyễn Thị Thu Hiền",
+        "position_en": "KTT (Chief Accountant)",
+        "owner_code": "KTT"
+      },
+      {
+        "from_date": "2011",
+        "position": "Trưởng BKS",
+        "name": "Ông Nguyễn Thế Anh",
+        "position_en": "Trưởng BKS (Chief of Supervisory Board)",
+        "owner_code": "Trưởng BKS"
+      },
+      {
+        "from_date": "TV Độc lập",
+        "position": "Thành viên BKS",
+        "name": "Bà Đỗ Thị Hồng Vân",
+        "position_en": "Thành viên BKS (Member of Supervisory Board)",
+        "owner_code": "Thành viên BKS"
+      },
+      {
+        "from_date": "N/A",
+        "position": "Thành viên BKS",
+        "name": "Bà Nguyễn Hồng Mai",
+        "position_en": "Thành viên BKS (Member of Supervisory Board)",
+        "owner_code": "Thành viên BKS"
+      }
+    ]
+  },
+  "VHM": {
+    "symbol": "VHM",
+    "info": {
+      "business_model": "\n- Phát triển và kinh doanh bất động sản, cho thuê văn phòng.\n- Cung cấp dịch vụ quản lý bất động sản và các dịch vụ liên quan.",
+      "symbol": "VHM",
+      "founded_date": "",
+      "charter_capital": 82148,
+      "number_of_employees": 12799,
+      "listing_date": "17/05/2018",
+      "par_value": 10000,
+      "exchange": "HOSE",
+      "listing_price": 92100,
+      "listed_volume": 8215,
+      "ceo_name": "Mr. Phạm Thiếu Hoa",
+      "ceo_position": "Chủ tịch HĐQT",
+      "inspector_name": "Mr. Phạm Thiếu Hoa",
+      "inspector_position": "Chủ tịch HĐQT",
+      "establishment_license": null,
+      "business_code": "0102671977",
+      "tax_id": "0102671977",
+      "auditor": null,
+      "company_type": "Công ty cổ phần",
+      "address": "Tòa nhà văn phòng Symphony - Đường Chu Huy Mân -  Khu đô thị Vinhomes Riverside - P. Phúc Lợi - Tp. Hà Nội",
+      "phone": "(84.24) 3974 9350",
+      "fax": "(84.24) 3974 9351",
+      "email": "info@vinhomes.vn",
+      "website": "https://vinhomes.vn/",
+      "branches": "",
+      "history": "\n- Năm 2002: Thành lập Công ty Cổ phần Vincom, tiền thân của Tập đoàn Vingroup – Công ty CP, công ty mẹ của Vinhomes.\n- Năm 2008: Tiền thân Công ty Cổ phần Đô thị BIDV-PP được thành lập với vốn điều lệ ban đầu là 300 tỷ đồng.\n- Tháng 03/2009: Đổi tên thành Công ty Cổ phần Phát triển Đô thị Nam Hà Nội.\n- Ngày 26/06/2009: Tăng vốn điều lệ lên 500 tỷ đồng.\n- Ngày 05/08/2010: Tăng vốn điều lệ lên 2,000 tỷ đồng.\n- Ngày 28/10/2011: Trở thành công ty đại chúng theo Công văn số 3585/UBCK-QLPH của Ủy ban chứng khoán Nhà nước.\n- Ngày 03/11/2011: Công ty nhận được Quyết định về việc chấp thuận đăng ký giao dịch cổ phiếu tại Sở Giao dịch Chứng khoán Hà Nội (UPCoM) với mã chứng khoán là NHN.\n- Ngày 14/07/2017: Hủy đăng ký giao dịch trên thị trường UPCoM.\n- Ngày 01/02/2018: Tăng vốn điều lệ lên 28,365 tỷ đồng.\n- Ngày 02/02/2018: Đổi tên thành Công ty Cổ phần Vinhomes.\n- Ngày 12/02/2018: Giảm vốn điều lệ xuống 26,796 tỷ đồng.\n- Ngày 07/05/2018: Niêm yết trên Sở Giao dịch Chứng khoán Thành phố Hồ Chí Minh (HOSE).\n- Ngày 17/05/2018: Là ngày giao dịch đầu tiên trên sàn HOSE với giá tham chiếu là 110,500 đ/CP.\n- Ngày 08/11/2018: Tăng vốn điều lệ lên 33,495 tỷ đồng.\n- Tháng 10/2021: Tăng vốn điều lệ lên 43,543 tỷ đồng.\n- Tháng 12/2024: Giảm vốn điều lệ xuống 41,074 tỷ đồng.\n- Tháng 08/2026: Tăng vốn điều lệ lên 82,148 tỷ đồng.",
+      "free_float_percentage": 82148240080000,
+      "free_float": 10000,
+      "outstanding_shares": 8214824008,
+      "as_of_date": "2025-12-31T00:00:00"
+    },
+    "shareholders": [
+      {
+        "name": "Tập đoàn Vingroup - CTCP",
+        "update_date": "2026-06-30T00:00:00",
+        "shares_owned": 2944999658,
+        "ownership_percentage": 72.7
+      }
+    ],
+    "officers": [
+      {
+        "from_date": "2011",
+        "position": "CTHĐQT",
+        "name": "Ông Phạm Thiếu Hoa",
+        "position_en": "CTHĐQT (Chairman of BOD)",
+        "owner_code": "CTHĐQT"
+      },
+      {
+        "from_date": "N/A",
+        "position": "TGĐ/TVHĐQT",
+        "name": "Bà Nguyễn Thu Hằng",
+        "position_en": "TGĐ (CEO)",
+        "owner_code": "TGĐ"
+      },
+      {
+        "from_date": "2018",
+        "position": "TVHĐQT",
+        "name": "Bà Cao Thị Hà An",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "TV Độc lập",
+        "position": "TVHĐQT",
+        "name": "Ông Hoang D. Quan",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "TV Độc lập",
+        "position": "TVHĐQT",
+        "name": "Ông Mueen Udden",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "2018",
+        "position": "TVHĐQT",
+        "name": "Bà Nguyễn Diệu Linh",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "2018",
+        "position": "TVHĐQT",
+        "name": "Ông Phạm Nhật Vượng",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "TV Độc lập",
+        "position": "TVHĐQT",
+        "name": "Ông Varun Kapur",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "N/A",
+        "position": "Phó TGĐ",
+        "name": "Ông Đặng Minh Hải",
+        "position_en": "Phó TGĐ (Deputy CEO)",
+        "owner_code": "Phó TGĐ"
+      },
+      {
+        "from_date": "N/A",
+        "position": "Phó TGĐ",
+        "name": "Bà Mai Thu Thủy",
+        "position_en": "Phó TGĐ (Deputy CEO)",
+        "owner_code": "Phó TGĐ"
+      },
+      {
+        "from_date": "N/A",
+        "position": "GĐ Tài chính",
+        "name": "Ông Lê Tiến Công",
+        "position_en": "GĐ Tài chính (Finance Director)",
+        "owner_code": "GĐ Tài chính"
+      },
+      {
+        "from_date": "2025",
+        "position": "KTT",
+        "name": "Ông Đỗ Đức Hiếu",
+        "position_en": "KTT (Chief Accountant)",
+        "owner_code": "KTT"
+      },
+      {
+        "from_date": "N/A",
+        "position": "Trưởng BKS",
+        "name": "Ông Trần Minh Anh",
+        "position_en": "Trưởng BKS (Chief of Supervisory Board)",
+        "owner_code": "Trưởng BKS"
+      },
+      {
+        "from_date": "N/A",
+        "position": "Thành viên BKS",
+        "name": "Bà Hoàng Thị Phượng",
+        "position_en": "Thành viên BKS (Member of Supervisory Board)",
+        "owner_code": "Thành viên BKS"
+      },
+      {
+        "from_date": "N/A",
+        "position": "Thành viên BKS",
+        "name": "Bà Phạm Ngọc Lan",
+        "position_en": "Thành viên BKS (Member of Supervisory Board)",
+        "owner_code": "Thành viên BKS"
+      }
+    ]
+  },
+  "TCB": {
+    "symbol": "TCB",
+    "info": {
+      "business_model": "\n- Huy động và nhận tiền gửi ngắn, trung và dài hạn từ các tổ chức và cá nhân.\n- Cung cấp tín dụng ngắn, trung và dài hạn dựa trên tính chất và khả năng cung ứng nguồn vốn của Ngân hàng.\n- Thực hiện các nghiệp vụ thanh toán và ngân quỹ và các dịch vụ ngân hàng khác được NHNN cho phép.\n- Thực hiện góp vốn, mua cổ phần, đầu tư trái phiếu theo quy định của pháp luật.\n- Kinh doanh ngoại tệ theo quy định của pháp luật.",
+      "symbol": "TCB",
+      "founded_date": "06/08/1993",
+      "charter_capital": 70862,
+      "number_of_employees": 12705,
+      "listing_date": "04/06/2018",
+      "par_value": 10000,
+      "exchange": "HOSE",
+      "listing_price": 128000,
+      "listed_volume": 7086,
+      "ceo_name": "Mr. Hồ Hùng Anh",
+      "ceo_position": "Chủ tịch HĐQT",
+      "inspector_name": "Mr. Phạm Quang Thắng",
+      "inspector_position": "Phó Tổng giám đốc ",
+      "establishment_license": "0040/NH -GP",
+      "business_code": "055697",
+      "tax_id": "0100230800",
+      "auditor": null,
+      "company_type": "Ngân hàng",
+      "address": "Techcombank Tower - Số 06 Quang Trung - P. Cửa Nam - Tp. Hà Nội",
+      "phone": "(84.24) 3944 6368",
+      "fax": "(84.24) 3944 6362",
+      "email": "ho@techcombank.com.vn",
+      "website": "https://www.techcombank.com.vn",
+      "branches": "",
+      "history": "\n- Ngày 27/09/1993: Ngân hàng Thương mại Cổ phần Kỹ thương Việt Nam (Techcombank) được thành lập với vốn điều lệ ban đầu là 20 tỷ đồng.\n- Năm 1995: Tăng vốn điều lệ lên 51.49 tỷ đồng.\n- Năm 1996: Tăng vốn điều lệ lên 70 tỷ đồng.\n- Năm 1999: Tăng vốn điều lệ lên 80.02 tỷ đồng.\n- Năm 2001: Tăng vốn điều lệ lên 85.25 tỷ đồng.\n- Năm 2001: Tăng vốn điều lệ lên 102.34 tỷ đồng.\n- Năm 2002: Tăng vốn điều lệ lên 104.43 tỷ đồng.\n- Năm 2002: Tăng vốn điều lệ lên 127.98 tỷ đồng.\n- Ngày 31/12/2003: Tăng vốn điều lệ lên 180 tỷ đồng.\n- Ngày 30/06/2004: Tăng vốn điều lệ lên 234 tỷ đồng.\n- Ngày 02/08/2004: Tăng vốn điều lệ lên 252.25 tỷ đồng.\n- Ngày 26/11/2004: Tăng vốn điều lệ lên 412.7 tỷ đồng.\n- Ngày 21/07/2005: Tăng vốn điều lệ lên 453 tỷ đồng.\n- Ngày 28/09/2005: Tăng vốn điều lệ lên 498 tỷ đồng.\n- Ngày 28/10/2005: Tăng vốn điều lệ lên 555 tỷ đồng.\n- Năm 2005: Ký kết hợp đồng cổ đông chiến lược với HSBC.\n- Ngày 24/11/2006: Tăng vốn điều lệ lên 1,500 tỷ đồng.\n- Tháng 09/2008: Tăng vốn điều lệ lên 3,165 tỷ đồng.\n- Năm 2008: Tăng vốn điều lệ lên 3,342 tỷ đồng.\n- Tháng 07/2009: Tăng vốn điều lệ lên 4,337 tỷ đồng.\n- Tháng 09/2009: Tăng vốn điều lệ lên 5,400 tỷ đồng.\n- Tháng 06/2010: Tăng vốn điều lệ lên 6,932 tỷ đồng.\n- Năm 2011: Tăng vốn điều lệ lên 8,788.07 tỷ đồng.\n- Tháng 04/2012: Tăng vốn điều lệ lên 8,848.07 tỷ đồng.\n- Năm 2013: Tăng vốn điều lệ lên 8,878.07 tỷ đồng.\n- Tháng 12/2017: Tăng vốn điều lệ lên 11,655.3 tỷ đồng.\n- Ngày 04/06/2018: Ngày giao dịch đầu tiên trên Sàn HOSE với giá tham chiếu là 128,000 đ/CP.\n- Ngày 10/08/2018: Tăng vốn điều lệ lên 34,965.92 tỷ đồng.\n- Ngày 12/11/2019: Tăng vốn điều lệ lên 35,001.39 tỷ đồng.\n- Ngày 19/01/2021: Tăng vốn điều lệ lên 35,049.06 tỷ đồng.\n- Tháng 12/2021: Tăng vốn điều lệ lên 35,109.14 tỷ đồng.\n- Tháng 10/2022: Tăng vốn điều lệ lên 35,172.38 tỷ đồng.\n- Tháng 01/2024: Tăng vốn điều lệ lên 35,225.10 tỷ đồng.\n- Tháng 05/2024: Tăng vốn điều lệ lên 70,450.02 tỷ đồng.\n- Tháng 08/2024: Tăng vốn điều lệ lên 70,648.51 tỷ đồng.\n- Tháng 05/2025: Tăng vốn điều lệ lên 70,862.40 tỷ đồng.",
+      "free_float_percentage": 70862404140000,
+      "free_float": 10000,
+      "outstanding_shares": 7086240414,
+      "as_of_date": "2025-12-31T00:00:00"
+    },
+    "shareholders": [
+      {
+        "name": "CTCP Tập đoàn Masan",
+        "update_date": "2025-12-31T00:00:00",
+        "shares_owned": 1048630998,
+        "ownership_percentage": 14.79
+      },
+      {
+        "name": "Nguyễn Thị Thanh Thủy",
+        "update_date": "2025-12-31T00:00:00",
+        "shares_owned": 348260580,
+        "ownership_percentage": 4.91
+      },
+      {
+        "name": "Hồ Anh Minh",
+        "update_date": "2025-12-31T00:00:00",
+        "shares_owned": 344689430,
+        "ownership_percentage": 4.86
+      },
+      {
+        "name": "Hồ Thủy Anh",
+        "update_date": "2025-12-31T00:00:00",
+        "shares_owned": 344689430,
+        "ownership_percentage": 4.86
+      },
+      {
+        "name": "Công ty TNHH Mapleleaf",
+        "update_date": "2025-08-05T10:22:25.533",
+        "shares_owned": 174570774,
+        "ownership_percentage": 2.47
+      },
+      {
+        "name": "Vesta Vn Investments B.V.",
+        "update_date": "2024-07-17T00:00:00",
+        "shares_owned": 153519531,
+        "ownership_percentage": 2.17
+      },
+      {
+        "name": "Nguyễn Phương Hoa",
+        "update_date": "2025-12-31T00:00:00",
+        "shares_owned": 151940400,
+        "ownership_percentage": 2.14
+      },
+      {
+        "name": "Hồ Minh Anh",
+        "update_date": "2025-12-31T00:00:00",
+        "shares_owned": 144122296,
+        "ownership_percentage": 2.03
+      },
+      {
+        "name": "Nguyễn Hương Liên",
+        "update_date": "2025-12-31T00:00:00",
+        "shares_owned": 139262976,
+        "ownership_percentage": 1.97
+      },
+      {
+        "name": "Cog Investments I B.V.",
+        "update_date": "2024-07-17T00:00:00",
+        "shares_owned": 126207843,
+        "ownership_percentage": 1.79
+      }
+    ],
+    "officers": [
+      {
+        "from_date": "2004",
+        "position": "CTHĐQT",
+        "name": "Ông Hồ Hùng Anh",
+        "position_en": "CTHĐQT (Chairman of BOD)",
+        "owner_code": "CTHĐQT"
+      },
+      {
+        "from_date": "2019",
+        "position": "Phó CTHĐQT",
+        "name": "Ông Hồ Anh Ngọc",
+        "position_en": "Phó CTHĐQT (Vice Chairman of BOD)",
+        "owner_code": "Phó CTHĐQT"
+      },
+      {
+        "from_date": "2008",
+        "position": "Phó CTHĐQT",
+        "name": "Ông Nguyễn Cảnh Sơn",
+        "position_en": "Phó CTHĐQT (Vice Chairman of BOD)",
+        "owner_code": "Phó CTHĐQT"
+      },
+      {
+        "from_date": "1995",
+        "position": "Phó CTHĐQT",
+        "name": "Ông Nguyễn Đăng Quang",
+        "position_en": "Phó CTHĐQT (Vice Chairman of BOD)",
+        "owner_code": "Phó CTHĐQT"
+      },
+      {
+        "from_date": "1999",
+        "position": "Phó CTHĐQT",
+        "name": "Ông Nguyễn Thiều Quang",
+        "position_en": "Phó CTHĐQT (Vice Chairman of BOD)",
+        "owner_code": "Phó CTHĐQT"
+      },
+      {
+        "from_date": "2001",
+        "position": "Phó CTHĐQT",
+        "name": "Bà Nguyễn Thu Lan",
+        "position_en": "Phó CTHĐQT (Vice Chairman of BOD)",
+        "owner_code": "Phó CTHĐQT"
+      },
+      {
+        "from_date": "TV Độc lập",
+        "position": "TVHĐQT",
+        "name": "Ông Eugene Keith Gilbraith",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "TV Độc lập",
+        "position": "TVHĐQT",
+        "name": "Ông Phạm Nghiêm Xuân Bắc",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "2019",
+        "position": "TVHĐQT",
+        "name": "Ông Saurabh Narayan Agarwal",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "2020",
+        "position": "TGĐ",
+        "name": "Ông Jens Lottner",
+        "position_en": "TGĐ (CEO)",
+        "owner_code": "TGĐ"
+      },
+      {
+        "from_date": "2014",
+        "position": "Phó TGĐ",
+        "name": "Ông Phạm Quang Thắng",
+        "position_en": "Phó TGĐ (Deputy CEO)",
+        "owner_code": "Phó TGĐ"
+      },
+      {
+        "from_date": "2022",
+        "position": "GĐ Tài chính",
+        "name": "Ông Alexandre Charles Emmanuel Macaire",
+        "position_en": "GĐ Tài chính (Finance Director)",
+        "owner_code": "GĐ Tài chính"
+      },
+      {
+        "from_date": "2022",
+        "position": "KTT",
+        "name": "Bà Nguyễn Thị Trà My",
+        "position_en": "KTT (Chief Accountant)",
+        "owner_code": "KTT"
+      },
+      {
+        "from_date": "2012",
+        "position": "Trưởng BKS",
+        "name": "Ông Hoàng Huy Trung",
+        "position_en": "Trưởng BKS (Chief of Supervisory Board)",
+        "owner_code": "Trưởng BKS"
+      },
+      {
+        "from_date": "2010",
+        "position": "Thành viên BKS",
+        "name": "Bà Bùi Thị Hồng Mai",
+        "position_en": "Thành viên BKS (Member of Supervisory Board)",
+        "owner_code": "Thành viên BKS"
+      }
+    ]
+  },
+  "MBB": {
+    "symbol": "MBB",
+    "info": {
+      "business_model": "\n- Cho khách hàng cá nhân: Tiền gửi, ngân hàng số, dịch vụ thẻ, chuyển tiền & thanh toán, bảo hiểm nhân thọ và các dịch vụ khác.\n- Cho khách hàng doanh nghiệp: Tiền gửi & đầu tư, ngân hàng số, các dịch vụ thu hộ/trả lương/nộp thuế điện tử, tín dụng & bảo lãnh, thanh toán quốc tế & tài trợ thương mại, và tài khoản & gói tài khoản.\n- Các sản phẩm chuyên biệt cho doanh nghiệp lớn và định chế: Gồm thị trường tiền tệ & vốn, sản phẩm ngoại hối & ngân hàng đầu tư, sản phẩm & chính sách cho khách hàng FDI, cùng với thư tín dụng, bảo lãnh, nhờ thu, cấp tín dụng và hợp vốn.",
+      "symbol": "MBB",
+      "founded_date": "14/09/1994",
+      "charter_capital": 92632,
+      "number_of_employees": 18836,
+      "listing_date": "01/11/2011",
+      "par_value": 10000,
+      "exchange": "HOSE",
+      "listing_price": 13800,
+      "listed_volume": 9263,
+      "ceo_name": "Mr. Lưu Trung Thái",
+      "ceo_position": "Chủ tịch HĐQT",
+      "inspector_name": "Ms. Vũ Thị Hải Phượng",
+      "inspector_position": "Phó Chủ tịch HĐQT",
+      "establishment_license": "0054/NH-GP",
+      "business_code": "0100283873",
+      "tax_id": "0100283873",
+      "auditor": "KPMG",
+      "company_type": "Ngân hàng",
+      "address": "Số 18 Lê Văn Lương - P. Yên Hòa - Tp. Hà Nội",
+      "phone": "(84.24) 6266 1088",
+      "fax": "(84.24) 6266 1080",
+      "email": "info@mbbank.com.vn",
+      "website": "https://www.mbbank.com.vn/",
+      "branches": "",
+      "history": "\n- Ngày 04/11/1994: Ngân hàng Thương mại Cổ phần Quân đội được thành lập với vốn điều lệ ban đầu là 20 tỷ đồng.\n- Năm 2008: Tăng vốn điều lệ lên 3,400 tỷ đồng.\n- Năm 2009: Tăng vốn điều lệ lên 5,300 tỷ đồng.\n- Năm 2010: Tăng vốn điều lệ lên 7,300 tỷ đồng.\n- Ngày 01/11/2011: Ngày giao dịch đầu tiên trên Sàn HOSE với giá tham chiếu là 13,800 đồng/CP.\n- Năm 2012: Tăng vốn điều lệ lên 10,000 tỷ đồng.\n- Tháng 12/2013: Tăng vốn điều lệ lên 11,256.25 tỷ đồng.\n- Tháng 12/2014: Tăng vốn điều lệ lên 11,593.93 tỷ đồng.\n- Tháng 09/2015: Tăng vốn điều lệ lên 16,000 tỷ đồng.\n- Tháng 04/2016: Tăng vốn điều lệ lên 16,311.81 tỷ đồng.\n- Tháng 11/2016: Tăng vốn điều lệ lên 17,127.4 tỷ đồng.\n- Ngày 31/08/2017: Tăng vốn điều lệ lên 18,155.05 tỷ đồng.\n- Ngày 31/07/2018: Tăng vốn điều lệ lên 21,604.51 tỷ đồng.\n- Ngày 05/12/2019: Tăng vốn điều lệ lên 23,727.32 tỷ đồng.\n- Ngày 01/04/2020: Tăng vốn điều lệ lên 24,370.42 tỷ đồng.\n- Ngày 18/11/2020: Tăng vốn điều lệ lên 27,987.56 tỷ đồng.\n- Ngày 10/08/2021: Tăng vốn điều lệ lên 37,783.21 tỷ đồng.\n- Ngày 08/11/2022: Tăng vốn điều lệ lên 45,339.86 tỷ đồng.\n- Ngày 25/08/2023: Tăng vốn điều lệ lên 52,140.84 tỷ đồng.\n- Ngày 25/11/2024: Tăng vốn điều lệ lên 53,063.24 tỷ đồng.\n- Tháng 02/2025: Tăng vốn điều lệ lên 61,022.72 tỷ đồng.\n- Tháng 09/2025: Tăng vốn điều lệ lên 80,549.99 tỷ đồng.\n- Tháng 09/2026: Tăng vốn điều lệ lên 92,632.49 tỷ đồng.",
+      "free_float_percentage": 92632498950000,
+      "free_float": 10000,
+      "outstanding_shares": 9263249895,
+      "as_of_date": "2025-12-31T00:00:00"
+    },
+    "shareholders": [
+      {
+        "name": "Tập đoàn Công nghiệp - Viễn thông Quân đội",
+        "update_date": "2025-12-31T00:00:00",
+        "shares_owned": 1184249466,
+        "ownership_percentage": 14.7
+      },
+      {
+        "name": "Tổng Công ty Đầu tư và Kinh doanh vốn Nhà nước",
+        "update_date": "2025-12-31T00:00:00",
+        "shares_owned": 791523642,
+        "ownership_percentage": 9.83
+      },
+      {
+        "name": "Tổng Công ty Trực thăng Việt Nam - Công ty TNHH",
+        "update_date": "2025-12-31T00:00:00",
+        "shares_owned": 679074898,
+        "ownership_percentage": 8.43
+      },
+      {
+        "name": "Công ty TNHH MTV - Tổng Công ty Tân Cảng Sài Gòn",
+        "update_date": "2025-12-31T00:00:00",
+        "shares_owned": 570727399,
+        "ownership_percentage": 7.09
+      },
+      {
+        "name": " Công ty TNHH Một thành viên thương mại và xuất nhập khẩu Viettel",
+        "update_date": "2025-12-31T00:00:00",
+        "shares_owned": 346407743,
+        "ownership_percentage": 4.3
+      },
+      {
+        "name": "Ngân hàng TMCP Ngoại thương Việt Nam",
+        "update_date": "2025-12-31T00:00:00",
+        "shares_owned": 344586062,
+        "ownership_percentage": 4.28
+      },
+      {
+        "name": "UBS AG London Branch",
+        "update_date": "2025-12-31T00:00:00",
+        "shares_owned": 308315971,
+        "ownership_percentage": 3.83
+      },
+      {
+        "name": "T.Rowe",
+        "update_date": "2026-07-09T00:00:00",
+        "shares_owned": 92904625,
+        "ownership_percentage": 1.15
+      },
+      {
+        "name": "Công ty TNHH Manulife (Việt Nam)",
+        "update_date": "2026-01-28T00:00:00",
+        "shares_owned": 61670390,
+        "ownership_percentage": 1.01
+      }
+    ],
+    "officers": [
+      {
+        "from_date": "1997",
+        "position": "CTHĐQT",
+        "name": "Ông Lưu Trung Thái",
+        "position_en": "CTHĐQT (Chairman of BOD)",
+        "owner_code": "CTHĐQT"
+      },
+      {
+        "from_date": "2024",
+        "position": "Phó CTHĐQT",
+        "name": "Bà Nguyễn Thị Hải Lý",
+        "position_en": "Phó CTHĐQT (Vice Chairman of BOD)",
+        "owner_code": "Phó CTHĐQT"
+      },
+      {
+        "from_date": "2015",
+        "position": "Phó CTHĐQT",
+        "name": "Ông Vũ Thành Trung",
+        "position_en": "Phó CTHĐQT (Vice Chairman of BOD)",
+        "owner_code": "Phó CTHĐQT"
+      },
+      {
+        "from_date": "1994",
+        "position": "Phó CTHĐQT",
+        "name": "Bà Vũ Thị Hải Phượng",
+        "position_en": "Phó CTHĐQT (Vice Chairman of BOD)",
+        "owner_code": "Phó CTHĐQT"
+      },
+      {
+        "from_date": "2024",
+        "position": "TVHĐQT",
+        "name": "Bà Hoàng Thị Thu Hiền",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "TV Độc lập",
+        "position": "TVHĐQT",
+        "name": "Ông Hoàng Văn Sâm",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "1996",
+        "position": "TVHĐQT",
+        "name": "Ông Lê Viết Hải",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "2026",
+        "position": "TVHĐQT",
+        "name": "Ông Nguyễn Việt Quân",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "2005",
+        "position": "TGĐ/TVHĐQT",
+        "name": "Ông Phạm Như Ánh",
+        "position_en": "TGĐ (CEO)",
+        "owner_code": "TGĐ"
+      },
+      {
+        "from_date": "2024",
+        "position": "TVHĐQT",
+        "name": "Ông Vũ Xuân Nam",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "2006",
+        "position": "Phó TGĐ",
+        "name": "Ông Lê Quốc Minh",
+        "position_en": "Phó TGĐ (Deputy CEO)",
+        "owner_code": "Phó TGĐ"
+      },
+      {
+        "from_date": "2009",
+        "position": "Phó TGĐ",
+        "name": "Bà Nguyễn Minh Châu",
+        "position_en": "Phó TGĐ (Deputy CEO)",
+        "owner_code": "Phó TGĐ"
+      },
+      {
+        "from_date": "N/A",
+        "position": "Phó TGĐ",
+        "name": "Ông Nguyễn Xuân Học",
+        "position_en": "Phó TGĐ (Deputy CEO)",
+        "owner_code": "Phó TGĐ"
+      },
+      {
+        "from_date": "1997",
+        "position": "Phó TGĐ",
+        "name": "Bà Phạm Thị Trung Hà",
+        "position_en": "Phó TGĐ (Deputy CEO)",
+        "owner_code": "Phó TGĐ"
+      },
+      {
+        "from_date": "2008",
+        "position": "Phó TGĐ",
+        "name": "Ông Trần Minh Đạt",
+        "position_en": "Phó TGĐ (Deputy CEO)",
+        "owner_code": "Phó TGĐ"
+      }
+    ]
+  },
+  "MWG": {
+    "symbol": "MWG",
+    "info": {
+      "business_model": "\n- Lĩnh vực hoạt động chủ yếu là: mua bán, bảo hành, sửa chữa: thiết bị tin học, điện thoại, linh kiện và phụ kiện điện thoại với thương hiệu Thế Giới Di Động, các mặt hàng điện máy với thương hiệu Điện Máy Xanh, các mặt hàng lương thực, thực phẩm, đồ uống và các hàng hóa khác với thương hiệu Bách Hóa Xanh, trong lĩnh vực dược phẩm, thực phẩm chức năng, dụng cụ y tế và các sản phẩm khác, Nhóm Công ty cung cấp dịch vụ thông qua thương hiệu nhà thuốc An Khang.\n- MWG hiện đang vận hành các chuỗi bán lẻ chính bao gồm: thegioididong.com, Điện Máy Xanh (dienmayxanh.com), Bách Hóa Xanh (bachhoaxanh.com), nhà thuốc An Khang và một số chuỗi thử nghiệm khác.",
+      "symbol": "MWG",
+      "founded_date": "01/03/2004",
+      "charter_capital": 14770,
+      "number_of_employees": 64727,
+      "listing_date": "14/07/2014",
+      "par_value": 10000,
+      "exchange": "HOSE",
+      "listing_price": 81500,
+      "listed_volume": 1477,
+      "ceo_name": "Mr. Vũ Đăng Linh",
+      "ceo_position": "Tổng Giám đốc",
+      "inspector_name": "Ms. Lê Thị Thu Trang",
+      "inspector_position": "Đại diện Công bố thông tin",
+      "establishment_license": null,
+      "business_code": "4103012275",
+      "tax_id": "0306731335",
+      "auditor": "Earn & Young",
+      "company_type": "Công ty cổ phần",
+      "address": "222 Yersin - P. Thủ Dầu Một - Tp. Hồ Chí Minh",
+      "phone": "(84.28) 3812 5960",
+      "fax": "(84.28) 3812 5961",
+      "email": "investor@thegioididong.com",
+      "website": "https://mwg.vn",
+      "branches": "",
+      "history": "\n- Tháng 03/2004: Công ty TNHH Thế Giới Di Động được thành lập.\n- Năm 2007: Công ty TNHH Thế Giới Di Động chuyển đổi sang mô hình công ty cổ phần.\n- Tháng 03/2011: Tăng vốn điều lệ lên 98.3 tỷ đồng.\n- Tháng 10/2011:Tăng vốn điều lệ lên 101.9 tỷ đồng.\n- Tháng 05/2012: Tăng vốn điều lệ lên 105.03 tỷ đồng.\n- Tháng 09/2013: Tăng vốn điều lệ lên 109.57 tỷ đồng.\n- Tháng 03/2014: Tăng vốn điều lệ lên 116.4 tỷ đồng.\n- Tháng 04/2014: Tăng vốn điều lệ lên 627.23 tỷ đồng.\n- Ngày 07/07/2014: Cổ phiếu của Công ty được niêm yết trên Sở Giao dịch Chứng khoán Hồ Chí Minh (HOSE).\n- Ngày 14/07/2014: Chính thức được giao dịch trên Sở Giao dịch Chứng khoán Hồ Chí Minh (HOSE).\n- Ngày 31/10/2014: Tăng vốn điều lệ lên 1,120 tỷ đồng.\n- Ngày 21/06/2015: Tăng vốn điều lệ lên 1,399 tỷ đồng.\n- Ngày 25/12/2015: Tăng vốn điều lệ lên 1,469 tỷ đồng.\n- Ngày 08/02/2017: Tăng vốn điều lệ lên 1,539 tỷ đồng.\n- Ngày 21/06/2017: Tăng vốn điều lệ lên 3,078 tỷ đồng.\n- Ngày 05/03/2018: Tăng vốn điều lệ lên 3,169 tỷ đồng.\n- Ngày 23/05/2018: Tăng vốn điều lệ lên 3,231 tỷ đồng.\n- Ngày 05/12/2018: Tăng vốn điều lệ lên 4,308 tỷ đồng.\n- Ngày 23/01/2019: Tăng vốn điều lệ lên 4,436 tỷ đồng.\n- Ngày 08/02/2021: Tăng vốn điều lệ lên 4,661 tỷ đồng.\n- Ngày 29/04/2021: Tăng vốn điều lệ lên 4,754 tỷ đồng.\n- Ngày 29/04/2022: Tăng vốn điều lệ lên 7,320 tỷ đồng.\n- Tháng 07/2022: Tăng vốn điều lệ lên 14,639 tỷ đồng.\n- Tháng 05/2024: Giảm vốn điều lệ xuống 14,622 tỷ đồng.\n- Tháng 04/2025: Tăng vốn điều lệ lên 14,796 tỷ đồng.\n- Tháng 12/2025: Giảm vốn điều lệ xuống 14,696 tỷ đồng.\n- Tháng 07/2026: Tăng vốn điều lệ lên 14,770 tỷ đồng.",
+      "free_float_percentage": 14770352940000,
+      "free_float": 10000,
+      "outstanding_shares": 1475694086,
+      "as_of_date": "2025-12-31T00:00:00"
+    },
+    "shareholders": [
+      {
+        "name": "Nhóm cổ đông có liên quan - Dragon Capital",
+        "update_date": "2020-05-26T14:15:29.72",
+        "shares_owned": 78033135,
+        "ownership_percentage": 12.08
+      },
+      {
+        "name": "Công ty TNHH MTV Tư vấn Đầu tư Thế giới Bán lẻ",
+        "update_date": "2026-10-05T00:00:00",
+        "shares_owned": 153375288,
+        "ownership_percentage": 10.39
+      },
+      {
+        "name": "Công ty TNHH Tri Tâm",
+        "update_date": "2020-05-26T14:15:48.39",
+        "shares_owned": 57954524,
+        "ownership_percentage": 8.52
+      },
+      {
+        "name": "Nhóm CĐL - Arisaig Asia Consumer Fund Limited",
+        "update_date": "2023-11-14T00:00:00",
+        "shares_owned": 73089484,
+        "ownership_percentage": 5.0
+      }
+    ],
+    "officers": [
+      {
+        "from_date": "2004",
+        "position": "CTHĐQT",
+        "name": "Ông Nguyễn Đức Tài",
+        "position_en": "CTHĐQT (Chairman of BOD)",
+        "owner_code": "CTHĐQT"
+      },
+      {
+        "from_date": "TV Độc lập",
+        "position": "TVHĐQT/Chủ tịch Ủy ban Kiểm toán",
+        "name": "Ông Nguyễn Tiến Trung",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "N/A",
+        "position": "TVHĐQT/Thành viên ban điều hành",
+        "name": "Ông Đoàn Văn Hiểu Em",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "N/A",
+        "position": "TVHĐQT/Thành viên ban điều hành",
+        "name": "Ông Phạm Văn Trọng",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "TV Độc lập",
+        "position": "TVHĐQT/TV Ủy ban Kiểm toán",
+        "name": "Ông Đỗ Tiến Sĩ",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "2008",
+        "position": "TGĐ/TVHĐQT",
+        "name": "Ông Vũ Đăng Linh",
+        "position_en": "TGĐ (CEO)",
+        "owner_code": "TGĐ"
+      },
+      {
+        "from_date": "N/A",
+        "position": "TVHĐQT",
+        "name": "Ông Robert Alan Willett",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "N/A",
+        "position": "TVHĐQT",
+        "name": "Ông Thomas Lanyi",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "2012",
+        "position": "KTT",
+        "name": "Bà Lý Trần Kim Ngân",
+        "position_en": "KTT (Chief Accountant)",
+        "owner_code": "KTT"
+      }
+    ]
+  },
+  "STB": {
+    "symbol": "STB",
+    "info": {
+      "business_model": "\n- Huy động vốn, cho vay.\n- Thanh toán quốc tế, tài trợ xuất nhập khẩu.\n- Tài khoản, thẻ, ngân hàng điện tử.\n- Chuyển tiền nhanh trong nước và nước ngoài.\n- Chi trả kiều hối, mua bán ngoại tệ.\n- Cho thuê két sắt.\n- Bao thanh toán.\n- Bảo hiểm, đầu tư và kinh doanh ngoại hối.",
+      "symbol": "STB",
+      "founded_date": "01/03/1992",
+      "charter_capital": 18852,
+      "number_of_employees": 15851,
+      "listing_date": "12/07/2006",
+      "par_value": 10000,
+      "exchange": "HOSE",
+      "listing_price": 78000,
+      "listed_volume": 1885,
+      "ceo_name": "Mr. Dương Công Minh",
+      "ceo_position": "Chủ tịch HĐQT",
+      "inspector_name": "Ms. Nguyễn Thị Kiều Anh",
+      "inspector_position": "Phó Tổng Giám đốc ",
+      "establishment_license": "05/GP-UB",
+      "business_code": "059002 ",
+      "tax_id": "0301103908",
+      "auditor": "Ernst & Young",
+      "company_type": "Ngân hàng",
+      "address": "Số 43-45-47 Nguyễn Thị Minh Khai - P. Sài Gòn - Tp. Hồ Chí Minh",
+      "phone": "(84-28) 38 469 516",
+      "fax": "(84.28) 3932 0424",
+      "email": "ask@sacombank.com",
+      "website": "https://www.sacombank.com.vn",
+      "branches": "Chi nhánh Hà Nội: Số 66 Hòa Mã - P.Ngô Thị Nhậm - Q.Hai Bà Trưng - Tp.Hà Nội",
+      "history": "\n- Ngày 05/12/1991: Ngân hàng TMCP Sài Gòn Thương Tín được thành lập.\n- Ngày 21/12/1991: Chính thức đi vào hoạt động với vốn điều lệ ban đầu là 3 tỷ đồng.\n- Năm 1998: Tăng vốn điều lệ lên 71 tỷ đồng.\n- Năm 2006: Là ngân hàng TMCP đầu tiên tại Việt Nam tiên phong niêm yết cổ phiếu tại Sàn HOSE với vốn điều lệ là 2,080 tỷ đồng.\n- Năm 2007: Tăng vốn điều lệ lên 4,449 tỷ đồng.\n- Ngày 20/08/2008: Tăng vốn điều lệ lên 5,115.83 tỷ đồng.\n- Năm 2009: Tăng vốn điều lệ lên 6,700.35 tỷ đồng.\n- Ngày 16/11/2010: Tăng vốn điều lệ lên 9,179.48 tỷ đồng.\n- Ngày 06/07/2011: Tăng vốn điều lệ lên 10,739.67 tỷ đồng.\n- Ngày 11/07/2013: Tăng vốn điều lệ lên 12,425.11 tỷ đồng.\n- Năm 2015: Sáp nhập Southern Bank (Ngân Hàng TMCP Phương Nam) vào SacomBank qua đó vốn điều lệ tăng lên 18,852.15 tỷ đồng.\n- Từ 06/2026: Ngân hàng TMCP Sài Gòn Thương Tín đổi tên thành Ngân hàng TMCP Sài Gòn Tài Lộc.",
+      "free_float_percentage": 18852157160000,
+      "free_float": 10000,
+      "outstanding_shares": 1885215716,
+      "as_of_date": "2025-12-31T00:00:00"
+    },
+    "shareholders": [
+      {
+        "name": "Pyn Elite Fund (Non-Ucits)",
+        "update_date": "2025-12-09T00:00:00",
+        "shares_owned": 91657700,
+        "ownership_percentage": 4.86
+      },
+      {
+        "name": "Dương Công Minh",
+        "update_date": "2024-12-04T00:00:00",
+        "shares_owned": 62569075,
+        "ownership_percentage": 3.32
+      },
+      {
+        "name": "SCB Vietnam Alpha Fund Not For Retail Investors",
+        "update_date": "2025-05-08T00:00:00",
+        "shares_owned": 27766500,
+        "ownership_percentage": 1.47
+      },
+      {
+        "name": "Tianhong Vietnam Thematic Fund (QDII)",
+        "update_date": "2025-05-08T00:00:00",
+        "shares_owned": 22245900,
+        "ownership_percentage": 1.18
+      },
+      {
+        "name": "Norges Bank",
+        "update_date": "2025-08-07T00:00:00",
+        "shares_owned": 22106200,
+        "ownership_percentage": 1.17
+      },
+      {
+        "name": "Kim Vietnam Growth Equity Fund",
+        "update_date": "2025-03-27T00:00:00",
+        "shares_owned": 19201200,
+        "ownership_percentage": 1.02
+      },
+      {
+        "name": "Vietnam Enterprise Investments Limited",
+        "update_date": "2025-08-07T00:00:00",
+        "shares_owned": 19282800,
+        "ownership_percentage": 1.02
+      },
+      {
+        "name": "Amersham Industries Limited",
+        "update_date": "2025-08-07T00:00:00",
+        "shares_owned": 19073000,
+        "ownership_percentage": 1.01
+      }
+    ],
+    "officers": [
+      {
+        "from_date": "N/A",
+        "position": "CTHĐQT",
+        "name": "Ông Dương Công Minh",
+        "position_en": "CTHĐQT (Chairman of BOD)",
+        "owner_code": "CTHĐQT"
+      },
+      {
+        "from_date": "2017",
+        "position": "Phó CTHĐQT",
+        "name": "Ông Phạm Văn Phong",
+        "position_en": "Phó CTHĐQT (Vice Chairman of BOD)",
+        "owner_code": "Phó CTHĐQT"
+      },
+      {
+        "from_date": "2013",
+        "position": "TVHĐQT",
+        "name": "Ông Nguyễn Xuân Vũ",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "TV Độc lập",
+        "position": "TVHĐQT",
+        "name": "Bà Phạm Thị Thu Hằng",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "2012",
+        "position": "TVHĐQT",
+        "name": "Ông Phan Đình Tuệ",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "TV Độc lập",
+        "position": "TVHĐQT",
+        "name": "Ông Vương Công Đức",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "2025",
+        "position": "Quyền TGĐ",
+        "name": "Ông Nguyễn Đức Thụy",
+        "position_en": "Quyền TGĐ (Acting CEO)",
+        "owner_code": "Quyền TGĐ"
+      },
+      {
+        "from_date": "2007",
+        "position": "Phó TGĐ",
+        "name": "Ông Đào Nguyên Vũ",
+        "position_en": "Phó TGĐ (Deputy CEO)",
+        "owner_code": "Phó TGĐ"
+      },
+      {
+        "from_date": "N/A",
+        "position": "Phó TGĐ",
+        "name": "Ông Hà Văn Trung",
+        "position_en": "Phó TGĐ (Deputy CEO)",
+        "owner_code": "Phó TGĐ"
+      },
+      {
+        "from_date": "1995",
+        "position": "Phó TGĐ",
+        "name": "Ông Hồ Doãn Cường",
+        "position_en": "Phó TGĐ (Deputy CEO)",
+        "owner_code": "Phó TGĐ"
+      },
+      {
+        "from_date": "N/A",
+        "position": "Phó TGĐ",
+        "name": "Ông Lê Đức Thịnh",
+        "position_en": "Phó TGĐ (Deputy CEO)",
+        "owner_code": "Phó TGĐ"
+      },
+      {
+        "from_date": "2007",
+        "position": "Phó TGĐ",
+        "name": "Ông Nguyễn Minh Tâm",
+        "position_en": "Phó TGĐ (Deputy CEO)",
+        "owner_code": "Phó TGĐ"
+      },
+      {
+        "from_date": "2025",
+        "position": "Phó TGĐ",
+        "name": "Bà Nguyễn Thị Kiều Anh",
+        "position_en": "Phó TGĐ (Deputy CEO)",
+        "owner_code": "Phó TGĐ"
+      },
+      {
+        "from_date": "N/A",
+        "position": "Phó TGĐ",
+        "name": "Bà Nguyễn Thị Kim Oanh",
+        "position_en": "Phó TGĐ (Deputy CEO)",
+        "owner_code": "Phó TGĐ"
+      },
+      {
+        "from_date": "2008",
+        "position": "Phó TGĐ",
+        "name": "Bà Quách Thanh Ngọc Thủy",
+        "position_en": "Phó TGĐ (Deputy CEO)",
+        "owner_code": "Phó TGĐ"
+      }
+    ]
+  },
+  "VPB": {
+    "symbol": "VPB",
+    "info": {
+      "business_model": "\n- Thực hiện các nghiệp vụ ngân hàng, bao gồm huy động và nhận tiền gửi ngắn hạn, trung hạn và dài hạn từ các tổ chức và cá nhân; cho vay ngắn hạn, trung hạn và dài hạn đối với các tổ chức và cá nhân.\n- Đầu tư chứng khoán, trái phiếu; đầu tư hợp đồng tương lai trái phiếu Chính phủ.\n- Cung cấp dịch vụ thanh toán, ví điện tử.\n- Thực hiện các giao dịch ngoại tệ, các dịch vụ tài trợ thương mại quốc tế, chiết khấu thương phiếu, trái phiếu và các giấy tờ có giá khác.\n- Cấp tín dụng dưới hình thức tái chiết khấu công cụ chuyển nhượng và giấy tờ có giá khác và các dịch vụ ngân hàng khác được NHNN cho phép.\n- Dịch vụ quản lý tài sản.",
+      "symbol": "VPB",
+      "founded_date": "04/09/1993",
+      "charter_capital": 79339,
+      "number_of_employees": 28768,
+      "listing_date": "17/08/2017",
+      "par_value": 10000,
+      "exchange": "HOSE",
+      "listing_price": 39000,
+      "listed_volume": 7934,
+      "ceo_name": "Mr. Ngô Chí Dũng",
+      "ceo_position": "Chủ tịch HĐQT",
+      "inspector_name": "Mr. Nguyễn Đức Vinh",
+      "inspector_position": "Tổng Giám đốc",
+      "establishment_license": "00506/GP-UB",
+      "business_code": "0100233583",
+      "tax_id": "0100233583",
+      "auditor": "KPMG",
+      "company_type": "Ngân hàng",
+      "address": "Số 89 Láng Hạ - P. Đống Đa - Tp. Hà Nội",
+      "phone": "(84.24) 3928 8869",
+      "fax": "(84.24) 3928 8867",
+      "email": "vpb@hn.vnn.vn",
+      "website": "https://www.vpbank.com.vn",
+      "branches": "Tầng 4 Tòa nhà FIDECO - 81-83-85 Hàm Nghi - P.Nguyễn Thái Bình - Q.1 - Tp.Hồ Chí Minh",
+      "history": "\n- Ngày 12/08/1993: Ngân hàng được thành lập dưới tên gọi Ngân hàng Thương mại Cổ phần Doanh nghiệp tư nhân Việt Nam với vốn điều lệ 20 tỷ đồng. Vốn điều lệ ban đầu khi mới thành lập là 20 tỷ VND.\n- Năm 2005: VPBank công bố việc thay đổi logo và hệ thống nhận diện thương hiệu với hai màu sắc chủ đạo là xanh đậm và đỏ tươi.\n- Tháng 03/2006: VPBank chính thức lựa chọn cổ đông chiến lược là một định chế tài chính nước ngoài \n- Ngân hàng OCBC của Singapore.\n- Tháng 8/2006: Vốn điều lệ của VPBank đạt 500 tỷ đồng.\n- Tháng 7/2007: Vốn điều lệ của VPBank đạt 1,500 tỷ đồng.\n- Năm 2008: Ngân hàng Nhà nước chấp thuận cho VPBank bán thêm 5% cổ phần cho OCBC.\n- Năm 2010: VPBank được NHNN chấp thuận đổi tên sang Ngân hàng TMCP Việt Nam Thịnh Vượng, sử dụng logo và hệ thống nhận diện thương hiệu mới.\n- Ngày 17/08/2017: là ngày giao dịch đầu tiên trên sàn HOSE với giá tham chiếu là 39,000 đồng/CP.\n- Ngày 12/09/2018: Tăng vốn điều lệ lên 24,962,728,720,000 đồng.\n- Năm 2021: Tăng vốn điều lệ lên 45,056,930,000,000 đồng.\n- Năm 2022: Tăng vốn điều lệ lên 67,434,236,010,000 đồng.\n- Tháng 10/2023: Tăng vốn điều lệ lên 79,339,236,010,000 đồng.",
+      "free_float_percentage": 79339236010000,
+      "free_float": 10000,
+      "outstanding_shares": 7933923601,
+      "as_of_date": "2025-12-31T00:00:00"
+    },
+    "shareholders": [
+      {
+        "name": "Sumitomo Mitsui Banking Corporation",
+        "update_date": "2023-10-30T00:00:00",
+        "shares_owned": 1190500000,
+        "ownership_percentage": 15.05
+      },
+      {
+        "name": "CTCP Diera Corp",
+        "update_date": "2024-12-31T00:00:00",
+        "shares_owned": 348748866,
+        "ownership_percentage": 4.4
+      },
+      {
+        "name": "Ngô Chí Dũng",
+        "update_date": "2024-12-31T00:00:00",
+        "shares_owned": 328553899,
+        "ownership_percentage": 4.14
+      },
+      {
+        "name": "Hoàng Anh Minh",
+        "update_date": "2024-12-31T00:00:00",
+        "shares_owned": 326753193,
+        "ownership_percentage": 4.12
+      },
+      {
+        "name": "Vũ Thị Quyên",
+        "update_date": "2024-12-31T00:00:00",
+        "shares_owned": 325888953,
+        "ownership_percentage": 4.11
+      },
+      {
+        "name": "Kim Ngọc Cẩm Ly",
+        "update_date": "2024-12-31T00:00:00",
+        "shares_owned": 286603963,
+        "ownership_percentage": 3.61
+      },
+      {
+        "name": "Lý Thị Thu Hà",
+        "update_date": "2024-12-31T00:00:00",
+        "shares_owned": 282127582,
+        "ownership_percentage": 3.56
+      },
+      {
+        "name": "Nguyễn Thu Thủy",
+        "update_date": "2024-12-31T00:00:00",
+        "shares_owned": 203349411,
+        "ownership_percentage": 2.56
+      },
+      {
+        "name": "Bùi Hải Quân",
+        "update_date": "2024-12-31T00:00:00",
+        "shares_owned": 156329202,
+        "ownership_percentage": 1.97
+      },
+      {
+        "name": "Nguyễn Đức Vinh",
+        "update_date": "2024-12-31T00:00:00",
+        "shares_owned": 104905020,
+        "ownership_percentage": 1.32
+      }
+    ],
+    "officers": [
+      {
+        "from_date": "2010",
+        "position": "CTHĐQT",
+        "name": "Ông Ngô Chí Dũng",
+        "position_en": "CTHĐQT (Chairman of BOD)",
+        "owner_code": "CTHĐQT"
+      },
+      {
+        "from_date": "2008",
+        "position": "Phó CTHĐQT",
+        "name": "Ông Bùi Hải Quân",
+        "position_en": "Phó CTHĐQT (Vice Chairman of BOD)",
+        "owner_code": "Phó CTHĐQT"
+      },
+      {
+        "from_date": "2010",
+        "position": "Phó CTHĐQT",
+        "name": "Ông Lô Bằng Giang",
+        "position_en": "Phó CTHĐQT (Vice Chairman of BOD)",
+        "owner_code": "Phó CTHĐQT"
+      },
+      {
+        "from_date": "TV Độc lập",
+        "position": "TVHĐQT",
+        "name": "Ông Daniel Ashton Carroll",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "TV Độc lập",
+        "position": "TVHĐQT",
+        "name": "Ông Mai Xuân Hùng",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "2013",
+        "position": "TGĐ/TVHĐQT",
+        "name": "Ông Nguyễn Đức Vinh",
+        "position_en": "TGĐ (CEO)",
+        "owner_code": "TGĐ"
+      },
+      {
+        "from_date": "2016",
+        "position": "TVHĐQT",
+        "name": "Bà Phạm Thị Nhung",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "2024",
+        "position": "TVHĐQT",
+        "name": "Ông Takeshi Kimoto",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "2013",
+        "position": "Phó TGĐ",
+        "name": "Ông Đinh Văn Nho",
+        "position_en": "Phó TGĐ (Deputy CEO)",
+        "owner_code": "Phó TGĐ"
+      },
+      {
+        "from_date": "2002",
+        "position": "Phó TGĐ",
+        "name": "Bà Dương Thị Thu Thủy",
+        "position_en": "Phó TGĐ (Deputy CEO)",
+        "owner_code": "Phó TGĐ"
+      },
+      {
+        "from_date": "2024",
+        "position": "Phó TGĐ",
+        "name": "Ông Kamijo Hiroki",
+        "position_en": "Phó TGĐ (Deputy CEO)",
+        "owner_code": "Phó TGĐ"
+      },
+      {
+        "from_date": "2011",
+        "position": "GĐ Điều hành/Phó TGĐ Thường trực",
+        "name": "Bà Lưu Thị Thảo",
+        "position_en": "GĐ Điều hành (Executive Director)",
+        "owner_code": "GĐ Điều hành"
+      },
+      {
+        "from_date": "2002",
+        "position": "Phó TGĐ",
+        "name": "Ông Nguyễn Thanh Bình",
+        "position_en": "Phó TGĐ (Deputy CEO)",
+        "owner_code": "Phó TGĐ"
+      },
+      {
+        "from_date": "N/A",
+        "position": "Phó TGĐ Thường trực/GĐ khối",
+        "name": "Ông Phùng Duy Khương",
+        "position_en": "Phó TGĐ Thường trực (Permanent Deputy CEO)",
+        "owner_code": "Phó TGĐ Thường trực"
+      },
+      {
+        "from_date": "2011",
+        "position": "Phó TGĐ",
+        "name": "Ông Vũ Minh Trường",
+        "position_en": "Phó TGĐ (Deputy CEO)",
+        "owner_code": "Phó TGĐ"
+      }
+    ]
+  },
+  "BID": {
+    "symbol": "BID",
+    "info": {
+      "business_model": "\n- Cấp tín dụng: Cho vay, chiết khấu, bảo lãnh,… đối với các cá nhân và tổ chức trên cơ sở đảm bảo an toàn cho cả khách hàng và Ngân hàng.\n- Huy động vốn: Nhận tiền gửi tiết kiệm; mua bán, phát hành trái phiếu, kỳ phiếu.\n- Giao dịch: Thực hiện các giao dịch ngoại tệ, các dịch vụ Tài trợ thương mại quốc tế và các dịch vụ ngân hàng khác được NHNN cho phép.\n- Dịch vụ thanh toán: Thực hiện thanh toán giữa các tổ chức, cá nhân trong nước và quốc tế qua tài khoản, thẻ ngân hàng và các phương tiện thanh toán khác.",
+      "symbol": "BID",
+      "founded_date": "26/04/1957",
+      "charter_capital": 77782,
+      "number_of_employees": 29273,
+      "listing_date": "24/01/2014",
+      "par_value": 10000,
+      "exchange": "HOSE",
+      "listing_price": 18800,
+      "listed_volume": 7778,
+      "ceo_name": "Mr. Phan Đức Tú",
+      "ceo_position": "Chủ tịch HĐQT",
+      "inspector_name": "Mr. Trần Long",
+      "inspector_position": "Phó Tổng giám đốc",
+      "establishment_license": "177/TTg",
+      "business_code": "0100150619",
+      "tax_id": "0106000439",
+      "auditor": "Deloitte",
+      "company_type": "Ngân hàng",
+      "address": "Tháp BIDV - Số 194 Trần Quang Khải - P. Hoàn Kiếm - Tp. Hà Nội",
+      "phone": "(84.242) 2205 544",
+      "fax": "(84.242) 2200 399",
+      "email": "Info@bidv.com.vn",
+      "website": "https://bidv.com.vn/",
+      "branches": "- Tên VP: Ngân Hàng Thương Mại Cổ Phần Đầu Tư & Phát Triển Việt Nam (tại Đà Nẵng).\r\n- Địa chỉ: 198 Nguyễn Tri Phương - P.Chính Gián - Q.Thanh Khê - Tp.Đà Nẵng.\r\n- Mã số: 3216000197",
+      "history": "\n- Ngày 26/04/1957: Tiền thân là Ngân hàng Kiến thiết Việt Nam trực thuộc Bộ Tài chính được thành lập theo Quyết định 177/TTg của Thủ tướng Chính phủ. .\n- Ngày 24/06/1981: Đổi tên thành Ngân hàng Đầu tư và Xây dựng Việt Nam.\n- Ngày 14/11/1990: Đổi tên thành Ngân hàng Đầu tư và Phát triển Việt Nam.\n- Ngày 23/04/2012: Ngân hàng Nhà nước đã cấp giấy phép số 84 về việc thành lập và hoạt động Ngân hàng TMCP Đầu tư và Phát triển Việt Nam.\n- Ngày 24/01/2014: Chính thức niêm yết trên sàn giao dịch HCM (MCK:BID).\n- Đến cuối năm 2014: BIDV đã thiết lập quan hệ đại lý với trên 1,700 ngân hàng và chi nhánh ngân hàng tại 122 quốc gia và vùng lãnh thổ trên thế giới.\n- Ngày 25/5/2015: BIDV nhận sáp nhập toàn bộ hệ thống Ngân hàng TMCP Phát triển Nhà Đồng bằng Sông Cửu Long (MHB), tăng mạng lưới hoạt động với 180 chi nhánh, 798 phòng giao dịch, 1,822 máy ATM, 15,962 điểm giao dịch POS tại 63 tỉnh/thành phố trên toàn quốc.\n- Đến cuối 2015: BIDV đã thành lập hiện diện thương mại tại 6 quốc gia – vùng lãnh thổ: Lào, Campuchia, Myanmar, Cộng hòa Séc, Cộng hoà LB Nga và Đài Loan.\n- Ngày 20/02/2020: Tăng vốn điều lệ lên 40,220,180,000,000 đồng.\n- Tháng 03/2022: Tăng vốn điều lệ lên 50,585,238,000,000 đồng.\n- Tháng 01/2025: Tăng vốn điều lệ lên 68,975,152,680,000 đồng.\n- Tháng 06/2025: Tăng vốn điều lệ lên 70,213,619,170,000 đồng.\n- Tháng 04/2026: Tăng vốn điều lệ lên 72,800,652,100,000 đồng.\n- Tháng 10/2026: Tăng vốn điều lệ lên 77,782,294,730,000 đồng.",
+      "free_float_percentage": 77782294730000,
+      "free_float": 10000,
+      "outstanding_shares": 7778229473,
+      "as_of_date": "2025-12-31T00:00:00"
+    },
+    "shareholders": [
+      {
+        "name": "Ngân hàng Nhà nước Việt Nam",
+        "update_date": "2025-12-31T00:00:00",
+        "shares_owned": 5586154083,
+        "ownership_percentage": 79.56
+      },
+      {
+        "name": "KEB Hana Bank",
+        "update_date": "2025-12-31T00:00:00",
+        "shares_owned": 1034627290,
+        "ownership_percentage": 14.74
+      }
+    ],
+    "officers": [
+      {
+        "from_date": "1998",
+        "position": "CTHĐQT",
+        "name": "Ông Phan Đức Tú",
+        "position_en": "CTHĐQT (Chairman of BOD)",
+        "owner_code": "CTHĐQT"
+      },
+      {
+        "from_date": "1997",
+        "position": "TGĐ/TVHĐQT",
+        "name": "Ông Lê Ngọc Lâm",
+        "position_en": "TGĐ (CEO)",
+        "owner_code": "TGĐ"
+      },
+      {
+        "from_date": "N/A",
+        "position": "TVHĐQT",
+        "name": "Ông Đặng Văn Tuyên",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "1997",
+        "position": "TVHĐQT",
+        "name": "Ông Lê Kim Hòa",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "2025",
+        "position": "TVHĐQT",
+        "name": "Ông Lê Quốc Nghị",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "1998",
+        "position": "TVHĐQT",
+        "name": "Ông Ngô Văn Dũng",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "TV Độc lập",
+        "position": "TVHĐQT",
+        "name": "Ông Nguyễn Văn Thạnh",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "2018",
+        "position": "TVHĐQT",
+        "name": "Ông Phạm Quang Tùng",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "1999",
+        "position": "TVHĐQT",
+        "name": "Ông Quách Hùng Hiệp",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "1996",
+        "position": "TVHĐQT",
+        "name": "Ông Trần Xuân Hoàng",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "N/A",
+        "position": "TVHĐQT",
+        "name": "Ông Yoo Je Bong",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "N/A",
+        "position": "Phó TGĐ",
+        "name": "Ông Đoàn Việt Nam",
+        "position_en": "Phó TGĐ (Deputy CEO)",
+        "owner_code": "Phó TGĐ"
+      },
+      {
+        "from_date": "N/A",
+        "position": "Phó TGĐ",
+        "name": "Ông Hoàng Việt Hùng",
+        "position_en": "Phó TGĐ (Deputy CEO)",
+        "owner_code": "Phó TGĐ"
+      },
+      {
+        "from_date": "N/A",
+        "position": "Phó TGĐ",
+        "name": "Ông Lại Tiến Quân",
+        "position_en": "Phó TGĐ (Deputy CEO)",
+        "owner_code": "Phó TGĐ"
+      },
+      {
+        "from_date": "2000",
+        "position": "Phó TGĐ",
+        "name": "Bà Nguyễn Thị Quỳnh Giao",
+        "position_en": "Phó TGĐ (Deputy CEO)",
+        "owner_code": "Phó TGĐ"
+      }
+    ]
+  },
+  "NVL": {
+    "symbol": "NVL",
+    "info": {
+      "business_model": "\n- Kinh doanh BĐS, quyền sử dụng đất thuộc chủ sở hữu, chủ sử dụng hoặc đi thuê. \n- Sửa chữa thiết bị quang học. \n- Xây dựng nhà các loại. \n- Tư vấn, môi giới, đấu giá BĐS, đấu giá quyền sử dụng đất. \n- Tư vấn máy vi tính và quản trị hệ thống máy vi tính. \n- Dịch vụ lưu trú ngắn ngày.",
+      "symbol": "NVL",
+      "founded_date": "",
+      "charter_capital": 24021,
+      "number_of_employees": 1219,
+      "listing_date": "28/12/2016",
+      "par_value": 10000,
+      "exchange": "HOSE",
+      "listing_price": 50000,
+      "listed_volume": 2402,
+      "ceo_name": "Mr. Dương Văn Bắc",
+      "ceo_position": "Tổng giám đốc",
+      "inspector_name": "Mr. Võ Quốc Đức",
+      "inspector_position": "Giám đốc tài chính",
+      "establishment_license": null,
+      "business_code": "0301444753",
+      "tax_id": "0301444753",
+      "auditor": null,
+      "company_type": "Công ty cổ phần",
+      "address": "Số 313B - 315 Nam Kỳ Khởi Nghĩa - P. Xuân Hòa - Tp. Hồ Chí Minh",
+      "phone": "(84.28) 3915 3666",
+      "fax": "(84.28) 3915 3888",
+      "email": "info@novaland.com.vn",
+      "website": "https://www.novaland.com.vn",
+      "branches": "",
+      "history": "\n- Ngày 18/09/1992: Công ty được thành lập dưới tên Công ty TNHH Thương mại Thành Nhơn với vốn điều lệ ban đầu 400 triệu đồng.\n- Năm 2007: Novaland Group được thành lập với vốn điều lệ ban đầu là 95,325,000,000 đồng.\n- Tháng 10/2007: Tăng vốn điều lệ lên 600,000,000,000 đồng.\n- Tháng 05/2009: Tăng vốn điều lệ lên 900,000,000,000 đồng.\n- Tháng 07/2009: Tăng vốn điều lệ lên 1,200,000,000,000 đồng.\n- Năm 2009: Khởi công dự án Sunrise City.\n- Tháng 10/2014: Tăng vốn điều lệ lên 2,300,000,000,000 đồng.\n- Tháng 06/2015: Tăng vốn điều lệ lên 3,504,658,000,000 đồng.\n- Tháng 07/2015: Tăng vốn điều lệ lên 3,614,658,000,000 đồng.\n- Tháng 10/2015: Tăng vốn điều lệ lên 3,671,658,000,000 đồng.\n- Tháng 12/2015: Tăng vốn điều lệ lên 3,682,958,000,000 đồng.\n- Tháng 02/2016: Tăng vốn điều lệ lên 4,699,997,000,000 đồng.\n- Tháng 08/2016: Tăng vốn điều lệ lên 5,219,992,000,000 đồng.\n- Tháng 11/2016: Tăng vốn điều lệ lên 5,741,992,000,000 đồng.\n- Tháng 11/2016: Tăng vốn điều lệ lên 5,961,992,340,000 đồng.\n- Ngày 08/12/2016: Trở thành công ty đại chúng theo Công văn số 8046/UBCK-GSĐC của Ủy ban Chứng khoán Nhà nước.\n- Ngày 19/12/2016: Niêm yết trên Sở Giao dịch Chứng khoán Thành phố Hồ Chí Minh (HOSE).\n- Ngày 28/12/2016: Giao dịch đầu tiên trên sàn HOSE với giá tham chiếu 50,000 đ/cp.\n- Ngày 06/07/2017: Tăng vốn điều lệ lên 6,296,587,880,000 đồng.\n- Ngày 17/01/2018: Tăng vốn điều lệ lên 6,496,587,880,000 đồng.\n- Ngày 20/04/2018: Tăng vốn điều lệ lên 8,617,859,280,000 đồng.\n- Ngày 31/05/2018: Tăng vốn điều lệ lên 9,142,859,280,000 đồng.\n- Ngày 26/12/2018: Tăng vốn điều lệ lên 9,146,066,740,000 đồng.\n- Ngày 10/01/2019: Tăng vốn điều lệ lên 9,372,766,740,000 đồng.\n- Ngày 16/12/2019: Tăng vốn điều lệ lên 9,558,807,970,000 đồng.\n- Ngày 10/03/2020: Tăng vốn điều lệ lên 9,695,407,970,000 đồng.\n- Ngày 12/10/2020: Tăng vốn điều lệ lên 9,708,312,670,000 đồng.\n- Ngày 22/10/2020: Tăng vốn điều lệ lên 9,710,210,420,000 đồng.\n- Ngày 29/10/2020: Tăng vốn điều lệ lên 9,855,641,520,000 đồng.\n- Ngày 13/04/2021: Tăng vốn điều lệ lên 10,638,546,550,000 đồng.\n- Ngày 19/04/2021: Tăng vốn điều lệ lên 10,685,990,300,000 đồng.\n- Ngày 12/05/2021: Tăng vốn điều lệ lên 10,728,120,350,000 đồng.\n- Ngày 31/05/2021: Tăng vốn điều lệ lên 10,817,390,510,000 đồng.\n- Ngày 07/07/2021: Tăng vốn điều lệ lên 14,676,535,850,000 đồng.\n- Ngày 21/07/2021: Tăng vốn điều lệ lên 14,736,056,190,000 đồng.\n- Tháng 01/2022: Tăng vốn điều lệ lên 19,304,213,000,000 đồng.\n- Tháng 06/2022: Tăng vốn điều lệ lên 19,497,255,000,000 đồng.\n- Tháng 07/2022: Tăng vốn điều lệ lên 19,498,338,000,000 đồng.\n- Tháng 01/2023: Tăng vốn điều lệ lên 19,501,045,380,000 đồng.\n- Tháng 10/2025: Tăng vốn điều lệ lên 20,476,097,640,000 đồng.\n- Tháng 01/2026: Tăng vốn điều lệ lên 22,112,681,550,000 đồng.",
+      "free_float_percentage": 24020679720000,
+      "free_float": 10000,
+      "outstanding_shares": 2402067972,
+      "as_of_date": "2025-12-31T00:00:00"
+    },
+    "shareholders": [
+      {
+        "name": "CTCP Diamond Properties",
+        "update_date": "2026-04-22T00:00:00",
+        "shares_owned": 168392289,
+        "ownership_percentage": 7.54
+      }
+    ],
+    "officers": [
+      {
+        "from_date": "1992",
+        "position": "CTHĐQT",
+        "name": "Ông Bùi Thành Nhơn",
+        "position_en": "CTHĐQT (Chairman of BOD)",
+        "owner_code": "CTHĐQT"
+      },
+      {
+        "from_date": "TV Độc lập",
+        "position": "TVHĐQT/Chủ tịch Ủy ban Kiểm toán",
+        "name": "Ông Hoàng Đức Hùng",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "TV Độc lập",
+        "position": "TVHĐQT/TV Ủy ban Kiểm toán",
+        "name": "Ông Phạm Tiến Vân",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "N/A",
+        "position": "TGĐ/TVHĐQT",
+        "name": "Ông Dương Văn Bắc",
+        "position_en": "TGĐ (CEO)",
+        "owner_code": "TGĐ"
+      },
+      {
+        "from_date": "2025",
+        "position": "TVHĐQT",
+        "name": "Bà Phạm Thị Hồng Nhung",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "N/A",
+        "position": "Phó TGĐ",
+        "name": "Ông Cao Trần Duy Nam",
+        "position_en": "Phó TGĐ (Deputy CEO)",
+        "owner_code": "Phó TGĐ"
+      },
+      {
+        "from_date": "2024",
+        "position": "Phó TGĐ",
+        "name": "Bà Trần Thị Thanh Vân",
+        "position_en": "Phó TGĐ (Deputy CEO)",
+        "owner_code": "Phó TGĐ"
+      },
+      {
+        "from_date": "2025",
+        "position": "GĐ Tài chính",
+        "name": "Ông Võ Quốc Đức",
+        "position_en": "GĐ Tài chính (Finance Director)",
+        "owner_code": "GĐ Tài chính"
+      },
+      {
+        "from_date": "N/A",
+        "position": "KTT",
+        "name": "Bà Nguyễn Thùy Xuân Mai",
+        "position_en": "KTT (Chief Accountant)",
+        "owner_code": "KTT"
+      }
+    ]
+  },
+  "DIG": {
+    "symbol": "DIG",
+    "info": {
+      "business_model": "\n- Kinh doanh bất động sản, quyền sử dụng đất chủ sở hữu, chủ sử dụng hoặc đi thuê.\n- Tư vấn, môi giới, đấu giá bất động sản, đấu giá quyền sử dụng đất.\n- Dịch vụ lưu trú ngắn ngày.\n- Xây dựng nhà để ở.\n- Hoạt động tư vấn quản lý.\n- Hoạt động kiến trúc và tư vấn kỹ thuật có liên quan.\n- Xây dựng công trình cấp thoát nước.",
+      "symbol": "DIG",
+      "founded_date": "30/01/2008",
+      "charter_capital": 8442,
+      "number_of_employees": 274,
+      "listing_date": "19/08/2009",
+      "par_value": 10000,
+      "exchange": "HOSE",
+      "listing_price": 66000,
+      "listed_volume": 844,
+      "ceo_name": "Mr. Nguyễn Hùng Cường",
+      "ceo_position": "Chủ tịch HĐQT",
+      "inspector_name": "Ms. Nguyễn Thị Thanh Huyền",
+      "inspector_position": "Phó Chủ tịch HĐQT",
+      "establishment_license": "160/QÐ–BXD",
+      "business_code": "3500101107",
+      "tax_id": "3500101107",
+      "auditor": "Ernst & Young",
+      "company_type": "Công ty cổ phần",
+      "address": "Số 15 Thi Sách - P. Vũng Tàu - Tp. Hồ Chí Minh",
+      "phone": "(84.64) 3839 671 - 3859 248 - 3580 050",
+      "fax": "(84.64) 3560 712 - 3859 518",
+      "email": "vanphongdic@vnn.vn",
+      "website": "https://www.dic.vn",
+      "branches": "",
+      "history": "\n- Năm 1990: Tiền thân là Nhà nghỉ Bộ Xây dựng được thành lập.\n- Tháng 05/1993: Công ty có vốn điều lệ là 8.2 tỷ đồng.\n- Ngày 13/03/2008: Chuyển đổi thành Công ty Cổ phần Đầu tư Phát triển Xây dựng với vốn điều lệ 370 tỷ đồng.\n- Ngày 01/09/2008: Đổi tên thành Tổng Công ty Cổ phần Đầu tư Phát triển Xây dựng.\n- Ngày 24/06/2009: Tăng vốn điều lệ lên 600 tỷ đồng.\n- Ngày 19/08/2009: Niêm yết trên sàn HOSE.\n- Tháng 10/2009: Tăng vốn điều lệ lên 700 tỷ đồng.\n- Tháng 01/2010: Tăng vốn điều lệ lên 1,000 tỷ đồng.\n- Tháng 10/2011: Tăng vốn điều lệ lên 1,299.97 tỷ đồng.\n- Tháng 12/2012: Tăng vốn điều lệ lên 1,429.95 tỷ đồng.\n- Tháng 09/2014: Tăng vốn điều lệ lên 1,787.43 tỷ đồng.\n- Tháng 09/2015: Tăng vốn điều lệ lên 1,986.43 tỷ đồng.\n- Tháng 12/2015: Tăng vốn điều lệ lên 2,145.33 tỷ đồng.\n- Tháng 06/2016: Tăng vốn điều lệ lên 2,316.94 tỷ đồng.\n- Ngày 11/09/2018: Tăng vốn điều lệ lên 2,524.84 tỷ đồng. .\n- Ngày 12/12/2019: Tăng vốn điều lệ lên 3,149.43 tỷ đồng.\n- Tháng 07/2020: Tăng vốn điều lệ lên 3,184.92 tỷ đồng.\n- Ngày 17/07/2021: Tăng vốn điều lệ lên 4,098.9 tỷ đồng.\n- Ngày 15/10/2021: Tăng vốn điều lệ lên 4,248.9 tỷ đồng.\n- Tháng 12/2021: Tăng vốn điều lệ lên 4,998.9 tỷ đồng.\n- Tháng 08/2022: Tăng vốn điều lệ lên 6,098.52 tỷ đồng.\n- Tháng 06/2025: Tăng vốn điều lệ lên 6,464.31 tỷ đồng.\n- Tháng 12/2025: Tăng vốn điều lệ lên 7,964.31 tỷ đồng.\n- Tháng 09/2026: Tăng vốn điều lệ lên 8,441.92 tỷ đồng.",
+      "free_float_percentage": 8441927630000,
+      "free_float": 10000,
+      "outstanding_shares": 844192763,
+      "as_of_date": "2025-12-31T00:00:00"
+    },
+    "shareholders": [
+      {
+        "name": "Nguyễn Hùng Cường",
+        "update_date": "2026-07-09T00:00:00",
+        "shares_owned": 40532578,
+        "ownership_percentage": 5.09
+      }
+    ],
+    "officers": [
+      {
+        "from_date": "2012",
+        "position": "CTHĐQT",
+        "name": "Ông Nguyễn Hùng Cường",
+        "position_en": "CTHĐQT (Chairman of BOD)",
+        "owner_code": "CTHĐQT"
+      },
+      {
+        "from_date": "2012",
+        "position": "Phó CTHĐQT/Trưởng Ủy ban Kiểm toán",
+        "name": "Bà Nguyễn Thị Thanh Huyền",
+        "position_en": "Phó CTHĐQT (Vice Chairman of BOD)",
+        "owner_code": "Phó CTHĐQT"
+      },
+      {
+        "from_date": "TV Độc lập",
+        "position": "TVHĐQT/Chủ tịch Ủy ban Kiểm toán",
+        "name": "Ông Đinh Hồng Kỳ",
+        "position_en": "TVHĐQT (Member of BOD)",
+        "owner_code": "TVHĐQT"
+      },
+      {
+        "from_date": "2001",
+        "position": "KTT/TVHĐQT",
+        "name": "Ông Bùi Văn Sự",
+        "position_en": "KTT (Chief Accountant)",
+        "owner_code": "KTT"
+      },
+      {
+        "from_date": "2012",
+        "position": "TGĐ/TVHĐQT",
+        "name": "Ông Nguyễn Quang Tín",
+        "position_en": "TGĐ (CEO)",
+        "owner_code": "TGĐ"
+      },
+      {
+        "from_date": "N/A",
+        "position": "Phó TGĐ Thường trực",
+        "name": "Ông Phạm Văn Thái",
+        "position_en": "Phó TGĐ Thường trực (Permanent Deputy CEO)",
+        "owner_code": "Phó TGĐ Thường trực"
+      },
+      {
+        "from_date": "2020",
+        "position": "Phó TGĐ",
+        "name": "Ông Nguyễn Tuấn Liêm",
+        "position_en": "Phó TGĐ (Deputy CEO)",
+        "owner_code": "Phó TGĐ"
+      },
+      {
+        "from_date": "2019",
+        "position": "Phó TGĐ",
+        "name": "Ông Nguyễn Văn Tùng",
+        "position_en": "Phó TGĐ (Deputy CEO)",
+        "owner_code": "Phó TGĐ"
+      },
+      {
+        "from_date": "2016",
+        "position": "Phó TGĐ",
+        "name": "Ông Trần Văn Đạt",
+        "position_en": "Phó TGĐ (Deputy CEO)",
+        "owner_code": "Phó TGĐ"
+      }
+    ]
+  }
+}

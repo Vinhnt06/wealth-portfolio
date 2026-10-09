@@ -1,0 +1,116 @@
+'use client';
+
+import React from 'react';
+import { IndexBanner } from './IndexBanner';
+import { MarketIndexChart } from './MarketIndexChart';
+import { WatchlistTable } from './WatchlistTable';
+import { MarketSummaryBar } from './MarketSummaryBar';
+import {
+  CurrencyCircleDollar,
+  Lightning,
+  ArrowsLeftRight,
+  ChartPieSlice,
+  ShieldCheck,
+  TrendUp,
+  TrendDown
+} from '@phosphor-icons/react';
+
+export const MarketOverviewSection: React.FC = () => {
+  return (
+    <div className="space-y-6">
+      {/* 1. Full-Width Market Index Banner (VN-INDEX 1735.09, VN30, HNX, UPCOM) */}
+      <IndexBanner />
+
+      {/* 2. Main Terminal Hub: Permanent Full-Height Index Chart (8 cols) + Market Breadth (4 cols) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Market Overview Chart - Fixed Full-Height, Never Collapsed */}
+        <div className="lg:col-span-8 min-h-[460px]">
+          <MarketIndexChart />
+        </div>
+
+        {/* Market Breadth & Macro Flow Statistics (4 cols) */}
+        <div className="lg:col-span-4 flex flex-col gap-4">
+          {/* Card: Market Breadth (Độ rộng thị trường) */}
+          <div className="p-5 rounded-2xl bg-zinc-950/90 border border-zinc-800/80 shadow-xl backdrop-blur-xl">
+            <div className="flex items-center justify-between pb-3 border-b border-zinc-800/80 mb-3">
+              <div className="flex items-center gap-2">
+                <ChartPieSlice className="w-4 h-4 text-emerald-400" />
+                <h4 className="text-xs font-mono font-bold text-zinc-200">ĐỘ RỘNG THỊ TRƯỜNG (HOSE)</h4>
+              </div>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-400">
+                469 Mã
+              </span>
+            </div>
+
+            {/* Distribution metrics */}
+            <div className="grid grid-cols-3 gap-2 text-center text-xs font-mono mb-3">
+              <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                <span className="text-[10px] text-emerald-400 block font-semibold">TĂNG GIÁ</span>
+                <span className="text-base font-bold text-emerald-400 mt-0.5 block">248 (53%)</span>
+                <span className="text-[9px] text-emerald-500/80 block mt-0.5">14 mã Trần</span>
+              </div>
+
+              <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                <span className="text-[10px] text-amber-400 block font-semibold">KHÔNG ĐỔI</span>
+                <span className="text-base font-bold text-amber-400 mt-0.5 block">62 (13%)</span>
+                <span className="text-[9px] text-amber-500/80 block mt-0.5">Tham chiếu</span>
+              </div>
+
+              <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20">
+                <span className="text-[10px] text-rose-400 block font-semibold">GIẢM GIÁ</span>
+                <span className="text-base font-bold text-rose-400 mt-0.5 block">159 (34%)</span>
+                <span className="text-[9px] text-rose-500/80 block mt-0.5">3 mã Sàn</span>
+              </div>
+            </div>
+
+            {/* Visual ratio bar */}
+            <div className="w-full h-2 rounded-full overflow-hidden flex bg-zinc-800">
+              <div className="h-full bg-emerald-500" style={{ width: '53%' }} />
+              <div className="h-full bg-amber-400" style={{ width: '13%' }} />
+              <div className="h-full bg-rose-500" style={{ width: '34%' }} />
+            </div>
+          </div>
+
+          {/* Card: Total Liquidity & Transaction Value */}
+          <div className="p-5 rounded-2xl bg-zinc-950/90 border border-zinc-800/80 shadow-xl backdrop-blur-xl">
+            <div className="flex items-center justify-between pb-3 border-b border-zinc-800/80 mb-3">
+              <div className="flex items-center gap-2">
+                <Lightning className="w-4 h-4 text-amber-400" />
+                <h4 className="text-xs font-mono font-bold text-zinc-200">THANH KHOẢN TOÀN THỊ TRƯỜNG</h4>
+              </div>
+              <span className="text-[10px] font-mono text-emerald-400 font-bold">+18.5% so với TB</span>
+            </div>
+
+            <div className="space-y-3 font-mono text-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-zinc-400">Tổng Giá Trị Giao Dịch:</span>
+                <span className="text-sm font-bold text-zinc-100">24,850.4 tỷ VNĐ</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-zinc-400">Tổng Khối Lượng CP:</span>
+                <span className="text-sm font-bold text-zinc-200">985.2 triệu CP</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-zinc-400">Giao dịch Khối Ngoại:</span>
+                <span className="text-sm font-bold text-emerald-400">+428.5 tỷ VNĐ (Mua Ròng)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 3. High-Density Realtime Watchlist (8 cols) & Top Movers (4 cols) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Interactive Live Watchlist (Clicking any stock opens deep detail) */}
+        <div className="lg:col-span-8">
+          <WatchlistTable />
+        </div>
+
+        {/* Top Market Gainers / Losers / Volume Movers */}
+        <div className="lg:col-span-4">
+          <MarketSummaryBar />
+        </div>
+      </div>
+    </div>
+  );
+};
