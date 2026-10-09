@@ -28,6 +28,31 @@ export const SymbolInfoPanel: React.FC = () => {
   const bidPct = Math.round((totalBidVol / totalVol) * 100);
   const askPct = 100 - bidPct;
 
+  const SYMBOL_NAMES: Record<string, string> = {
+    HPG: 'Tập đoàn Hòa Phát • Thép & Kim loại',
+    SSI: 'CTCP Chứng khoán SSI • Dịch vụ Tài chính',
+    VCB: 'Ngân hàng Vietcombank • Ngân hàng',
+    VNM: 'CTCP Sữa Việt Nam • Thực phẩm & Đồ uống',
+    TCB: 'Ngân hàng Techcombank • Ngân hàng',
+    FPT: 'Tập đoàn FPT • Công nghệ Thông tin',
+    MBB: 'Ngân hàng MBBank • Ngân hàng',
+    VHM: 'CTCP Vinhomes • Bất động sản',
+    MWG: 'CTCP Đầu tư Thế Giới Di Động • Bán lẻ',
+    VIC: 'Tập đoàn Vingroup • Bất động sản & Đa ngành',
+    STB: 'Ngân hàng Sacombank • Ngân hàng',
+    VPB: 'Ngân hàng VPBank • Ngân hàng',
+    BID: 'Ngân hàng BIDV • Ngân hàng',
+    NVL: 'CTCP Tập đoàn No Va • Bất động sản',
+    DIG: 'Tập đoàn DIC Corp • Bất động sản',
+    PDR: 'CTCP Bất động sản Phát Đạt • Bất động sản',
+    SHB: 'Ngân hàng SHB • Ngân hàng',
+    ACB: 'Ngân hàng ACB • Ngân hàng',
+    EIB: 'Ngân hàng Eximbank • Ngân hàng',
+    LPB: 'Ngân hàng LPBank • Ngân hàng',
+  };
+
+  const companySubtitle = SYMBOL_NAMES[selectedSymbol] || `${selectedSymbol} • Niêm yết HOSE`;
+
   return (
     <div className="p-5 bg-zinc-900/60 border border-zinc-800/80 rounded-2xl flex flex-col justify-between backdrop-blur-sm relative overflow-hidden">
       {/* Top Header Row */}
@@ -42,7 +67,7 @@ export const SymbolInfoPanel: React.FC = () => {
                 <h3 className="font-mono font-extrabold text-xl text-zinc-100">{selectedSymbol}</h3>
                 <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400">HOSE</span>
               </div>
-              <p className="text-xs text-zinc-400">Tập đoàn Hòa Phát • Thép & Kim loại</p>
+              <p className="text-xs text-zinc-400">{companySubtitle}</p>
             </div>
           </div>
 

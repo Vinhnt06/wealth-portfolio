@@ -3,6 +3,7 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { useMarketStore } from '../store/marketStore';
 import { TickData, QuotesData, MarketIndexData } from '../types/dnse.types';
+import realTicksData from '../data/realTicks.json';
 
 const WS_URL = 'wss://ws-openapi.dnse.com.vn';
 
@@ -12,6 +13,17 @@ const DEFAULT_SYMBOLS = [
   'ACB', 'EIB', 'LPB', 'HDB', 'KBC', 'DGC', 'VHC', 'DBC', 'REE', 'GEX',
   'KDH', 'VRE', 'VJC', 'POW', 'SAB', 'CTG', 'VIB'
 ];
+
+interface RealTickEntry {
+  price: number;
+  ref: number;
+  open: number;
+  high: number;
+  low: number;
+  volume: number;
+}
+
+const REAL_TICKS: Record<string, RealTickEntry> = realTicksData as unknown as Record<string, RealTickEntry>;
 
 export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
   const wsRef = useRef<WebSocket | null>(null);
@@ -98,63 +110,43 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
     }
   }, [updateTick, updateQuotes, updateIndex, setLastHeartbeat]);
 
-  // Seed market state for 35+ major stocks
+  // Seed market state with REAL vnstock data
   const seedInitialState = useCallback(() => {
-    const initialTicks: Record<string, { price: number; ref: number; name: string }> = {
-      HPG: { price: 28500, ref: 28100, name: 'Hòa Phát' },
-      SSI: { price: 34200, ref: 34500, name: 'Chứng khoán SSI' },
-      VCB: { price: 92500, ref: 91000, name: 'Vietcombank' },
-      VNM: { price: 67800, ref: 67800, name: 'Vinamilk' },
-      TCB: { price: 23800, ref: 23200, name: 'Techcombank' },
-      FPT: { price: 134500, ref: 132000, name: 'FPT Corp' },
-      MBB: { price: 24100, ref: 24000, name: 'MBBank' },
-      VHM: { price: 42300, ref: 43000, name: 'Vinhomes' },
-      MWG: { price: 64200, ref: 65000, name: 'Thế Giới Di Động' },
-      VIC: { price: 44600, ref: 45000, name: 'Vingroup' },
-      STB: { price: 29800, ref: 29200, name: 'Sacombank' },
-      VPB: { price: 19200, ref: 18900, name: 'VPBank' },
-      BID: { price: 49500, ref: 49000, name: 'BIDV' },
-      NVL: { price: 14200, ref: 14500, name: 'Novaland' },
-      DIG: { price: 26500, ref: 26000, name: 'DIC Corp' },
-      PDR: { price: 22100, ref: 22500, name: 'Phát Đạt' },
-      SHB: { price: 11500, ref: 11400, name: 'SHB' },
-      ACB: { price: 24800, ref: 24500, name: 'ACB' },
-      EIB: { price: 18500, ref: 18200, name: 'Eximbank' },
-      LPB: { price: 31200, ref: 30800, name: 'LPBank' },
-    };
+    Object.entries(REAL_TICKS).forEach(([sym, val]) => {
+      const price = val.price;
+      const ref = val.ref || price;
+      const change = price - ref;
+      const changePercent = ref ? (change / ref) * 100 : 0;
 
-    Object.entries(initialTicks).forEach(([sym, val]) => {
-      const change = val.price - val.ref;
-      const changePercent = (change / val.ref) * 100;
       updateTick({
         symbol: sym,
-        price: val.price,
-        change,
-        changePercent,
-        volume: Math.floor(Math.random() * 50000) + 10000,
-        totalVolume: Math.floor(Math.random() * 8000000) + 2000000,
-        high: Math.round(val.price * 1.02),
-        low: Math.round(val.price * 0.98),
-        open: val.ref,
-        referencePrice: val.ref,
-        ceilingPrice: Math.round(val.ref * 1.07),
-        floorPrice: Math.round(val.ref * 0.93),
+        price: price,
+        change: Number(change.toFixed(2)),
+        changePercent: Number(changePercent.toFixed(2)),
+        volume: Math.floor((val.volume || 1000000) / 10),
+        totalVolume: val.volume || 5000000,
+        high: val.high || Math.round(price * 1.01),
+        low: val.low || Math.round(price * 0.99),
+        open: val.open || ref,
+        referencePrice: ref,
+        ceilingPrice: Math.round(ref * 1.07),
+        floorPrice: Math.round(ref * 0.93),
         timestamp: Date.now(),
         matchType: Math.random() > 0.5 ? 'B' : 'S',
       });
 
-      const spread = Math.round(val.price * 0.002);
+      const spread = Math.max(50, Math.round(price * 0.002 / 50) * 50);
       updateQuotes({
         symbol: sym,
         bids: [
-          { price: val.price - spread, volume: Math.floor(Math.random() * 80000) + 20000 },
-          { price: val.price - spread * 2, volume: Math.floor(Math.random() * 120000) + 30000 },
-          { price: val.price - spread * 3, volume: Math.floor(Math.random() * 150000) + 40000 },
+          { price: price - spread, volume: Math.floor(Math.random() * 80000) + 20000 },
+          { price: price - spread * 2, volume: Math.floor(Math.random() * 120000) + 30000 },
+          { price: price - spread * 3, volume: Math.floor(Math.random() * 150000) + 40000 },
         ],
         asks: [
-          { price: val.price + spread, volume: Math.floor(Math.random() * 70000) + 15000 },
-          { price: val.price + spread * 2, volume: Math.floor(Math.random() * 110000) + 25000 },
-          { price: val.price + spread * 3, volume: Math.floor(Math.random() * 140000) + 35000 },
+          { price: price + spread, volume: Math.floor(Math.random() * 70000) + 15000 },
+          { price: price + spread * 2, volume: Math.floor(Math.random() * 110000) + 25000 },
+          { price: price + spread * 3, volume: Math.floor(Math.random() * 140000) + 35000 },
         ],
         totalBidVol: 350000,
         totalAskVol: 320000,
@@ -206,22 +198,27 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
     });
   }, [updateTick, updateQuotes, updateIndex]);
 
-  // Ensure dynamically selected custom symbols are instantly seeded
+  // Ensure dynamically selected custom symbols are instantly seeded with real data
   useEffect(() => {
     if (!selectedSymbol) return;
     const currentStore = useMarketStore.getState();
     if (!currentStore.ticks[selectedSymbol]) {
-      const ref = 25000;
+      const real = REAL_TICKS[selectedSymbol];
+      const ref = real?.ref || real?.price || 25000;
+      const price = real?.price || ref;
+      const change = price - ref;
+      const changePercent = ref ? (change / ref) * 100 : 0;
+
       updateTick({
         symbol: selectedSymbol,
-        price: ref,
-        change: 0,
-        changePercent: 0,
-        volume: 15000,
-        totalVolume: 1200000,
-        high: Math.round(ref * 1.02),
-        low: Math.round(ref * 0.98),
-        open: ref,
+        price: price,
+        change: Number(change.toFixed(2)),
+        changePercent: Number(changePercent.toFixed(2)),
+        volume: real?.volume ? Math.floor(real.volume / 10) : 15000,
+        totalVolume: real?.volume || 1200000,
+        high: real?.high || Math.round(ref * 1.02),
+        low: real?.low || Math.round(ref * 0.98),
+        open: real?.open || ref,
         referencePrice: ref,
         ceilingPrice: Math.round(ref * 1.07),
         floorPrice: Math.round(ref * 0.93),
