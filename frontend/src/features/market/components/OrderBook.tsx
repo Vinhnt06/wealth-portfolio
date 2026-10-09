@@ -1,13 +1,68 @@
 'use client';
 
+import { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useMarketStore } from '../store/marketStore';
-import { Stack, ChartBar } from '@phosphor-icons/react';
+import { Stack, ChartBar, ArrowsClockwise } from '@phosphor-icons/react';
 
 export function OrderBook() {
-  const { selectedSymbol, quotes, ticks } = useMarketStore();
+  const { selectedSymbol, quotes, ticks, updateQuotes, updateTick } = useMarketStore();
+  const [loading, setLoading] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<string>('');
+
   const currentQuotes = quotes[selectedSymbol];
   const currentTick = ticks[selectedSymbol];
+
+  const fetchRealOrderBook = useCallback(async () => {
+    if (!selectedSymbol) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/market/orderbook?symbol=${selectedSymbol}`);
+      const json = await res.json();
+      if (json.success && json.data) {
+        const d = json.data;
+        updateQuotes({
+          symbol: d.symbol,
+          bids: d.bids,
+          asks: d.asks,
+          totalBidVol: d.totalBidVol,
+          totalAskVol: d.totalAskVol,
+          timestamp: d.timestamp,
+        });
+
+        // Also update tick with real prices
+        if (d.price) {
+          updateTick({
+            symbol: d.symbol,
+            price: d.price,
+            change: d.change,
+            changePercent: d.changePercent,
+            volume: d.totalVolume,
+            totalVolume: d.totalVolume,
+            high: d.high,
+            low: d.low,
+            open: d.open,
+            referencePrice: d.referencePrice,
+            ceilingPrice: d.ceilingPrice,
+            floorPrice: d.floorPrice,
+            timestamp: d.timestamp,
+            matchType: 'B',
+          });
+        }
+        setLastUpdated(new Date().toLocaleTimeString('vi-VN', { hour12: false }));
+      }
+    } catch (err) {
+      console.error('Lỗi tải sổ lệnh thật:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedSymbol, updateQuotes, updateTick]);
+
+  useEffect(() => {
+    fetchRealOrderBook();
+    const timer = setInterval(fetchRealOrderBook, 12000); // Tự động làm mới mỗi 12s
+    return () => clearInterval(timer);
+  }, [fetchRealOrderBook]);
 
   const bids = currentQuotes?.bids || [];
   const asks = currentQuotes?.asks || [];
@@ -40,23 +95,42 @@ export function OrderBook() {
               <span className="font-mono text-xs px-2 py-0.5 rounded bg-zinc-900 text-emerald-400 border border-zinc-800 font-bold">
                 {selectedSymbol}
               </span>
+              <span className="text-[9px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 font-mono">
+                DỮ LIỆU THẬT 100%
+              </span>
             </h3>
-            <p className="text-[11px] text-zinc-400">Độ sâu thị trường theo thời gian thực</p>
+            <div className="flex items-center gap-2 mt-0.5">
+              <p className="text-[11px] text-zinc-400">Độ sâu 3 mức giá mua/bán tốt nhất</p>
+              {lastUpdated && (
+                <span className="text-[9px] text-zinc-500 font-mono">({lastUpdated})</span>
+              )}
+            </div>
           </div>
         </div>
 
-        {currentTick && (
-          <div className="text-right">
-            <div className="text-sm font-mono font-bold text-zinc-100">
-              {formatPrice(currentTick.price)}
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={() => fetchRealOrderBook()}
+            disabled={loading}
+            title="Làm mới sổ lệnh thật"
+            className="p-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 hover:text-emerald-400 transition-colors disabled:opacity-50"
+          >
+            <ArrowsClockwise className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-emerald-400' : ''}`} />
+          </button>
+
+          {currentTick && (
+            <div className="text-right">
+              <div className="text-sm font-mono font-bold text-zinc-100">
+                {formatPrice(currentTick.price)}
+              </div>
+              <div className={`text-[11px] font-mono font-semibold ${
+                currentTick.change >= 0 ? 'text-emerald-400' : 'text-rose-400'
+              }`}>
+                {currentTick.change >= 0 ? '+' : ''}{(currentTick.change / 1000).toFixed(2)} ({currentTick.changePercent.toFixed(2)}%)
+              </div>
             </div>
-            <div className={`text-[11px] font-mono font-semibold ${
-              currentTick.change >= 0 ? 'text-emerald-400' : 'text-rose-400'
-            }`}>
-              {currentTick.change >= 0 ? '+' : ''}{(currentTick.change / 1000).toFixed(2)} ({currentTick.changePercent.toFixed(2)}%)
-            </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Table Headers */}
@@ -76,8 +150,8 @@ export function OrderBook() {
         {[0, 1, 2].map((idx) => {
           const bid = bids[idx];
           const ask = asks[idx];
-          const bidPct = bid ? (bid.volume / maxVolume) * 100 : 0;
-          const askPct = ask ? (ask.volume / maxVolume) * 100 : 0;
+          const bidPct = bid && bid.volume > 0 ? (bid.volume / maxVolume) * 100 : 0;
+          const askPct = ask && ask.volume > 0 ? (ask.volume / maxVolume) * 100 : 0;
 
           return (
             <div key={idx} className="grid grid-cols-2 gap-4 text-xs font-mono py-1 px-1 rounded hover:bg-zinc-900/40 transition-colors relative">
@@ -88,10 +162,10 @@ export function OrderBook() {
                   style={{ width: `${bidPct}%` }}
                 />
                 <span className="text-zinc-400 text-left z-10 font-mono text-[11px]">
-                  {bid ? formatVol(bid.volume) : '-'}
+                  {bid && bid.volume > 0 ? formatVol(bid.volume) : '-'}
                 </span>
                 <span className="text-emerald-400 font-bold text-right z-10 font-mono">
-                  {bid ? formatPrice(bid.price) : '-'}
+                  {bid && bid.price > 0 ? formatPrice(bid.price) : '-'}
                 </span>
               </div>
 
@@ -102,10 +176,10 @@ export function OrderBook() {
                   style={{ width: `${askPct}%` }}
                 />
                 <span className="text-rose-400 font-bold text-left z-10 font-mono">
-                  {ask ? formatPrice(ask.price) : '-'}
+                  {ask && ask.price > 0 ? formatPrice(ask.price) : '-'}
                 </span>
                 <span className="text-zinc-400 text-right z-10 font-mono text-[11px]">
-                  {ask ? formatVol(ask.volume) : '-'}
+                  {ask && ask.volume > 0 ? formatVol(ask.volume) : '-'}
                 </span>
               </div>
             </div>
@@ -117,10 +191,10 @@ export function OrderBook() {
       <div className="mt-4 pt-3 border-t border-zinc-800/80">
         <div className="flex justify-between items-center text-[11px] font-mono text-zinc-400 mb-1.5">
           <span className="text-emerald-400 font-semibold flex items-center gap-1">
-            <ChartBar size={12} /> Mua: {formatVol(currentQuotes?.totalBidVol || 350000)}
+            <ChartBar size={12} /> Mua: {formatVol(currentQuotes?.totalBidVol || 0)}
           </span>
           <span className="text-rose-400 font-semibold flex items-center gap-1">
-            Bán: {formatVol(currentQuotes?.totalAskVol || 320000)} <ChartBar size={12} />
+            Bán: {formatVol(currentQuotes?.totalAskVol || 0)} <ChartBar size={12} />
           </span>
         </div>
         <div className="h-2 w-full bg-zinc-900 rounded-full overflow-hidden flex border border-zinc-800">

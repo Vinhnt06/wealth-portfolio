@@ -28,7 +28,6 @@ const REAL_TICKS: Record<string, RealTickEntry> = realTicksData as unknown as Re
 export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
   const wsRef = useRef<WebSocket | null>(null);
   const heartbeatTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const mockTimerRef = useRef<NodeJS.Timeout | null>(null);
   const reconnectAttemptRef = useRef(0);
 
   const {
@@ -175,24 +174,6 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
         timestamp: Date.now(),
         matchType: Math.random() > 0.5 ? 'B' : 'S',
       });
-
-      const spread = Math.max(50, Math.round(price * 0.002 / 50) * 50);
-      updateQuotes({
-        symbol: sym,
-        bids: [
-          { price: price - spread, volume: Math.floor(Math.random() * 80000) + 20000 },
-          { price: price - spread * 2, volume: Math.floor(Math.random() * 120000) + 30000 },
-          { price: price - spread * 3, volume: Math.floor(Math.random() * 150000) + 40000 },
-        ],
-        asks: [
-          { price: price + spread, volume: Math.floor(Math.random() * 70000) + 15000 },
-          { price: price + spread * 2, volume: Math.floor(Math.random() * 110000) + 25000 },
-          { price: price + spread * 3, volume: Math.floor(Math.random() * 140000) + 35000 },
-        ],
-        totalBidVol: 350000,
-        totalAskVol: 320000,
-        timestamp: Date.now(),
-      });
     });
 
     // Seed Real Market Indexes from vnstock
@@ -292,57 +273,7 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
     }
   }, [selectedSymbol, updateTick]);
 
-  // Live simulation tick updates
-  const startLiveSimulation = useCallback(() => {
-    if (mockTimerRef.current) clearInterval(mockTimerRef.current);
 
-    mockTimerRef.current = setInterval(() => {
-      const symList = Object.keys(useMarketStore.getState().ticks);
-      if (symList.length === 0) return;
-      const sym = symList[Math.floor(Math.random() * symList.length)];
-      const currentStore = useMarketStore.getState();
-      const existing = currentStore.ticks[sym];
-      if (!existing) return;
-
-      const delta = (Math.random() - 0.49) * (existing.referencePrice * 0.003);
-      const newPrice = Math.round((existing.price + delta) / 100) * 100;
-      const boundedPrice = Math.max(existing.floorPrice, Math.min(existing.ceilingPrice, newPrice));
-      const change = boundedPrice - existing.referencePrice;
-      const changePercent = (change / existing.referencePrice) * 100;
-      const tickVol = Math.floor(Math.random() * 5000) + 100;
-
-      updateTick({
-        ...existing,
-        price: boundedPrice,
-        change,
-        changePercent,
-        volume: tickVol,
-        totalVolume: existing.totalVolume + tickVol,
-        high: Math.max(existing.high, boundedPrice),
-        low: Math.min(existing.low, boundedPrice),
-        timestamp: Date.now(),
-        matchType: delta >= 0 ? 'B' : 'S',
-      });
-
-      const spread = 100;
-      updateQuotes({
-        symbol: sym,
-        bids: [
-          { price: boundedPrice - spread, volume: Math.floor(Math.random() * 60000) + 10000 },
-          { price: boundedPrice - spread * 2, volume: Math.floor(Math.random() * 90000) + 20000 },
-          { price: boundedPrice - spread * 3, volume: Math.floor(Math.random() * 140000) + 30000 },
-        ],
-        asks: [
-          { price: boundedPrice + spread, volume: Math.floor(Math.random() * 55000) + 8000 },
-          { price: boundedPrice + spread * 2, volume: Math.floor(Math.random() * 85000) + 18000 },
-          { price: boundedPrice + spread * 3, volume: Math.floor(Math.random() * 130000) + 28000 },
-        ],
-        totalBidVol: 290000 + Math.floor(Math.random() * 50000),
-        totalAskVol: 270000 + Math.floor(Math.random() * 50000),
-        timestamp: Date.now(),
-      });
-    }, 800);
-  }, [updateTick, updateQuotes]);
 
   // Main Connection logic
   useEffect(() => {
@@ -433,17 +364,14 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
 
       ws.onerror = () => {
         setWsStatus('error');
-        startLiveSimulation();
       };
 
       ws.onclose = () => {
         setWsStatus('disconnected');
         if (heartbeatTimerRef.current) clearInterval(heartbeatTimerRef.current);
-        startLiveSimulation();
       };
     } catch {
       setWsStatus('error');
-      startLiveSimulation();
     }
 
     return () => {
@@ -453,11 +381,8 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
       if (heartbeatTimerRef.current) {
         clearInterval(heartbeatTimerRef.current);
       }
-      if (mockTimerRef.current) {
-        clearInterval(mockTimerRef.current);
-      }
     };
-  }, [symbols, handleMessage, seedInitialState, setWsStatus, startLiveSimulation]);
+  }, [symbols, handleMessage, seedInitialState, setWsStatus]);
 
   const { wsStatus } = useMarketStore();
   return { wsStatus, selectedSymbol };
