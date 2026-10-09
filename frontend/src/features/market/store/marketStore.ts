@@ -17,10 +17,12 @@ interface MarketState {
   searchQuery: string;
   watchlistSymbols: string[];
   isChartExpanded: boolean;
+  activeTab: 'orderbook' | 'info' | 'foreign';
 
   // Actions
   setWsStatus: (status: WsStatus) => void;
   setSelectedSymbol: (symbol: string) => void;
+  setActiveTab: (tab: 'orderbook' | 'info' | 'foreign') => void;
   setSearchQuery: (query: string) => void;
   toggleWatchlistSymbol: (symbol: string) => void;
   setChartExpanded: (expanded: boolean) => void;
@@ -39,10 +41,12 @@ export const useMarketStore = create<MarketState>((set) => ({
   selectedSymbol: 'HPG',
   searchQuery: '',
   watchlistSymbols: ['HPG', 'VCB', 'SSI', 'VHM', 'TCB', 'FPT', 'MBB', 'MWG', 'VNM', 'VIC'],
-  isChartExpanded: false,
+  isChartExpanded: true,
+  activeTab: 'info',
 
   setWsStatus: (wsStatus) => set({ wsStatus }),
-  setSelectedSymbol: (selectedSymbol) => set({ selectedSymbol }),
+  setSelectedSymbol: (selectedSymbol) => set({ selectedSymbol, isChartExpanded: true, activeTab: 'info' }),
+  setActiveTab: (activeTab) => set({ activeTab }),
   setSearchQuery: (searchQuery) => set({ searchQuery }),
   toggleWatchlistSymbol: (symbol) =>
     set((state) => ({

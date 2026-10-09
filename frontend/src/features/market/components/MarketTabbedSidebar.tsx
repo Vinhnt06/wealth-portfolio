@@ -9,9 +9,8 @@ import { useMarketStore } from '../store/marketStore';
 type TabType = 'orderbook' | 'info' | 'foreign';
 
 export const MarketTabbedSidebar: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<TabType>('orderbook');
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const { selectedSymbol } = useMarketStore();
+  const { selectedSymbol, activeTab, setActiveTab } = useMarketStore();
 
   return (
     <div className="bg-zinc-950/90 border border-zinc-800/60 rounded-2xl p-4 backdrop-blur-xl flex flex-col h-full transition-all">

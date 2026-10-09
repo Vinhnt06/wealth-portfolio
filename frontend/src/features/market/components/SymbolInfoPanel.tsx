@@ -1,57 +1,84 @@
-'use client';
-
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Star, ChartLine, ShieldCheck, Coins, ArrowsLeftRight, Lightning } from '@phosphor-icons/react';
 import { useMarketStore } from '../store/marketStore';
+import stockDatabase from '../data/stockDatabase.json';
+
+interface StockMetadata {
+  symbol: string;
+  name: string;
+  exchange: string;
+  sector: string;
+}
+
+const STOCK_LOOKUP_MAP = new Map<string, StockMetadata>();
+(stockDatabase as StockMetadata[]).forEach((item) => {
+  STOCK_LOOKUP_MAP.set(item.symbol.toUpperCase(), item);
+});
 
 export const SymbolInfoPanel: React.FC = () => {
-  const { selectedSymbol, ticks, quotes, watchlistSymbols, toggleWatchlistSymbol, toggleChartExpanded, isChartExpanded } = useMarketStore();
+  const { selectedSymbol, ticks, quotes, watchlistSymbols, toggleWatchlistSymbol, toggleChartExpanded, isChartExpanded, updateTick } = useMarketStore();
+  const [isLoading, setIsLoading] = useState(false);
 
   const tick = ticks[selectedSymbol];
   const quote = quotes[selectedSymbol];
 
-  const currentPrice = tick?.price ? tick.price / 1000 : 28.5;
-  const refPrice = tick?.referencePrice ? tick.referencePrice / 1000 : 28.0;
-  const ceilPrice = tick?.ceilingPrice ? tick.ceilingPrice / 1000 : 30.0;
-  const floorPrice = tick?.floorPrice ? tick.floorPrice / 1000 : 26.0;
+  // Auto-fetch quote if not present in client store
+  useEffect(() => {
+    if (!selectedSymbol) return;
+    if (!ticks[selectedSymbol]) {
+      setIsLoading(true);
+      fetch(`/api/market/quote?symbol=${selectedSymbol}`)
+        .then((res) => res.json())
+        .then((resData) => {
+          if (resData.success && resData.data) {
+            const d = resData.data;
+            updateTick({
+              symbol: d.symbol,
+              price: d.price,
+              change: d.change,
+              changePercent: d.changePercent,
+              volume: Math.floor(d.volume / 10),
+              totalVolume: d.volume,
+              high: d.high,
+              low: d.low,
+              open: d.open,
+              referencePrice: d.referencePrice,
+              ceilingPrice: d.ceilingPrice,
+              floorPrice: d.floorPrice,
+              timestamp: d.timestamp,
+              matchType: 'B',
+            });
+          }
+        })
+        .catch(() => {})
+        .finally(() => setIsLoading(false));
+    }
+  }, [selectedSymbol, ticks, updateTick]);
 
-  const change = currentPrice - refPrice;
-  const changePct = (change / refPrice) * 100;
+  const stockMeta = STOCK_LOOKUP_MAP.get(selectedSymbol) || {
+    symbol: selectedSymbol,
+    name: `${selectedSymbol} Corporation`,
+    exchange: 'HOSE',
+    sector: 'Chứng khoán & Đầu tư',
+  };
+
+  const currentPrice = tick?.price ? tick.price / 1000 : null;
+  const refPrice = tick?.referencePrice ? tick.referencePrice / 1000 : currentPrice;
+  const ceilPrice = tick?.ceilingPrice ? tick.ceilingPrice / 1000 : (refPrice ? refPrice * 1.07 : null);
+  const floorPrice = tick?.floorPrice ? tick.floorPrice / 1000 : (refPrice ? refPrice * 0.93 : null);
+
+  const change = currentPrice && refPrice ? currentPrice - refPrice : 0;
+  const changePct = refPrice ? (change / refPrice) * 100 : 0;
   const isUp = change >= 0;
 
   const isStarred = watchlistSymbols.includes(selectedSymbol);
 
-  // Calculate mock or real bid vs ask ratio
+  // Calculate bid vs ask ratio
   const totalBidVol = quote?.totalBidVol || 450000;
   const totalAskVol = quote?.totalAskVol || 320000;
   const totalVol = totalBidVol + totalAskVol;
   const bidPct = Math.round((totalBidVol / totalVol) * 100);
   const askPct = 100 - bidPct;
-
-  const SYMBOL_NAMES: Record<string, string> = {
-    HPG: 'Tập đoàn Hòa Phát • Thép & Kim loại',
-    SSI: 'CTCP Chứng khoán SSI • Dịch vụ Tài chính',
-    VCB: 'Ngân hàng Vietcombank • Ngân hàng',
-    VNM: 'CTCP Sữa Việt Nam • Thực phẩm & Đồ uống',
-    TCB: 'Ngân hàng Techcombank • Ngân hàng',
-    FPT: 'Tập đoàn FPT • Công nghệ Thông tin',
-    MBB: 'Ngân hàng MBBank • Ngân hàng',
-    VHM: 'CTCP Vinhomes • Bất động sản',
-    MWG: 'CTCP Đầu tư Thế Giới Di Động • Bán lẻ',
-    VIC: 'Tập đoàn Vingroup • Bất động sản & Đa ngành',
-    STB: 'Ngân hàng Sacombank • Ngân hàng',
-    VPB: 'Ngân hàng VPBank • Ngân hàng',
-    BID: 'Ngân hàng BIDV • Ngân hàng',
-    NVL: 'CTCP Tập đoàn No Va • Bất động sản',
-    DIG: 'Tập đoàn DIC Corp • Bất động sản',
-    PDR: 'CTCP Bất động sản Phát Đạt • Bất động sản',
-    SHB: 'Ngân hàng SHB • Ngân hàng',
-    ACB: 'Ngân hàng ACB • Ngân hàng',
-    EIB: 'Ngân hàng Eximbank • Ngân hàng',
-    LPB: 'Ngân hàng LPBank • Ngân hàng',
-  };
-
-  const companySubtitle = SYMBOL_NAMES[selectedSymbol] || `${selectedSymbol} • Niêm yết HOSE`;
 
   return (
     <div className="p-5 bg-zinc-900/60 border border-zinc-800/80 rounded-2xl flex flex-col justify-between backdrop-blur-sm relative overflow-hidden">
@@ -65,9 +92,11 @@ export const SymbolInfoPanel: React.FC = () => {
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="font-mono font-extrabold text-xl text-zinc-100">{selectedSymbol}</h3>
-                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400">HOSE</span>
+                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 border border-zinc-700/50">
+                  {stockMeta.exchange}
+                </span>
               </div>
-              <p className="text-xs text-zinc-400">{companySubtitle}</p>
+              <p className="text-xs text-zinc-400 line-clamp-1">{stockMeta.name} • {stockMeta.sector}</p>
             </div>
           </div>
 
@@ -100,19 +129,29 @@ export const SymbolInfoPanel: React.FC = () => {
 
         {/* Live Price Display */}
         <div className="flex items-baseline gap-3 my-4 p-3 bg-zinc-950/60 rounded-xl border border-zinc-800/60">
-          <span className={`font-mono text-3xl font-black ${isUp ? 'text-emerald-400' : 'text-rose-400'}`}>
-            {currentPrice.toFixed(2)}
+          <span className={`font-mono text-3xl font-black ${currentPrice === null ? 'text-zinc-500 animate-pulse' : isUp ? 'text-emerald-400' : 'text-rose-400'}`}>
+            {currentPrice !== null ? currentPrice.toFixed(2) : '--.--'}
           </span>
           <span className="text-xs font-mono text-zinc-400">x 1.000 VNĐ</span>
 
           <div
             className={`ml-auto px-2.5 py-1 rounded-lg text-xs font-mono font-bold ${
-              isUp ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+              currentPrice === null
+                ? 'bg-zinc-800/40 text-zinc-400'
+                : isUp
+                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
             }`}
           >
-            {isUp ? '+' : ''}
-            {change.toFixed(2)} ({isUp ? '+' : ''}
-            {changePct.toFixed(2)}%)
+            {currentPrice !== null ? (
+              <>
+                {isUp ? '+' : ''}
+                {change.toFixed(2)} ({isUp ? '+' : ''}
+                {changePct.toFixed(2)}%)
+              </>
+            ) : (
+              'Đang tải...'
+            )}
           </div>
         </div>
 
@@ -120,15 +159,15 @@ export const SymbolInfoPanel: React.FC = () => {
         <div className="grid grid-cols-3 gap-2 mb-4 text-center text-xs font-mono">
           <div className="p-2 bg-zinc-950/40 rounded-lg border border-zinc-800/40">
             <div className="text-[10px] text-cyan-400 mb-0.5 font-semibold">SÀN</div>
-            <div className="font-bold text-cyan-300">{floorPrice.toFixed(2)}</div>
+            <div className="font-bold text-cyan-300">{floorPrice !== null ? floorPrice.toFixed(2) : '--'}</div>
           </div>
           <div className="p-2 bg-zinc-950/40 rounded-lg border border-zinc-800/40">
             <div className="text-[10px] text-amber-400 mb-0.5 font-semibold">THAM CHIẾU</div>
-            <div className="font-bold text-amber-300">{refPrice.toFixed(2)}</div>
+            <div className="font-bold text-amber-300">{refPrice !== null ? refPrice.toFixed(2) : '--'}</div>
           </div>
           <div className="p-2 bg-zinc-950/40 rounded-lg border border-zinc-800/40">
             <div className="text-[10px] text-purple-400 mb-0.5 font-semibold font-sans">TRẦN</div>
-            <div className="font-bold text-purple-300">{ceilPrice.toFixed(2)}</div>
+            <div className="font-bold text-purple-300">{ceilPrice !== null ? ceilPrice.toFixed(2) : '--'}</div>
           </div>
         </div>
       </div>
@@ -138,9 +177,11 @@ export const SymbolInfoPanel: React.FC = () => {
         <div className="flex justify-between items-center text-zinc-400">
           <span className="flex items-center gap-1.5 text-zinc-400">
             <Lightning className="w-3.5 h-3.5 text-emerald-400" />
-            Khối lượng khớp:
+            Khối lượng giao dịch:
           </span>
-          <span className="text-zinc-100 font-bold">14,850,200</span>
+          <span className="text-zinc-100 font-bold">
+            {tick?.totalVolume ? tick.totalVolume.toLocaleString() : 'Đang cập nhật...'}
+          </span>
         </div>
 
         <div className="flex justify-between items-center text-zinc-400">

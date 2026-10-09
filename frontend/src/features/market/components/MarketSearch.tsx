@@ -19,7 +19,7 @@ export const MarketSearch: React.FC = () => {
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   
-  const { setSelectedSymbol, selectedSymbol, ticks, toggleWatchlistSymbol, watchlistSymbols } = useMarketStore();
+  const { setSelectedSymbol, selectedSymbol, ticks, toggleWatchlistSymbol, watchlistSymbols, updateTick } = useMarketStore();
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -58,9 +58,36 @@ export const MarketSearch: React.FC = () => {
     : VN_STOCK_DATABASE.slice(0, 10);
 
   const handleSelect = (symbol: string) => {
-    setSelectedSymbol(symbol.toUpperCase());
+    const s = symbol.toUpperCase();
+    setSelectedSymbol(s);
     setIsOpen(false);
     setQuery('');
+
+    // Instant quote fetch with failover
+    fetch(`/api/market/quote?symbol=${s}`)
+      .then((res) => res.json())
+      .then((resData) => {
+        if (resData.success && resData.data) {
+          const d = resData.data;
+          updateTick({
+            symbol: d.symbol,
+            price: d.price,
+            change: d.change,
+            changePercent: d.changePercent,
+            volume: Math.floor(d.volume / 10),
+            totalVolume: d.volume,
+            high: d.high,
+            low: d.low,
+            open: d.open,
+            referencePrice: d.referencePrice,
+            ceilingPrice: d.ceilingPrice,
+            floorPrice: d.floorPrice,
+            timestamp: d.timestamp,
+            matchType: 'B',
+          });
+        }
+      })
+      .catch(() => {});
   };
 
   const handleKeyDownInput = (e: React.KeyboardEvent<HTMLInputElement>) => {
