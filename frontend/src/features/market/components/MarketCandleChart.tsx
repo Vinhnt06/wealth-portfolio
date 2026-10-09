@@ -83,11 +83,12 @@ function TradingViewProEmbed({ symbol, onFallbackToNative }: { symbol: string; o
   const cleanSym = symbol.toUpperCase().trim();
   const exchange = EXCHANGE_MAP.get(cleanSym) || 'HOSE';
   const isUpcom = exchange === 'UPCOM';
+  const isRestrictedByTV = isUpcom || cleanSym === 'TAL';
   const tvSymbol = cleanSym.includes(':') ? cleanSym : `${exchange}:${cleanSym}`;
   const containerId = useMemo(() => `tv_widget_${cleanSym.toLowerCase()}`, [cleanSym]);
 
   useEffect(() => {
-    if (isUpcom) return;
+    if (isRestrictedByTV) return;
     if (!containerRef.current) return;
     containerRef.current.innerHTML = '';
 
@@ -139,26 +140,29 @@ function TradingViewProEmbed({ symbol, onFallbackToNative }: { symbol: string; o
         document.head.appendChild(script);
       }
     }
-  }, [tvSymbol, containerId, isUpcom]);
+  }, [tvSymbol, containerId, isRestrictedByTV]);
 
-  if (isUpcom) {
+  if (isRestrictedByTV) {
     return (
       <div className="w-full h-[500px] min-h-[500px] rounded-xl flex flex-col items-center justify-center p-6 bg-zinc-950 border border-zinc-800 text-center">
         <div className="p-3 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-2xl mb-3">
           <Sparkle size={28} />
         </div>
         <h4 className="font-mono font-bold text-zinc-100 text-base mb-1">
-          Mã {cleanSym} thuộc sàn UPCOM
+          {cleanSym === 'TAL' ? `Mã ${cleanSym} bị TradingView giới hạn bản quyền ngoài web` : `Mã ${cleanSym} thuộc sàn UPCOM`}
         </h4>
         <p className="text-xs text-zinc-400 max-w-md mb-4 leading-relaxed">
-          Nền tảng TradingView quốc tế chưa hỗ trợ trực tiếp các mã sàn UPCOM Việt Nam. Vui lòng chuyển sang chế độ <strong>Native DNSE Lightspeed</strong> để xem toàn bộ nến thật thời gian thực.
+          {cleanSym === 'TAL'
+            ? 'TradingView quốc tế hiện không cấp phép nhúng iframe bên ngoài đối với mã TAL. Toàn bộ nến thật và chỉ báo kỹ thuật đã sẵn sàng 100% trên Native DNSE Lightspeed.'
+            : 'Nền tảng TradingView quốc tế chưa hỗ trợ trực tiếp các mã sàn UPCOM Việt Nam. Vui lòng chuyển sang chế độ Native DNSE Lightspeed để xem toàn bộ nến thật thời gian thực.'}
         </p>
         {onFallbackToNative && (
           <button
             onClick={onFallbackToNative}
-            className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-zinc-950 font-bold text-xs rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)]"
+            className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-zinc-950 font-bold text-xs rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] flex items-center gap-2"
           >
-            Chuyển sang Biểu Đồ DNSE (100% Khả Dụng)
+            <ChartLine size={14} weight="bold" />
+            <span>Xem ngay trên Native DNSE (100% Khả Dụng)</span>
           </button>
         )}
       </div>
@@ -185,13 +189,14 @@ export function MarketCandleChart() {
   const { selectedSymbol, ticks } = useMarketStore();
   const exchange = EXCHANGE_MAP.get(selectedSymbol.toUpperCase()) || 'HOSE';
   const isUpcom = exchange === 'UPCOM';
-  const [chartMode, setChartMode] = useState<'tradingview' | 'native'>(isUpcom ? 'native' : 'tradingview');
+  const isRestrictedByTV = isUpcom || selectedSymbol.toUpperCase() === 'TAL';
+  const [chartMode, setChartMode] = useState<'tradingview' | 'native'>(isRestrictedByTV ? 'native' : 'tradingview');
 
   useEffect(() => {
-    if (isUpcom) {
+    if (isRestrictedByTV) {
       setChartMode('native');
     }
-  }, [isUpcom, selectedSymbol]);
+  }, [isRestrictedByTV, selectedSymbol]);
   const [resolution, setResolution] = useState<ResolutionId>('1D');
   const [showMA20, setShowMA20] = useState(true);
   const [showMA50, setShowMA50] = useState(true);
