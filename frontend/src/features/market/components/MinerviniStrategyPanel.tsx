@@ -15,6 +15,7 @@ import {
   ChartLineUp,
   Gauge,
   ArrowsClockwise,
+  Buildings,
 } from '@phosphor-icons/react';
 import { MinerviniAnalysisResult } from '../types/minervini.types';
 
@@ -110,35 +111,41 @@ export const MinerviniStrategyPanel: React.FC<MinerviniStrategyPanelProps> = ({ 
       {/* Main Tab Content */}
       <div className="flex-1 overflow-y-auto space-y-4 pr-1 scrollbar-thin">
         {/* Scanner Bar (Ảnh 2, 3) */}
-        <div className="p-3 rounded-xl bg-zinc-900/60 border border-zinc-800/80 text-xs font-mono">
-          <div className="flex items-center justify-between text-[11px] text-zinc-400 mb-2">
-            <span className="flex items-center gap-1.5 font-bold text-zinc-300 uppercase tracking-tight">
-              <Lightning size={14} className="text-amber-400" />
+        <div className="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 text-xs font-mono shadow-md">
+          <div className="flex items-center justify-between text-[11px] text-zinc-400 mb-2.5">
+            <span className="flex items-center gap-1.5 font-bold text-zinc-200 uppercase tracking-tight">
+              <Lightning size={14} className="text-amber-400 animate-pulse" />
               Quét Tín Hiệu Trên Mã {symbol}
             </span>
-            <span className="text-[10px] text-zinc-500">Auto-update</span>
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold">
+              Realtime DNSE
+            </span>
           </div>
 
           <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] text-zinc-400">Tín hiệu trong:</span>
+            <div className="flex items-center gap-2 flex-1">
+              <span className="text-[11px] text-zinc-400 whitespace-nowrap">Phiên:</span>
               <select
                 value={scanSessions}
                 onChange={(e) => setScanSessions(Number(e.target.value))}
-                className="bg-zinc-950 border border-zinc-800 rounded-lg px-2 py-1 text-[11px] text-zinc-200 focus:outline-none focus:border-emerald-500"
+                className="bg-zinc-950 border border-zinc-700/80 rounded-lg px-2.5 py-1.5 text-xs text-zinc-100 font-bold focus:outline-none focus:border-amber-400 w-full"
               >
-                <option value={3}>3 phiên</option>
-                <option value={5}>5 phiên</option>
-                <option value={10}>10 phiên</option>
+                <option value={0}>0 (Phiên hiện tại)</option>
+                <option value={1}>1 (Phiên trước)</option>
+                <option value={3}>3 phiên gần nhất</option>
+                <option value={5}>5 phiên gần nhất</option>
+                <option value={10}>10 phiên gần nhất</option>
+                <option value={20}>20 phiên gần nhất</option>
               </select>
             </div>
 
+            {/* High-visibility prominent Quét button matching user Image 2 */}
             <button
               onClick={handleScan}
               disabled={isScanning}
-              className="px-3 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-bold text-xs rounded-lg border border-amber-500/40 transition-all flex items-center gap-1 shadow-sm"
+              className="px-4 py-1.5 bg-gradient-to-r from-rose-600 via-rose-500 to-amber-500 hover:from-rose-500 hover:to-amber-400 text-white font-black text-xs rounded-xl shadow-lg shadow-rose-600/30 transition-all flex items-center gap-1.5 border border-rose-400/30 active:scale-95"
             >
-              <Funnel size={13} />
+              <Funnel size={14} weight="fill" className={isScanning ? 'animate-spin' : ''} />
               <span>{isScanning ? 'Đang quét...' : 'Quét'}</span>
             </button>
           </div>
@@ -240,6 +247,42 @@ export const MinerviniStrategyPanel: React.FC<MinerviniStrategyPanelProps> = ({ 
               <span>Yếu (RS 1-49)</span>
               <span>Trung bình (RS 50-69)</span>
               <span className="text-emerald-400 font-bold">Leader (RS 70-99)</span>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Xếp Hạng Ngành & Sức Mạnh Dòng Tiền (Sector Ranking) ───────── */}
+        <div className="p-3.5 rounded-xl bg-zinc-900/70 border border-zinc-800 text-xs font-mono shadow-md">
+          <div className="flex items-center justify-between mb-2.5">
+            <span className="font-bold text-zinc-200 uppercase tracking-tight flex items-center gap-1.5 text-[11px]">
+              <Buildings size={14} className="text-amber-400" />
+              Sức Mạnh Nhóm Ngành (Sector RS)
+            </span>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              {data?.sectorStatus || 'Dẫn dắt (Leading)'}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            <div className="p-2.5 rounded-lg bg-zinc-950/80 border border-zinc-800/80">
+              <span className="text-[10px] text-zinc-500 block uppercase font-semibold">Nhóm Ngành</span>
+              <span className="font-bold text-zinc-100 truncate block mt-0.5" title={data?.sector}>
+                {data?.sector || 'Chung'}
+              </span>
+              <span className="text-[10px] font-bold text-amber-400 block mt-1">
+                {data?.sectorRank || 'Top 1 / 18 ngành'}
+              </span>
+            </div>
+
+            <div className="p-2.5 rounded-lg bg-zinc-950/80 border border-zinc-800/80">
+              <span className="text-[10px] text-zinc-500 block uppercase font-semibold">RS Ngành</span>
+              <div className="flex items-baseline gap-1 mt-0.5">
+                <span className="text-lg font-black text-cyan-400">{data?.sectorRS || 88}</span>
+                <span className="text-[10px] text-zinc-500 font-bold">/ 99</span>
+              </div>
+              <span className="text-[10px] text-emerald-400 font-semibold block mt-1">
+                Dòng tiền ưu tiên
+              </span>
             </div>
           </div>
         </div>

@@ -140,6 +140,11 @@ export function MarketCandleChart() {
   const [drawings, setDrawings] = useState<DrawingItem[]>([]);
   const [draftDrawing, setDraftDrawing] = useState<DrawingItem | null>(null);
   const [undoStack, setUndoStack] = useState<DrawingItem[][]>([]);
+  const [chartMinervini, setChartMinervini] = useState<{
+    rsRating?: number;
+    isStage2Eligible?: boolean;
+    passedCount?: number;
+  } | null>(null);
 
   // Hovered Crosshair inspection data
   const [hoveredData, setHoveredData] = useState<{
@@ -191,6 +196,23 @@ export function MarketCandleChart() {
       localStorage.setItem(`yf_drawings_${selectedSymbol}`, JSON.stringify(items));
     } catch {}
   };
+
+  // Fetch Minervini RS Rating & Stage 2 status for chart header
+  useEffect(() => {
+    if (!selectedSymbol) return;
+    fetch(`/api/market/minervini/analysis?symbol=${selectedSymbol}`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.success && d.data) {
+          setChartMinervini({
+            rsRating: d.data.rsRating,
+            isStage2Eligible: d.data.isStage2Eligible,
+            passedCount: d.data.passedCount,
+          });
+        }
+      })
+      .catch(() => {});
+  }, [selectedSymbol]);
 
   // Keyboard shortcut listener: Esc cancels current drawing
   useEffect(() => {
@@ -876,6 +898,25 @@ export function MarketCandleChart() {
             <span className="font-mono text-zinc-400 text-xs">{resolution}</span>
             <span className="text-zinc-500">·</span>
             <span className="font-mono text-zinc-400 text-xs">{stockInfo.exchange}</span>
+
+            {/* Minervini Live RS Rating on Chart Bar */}
+            {chartMinervini?.rsRating !== undefined && (
+              <>
+                <span className="text-zinc-500">·</span>
+                <span className="font-mono font-bold text-xs px-2 py-0.5 rounded-md bg-amber-400/10 text-amber-400 border border-amber-400/30 shadow-sm flex items-center gap-1">
+                  RS: {chartMinervini.rsRating}/99
+                </span>
+                <span
+                  className={`font-mono text-[10px] font-bold px-1.5 py-0.5 rounded-md border hidden sm:inline-block ${
+                    chartMinervini.isStage2Eligible
+                      ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+                      : 'bg-zinc-900 text-zinc-400 border-zinc-800'
+                  }`}
+                >
+                  {chartMinervini.isStage2Eligible ? 'Stage 2 (8/8)' : `${chartMinervini.passedCount || 0}/8`}
+                </span>
+              </>
+            )}
           </div>
 
           {/* Real-time OHLC Legend */}

@@ -155,13 +155,14 @@ export const MarkMinerviniScreener: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-3">
+            {/* Prominent High-Visibility Scan Button */}
             <button
               onClick={fetchScreenerData}
               disabled={isLoading}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700/80 text-zinc-200 text-xs font-mono font-semibold transition-all"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-rose-600 hover:from-amber-400 hover:via-orange-400 hover:to-rose-500 text-zinc-950 font-mono font-black text-xs transition-all shadow-lg shadow-amber-500/25 active:scale-95 border border-amber-300/40 cursor-pointer"
             >
-              <ArrowClockwise className={`w-4 h-4 ${isLoading ? 'animate-spin text-amber-400' : 'text-zinc-400'}`} />
-              <span>{isLoading ? 'Đang lọc...' : 'Quét Dữ Liệu'}</span>
+              <ArrowClockwise className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} weight="bold" />
+              <span>{isLoading ? 'ĐANG QUÉT TOÀN BỘ THỊ TRƯỜNG...' : '⚡ QUÉT BỘ LỌC MINERVINI'}</span>
             </button>
             {lastUpdated && (
               <span className="text-[11px] font-mono text-zinc-500 hidden sm:inline">
@@ -338,6 +339,16 @@ export const MarkMinerviniScreener: React.FC = () => {
           >
             <ShieldCheck className="w-4 h-4" />
             <span>Chỉ Stage 2 (8/8)</span>
+          </button>
+
+          {/* Secondary Quick Scan Button */}
+          <button
+            onClick={fetchScreenerData}
+            disabled={isLoading}
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-amber-400/10 hover:bg-amber-400/20 text-amber-300 border border-amber-400/30 text-xs font-mono font-bold transition-all shadow-sm active:scale-95 cursor-pointer"
+          >
+            <ArrowClockwise className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-amber-400' : ''}`} weight="bold" />
+            <span>{isLoading ? 'Đang lọc...' : 'Quét Lại'}</span>
           </button>
         </div>
       </div>

@@ -4,17 +4,26 @@ import { MinerviniScreenerItem } from '../../../../../features/market/types/mine
 
 export const runtime = 'nodejs';
 
-// Pre-curated list of active liquid VN equities matching Minervini screener
-const ACTIVE_SYMBOLS = [
-  'MSB', 'BSR', 'PVT', 'MSR', 'GMD', 'PVP', 'HHP', 'TRC', 'PET', 'ABB', 'PHP',
-  'HPG', 'FPT', 'MWG', 'VCB', 'TCB', 'MBB', 'SSI', 'VND', 'VHM', 'VIC', 'DGC',
-  'FRT', 'PNJ', 'KBC', 'VGC', 'SZC', 'HAH', 'VOS', 'DCM', 'DPM', 'PVD', 'PVS',
-  'TAL', 'SHB', 'STB', 'BID', 'CTG', 'VRE', 'VNM', 'SAB', 'MSN', 'PLX', 'POW'
+// Comprehensive universe of 80+ liquid VN equities across all 18 industry sectors
+const DEFAULT_UNIVERSE = [
+  'PVP', 'PHP', 'PET', 'BSR', 'PVT', 'PVD', 'PVS', 'GAS', 'PLX',
+  'FPT', 'CMG', 'ELC',
+  'MWG', 'FRT', 'DGW', 'PNJ', 'MSN', 'VNM', 'SAB',
+  'DGC', 'DCM', 'DPM', 'CSV', 'BFC', 'LAS',
+  'VCB', 'BID', 'CTG', 'TCB', 'MBB', 'ACB', 'VPB', 'HDB', 'STB', 'LPB', 'SHB', 'TPB', 'VIB', 'MSB', 'OCB',
+  'SSI', 'VND', 'VCI', 'HCM', 'SHS', 'MBS', 'FTS', 'BSI', 'CTS', 'VIX',
+  'HPG', 'HSG', 'NKG', 'VGS',
+  'VHM', 'VIC', 'VRE', 'KDH', 'NLG', 'PDR', 'DIG', 'DXG', 'CEO',
+  'KBC', 'IDC', 'VGC', 'SZC', 'GVR', 'BCM',
+  'REE', 'PC1', 'POW', 'GEG', 'VCG', 'HHV', 'CII',
+  'VHC', 'ANV', 'DBC', 'HAG', 'BAF',
+  'GMD', 'HAH', 'VSC', 'VTP',
+  'TNG', 'MSH', 'BMP', 'NTP', 'HT1'
 ];
 
 /**
- * GET /api/market/minervini/screener?minMktCap=1&minVol=300000&minRS=70&sector=all
- * Returns stocks filtered by Mark Minervini Trend Template & Fundamentals
+ * GET /api/market/minervini/screener?minMktCap=1&minVol=300000&minRS=70&sector=all&symbols=...
+ * Returns stocks dynamically filtered by Mark Minervini Trend Template & Fundamentals
  */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -23,6 +32,11 @@ export async function GET(request: Request) {
   const minRS = parseInt(searchParams.get('minRS') || '70', 10);        // >= 70
   const sectorFilter = (searchParams.get('sector') || 'all').toLowerCase();
   const onlyStage2 = searchParams.get('stage2') !== 'false';
+  const customSymbolsParam = searchParams.get('symbols');
+
+  const symbolsToScan = customSymbolsParam
+    ? customSymbolsParam.split(',').map((s) => s.trim().toUpperCase()).filter(Boolean)
+    : DEFAULT_UNIVERSE;
 
   // Seeded deterministic fundamental figures per symbol
   const getFundMetrics = (sym: string, price: number) => {
@@ -50,7 +64,7 @@ export async function GET(request: Request) {
 
     // Parallel analysis for symbols
     await Promise.all(
-      ACTIVE_SYMBOLS.map(async (sym) => {
+      symbolsToScan.map(async (sym) => {
         try {
           const info = dbMap.get(sym) || { name: sym, exchange: 'HOSE', sector: 'Tài chính' };
 

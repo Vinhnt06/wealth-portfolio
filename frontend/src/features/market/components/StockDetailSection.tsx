@@ -26,6 +26,7 @@ import { MarketCandleChart } from './MarketCandleChart';
 import { OrderBook } from './OrderBook';
 import { InvestorFlowAnalysis } from './InvestorFlowAnalysis';
 import { MinerviniStrategyPanel } from './MinerviniStrategyPanel';
+import { MinerviniAnalysisResult } from '../types/minervini.types';
 import stockDatabase from '../data/stockDatabase.json';
 
 interface StockMetadata {
@@ -81,6 +82,7 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
   const [activeTab, setActiveTab] = useState<'profile' | 'shareholders' | 'officers' | 'financials' | 'foreign' | 'investor_flow'>('profile');
   const [sidebarMode, setSidebarMode] = useState<'minervini' | 'investor_flow' | 'orderbook'>('minervini');
   const [companyData, setCompanyData] = useState<CompanyData | null>(null);
+  const [minerviniData, setMinerviniData] = useState<MinerviniAnalysisResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const tick = ticks[selectedSymbol];
@@ -93,7 +95,7 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
 
   const isStarred = watchlistSymbols.includes(selectedSymbol);
 
-  // Fetch company profile & shareholders when selectedSymbol changes
+  // Fetch company profile & Minervini Stage 2/RS when selectedSymbol changes
   useEffect(() => {
     if (!selectedSymbol) return;
     setIsLoading(true);
@@ -106,6 +108,16 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
       })
       .catch(() => {})
       .finally(() => setIsLoading(false));
+
+    // Fetch Minervini RS and Trend Template
+    fetch(`/api/market/minervini/analysis?symbol=${selectedSymbol}`)
+      .then((res) => res.json())
+      .then((resData) => {
+        if (resData.success && resData.data) {
+          setMinerviniData(resData.data);
+        }
+      })
+      .catch(() => {});
   }, [selectedSymbol]);
 
   const price = tick?.price || 0;
@@ -178,6 +190,33 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
                 <span className="px-2.5 py-0.5 text-xs text-zinc-400 bg-zinc-900 border border-zinc-800/80 rounded-lg">
                   {meta.sector}
                 </span>
+
+                {/* Minervini Live RS Rating & Stage 2 Status Pill */}
+                {minerviniData && (
+                  <>
+                    <span className="px-2.5 py-0.5 text-xs font-mono font-bold rounded-lg bg-amber-400/10 text-amber-400 border border-amber-400/30 flex items-center gap-1 shadow-sm">
+                      <Sparkle weight="fill" className="w-3.5 h-3.5 text-amber-400" />
+                      <span>RS: {minerviniData.rsRating}/99</span>
+                    </span>
+
+                    <span
+                      className={`px-2.5 py-0.5 text-xs font-mono font-bold rounded-lg border flex items-center gap-1 ${
+                        minerviniData.isStage2Eligible
+                          ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30 shadow-[0_0_12px_rgba(16,185,129,0.2)]'
+                          : 'bg-zinc-900 text-zinc-400 border-zinc-800'
+                      }`}
+                    >
+                      <ShieldCheck className="w-3.5 h-3.5" />
+                      <span>{minerviniData.isStage2Eligible ? 'Stage 2 (8/8 ĐẠT)' : `${minerviniData.passedCount}/8 Tiêu chí`}</span>
+                    </span>
+
+                    <span className="hidden md:inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-mono text-zinc-300 bg-zinc-900 border border-zinc-800 rounded-lg">
+                      <Buildings className="w-3.5 h-3.5 text-cyan-400" />
+                      <span>{minerviniData.sectorRank || 'Top Ngành'}</span>
+                      <span className="text-[10px] text-emerald-400 font-bold">({minerviniData.sectorStatus?.split(' ')[0] || 'Dẫn dắt'})</span>
+                    </span>
+                  </>
+                )}
               </div>
               <p className="text-sm text-zinc-300 font-medium mt-1">{meta.name}</p>
             </div>

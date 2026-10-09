@@ -21,6 +21,9 @@ export interface MinerviniAnalysisResult {
   name: string;
   exchange: string;
   sector: string;
+  sectorRank?: string;
+  sectorRS?: number;
+  sectorStatus?: 'Dẫn dắt (Leading)' | 'Cải thiện (Improving)' | 'Suy yếu (Lagging)';
   price: number;
   change: number;
   changePct: number;
