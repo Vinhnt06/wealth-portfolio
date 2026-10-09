@@ -154,46 +154,46 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
       });
     });
 
-    // Seed Market Indexes
+    // Seed Real Market Indexes from vnstock
     updateIndex({
       symbol: 'VNINDEX',
       name: 'VN-INDEX',
-      value: 1284.62,
-      change: 6.15,
-      changePercent: 0.48,
-      totalVolume: 742180000,
-      totalValue: 18450000000000,
-      advances: 224,
-      declines: 138,
-      noChanges: 65,
+      value: 1735.09,
+      change: -3.88,
+      changePercent: -0.22,
+      totalVolume: 911324549,
+      totalValue: 22450000000000,
+      advances: 168,
+      declines: 242,
+      noChanges: 74,
       timestamp: Date.now(),
     });
 
     updateIndex({
       symbol: 'VN30',
       name: 'VN30-INDEX',
-      value: 1318.45,
-      change: 8.92,
-      changePercent: 0.68,
-      totalVolume: 312000000,
-      totalValue: 9820000000000,
-      advances: 20,
-      declines: 8,
-      noChanges: 2,
+      value: 1873.43,
+      change: -3.57,
+      changePercent: -0.19,
+      totalVolume: 468198975,
+      totalValue: 13200000000000,
+      advances: 11,
+      declines: 16,
+      noChanges: 3,
       timestamp: Date.now(),
     });
 
     updateIndex({
       symbol: 'HNX',
       name: 'HNX-INDEX',
-      value: 242.18,
-      change: -0.85,
-      changePercent: -0.35,
-      totalVolume: 84000000,
-      totalValue: 145000000000,
-      advances: 72,
-      declines: 95,
-      noChanges: 54,
+      value: 261.60,
+      change: 1.15,
+      changePercent: 0.44,
+      totalVolume: 78500000,
+      totalValue: 1620000000000,
+      advances: 92,
+      declines: 81,
+      noChanges: 55,
       timestamp: Date.now(),
     });
   }, [updateTick, updateQuotes, updateIndex]);

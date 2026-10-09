@@ -1,0 +1,41 @@
+[
+  {
+    "symbol": "VNINDEX",
+    "name": "VN-Index",
+    "exchange": "HOSE",
+    "value": 1735.09,
+    "change": -3.88,
+    "percentChange": -0.22,
+    "advances": 168,
+    "declines": 242,
+    "noChanges": 74,
+    "totalVolume": "911.3M",
+    "totalValue": "22,450B"
+  },
+  {
+    "symbol": "VN30",
+    "name": "VN30-Index",
+    "exchange": "HOSE",
+    "value": 1873.43,
+    "change": -3.57,
+    "percentChange": -0.19,
+    "advances": 11,
+    "declines": 16,
+    "noChanges": 3,
+    "totalVolume": "468.2M",
+    "totalValue": "13,200B"
+  },
+  {
+    "symbol": "HNX",
+    "name": "HNX-Index",
+    "exchange": "HNX",
+    "value": 261.60,
+    "change": 1.15,
+    "percentChange": 0.44,
+    "advances": 92,
+    "declines": 81,
+    "noChanges": 55,
+    "totalVolume": "78.5M",
+    "totalValue": "1,620B"
+  }
+]

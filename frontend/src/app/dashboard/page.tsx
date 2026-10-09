@@ -15,25 +15,9 @@ import {
 } from 'recharts';
 import { Shield, Target, Plus, TrendUp, Sparkle, Newspaper, ArrowRight, Wallet, ChartPie, Globe } from '@phosphor-icons/react';
 import newsDatabase from '../../features/market/data/newsDatabase.json';
+import vnindexCandles from '../../features/market/data/vnindexHistory.json';
 
-// ── Mock Data Generator ──────────────────────────────────────
-const generateMockData = (): CandlestickData[] => {
-  const data: CandlestickData[] = [];
-  let basePrice = 50000;
-  const now = Math.floor(Date.now() / 1000);
-  for (let i = 100; i >= 0; i--) {
-    const time = (now - i * 86400) as any;
-    const volatility = Math.random() * 2000;
-    const direction = Math.random() > 0.5 ? 1 : -1;
-    const open = basePrice;
-    const close = basePrice + (direction * volatility);
-    const high = Math.max(open, close) + Math.random() * 500;
-    const low = Math.min(open, close) - Math.random() * 500;
-    data.push({ time, open, high, low, close });
-    basePrice = close;
-  }
-  return data;
-};
+const realChartData = (vnindexCandles as unknown as CandlestickData[]).slice(-120);
 
 const PORTFOLIO = {
   totalNetWorth: 1242084.50,
@@ -54,7 +38,7 @@ const fmtPrice = (v: number) => v.toLocaleString('en-US', { style: 'currency', c
 
 export default function DashboardPage() {
   const { t } = useLanguage();
-  const mockData = generateMockData();
+  const chartData = realChartData;
 
   const assetLabels: Record<string, string> = {
     stocks: t('assets.stocks') || 'Cổ phiếu',
@@ -158,8 +142,8 @@ export default function DashboardPage() {
           <div className="lg:col-span-8 bg-zinc-950/90 border border-zinc-800/80 rounded-2xl p-6 backdrop-blur-xl space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-800/80 pb-3">
               <div>
-                <h3 className="font-mono font-bold text-sm text-zinc-100">TĂNG TRƯỞNG DANH MỤC THEO THỜI GIAN</h3>
-                <p className="text-xs text-zinc-400">Đồ thị diễn biến tài sản tích lũy qua các chu kỳ</p>
+                <h3 className="font-mono font-bold text-sm text-zinc-100">DIỄN BIẾN CHỈ SỐ VN-INDEX (VNSTOCK REAL DATA)</h3>
+                <p className="text-xs text-zinc-400">Dữ liệu nến giá thực tế đồng bộ từ Sở giao dịch chứng khoán qua vnstock</p>
               </div>
               <div className="flex items-center gap-1 bg-zinc-900 p-1 rounded-xl border border-zinc-800">
                 {timeframes.map((tf) => (
@@ -176,7 +160,7 @@ export default function DashboardPage() {
                 ))}
               </div>
             </div>
-            <TradingViewChart data={mockData} chartType="area" height={300} />
+            <TradingViewChart data={chartData} chartType="area" height={300} />
           </div>
         </div>
 

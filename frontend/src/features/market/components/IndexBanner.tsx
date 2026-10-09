@@ -3,52 +3,30 @@
 import React from 'react';
 import { TrendUp, TrendDown, Minus } from '@phosphor-icons/react';
 import { useMarketStore } from '../store/marketStore';
+import realIndexesData from '../data/realIndexes.json';
 
-const MOCK_INDEX_DATA = [
-  {
-    symbol: 'VNINDEX',
-    name: 'VN-Index',
-    value: 1284.52,
-    change: +12.34,
-    percentChange: +0.97,
-    advances: 245,
-    declines: 112,
-    noChanges: 68,
-    totalVolume: '685.4M',
-    totalValue: '18,420B',
-  },
-  {
-    symbol: 'VN30',
-    name: 'VN30-Index',
-    value: 1312.80,
-    change: +15.60,
-    percentChange: +1.20,
-    advances: 22,
-    declines: 5,
-    noChanges: 3,
-    totalVolume: '290.1M',
-    totalValue: '9,850B',
-  },
-  {
-    symbol: 'HNX',
-    name: 'HNX-Index',
-    value: 242.15,
-    change: -0.85,
-    percentChange: -0.35,
-    advances: 85,
-    declines: 104,
-    noChanges: 55,
-    totalVolume: '78.2M',
-    totalValue: '1,320B',
-  },
-];
+interface IndexInfo {
+  symbol: string;
+  name: string;
+  exchange: string;
+  value: number;
+  change: number;
+  percentChange: number;
+  advances: number;
+  declines: number;
+  noChanges: number;
+  totalVolume: string;
+  totalValue: string;
+}
+
+const REAL_INDEX_DATA: IndexInfo[] = realIndexesData as IndexInfo[];
 
 export const IndexBanner: React.FC = () => {
   const { indexes } = useMarketStore();
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      {MOCK_INDEX_DATA.map((item) => {
+      {REAL_INDEX_DATA.map((item) => {
         const liveIndex = indexes[item.symbol];
         const val = liveIndex?.value ?? item.value;
         const chg = liveIndex?.change ?? item.change;
@@ -76,7 +54,7 @@ export const IndexBanner: React.FC = () => {
               <div className="flex items-center gap-2">
                 <span className="font-mono font-bold text-sm text-zinc-100 tracking-wide">{item.name}</span>
                 <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 border border-zinc-700/50">
-                  HOSE
+                  {item.exchange}
                 </span>
               </div>
               <div
