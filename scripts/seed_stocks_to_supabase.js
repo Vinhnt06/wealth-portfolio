@@ -6,7 +6,13 @@
 
 const fs = require('fs');
 const path = require('path');
-const { createClient } = require('@supabase/supabase-js');
+
+let createClient;
+try {
+  createClient = require('@supabase/supabase-js').createClient;
+} catch {
+  createClient = require(path.resolve(__dirname, '../frontend/node_modules/@supabase/supabase-js')).createClient;
+}
 
 // Parse environment variables from frontend/.env.local if available
 function loadEnv() {
