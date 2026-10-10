@@ -28,6 +28,12 @@ export const MarketSearch: React.FC = () => {
   
   const { setSelectedSymbol, selectedSymbol, ticks, toggleWatchlistSymbol, watchlistSymbols, updateTick, openQuickView, closeQuickView } = useMarketStore();
 
+  // Helper to normalize any stock price input cleanly into VND
+  const normalizeToVnd = (p: number | null | undefined): number | null => {
+    if (!p || isNaN(p) || p <= 0) return null;
+    return p < 1000 ? Math.round(p * 1000) : Math.round(p);
+  };
+
   // Preload verified real universe data (DNSE candles & true Minervini RS ratings)
   useEffect(() => {
     fetch('/api/market/minervini/screener?minMktCap=0&minVol=0&minRS=1&stage2=false')
@@ -36,9 +42,12 @@ export const MarketSearch: React.FC = () => {
         if (resData.success && Array.isArray(resData.data)) {
           const map: Record<string, { price: number; changePercent: number; rsRating: number; volume: number }> = {};
           resData.data.forEach((item: any) => {
+            const rawP = Number(item.price);
+            const vnd = normalizeToVnd(rawP) || 0;
+            const chg = item.changePct !== undefined ? Number(item.changePct) : (item.changePercent !== undefined ? Number(item.changePercent) : 0);
             map[item.symbol] = {
-              price: item.price * 1000,
-              changePercent: item.changePercent,
+              price: vnd,
+              changePercent: chg,
               rsRating: item.rsRating,
               volume: item.volume,
             };
@@ -219,15 +228,19 @@ export const MarketSearch: React.FC = () => {
                 const screenerItem = screenerMap[item.symbol];
                 const baseTick = REAL_TICKS_MAP[item.symbol];
 
-                // Verified price from Live Tick, Minervini Screener or Real Snapshot
-                const price = liveTick?.price ?? (screenerItem ? screenerItem.price : (baseTick?.price ?? null));
-                const ref = liveTick?.referencePrice ?? (screenerItem ? Math.round(screenerItem.price / (1 + (screenerItem.changePercent || 0) / 100)) : (baseTick?.ref ?? price));
+                // Verified price normalized cleanly to VND (handling thousands vs full VND)
+                const rawPrice = liveTick?.price ?? (screenerItem ? screenerItem.price : (baseTick?.price ?? null));
+                const price = normalizeToVnd(rawPrice);
+
+                const rawRef = liveTick?.referencePrice ?? (screenerItem && price ? Math.round(price / (1 + (screenerItem.changePercent || 0) / 100)) : (baseTick?.ref ?? price));
+                const ref = normalizeToVnd(rawRef);
+
                 const change = liveTick?.change ?? (price && ref ? price - ref : 0);
                 const changePercent = liveTick?.changePercent ?? (screenerItem?.changePercent ?? (price && ref && ref > 0 ? ((price - ref) / ref) * 100 : 0));
                 const isStarred = watchlistSymbols.includes(item.symbol);
                 const isSelected = selectedSymbol === item.symbol;
-                const isUp = change > 0;
-                const isDown = change < 0;
+                const isUp = changePercent > 0;
+                const isDown = changePercent < 0;
 
                 // Verified Minervini RS Rating (1-99)
                 const rsRating = screenerItem?.rsRating ?? (liveTick ? Math.min(99, Math.max(30, Math.round(50 + (liveTick.changePercent || 0) * 4))) : null);

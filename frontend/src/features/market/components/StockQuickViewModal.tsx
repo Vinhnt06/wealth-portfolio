@@ -52,6 +52,8 @@ export const StockQuickViewModal: React.FC = () => {
 
   const isStarred = watchlistSymbols.includes(selectedSymbol);
 
+  const [realRsRating, setRealRsRating] = useState<number | null>(null);
+
   // Auto-fetch fresh quote from dual-failover pipeline when modal opens
   useEffect(() => {
     if (!isQuickViewOpen || !selectedSymbol) return;
@@ -82,6 +84,15 @@ export const StockQuickViewModal: React.FC = () => {
       })
       .catch(() => {})
       .finally(() => setIsLoading(false));
+
+    fetch(`/api/market/minervini/analysis?symbol=${selectedSymbol}`)
+      .then((res) => res.json())
+      .then((resData) => {
+        if (resData.success && resData.data?.rsRating) {
+          setRealRsRating(resData.data.rsRating);
+        }
+      })
+      .catch(() => {});
   }, [isQuickViewOpen, selectedSymbol, updateTick]);
 
   // Handle ESC key press
@@ -97,11 +108,16 @@ export const StockQuickViewModal: React.FC = () => {
 
   if (!isQuickViewOpen) return null;
 
-  const price = tick?.price || 0;
+  const rawPrice = tick?.price || 0;
+  const price = rawPrice > 0 && rawPrice < 1000 ? Math.round(rawPrice * 1000) : Math.round(rawPrice);
   const change = tick?.change || 0;
   const changePercent = tick?.changePercent || 0;
   const isUp = change > 0;
   const isDown = change < 0;
+
+  const ceilPrice = tick?.ceilingPrice ? (tick.ceilingPrice < 1000 ? Math.round(tick.ceilingPrice * 1000) : tick.ceilingPrice) : 0;
+  const floorPrice = tick?.floorPrice ? (tick.floorPrice < 1000 ? Math.round(tick.floorPrice * 1000) : tick.floorPrice) : 0;
+  const refPrice = tick?.referencePrice ? (tick.referencePrice < 1000 ? Math.round(tick.referencePrice * 1000) : tick.referencePrice) : 0;
 
   const colorClass = isUp
     ? 'text-emerald-400'
@@ -115,9 +131,9 @@ export const StockQuickViewModal: React.FC = () => {
     ? 'bg-rose-500/10 text-rose-400 border-rose-500/20'
     : 'bg-amber-500/10 text-amber-400 border-amber-500/20';
 
-  const rsRating = Math.min(
+  const rsRating = realRsRating ?? Math.min(
     99,
-    Math.max(35, Math.round(52 + changePercent * 6 + ((tick?.totalVolume || 0) > 10000000 ? 15 : 6)))
+    Math.max(35, Math.round(50 + (changePercent || 0) * 4))
   );
 
   return (
@@ -245,19 +261,19 @@ export const StockQuickViewModal: React.FC = () => {
               <div className="p-3 bg-zinc-900/40 border border-zinc-800/60 rounded-xl">
                 <span className="text-[10px] font-mono text-fuchsia-400 block font-semibold">GIÁ TRẦN (CE)</span>
                 <span className="text-sm font-mono font-bold text-fuchsia-400 mt-1 block">
-                  {tick?.ceilingPrice ? tick.ceilingPrice.toLocaleString('vi-VN') : '--'}
+                  {ceilPrice > 0 ? ceilPrice.toLocaleString('vi-VN') : '--'}
                 </span>
               </div>
               <div className="p-3 bg-zinc-900/40 border border-zinc-800/60 rounded-xl">
                 <span className="text-[10px] font-mono text-cyan-400 block font-semibold">GIÁ SÀN (FL)</span>
                 <span className="text-sm font-mono font-bold text-cyan-400 mt-1 block">
-                  {tick?.floorPrice ? tick.floorPrice.toLocaleString('vi-VN') : '--'}
+                  {floorPrice > 0 ? floorPrice.toLocaleString('vi-VN') : '--'}
                 </span>
               </div>
               <div className="p-3 bg-zinc-900/40 border border-zinc-800/60 rounded-xl">
                 <span className="text-[10px] font-mono text-amber-400 block font-semibold">THAM CHIẾU (TC)</span>
                 <span className="text-sm font-mono font-bold text-amber-400 mt-1 block">
-                  {tick?.referencePrice ? tick.referencePrice.toLocaleString('vi-VN') : '--'}
+                  {refPrice > 0 ? refPrice.toLocaleString('vi-VN') : '--'}
                 </span>
               </div>
               <div className="p-3 bg-zinc-900/40 border border-zinc-800/60 rounded-xl">
