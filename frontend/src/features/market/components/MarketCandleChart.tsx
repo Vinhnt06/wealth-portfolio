@@ -462,6 +462,47 @@ function aggregateCandles(
   return { candles: aggCandles, volumes: aggVolumes };
 }
 
+// Universal Point to Screen Coordinate Resolver (Handles past candles, live candles, and future projections)
+function resolvePointCoordinate(
+  chart: IChartApi | null,
+  series: ISeriesApi<'Candlestick'> | null,
+  point?: { time: Time; price: number; logical?: number },
+  candles: CandlestickData<Time>[] = []
+): { x: number | null; y: number | null } {
+  if (!chart || !series || !point) return { x: null, y: null };
+  const timeScale = chart.timeScale();
+  let x = timeScale.timeToCoordinate(point.time);
+
+  if (x === null) {
+    if (point.logical !== undefined && point.logical !== null) {
+      x = timeScale.logicalToCoordinate(point.logical as any);
+    } else if (candles.length > 0) {
+      const lastCandle = candles[candles.length - 1];
+      const pStr = String(point.time);
+      const lastStr = String(lastCandle.time);
+      if (pStr > lastStr) {
+        const pDate = new Date(pStr).getTime();
+        const lDate = new Date(lastStr).getTime();
+        const diffDays = !isNaN(pDate) && !isNaN(lDate)
+          ? Math.max(1, Math.round((pDate - lDate) / (24 * 60 * 60 * 1000)))
+          : 1;
+        const targetLogical = candles.length - 1 + diffDays;
+        x = timeScale.logicalToCoordinate(targetLogical as any);
+      } else {
+        const pDate = new Date(pStr).getTime();
+        const fDate = new Date(String(candles[0].time)).getTime();
+        if (!isNaN(pDate) && !isNaN(fDate) && pDate < fDate) {
+          const diffDays = Math.max(1, Math.round((fDate - pDate) / (24 * 60 * 60 * 1000)));
+          x = timeScale.logicalToCoordinate((-diffDays) as any);
+        }
+      }
+    }
+  }
+
+  const y = series.priceToCoordinate(point.price);
+  return { x, y };
+}
+
 // ── Native Stream MarketCandleChart Component ────────────────────────
 export function MarketCandleChart() {
   const fullWrapperRef = useRef<HTMLDivElement>(null);
@@ -909,11 +950,8 @@ export function MarketCandleChart() {
       const series = candleSeriesRef.current;
       if (!chart || !series || drawings.length === 0) return null;
 
-      const toCoord = (p?: { time: Time; price: number }) => {
-        if (!p) return { x: null, y: null };
-        const cx = chart.timeScale().timeToCoordinate(p.time);
-        const cy = series.priceToCoordinate(p.price);
-        return { x: cx, y: cy };
+      const toCoord = (p?: { time: Time; price: number; logical?: number }) => {
+        return resolvePointCoordinate(chart, series, p, loadedCandlesRef.current);
       };
 
       for (let i = drawings.length - 1; i >= 0; i--) {
@@ -1048,12 +1086,7 @@ export function MarketCandleChart() {
       if (isDraft && draftDrawing?.mouseCoord) {
         return { x: draftDrawing.mouseCoord.x, y: draftDrawing.mouseCoord.y };
       }
-      let x = chart.timeScale().timeToCoordinate(p.time);
-      if (x === null && p.logical !== undefined) {
-        x = chart.timeScale().logicalToCoordinate(p.logical as any);
-      }
-      const y = series.priceToCoordinate(p.price);
-      return { x, y };
+      return resolvePointCoordinate(chart, series, p, loadedCandlesRef.current);
     };
 
     // ── Render User Drawings (Respect Hide Drawings Toggle) ──
@@ -1819,20 +1852,19 @@ export function MarketCandleChart() {
       const chart = chartRef.current;
       const series = candleSeriesRef.current;
       if (!chart || !series) return null;
+      const candles = loadedCandlesRef.current;
 
       // 1. Prioritize handles of currently selected drawing
       if (selId) {
         const item = drawingsRef.current.find((d) => d.id === selId);
         if (item) {
-          const c1X = chart.timeScale().timeToCoordinate(item.p1.time);
-          const c1Y = series.priceToCoordinate(item.p1.price);
-          if (c1X !== null && c1Y !== null && Math.hypot(x - c1X, y - c1Y) <= 20) {
+          const c1 = resolvePointCoordinate(chart, series, item.p1, candles);
+          if (c1.x !== null && c1.y !== null && Math.hypot(x - c1.x, y - c1.y) <= 22) {
             return { item, part: 'p1' as const };
           }
           if (item.p2) {
-            const c2X = chart.timeScale().timeToCoordinate(item.p2.time);
-            const c2Y = series.priceToCoordinate(item.p2.price);
-            if (c2X !== null && c2Y !== null && Math.hypot(x - c2X, y - c2Y) <= 20) {
+            const c2 = resolvePointCoordinate(chart, series, item.p2, candles);
+            if (c2.x !== null && c2.y !== null && Math.hypot(x - c2.x, y - c2.y) <= 22) {
               return { item, part: 'p2' as const };
             }
           }
@@ -1842,15 +1874,13 @@ export function MarketCandleChart() {
       // 2. Allow grabbing handles of ANY drawing directly
       for (let i = drawingsRef.current.length - 1; i >= 0; i--) {
         const item = drawingsRef.current[i];
-        const c1X = chart.timeScale().timeToCoordinate(item.p1.time);
-        const c1Y = series.priceToCoordinate(item.p1.price);
-        if (c1X !== null && c1Y !== null && Math.hypot(x - c1X, y - c1Y) <= 20) {
+        const c1 = resolvePointCoordinate(chart, series, item.p1, candles);
+        if (c1.x !== null && c1.y !== null && Math.hypot(x - c1.x, y - c1.y) <= 22) {
           return { item, part: 'p1' as const };
         }
         if (item.p2) {
-          const c2X = chart.timeScale().timeToCoordinate(item.p2.time);
-          const c2Y = series.priceToCoordinate(item.p2.price);
-          if (c2X !== null && c2Y !== null && Math.hypot(x - c2X, y - c2Y) <= 20) {
+          const c2 = resolvePointCoordinate(chart, series, item.p2, candles);
+          if (c2.x !== null && c2.y !== null && Math.hypot(x - c2.x, y - c2.y) <= 22) {
             return { item, part: 'p2' as const };
           }
         }
@@ -1894,8 +1924,17 @@ export function MarketCandleChart() {
           const candles = loadedCandlesRef.current;
 
           if (!curTime && curLogical !== null && candles.length > 0) {
-            const clampedIdx = Math.max(0, Math.min(candles.length - 1, Math.round(curLogical)));
-            curTime = candles[clampedIdx].time;
+            if (curLogical >= candles.length) {
+              const diffBars = Math.round(curLogical) - (candles.length - 1);
+              const lastDate = new Date(candles[candles.length - 1].time as string);
+              lastDate.setDate(lastDate.getDate() + diffBars);
+              curTime = lastDate.toISOString().split('T')[0] as Time;
+            } else if (curLogical < 0) {
+              curTime = candles[0].time;
+            } else {
+              const clampedIdx = Math.max(0, Math.min(candles.length - 1, Math.round(curLogical)));
+              curTime = candles[clampedIdx].time;
+            }
           }
 
           if (curPrice === null || !curTime) return;
@@ -1904,9 +1943,25 @@ export function MarketCandleChart() {
             const next = prev.map((d) => {
               if (d.id !== dragItem.id) return d;
               if (handleHit.part === 'p1') {
-                return { ...d, p1: { ...d.p1, price: Math.round(curPrice * 100) / 100, time: curTime! } };
+                return {
+                  ...d,
+                  p1: {
+                    ...d.p1,
+                    price: Math.round(curPrice * 100) / 100,
+                    time: curTime!,
+                    logical: curLogical !== null ? Math.round(curLogical * 10) / 10 : undefined,
+                  },
+                };
               } else if (handleHit.part === 'p2' && d.p2) {
-                return { ...d, p2: { ...d.p2, price: Math.round(curPrice * 100) / 100, time: curTime! } };
+                return {
+                  ...d,
+                  p2: {
+                    ...d.p2,
+                    price: Math.round(curPrice * 100) / 100,
+                    time: curTime!,
+                    logical: curLogical !== null ? Math.round(curLogical * 10) / 10 : undefined,
+                  },
+                };
               }
               return d;
             });
@@ -1967,18 +2022,20 @@ export function MarketCandleChart() {
 
           const newP1Time = shiftTime(origP1.time, dLogical);
           const newP1Price = Math.round((origP1.price + dPrice) * 100) / 100;
+          const newP1Logical = (origP1.logical ?? startLogical) + dLogical;
 
           setDrawings((prev) => {
             const next = prev.map((d) => {
               if (d.id !== hit.id) return d;
               const updated: DrawingItem = {
                 ...d,
-                p1: { ...d.p1, price: newP1Price, time: newP1Time },
+                p1: { ...d.p1, price: newP1Price, time: newP1Time, logical: newP1Logical },
               };
               if (origP2 && d.p2) {
                 const newP2Time = shiftTime(origP2.time, dLogical);
                 const newP2Price = Math.round((origP2.price + dPrice) * 100) / 100;
-                updated.p2 = { ...d.p2, price: newP2Price, time: newP2Time };
+                const newP2Logical = (origP2.logical ?? startLogical) + dLogical;
+                updated.p2 = { ...d.p2, price: newP2Price, time: newP2Time, logical: newP2Logical };
               }
               return updated;
             });
@@ -2014,19 +2071,25 @@ export function MarketCandleChart() {
       const handleHit = getHandleAt(mx, my, selectedDrawingIdRef.current);
       if (handleHit) {
         container.style.cursor = 'grab';
+        container.querySelectorAll('canvas').forEach((c) => (c.style.cursor = 'grab'));
         return;
       }
       const hit = findHitDrawingRef.current(mx, my);
       if (hit) {
         container.style.cursor = 'move';
+        container.querySelectorAll('canvas').forEach((c) => (c.style.cursor = 'move'));
         return;
       }
-      container.style.cursor = activeToolRef.current === 'arrow_pointer' ? 'default' : 'crosshair';
+      const defaultCur = activeToolRef.current === 'arrow_pointer' ? 'default' : 'crosshair';
+      container.style.cursor = defaultCur;
+      container.querySelectorAll('canvas').forEach((c) => (c.style.cursor = defaultCur));
     };
 
     const onContainerMouseLeave = () => {
       if (chartContainerRef.current) {
-        chartContainerRef.current.style.cursor = activeToolRef.current === 'arrow_pointer' ? 'default' : 'crosshair';
+        const defaultCur = activeToolRef.current === 'arrow_pointer' ? 'default' : 'crosshair';
+        chartContainerRef.current.style.cursor = defaultCur;
+        chartContainerRef.current.querySelectorAll('canvas').forEach((c) => (c.style.cursor = defaultCur));
       }
     };
 
