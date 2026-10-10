@@ -297,10 +297,10 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
 
       {/* Main Terminal Grid: Candlestick Chart (Expanded Space) + Minervini Strategy Terminal */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-5 items-start">
-        <div className="lg:col-span-8 xl:col-span-9">
+        <div className="lg:col-span-8 2xl:col-span-9">
           <MarketCandleChart />
         </div>
-        <div className="lg:col-span-4 xl:col-span-3 h-[550px] lg:h-[580px] flex flex-col overflow-hidden bg-zinc-950/80 border border-zinc-800/80 rounded-2xl p-2.5 shadow-xl">
+        <div className="lg:col-span-4 2xl:col-span-3 h-[550px] lg:h-[580px] flex flex-col overflow-hidden bg-zinc-950/80 border border-zinc-800/80 rounded-2xl p-2.5 shadow-xl">
           <div className="flex items-center justify-between pb-2 mb-2 border-b border-zinc-800/80 text-xs font-mono font-bold text-amber-400 shrink-0">
             <div className="flex items-center gap-1.5">
               <Sparkle className="w-3.5 h-3.5" weight="fill" />

@@ -531,10 +531,17 @@ export function MarketCandleChart() {
 
   // Drawing Tools State (TradingView Style)
   const [activeTool, setActiveTool] = useState<DrawingTool>('cursor');
+  const activeToolRef = useRef<DrawingTool>('cursor');
+  activeToolRef.current = activeTool;
+
   const [activeColor, setActiveColor] = useState<string>('#10b981');
   const [activeWidth, setActiveWidth] = useState<number>(2);
   const [showPalette, setShowPalette] = useState<boolean>(false);
+
   const [drawings, setDrawings] = useState<DrawingItem[]>([]);
+  const drawingsRef = useRef<DrawingItem[]>([]);
+  drawingsRef.current = drawings;
+
   const [draftDrawing, setDraftDrawing] = useState<DrawingItem | null>(null);
   const [selectedDrawingId, setSelectedDrawingId] = useState<string | null>(null);
   const selectedDrawingIdRef = useRef<string | null>(null);
@@ -543,7 +550,12 @@ export function MarketCandleChart() {
   const [redoStack, setRedoStack] = useState<DrawingItem[][]>([]);
   const [isMagnetMode, setIsMagnetMode] = useState<boolean>(false); // Smart magnet snap to OHLC (off by default like TradingView)
   const [stayInDrawingMode, setStayInDrawingMode] = useState<boolean>(false);
+
   const [lockDrawings, setLockDrawings] = useState<boolean>(false);
+  const lockDrawingsRef = useRef<boolean>(false);
+  lockDrawingsRef.current = lockDrawings;
+
+  const isDraggingRef = useRef<boolean>(false);
   const [hideDrawings, setHideDrawings] = useState<boolean>(false);
   const [activeFlyout, setActiveFlyout] = useState<string | null>(null);
   const [hoverSnapPoint, setHoverSnapPoint] = useState<{ x: number; y: number; price: number } | null>(null);
@@ -1703,10 +1715,195 @@ export function MarketCandleChart() {
     resizeObserver.observe(container);
     updateCanvasSize();
 
+    const getHandleAt = (x: number, y: number, selId: string | null) => {
+      if (!selId) return null;
+      const chart = chartRef.current;
+      const series = candleSeriesRef.current;
+      if (!chart || !series) return null;
+      const item = drawingsRef.current.find((d) => d.id === selId);
+      if (!item) return null;
+
+      const c1X = chart.timeScale().timeToCoordinate(item.p1.time);
+      const c1Y = series.priceToCoordinate(item.p1.price);
+      if (c1X !== null && c1Y !== null && Math.hypot(x - c1X, y - c1Y) <= 16) {
+        return { item, part: 'p1' as const };
+      }
+
+      if (item.p2) {
+        const c2X = chart.timeScale().timeToCoordinate(item.p2.time);
+        const c2Y = series.priceToCoordinate(item.p2.price);
+        if (c2X !== null && c2Y !== null && Math.hypot(x - c2X, y - c2Y) <= 16) {
+          return { item, part: 'p2' as const };
+        }
+      }
+
+      return null;
+    };
+
     let downPt: { x: number; y: number } | null = null;
     const onContainerMouseDown = (e: MouseEvent) => {
       downPt = { x: e.clientX, y: e.clientY };
+
+      if (lockDrawingsRef.current || (activeToolRef.current !== 'cursor' && activeToolRef.current !== 'arrow_pointer')) {
+        return;
+      }
+
+      const canvas = canvasRef.current;
+      const chart = chartRef.current;
+      const series = candleSeriesRef.current;
+      if (!canvas || !chart || !series) return;
+
+      const rect = canvas.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const clickY = e.clientY - rect.top;
+
+      // 1. Check if user clicked an anchor handle of the selected drawing
+      const handleHit = getHandleAt(clickX, clickY, selectedDrawingIdRef.current);
+      if (handleHit) {
+        e.stopPropagation();
+        e.preventDefault();
+        isDraggingRef.current = true;
+        const dragItem = handleHit.item;
+
+        const onWindowMouseMove = (moveEvent: MouseEvent) => {
+          const moveX = moveEvent.clientX - rect.left;
+          const moveY = moveEvent.clientY - rect.top;
+          const curPrice = series.coordinateToPrice(moveY);
+          const curLogical = chart.timeScale().coordinateToLogical(moveX);
+          let curTime = chart.timeScale().coordinateToTime(moveX);
+          const candles = loadedCandlesRef.current;
+
+          if (!curTime && curLogical !== null && candles.length > 0) {
+            const clampedIdx = Math.max(0, Math.min(candles.length - 1, Math.round(curLogical)));
+            curTime = candles[clampedIdx].time;
+          }
+
+          if (curPrice === null || !curTime) return;
+
+          setDrawings((prev) => {
+            const next = prev.map((d) => {
+              if (d.id !== dragItem.id) return d;
+              if (handleHit.part === 'p1') {
+                return { ...d, p1: { ...d.p1, price: Math.round(curPrice * 100) / 100, time: curTime! } };
+              } else if (handleHit.part === 'p2' && d.p2) {
+                return { ...d, p2: { ...d.p2, price: Math.round(curPrice * 100) / 100, time: curTime! } };
+              }
+              return d;
+            });
+            drawingsRef.current = next;
+            return next;
+          });
+        };
+
+        const onWindowMouseUp = () => {
+          isDraggingRef.current = false;
+          window.removeEventListener('mousemove', onWindowMouseMove, { capture: true });
+          window.removeEventListener('mouseup', onWindowMouseUp, { capture: true });
+          saveDrawings(drawingsRef.current);
+        };
+
+        window.addEventListener('mousemove', onWindowMouseMove, { capture: true });
+        window.addEventListener('mouseup', onWindowMouseUp, { capture: true });
+        return;
+      }
+
+      // 2. Check if user clicked on any drawing body to move it
+      const hit = findHitDrawingRef.current(clickX, clickY);
+      if (hit) {
+        e.stopPropagation();
+        e.preventDefault();
+        setSelectedDrawingId(hit.id);
+        isDraggingRef.current = true;
+        const startRawPrice = series.coordinateToPrice(clickY) ?? hit.p1.price;
+        const startLogical = chart.timeScale().coordinateToLogical(clickX) ?? 0;
+        const origP1 = { ...hit.p1 };
+        const origP2 = hit.p2 ? { ...hit.p2 } : undefined;
+
+        const onWindowMouseMove = (moveEvent: MouseEvent) => {
+          const moveX = moveEvent.clientX - rect.left;
+          const moveY = moveEvent.clientY - rect.top;
+          const curPrice = series.coordinateToPrice(moveY);
+          const curLogical = chart.timeScale().coordinateToLogical(moveX);
+          if (curPrice === null || curLogical === null) return;
+
+          const dPrice = curPrice - startRawPrice;
+          const dLogical = curLogical - startLogical;
+          const candles = loadedCandlesRef.current;
+
+          const shiftTime = (origTime: Time, deltaL: number): Time => {
+            if (candles.length === 0 || deltaL === 0) return origTime;
+            const origIdx = candles.findIndex((c) => c.time === origTime);
+            const baseIdx = origIdx !== -1 ? origIdx : Math.round(chart.timeScale().coordinateToLogical(chart.timeScale().timeToCoordinate(origTime) ?? 0) ?? 0);
+            const targetIdx = Math.round(baseIdx + deltaL);
+            if (targetIdx < 0) return candles[0].time;
+            if (targetIdx >= candles.length) {
+              const diffBars = targetIdx - (candles.length - 1);
+              const lastDate = new Date(candles[candles.length - 1].time as string);
+              lastDate.setDate(lastDate.getDate() + diffBars);
+              return lastDate.toISOString().split('T')[0] as Time;
+            }
+            return candles[targetIdx].time;
+          };
+
+          const newP1Time = shiftTime(origP1.time, dLogical);
+          const newP1Price = Math.round((origP1.price + dPrice) * 100) / 100;
+
+          setDrawings((prev) => {
+            const next = prev.map((d) => {
+              if (d.id !== hit.id) return d;
+              const updated: DrawingItem = {
+                ...d,
+                p1: { ...d.p1, price: newP1Price, time: newP1Time },
+              };
+              if (origP2 && d.p2) {
+                const newP2Time = shiftTime(origP2.time, dLogical);
+                const newP2Price = Math.round((origP2.price + dPrice) * 100) / 100;
+                updated.p2 = { ...d.p2, price: newP2Price, time: newP2Time };
+              }
+              return updated;
+            });
+            drawingsRef.current = next;
+            return next;
+          });
+        };
+
+        const onWindowMouseUp = () => {
+          isDraggingRef.current = false;
+          window.removeEventListener('mousemove', onWindowMouseMove, { capture: true });
+          window.removeEventListener('mouseup', onWindowMouseUp, { capture: true });
+          saveDrawings(drawingsRef.current);
+        };
+
+        window.addEventListener('mousemove', onWindowMouseMove, { capture: true });
+        window.addEventListener('mouseup', onWindowMouseUp, { capture: true });
+        return;
+      }
     };
+
+    const onContainerMouseMove = (e: MouseEvent) => {
+      if (isDraggingRef.current) return;
+      if (lockDrawingsRef.current || (activeToolRef.current !== 'cursor' && activeToolRef.current !== 'arrow_pointer')) {
+        return;
+      }
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+
+      const handleHit = getHandleAt(mx, my, selectedDrawingIdRef.current);
+      if (handleHit) {
+        container.style.cursor = 'grab';
+        return;
+      }
+      const hit = findHitDrawingRef.current(mx, my);
+      if (hit) {
+        container.style.cursor = 'move';
+        return;
+      }
+      container.style.cursor = 'crosshair';
+    };
+
     const onContainerMouseUp = (e: MouseEvent) => {
       if (!downPt) return;
       const dist = Math.hypot(e.clientX - downPt.x, e.clientY - downPt.y);
@@ -1728,10 +1925,12 @@ export function MarketCandleChart() {
     };
 
     container.addEventListener('mousedown', onContainerMouseDown, { capture: true });
+    container.addEventListener('mousemove', onContainerMouseMove);
     container.addEventListener('mouseup', onContainerMouseUp, { capture: true });
 
     return () => {
       container.removeEventListener('mousedown', onContainerMouseDown, { capture: true });
+      container.removeEventListener('mousemove', onContainerMouseMove);
       container.removeEventListener('mouseup', onContainerMouseUp, { capture: true });
       resizeObserver.disconnect();
       chart.remove();
@@ -2928,17 +3127,36 @@ export function MarketCandleChart() {
           </button>
         </div>
 
-        {/* Right: Minervini RS Rating, Fit & Fullscreen */}
-        <div className="flex items-center gap-1 shrink-0 ml-auto">
-          {chartMinervini?.rsRating !== undefined && (
-            <span
-              title={`Minervini RS Rating: ${chartMinervini.rsRating}/99 - Stage 2: ${chartMinervini.passedCount || 0}/8`}
-              className="font-mono font-black text-xs px-1.5 py-0.5 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-400/50 flex items-center gap-1 shrink-0 cursor-default"
-            >
-              <Sparkle weight="fill" className="w-2.5 h-2.5 text-amber-400" />
-              <span className="text-[9px] text-amber-300/90 uppercase font-bold">RS</span>
-              <span className="text-xs font-black text-amber-300">{chartMinervini.rsRating}</span>
-            </span>
+        {/* Right: Minervini RS Rating & Stage 2 Criteria, Fit & Fullscreen */}
+        <div className="flex items-center gap-1.5 shrink-0 ml-auto">
+          {chartMinervini && (
+            <div className="flex items-center gap-1.5 shrink-0">
+              {/* Highlighted RS Rating */}
+              <div
+                title={`Chỉ số Sức Mạnh Tương Đối (Minervini RS Rating): ${chartMinervini.rsRating ?? '--'}/99`}
+                className="font-mono font-black text-xs px-2 py-0.5 rounded-lg bg-gradient-to-r from-amber-500/25 to-amber-500/10 text-amber-300 border border-amber-400/60 shadow-[0_0_12px_rgba(245,158,11,0.25)] flex items-center gap-1.5 shrink-0 cursor-default"
+              >
+                <Sparkle weight="fill" className="w-3.5 h-3.5 text-amber-400 animate-pulse shrink-0" />
+                <span className="text-[10px] text-amber-200 uppercase font-bold tracking-wider">RS</span>
+                <span className="text-xs font-black text-amber-300">{chartMinervini.rsRating ?? '--'}</span>
+              </div>
+
+              {/* Highlighted Minervini Criteria Count */}
+              <div
+                title={`Mark Minervini Trend Template: Đạt ${chartMinervini.passedCount ?? 0}/8 tiêu chí mẫu hình tăng trưởng Stage 2`}
+                className={`font-mono text-xs px-2 py-0.5 rounded-lg border font-bold flex items-center gap-1.5 shrink-0 shadow-sm cursor-default ${
+                  (chartMinervini.passedCount ?? 0) >= 6
+                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/50 shadow-[0_0_12px_rgba(16,185,129,0.25)]'
+                    : 'bg-zinc-800/90 text-zinc-300 border-zinc-700/70'
+                }`}
+              >
+                <Target size={13} className={(chartMinervini.passedCount ?? 0) >= 6 ? 'text-emerald-400 shrink-0' : 'text-zinc-400 shrink-0'} />
+                <span className="text-[10px] text-zinc-400 uppercase font-bold hidden sm:inline">STAGE 2:</span>
+                <span className="font-mono font-black text-white">
+                  {chartMinervini.passedCount ?? 0}/8 Tiêu chí
+                </span>
+              </div>
+            </div>
           )}
 
           <div className="w-px h-3.5 bg-zinc-800 shrink-0 mx-0.5" />
@@ -3059,14 +3277,13 @@ export function MarketCandleChart() {
               <div key={group.id} className="relative group/tool">
                 <button
                   onClick={() => {
-                    if (isGroupActive) {
+                    // Always open/toggle flyout if group has multiple tools so user can see sub-tools (e.g. Fibonacci)
+                    if (group.tools.length > 1) {
                       setActiveFlyout(activeFlyout === group.id ? null : group.id);
-                    } else {
-                      const toolToActivate = activeToolInGroup ? activeToolInGroup.id : group.tools[0].id;
-                      setActiveTool(toolToActivate);
-                      setDraftDrawing(null);
-                      setActiveFlyout(null);
                     }
+                    const toolToActivate = activeToolInGroup ? activeToolInGroup.id : group.tools[0].id;
+                    setActiveTool(toolToActivate);
+                    setDraftDrawing(null);
                   }}
                   onContextMenu={(e) => {
                     e.preventDefault();
@@ -3080,18 +3297,21 @@ export function MarketCandleChart() {
                   }`}
                 >
                   <GroupIcon size={16} weight={isGroupActive ? 'bold' : 'regular'} />
-                  {/* TradingView corner triangle indicator */}
-                  <span
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setActiveFlyout(activeFlyout === group.id ? null : group.id);
-                    }}
-                    className="absolute bottom-0.5 right-0.5 w-2 h-2 flex items-end justify-end cursor-pointer"
-                  >
-                    <svg className="w-1.5 h-1.5 opacity-60 hover:opacity-100" viewBox="0 0 6 6" fill="currentColor">
-                      <polygon points="6,0 6,6 0,6" />
-                    </svg>
-                  </span>
+                  {/* TradingView corner triangle indicator (Enlarged and clearly interactive) */}
+                  {group.tools.length > 1 && (
+                    <span
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveFlyout(activeFlyout === group.id ? null : group.id);
+                      }}
+                      title="Mở rộng danh sách công cụ"
+                      className="absolute bottom-0.5 right-0.5 w-3 h-3 flex items-end justify-end cursor-pointer p-0.5 text-zinc-400 hover:text-white"
+                    >
+                      <svg className="w-2 h-2 opacity-70 group-hover/tool:opacity-100" viewBox="0 0 6 6" fill="currentColor">
+                        <polygon points="6,0 6,6 0,6" />
+                      </svg>
+                    </span>
+                  )}
                 </button>
 
                 {/* Submenu Flyout */}

@@ -31,6 +31,7 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [isCollapsed, setIsCollapsed] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
     const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
@@ -52,9 +53,25 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             if (!mobile) setIsSidebarOpen(true);
         };
         checkMobile();
+        try {
+            const savedCollapsed = localStorage.getItem('yf_sidebar_collapsed');
+            if (savedCollapsed !== null) {
+                setIsCollapsed(savedCollapsed === 'true');
+            }
+        } catch {}
         window.addEventListener('resize', checkMobile);
         return () => window.removeEventListener('resize', checkMobile);
     }, []);
+
+    const toggleSidebarCollapse = () => {
+        setIsCollapsed((prev) => {
+            const next = !prev;
+            try {
+                localStorage.setItem('yf_sidebar_collapsed', String(next));
+            } catch {}
+            return next;
+        });
+    };
 
     const navItems = [
         { icon: House, labelKey: 'dash.nav.overview', href: '/dashboard' },
@@ -102,64 +119,100 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                         animate={{ x: 0 }}
                         exit={{ x: -256 }}
                         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                        className="fixed top-16 left-0 h-[calc(100dvh-4rem)] w-64 bg-[#0C0C0C] border-r border-white/5 z-40"
+                        className={`fixed top-16 left-0 h-[calc(100dvh-4rem)] ${
+                            isCollapsed ? 'w-16' : 'w-56'
+                        } bg-[#0C0C0C] border-r border-white/5 z-40 transition-[width] duration-300 ease-in-out`}
                     >
-                        <div className="p-5">
-                            <div className="flex items-center gap-3 mb-5">
-                                <div className="w-9 h-9 bg-white/8 rounded-lg flex items-center justify-center">
-                                    <User size={18} className="text-zinc-300" />
-                                </div>
-                                <div>
-                                    <p className="text-sm font-semibold text-white leading-none">{t('dash.nav.portfolio')}</p>
-                                    <p className="text-[9px] text-zinc-600 font-bold tracking-[0.15em] uppercase mt-0.5">{t('dash.premium')}</p>
-                                </div>
-                            </div>
-                            <button className="w-full py-2.5 rounded-lg bg-white text-black text-[10px] font-bold uppercase tracking-[0.15em] hover:bg-zinc-200 transition-colors active:scale-[0.98]">
-                                {t('dash.deposit')}
+                        {/* Sidebar Header / Profile Header */}
+                        <div className={`p-3 relative ${isCollapsed ? 'flex flex-col items-center' : 'p-4'}`}>
+                            {/* Collapse Toggle Button (Desktop) */}
+                            <button
+                                onClick={toggleSidebarCollapse}
+                                title={isCollapsed ? 'Mở rộng sidebar' : 'Thu gọn sidebar để mở rộng chart'}
+                                className={`hidden md:flex items-center justify-center w-6 h-6 rounded-md bg-white/5 hover:bg-white/15 text-zinc-400 hover:text-white transition-colors absolute top-3.5 ${
+                                    isCollapsed ? 'right-2' : 'right-3'
+                                }`}
+                            >
+                                <List size={14} weight="bold" />
                             </button>
+
+                            <div className={`flex items-center gap-3 mb-4 ${isCollapsed ? 'justify-center mb-3 mt-8' : 'pr-6'}`}>
+                                <div className="w-8 h-8 bg-white/8 rounded-lg flex items-center justify-center shrink-0">
+                                    <User size={16} className="text-zinc-300" />
+                                </div>
+                                {!isCollapsed && (
+                                    <div className="min-w-0">
+                                        <p className="text-xs font-semibold text-white leading-none truncate">{t('dash.nav.portfolio')}</p>
+                                        <p className="text-[8px] text-zinc-500 font-bold tracking-[0.15em] uppercase mt-0.5">{t('dash.premium')}</p>
+                                    </div>
+                                )}
+                            </div>
+
+                            {isCollapsed ? (
+                                <button
+                                    title={t('dash.deposit')}
+                                    className="w-10 h-8 rounded-lg bg-white text-black text-xs font-black flex items-center justify-center hover:bg-zinc-200 transition-colors"
+                                >
+                                    +
+                                </button>
+                            ) : (
+                                <button className="w-full py-2 rounded-lg bg-white text-black text-[10px] font-bold uppercase tracking-[0.15em] hover:bg-zinc-200 transition-colors active:scale-[0.98]">
+                                    {t('dash.deposit')}
+                                </button>
+                            )}
                         </div>
 
-                        <nav className="mt-2">
+                        <nav className="mt-1">
                             {navItems.map((item) => {
                                 const active = isActive(item.href);
+                                const label = item.labelKey.startsWith('dash.') ? t(item.labelKey) : item.labelKey;
                                 return (
                                     <Link
                                         key={item.href}
                                         href={item.href}
+                                        title={isCollapsed ? label : undefined}
                                         onClick={() => isMobile && setIsSidebarOpen(false)}
-                                        className={`flex items-center gap-3.5 px-5 py-2.5 transition-all duration-200 group border-l-2 ${active
-                                            ? 'bg-white/5 border-white'
-                                            : 'border-transparent hover:bg-white/[0.03]'
-                                            }`}
+                                        className={`flex items-center ${
+                                            isCollapsed ? 'justify-center px-2 py-3' : 'gap-3 px-4 py-2.5'
+                                        } transition-all duration-200 group border-l-2 ${
+                                            active
+                                                ? 'bg-white/5 border-white text-white'
+                                                : 'border-transparent hover:bg-white/[0.03] text-zinc-500 hover:text-zinc-300'
+                                        }`}
                                     >
                                         <item.icon
-                                            size={18}
+                                            size={isCollapsed ? 20 : 17}
                                             weight={active ? 'fill' : 'regular'}
-                                            className={active ? 'text-white' : 'text-zinc-600 group-hover:text-zinc-400 transition-colors'}
+                                            className={`${active ? 'text-white' : 'text-zinc-500 group-hover:text-zinc-300'} transition-colors shrink-0`}
                                         />
-                                        <span className={`text-[13px] font-medium ${active ? 'text-white' : 'text-zinc-500 group-hover:text-zinc-300'} transition-colors`}>
-                                            {item.labelKey.startsWith('dash.') ? t(item.labelKey) : item.labelKey}
-                                        </span>
+                                        {!isCollapsed && (
+                                            <span className={`text-xs font-medium ${active ? 'text-white' : 'text-zinc-400 group-hover:text-zinc-200'} transition-colors truncate`}>
+                                                {label}
+                                            </span>
+                                        )}
                                     </Link>
                                 );
                             })}
                         </nav>
 
                         {/* Sidebar Footer */}
-                        <div className="absolute bottom-0 left-0 right-0 p-5 border-t border-white/5">
+                        <div className={`absolute bottom-0 left-0 right-0 border-t border-white/5 ${isCollapsed ? 'p-2 flex justify-center' : 'p-3'}`}>
                             <Link
                                 href="/profile"
-                                className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-white/5 transition-colors group"
+                                title={isCollapsed ? displayName : undefined}
+                                className={`flex items-center ${isCollapsed ? 'justify-center p-1.5' : 'gap-2.5 px-2 py-1.5'} rounded-lg hover:bg-white/5 transition-colors group`}
                             >
-                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-600 to-blue-600 flex items-center justify-center text-[10px] font-bold overflow-hidden">
+                                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-emerald-600 to-blue-600 flex items-center justify-center text-[9px] font-bold overflow-hidden shrink-0">
                                     {avatarUrl ? (
                                         <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover" />
                                     ) : initials}
                                 </div>
-                                <div>
-                                    <p className="text-xs font-medium text-zinc-300 group-hover:text-white transition-colors">{displayName}</p>
-                                    <p className="text-[9px] text-zinc-600">{t('dash.view_profile')}</p>
-                                </div>
+                                {!isCollapsed && (
+                                    <div className="min-w-0">
+                                        <p className="text-xs font-medium text-zinc-300 group-hover:text-white transition-colors truncate">{displayName}</p>
+                                        <p className="text-[8px] text-zinc-500 truncate">{t('dash.view_profile')}</p>
+                                    </div>
+                                )}
                             </Link>
                         </div>
                     </motion.aside>
@@ -167,7 +220,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             </AnimatePresence>
 
             {/* Main */}
-            <main className="md:ml-64 min-h-[100dvh] pt-16 bg-[#0A0A0A]">
+            <main className={`${isCollapsed ? 'md:ml-16' : 'md:ml-56'} min-h-[100dvh] pt-16 bg-[#0A0A0A] transition-[margin] duration-300 ease-in-out`}>
                 {/* Desktop Top Nav */}
                 <header className="hidden md:flex fixed top-0 left-0 right-0 h-16 bg-[#0F0F0F]/95 backdrop-blur-lg border-b border-white/5 items-center justify-between px-6 z-[55]">
                     <div className="flex items-center gap-8">
