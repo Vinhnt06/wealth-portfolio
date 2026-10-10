@@ -2709,105 +2709,37 @@ export function MarketCandleChart() {
       className={`border border-zinc-800/80 flex flex-col relative select-none transition-all duration-200 ${
         isExpanded
           ? 'fixed inset-0 z-[99999] w-screen h-screen rounded-none p-2 sm:p-3 shadow-2xl !bg-zinc-950'
-          : 'bg-zinc-950 w-full h-[480px] lg:h-[500px] rounded-2xl shadow-xl overflow-hidden'
+          : 'bg-zinc-950 w-full h-[520px] lg:h-[550px] rounded-2xl shadow-xl overflow-hidden'
       }`}
     >
-      {/* ── TradingView-Style Top Navigation & Header Bar ────────── */}
-      <div className="flex flex-wrap items-center justify-between px-3 py-2 border-b border-zinc-800/70 bg-zinc-950 text-zinc-300 text-xs gap-2 z-30">
-        {/* Left: Ticker & Live Legend */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 font-sans">
-            <span className="font-bold text-zinc-100 text-sm tracking-tight">{stockInfo.name}</span>
-            <span className="text-zinc-500">·</span>
-            <span className={`font-mono font-extrabold text-xs px-1.5 py-0.5 rounded border ${priceColor.badgeBgClass}`}>
+      {/* ── TradingView-Style Top Navigation & Header Bar (Tier 1: Controls) ────────── */}
+      <div className="flex items-center justify-between px-3 py-1.5 border-b border-zinc-800/80 bg-zinc-950 text-zinc-300 text-xs gap-2 z-30 overflow-x-auto scrollbar-none whitespace-nowrap">
+        {/* Left: Ticker & Timeframe & Indicators */}
+        <div className="flex items-center gap-2 shrink-0">
+          {/* Symbol & Name */}
+          <div className="flex items-center gap-1.5 font-sans shrink-0">
+            <span className={`font-mono font-extrabold text-xs px-2 py-0.5 rounded border shadow-sm ${priceColor.badgeBgClass}`}>
               {selectedSymbol}
             </span>
-            <span className="text-zinc-500">·</span>
-            <span className="font-mono text-zinc-400 text-xs">{resolution}</span>
-            <span className="text-zinc-500">·</span>
-            <span className="font-mono text-zinc-400 text-xs">{stockInfo.exchange}</span>
-
-            {/* Minervini Live RS Rating on Chart Bar */}
-            {chartMinervini?.rsRating !== undefined && (
-              <>
-                <span className="text-zinc-500">·</span>
-                <span className="font-mono font-black text-xs sm:text-sm px-2.5 py-0.5 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-400/50 shadow-[0_0_12px_rgba(245,158,11,0.25)] flex items-center gap-1.5">
-                  <Sparkle weight="fill" className="w-3.5 h-3.5 text-amber-400" />
-                  <span className="text-[10px] text-amber-300/90 uppercase font-bold tracking-wider">RS</span>
-                  <span className="text-sm font-black text-amber-300">{chartMinervini.rsRating}</span>
-                  <span className="text-[10px] text-amber-400/60 font-semibold">/99</span>
-                </span>
-                <span
-                  className={`font-mono text-[10px] font-bold px-1.5 py-0.5 rounded-md border hidden sm:inline-block ${
-                    chartMinervini.isStage2Eligible
-                      ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
-                      : 'bg-zinc-900 text-zinc-400 border-zinc-800'
-                  }`}
-                >
-                  {chartMinervini.isStage2Eligible ? 'Stage 2 (8/8)' : `${chartMinervini.passedCount || 0}/8`}
-                </span>
-              </>
-            )}
+            <span
+              className="font-bold text-zinc-100 text-xs sm:text-sm tracking-tight truncate max-w-[130px] sm:max-w-[200px] md:max-w-[260px] whitespace-nowrap"
+              title={stockInfo.name}
+            >
+              {stockInfo.name}
+            </span>
+            <span className="text-zinc-600">·</span>
+            <span className="font-mono text-zinc-400 text-xs shrink-0">{stockInfo.exchange}</span>
           </div>
 
-          {/* Real-time OHLC Legend */}
-          <div className="hidden lg:flex items-center gap-2 font-mono text-[11px] text-zinc-400 ml-2">
-            <div>O <span className="text-zinc-200 font-bold">{hoveredData?.open ? hoveredData.open.toFixed(2) : (lastCandleRef.current ? lastCandleRef.current.open.toFixed(2) : priceDisplayK)}</span></div>
-            <div>H <span className="text-emerald-400 font-bold">{hoveredData?.high ? hoveredData.high.toFixed(2) : (lastCandleRef.current ? lastCandleRef.current.high.toFixed(2) : priceDisplayK)}</span></div>
-            <div>L <span className="text-rose-400 font-bold">{hoveredData?.low ? hoveredData.low.toFixed(2) : (lastCandleRef.current ? lastCandleRef.current.low.toFixed(2) : priceDisplayK)}</span></div>
-            <div>C <span className="text-zinc-100 font-bold">{hoveredData?.close ? hoveredData.close.toFixed(2) : (lastCandleRef.current ? lastCandleRef.current.close.toFixed(2) : priceDisplayK)}</span></div>
-            <div className={`font-bold ${priceColor.colorClass}`}>
-              {hoveredData?.change ? (
-                `${hoveredData.change >= 0 ? '+' : ''}${hoveredData.change.toFixed(2)} (${hoveredData.changePct?.toFixed(2)}%)`
-              ) : lastCandleRef.current ? (
-                `${lastCandleRef.current.close >= lastCandleRef.current.open ? '+' : ''}${(lastCandleRef.current.close - lastCandleRef.current.open).toFixed(2)} (${(((lastCandleRef.current.close - lastCandleRef.current.open) / (lastCandleRef.current.open || 1)) * 100).toFixed(2)}%)`
-              ) : (
-                `${isPositive ? '+' : ''}${changeK} (${isPositive ? '+' : ''}${changePct}%)`
-              )}
-            </div>
-            {(hoveredData?.volume || lastCandleRef.current) && (
-              <div className="text-zinc-500 ml-1">
-                Vol: <span className="text-zinc-300 font-bold">{(hoveredData?.volume || (loadedCandlesRef.current.length > 0 ? (currentTick?.totalVolume || 0) : 0)).toLocaleString()}</span>
-              </div>
-            )}
+          <div className="w-px h-3.5 bg-zinc-800/80 shrink-0 mx-0.5" />
 
-            {/* Live MA Values on Top Legend */}
-            {(showMA20 || showMA50 || showMA150 || showMA200) && (
-              <div className="flex items-center gap-2 pl-2 border-l border-zinc-800 text-[11px]">
-                {showMA20 && activeMA20 !== undefined && (
-                  <span className="text-[#f59e0b] font-medium">
-                    MA20: <strong className="font-bold">{activeMA20.toFixed(2)}</strong>
-                  </span>
-                )}
-                {showMA50 && activeMA50 !== undefined && (
-                  <span className="text-[#06b6d4] font-medium">
-                    MA50: <strong className="font-bold">{activeMA50.toFixed(2)}</strong>
-                  </span>
-                )}
-                {showMA150 && activeMA150 !== undefined && (
-                  <span className="text-[#f97316] font-medium">
-                    MA150: <strong className="font-bold">{activeMA150.toFixed(2)}</strong>
-                  </span>
-                )}
-                {showMA200 && activeMA200 !== undefined && (
-                  <span className="text-[#f43f5e] font-medium">
-                    MA200: <strong className="font-bold">{activeMA200.toFixed(2)}</strong>
-                  </span>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Center / Right: Indicators, Resolutions, Actions */}
-        <div className="flex items-center gap-1.5">
-          {/* Resolution buttons */}
-          <div className="flex items-center bg-zinc-900 border border-zinc-800 rounded-lg p-0.5">
+          {/* Timeframe Resolution buttons */}
+          <div className="flex items-center bg-zinc-900 border border-zinc-800 rounded-lg p-0.5 shrink-0">
             {RESOLUTIONS.map((res) => (
               <button
                 key={res.id}
                 onClick={() => setResolution(res.id)}
-                className={`px-2 py-0.5 text-[11px] font-mono font-medium rounded transition-all ${
+                className={`px-1.5 sm:px-2 py-0.5 text-[11px] font-mono font-medium rounded whitespace-nowrap transition-all ${
                   resolution === res.id
                     ? 'bg-emerald-500 text-zinc-950 font-bold shadow'
                     : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
@@ -2818,20 +2750,20 @@ export function MarketCandleChart() {
             ))}
           </div>
 
-          <div className="w-px h-4 bg-zinc-800 mx-0.5" />
+          <div className="w-px h-3.5 bg-zinc-800/80 shrink-0 mx-0.5" />
 
           {/* Indicators Button */}
-          <div className="relative">
+          <div className="relative shrink-0">
             <button
               onClick={() => setShowIndicatorsModal(!showIndicatorsModal)}
-              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-mono font-semibold border rounded-lg transition-all ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-mono font-semibold border rounded-lg whitespace-nowrap transition-all ${
                 activeSubIndicator !== 'none'
                   ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300 shadow-sm'
                   : 'bg-zinc-900 border-zinc-800 hover:border-zinc-700 text-zinc-200'
               }`}
             >
-              <FxIcon size={14} className={activeSubIndicator !== 'none' ? 'text-emerald-400' : 'text-zinc-400'} />
-              <span>Các chỉ báo</span>
+              <FxIcon size={14} className={activeSubIndicator !== 'none' ? 'text-emerald-400 shrink-0' : 'text-zinc-400 shrink-0'} />
+              <span className="whitespace-nowrap">Các chỉ báo</span>
               {activeSubIndicator !== 'none' && (
                 <span className="text-[10px] uppercase font-bold bg-emerald-500/20 text-emerald-300 px-1.5 py-0.2 rounded border border-emerald-500/30">
                   {activeSubIndicator}
@@ -2846,134 +2778,134 @@ export function MarketCandleChart() {
                   className="fixed inset-0 z-40 bg-transparent"
                   onClick={() => setShowIndicatorsModal(false)}
                 />
-                <div className="absolute right-0 top-full mt-2 w-64 bg-zinc-900/95 border border-zinc-800 rounded-xl p-2.5 shadow-2xl z-50 backdrop-blur-xl animate-in fade-in max-h-[85vh] overflow-y-auto">
-                <div className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 mb-1.5 px-1 font-bold">1. Xu hướng & Nền giá</div>
-                <div className="flex flex-col gap-1 mb-2">
-                  <button
-                    onClick={() => setShowMA20(!showMA20)}
-                    className="flex items-center justify-between px-2 py-1.5 rounded-lg text-xs font-mono text-zinc-200 hover:bg-zinc-800"
-                  >
-                    <span className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
-                      Đường MA20
-                    </span>
-                    <span className={`text-[10px] ${showMA20 ? 'text-emerald-400 font-bold' : 'text-zinc-500'}`}>{showMA20 ? 'BẬT' : 'TẮT'}</span>
-                  </button>
+                <div className="absolute left-0 sm:right-0 sm:left-auto top-full mt-2 w-64 bg-zinc-900/95 border border-zinc-800 rounded-xl p-2.5 shadow-2xl z-50 backdrop-blur-xl animate-in fade-in max-h-[85vh] overflow-y-auto">
+                  <div className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 mb-1.5 px-1 font-bold">1. Xu hướng & Nền giá</div>
+                  <div className="flex flex-col gap-1 mb-2">
+                    <button
+                      onClick={() => setShowMA20(!showMA20)}
+                      className="flex items-center justify-between px-2 py-1.5 rounded-lg text-xs font-mono text-zinc-200 hover:bg-zinc-800"
+                    >
+                      <span className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+                        Đường MA20
+                      </span>
+                      <span className={`text-[10px] ${showMA20 ? 'text-emerald-400 font-bold' : 'text-zinc-500'}`}>{showMA20 ? 'BẬT' : 'TẮT'}</span>
+                    </button>
 
-                  <button
-                    onClick={() => setShowMA50(!showMA50)}
-                    className="flex items-center justify-between px-2 py-1.5 rounded-lg text-xs font-mono text-zinc-200 hover:bg-zinc-800"
-                  >
-                    <span className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-cyan-400" />
-                      Đường MA50 (Minervini)
-                    </span>
-                    <span className={`text-[10px] ${showMA50 ? 'text-emerald-400 font-bold' : 'text-zinc-500'}`}>{showMA50 ? 'BẬT' : 'TẮT'}</span>
-                  </button>
+                    <button
+                      onClick={() => setShowMA50(!showMA50)}
+                      className="flex items-center justify-between px-2 py-1.5 rounded-lg text-xs font-mono text-zinc-200 hover:bg-zinc-800"
+                    >
+                      <span className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full bg-cyan-400" />
+                        Đường MA50 (Minervini)
+                      </span>
+                      <span className={`text-[10px] ${showMA50 ? 'text-emerald-400 font-bold' : 'text-zinc-500'}`}>{showMA50 ? 'BẬT' : 'TẮT'}</span>
+                    </button>
 
-                  <button
-                    onClick={() => setShowMA150(!showMA150)}
-                    className="flex items-center justify-between px-2 py-1.5 rounded-lg text-xs font-mono text-zinc-200 hover:bg-zinc-800"
-                  >
-                    <span className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-orange-500" />
-                      Đường MA150 (Minervini)
-                    </span>
-                    <span className={`text-[10px] ${showMA150 ? 'text-emerald-400 font-bold' : 'text-zinc-500'}`}>{showMA150 ? 'BẬT' : 'TẮT'}</span>
-                  </button>
+                    <button
+                      onClick={() => setShowMA150(!showMA150)}
+                      className="flex items-center justify-between px-2 py-1.5 rounded-lg text-xs font-mono text-zinc-200 hover:bg-zinc-800"
+                    >
+                      <span className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full bg-orange-500" />
+                        Đường MA150 (Minervini)
+                      </span>
+                      <span className={`text-[10px] ${showMA150 ? 'text-emerald-400 font-bold' : 'text-zinc-500'}`}>{showMA150 ? 'BẬT' : 'TẮT'}</span>
+                    </button>
 
-                  <button
-                    onClick={() => setShowMA200(!showMA200)}
-                    className="flex items-center justify-between px-2 py-1.5 rounded-lg text-xs font-mono text-zinc-200 hover:bg-zinc-800"
-                  >
-                    <span className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
-                      Đường MA200 (Minervini)
-                    </span>
-                    <span className={`text-[10px] ${showMA200 ? 'text-emerald-400 font-bold' : 'text-zinc-500'}`}>{showMA200 ? 'BẬT' : 'TẮT'}</span>
-                  </button>
+                    <button
+                      onClick={() => setShowMA200(!showMA200)}
+                      className="flex items-center justify-between px-2 py-1.5 rounded-lg text-xs font-mono text-zinc-200 hover:bg-zinc-800"
+                    >
+                      <span className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
+                        Đường MA200 (Minervini)
+                      </span>
+                      <span className={`text-[10px] ${showMA200 ? 'text-emerald-400 font-bold' : 'text-zinc-500'}`}>{showMA200 ? 'BẬT' : 'TẮT'}</span>
+                    </button>
 
-                  <button
-                    onClick={() => setShowBB(!showBB)}
-                    className="flex items-center justify-between px-2 py-1.5 rounded-lg text-xs font-mono text-zinc-200 hover:bg-zinc-800"
-                  >
-                    <span className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-indigo-400" />
-                      Bollinger Bands
-                    </span>
-                    <span className={`text-[10px] ${showBB ? 'text-emerald-400 font-bold' : 'text-zinc-500'}`}>{showBB ? 'BẬT' : 'TẮT'}</span>
-                  </button>
+                    <button
+                      onClick={() => setShowBB(!showBB)}
+                      className="flex items-center justify-between px-2 py-1.5 rounded-lg text-xs font-mono text-zinc-200 hover:bg-zinc-800"
+                    >
+                      <span className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full bg-indigo-400" />
+                        Bollinger Bands
+                      </span>
+                      <span className={`text-[10px] ${showBB ? 'text-emerald-400 font-bold' : 'text-zinc-500'}`}>{showBB ? 'BẬT' : 'TẮT'}</span>
+                    </button>
 
-                  <button
-                    onClick={() => setShowVolume(!showVolume)}
-                    className="flex items-center justify-between px-2 py-1.5 rounded-lg text-xs font-mono text-zinc-200 hover:bg-zinc-800"
-                  >
-                    <span className="flex items-center gap-2">
-                      <ChartBar size={12} className="text-zinc-400" />
-                      Khối lượng (Volume)
-                    </span>
-                    <span className={`text-[10px] ${showVolume ? 'text-emerald-400 font-bold' : 'text-zinc-500'}`}>{showVolume ? 'BẬT' : 'TẮT'}</span>
-                  </button>
+                    <button
+                      onClick={() => setShowVolume(!showVolume)}
+                      className="flex items-center justify-between px-2 py-1.5 rounded-lg text-xs font-mono text-zinc-200 hover:bg-zinc-800"
+                    >
+                      <span className="flex items-center gap-2">
+                        <ChartBar size={13} className="text-zinc-400" />
+                        Khối lượng (Volume)
+                      </span>
+                      <span className={`text-[10px] ${showVolume ? 'text-emerald-400 font-bold' : 'text-zinc-500'}`}>{showVolume ? 'BẬT' : 'TẮT'}</span>
+                    </button>
+                  </div>
+
+                  <div className="text-[10px] font-mono uppercase tracking-wider text-purple-400 mb-1.5 px-1 pt-2 border-t border-zinc-800/80 font-bold">2. Động lượng & Dao động</div>
+                  <div className="flex flex-col gap-1 mb-2">
+                    <button
+                      onClick={() => setActiveSubIndicator(activeSubIndicator === 'rsi' ? 'none' : 'rsi')}
+                      className="flex items-center justify-between px-2 py-1.5 rounded-lg text-xs font-mono text-zinc-200 hover:bg-zinc-800"
+                    >
+                      <span className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full bg-purple-500" />
+                        RSI (14) - Sức mạnh tương đối
+                      </span>
+                      <span className={`text-[10px] ${activeSubIndicator === 'rsi' ? 'text-emerald-400 font-bold' : 'text-zinc-500'}`}>
+                        {activeSubIndicator === 'rsi' ? 'BẬT' : 'TẮT'}
+                      </span>
+                    </button>
+
+                    <button
+                      onClick={() => setActiveSubIndicator(activeSubIndicator === 'macd' ? 'none' : 'macd')}
+                      className="flex items-center justify-between px-2 py-1.5 rounded-lg text-xs font-mono text-zinc-200 hover:bg-zinc-800"
+                    >
+                      <span className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+                        MACD (12, 26, 9)
+                      </span>
+                      <span className={`text-[10px] ${activeSubIndicator === 'macd' ? 'text-emerald-400 font-bold' : 'text-zinc-500'}`}>
+                        {activeSubIndicator === 'macd' ? 'BẬT' : 'TẮT'}
+                      </span>
+                    </button>
+                  </div>
+
+                  <div className="text-[10px] font-mono uppercase tracking-wider text-emerald-400 mb-1.5 px-1 pt-2 border-t border-zinc-800/80 font-bold">3. Dòng tiền thông minh</div>
+                  <div className="flex flex-col gap-1">
+                    <button
+                      onClick={() => setActiveSubIndicator(activeSubIndicator === 'mfi' ? 'none' : 'mfi')}
+                      className="flex items-center justify-between px-2 py-1.5 rounded-lg text-xs font-mono text-zinc-200 hover:bg-zinc-800"
+                    >
+                      <span className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
+                        MFI (14) - Chỉ số Dòng tiền
+                      </span>
+                      <span className={`text-[10px] ${activeSubIndicator === 'mfi' ? 'text-emerald-400 font-bold' : 'text-zinc-500'}`}>
+                        {activeSubIndicator === 'mfi' ? 'BẬT' : 'TẮT'}
+                      </span>
+                    </button>
+
+                    <button
+                      onClick={() => setActiveSubIndicator(activeSubIndicator === 'obv' ? 'none' : 'obv')}
+                      className="flex items-center justify-between px-2 py-1.5 rounded-lg text-xs font-mono text-zinc-200 hover:bg-zinc-800"
+                    >
+                      <span className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full bg-cyan-400" />
+                        OBV - Dòng tiền cá mập gom/xả
+                      </span>
+                      <span className={`text-[10px] ${activeSubIndicator === 'obv' ? 'text-emerald-400 font-bold' : 'text-zinc-500'}`}>
+                        {activeSubIndicator === 'obv' ? 'BẬT' : 'TẮT'}
+                      </span>
+                    </button>
+                  </div>
                 </div>
-
-                <div className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 mb-1.5 px-1 pt-2 border-t border-zinc-800/80 font-bold">2. Động lượng & Dao động</div>
-                <div className="flex flex-col gap-1 mb-2">
-                  <button
-                    onClick={() => setActiveSubIndicator(activeSubIndicator === 'rsi' ? 'none' : 'rsi')}
-                    className="flex items-center justify-between px-2 py-1.5 rounded-lg text-xs font-mono text-zinc-200 hover:bg-zinc-800"
-                  >
-                    <span className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-purple-400" />
-                      RSI (14) - Sức mạnh tương đối
-                    </span>
-                    <span className={`text-[10px] ${activeSubIndicator === 'rsi' ? 'text-emerald-400 font-bold' : 'text-zinc-500'}`}>
-                      {activeSubIndicator === 'rsi' ? 'BẬT' : 'TẮT'}
-                    </span>
-                  </button>
-
-                  <button
-                    onClick={() => setActiveSubIndicator(activeSubIndicator === 'macd' ? 'none' : 'macd')}
-                    className="flex items-center justify-between px-2 py-1.5 rounded-lg text-xs font-mono text-zinc-200 hover:bg-zinc-800"
-                  >
-                    <span className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-blue-400" />
-                      MACD (12, 26, 9)
-                    </span>
-                    <span className={`text-[10px] ${activeSubIndicator === 'macd' ? 'text-emerald-400 font-bold' : 'text-zinc-500'}`}>
-                      {activeSubIndicator === 'macd' ? 'BẬT' : 'TẮT'}
-                    </span>
-                  </button>
-                </div>
-
-                <div className="text-[10px] font-mono uppercase tracking-wider text-emerald-400 mb-1.5 px-1 pt-2 border-t border-zinc-800/80 font-bold">3. Dòng tiền thông minh</div>
-                <div className="flex flex-col gap-1">
-                  <button
-                    onClick={() => setActiveSubIndicator(activeSubIndicator === 'mfi' ? 'none' : 'mfi')}
-                    className="flex items-center justify-between px-2 py-1.5 rounded-lg text-xs font-mono text-zinc-200 hover:bg-zinc-800"
-                  >
-                    <span className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
-                      MFI (14) - Chỉ số Dòng tiền
-                    </span>
-                    <span className={`text-[10px] ${activeSubIndicator === 'mfi' ? 'text-emerald-400 font-bold' : 'text-zinc-500'}`}>
-                      {activeSubIndicator === 'mfi' ? 'BẬT' : 'TẮT'}
-                    </span>
-                  </button>
-
-                  <button
-                    onClick={() => setActiveSubIndicator(activeSubIndicator === 'obv' ? 'none' : 'obv')}
-                    className="flex items-center justify-between px-2 py-1.5 rounded-lg text-xs font-mono text-zinc-200 hover:bg-zinc-800"
-                  >
-                    <span className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-cyan-400" />
-                      OBV - Dòng tiền cá mập gom/xả
-                    </span>
-                    <span className={`text-[10px] ${activeSubIndicator === 'obv' ? 'text-emerald-400 font-bold' : 'text-zinc-500'}`}>
-                      {activeSubIndicator === 'obv' ? 'BẬT' : 'TẮT'}
-                    </span>
-                  </button>
-                </div>
-              </div>
               </>
             )}
           </div>
@@ -2982,21 +2914,22 @@ export function MarketCandleChart() {
           <button
             onClick={() => setShowTrendlinePro(!showTrendlinePro)}
             title="Tự động kẻ Trendline Pro & Kênh Fibonacci đa tầng"
-            className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-mono font-semibold rounded-lg transition-all ${
+            className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-mono font-semibold rounded-lg whitespace-nowrap shrink-0 transition-all ${
               showTrendlinePro
                 ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'
                 : 'bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200'
             }`}
           >
-            <TrendUp size={14} className={showTrendlinePro ? 'text-amber-400' : 'text-zinc-500'} />
-            <span className="hidden sm:inline">Trendline Pro</span>
+            <TrendUp size={14} className={showTrendlinePro ? 'text-amber-400 shrink-0' : 'text-zinc-500 shrink-0'} />
+            <span className="whitespace-nowrap">Trendline Pro</span>
             {showTrendlinePro && <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />}
           </button>
+        </div>
 
-          <div className="w-px h-4 bg-zinc-800 mx-0.5" />
-
+        {/* Right: Actions & Fullscreen */}
+        <div className="flex items-center gap-1.5 shrink-0">
           {/* Drawing Actions: Undo, Redo, Hide, Clear Trash */}
-          <div className="flex items-center gap-0.5 bg-zinc-900 border border-zinc-800 rounded-lg p-0.5">
+          <div className="flex items-center gap-0.5 bg-zinc-900 border border-zinc-800 rounded-lg p-0.5 shrink-0">
             <button
               onClick={handleUndo}
               disabled={drawings.length === 0}
@@ -3016,7 +2949,7 @@ export function MarketCandleChart() {
             <div className="w-px h-3.5 bg-zinc-800 mx-0.5" />
             <button
               onClick={() => setHideDrawings(!hideDrawings)}
-              title={hideDrawings ? 'Hiện tất cả nét vẽ (Show drawings)' : 'Ẩn tất cả nét vẽ (Hide drawings)'}
+              title={hideDrawings ? 'Hiện tất cả nét vẽ' : 'Ẩn tất cả nét vẽ'}
               className={`p-1 rounded transition-colors ${
                 hideDrawings
                   ? 'text-amber-400 bg-amber-500/20 font-bold'
@@ -3028,7 +2961,7 @@ export function MarketCandleChart() {
             <button
               onClick={handleClearAll}
               disabled={drawings.length === 0}
-              title="Xóa tất cả nét vẽ trên biểu đồ (Xoá nét vẽ / Trash)"
+              title="Xóa tất cả nét vẽ"
               className="p-1 text-zinc-400 hover:text-rose-400 hover:bg-rose-500/15 rounded disabled:opacity-25 transition-colors"
             >
               <Trash size={13} />
@@ -3038,7 +2971,7 @@ export function MarketCandleChart() {
           <button
             onClick={() => chartRef.current?.timeScale().fitContent()}
             title="Căn chỉnh dữ liệu nến vừa khung (Fit Content)"
-            className="p-1.5 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900 rounded-lg"
+            className="p-1.5 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900 rounded-lg shrink-0"
           >
             <ArrowsOutSimple size={14} />
           </button>
@@ -3046,7 +2979,7 @@ export function MarketCandleChart() {
           <button
             onClick={toggleFullscreen}
             title={isExpanded ? 'Thu nhỏ biểu đồ (Esc)' : 'Phóng to toàn bộ màn hình (Fullscreen)'}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-semibold transition-all ${
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-semibold whitespace-nowrap shrink-0 transition-all ${
               isExpanded
                 ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20 font-bold'
                 : 'bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-emerald-400 hover:border-emerald-500/40'
@@ -3055,94 +2988,122 @@ export function MarketCandleChart() {
             {isExpanded ? (
               <>
                 <ArrowsIn size={14} weight="bold" />
-                <span>Thu nhỏ</span>
+                <span className="whitespace-nowrap">Thu nhỏ</span>
               </>
             ) : (
               <>
                 <ArrowsOut size={14} weight="bold" />
-                <span className="hidden sm:inline">Toàn màn hình</span>
+                <span className="whitespace-nowrap hidden sm:inline">Toàn màn hình</span>
               </>
             )}
           </button>
         </div>
       </div>
 
-      {/* ── Sub-header: Live Trendline Pro & MA Indicators Summary Bar ── */}
-      {((showTrendlinePro && trendlineProData) || (showMA20 || showMA50 || showMA150 || showMA200)) && (
-        <div className="flex items-center gap-3 sm:gap-4 px-4 py-1.5 bg-zinc-950 border-b border-zinc-800/80 text-[11px] font-mono text-zinc-300 overflow-x-auto scrollbar-none z-20">
-          {showTrendlinePro && trendlineProData && (
+      {/* ── Sub-header: Live Realtime OHLC & Trendline Pro & Indicators Bar (Tier 2: Legend) ── */}
+      <div className="flex items-center justify-between px-3 py-1.5 bg-zinc-950/90 border-b border-zinc-800/60 text-[11px] font-mono text-zinc-300 overflow-x-auto scrollbar-none whitespace-nowrap gap-3 z-20">
+        {/* Left: Real-time OHLC Legend & Moving Averages & Trendline Pro */}
+        <div className="flex items-center gap-2.5 shrink-0">
+          {/* Live OHLC */}
+          <div className="flex items-center gap-2 text-[11px] font-mono text-zinc-400 shrink-0">
+            <div>O <span className="text-zinc-200 font-bold">{hoveredData?.open ? hoveredData.open.toFixed(2) : (lastCandleRef.current ? lastCandleRef.current.open.toFixed(2) : priceDisplayK)}</span></div>
+            <div>H <span className="text-emerald-400 font-bold">{hoveredData?.high ? hoveredData.high.toFixed(2) : (lastCandleRef.current ? lastCandleRef.current.high.toFixed(2) : priceDisplayK)}</span></div>
+            <div>L <span className="text-rose-400 font-bold">{hoveredData?.low ? hoveredData.low.toFixed(2) : (lastCandleRef.current ? lastCandleRef.current.low.toFixed(2) : priceDisplayK)}</span></div>
+            <div>C <span className="text-zinc-100 font-bold">{hoveredData?.close ? hoveredData.close.toFixed(2) : (lastCandleRef.current ? lastCandleRef.current.close.toFixed(2) : priceDisplayK)}</span></div>
+            <div className={`font-bold ${priceColor.colorClass}`}>
+              {hoveredData?.change ? (
+                `${hoveredData.change >= 0 ? '+' : ''}${hoveredData.change.toFixed(2)} (${hoveredData.changePct?.toFixed(2)}%)`
+              ) : lastCandleRef.current ? (
+                `${lastCandleRef.current.close >= lastCandleRef.current.open ? '+' : ''}${(lastCandleRef.current.close - lastCandleRef.current.open).toFixed(2)} (${(((lastCandleRef.current.close - lastCandleRef.current.open) / (lastCandleRef.current.open || 1)) * 100).toFixed(2)}%)`
+              ) : (
+                `${isPositive ? '+' : ''}${changeK} (${isPositive ? '+' : ''}${changePct}%)`
+              )}
+            </div>
+            {(hoveredData?.volume || lastCandleRef.current) && (
+              <div className="text-zinc-500 ml-1">
+                Vol: <span className="text-zinc-300 font-bold">{(hoveredData?.volume || (loadedCandlesRef.current.length > 0 ? (currentTick?.totalVolume || 0) : 0)).toLocaleString()}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Live Moving Average Values */}
+          {(showMA20 || showMA50 || showMA150 || showMA200) && (
             <>
-              <span className="flex items-center gap-1.5 font-bold text-amber-400 shrink-0">
-                <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-                * Trendline Pro
-              </span>
-              <span className="text-zinc-600 shrink-0">|</span>
-              <span className="shrink-0 flex items-center gap-1.5">
-                <span className="text-zinc-400">Kháng cự:</span>
-                <span className="px-1.5 py-0.5 rounded bg-lime-500/15 text-lime-400 font-bold border border-lime-500/30">
-                  {trendlineProData.resistance.toFixed(2)}
-                </span>
-              </span>
-              <span className="shrink-0 flex items-center gap-1.5">
-                <span className="text-zinc-400">Hỗ trợ:</span>
-                <span className="px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-400 font-bold border border-rose-500/30">
-                  {trendlineProData.support.toFixed(2)}
-                </span>
-              </span>
-              <span className="shrink-0 flex items-center gap-1.5">
-                <span className="text-zinc-400">Fib 0,618:</span>
-                <span className="px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-300 font-bold border border-amber-500/30">
-                  {trendlineProData.fib0618.toFixed(2)}
-                </span>
-              </span>
-              <span className="shrink-0 flex items-center gap-1.5">
-                <span className="text-zinc-400">Fib 1,618:</span>
-                <span className="px-1.5 py-0.5 rounded bg-cyan-500/15 text-cyan-300 font-bold border border-cyan-500/30">
-                  {trendlineProData.fib1618.toFixed(2)}
-                </span>
-              </span>
+              <span className="text-zinc-700 shrink-0">|</span>
+              <div className="flex items-center gap-2 text-[11px] shrink-0">
+                {showMA20 && activeMA20 !== undefined && (
+                  <span className="text-[#f59e0b] font-medium shrink-0">
+                    MA20: <strong className="font-bold">{activeMA20.toFixed(2)}</strong>
+                  </span>
+                )}
+                {showMA50 && activeMA50 !== undefined && (
+                  <span className="text-[#06b6d4] font-medium shrink-0">
+                    MA50: <strong className="font-bold">{activeMA50.toFixed(2)}</strong>
+                  </span>
+                )}
+                {showMA150 && activeMA150 !== undefined && (
+                  <span className="text-[#f97316] font-medium shrink-0">
+                    MA150: <strong className="font-bold">{activeMA150.toFixed(2)}</strong>
+                  </span>
+                )}
+                {showMA200 && activeMA200 !== undefined && (
+                  <span className="text-[#f43f5e] font-medium shrink-0">
+                    MA200: <strong className="font-bold">{activeMA200.toFixed(2)}</strong>
+                  </span>
+                )}
+              </div>
             </>
           )}
 
-          {showTrendlinePro && trendlineProData && (showMA20 || showMA50 || showMA150 || showMA200) && (
-            <span className="text-zinc-600 shrink-0">|</span>
-          )}
-
-          {/* Active MA Indicator Numbers on Header */}
-          {showMA20 && activeMA20 !== undefined && (
-            <span className="shrink-0 flex items-center gap-1">
-              <span className="text-zinc-400">MA20:</span>
-              <span className="px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400 font-bold border border-amber-500/30">
-                {activeMA20.toFixed(2)}
-              </span>
-            </span>
-          )}
-          {showMA50 && activeMA50 !== undefined && (
-            <span className="shrink-0 flex items-center gap-1">
-              <span className="text-zinc-400">MA50:</span>
-              <span className="px-1.5 py-0.5 rounded bg-cyan-500/15 text-cyan-400 font-bold border border-cyan-500/30">
-                {activeMA50.toFixed(2)}
-              </span>
-            </span>
-          )}
-          {showMA150 && activeMA150 !== undefined && (
-            <span className="shrink-0 flex items-center gap-1">
-              <span className="text-zinc-400">MA150:</span>
-              <span className="px-1.5 py-0.5 rounded bg-orange-500/15 text-orange-400 font-bold border border-orange-500/30">
-                {activeMA150.toFixed(2)}
-              </span>
-            </span>
-          )}
-          {showMA200 && activeMA200 !== undefined && (
-            <span className="shrink-0 flex items-center gap-1">
-              <span className="text-zinc-400">MA200:</span>
-              <span className="px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-400 font-bold border border-rose-500/30">
-                {activeMA200.toFixed(2)}
-              </span>
-            </span>
+          {/* Trendline Pro Support / Resistance */}
+          {showTrendlinePro && trendlineProData && (
+            <>
+              <span className="text-zinc-700 shrink-0">|</span>
+              <div className="flex items-center gap-2 text-[11px] shrink-0">
+                <span className="shrink-0 flex items-center gap-1">
+                  <span className="text-zinc-400">Kháng cự:</span>
+                  <span className="px-1.5 py-0.2 rounded bg-lime-500/15 text-lime-400 font-bold border border-lime-500/30">
+                    {trendlineProData.resistance.toFixed(2)}
+                  </span>
+                </span>
+                <span className="shrink-0 flex items-center gap-1">
+                  <span className="text-zinc-400">Hỗ trợ:</span>
+                  <span className="px-1.5 py-0.2 rounded bg-rose-500/15 text-rose-400 font-bold border border-rose-500/30">
+                    {trendlineProData.support.toFixed(2)}
+                  </span>
+                </span>
+                <span className="shrink-0 flex items-center gap-1">
+                  <span className="text-zinc-400">Fib 0.618:</span>
+                  <span className="px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-300 font-bold border border-amber-500/30">
+                    {trendlineProData.fib0618.toFixed(2)}
+                  </span>
+                </span>
+              </div>
+            </>
           )}
         </div>
-      )}
+
+        {/* Right: Minervini Live RS Rating on Chart Bar */}
+        {chartMinervini?.rsRating !== undefined && (
+          <div className="flex items-center gap-1.5 shrink-0 ml-auto">
+            <span className="font-mono font-black text-xs px-2 py-0.5 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-400/50 shadow-[0_0_12px_rgba(245,158,11,0.25)] flex items-center gap-1 shrink-0">
+              <Sparkle weight="fill" className="w-3 h-3 text-amber-400" />
+              <span className="text-[10px] text-amber-300/90 uppercase font-bold tracking-wider">RS</span>
+              <span className="text-xs font-black text-amber-300">{chartMinervini.rsRating}</span>
+              <span className="text-[10px] text-amber-400/60 font-semibold">/99</span>
+            </span>
+            <span
+              className={`font-mono text-[10px] font-bold px-1.5 py-0.5 rounded-md border shrink-0 ${
+                chartMinervini.isStage2Eligible
+                  ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+                  : 'bg-zinc-900 text-zinc-400 border-zinc-800'
+              }`}
+            >
+              {chartMinervini.isStage2Eligible ? 'Stage 2 (8/8)' : `${chartMinervini.passedCount || 0}/8`}
+            </span>
+          </div>
+        )}
+      </div>
 
       {/* ── Main Chart Body with Left Drawing Toolbar ─────────────── */}
       <div className={`w-full flex-1 flex relative bg-zinc-950 overflow-hidden ${
