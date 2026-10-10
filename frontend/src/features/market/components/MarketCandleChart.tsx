@@ -1042,32 +1042,52 @@ export function MarketCandleChart() {
         } else if (item.type === 'fibonacci' && item.p2) {
           if (c1.x !== null && c1.y !== null && c2 && c2.x !== null && c2.y !== null) {
             if (distToSegment(x, y, c1.x, c1.y, c2.x, c2.y) <= 14) return item;
-            if (Math.hypot(x - c1.x, y - c1.y) <= 16 || Math.hypot(x - c2.x, y - c2.y) <= 16) return item;
+            if (Math.hypot(x - c1.x, y - c1.y) <= 18 || Math.hypot(x - c2.x, y - c2.y) <= 18) return item;
 
             const p1 = item.p1.price;
             const p2 = item.p2.price;
             const minX = Math.min(c1.x, c2.x);
-            const fibRatios = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1.0];
-            for (const ratio of fibRatios) {
-              const priceLvl = p1 + (p2 - p1) * ratio;
-              const yLvl = series.priceToCoordinate(priceLvl);
-              if (yLvl !== null && Math.abs(y - yLvl) <= 10 && x >= minX - 14) {
-                return item;
+            const maxX = Math.max(c1.x, c2.x);
+            const fibRatios = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1.0, 1.618, 2.618];
+
+            // Inside fibonacci bounding box
+            if (x >= minX - 10 && x <= maxX + 10) {
+              const yCoords: number[] = [];
+              for (const r of fibRatios) {
+                const yc = series.priceToCoordinate(p1 + (p2 - p1) * r);
+                if (yc !== null) yCoords.push(yc as number);
+              }
+              if (yCoords.length > 0) {
+                const minY = Math.min(...yCoords);
+                const maxY = Math.max(...yCoords);
+                if (y >= minY - 8 && y <= maxY + 8) return item;
               }
             }
           }
         } else if (item.type === 'fib_extension' && item.p2) {
           if (c1.x !== null && c1.y !== null && c2 && c2.x !== null && c2.y !== null) {
-            if (distToSegment(x, y, c1.x, c1.y, c2.x, c2.y) <= 14) return item;
+            // Hit on base trendline
+            if (distToSegment(x, y, c1.x, c1.y, c2.x, c2.y) <= 16) return item;
+            if (Math.hypot(x - c1.x, y - c1.y) <= 18 || Math.hypot(x - c2.x, y - c2.y) <= 18) return item;
+
             const p1 = item.p1.price;
             const p2 = item.p2.price;
-            const minX = Math.min(c1.x, c2.x);
-            const extRatios = [0, 0.618, 1.0, 1.618, 2.618];
-            for (const ratio of extRatios) {
-              const priceLvl = p1 + Math.abs(p2 - p1) * ratio;
-              const yLvl = series.priceToCoordinate(priceLvl);
-              if (yLvl !== null && Math.abs(y - yLvl) <= 10 && x >= minX - 14) {
-                return item;
+            const diff = Math.abs(p2 - p1);
+            const isUpward = p2 >= p1;
+            const extStartX = Math.min(c1.x, c2.x);
+            const extEndX = Math.max(c1.x, c2.x + 180);
+            const extRatios = [0, 0.618, 1.0, 1.272, 1.618, 2.0, 2.618];
+
+            if (x >= extStartX - 10 && x <= extEndX + 10) {
+              const yCoords: number[] = [];
+              for (const r of extRatios) {
+                const yc = series.priceToCoordinate(isUpward ? p1 + diff * r : p1 - diff * r);
+                if (yc !== null) yCoords.push(yc as number);
+              }
+              if (yCoords.length > 0) {
+                const minY = Math.min(...yCoords);
+                const maxY = Math.max(...yCoords);
+                if (y >= minY - 8 && y <= maxY + 8) return item;
               }
             }
           }
@@ -1297,69 +1317,184 @@ export function MarketCandleChart() {
           }
         } else if (item.type === 'fibonacci' && c2 && item.p2) {
           if (c1.x !== null && c1.y !== null && c2.x !== null && c2.y !== null) {
-            const startX = Math.min(c1.x, c2.x);
-            const endX = Math.max(c1.x, c2.x, w - 80);
+            const minX = Math.min(c1.x, c2.x);
+            const maxX = Math.max(c1.x, c2.x);
+            const renderWidth = Math.max(maxX - minX, 40);
             const p1 = item.p1.price;
-            const p2 = isDraft && series && draftDrawing?.mouseCoord ? (series.coordinateToPrice(draftDrawing.mouseCoord.y) ?? item.p2.price) : item.p2.price;
-            const levels = [
-              { ratio: 0, label: '0.0%', color: '#f43f5e' },
-              { ratio: 0.236, label: '23.6%', color: '#f59e0b' },
-              { ratio: 0.382, label: '38.2%', color: '#10b981' },
-              { ratio: 0.5, label: '50.0%', color: '#06b6d4' },
-              { ratio: 0.618, label: '61.8% (Golden)', color: '#eab308' },
-              { ratio: 0.786, label: '78.6%', color: '#818cf8' },
-              { ratio: 1.0, label: '100.0%', color: '#f43f5e' },
+            const p2 = isDraft && series && draftDrawing?.mouseCoord
+              ? (series.coordinateToPrice(draftDrawing.mouseCoord.y) ?? item.p2.price)
+              : item.p2.price;
+
+            // 1. Diagonal dashed trendline connecting c1 and c2 (as in reference image)
+            ctx.save();
+            ctx.strokeStyle = 'rgba(212, 212, 216, 0.65)';
+            ctx.lineWidth = 1.4;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(c1.x, c1.y);
+            ctx.lineTo(c2.x, c2.y);
+            ctx.stroke();
+            ctx.restore();
+
+            // 2. Fibonacci Retracement Levels matching reference image
+            const fibLevels = [
+              { ratio: 0, color: '#a1a1aa', bg: 'rgba(239, 68, 68, 0.13)' },
+              { ratio: 0.236, color: '#ef4444', bg: 'rgba(245, 158, 11, 0.13)' },
+              { ratio: 0.382, color: '#f59e0b', bg: 'rgba(34, 197, 94, 0.13)' },
+              { ratio: 0.5, color: '#22c55e', bg: 'rgba(6, 182, 212, 0.13)' },
+              { ratio: 0.618, color: '#06b6d4', bg: 'rgba(14, 165, 233, 0.13)' },
+              { ratio: 0.786, color: '#0ea5e9', bg: 'rgba(161, 161, 170, 0.13)' },
+              { ratio: 1.0, color: '#a1a1aa', bg: 'rgba(59, 130, 246, 0.15)' },
+              { ratio: 1.618, color: '#3b82f6', bg: 'rgba(244, 63, 94, 0.13)' },
+              { ratio: 2.618, color: '#f43f5e', bg: 'transparent' },
             ];
 
-            levels.forEach((lvl) => {
+            const levelCoords = fibLevels.map((lvl) => {
               const priceLvl = p1 + (p2 - p1) * lvl.ratio;
-              const y = series.priceToCoordinate(priceLvl);
-              if (y !== null) {
+              const yCoord = series.priceToCoordinate(priceLvl);
+              return { ...lvl, priceLvl, yCoord };
+            });
+
+            // 3. Colored background bands between adjacent levels
+            ctx.save();
+            for (let i = 0; i < levelCoords.length - 1; i++) {
+              const curr = levelCoords[i];
+              const next = levelCoords[i + 1];
+              if (curr.yCoord !== null && next.yCoord !== null && curr.bg !== 'transparent') {
+                const topY = Math.min(curr.yCoord, next.yCoord);
+                const bandH = Math.abs(curr.yCoord - next.yCoord);
+                ctx.fillStyle = curr.bg;
+                ctx.fillRect(minX, topY, renderWidth, bandH);
+              }
+            }
+            ctx.restore();
+
+            // 4. Horizontal lines and left-aligned labels formatted as "0.236 (54,300)"
+            levelCoords.forEach((lvl) => {
+              if (lvl.yCoord !== null) {
+                ctx.save();
                 ctx.strokeStyle = lvl.color;
-                ctx.lineWidth = 1;
-                ctx.setLineDash([2, 2]);
+                ctx.lineWidth = 1.2;
+                ctx.setLineDash([]);
                 ctx.beginPath();
-                ctx.moveTo(startX, y);
-                ctx.lineTo(endX, y);
+                ctx.moveTo(minX, lvl.yCoord);
+                ctx.lineTo(minX + renderWidth, lvl.yCoord);
                 ctx.stroke();
 
+                const val = lvl.priceLvl < 500 ? lvl.priceLvl * 1000 : lvl.priceLvl;
+                const formattedPrice = Math.round(val).toLocaleString('en-US');
+                const labelText = `${lvl.ratio} (${formattedPrice})`;
+
                 ctx.fillStyle = lvl.color;
-                ctx.font = '9px JetBrains Mono, monospace';
+                ctx.font = '10.5px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
                 ctx.textAlign = 'left';
-                ctx.fillText(`${lvl.label} - ${priceLvl.toFixed(2)}k`, startX + 4, y - 3);
+                ctx.textBaseline = 'bottom';
+                ctx.fillText(labelText, minX + 5, lvl.yCoord - 3);
+                ctx.restore();
               }
             });
           }
         } else if (item.type === 'fib_extension' && c2 && item.p2) {
           if (c1.x !== null && c1.y !== null && c2.x !== null && c2.y !== null) {
-            const startX = Math.min(c1.x, c2.x);
-            const endX = Math.max(c1.x, c2.x, w - 80);
             const p1 = item.p1.price;
-            const p2 = isDraft && series && draftDrawing?.mouseCoord ? (series.coordinateToPrice(draftDrawing.mouseCoord.y) ?? item.p2.price) : item.p2.price;
+            const p2 = isDraft && series && draftDrawing?.mouseCoord
+              ? (series.coordinateToPrice(draftDrawing.mouseCoord.y) ?? item.p2.price)
+              : item.p2.price;
             const diff = Math.abs(p2 - p1);
-            const extLevels = [
-              { ratio: 0, label: '0.0%', color: '#94a3b8' },
-              { ratio: 0.618, label: '61.8%', color: '#eab308' },
-              { ratio: 1.0, label: '100.0%', color: '#10b981' },
-              { ratio: 1.618, label: '161.8% Target', color: '#06b6d4' },
-              { ratio: 2.618, label: '261.8% Ultra', color: '#f59e0b' },
-            ];
-            extLevels.forEach((lvl) => {
-              const priceLvl = p2 + diff * lvl.ratio;
-              const y = series.priceToCoordinate(priceLvl);
-              if (y !== null) {
-                ctx.strokeStyle = lvl.color;
-                ctx.lineWidth = 1;
-                ctx.setLineDash([2, 2]);
+
+            // 1. Kéo đường thẳng xu hướng cơ sở trước (Base Wave Trendline from c1 to c2)
+            ctx.save();
+            ctx.strokeStyle = item.color || '#06b6d4';
+            ctx.lineWidth = 2.5;
+            ctx.setLineDash([]);
+            ctx.beginPath();
+            ctx.moveTo(c1.x, c1.y);
+            ctx.lineTo(c2.x, c2.y);
+            ctx.stroke();
+
+            // Mũi tên chỉ hướng sóng cơ sở tại c2
+            const angle = Math.atan2(c2.y - c1.y, c2.x - c1.x);
+            const headlen = 11;
+            ctx.beginPath();
+            ctx.moveTo(c2.x, c2.y);
+            ctx.lineTo(c2.x - headlen * Math.cos(angle - Math.PI / 6), c2.y - headlen * Math.sin(angle - Math.PI / 6));
+            ctx.lineTo(c2.x - headlen * Math.cos(angle + Math.PI / 6), c2.y - headlen * Math.sin(angle + Math.PI / 6));
+            ctx.closePath();
+            ctx.fillStyle = item.color || '#06b6d4';
+            ctx.fill();
+
+            // 2 điểm chốt tròn ở 2 đầu đường thẳng
+            [c1, c2].forEach((pt) => {
+              if (pt.x !== null && pt.y !== null) {
                 ctx.beginPath();
-                ctx.moveTo(startX, y);
-                ctx.lineTo(endX, y);
+                ctx.arc(pt.x, pt.y, 4, 0, Math.PI * 2);
+                ctx.fillStyle = '#ffffff';
+                ctx.fill();
+                ctx.strokeStyle = item.color || '#06b6d4';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+              }
+            });
+            ctx.restore();
+
+            // 2. Các mức Fibo mở rộng dựa trên đường thẳng sóng cơ sở đó
+            const isUpward = p2 >= p1;
+            const extLevels = [
+              { ratio: 0, label: '0.0 (Gốc sóng)', color: '#a1a1aa', bg: 'rgba(161, 161, 170, 0.08)' },
+              { ratio: 0.618, label: '0.618 (61.8%)', color: '#eab308', bg: 'rgba(234, 179, 8, 0.12)' },
+              { ratio: 1.0, label: '1.0 (100% Sóng cơ sở)', color: '#10b981', bg: 'rgba(16, 185, 129, 0.12)' },
+              { ratio: 1.272, label: '1.272 (127.2%)', color: '#06b6d4', bg: 'rgba(6, 182, 212, 0.12)' },
+              { ratio: 1.618, label: '1.618 (161.8% Mục tiêu chính)', color: '#3b82f6', bg: 'rgba(59, 130, 246, 0.14)' },
+              { ratio: 2.0, label: '2.0 (200% Sóng đôi)', color: '#8b5cf6', bg: 'rgba(139, 92, 246, 0.12)' },
+              { ratio: 2.618, label: '2.618 (261.8% Siêu mục tiêu)', color: '#f43f5e', bg: 'transparent' },
+            ];
+
+            const extStartX = Math.min(c1.x, c2.x);
+            const extEndX = Math.max(c1.x, c2.x + 180, w - 80);
+            const extWidth = extEndX - extStartX;
+
+            const levelCoords = extLevels.map((lvl) => {
+              const priceLvl = isUpward ? p1 + diff * lvl.ratio : p1 - diff * lvl.ratio;
+              const yCoord = series.priceToCoordinate(priceLvl);
+              return { ...lvl, priceLvl, yCoord };
+            });
+
+            // 3. Dải màu nền mờ cho Fibo mở rộng
+            ctx.save();
+            for (let i = 0; i < levelCoords.length - 1; i++) {
+              const curr = levelCoords[i];
+              const next = levelCoords[i + 1];
+              if (curr.yCoord !== null && next.yCoord !== null && curr.bg !== 'transparent') {
+                const topY = Math.min(curr.yCoord, next.yCoord);
+                const bandH = Math.abs(curr.yCoord - next.yCoord);
+                ctx.fillStyle = curr.bg;
+                ctx.fillRect(extStartX, topY, extWidth, bandH);
+              }
+            }
+            ctx.restore();
+
+            // 4. Các đường ngang và nhãn mục tiêu Fibo mở rộng
+            levelCoords.forEach((lvl) => {
+              if (lvl.yCoord !== null) {
+                ctx.save();
+                ctx.strokeStyle = lvl.color;
+                ctx.lineWidth = 1.2;
+                ctx.setLineDash([4, 3]);
+                ctx.beginPath();
+                ctx.moveTo(extStartX, lvl.yCoord);
+                ctx.lineTo(extEndX, lvl.yCoord);
                 ctx.stroke();
 
+                const val = lvl.priceLvl < 500 ? lvl.priceLvl * 1000 : lvl.priceLvl;
+                const formattedPrice = Math.round(val).toLocaleString('en-US');
+                const labelText = `${lvl.label}: ${formattedPrice}`;
+
                 ctx.fillStyle = lvl.color;
-                ctx.font = '9px JetBrains Mono, monospace';
+                ctx.font = '10px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
                 ctx.textAlign = 'left';
-                ctx.fillText(`${lvl.label} - ${priceLvl.toFixed(2)}k`, startX + 4, y - 3);
+                ctx.textBaseline = 'bottom';
+                ctx.fillText(labelText, extStartX + 8, lvl.yCoord - 3);
+                ctx.restore();
               }
             });
           }
