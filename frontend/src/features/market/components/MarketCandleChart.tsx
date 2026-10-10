@@ -462,6 +462,32 @@ function aggregateCandles(
   return { candles: aggCandles, volumes: aggVolumes };
 }
 
+// Helper to map continuous logical bar indices to calendar dates / Time
+function logicalToTime(logical: number, candles: CandlestickData<Time>[]): Time {
+  if (candles.length === 0) return '' as Time;
+  const roundedIdx = Math.round(logical);
+  if (roundedIdx < 0) {
+    const firstStr = String(candles[0].time);
+    const firstDate = new Date(firstStr);
+    if (!isNaN(firstDate.getTime())) {
+      firstDate.setDate(firstDate.getDate() + roundedIdx);
+      return firstDate.toISOString().split('T')[0] as Time;
+    }
+    return candles[0].time;
+  }
+  if (roundedIdx >= candles.length) {
+    const lastStr = String(candles[candles.length - 1].time);
+    const lastDate = new Date(lastStr);
+    if (!isNaN(lastDate.getTime())) {
+      const diffBars = roundedIdx - (candles.length - 1);
+      lastDate.setDate(lastDate.getDate() + diffBars);
+      return lastDate.toISOString().split('T')[0] as Time;
+    }
+    return candles[candles.length - 1].time;
+  }
+  return candles[roundedIdx].time;
+}
+
 // Universal Point to Screen Coordinate Resolver (Handles past candles, live candles, and future projections)
 function resolvePointCoordinate(
   chart: IChartApi | null,
@@ -471,30 +497,53 @@ function resolvePointCoordinate(
 ): { x: number | null; y: number | null } {
   if (!chart || !series || !point) return { x: null, y: null };
   const timeScale = chart.timeScale();
-  let x = timeScale.timeToCoordinate(point.time);
+  let x: number | null = null;
 
-  if (x === null) {
-    if (point.logical !== undefined && point.logical !== null) {
-      x = timeScale.logicalToCoordinate(point.logical as any);
-    } else if (candles.length > 0) {
-      const lastCandle = candles[candles.length - 1];
-      const pStr = String(point.time);
-      const lastStr = String(lastCandle.time);
-      if (pStr > lastStr) {
-        const pDate = new Date(pStr).getTime();
-        const lDate = new Date(lastStr).getTime();
-        const diffDays = !isNaN(pDate) && !isNaN(lDate)
-          ? Math.max(1, Math.round((pDate - lDate) / (24 * 60 * 60 * 1000)))
-          : 1;
-        const targetLogical = candles.length - 1 + diffDays;
-        x = timeScale.logicalToCoordinate(targetLogical as any);
-      } else {
-        const pDate = new Date(pStr).getTime();
-        const fDate = new Date(String(candles[0].time)).getTime();
-        if (!isNaN(pDate) && !isNaN(fDate) && pDate < fDate) {
-          const diffDays = Math.max(1, Math.round((fDate - pDate) / (24 * 60 * 60 * 1000)));
-          x = timeScale.logicalToCoordinate((-diffDays) as any);
+  // 1. If point has high-precision continuous logical coordinate
+  if (point.logical !== undefined && point.logical !== null) {
+    if (candles.length > 0 && point.time) {
+      const cIdx = candles.findIndex((c) => c.time === point.time);
+      if (cIdx !== -1) {
+        // If logical is aligned with current candles, use logical for silky-smooth sub-bar dragging
+        if (Math.abs(point.logical - cIdx) < 3) {
+          x = timeScale.logicalToCoordinate(point.logical as any);
+        } else {
+          // If timeframe or data shifted significantly, fallback to timeToCoordinate
+          x = timeScale.timeToCoordinate(point.time);
         }
+      } else {
+        // Target is future/past or off-candle: logicalToCoordinate smoothly resolves it
+        x = timeScale.logicalToCoordinate(point.logical as any);
+      }
+    } else {
+      x = timeScale.logicalToCoordinate(point.logical as any);
+    }
+  }
+
+  // 2. If x is still null, fallback to timeToCoordinate
+  if (x === null && point.time) {
+    x = timeScale.timeToCoordinate(point.time);
+  }
+
+  // 3. Fallback for future or past projection beyond loaded candle dataset
+  if (x === null && candles.length > 0 && point.time) {
+    const lastCandle = candles[candles.length - 1];
+    const pStr = String(point.time);
+    const lastStr = String(lastCandle.time);
+    if (pStr > lastStr) {
+      const pDate = new Date(pStr).getTime();
+      const lDate = new Date(lastStr).getTime();
+      const diffDays = !isNaN(pDate) && !isNaN(lDate)
+        ? Math.max(1, Math.round((pDate - lDate) / (24 * 60 * 60 * 1000)))
+        : 1;
+      const targetLogical = candles.length - 1 + diffDays;
+      x = timeScale.logicalToCoordinate(targetLogical as any);
+    } else {
+      const pDate = new Date(pStr).getTime();
+      const fDate = new Date(String(candles[0].time)).getTime();
+      if (!isNaN(pDate) && !isNaN(fDate) && pDate < fDate) {
+        const diffDays = Math.max(1, Math.round((fDate - pDate) / (24 * 60 * 60 * 1000)));
+        x = timeScale.logicalToCoordinate((-diffDays) as any);
       }
     }
   }
@@ -1854,34 +1903,19 @@ export function MarketCandleChart() {
       if (!chart || !series) return null;
       const candles = loadedCandlesRef.current;
 
-      // 1. Prioritize handles of currently selected drawing
+      // Only check handles of currently selected drawing
       if (selId) {
         const item = drawingsRef.current.find((d) => d.id === selId);
         if (item) {
           const c1 = resolvePointCoordinate(chart, series, item.p1, candles);
-          if (c1.x !== null && c1.y !== null && Math.hypot(x - c1.x, y - c1.y) <= 22) {
+          if (c1.x !== null && c1.y !== null && Math.hypot(x - c1.x, y - c1.y) <= 18) {
             return { item, part: 'p1' as const };
           }
           if (item.p2) {
             const c2 = resolvePointCoordinate(chart, series, item.p2, candles);
-            if (c2.x !== null && c2.y !== null && Math.hypot(x - c2.x, y - c2.y) <= 22) {
+            if (c2.x !== null && c2.y !== null && Math.hypot(x - c2.x, y - c2.y) <= 18) {
               return { item, part: 'p2' as const };
             }
-          }
-        }
-      }
-
-      // 2. Allow grabbing handles of ANY drawing directly
-      for (let i = drawingsRef.current.length - 1; i >= 0; i--) {
-        const item = drawingsRef.current[i];
-        const c1 = resolvePointCoordinate(chart, series, item.p1, candles);
-        if (c1.x !== null && c1.y !== null && Math.hypot(x - c1.x, y - c1.y) <= 22) {
-          return { item, part: 'p1' as const };
-        }
-        if (item.p2) {
-          const c2 = resolvePointCoordinate(chart, series, item.p2, candles);
-          if (c2.x !== null && c2.y !== null && Math.hypot(x - c2.x, y - c2.y) <= 22) {
-            return { item, part: 'p2' as const };
           }
         }
       }
@@ -1906,7 +1940,7 @@ export function MarketCandleChart() {
       const clickX = e.clientX - rect.left;
       const clickY = e.clientY - rect.top;
 
-      // 1. Check if user clicked an anchor handle of any drawing
+      // 1. Check if user clicked an anchor handle of the selected drawing
       const handleHit = getHandleAt(clickX, clickY, selectedDrawingIdRef.current);
       if (handleHit) {
         e.stopPropagation();
@@ -1918,26 +1952,25 @@ export function MarketCandleChart() {
         const onWindowMouseMove = (moveEvent: MouseEvent) => {
           const moveX = moveEvent.clientX - rect.left;
           const moveY = moveEvent.clientY - rect.top;
-          const curPrice = series.coordinateToPrice(moveY);
-          const curLogical = chart.timeScale().coordinateToLogical(moveX);
-          let curTime = chart.timeScale().coordinateToTime(moveX);
-          const candles = loadedCandlesRef.current;
+          let curPrice: number | null = series.coordinateToPrice(moveY) as any;
+          let curLogical: number | null = chart.timeScale().coordinateToLogical(moveX) as any;
 
-          if (!curTime && curLogical !== null && candles.length > 0) {
-            if (curLogical >= candles.length) {
-              const diffBars = Math.round(curLogical) - (candles.length - 1);
-              const lastDate = new Date(candles[candles.length - 1].time as string);
-              lastDate.setDate(lastDate.getDate() + diffBars);
-              curTime = lastDate.toISOString().split('T')[0] as Time;
-            } else if (curLogical < 0) {
-              curTime = candles[0].time;
-            } else {
-              const clampedIdx = Math.max(0, Math.min(candles.length - 1, Math.round(curLogical)));
-              curTime = candles[clampedIdx].time;
-            }
+          if (curPrice === null) {
+            const topP = series.coordinateToPrice(10) as number | null;
+            const botP = series.coordinateToPrice(rect.height - 30) as number | null;
+            curPrice = moveY < 10 ? (topP ?? 0) : (botP ?? 0);
           }
+          if (curLogical === null) {
+            const leftL = (chart.timeScale().coordinateToLogical(0) ?? 0) as number;
+            const rightL = (chart.timeScale().coordinateToLogical(rect.width) ?? 0) as number;
+            curLogical = moveX < 0 ? leftL : rightL;
+          }
+          if (curPrice === null || curLogical === null) return;
 
-          if (curPrice === null || !curTime) return;
+          const candles = loadedCandlesRef.current;
+          const curTime = logicalToTime(curLogical, candles);
+          const safePrice = Math.round(curPrice * 100) / 100;
+          const safeLogical = Math.round(curLogical * 100) / 100;
 
           setDrawings((prev) => {
             const next = prev.map((d) => {
@@ -1947,9 +1980,9 @@ export function MarketCandleChart() {
                   ...d,
                   p1: {
                     ...d.p1,
-                    price: Math.round(curPrice * 100) / 100,
-                    time: curTime!,
-                    logical: curLogical !== null ? Math.round(curLogical * 10) / 10 : undefined,
+                    price: safePrice,
+                    time: curTime,
+                    logical: safeLogical,
                   },
                 };
               } else if (handleHit.part === 'p2' && d.p2) {
@@ -1957,9 +1990,9 @@ export function MarketCandleChart() {
                   ...d,
                   p2: {
                     ...d.p2,
-                    price: Math.round(curPrice * 100) / 100,
-                    time: curTime!,
-                    logical: curLogical !== null ? Math.round(curLogical * 10) / 10 : undefined,
+                    price: safePrice,
+                    time: curTime,
+                    logical: safeLogical,
                   },
                 };
               }
@@ -1989,40 +2022,60 @@ export function MarketCandleChart() {
         e.preventDefault();
         setSelectedDrawingId(hit.id);
         isDraggingRef.current = true;
+
+        const candles = loadedCandlesRef.current;
         const startRawPrice = series.coordinateToPrice(clickY) ?? hit.p1.price;
         const startLogical = chart.timeScale().coordinateToLogical(clickX) ?? 0;
-        const origP1 = { ...hit.p1 };
-        const origP2 = hit.p2 ? { ...hit.p2 } : undefined;
+
+        // Compute current exact logical and price positions for p1 and p2 at click time
+        const c1 = resolvePointCoordinate(chart, series, hit.p1, candles);
+        const p1BaseLogical = (c1.x !== null ? chart.timeScale().coordinateToLogical(c1.x) : null)
+          ?? (hit.p1.logical !== undefined ? hit.p1.logical : startLogical);
+        const p1BasePrice = hit.p1.price;
+
+        let p2BaseLogical: number | null = null;
+        let p2BasePrice: number | null = null;
+        if (hit.p2) {
+          const c2 = resolvePointCoordinate(chart, series, hit.p2, candles);
+          p2BaseLogical = (c2.x !== null ? chart.timeScale().coordinateToLogical(c2.x) : null)
+            ?? (hit.p2.logical !== undefined ? hit.p2.logical : (startLogical + 5));
+          p2BasePrice = hit.p2.price;
+        }
 
         const onWindowMouseMove = (moveEvent: MouseEvent) => {
           const moveX = moveEvent.clientX - rect.left;
           const moveY = moveEvent.clientY - rect.top;
-          const curPrice = series.coordinateToPrice(moveY);
-          const curLogical = chart.timeScale().coordinateToLogical(moveX);
+          let curPrice: number | null = series.coordinateToPrice(moveY) as any;
+          let curLogical: number | null = chart.timeScale().coordinateToLogical(moveX) as any;
+
+          if (curPrice === null) {
+            const topP = series.coordinateToPrice(10) as number | null;
+            const botP = series.coordinateToPrice(rect.height - 30) as number | null;
+            curPrice = moveY < 10 ? (topP ?? 0) : (botP ?? 0);
+          }
+          if (curLogical === null) {
+            const leftL = (chart.timeScale().coordinateToLogical(0) ?? 0) as number;
+            const rightL = (chart.timeScale().coordinateToLogical(rect.width) ?? 0) as number;
+            curLogical = moveX < 0 ? leftL : rightL;
+          }
           if (curPrice === null || curLogical === null) return;
 
           const dPrice = curPrice - startRawPrice;
           const dLogical = curLogical - startLogical;
-          const candles = loadedCandlesRef.current;
+          const currentCandles = loadedCandlesRef.current;
 
-          const shiftTime = (origTime: Time, deltaL: number): Time => {
-            if (candles.length === 0 || deltaL === 0) return origTime;
-            const origIdx = candles.findIndex((c) => c.time === origTime);
-            const baseIdx = origIdx !== -1 ? origIdx : Math.round(chart.timeScale().coordinateToLogical(chart.timeScale().timeToCoordinate(origTime) ?? 0) ?? 0);
-            const targetIdx = Math.round(baseIdx + deltaL);
-            if (targetIdx < 0) return candles[0].time;
-            if (targetIdx >= candles.length) {
-              const diffBars = targetIdx - (candles.length - 1);
-              const lastDate = new Date(candles[candles.length - 1].time as string);
-              lastDate.setDate(lastDate.getDate() + diffBars);
-              return lastDate.toISOString().split('T')[0] as Time;
-            }
-            return candles[targetIdx].time;
-          };
+          const newP1Logical = Math.round((p1BaseLogical + dLogical) * 100) / 100;
+          const newP1Price = Math.round((p1BasePrice + dPrice) * 100) / 100;
+          const newP1Time = logicalToTime(newP1Logical, currentCandles);
 
-          const newP1Time = shiftTime(origP1.time, dLogical);
-          const newP1Price = Math.round((origP1.price + dPrice) * 100) / 100;
-          const newP1Logical = (origP1.logical ?? startLogical) + dLogical;
+          let newP2Logical: number | null = null;
+          let newP2Price: number | null = null;
+          let newP2Time: Time | null = null;
+          if (p2BaseLogical !== null && p2BasePrice !== null) {
+            newP2Logical = Math.round((p2BaseLogical + dLogical) * 100) / 100;
+            newP2Price = Math.round((p2BasePrice + dPrice) * 100) / 100;
+            newP2Time = logicalToTime(newP2Logical, currentCandles);
+          }
 
           setDrawings((prev) => {
             const next = prev.map((d) => {
@@ -2031,10 +2084,7 @@ export function MarketCandleChart() {
                 ...d,
                 p1: { ...d.p1, price: newP1Price, time: newP1Time, logical: newP1Logical },
               };
-              if (origP2 && d.p2) {
-                const newP2Time = shiftTime(origP2.time, dLogical);
-                const newP2Price = Math.round((origP2.price + dPrice) * 100) / 100;
-                const newP2Logical = (origP2.logical ?? startLogical) + dLogical;
+              if (d.p2 && newP2Logical !== null && newP2Price !== null && newP2Time !== null) {
                 updated.p2 = { ...d.p2, price: newP2Price, time: newP2Time, logical: newP2Logical };
               }
               return updated;
