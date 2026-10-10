@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { DashboardLayout } from '../components/layout/DashboardLayout';
 import { TradingViewChart } from '../components/TradingViewChart';
-import { MacroDataSection } from '../../features/market/components/MacroDataSection';
 import { IndexBanner } from '../../features/market/components/IndexBanner';
 import { motion } from 'framer-motion';
 import { CandlestickData } from 'lightweight-charts';
@@ -85,12 +84,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* ── 2. Full Economic Macro Section (Kinh Tế Vĩ Mô) ── */}
-        <section className="space-y-3">
-          <MacroDataSection />
-        </section>
-
-        {/* ── 3. Realtime Market Index Pulse (Thị Trường) ── */}
+        {/* ── 2. Realtime Market Index Pulse (Thị Trường) ── */}
         <section className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 font-mono">

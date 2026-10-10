@@ -8,10 +8,24 @@ import realTicksData from '../data/realTicks.json';
 const WS_URL = 'wss://ws-openapi.dnse.com.vn';
 
 const DEFAULT_SYMBOLS = [
-  'HPG', 'SSI', 'VCB', 'VNM', 'TCB', 'FPT', 'MBB', 'VHM', 'MWG', 'VIC',
-  'GAS', 'MSN', 'STB', 'VPB', 'BID', 'PLX', 'NVL', 'DIG', 'PDR', 'SHB',
-  'ACB', 'EIB', 'LPB', 'HDB', 'KBC', 'DGC', 'VHC', 'DBC', 'REE', 'GEX',
-  'KDH', 'VRE', 'VJC', 'POW', 'SAB', 'CTG', 'VIB'
+  // Ngân hàng & Tài chính
+  'VCB', 'BID', 'CTG', 'TCB', 'MBB', 'ACB', 'VPB', 'HDB', 'STB', 'LPB', 'SHB', 'TPB', 'VIB', 'MSB', 'OCB', 'EIB',
+  // Chứng khoán
+  'SSI', 'VND', 'VCI', 'HCM', 'SHS', 'MBS', 'FTS', 'BSI', 'CTS', 'VIX',
+  // Thép & Vật liệu
+  'HPG', 'HSG', 'NKG', 'VGS',
+  // Bất động sản
+  'VHM', 'VIC', 'VRE', 'KDH', 'NLG', 'PDR', 'DIG', 'DXG', 'CEO', 'NVL', 'KBC', 'IDC', 'VGC', 'SZC', 'BCM', 'TCH',
+  // Công nghệ
+  'FPT', 'CMG', 'ELC',
+  // Bán lẻ & Tiêu dùng
+  'MWG', 'FRT', 'DGW', 'PNJ', 'MSN', 'VNM', 'SAB', 'DBC', 'HAG', 'BAF', 'VHC', 'ANV',
+  // Năng lượng & Dầu khí
+  'GAS', 'PLX', 'BSR', 'PVD', 'PVS', 'PVT', 'PVP', 'POW', 'REE', 'PC1',
+  // Hóa chất & Phân bón
+  'DGC', 'DCM', 'DPM', 'CSV', 'GVR',
+  // Công nghiệp & Xây dựng, Vận tải
+  'GEX', 'VSC', 'GMD', 'HAH', 'VCG', 'HHV', 'CII', 'VJC'
 ];
 
 interface RealTickEntry {

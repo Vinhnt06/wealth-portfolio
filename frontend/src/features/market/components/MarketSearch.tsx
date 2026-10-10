@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import { MagnifyingGlass, Command, X, TrendUp, Star } from '@phosphor-icons/react';
 import { useMarketStore } from '../store/marketStore';
 
@@ -21,13 +22,15 @@ const REAL_TICKS_MAP = realTicksData as Record<
 >;
 
 export const MarketSearch: React.FC = () => {
+  const router = useRouter();
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [screenerMap, setScreenerMap] = useState<Record<string, { price: number; changePercent: number; rsRating: number; volume: number }>>({});
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   
-  const { setSelectedSymbol, selectedSymbol, ticks, toggleWatchlistSymbol, watchlistSymbols, updateTick, openQuickView, closeQuickView } = useMarketStore();
+  const { setSelectedSymbol, selectedSymbol, ticks, toggleWatchlistSymbol, watchlistSymbols, updateTick, openQuickView, closeQuickView, setViewMode } = useMarketStore();
 
   // Helper to normalize any stock price input cleanly into VND
   const normalizeToVnd = (p: number | null | undefined): number | null => {
@@ -132,9 +135,14 @@ export const MarketSearch: React.FC = () => {
   const handleSelect = (symbol: string) => {
     const s = symbol.toUpperCase();
     setSelectedSymbol(s);
+    setViewMode('detail');
     closeQuickView();
     setIsOpen(false);
     setQuery('');
+
+    if (pathname !== '/market') {
+      router.push('/market');
+    }
 
     // Instant quote fetch with failover
     fetch(`/api/market/quote?symbol=${s}`)
@@ -174,10 +182,10 @@ export const MarketSearch: React.FC = () => {
   };
 
   return (
-    <div ref={containerRef} className="relative w-72 sm:w-88 z-[9999]">
+    <div ref={containerRef} className="relative w-full z-[9999]">
       {/* Inline Direct Header Search Input */}
       <div
-        className={`flex items-center px-3.5 py-1.5 bg-zinc-900 border rounded-xl transition-all shadow-inner ${
+        className={`flex items-center px-3 py-2 bg-zinc-900/90 border rounded-xl transition-all shadow-inner ${
           isOpen ? 'border-emerald-500/50 ring-2 ring-emerald-500/20 bg-zinc-950' : 'border-zinc-800 hover:border-zinc-700'
         }`}
       >
@@ -192,7 +200,7 @@ export const MarketSearch: React.FC = () => {
             setIsOpen(true);
           }}
           onKeyDown={handleKeyDownInput}
-          placeholder={`Tìm mã CK hoặc giá (${selectedSymbol})...`}
+          placeholder="Tìm mã CP (VCB, FPT...)"
           className="w-full bg-transparent text-xs font-mono text-zinc-100 placeholder-zinc-500 focus:outline-none"
         />
         {query ? (
@@ -206,7 +214,7 @@ export const MarketSearch: React.FC = () => {
             <X className="w-3.5 h-3.5" />
           </button>
         ) : (
-          <kbd className="hidden sm:flex items-center gap-0.5 px-1.5 py-0.5 text-[9px] font-mono bg-zinc-800 border border-zinc-700/60 rounded text-zinc-400 ml-1">
+          <kbd className="flex items-center gap-0.5 px-1.5 py-0.5 text-[9px] font-mono bg-zinc-800 border border-zinc-700/60 rounded text-zinc-400 ml-1">
             <Command className="w-2.5 h-2.5" />K
           </kbd>
         )}
@@ -214,7 +222,7 @@ export const MarketSearch: React.FC = () => {
 
       {/* Floating Autocomplete Dropdown List with Stock + Price + RS */}
       {isOpen && (
-        <div className="absolute left-0 right-0 sm:right-auto sm:w-[440px] top-full mt-2 z-[99999] bg-zinc-950/98 border border-zinc-700/80 rounded-2xl shadow-[0_25px_60px_rgba(0,0,0,0.9)] overflow-hidden backdrop-blur-2xl animate-in fade-in duration-150 ring-1 ring-white/10">
+        <div className="fixed left-4 right-4 sm:absolute sm:left-0 sm:right-auto sm:w-[440px] max-w-[480px] top-16 sm:top-full mt-2 z-[99999] bg-zinc-950/98 border border-zinc-700/80 rounded-2xl shadow-[0_25px_60px_rgba(0,0,0,0.9)] overflow-hidden backdrop-blur-2xl animate-in fade-in duration-150 ring-1 ring-white/10">
           <div className="max-h-80 overflow-y-auto p-1.5 divide-y divide-zinc-800/40 scrollbar-none">
             {filtered.length === 0 ? (
               <div

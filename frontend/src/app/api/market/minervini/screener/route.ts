@@ -42,13 +42,45 @@ export async function GET(request: Request) {
     ? customSymbolsParam.split(',').map((s) => s.trim().toUpperCase()).filter(Boolean)
     : DEFAULT_UNIVERSE;
 
+// Real Shares Outstanding (Cổ phiếu lưu hành) for Vietnamese equities (in millions of shares)
+const OUTSTANDING_SHARES_M: Record<string, number> = {
+  // Ngân hàng
+  VCB: 5589, BID: 5700, CTG: 5369, TCB: 7067, MBB: 5287, ACB: 4466, VPB: 7933,
+  HDB: 2900, STB: 1885, LPB: 2557, SHB: 3662, TPB: 2201, VIB: 2536, MSB: 2600,
+  OCB: 2054, SSB: 2490, EIB: 1740,
+  // Chứng khoán
+  SSI: 1511, VND: 1522, VCI: 718, HCM: 705, SHS: 813, MBS: 437, FTS: 242,
+  BSI: 202, CTS: 148, VIX: 1459,
+  // Bất động sản
+  VHM: 4354, VIC: 3880, VRE: 2272, KDH: 800, NLG: 384, PDR: 873, DIG: 609,
+  DXG: 720, CEO: 514, NVL: 1950, KBC: 767, IDC: 330, VGC: 448, SZC: 180,
+  BCM: 1035, TCH: 668, VPI: 241, HDG: 305,
+  // Thép & Vật liệu
+  HPG: 8443, HSG: 616, NKG: 263, VGS: 107, HT1: 381, BMP: 81, NTP: 129,
+  // Công nghệ
+  FPT: 1460, CMG: 150, ELC: 82, CTR: 114, VGI: 3043,
+  // Bán lẻ & Tiêu dùng
+  MSN: 1430, MWG: 1463, VNM: 2089, SAB: 1282, PNJ: 338, FRT: 136, DGW: 167,
+  DBC: 242, HAG: 1057, BAF: 239, VHC: 224, ANV: 266,
+  // Năng lượng & Dầu khí
+  GAS: 2296, PLX: 1270, BSR: 3100, PVD: 555, PVS: 478, PVT: 356, PVP: 94,
+  POW: 2341, REE: 409, PC1: 310, GEG: 338,
+  // Hóa chất & Phân bón
+  DGC: 379, DCM: 529, DPM: 391, CSV: 132, GVR: 4000, BFC: 77, LAS: 112,
+  // Công nghiệp & Vận tải
+  GEX: 851, VSC: 266, GMD: 335, HAH: 121, VCG: 534, HHV: 411, CII: 318,
+  VJC: 541, TNG: 113, MSH: 75
+};
+
   // Seeded deterministic fundamental figures per symbol
   const getFundMetrics = (sym: string, price: number) => {
     let hash = 0;
     for (let i = 0; i < sym.length; i++) hash = (hash << 5) - hash + sym.charCodeAt(i);
     const posHash = Math.abs(hash);
 
-    const mktCapT = Math.round((posHash % 150 + 2.5) * 10) / 10;
+    const sharesM = OUTSTANDING_SHARES_M[sym] || (posHash % 400 + 50);
+    // Real market cap in nghìn tỷ VND = (sharesM * 10^6 * price) / 10^12 = (sharesM * price) / 10^6
+    const mktCapT = Math.round(((sharesM * (price || 10000)) / 1000000) * 10) / 10;
     const pe = Math.round(((posHash % 25) + 6.5) * 10) / 10;
     const epsDilTTM = Math.round((price * 1000) / pe);
     const epsGrowthYoY = Math.round(((posHash % 80) - 10) * 10) / 10;

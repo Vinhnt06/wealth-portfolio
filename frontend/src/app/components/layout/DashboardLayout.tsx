@@ -7,6 +7,7 @@ import { useSession, signOut } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '../LanguageContext';
 import { LanguageSwitcher } from '../LanguageSwitcher';
+import { MarketSearch } from '@/features/market/components/MarketSearch';
 import {
     House,
     User,
@@ -77,9 +78,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     return (
         <div className="min-h-[100dvh] bg-black text-white">
             {/* Mobile Header */}
-            <header className="md:hidden fixed top-0 left-0 right-0 z-50 bg-[#111]/95 backdrop-blur-lg border-b border-white/5 px-4 py-3 flex items-center justify-between">
-                <Link href="/dashboard" className="text-xl font-semibold tracking-tighter">YourFin.</Link>
-                <div className="flex items-center gap-3">
+            <header className="md:hidden fixed top-0 left-0 right-0 z-[55] bg-[#111]/95 backdrop-blur-lg border-b border-white/5 px-4 py-2.5 flex items-center justify-between gap-3">
+                <Link href="/dashboard" className="text-xl font-semibold tracking-tighter shrink-0">YourFin.</Link>
+                <div className="flex-1 max-w-[200px]">
+                    <MarketSearch />
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
                     <LanguageSwitcher />
                     <button
                         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -165,10 +169,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             {/* Main */}
             <main className="md:ml-64 min-h-[100dvh] pt-16 bg-[#0A0A0A]">
                 {/* Desktop Top Nav */}
-                <header className="hidden md:flex fixed top-0 left-0 right-0 h-16 bg-[#0F0F0F]/95 backdrop-blur-lg border-b border-white/5 items-center justify-between px-6 z-50">
-                    <div className="flex items-center gap-10">
+                <header className="hidden md:flex fixed top-0 left-0 right-0 h-16 bg-[#0F0F0F]/95 backdrop-blur-lg border-b border-white/5 items-center justify-between px-6 z-[55]">
+                    <div className="flex items-center gap-8">
                         <Link href="/dashboard" className="text-xl font-semibold tracking-tighter">YourFin.</Link>
-                        <nav className="flex items-center gap-8 h-16" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+                        <nav className="flex items-center gap-7 h-16" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
                             {topNavItems.map((item) => {
                                 const active = isActive(item.href);
                                 return (
@@ -186,6 +190,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                             })}
                         </nav>
                     </div>
+
+                    {/* Central Global Search in Navbar */}
+                    <div className="flex-1 max-w-sm mx-6">
+                        <MarketSearch />
+                    </div>
+
                     <div className="flex items-center gap-5">
                         <LanguageSwitcher />
                         <button className="text-zinc-500 hover:text-white transition-colors relative">

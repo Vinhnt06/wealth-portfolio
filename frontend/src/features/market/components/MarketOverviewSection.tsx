@@ -1,10 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { IndexBanner } from './IndexBanner';
 import { MarketIndexChart } from './MarketIndexChart';
 import { WatchlistTable } from './WatchlistTable';
 import { MarketSummaryBar } from './MarketSummaryBar';
+import { MarketHeatmap } from './MarketHeatmap';
 import {
   CurrencyCircleDollar,
   Lightning,
@@ -12,21 +13,57 @@ import {
   ChartPieSlice,
   ShieldCheck,
   TrendUp,
-  TrendDown
+  TrendDown,
+  Flame,
+  ChartLineUp
 } from '@phosphor-icons/react';
 
 export const MarketOverviewSection: React.FC = () => {
+  const [overviewTab, setOverviewTab] = useState<'heatmap' | 'chart'>('heatmap');
+
   return (
     <div className="space-y-6">
       {/* 1. Full-Width Market Index Banner (VN-INDEX 1735.09, VN30, HNX, UPCOM) */}
       <IndexBanner />
 
-      {/* 2. Main Terminal Hub: Permanent Full-Height Index Chart (8 cols) + Market Breadth (4 cols) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Market Overview Chart - Fixed Full-Height, Never Collapsed */}
-        <div className="lg:col-span-8 min-h-[460px]">
-          <MarketIndexChart />
+      {/* Overview View Switcher */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center p-1 rounded-xl bg-zinc-950/80 border border-zinc-800/80 backdrop-blur-xl">
+          <button
+            onClick={() => setOverviewTab('heatmap')}
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold transition-all ${
+              overviewTab === 'heatmap'
+                ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20'
+                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
+            }`}
+          >
+            <Flame className="w-4 h-4" weight="fill" />
+            <span>Bản Đồ Nhiệt (Heatmap)</span>
+          </button>
+
+          <button
+            onClick={() => setOverviewTab('chart')}
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold transition-all ${
+              overviewTab === 'chart'
+                ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20'
+                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
+            }`}
+          >
+            <ChartLineUp className="w-4 h-4" />
+            <span>Biểu Đồ Chỉ Số & Độ Rộng</span>
+          </button>
         </div>
+      </div>
+
+      {/* 2. Main Terminal Hub: Heatmap or Index Chart */}
+      {overviewTab === 'heatmap' ? (
+        <MarketHeatmap />
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Market Overview Chart - Fixed Full-Height, Never Collapsed */}
+          <div className="lg:col-span-8 min-h-[460px]">
+            <MarketIndexChart />
+          </div>
 
         {/* Market Breadth & Macro Flow Statistics (4 cols) */}
         <div className="lg:col-span-4 flex flex-col gap-4">
@@ -98,6 +135,7 @@ export const MarketOverviewSection: React.FC = () => {
           </div>
         </div>
       </div>
+    )}
 
       {/* 3. High-Density Realtime Watchlist (8 cols) & Top Movers Terminal (4 cols) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">

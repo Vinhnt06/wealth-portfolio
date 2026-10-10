@@ -5,4 +5,5 @@
 - [project] AG Kit only supports Gemini CLI and Google Antigravity (not other AI coding tools) → project-conventions.md
 - [project] Component metadata uses SemVer while toolkit releases use CalVer → tech-decisions.md
 - [api] DNSE Market Data WebSocket spec & heartbeat guidelines → dnse-websocket.md
+- [data] STRICT BAN ON MOCK DATA: Cấm mock data tài chính; chỉ dùng API thật (DNSE, Vnstock) → project-conventions.md
 

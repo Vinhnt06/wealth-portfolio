@@ -70,6 +70,9 @@ const RESOLUTIONS = [
   { id: '1h', label: '1H' },
   { id: '1D', label: 'D' },
   { id: '1W', label: 'W' },
+  { id: '1M', label: '1M' },
+  { id: '3M', label: '3M' },
+  { id: '6M', label: '6M' },
 ] as const;
 
 type ResolutionId = typeof RESOLUTIONS[number]['id'];
@@ -117,8 +120,9 @@ export interface DrawingItem {
   symbol: string;
   color: string;
   width: number;
-  p1: { time: Time; price: number };
-  p2?: { time: Time; price: number };
+  p1: { time: Time; price: number; logical?: number };
+  p2?: { time: Time; price: number; logical?: number };
+  mouseCoord?: { x: number; y: number };
   text?: string;
 }
 
@@ -251,6 +255,210 @@ export function calculateTrendlinePro(candles: CandlestickData<Time>[]): Trendli
   };
 }
 
+// ── Technical Indicator Calculations (RSI, MACD, MFI, OBV) ──────────
+export type SubIndicatorType = 'none' | 'rsi' | 'macd' | 'mfi' | 'obv';
+
+function calculateRSI(candles: CandlestickData<Time>[], period = 14): LineData<Time>[] {
+  if (!candles || candles.length <= period) return [];
+  const results: LineData<Time>[] = [];
+  let gains = 0;
+  let losses = 0;
+
+  for (let i = 1; i <= period; i++) {
+    const diff = candles[i].close - candles[i - 1].close;
+    if (diff >= 0) gains += diff;
+    else losses += Math.abs(diff);
+  }
+
+  let avgGain = gains / period;
+  let avgLoss = losses / period;
+
+  let rs = avgLoss === 0 ? 100 : avgGain / avgLoss;
+  let rsi = 100 - (100 / (1 + rs));
+  results.push({ time: candles[period].time, value: Math.round(rsi * 100) / 100 });
+
+  for (let i = period + 1; i < candles.length; i++) {
+    const diff = candles[i].close - candles[i - 1].close;
+    const gain = diff > 0 ? diff : 0;
+    const loss = diff < 0 ? Math.abs(diff) : 0;
+
+    avgGain = (avgGain * (period - 1) + gain) / period;
+    avgLoss = (avgLoss * (period - 1) + loss) / period;
+
+    rs = avgLoss === 0 ? 100 : avgGain / avgLoss;
+    rsi = 100 - (100 / (1 + rs));
+    results.push({ time: candles[i].time, value: Math.round(rsi * 100) / 100 });
+  }
+  return results;
+}
+
+function calculateMACD(candles: CandlestickData<Time>[], fast = 12, slow = 26, signal = 9) {
+  if (!candles || candles.length <= slow + signal) return { macd: [], signal: [], hist: [] };
+  const closes = candles.map((c) => c.close);
+  const kFast = 2 / (fast + 1);
+  const kSlow = 2 / (slow + 1);
+  const kSignal = 2 / (signal + 1);
+
+  let emaFast = closes.slice(0, fast).reduce((a, b) => a + b, 0) / fast;
+  let emaSlow = closes.slice(0, slow).reduce((a, b) => a + b, 0) / slow;
+
+  const macdValues: number[] = [];
+  const times: Time[] = [];
+
+  for (let i = slow; i < candles.length; i++) {
+    emaFast = closes[i] * kFast + emaFast * (1 - kFast);
+    emaSlow = closes[i] * kSlow + emaSlow * (1 - kSlow);
+    const macdVal = emaFast - emaSlow;
+    macdValues.push(macdVal);
+    times.push(candles[i].time);
+  }
+
+  let signalEma = macdValues.slice(0, signal).reduce((a, b) => a + b, 0) / signal;
+  const macdSeries: LineData<Time>[] = [];
+  const signalSeries: LineData<Time>[] = [];
+  const histSeries: HistogramData<Time>[] = [];
+
+  for (let i = signal - 1; i < macdValues.length; i++) {
+    if (i >= signal) {
+      signalEma = macdValues[i] * kSignal + signalEma * (1 - kSignal);
+    }
+    const m = Math.round(macdValues[i] * 100) / 100;
+    const s = Math.round(signalEma * 100) / 100;
+    const h = Math.round((m - s) * 100) / 100;
+    const t = times[i];
+
+    macdSeries.push({ time: t, value: m });
+    signalSeries.push({ time: t, value: s });
+    histSeries.push({
+      time: t,
+      value: h,
+      color: h >= 0 ? 'rgba(16, 185, 129, 0.85)' : 'rgba(239, 68, 68, 0.85)',
+    });
+  }
+
+  return { macd: macdSeries, signal: signalSeries, hist: histSeries };
+}
+
+function calculateMFI(candles: CandlestickData<Time>[], volumes: HistogramData<Time>[], period = 14): LineData<Time>[] {
+  if (!candles || candles.length <= period) return [];
+  const volMap = new Map<Time, number>();
+  volumes.forEach((v) => volMap.set(v.time, v.value));
+
+  const tp = candles.map((c) => (c.high + c.low + c.close) / 3);
+  const rmf = tp.map((price, i) => price * (volMap.get(candles[i].time) || 0));
+
+  const results: LineData<Time>[] = [];
+  for (let i = period; i < candles.length; i++) {
+    let posFlow = 0;
+    let negFlow = 0;
+    for (let j = i - period + 1; j <= i; j++) {
+      if (tp[j] > tp[j - 1]) posFlow += rmf[j];
+      else if (tp[j] < tp[j - 1]) negFlow += rmf[j];
+    }
+    const mfi = negFlow === 0 ? 100 : 100 - (100 / (1 + (posFlow / negFlow)));
+    results.push({ time: candles[i].time, value: Math.round(mfi * 100) / 100 });
+  }
+  return results;
+}
+
+function calculateOBV(candles: CandlestickData<Time>[], volumes: HistogramData<Time>[]): LineData<Time>[] {
+  if (!candles || candles.length === 0) return [];
+  const volMap = new Map<Time, number>();
+  volumes.forEach((v) => volMap.set(v.time, v.value));
+
+  const results: LineData<Time>[] = [];
+  let currentOBV = 0;
+  results.push({ time: candles[0].time, value: 0 });
+
+  for (let i = 1; i < candles.length; i++) {
+    const vol = volMap.get(candles[i].time) || 0;
+    if (candles[i].close > candles[i - 1].close) currentOBV += vol;
+    else if (candles[i].close < candles[i - 1].close) currentOBV -= vol;
+    results.push({ time: candles[i].time, value: Math.round(currentOBV) });
+  }
+  return results;
+}
+
+function distToSegment(px: number, py: number, x1: number, y1: number, x2: number, y2: number): number {
+  const l2 = (x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1);
+  if (l2 === 0) return Math.hypot(px - x1, py - y1);
+  let t = ((px - x1) * (x2 - x1) + (py - y1) * (y2 - y1)) / l2;
+  t = Math.max(0, Math.min(1, t));
+  return Math.hypot(px - (x1 + t * (x2 - x1)), py - (y1 + t * (y2 - y1)));
+}
+
+function aggregateCandles(
+  candles: CandlestickData<Time>[],
+  volumes: HistogramData<Time>[],
+  type: '1M' | '3M' | '6M'
+): { candles: CandlestickData<Time>[]; volumes: HistogramData<Time>[] } {
+  if (!candles || candles.length === 0) return { candles: [], volumes: [] };
+
+  const volMap = new Map<Time, number>();
+  volumes.forEach((v) => volMap.set(v.time, v.value));
+
+  const groups = new Map<
+    string,
+    { time: Time; open: number; high: number; low: number; close: number; volume: number }
+  >();
+
+  for (let i = 0; i < candles.length; i++) {
+    const c = candles[i];
+    const timeStr = typeof c.time === 'string' ? c.time : new Date(Number(c.time) * 1000).toISOString().split('T')[0];
+    const parts = timeStr.split('-');
+    const year = parts[0];
+    const month = parseInt(parts[1] || '1', 10);
+
+    let key = '';
+    if (type === '1M') {
+      key = `${year}-${String(month).padStart(2, '0')}`;
+    } else if (type === '3M') {
+      const q = Math.floor((month - 1) / 3) + 1;
+      key = `${year}-Q${q}`;
+    } else if (type === '6M') {
+      const h = Math.floor((month - 1) / 6) + 1;
+      key = `${year}-H${h}`;
+    }
+
+    if (!groups.has(key)) {
+      groups.set(key, {
+        time: c.time,
+        open: c.open,
+        high: c.high,
+        low: c.low,
+        close: c.close,
+        volume: volMap.get(c.time) || 0,
+      });
+    } else {
+      const g = groups.get(key)!;
+      g.high = Math.max(g.high, c.high);
+      g.low = Math.min(g.low, c.low);
+      g.close = c.close;
+      g.volume += volMap.get(c.time) || 0;
+    }
+  }
+
+  const aggCandles: CandlestickData<Time>[] = [];
+  const aggVolumes: HistogramData<Time>[] = [];
+
+  groups.forEach((g) => {
+    aggCandles.push({
+      time: g.time,
+      open: g.open,
+      high: g.high,
+      low: g.low,
+      close: g.close,
+    });
+    aggVolumes.push({
+      time: g.time,
+      value: g.volume,
+      color: g.close >= g.open ? 'rgba(16, 185, 129, 0.4)' : 'rgba(244, 63, 94, 0.4)',
+    });
+  });
+
+  return { candles: aggCandles, volumes: aggVolumes };
+}
+
 // ── Native Stream MarketCandleChart Component ────────────────────────
 export function MarketCandleChart() {
   const fullWrapperRef = useRef<HTMLDivElement>(null);
@@ -302,6 +510,21 @@ export function MarketCandleChart() {
   const [showBB, setShowBB] = useState(false);
   const [showVolume, setShowVolume] = useState(true);
 
+  // Sub-Chart Indicators (RSI, MACD, MFI, OBV)
+  const [activeSubIndicator, setActiveSubIndicator] = useState<SubIndicatorType>('none');
+  const [subIndicatorValues, setSubIndicatorValues] = useState<{
+    rsi?: number;
+    macd?: number;
+    signal?: number;
+    hist?: number;
+    mfi?: number;
+    obv?: number;
+  }>({});
+  const [dataVersion, setDataVersion] = useState<number>(0);
+  const subChartContainerRef = useRef<HTMLDivElement>(null);
+  const subChartRef = useRef<IChartApi | null>(null);
+  const loadedVolumesRef = useRef<HistogramData<Time>[]>([]);
+
   // Trendline Pro State
   const [showTrendlinePro, setShowTrendlinePro] = useState(true);
   const [trendlineProData, setTrendlineProData] = useState<TrendlineProResult | null>(null);
@@ -313,9 +536,12 @@ export function MarketCandleChart() {
   const [showPalette, setShowPalette] = useState<boolean>(false);
   const [drawings, setDrawings] = useState<DrawingItem[]>([]);
   const [draftDrawing, setDraftDrawing] = useState<DrawingItem | null>(null);
+  const [selectedDrawingId, setSelectedDrawingId] = useState<string | null>(null);
+  const selectedDrawingIdRef = useRef<string | null>(null);
+  const findHitDrawingRef = useRef<(x: number, y: number) => DrawingItem | null>(() => null);
   const [undoStack, setUndoStack] = useState<DrawingItem[][]>([]);
   const [redoStack, setRedoStack] = useState<DrawingItem[][]>([]);
-  const [isMagnetMode, setIsMagnetMode] = useState<boolean>(true); // Smart magnet snap to OHLC
+  const [isMagnetMode, setIsMagnetMode] = useState<boolean>(false); // Smart magnet snap to OHLC (off by default like TradingView)
   const [stayInDrawingMode, setStayInDrawingMode] = useState<boolean>(false);
   const [lockDrawings, setLockDrawings] = useState<boolean>(false);
   const [hideDrawings, setHideDrawings] = useState<boolean>(false);
@@ -336,7 +562,19 @@ export function MarketCandleChart() {
     volume?: number;
     change?: number;
     changePct?: number;
+    ma20?: number;
+    ma50?: number;
+    ma150?: number;
+    ma200?: number;
   } | null>(null);
+
+  // Latest calculated Moving Average values for indicator legend
+  const [latestMA, setLatestMA] = useState<{
+    ma20?: number;
+    ma50?: number;
+    ma150?: number;
+    ma200?: number;
+  }>({});
 
   const currentTick = ticks[selectedSymbol];
 
@@ -420,15 +658,45 @@ export function MarketCandleChart() {
     };
   }, []);
 
-  // Keyboard shortcut listener: Esc cancels current drawing or exits fullscreen
+  useEffect(() => {
+    selectedDrawingIdRef.current = selectedDrawingId;
+  }, [selectedDrawingId]);
+
+  // Keyboard shortcut listener: Delete/Backspace deletes selected drawing, Esc cancels current drawing or exits fullscreen
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        const tag = (document.activeElement?.tagName || '').toLowerCase();
+        if (tag === 'input' || tag === 'textarea') return;
+
+        const selId = selectedDrawingIdRef.current;
+        if (selId) {
+          e.preventDefault();
+          setDrawings((prev) => {
+            const itemToRemove = prev.find((d) => d.id === selId);
+            if (itemToRemove) {
+              setUndoStack((u) => [...u, [itemToRemove]]);
+              setRedoStack([]);
+            }
+            const updated = prev.filter((d) => d.id !== selId);
+            saveDrawings(updated);
+            return updated;
+          });
+          setSelectedDrawingId(null);
+          setTimeout(() => {
+            redrawCanvasRef.current();
+          }, 0);
+          return;
+        }
+      }
+
       if (e.key === 'Escape') {
         if (document.fullscreenElement) {
           document.exitFullscreen().catch(() => {});
         }
         setIsExpanded(false);
         setDraftDrawing(null);
+        setSelectedDrawingId(null);
         setActiveTool('cursor');
         setShowPalette(false);
         setShowIndicatorsModal(false);
@@ -448,14 +716,15 @@ export function MarketCandleChart() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Smart Magnet Snapping function (Snaps to Nearest Candle O/H/L/C)
+  // Smart Magnet Snapping function (Snaps to Nearest Candle O/H/L/C with TradingView-style proximity gate)
   const snapToCandle = useCallback(
-    (rawTime: Time | null, rawPrice: number, screenX?: number) => {
-      if (!isMagnetMode || loadedCandlesRef.current.length === 0) {
+    (rawTime: Time | null, rawPrice: number, screenX?: number, screenY?: number) => {
+      if (!isMagnetMode || loadedCandlesRef.current.length === 0 || !chartRef.current || !candleSeriesRef.current) {
         return { time: rawTime, price: Math.round(rawPrice * 100) / 100, isSnapped: false };
       }
 
       const chart = chartRef.current;
+      const series = candleSeriesRef.current;
       const candles = loadedCandlesRef.current;
       let targetCandle: CandlestickData<Time> | null = null;
 
@@ -466,13 +735,13 @@ export function MarketCandleChart() {
         }
       }
 
-      if (!targetCandle && chart && screenX !== undefined) {
+      if (!targetCandle && screenX !== undefined) {
         let closestDist = Infinity;
         for (let i = 0; i < candles.length; i++) {
           const coord = chart.timeScale().timeToCoordinate(candles[i].time);
           if (coord !== null) {
             const dist = Math.abs(coord - screenX);
-            if (dist < closestDist) {
+            if (dist < closestDist && dist <= 24) {
               closestDist = dist;
               targetCandle = candles[i];
             }
@@ -484,17 +753,32 @@ export function MarketCandleChart() {
         return { time: rawTime, price: Math.round(rawPrice * 100) / 100, isSnapped: false };
       }
 
-      // Check OHLC points
-      const ohlc = [targetCandle.high, targetCandle.low, targetCandle.open, targetCandle.close];
-      let bestPrice = ohlc[0];
-      let minDiff = Math.abs(bestPrice - rawPrice);
+      // Check horizontal distance
+      const candleX = chart.timeScale().timeToCoordinate(targetCandle.time);
+      if (candleX !== null && screenX !== undefined && Math.abs(candleX - screenX) > 24) {
+        return { time: rawTime, price: Math.round(rawPrice * 100) / 100, isSnapped: false };
+      }
 
-      for (let i = 1; i < ohlc.length; i++) {
-        const diff = Math.abs(ohlc[i] - rawPrice);
-        if (diff < minDiff) {
-          minDiff = diff;
-          bestPrice = ohlc[i];
+      // Check OHLC points for vertical proximity
+      const ohlc = [targetCandle.high, targetCandle.low, targetCandle.open, targetCandle.close];
+      let bestPrice = rawPrice;
+      let minPixDiff = Infinity;
+      let foundSnap = false;
+
+      for (let i = 0; i < ohlc.length; i++) {
+        const pY = series.priceToCoordinate(ohlc[i]);
+        if (pY !== null && screenY !== undefined) {
+          const pixDiff = Math.abs(pY - screenY);
+          if (pixDiff < minPixDiff && pixDiff <= 28) {
+            minPixDiff = pixDiff;
+            bestPrice = ohlc[i];
+            foundSnap = true;
+          }
         }
+      }
+
+      if (!foundSnap) {
+        return { time: targetCandle.time, price: Math.round(rawPrice * 100) / 100, isSnapped: false };
       }
 
       return {
@@ -505,6 +789,126 @@ export function MarketCandleChart() {
     },
     [isMagnetMode]
   );
+
+  // Find drawing hit at screen coordinates (x, y) for selection & deletion
+  const findHitDrawing = useCallback(
+    (x: number, y: number): DrawingItem | null => {
+      const chart = chartRef.current;
+      const series = candleSeriesRef.current;
+      if (!chart || !series || drawings.length === 0) return null;
+
+      const toCoord = (p?: { time: Time; price: number }) => {
+        if (!p) return { x: null, y: null };
+        const cx = chart.timeScale().timeToCoordinate(p.time);
+        const cy = series.priceToCoordinate(p.price);
+        return { x: cx, y: cy };
+      };
+
+      for (let i = drawings.length - 1; i >= 0; i--) {
+        const item = drawings[i];
+        const c1 = toCoord(item.p1);
+        const c2 = item.p2 ? toCoord(item.p2) : null;
+
+        if (item.type === 'horizontal') {
+          const yCoord = series.priceToCoordinate(item.p1.price);
+          if (yCoord !== null && Math.abs(y - yCoord) <= 12) return item;
+        } else if (item.type === 'horizontal_ray') {
+          const yCoord = series.priceToCoordinate(item.p1.price);
+          if (yCoord !== null && Math.abs(y - yCoord) <= 12) {
+            if (c1.x === null || x >= c1.x - 12) return item;
+          }
+        } else if (item.type === 'vertical') {
+          if (c1.x !== null && Math.abs(x - c1.x) <= 12) return item;
+        } else if (
+          item.type === 'trendline' ||
+          item.type === 'ray' ||
+          item.type === 'arrow_pointer' ||
+          item.type === 'arrow_marker' ||
+          item.type === 'measure'
+        ) {
+          if (c1.x !== null && c1.y !== null && c2 && c2.x !== null && c2.y !== null) {
+            if (distToSegment(x, y, c1.x, c1.y, c2.x, c2.y) <= 14) return item;
+            if (Math.hypot(x - c1.x, y - c1.y) <= 16 || Math.hypot(x - c2.x, y - c2.y) <= 16) return item;
+            if (item.type === 'ray') {
+              const dx = c2.x - c1.x;
+              const dy = c2.y - c1.y;
+              if (dx !== 0) {
+                const slope = dy / dx;
+                const extY = c1.y + slope * (x - c1.x);
+                const isForward = dx > 0 ? x >= c1.x - 10 : x <= c1.x + 10;
+                if (isForward && Math.abs(y - extY) <= 14) return item;
+              }
+            }
+          }
+        } else if (item.type === 'fibonacci' && item.p2) {
+          if (c1.x !== null && c1.y !== null && c2 && c2.x !== null && c2.y !== null) {
+            if (distToSegment(x, y, c1.x, c1.y, c2.x, c2.y) <= 14) return item;
+            if (Math.hypot(x - c1.x, y - c1.y) <= 16 || Math.hypot(x - c2.x, y - c2.y) <= 16) return item;
+
+            const p1 = item.p1.price;
+            const p2 = item.p2.price;
+            const minX = Math.min(c1.x, c2.x);
+            const fibRatios = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1.0];
+            for (const ratio of fibRatios) {
+              const priceLvl = p1 + (p2 - p1) * ratio;
+              const yLvl = series.priceToCoordinate(priceLvl);
+              if (yLvl !== null && Math.abs(y - yLvl) <= 10 && x >= minX - 14) {
+                return item;
+              }
+            }
+          }
+        } else if (item.type === 'fib_extension' && item.p2) {
+          if (c1.x !== null && c1.y !== null && c2 && c2.x !== null && c2.y !== null) {
+            if (distToSegment(x, y, c1.x, c1.y, c2.x, c2.y) <= 14) return item;
+            const p1 = item.p1.price;
+            const p2 = item.p2.price;
+            const minX = Math.min(c1.x, c2.x);
+            const extRatios = [0, 0.618, 1.0, 1.618, 2.618];
+            for (const ratio of extRatios) {
+              const priceLvl = p1 + Math.abs(p2 - p1) * ratio;
+              const yLvl = series.priceToCoordinate(priceLvl);
+              if (yLvl !== null && Math.abs(y - yLvl) <= 10 && x >= minX - 14) {
+                return item;
+              }
+            }
+          }
+        } else if (item.type === 'rectangle' && c2) {
+          if (c1.x !== null && c1.y !== null && c2.x !== null && c2.y !== null) {
+            const minX = Math.min(c1.x, c2.x);
+            const maxX = Math.max(c1.x, c2.x);
+            const minY = Math.min(c1.y, c2.y);
+            const maxY = Math.max(c1.y, c2.y);
+            if (x >= minX - 8 && x <= maxX + 8 && y >= minY - 8 && y <= maxY + 8) return item;
+          }
+        } else if (item.type === 'circle' && c2) {
+          if (c1.x !== null && c1.y !== null && c2.x !== null && c2.y !== null) {
+            const radius = Math.hypot(c2.x - c1.x, c2.y - c1.y);
+            const dToCenter = Math.hypot(x - c1.x, y - c1.y);
+            if (Math.abs(dToCenter - radius) <= 14 || dToCenter <= 16) return item;
+          }
+        } else if (item.type === 'parallel_channel' && c2) {
+          if (c1.x !== null && c1.y !== null && c2.x !== null && c2.y !== null) {
+            const dy = 40;
+            if (distToSegment(x, y, c1.x, c1.y, c2.x, c2.y) <= 14) return item;
+            if (distToSegment(x, y, c1.x, c1.y - dy, c2.x, c2.y - dy) <= 14) return item;
+          }
+        } else if (item.type === 'long_position' || item.type === 'short_position') {
+          if (c1.x !== null && c1.y !== null && c2 && c2.x !== null && c2.y !== null) {
+            const leftX = Math.min(c1.x, c2.x);
+            const rightX = Math.max(c1.x, c2.x) + 60;
+            if (x >= leftX - 10 && x <= rightX + 10 && Math.abs(y - c1.y) <= 50) return item;
+          }
+        } else {
+          // Dot, Text, Rocket, Price Label, Callout
+          if (c1.x !== null && c1.y !== null && Math.hypot(x - c1.x, y - c1.y) <= 24) return item;
+        }
+      }
+      return null;
+    },
+    [drawings]
+  );
+
+  findHitDrawingRef.current = findHitDrawing;
 
   // Redraw Canvas Drawings overlay
   const redrawCanvas = useCallback(() => {
@@ -528,8 +932,14 @@ export function MarketCandleChart() {
       return;
     }
 
-    const toCoord = (p: { time: Time; price: number }) => {
-      const x = chart.timeScale().timeToCoordinate(p.time);
+    const toCoord = (p: { time: Time; price: number; logical?: number }, isDraft = false) => {
+      if (isDraft && draftDrawing?.mouseCoord) {
+        return { x: draftDrawing.mouseCoord.x, y: draftDrawing.mouseCoord.y };
+      }
+      let x = chart.timeScale().timeToCoordinate(p.time);
+      if (x === null && p.logical !== undefined) {
+        x = chart.timeScale().logicalToCoordinate(p.logical as any);
+      }
       const y = series.priceToCoordinate(p.price);
       return { x, y };
     };
@@ -546,6 +956,10 @@ export function MarketCandleChart() {
         ctx.strokeStyle = item.color;
         ctx.lineWidth = item.width || 2;
         ctx.fillStyle = item.color;
+
+        const isDraft = item === draftDrawing;
+        const c1 = toCoord(item.p1, false);
+        const c2 = item.p2 ? toCoord(item.p2, isDraft) : null;
 
         if (item.type === 'horizontal') {
           const y = series.priceToCoordinate(item.p1.price);
@@ -567,7 +981,6 @@ export function MarketCandleChart() {
             ctx.fillText(`${item.p1.price.toFixed(2)}k`, w - 38, y);
           }
         } else if (item.type === 'horizontal_ray') {
-          const c1 = toCoord(item.p1);
           if (c1.x !== null && c1.y !== null) {
             ctx.setLineDash([4, 4]);
             ctx.beginPath();
@@ -588,7 +1001,6 @@ export function MarketCandleChart() {
             ctx.fillText(`${item.p1.price.toFixed(2)}k`, w - 38, c1.y);
           }
         } else if (item.type === 'vertical') {
-          const c1 = toCoord(item.p1);
           if (c1.x !== null) {
             ctx.setLineDash([4, 4]);
             ctx.beginPath();
@@ -605,9 +1017,7 @@ export function MarketCandleChart() {
             ctx.textBaseline = 'middle';
             ctx.fillText(String(item.p1.time).slice(5), c1.x, h - 11);
           }
-        } else if (item.type === 'trendline' && item.p2) {
-          const c1 = toCoord(item.p1);
-          const c2 = toCoord(item.p2);
+        } else if (item.type === 'trendline' && c2) {
           if (c1.x !== null && c1.y !== null && c2.x !== null && c2.y !== null) {
             ctx.beginPath();
             ctx.moveTo(c1.x, c1.y);
@@ -615,15 +1025,13 @@ export function MarketCandleChart() {
             ctx.stroke();
 
             ctx.beginPath();
-            ctx.arc(c1.x, c1.y, 3, 0, Math.PI * 2);
+            ctx.arc(c1.x, c1.y, 3.5, 0, Math.PI * 2);
             ctx.fill();
             ctx.beginPath();
-            ctx.arc(c2.x, c2.y, 3, 0, Math.PI * 2);
+            ctx.arc(c2.x, c2.y, 3.5, 0, Math.PI * 2);
             ctx.fill();
           }
-        } else if (item.type === 'ray' && item.p2) {
-          const c1 = toCoord(item.p1);
-          const c2 = toCoord(item.p2);
+        } else if (item.type === 'ray' && c2) {
           if (c1.x !== null && c1.y !== null && c2.x !== null && c2.y !== null) {
             const dx = c2.x - c1.x;
             const dy = c2.y - c1.y;
@@ -637,9 +1045,7 @@ export function MarketCandleChart() {
             ctx.arc(c1.x, c1.y, 3.5, 0, Math.PI * 2);
             ctx.fill();
           }
-        } else if (item.type === 'parallel_channel' && item.p2) {
-          const c1 = toCoord(item.p1);
-          const c2 = toCoord(item.p2);
+        } else if (item.type === 'parallel_channel' && c2) {
           if (c1.x !== null && c1.y !== null && c2.x !== null && c2.y !== null) {
             const dyChannel = 28;
             ctx.beginPath();
@@ -658,9 +1064,7 @@ export function MarketCandleChart() {
             ctx.lineTo(c2.x, c2.y - dyChannel / 2);
             ctx.stroke();
           }
-        } else if (item.type === 'rectangle' && item.p2) {
-          const c1 = toCoord(item.p1);
-          const c2 = toCoord(item.p2);
+        } else if (item.type === 'rectangle' && c2) {
           if (c1.x !== null && c1.y !== null && c2.x !== null && c2.y !== null) {
             const minX = Math.min(c1.x, c2.x);
             const minY = Math.min(c1.y, c2.y);
@@ -671,9 +1075,7 @@ export function MarketCandleChart() {
             ctx.fillRect(minX, minY, boxW, boxH);
             ctx.strokeRect(minX, minY, boxW, boxH);
           }
-        } else if (item.type === 'circle' && item.p2) {
-          const c1 = toCoord(item.p1);
-          const c2 = toCoord(item.p2);
+        } else if (item.type === 'circle' && c2) {
           if (c1.x !== null && c1.y !== null && c2.x !== null && c2.y !== null) {
             const radius = Math.hypot(c2.x - c1.x, c2.y - c1.y);
             ctx.beginPath();
@@ -682,9 +1084,7 @@ export function MarketCandleChart() {
             ctx.fill();
             ctx.stroke();
           }
-        } else if (item.type === 'arrow_marker' && item.p2) {
-          const c1 = toCoord(item.p1);
-          const c2 = toCoord(item.p2);
+        } else if (item.type === 'arrow_marker' && c2) {
           if (c1.x !== null && c1.y !== null && c2.x !== null && c2.y !== null) {
             ctx.beginPath();
             ctx.moveTo(c1.x, c1.y);
@@ -701,14 +1101,12 @@ export function MarketCandleChart() {
             ctx.fillStyle = item.color;
             ctx.fill();
           }
-        } else if (item.type === 'fibonacci' && item.p2) {
-          const c1 = toCoord(item.p1);
-          const c2 = toCoord(item.p2);
+        } else if (item.type === 'fibonacci' && c2 && item.p2) {
           if (c1.x !== null && c1.y !== null && c2.x !== null && c2.y !== null) {
             const startX = Math.min(c1.x, c2.x);
             const endX = Math.max(c1.x, c2.x, w - 80);
             const p1 = item.p1.price;
-            const p2 = item.p2.price;
+            const p2 = isDraft && series && draftDrawing?.mouseCoord ? (series.coordinateToPrice(draftDrawing.mouseCoord.y) ?? item.p2.price) : item.p2.price;
             const levels = [
               { ratio: 0, label: '0.0%', color: '#f43f5e' },
               { ratio: 0.236, label: '23.6%', color: '#f59e0b' },
@@ -738,14 +1136,12 @@ export function MarketCandleChart() {
               }
             });
           }
-        } else if (item.type === 'fib_extension' && item.p2) {
-          const c1 = toCoord(item.p1);
-          const c2 = toCoord(item.p2);
+        } else if (item.type === 'fib_extension' && c2 && item.p2) {
           if (c1.x !== null && c1.y !== null && c2.x !== null && c2.y !== null) {
             const startX = Math.min(c1.x, c2.x);
             const endX = Math.max(c1.x, c2.x, w - 80);
             const p1 = item.p1.price;
-            const p2 = item.p2.price;
+            const p2 = isDraft && series && draftDrawing?.mouseCoord ? (series.coordinateToPrice(draftDrawing.mouseCoord.y) ?? item.p2.price) : item.p2.price;
             const diff = Math.abs(p2 - p1);
             const extLevels = [
               { ratio: 0, label: '0.0%', color: '#94a3b8' },
@@ -773,16 +1169,15 @@ export function MarketCandleChart() {
               }
             });
           }
-        } else if (item.type === 'measure' && item.p2) {
-          const c1 = toCoord(item.p1);
-          const c2 = toCoord(item.p2);
+        } else if (item.type === 'measure' && c2 && item.p2) {
           if (c1.x !== null && c1.y !== null && c2.x !== null && c2.y !== null) {
             const minX = Math.min(c1.x, c2.x);
             const minY = Math.min(c1.y, c2.y);
             const boxW = Math.abs(c2.x - c1.x);
             const boxH = Math.abs(c2.y - c1.y);
 
-            const deltaP = item.p2.price - item.p1.price;
+            const p2Price = isDraft && series && draftDrawing?.mouseCoord ? (series.coordinateToPrice(draftDrawing.mouseCoord.y) ?? item.p2.price) : item.p2.price;
+            const deltaP = p2Price - item.p1.price;
             const deltaPct = item.p1.price !== 0 ? (deltaP / item.p1.price) * 100 : 0;
             const isUp = deltaP >= 0;
 
@@ -808,7 +1203,6 @@ export function MarketCandleChart() {
             ctx.fillText(`${isUp ? '+' : ''}${deltaP.toFixed(2)}k (${isUp ? '+' : ''}${deltaPct.toFixed(2)}%)`, midX, midY);
           }
         } else if (item.type === 'text' && item.text) {
-          const c1 = toCoord(item.p1);
           if (c1.x !== null && c1.y !== null) {
             ctx.font = 'bold 11px JetBrains Mono, monospace';
             const textMetrics = ctx.measureText(item.text);
@@ -822,7 +1216,6 @@ export function MarketCandleChart() {
             ctx.fillText(item.text, c1.x, c1.y);
           }
         } else if (item.type === 'price_label') {
-          const c1 = toCoord(item.p1);
           if (c1.x !== null && c1.y !== null) {
             const labelText = `${item.p1.price.toFixed(2)}k`;
             ctx.font = 'bold 10px JetBrains Mono, monospace';
@@ -842,9 +1235,7 @@ export function MarketCandleChart() {
             ctx.textBaseline = 'middle';
             ctx.fillText(labelText, c1.x + 10, c1.y);
           }
-        } else if (item.type === 'callout' && item.p2) {
-          const c1 = toCoord(item.p1);
-          const c2 = toCoord(item.p2);
+        } else if (item.type === 'callout' && c2) {
           if (c1.x !== null && c1.y !== null && c2.x !== null && c2.y !== null) {
             ctx.beginPath();
             ctx.moveTo(c1.x, c1.y);
@@ -863,12 +1254,10 @@ export function MarketCandleChart() {
             ctx.textBaseline = 'middle';
             ctx.fillText(calloutText, c2.x, c2.y);
           }
-        } else if ((item.type === 'long_position' || item.type === 'short_position') && item.p2) {
-          const c1 = toCoord(item.p1);
-          const c2 = toCoord(item.p2);
+        } else if ((item.type === 'long_position' || item.type === 'short_position') && c2 && item.p2) {
           if (c1.x !== null && c1.y !== null && c2.x !== null && c2.y !== null) {
             const entryPrice = item.p1.price;
-            const targetPrice = item.p2.price;
+            const targetPrice = isDraft && series && draftDrawing?.mouseCoord ? (series.coordinateToPrice(draftDrawing.mouseCoord.y) ?? item.p2.price) : item.p2.price;
             const isLong = item.type === 'long_position';
             const riskPrice = isLong ? entryPrice - Math.abs(targetPrice - entryPrice) * 0.5 : entryPrice + Math.abs(targetPrice - entryPrice) * 0.5;
             const riskY = series.priceToCoordinate(riskPrice);
@@ -905,7 +1294,6 @@ export function MarketCandleChart() {
             ctx.fillText(`R:R = 1 : ${rrRatio}`, leftX + boxW / 2, eY);
           }
         } else if (item.type === 'rocket') {
-          const c1 = toCoord(item.p1);
           if (c1.x !== null && c1.y !== null) {
             ctx.font = '18px sans-serif';
             ctx.fillText('🚀', c1.x - 9, c1.y + 6);
@@ -919,6 +1307,43 @@ export function MarketCandleChart() {
             ctx.fillText(`Target ${item.p1.price.toFixed(2)}k`, c1.x + 49, c1.y);
           }
         }
+
+        if (item.id === selectedDrawingId) {
+          ctx.save();
+          ctx.fillStyle = '#ffffff';
+          ctx.strokeStyle = '#06b6d4';
+          ctx.lineWidth = 2.5;
+          ctx.shadowColor = '#06b6d4';
+          ctx.shadowBlur = 10;
+
+          if (c1.x !== null && c1.y !== null) {
+            ctx.beginPath();
+            ctx.arc(c1.x, c1.y, 5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+          }
+
+          if (c2 && c2.x !== null && c2.y !== null) {
+            ctx.beginPath();
+            ctx.arc(c2.x, c2.y, 5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+          }
+
+          if (item.type === 'horizontal') {
+            const y = series.priceToCoordinate(item.p1.price);
+            if (y !== null) {
+              [w * 0.25, w * 0.75].forEach((hx) => {
+                ctx.beginPath();
+                ctx.arc(hx, y, 4.5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+              });
+            }
+          }
+          ctx.restore();
+        }
+
         ctx.restore();
       });
     }
@@ -957,32 +1382,35 @@ export function MarketCandleChart() {
       const rC1 = toCoord(trendlineProData.resP1);
       const rC2 = toCoord(trendlineProData.resP2);
 
-      ctx.strokeStyle = '#84cc16';
-      ctx.lineWidth = 2;
-      ctx.setLineDash([]);
-      ctx.beginPath();
-      if (rC1.x !== null && rC1.y !== null && rC2.x !== null && rC2.y !== null && Math.abs(rC2.x - rC1.x) > 5) {
-        const slope = (rC2.y - rC1.y) / (rC2.x - rC1.x);
-        const endX = w - 75;
-        const endY = rC1.y + slope * (endX - rC1.x);
+      // Local pivot segment between the 2 swing highs
+      if (rC1.x !== null && rC1.y !== null && rC2.x !== null && rC2.y !== null) {
+        ctx.strokeStyle = '#84cc1680';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([3, 3]);
+        ctx.beginPath();
         ctx.moveTo(rC1.x, rC1.y);
-        ctx.lineTo(endX, endY);
+        ctx.lineTo(rC2.x, rC2.y);
         ctx.stroke();
 
-        // Tag Kháng cự at ray endpoint
-        const tagY = Math.min(Math.max(endY, 14), h - 14);
         ctx.fillStyle = '#84cc16';
-        ctx.fillRect(w - 76, tagY - 10, 72, 20);
-        ctx.fillStyle = '#09090b';
-        ctx.font = 'bold 10px JetBrains Mono, monospace';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(`Kháng cự: ${trendlineProData.resistance}`, w - 40, tagY);
-      } else if (resY !== null) {
-        ctx.moveTo(0, resY);
+        ctx.beginPath();
+        ctx.arc(rC1.x, rC1.y, 3, 0, Math.PI * 2);
+        ctx.arc(rC2.x, rC2.y, 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Horizontal resistance zone ray
+      if (resY !== null) {
+        const startX = rC1.x !== null ? Math.min(rC1.x, w * 0.4) : 0;
+        ctx.strokeStyle = '#84cc16';
+        ctx.lineWidth = 1.8;
+        ctx.setLineDash([5, 4]);
+        ctx.beginPath();
+        ctx.moveTo(startX, resY);
         ctx.lineTo(w - 75, resY);
         ctx.stroke();
 
+        ctx.setLineDash([]);
         ctx.fillStyle = '#84cc16';
         ctx.fillRect(w - 76, resY - 10, 72, 20);
         ctx.fillStyle = '#09090b';
@@ -997,32 +1425,35 @@ export function MarketCandleChart() {
       const sC1 = toCoord(trendlineProData.supP1);
       const sC2 = toCoord(trendlineProData.supP2);
 
-      ctx.strokeStyle = '#ef4444';
-      ctx.lineWidth = 2;
-      ctx.setLineDash([]);
-      ctx.beginPath();
-      if (sC1.x !== null && sC1.y !== null && sC2.x !== null && sC2.y !== null && Math.abs(sC2.x - sC1.x) > 5) {
-        const slope = (sC2.y - sC1.y) / (sC2.x - sC1.x);
-        const endX = w - 75;
-        const endY = sC1.y + slope * (endX - sC1.x);
+      // Local pivot segment between the 2 swing lows
+      if (sC1.x !== null && sC1.y !== null && sC2.x !== null && sC2.y !== null) {
+        ctx.strokeStyle = '#ef444480';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([3, 3]);
+        ctx.beginPath();
         ctx.moveTo(sC1.x, sC1.y);
-        ctx.lineTo(endX, endY);
+        ctx.lineTo(sC2.x, sC2.y);
         ctx.stroke();
 
-        // Tag Hỗ trợ at ray endpoint
-        const tagY = Math.min(Math.max(endY, 14), h - 14);
         ctx.fillStyle = '#ef4444';
-        ctx.fillRect(w - 76, tagY - 10, 72, 20);
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 10px JetBrains Mono, monospace';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(`Hỗ trợ: ${trendlineProData.support}`, w - 40, tagY);
-      } else if (supY !== null) {
-        ctx.moveTo(0, supY);
+        ctx.beginPath();
+        ctx.arc(sC1.x, sC1.y, 3, 0, Math.PI * 2);
+        ctx.arc(sC2.x, sC2.y, 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Horizontal support zone ray
+      if (supY !== null) {
+        const startX = sC1.x !== null ? Math.min(sC1.x, w * 0.4) : 0;
+        ctx.strokeStyle = '#ef4444';
+        ctx.lineWidth = 1.8;
+        ctx.setLineDash([5, 4]);
+        ctx.beginPath();
+        ctx.moveTo(startX, supY);
         ctx.lineTo(w - 75, supY);
         ctx.stroke();
 
+        ctx.setLineDash([]);
         ctx.fillStyle = '#ef4444';
         ctx.fillRect(w - 76, supY - 10, 72, 20);
         ctx.fillStyle = '#ffffff';
@@ -1078,7 +1509,7 @@ export function MarketCandleChart() {
     }
 
     ctx.restore();
-  }, [drawings, draftDrawing, showTrendlinePro, trendlineProData, hideDrawings, isMagnetMode, hoverSnapPoint, activeTool]);
+  }, [drawings, draftDrawing, showTrendlinePro, trendlineProData, hideDrawings, isMagnetMode, hoverSnapPoint, activeTool, selectedDrawingId]);
 
   // Keep decoupled ref for chart and window callbacks
   redrawCanvasRef.current = redrawCanvas;
@@ -1160,6 +1591,8 @@ export function MarketCandleChart() {
       priceFormat: { type: 'price', precision: 2, minMove: 0.05 },
       title: 'MA20',
       visible: showMA20,
+      priceLineVisible: false,
+      lastValueVisible: false,
     });
     ma20SeriesRef.current = ma20Series;
 
@@ -1169,6 +1602,8 @@ export function MarketCandleChart() {
       priceFormat: { type: 'price', precision: 2, minMove: 0.05 },
       title: 'MA50',
       visible: showMA50,
+      priceLineVisible: false,
+      lastValueVisible: false,
     });
     ma50SeriesRef.current = ma50Series;
 
@@ -1178,6 +1613,8 @@ export function MarketCandleChart() {
       priceFormat: { type: 'price', precision: 2, minMove: 0.05 },
       title: 'MA150',
       visible: showMA150,
+      priceLineVisible: false,
+      lastValueVisible: false,
     });
     ma150SeriesRef.current = ma150Series;
 
@@ -1187,6 +1624,8 @@ export function MarketCandleChart() {
       priceFormat: { type: 'price', precision: 2, minMove: 0.05 },
       title: 'MA200',
       visible: showMA200,
+      priceLineVisible: false,
+      lastValueVisible: false,
     });
     ma200SeriesRef.current = ma200Series;
 
@@ -1196,6 +1635,8 @@ export function MarketCandleChart() {
       priceFormat: { type: 'price', precision: 2, minMove: 0.05 },
       title: 'BB Upper',
       visible: showBB,
+      priceLineVisible: false,
+      lastValueVisible: false,
     });
     bbUpperSeriesRef.current = bbUpperSeries;
 
@@ -1205,6 +1646,8 @@ export function MarketCandleChart() {
       priceFormat: { type: 'price', precision: 2, minMove: 0.05 },
       title: 'BB Lower',
       visible: showBB,
+      priceLineVisible: false,
+      lastValueVisible: false,
     });
     bbLowerSeriesRef.current = bbLowerSeries;
 
@@ -1222,6 +1665,10 @@ export function MarketCandleChart() {
       }
       const candle = param.seriesData.get(candlestickSeries) as any;
       const vol = param.seriesData.get(volumeSeries) as any;
+      const ma20 = ma20Series ? (param.seriesData.get(ma20Series) as any) : undefined;
+      const ma50 = ma50Series ? (param.seriesData.get(ma50Series) as any) : undefined;
+      const ma150 = ma150Series ? (param.seriesData.get(ma150Series) as any) : undefined;
+      const ma200 = ma200Series ? (param.seriesData.get(ma200Series) as any) : undefined;
       if (candle) {
         const change = candle.close - candle.open;
         const changePct = candle.open ? (change / candle.open) * 100 : 0;
@@ -1233,6 +1680,10 @@ export function MarketCandleChart() {
           volume: vol?.value,
           change,
           changePct,
+          ma20: ma20?.value,
+          ma50: ma50?.value,
+          ma150: ma150?.value,
+          ma200: ma200?.value,
         });
       }
     });
@@ -1246,7 +1697,36 @@ export function MarketCandleChart() {
     resizeObserver.observe(container);
     updateCanvasSize();
 
+    let downPt: { x: number; y: number } | null = null;
+    const onContainerMouseDown = (e: MouseEvent) => {
+      downPt = { x: e.clientX, y: e.clientY };
+    };
+    const onContainerMouseUp = (e: MouseEvent) => {
+      if (!downPt) return;
+      const dist = Math.hypot(e.clientX - downPt.x, e.clientY - downPt.y);
+      downPt = null;
+      if (dist > 6) return; // Ignore drag / pan
+
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const clickY = e.clientY - rect.top;
+
+      const hit = findHitDrawingRef.current(clickX, clickY);
+      if (hit) {
+        setSelectedDrawingId(hit.id);
+      } else {
+        setSelectedDrawingId(null);
+      }
+    };
+
+    container.addEventListener('mousedown', onContainerMouseDown, { capture: true });
+    container.addEventListener('mouseup', onContainerMouseUp, { capture: true });
+
     return () => {
+      container.removeEventListener('mousedown', onContainerMouseDown, { capture: true });
+      container.removeEventListener('mouseup', onContainerMouseUp, { capture: true });
       resizeObserver.disconnect();
       chart.remove();
       chartRef.current = null;
@@ -1301,7 +1781,7 @@ export function MarketCandleChart() {
 
     if (!chart || !candlestickSeries || !volumeSeries) return;
 
-    const isDaily = resolution === '1D' || resolution === '1W';
+    const isDaily = resolution === '1D' || resolution === '1W' || resolution === '1M' || resolution === '3M' || resolution === '6M';
     chart.applyOptions({
       timeScale: {
         timeVisible: !isDaily,
@@ -1322,7 +1802,15 @@ export function MarketCandleChart() {
       bbUpperSeries?.setData(cached.bbUpper);
       bbLowerSeries?.setData(cached.bbLower);
       loadedCandlesRef.current = cached.candles;
+      loadedVolumesRef.current = cached.volumes;
+      setDataVersion((v) => v + 1);
       setTrendlineProData(cached.proData);
+      setLatestMA({
+        ma20: cached.ma20.length > 0 ? cached.ma20[cached.ma20.length - 1]?.value : undefined,
+        ma50: cached.ma50.length > 0 ? cached.ma50[cached.ma50.length - 1]?.value : undefined,
+        ma150: cached.ma150.length > 0 ? cached.ma150[cached.ma150.length - 1]?.value : undefined,
+        ma200: cached.ma200.length > 0 ? cached.ma200[cached.ma200.length - 1]?.value : undefined,
+      });
 
       if (cached.candles.length > 150) {
         chart.timeScale().setVisibleLogicalRange({
@@ -1353,7 +1841,14 @@ export function MarketCandleChart() {
     else if (resolution === '5m') daysToFetch = 5;
     else if (resolution === '15m') daysToFetch = 14;
     else if (resolution === '1h') daysToFetch = 60;
-    else if (resolution === '1D' || resolution === '1W') daysToFetch = 0;
+    else if (
+      resolution === '1D' ||
+      resolution === '1W' ||
+      resolution === '1M' ||
+      resolution === '3M' ||
+      resolution === '6M'
+    )
+      daysToFetch = 0;
 
     setIsLoading(true);
     fetch(`/api/market/history?symbol=${selectedSymbol}&resolution=${resolution}&days=${daysToFetch}`)
@@ -1388,6 +1883,8 @@ export function MarketCandleChart() {
         const uniqueCandles = realCandles.filter((item, idx, arr) => idx === 0 || item.time !== arr[idx - 1].time);
         const uniqueVolumes = realVolumes.filter((item, idx, arr) => idx === 0 || item.time !== arr[idx - 1].time);
         loadedCandlesRef.current = uniqueCandles;
+        loadedVolumesRef.current = uniqueVolumes;
+        setDataVersion((v) => v + 1);
         const proData = calculateTrendlinePro(uniqueCandles);
         setTrendlineProData(proData);
 
@@ -1446,6 +1943,12 @@ export function MarketCandleChart() {
           ma200Series?.setData(realMa200);
           bbUpperSeries?.setData(bbUpperData);
           bbLowerSeries?.setData(bbLowerData);
+          setLatestMA({
+            ma20: realMa20.length > 0 ? realMa20[realMa20.length - 1]?.value : undefined,
+            ma50: realMa50.length > 0 ? realMa50[realMa50.length - 1]?.value : undefined,
+            ma150: realMa150.length > 0 ? realMa150[realMa150.length - 1]?.value : undefined,
+            ma200: realMa200.length > 0 ? realMa200[realMa200.length - 1]?.value : undefined,
+          });
 
           if (uniqueCandles.length > 150) {
             chart.timeScale().setVisibleLogicalRange({
@@ -1542,6 +2045,299 @@ export function MarketCandleChart() {
     }
   }, [currentTick]);
 
+  // ── 5. Sub-Chart Mount and Sync (RSI, MACD, MFI, OBV) ───────────────────
+  useEffect(() => {
+    if (activeSubIndicator === 'none') {
+      if (subChartRef.current) {
+        subChartRef.current.remove();
+        subChartRef.current = null;
+      }
+      return;
+    }
+
+    const container = subChartContainerRef.current;
+    if (!container) return;
+
+    if (subChartRef.current) {
+      subChartRef.current.remove();
+      subChartRef.current = null;
+    }
+
+    const candles = loadedCandlesRef.current;
+    const volumes = loadedVolumesRef.current;
+    if (!candles || candles.length === 0) return;
+
+    const subChart = createChart(container, {
+      width: container.clientWidth,
+      height: container.clientHeight || 116,
+      layout: {
+        background: { type: ColorType.Solid, color: '#09090b' },
+        textColor: '#71717a',
+        fontSize: 10,
+        fontFamily: 'JetBrains Mono, monospace',
+      },
+      grid: {
+        vertLines: { color: 'rgba(255, 255, 255, 0.03)' },
+        horzLines: { color: 'rgba(255, 255, 255, 0.03)' },
+      },
+      crosshair: {
+        vertLine: {
+          color: 'rgba(255, 255, 255, 0.25)',
+          labelBackgroundColor: '#18181b',
+        },
+        horzLine: {
+          color: 'rgba(255, 255, 255, 0.25)',
+          labelBackgroundColor: '#18181b',
+        },
+      },
+      rightPriceScale: {
+        borderColor: 'rgba(255, 255, 255, 0.08)',
+        alignLabels: true,
+        scaleMargins: {
+          top: 0.12,
+          bottom: 0.12,
+        },
+      },
+      timeScale: {
+        visible: false,
+        borderColor: 'rgba(255, 255, 255, 0.08)',
+      },
+    });
+
+    subChartRef.current = subChart;
+
+    if (activeSubIndicator === 'rsi') {
+      const rsiData = calculateRSI(candles, 14);
+      if (rsiData.length > 0) {
+        const obSeries = subChart.addSeries(LineSeries, {
+          color: 'rgba(244, 63, 94, 0.35)',
+          lineWidth: 1,
+          priceLineVisible: false,
+          lastValueVisible: false,
+        });
+        const midSeries = subChart.addSeries(LineSeries, {
+          color: 'rgba(255, 255, 255, 0.15)',
+          lineWidth: 1,
+          priceLineVisible: false,
+          lastValueVisible: false,
+        });
+        const osSeries = subChart.addSeries(LineSeries, {
+          color: 'rgba(16, 185, 129, 0.35)',
+          lineWidth: 1,
+          priceLineVisible: false,
+          lastValueVisible: false,
+        });
+        const rsiSeries = subChart.addSeries(LineSeries, {
+          color: '#a855f7',
+          lineWidth: 2,
+          priceFormat: { type: 'custom', formatter: (v: number) => v.toFixed(1) },
+        });
+
+        obSeries.setData(rsiData.map((d) => ({ time: d.time, value: 70 })));
+        midSeries.setData(rsiData.map((d) => ({ time: d.time, value: 50 })));
+        osSeries.setData(rsiData.map((d) => ({ time: d.time, value: 30 })));
+        rsiSeries.setData(rsiData);
+
+        const lastVal = rsiData[rsiData.length - 1]?.value;
+        setSubIndicatorValues({ rsi: lastVal });
+
+        subChart.subscribeCrosshairMove((param) => {
+          if (!param.time || !param.seriesData) return;
+          const val = param.seriesData.get(rsiSeries) as LineData<Time> | undefined;
+          if (val && typeof val.value === 'number') {
+            setSubIndicatorValues({ rsi: val.value });
+          }
+        });
+      }
+    } else if (activeSubIndicator === 'macd') {
+      const macdRes = calculateMACD(candles, 12, 26, 9);
+      if (macdRes.macd.length > 0) {
+        const histSeries = subChart.addSeries(HistogramSeries, {
+          priceFormat: { type: 'custom', formatter: (v: number) => v.toFixed(2) },
+          priceScaleId: 'right',
+        });
+        const macdLineSeries = subChart.addSeries(LineSeries, {
+          color: '#3b82f6',
+          lineWidth: 2,
+          priceFormat: { type: 'custom', formatter: (v: number) => v.toFixed(2) },
+        });
+        const signalLineSeries = subChart.addSeries(LineSeries, {
+          color: '#f97316',
+          lineWidth: 1,
+          priceFormat: { type: 'custom', formatter: (v: number) => v.toFixed(2) },
+        });
+        const zeroSeries = subChart.addSeries(LineSeries, {
+          color: 'rgba(255, 255, 255, 0.15)',
+          lineWidth: 1,
+          priceLineVisible: false,
+          lastValueVisible: false,
+        });
+
+        histSeries.setData(macdRes.hist);
+        macdLineSeries.setData(macdRes.macd);
+        signalLineSeries.setData(macdRes.signal);
+        zeroSeries.setData(macdRes.macd.map((d: LineData<Time>) => ({ time: d.time, value: 0 })));
+
+        const lastMacd = macdRes.macd[macdRes.macd.length - 1]?.value;
+        const lastSignal = macdRes.signal[macdRes.signal.length - 1]?.value;
+        const lastHist = macdRes.hist[macdRes.hist.length - 1]?.value;
+        setSubIndicatorValues({ macd: lastMacd, signal: lastSignal, hist: lastHist });
+
+        subChart.subscribeCrosshairMove((param) => {
+          if (!param.time || !param.seriesData) return;
+          const mVal = param.seriesData.get(macdLineSeries) as LineData<Time> | undefined;
+          const sVal = param.seriesData.get(signalLineSeries) as LineData<Time> | undefined;
+          const hVal = param.seriesData.get(histSeries) as HistogramData<Time> | undefined;
+          if (mVal || sVal || hVal) {
+            setSubIndicatorValues({
+              macd: mVal?.value,
+              signal: sVal?.value,
+              hist: hVal?.value,
+            });
+          }
+        });
+      }
+    } else if (activeSubIndicator === 'mfi') {
+      const mfiData = calculateMFI(candles, volumes, 14);
+      if (mfiData.length > 0) {
+        const obSeries = subChart.addSeries(LineSeries, {
+          color: 'rgba(244, 63, 94, 0.35)',
+          lineWidth: 1,
+          priceLineVisible: false,
+          lastValueVisible: false,
+        });
+        const midSeries = subChart.addSeries(LineSeries, {
+          color: 'rgba(255, 255, 255, 0.15)',
+          lineWidth: 1,
+          priceLineVisible: false,
+          lastValueVisible: false,
+        });
+        const osSeries = subChart.addSeries(LineSeries, {
+          color: 'rgba(16, 185, 129, 0.35)',
+          lineWidth: 1,
+          priceLineVisible: false,
+          lastValueVisible: false,
+        });
+        const mfiSeries = subChart.addSeries(LineSeries, {
+          color: '#10b981',
+          lineWidth: 2,
+          priceFormat: { type: 'custom', formatter: (v: number) => v.toFixed(1) },
+        });
+
+        obSeries.setData(mfiData.map((d) => ({ time: d.time, value: 80 })));
+        midSeries.setData(mfiData.map((d) => ({ time: d.time, value: 50 })));
+        osSeries.setData(mfiData.map((d) => ({ time: d.time, value: 20 })));
+        mfiSeries.setData(mfiData);
+
+        const lastMfi = mfiData[mfiData.length - 1]?.value;
+        setSubIndicatorValues({ mfi: lastMfi });
+
+        subChart.subscribeCrosshairMove((param) => {
+          if (!param.time || !param.seriesData) return;
+          const val = param.seriesData.get(mfiSeries) as LineData<Time> | undefined;
+          if (val && typeof val.value === 'number') {
+            setSubIndicatorValues({ mfi: val.value });
+          }
+        });
+      }
+    } else if (activeSubIndicator === 'obv') {
+      const obvData = calculateOBV(candles, volumes);
+      if (obvData.length > 0) {
+        const obvSeries = subChart.addSeries(LineSeries, {
+          color: '#06b6d4',
+          lineWidth: 2,
+          priceFormat: {
+            type: 'custom',
+            formatter: (v: number) => {
+              if (Math.abs(v) >= 1_000_000) return (v / 1_000_000).toFixed(2) + 'M';
+              if (Math.abs(v) >= 1_000) return (v / 1_000).toFixed(1) + 'K';
+              return v.toLocaleString();
+            },
+          },
+        });
+
+        const obvMaData: LineData<Time>[] = [];
+        for (let i = 0; i < obvData.length; i++) {
+          if (i >= 19) {
+            const slice = obvData.slice(i - 19, i + 1);
+            const sum = slice.reduce((acc, curr) => acc + curr.value, 0);
+            obvMaData.push({ time: obvData[i].time, value: Math.round(sum / 20) });
+          }
+        }
+        const obvMaSeries = subChart.addSeries(LineSeries, {
+          color: '#f59e0b',
+          lineWidth: 1,
+          priceLineVisible: false,
+          lastValueVisible: false,
+        });
+
+        obvSeries.setData(obvData);
+        obvMaSeries.setData(obvMaData);
+
+        const lastObv = obvData[obvData.length - 1]?.value;
+        setSubIndicatorValues({ obv: lastObv });
+
+        subChart.subscribeCrosshairMove((param) => {
+          if (!param.time || !param.seriesData) return;
+          const val = param.seriesData.get(obvSeries) as LineData<Time> | undefined;
+          if (val && typeof val.value === 'number') {
+            setSubIndicatorValues({ obv: val.value });
+          }
+        });
+      }
+    }
+
+    // Bidirectional timeScale synchronization between main chart and subChart
+    const mainChart = chartRef.current;
+    let isSyncing = false;
+
+    if (mainChart) {
+      const initialRange = mainChart.timeScale().getVisibleLogicalRange();
+      if (initialRange) {
+        try {
+          subChart.timeScale().setVisibleLogicalRange(initialRange);
+        } catch {}
+      }
+
+      const handleMainRangeChange = (range: any) => {
+        if (isSyncing || !range) return;
+        isSyncing = true;
+        try {
+          subChart.timeScale().setVisibleLogicalRange(range);
+        } catch {}
+        isSyncing = false;
+      };
+
+      const handleSubRangeChange = (range: any) => {
+        if (isSyncing || !range) return;
+        isSyncing = true;
+        try {
+          mainChart.timeScale().setVisibleLogicalRange(range);
+        } catch {}
+        isSyncing = false;
+      };
+
+      mainChart.timeScale().subscribeVisibleLogicalRangeChange(handleMainRangeChange);
+      subChart.timeScale().subscribeVisibleLogicalRangeChange(handleSubRangeChange);
+    }
+
+    const resizeObserver = new ResizeObserver(() => {
+      if (container) {
+        subChart.applyOptions({
+          width: container.clientWidth,
+          height: container.clientHeight,
+        });
+      }
+    });
+    resizeObserver.observe(container);
+
+    return () => {
+      resizeObserver.disconnect();
+      subChart.remove();
+      subChartRef.current = null;
+    };
+  }, [activeSubIndicator, dataVersion, selectedSymbol, resolution]);
+
   // Switch Quick Date Ranges instantaneously
   const handleRangeSelect = (rangeId: string, bars: number) => {
     setActiveRange(rangeId);
@@ -1612,6 +2408,16 @@ export function MarketCandleChart() {
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
+    if (activeTool === 'arrow_pointer') {
+      const hit = findHitDrawing(x, y);
+      if (hit) {
+        setSelectedDrawingId(hit.id);
+      } else {
+        setSelectedDrawingId(null);
+      }
+      return;
+    }
+
     // Eraser Tool: Click on or near drawing to remove it
     if (activeTool === 'eraser') {
       let foundIdx = -1;
@@ -1643,13 +2449,40 @@ export function MarketCandleChart() {
       return;
     }
 
-    const rawTime = chart.timeScale().coordinateToTime(x);
-    const rawPrice = series.coordinateToPrice(y);
-    if (!rawTime || rawPrice === null) return;
+    const timeScale = chart.timeScale();
+    const logicalIndex = timeScale.coordinateToLogical(x);
+    let rawTime = timeScale.coordinateToTime(x);
+    let rawPrice = series.coordinateToPrice(y) as number | null;
+
+    if (rawPrice === null) {
+      const topP = series.coordinateToPrice(10) as number | null;
+      const botP = series.coordinateToPrice(canvas.height / (window.devicePixelRatio || 1) - 30) as number | null;
+      rawPrice = y < 10 ? (topP ?? 0) : (botP ?? 0);
+    }
+
+    const candles = loadedCandlesRef.current;
+    if (!rawTime && logicalIndex !== null && candles.length > 0) {
+      const lastCandle = candles[candles.length - 1];
+      if (logicalIndex >= candles.length) {
+        const diffBars = Math.round(logicalIndex) - (candles.length - 1);
+        const lastDate = new Date(lastCandle.time as string);
+        lastDate.setDate(lastDate.getDate() + diffBars);
+        rawTime = lastDate.toISOString().split('T')[0] as Time;
+      } else {
+        const clampedIdx = Math.max(0, Math.min(candles.length - 1, Math.round(logicalIndex)));
+        rawTime = candles[clampedIdx].time;
+      }
+    }
+
+    if (rawPrice === null) return;
 
     // Smart Magnet Snapping
-    const snapped = snapToCandle(rawTime, rawPrice, x);
-    const point = { time: snapped.time || rawTime, price: snapped.price };
+    const snapped = snapToCandle(rawTime, rawPrice, x, y);
+    const point = {
+      time: snapped.time || rawTime || (candles.length > 0 ? candles[candles.length - 1].time : ('' as Time)),
+      price: snapped.price,
+      logical: logicalIndex ?? undefined,
+    };
 
     // 1-Click Tools
     if (
@@ -1713,6 +2546,7 @@ export function MarketCandleChart() {
         width: activeWidth,
         p1: point,
         p2: point,
+        mouseCoord: { x, y },
         text: activeTool === 'callout' ? 'Ghi chú kỹ thuật' : undefined,
       });
     } else {
@@ -1721,6 +2555,7 @@ export function MarketCandleChart() {
       const finalDrawing: DrawingItem = {
         ...draftDrawing,
         p2: point,
+        mouseCoord: undefined,
       };
       const updated = [...drawings, finalDrawing];
       setDrawings(updated);
@@ -1742,20 +2577,42 @@ export function MarketCandleChart() {
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
-    const rawTime = chart.timeScale().coordinateToTime(x);
-    const rawPrice = series.coordinateToPrice(y);
-    if (!rawTime || rawPrice === null) {
-      setHoverSnapPoint(null);
-      return;
+    const timeScale = chart.timeScale();
+    const logicalIndex = timeScale.coordinateToLogical(x);
+    let rawTime = timeScale.coordinateToTime(x);
+    let rawPrice = series.coordinateToPrice(y) as number | null;
+
+    if (rawPrice === null) {
+      const topP = series.coordinateToPrice(10) as number | null;
+      const botP = series.coordinateToPrice(canvas.height / (window.devicePixelRatio || 1) - 30) as number | null;
+      rawPrice = y < 10 ? (topP ?? 0) : (botP ?? 0);
+    }
+
+    const candles = loadedCandlesRef.current;
+    if (!rawTime && logicalIndex !== null && candles.length > 0) {
+      const lastCandle = candles[candles.length - 1];
+      if (logicalIndex >= candles.length) {
+        const diffBars = Math.round(logicalIndex) - (candles.length - 1);
+        const lastDate = new Date(lastCandle.time as string);
+        lastDate.setDate(lastDate.getDate() + diffBars);
+        rawTime = lastDate.toISOString().split('T')[0] as Time;
+      } else {
+        const clampedIdx = Math.max(0, Math.min(candles.length - 1, Math.round(logicalIndex)));
+        rawTime = candles[clampedIdx].time;
+      }
     }
 
     // Live magnet snap point feedback
-    if (isMagnetMode && activeTool !== 'cursor') {
-      const snapped = snapToCandle(rawTime, rawPrice, x);
-      const snapX = snapped.time ? chart.timeScale().timeToCoordinate(snapped.time) : x;
-      const snapY = series.priceToCoordinate(snapped.price);
-      if (snapX !== null && snapY !== null) {
-        setHoverSnapPoint({ x: snapX, y: snapY, price: snapped.price });
+    if (isMagnetMode && activeTool !== 'cursor' && rawPrice !== null) {
+      const snapped = snapToCandle(rawTime, rawPrice, x, y);
+      if (snapped.isSnapped) {
+        const snapX = snapped.time ? chart.timeScale().timeToCoordinate(snapped.time) : x;
+        const snapY = series.priceToCoordinate(snapped.price);
+        if (snapX !== null && snapY !== null) {
+          setHoverSnapPoint({ x: snapX, y: snapY, price: snapped.price });
+        }
+      } else {
+        setHoverSnapPoint(null);
       }
     } else if (hoverSnapPoint) {
       setHoverSnapPoint(null);
@@ -1764,16 +2621,20 @@ export function MarketCandleChart() {
     // Update draft drawing line preview
     if (!draftDrawing) return;
 
-    const snapped = isMagnetMode ? snapToCandle(rawTime, rawPrice, x) : { time: rawTime, price: Math.round(rawPrice * 100) / 100 };
+    const snapped = isMagnetMode && rawPrice !== null
+      ? snapToCandle(rawTime, rawPrice, x, y)
+      : { time: rawTime, price: rawPrice !== null ? Math.round(rawPrice * 100) / 100 : draftDrawing.p1.price, isSnapped: false };
 
     setDraftDrawing((prev) => {
       if (!prev) return null;
       return {
         ...prev,
         p2: {
-          time: snapped.time || rawTime,
+          time: snapped.time || rawTime || prev.p1.time,
           price: snapped.price,
+          logical: logicalIndex ?? undefined,
         },
+        mouseCoord: { x, y },
       };
     });
   };
@@ -1836,6 +2697,11 @@ export function MarketCandleChart() {
     changePercent: activeChangePct,
     exchange: stockInfo.exchange,
   });
+
+  const activeMA20 = hoveredData?.ma20 !== undefined ? hoveredData.ma20 : latestMA.ma20;
+  const activeMA50 = hoveredData?.ma50 !== undefined ? hoveredData.ma50 : latestMA.ma50;
+  const activeMA150 = hoveredData?.ma150 !== undefined ? hoveredData.ma150 : latestMA.ma150;
+  const activeMA200 = hoveredData?.ma200 !== undefined ? hoveredData.ma200 : latestMA.ma200;
 
   return (
     <div
@@ -1904,6 +2770,32 @@ export function MarketCandleChart() {
                 Vol: <span className="text-zinc-300 font-bold">{(hoveredData?.volume || (loadedCandlesRef.current.length > 0 ? (currentTick?.totalVolume || 0) : 0)).toLocaleString()}</span>
               </div>
             )}
+
+            {/* Live MA Values on Top Legend */}
+            {(showMA20 || showMA50 || showMA150 || showMA200) && (
+              <div className="flex items-center gap-2 pl-2 border-l border-zinc-800 text-[11px]">
+                {showMA20 && activeMA20 !== undefined && (
+                  <span className="text-[#f59e0b] font-medium">
+                    MA20: <strong className="font-bold">{activeMA20.toFixed(2)}</strong>
+                  </span>
+                )}
+                {showMA50 && activeMA50 !== undefined && (
+                  <span className="text-[#06b6d4] font-medium">
+                    MA50: <strong className="font-bold">{activeMA50.toFixed(2)}</strong>
+                  </span>
+                )}
+                {showMA150 && activeMA150 !== undefined && (
+                  <span className="text-[#f97316] font-medium">
+                    MA150: <strong className="font-bold">{activeMA150.toFixed(2)}</strong>
+                  </span>
+                )}
+                {showMA200 && activeMA200 !== undefined && (
+                  <span className="text-[#f43f5e] font-medium">
+                    MA200: <strong className="font-bold">{activeMA200.toFixed(2)}</strong>
+                  </span>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -1932,17 +2824,31 @@ export function MarketCandleChart() {
           <div className="relative">
             <button
               onClick={() => setShowIndicatorsModal(!showIndicatorsModal)}
-              className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-mono font-semibold bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-200 rounded-lg transition-all"
+              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-mono font-semibold border rounded-lg transition-all ${
+                activeSubIndicator !== 'none'
+                  ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300 shadow-sm'
+                  : 'bg-zinc-900 border-zinc-800 hover:border-zinc-700 text-zinc-200'
+              }`}
             >
-              <FxIcon size={14} className="text-emerald-400" />
+              <FxIcon size={14} className={activeSubIndicator !== 'none' ? 'text-emerald-400' : 'text-zinc-400'} />
               <span>Các chỉ báo</span>
+              {activeSubIndicator !== 'none' && (
+                <span className="text-[10px] uppercase font-bold bg-emerald-500/20 text-emerald-300 px-1.5 py-0.2 rounded border border-emerald-500/30">
+                  {activeSubIndicator}
+                </span>
+              )}
             </button>
 
             {/* Indicators Popover */}
             {showIndicatorsModal && (
-              <div className="absolute right-0 top-full mt-2 w-56 bg-zinc-900 border border-zinc-800 rounded-xl p-2.5 shadow-2xl z-50 backdrop-blur-xl animate-in fade-in">
-                <div className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 mb-2 px-1">Chỉ báo kỹ thuật</div>
-                <div className="flex flex-col gap-1">
+              <>
+                <div
+                  className="fixed inset-0 z-40 bg-transparent"
+                  onClick={() => setShowIndicatorsModal(false)}
+                />
+                <div className="absolute right-0 top-full mt-2 w-64 bg-zinc-900/95 border border-zinc-800 rounded-xl p-2.5 shadow-2xl z-50 backdrop-blur-xl animate-in fade-in max-h-[85vh] overflow-y-auto">
+                <div className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 mb-1.5 px-1 font-bold">1. Xu hướng & Nền giá</div>
+                <div className="flex flex-col gap-1 mb-2">
                   <button
                     onClick={() => setShowMA20(!showMA20)}
                     className="flex items-center justify-between px-2 py-1.5 rounded-lg text-xs font-mono text-zinc-200 hover:bg-zinc-800"
@@ -2009,7 +2915,66 @@ export function MarketCandleChart() {
                     <span className={`text-[10px] ${showVolume ? 'text-emerald-400 font-bold' : 'text-zinc-500'}`}>{showVolume ? 'BẬT' : 'TẮT'}</span>
                   </button>
                 </div>
+
+                <div className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 mb-1.5 px-1 pt-2 border-t border-zinc-800/80 font-bold">2. Động lượng & Dao động</div>
+                <div className="flex flex-col gap-1 mb-2">
+                  <button
+                    onClick={() => setActiveSubIndicator(activeSubIndicator === 'rsi' ? 'none' : 'rsi')}
+                    className="flex items-center justify-between px-2 py-1.5 rounded-lg text-xs font-mono text-zinc-200 hover:bg-zinc-800"
+                  >
+                    <span className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-purple-400" />
+                      RSI (14) - Sức mạnh tương đối
+                    </span>
+                    <span className={`text-[10px] ${activeSubIndicator === 'rsi' ? 'text-emerald-400 font-bold' : 'text-zinc-500'}`}>
+                      {activeSubIndicator === 'rsi' ? 'BẬT' : 'TẮT'}
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={() => setActiveSubIndicator(activeSubIndicator === 'macd' ? 'none' : 'macd')}
+                    className="flex items-center justify-between px-2 py-1.5 rounded-lg text-xs font-mono text-zinc-200 hover:bg-zinc-800"
+                  >
+                    <span className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-blue-400" />
+                      MACD (12, 26, 9)
+                    </span>
+                    <span className={`text-[10px] ${activeSubIndicator === 'macd' ? 'text-emerald-400 font-bold' : 'text-zinc-500'}`}>
+                      {activeSubIndicator === 'macd' ? 'BẬT' : 'TẮT'}
+                    </span>
+                  </button>
+                </div>
+
+                <div className="text-[10px] font-mono uppercase tracking-wider text-emerald-400 mb-1.5 px-1 pt-2 border-t border-zinc-800/80 font-bold">3. Dòng tiền thông minh</div>
+                <div className="flex flex-col gap-1">
+                  <button
+                    onClick={() => setActiveSubIndicator(activeSubIndicator === 'mfi' ? 'none' : 'mfi')}
+                    className="flex items-center justify-between px-2 py-1.5 rounded-lg text-xs font-mono text-zinc-200 hover:bg-zinc-800"
+                  >
+                    <span className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
+                      MFI (14) - Chỉ số Dòng tiền
+                    </span>
+                    <span className={`text-[10px] ${activeSubIndicator === 'mfi' ? 'text-emerald-400 font-bold' : 'text-zinc-500'}`}>
+                      {activeSubIndicator === 'mfi' ? 'BẬT' : 'TẮT'}
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={() => setActiveSubIndicator(activeSubIndicator === 'obv' ? 'none' : 'obv')}
+                    className="flex items-center justify-between px-2 py-1.5 rounded-lg text-xs font-mono text-zinc-200 hover:bg-zinc-800"
+                  >
+                    <span className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-cyan-400" />
+                      OBV - Dòng tiền cá mập gom/xả
+                    </span>
+                    <span className={`text-[10px] ${activeSubIndicator === 'obv' ? 'text-emerald-400 font-bold' : 'text-zinc-500'}`}>
+                      {activeSubIndicator === 'obv' ? 'BẬT' : 'TẮT'}
+                    </span>
+                  </button>
+                </div>
               </div>
+              </>
             )}
           </div>
 
@@ -2030,15 +2995,45 @@ export function MarketCandleChart() {
 
           <div className="w-px h-4 bg-zinc-800 mx-0.5" />
 
-          {/* Undo / Redo for drawings */}
-          <button
-            onClick={handleUndo}
-            disabled={drawings.length === 0}
-            title="Hoàn tác nét vẽ (Undo)"
-            className="p-1.5 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900 rounded-lg disabled:opacity-30"
-          >
-            <ArrowCounterClockwise size={14} />
-          </button>
+          {/* Drawing Actions: Undo, Redo, Hide, Clear Trash */}
+          <div className="flex items-center gap-0.5 bg-zinc-900 border border-zinc-800 rounded-lg p-0.5">
+            <button
+              onClick={handleUndo}
+              disabled={drawings.length === 0}
+              title="Hoàn tác nét vẽ (Undo)"
+              className="p-1 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded disabled:opacity-25"
+            >
+              <ArrowCounterClockwise size={13} />
+            </button>
+            <button
+              onClick={handleRedo}
+              disabled={redoStack.length === 0}
+              title="Làm lại nét vẽ (Redo)"
+              className="p-1 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded disabled:opacity-25"
+            >
+              <ArrowClockwise size={13} />
+            </button>
+            <div className="w-px h-3.5 bg-zinc-800 mx-0.5" />
+            <button
+              onClick={() => setHideDrawings(!hideDrawings)}
+              title={hideDrawings ? 'Hiện tất cả nét vẽ (Show drawings)' : 'Ẩn tất cả nét vẽ (Hide drawings)'}
+              className={`p-1 rounded transition-colors ${
+                hideDrawings
+                  ? 'text-amber-400 bg-amber-500/20 font-bold'
+                  : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
+              }`}
+            >
+              {hideDrawings ? <EyeSlash size={13} weight="bold" /> : <Eye size={13} />}
+            </button>
+            <button
+              onClick={handleClearAll}
+              disabled={drawings.length === 0}
+              title="Xóa tất cả nét vẽ trên biểu đồ (Xoá nét vẽ / Trash)"
+              className="p-1 text-zinc-400 hover:text-rose-400 hover:bg-rose-500/15 rounded disabled:opacity-25 transition-colors"
+            >
+              <Trash size={13} />
+            </button>
+          </div>
 
           <button
             onClick={() => chartRef.current?.timeScale().fitContent()}
@@ -2072,38 +3067,80 @@ export function MarketCandleChart() {
         </div>
       </div>
 
-      {/* ── Sub-header: Live Trendline Pro Summary Bar (VN Terminal Pro Style) ── */}
-      {showTrendlinePro && trendlineProData && (
-        <div className="flex items-center gap-3 sm:gap-5 px-4 py-1.5 bg-zinc-950 border-b border-zinc-800/80 text-[11px] font-mono text-zinc-300 overflow-x-auto scrollbar-none z-20">
-          <span className="flex items-center gap-1.5 font-bold text-amber-400 shrink-0">
-            <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-            * Trendline Pro
-          </span>
-          <span className="text-zinc-600 shrink-0">|</span>
-          <span className="shrink-0 flex items-center gap-1.5">
-            <span className="text-zinc-400">Kháng cự:</span>
-            <span className="px-1.5 py-0.5 rounded bg-lime-500/15 text-lime-400 font-bold border border-lime-500/30">
-              {trendlineProData.resistance.toFixed(2)}
+      {/* ── Sub-header: Live Trendline Pro & MA Indicators Summary Bar ── */}
+      {((showTrendlinePro && trendlineProData) || (showMA20 || showMA50 || showMA150 || showMA200)) && (
+        <div className="flex items-center gap-3 sm:gap-4 px-4 py-1.5 bg-zinc-950 border-b border-zinc-800/80 text-[11px] font-mono text-zinc-300 overflow-x-auto scrollbar-none z-20">
+          {showTrendlinePro && trendlineProData && (
+            <>
+              <span className="flex items-center gap-1.5 font-bold text-amber-400 shrink-0">
+                <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                * Trendline Pro
+              </span>
+              <span className="text-zinc-600 shrink-0">|</span>
+              <span className="shrink-0 flex items-center gap-1.5">
+                <span className="text-zinc-400">Kháng cự:</span>
+                <span className="px-1.5 py-0.5 rounded bg-lime-500/15 text-lime-400 font-bold border border-lime-500/30">
+                  {trendlineProData.resistance.toFixed(2)}
+                </span>
+              </span>
+              <span className="shrink-0 flex items-center gap-1.5">
+                <span className="text-zinc-400">Hỗ trợ:</span>
+                <span className="px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-400 font-bold border border-rose-500/30">
+                  {trendlineProData.support.toFixed(2)}
+                </span>
+              </span>
+              <span className="shrink-0 flex items-center gap-1.5">
+                <span className="text-zinc-400">Fib 0,618:</span>
+                <span className="px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-300 font-bold border border-amber-500/30">
+                  {trendlineProData.fib0618.toFixed(2)}
+                </span>
+              </span>
+              <span className="shrink-0 flex items-center gap-1.5">
+                <span className="text-zinc-400">Fib 1,618:</span>
+                <span className="px-1.5 py-0.5 rounded bg-cyan-500/15 text-cyan-300 font-bold border border-cyan-500/30">
+                  {trendlineProData.fib1618.toFixed(2)}
+                </span>
+              </span>
+            </>
+          )}
+
+          {showTrendlinePro && trendlineProData && (showMA20 || showMA50 || showMA150 || showMA200) && (
+            <span className="text-zinc-600 shrink-0">|</span>
+          )}
+
+          {/* Active MA Indicator Numbers on Header */}
+          {showMA20 && activeMA20 !== undefined && (
+            <span className="shrink-0 flex items-center gap-1">
+              <span className="text-zinc-400">MA20:</span>
+              <span className="px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400 font-bold border border-amber-500/30">
+                {activeMA20.toFixed(2)}
+              </span>
             </span>
-          </span>
-          <span className="shrink-0 flex items-center gap-1.5">
-            <span className="text-zinc-400">Hỗ trợ:</span>
-            <span className="px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-400 font-bold border border-rose-500/30">
-              {trendlineProData.support.toFixed(2)}
+          )}
+          {showMA50 && activeMA50 !== undefined && (
+            <span className="shrink-0 flex items-center gap-1">
+              <span className="text-zinc-400">MA50:</span>
+              <span className="px-1.5 py-0.5 rounded bg-cyan-500/15 text-cyan-400 font-bold border border-cyan-500/30">
+                {activeMA50.toFixed(2)}
+              </span>
             </span>
-          </span>
-          <span className="shrink-0 flex items-center gap-1.5">
-            <span className="text-zinc-400">Fib 0,618:</span>
-            <span className="px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-300 font-bold border border-amber-500/30">
-              {trendlineProData.fib0618.toFixed(2)}
+          )}
+          {showMA150 && activeMA150 !== undefined && (
+            <span className="shrink-0 flex items-center gap-1">
+              <span className="text-zinc-400">MA150:</span>
+              <span className="px-1.5 py-0.5 rounded bg-orange-500/15 text-orange-400 font-bold border border-orange-500/30">
+                {activeMA150.toFixed(2)}
+              </span>
             </span>
-          </span>
-          <span className="shrink-0 flex items-center gap-1.5">
-            <span className="text-zinc-400">Fib 1,618:</span>
-            <span className="px-1.5 py-0.5 rounded bg-cyan-500/15 text-cyan-300 font-bold border border-cyan-500/30">
-              {trendlineProData.fib1618.toFixed(2)}
+          )}
+          {showMA200 && activeMA200 !== undefined && (
+            <span className="shrink-0 flex items-center gap-1">
+              <span className="text-zinc-400">MA200:</span>
+              <span className="px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-400 font-bold border border-rose-500/30">
+                {activeMA200.toFixed(2)}
+              </span>
             </span>
-          </span>
+          )}
         </div>
       )}
 
@@ -2112,7 +3149,7 @@ export function MarketCandleChart() {
         isExpanded ? 'h-[calc(100vh-100px)] min-h-0' : 'h-[420px] lg:h-[440px] min-h-[360px]'
       }`}>
         {/* Left Vertical Drawing Toolbar (Complete TradingView Style) */}
-        <div className="flex flex-col items-center gap-0.5 sm:gap-1 py-1.5 px-1 bg-[#131722]/95 border-r border-zinc-800/80 z-30 shrink-0 w-10 sm:w-11 select-none">
+        <div className="flex flex-col items-center gap-0.5 sm:gap-1 py-1.5 px-1 bg-[#131722]/95 border-r border-zinc-800/80 z-30 shrink-0 w-10 sm:w-11 select-none overflow-y-auto scrollbar-none h-full">
           {/* 1. Grip Handle */}
           <div className="text-zinc-600 py-0.5 flex justify-center cursor-grab active:cursor-grabbing hover:text-zinc-400 transition-colors">
             <DotsSixVertical size={16} />
@@ -2419,48 +3456,208 @@ export function MarketCandleChart() {
           <button
             onClick={handleClearAll}
             disabled={drawings.length === 0}
-            title="Xóa tất cả nét vẽ trên biểu đồ"
-            className="w-8 h-8 flex items-center justify-center rounded-lg text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 disabled:opacity-20 disabled:hover:bg-transparent mt-auto transition-colors"
+            title="Xóa tất cả nét vẽ trên biểu đồ (Clear all)"
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-zinc-400 hover:text-rose-400 hover:bg-rose-500/15 disabled:opacity-20 disabled:hover:bg-transparent transition-colors"
           >
             <Trash size={16} />
           </button>
         </div>
 
-        {/* Chart Canvas Area */}
-        <div className="flex-1 h-full w-full min-h-0 relative overflow-hidden">
-          <div ref={chartContainerRef} className="w-full h-full min-h-0" />
-          <canvas
-            ref={canvasRef}
-            onMouseDown={handleCanvasMouseDown}
-            onMouseMove={handleCanvasMouseMove}
-            onMouseLeave={() => setHoverSnapPoint(null)}
-            className={`absolute inset-0 z-20 ${
-              activeTool === 'cursor' ? 'pointer-events-none' : 'pointer-events-auto cursor-crosshair'
-            }`}
-          />
+        {/* Chart Canvas Area & Sub Indicator Pane */}
+        <div className="flex-1 h-full w-full min-h-0 relative overflow-hidden flex flex-col">
+          <div className="flex-1 w-full min-h-0 relative overflow-hidden">
+            <div ref={chartContainerRef} className="w-full h-full min-h-0" />
+            <canvas
+              ref={canvasRef}
+              onMouseDown={handleCanvasMouseDown}
+              onMouseMove={handleCanvasMouseMove}
+              onMouseLeave={() => setHoverSnapPoint(null)}
+              onContextMenu={(e) => {
+                if (draftDrawing) {
+                  e.preventDefault();
+                  setDraftDrawing(null);
+                }
+              }}
+              className={`absolute inset-0 z-20 ${
+                activeTool === 'cursor' ? 'pointer-events-none' : 'pointer-events-auto cursor-crosshair'
+              }`}
+            />
 
-          {/* Loading Overlay */}
-          {isLoading && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-950/80 backdrop-blur-sm z-30">
-              <SpinnerGap size={28} className="text-emerald-400 animate-spin mb-2" />
-              <p className="text-xs font-mono text-zinc-300">Đang đồng bộ nến lịch sử DNSE từ ngày đầu tiên...</p>
-            </div>
-          )}
+            {/* Loading Overlay */}
+            {isLoading && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-950/80 backdrop-blur-sm z-30">
+                <SpinnerGap size={28} className="text-emerald-400 animate-spin mb-2" />
+                <p className="text-xs font-mono text-zinc-300">Đang đồng bộ nến lịch sử DNSE từ ngày đầu tiên...</p>
+              </div>
+            )}
 
-          {/* Active Tool Floating Banner */}
-          {activeTool !== 'cursor' && (
-            <div className="absolute top-3 left-4 z-30 flex items-center gap-2 px-3 py-1.5 bg-zinc-900/90 border border-emerald-500/30 rounded-xl text-[11px] font-mono text-emerald-400 backdrop-blur-md shadow-xl">
-              <span className="font-bold">{TOOL_LABELS[activeTool]}</span>
-              <span className="text-zinc-400 text-[10px]">
-                ({draftDrawing ? 'Nhấp điểm thứ 2 để chốt' : 'Nhấp điểm trên nến để bắt đầu'})
-              </span>
-              <button
-                onClick={() => { setDraftDrawing(null); setActiveTool('cursor'); }}
-                className="ml-1 p-0.5 hover:bg-zinc-800 rounded text-zinc-400 hover:text-zinc-200"
-                title="Hủy vẽ (Esc)"
-              >
-                <X size={13} />
-              </button>
+            {/* Active Tool Floating Banner */}
+            {activeTool !== 'cursor' && (
+              <div className="absolute top-3 left-4 z-30 flex items-center gap-2 px-3 py-1.5 bg-zinc-900/90 border border-emerald-500/30 rounded-xl text-[11px] font-mono text-emerald-400 backdrop-blur-md shadow-xl">
+                <span className="font-bold">{TOOL_LABELS[activeTool]}</span>
+                <span className="text-zinc-400 text-[10px]">
+                  ({draftDrawing ? 'Nhấp điểm thứ 2 để chốt' : 'Nhấp điểm trên nến để bắt đầu'})
+                </span>
+                <button
+                  onClick={() => { setDraftDrawing(null); setActiveTool('cursor'); }}
+                  className="ml-1 p-0.5 hover:bg-zinc-800 rounded text-zinc-400 hover:text-zinc-200"
+                  title="Hủy vẽ (Esc)"
+                >
+                  <X size={13} />
+                </button>
+              </div>
+            )}
+
+            {/* Selected Drawing Floating Banner */}
+            {selectedDrawingId && activeTool === 'cursor' && (
+              <div className="absolute top-3 left-4 z-30 flex items-center gap-2 px-3 py-1.5 bg-zinc-900/95 border border-cyan-500/40 rounded-xl text-[11px] font-mono text-cyan-400 backdrop-blur-md shadow-2xl animate-in fade-in">
+                <span className="font-bold">Đã chọn:</span>
+                <span className="text-zinc-200 font-medium">
+                  {TOOL_LABELS[drawings.find((d) => d.id === selectedDrawingId)?.type || 'trendline'] || 'Nét vẽ'}
+                </span>
+                <span className="text-zinc-400 text-[10px] bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">
+                  Phím Delete / Backspace để xoá
+                </span>
+                <button
+                  onClick={() => {
+                    setDrawings((prev) => {
+                      const itemToRemove = prev.find((d) => d.id === selectedDrawingId);
+                      if (itemToRemove) {
+                        setUndoStack((u) => [...u, [itemToRemove]]);
+                        setRedoStack([]);
+                      }
+                      const updated = prev.filter((d) => d.id !== selectedDrawingId);
+                      saveDrawings(updated);
+                      return updated;
+                    });
+                    setSelectedDrawingId(null);
+                    setTimeout(() => redrawCanvasRef.current(), 0);
+                  }}
+                  className="ml-1 p-1 hover:bg-rose-500/20 rounded text-rose-400 hover:text-rose-300 transition-colors"
+                  title="Xoá nét vẽ này"
+                >
+                  <Trash size={13} />
+                </button>
+                <button
+                  onClick={() => setSelectedDrawingId(null)}
+                  className="p-1 hover:bg-zinc-800 rounded text-zinc-400 hover:text-zinc-200 transition-colors"
+                  title="Bỏ chọn (Esc)"
+                >
+                  <X size={13} />
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Sub Indicator Pane (RSI, MACD, MFI, OBV) */}
+          {activeSubIndicator !== 'none' && (
+            <div className="h-[148px] w-full border-t border-zinc-800/80 bg-zinc-950/95 flex flex-col relative shrink-0">
+              {/* Header Bar */}
+              <div className="flex items-center justify-between px-3 py-1 bg-zinc-900/70 border-b border-zinc-800/60 text-[11px] font-mono select-none">
+                {/* Left: Quick Switcher Tabs */}
+                <div className="flex items-center gap-1">
+                  <span className="text-zinc-500 text-[10px] uppercase font-bold mr-1">Chỉ báo phụ:</span>
+                  {(
+                    [
+                      { id: 'rsi', label: 'RSI (14)' },
+                      { id: 'macd', label: 'MACD (12,26,9)' },
+                      { id: 'mfi', label: 'MFI (14) - Dòng tiền' },
+                      { id: 'obv', label: 'OBV - Cá mập gom' },
+                    ] as const
+                  ).map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveSubIndicator(tab.id)}
+                      className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all ${
+                        activeSubIndicator === tab.id
+                          ? 'bg-zinc-800 text-emerald-400 border border-emerald-500/40 shadow-sm'
+                          : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900'
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Center / Right: Live Numeric Values & Close Button */}
+                <div className="flex items-center gap-3">
+                  {activeSubIndicator === 'rsi' && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-purple-400 font-bold">
+                        RSI(14): <strong className="text-zinc-100">{subIndicatorValues.rsi !== undefined ? subIndicatorValues.rsi.toFixed(1) : '--'}</strong>
+                      </span>
+                      <span className={`text-[10px] px-1.5 py-0.2 rounded font-bold ${
+                        (subIndicatorValues.rsi ?? 50) >= 70
+                          ? 'bg-rose-500/20 text-rose-400'
+                          : (subIndicatorValues.rsi ?? 50) <= 30
+                          ? 'bg-emerald-500/20 text-emerald-400'
+                          : 'bg-zinc-800 text-zinc-400'
+                      }`}>
+                        {(subIndicatorValues.rsi ?? 50) >= 70 ? 'Quá mua (>70)' : (subIndicatorValues.rsi ?? 50) <= 30 ? 'Quá bán (<30)' : 'Cân bằng'}
+                      </span>
+                    </div>
+                  )}
+
+                  {activeSubIndicator === 'macd' && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-blue-400 font-medium">
+                        MACD: <strong className="text-zinc-100 font-bold">{subIndicatorValues.macd !== undefined ? subIndicatorValues.macd.toFixed(2) : '--'}</strong>
+                      </span>
+                      <span className="text-orange-400 font-medium">
+                        Signal: <strong className="text-zinc-100 font-bold">{subIndicatorValues.signal !== undefined ? subIndicatorValues.signal.toFixed(2) : '--'}</strong>
+                      </span>
+                      <span className={`font-medium ${
+                        (subIndicatorValues.hist ?? 0) >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                      }`}>
+                        Hist: <strong className="font-bold">{(subIndicatorValues.hist ?? 0) >= 0 ? '+' : ''}{subIndicatorValues.hist !== undefined ? subIndicatorValues.hist.toFixed(2) : '--'}</strong>
+                      </span>
+                    </div>
+                  )}
+
+                  {activeSubIndicator === 'mfi' && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-emerald-400 font-bold">
+                        MFI(14): <strong className="text-zinc-100">{subIndicatorValues.mfi !== undefined ? subIndicatorValues.mfi.toFixed(1) : '--'}</strong>
+                      </span>
+                      <span className={`text-[10px] px-1.5 py-0.2 rounded font-bold ${
+                        (subIndicatorValues.mfi ?? 50) >= 80
+                          ? 'bg-rose-500/20 text-rose-400'
+                          : (subIndicatorValues.mfi ?? 50) <= 20
+                          ? 'bg-emerald-500/20 text-emerald-400'
+                          : 'bg-zinc-800 text-zinc-400'
+                      }`}>
+                        {(subIndicatorValues.mfi ?? 50) >= 80 ? 'Dòng tiền nóng (>80)' : (subIndicatorValues.mfi ?? 20) <= 20 ? 'Dòng tiền gom đáy (<20)' : 'Dòng tiền ổn định'}
+                      </span>
+                    </div>
+                  )}
+
+                  {activeSubIndicator === 'obv' && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-cyan-400 font-bold">
+                        OBV: <strong className="text-zinc-100">
+                          {subIndicatorValues.obv !== undefined
+                            ? Math.abs(subIndicatorValues.obv) >= 1_000_000
+                              ? `${(subIndicatorValues.obv / 1_000_000).toFixed(2)}M cp`
+                              : `${(subIndicatorValues.obv / 1_000).toFixed(1)}K cp`
+                            : '--'}
+                        </strong>
+                      </span>
+                      <span className="text-amber-400 text-[10px] hidden sm:inline">Cam: EMA20 OBV</span>
+                    </div>
+                  )}
+
+                  <button
+                    onClick={() => setActiveSubIndicator('none')}
+                    className="p-1 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded transition-colors"
+                    title="Đóng chỉ báo phụ"
+                  >
+                    <X size={13} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Sub-chart container */}
+              <div ref={subChartContainerRef} className="w-full flex-1 min-h-0" />
             </div>
           )}
         </div>

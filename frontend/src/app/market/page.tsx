@@ -4,7 +4,6 @@ import React from 'react';
 import { DashboardLayout } from '../components/layout/DashboardLayout';
 import { useDnseWebSocket } from '../../features/market/hooks/useDnseWebSocket';
 import { useMarketStore } from '../../features/market/store/marketStore';
-import { MarketSearch } from '../../features/market/components/MarketSearch';
 import { MarketOverviewSection } from '../../features/market/components/MarketOverviewSection';
 import { StockDetailSection } from '../../features/market/components/StockDetailSection';
 import { MarkMinerviniScreener } from '../../features/market/components/MarkMinerviniScreener';
@@ -29,7 +28,7 @@ export default function MarketTerminalPage() {
     <DashboardLayout>
       <div className="space-y-6 pb-12">
         {/* Top Header Command Bar */}
-        <div className="relative z-50 flex flex-wrap items-center justify-between gap-4 p-4 bg-zinc-950/80 border border-zinc-800/80 rounded-2xl backdrop-blur-xl shadow-xl">
+        <div className="relative z-10 flex flex-wrap items-center justify-between gap-4 p-4 bg-zinc-950/80 border border-zinc-800/80 rounded-2xl backdrop-blur-xl shadow-xl">
           {/* Left Title & System Status */}
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
@@ -92,11 +91,8 @@ export default function MarketTerminalPage() {
             </button>
           </div>
 
-          {/* Right Tools: Search Command Palette & WebSocket Status Pill */}
+          {/* Right Tools: WebSocket Status Pill */}
           <div className="flex items-center gap-3">
-            {/* Stock Search Command Palette (Selecting any stock immediately displays full details) */}
-            <MarketSearch />
-
             {/* Connection Status Pill */}
             <div
               className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl border text-xs font-mono font-semibold transition-all ${
