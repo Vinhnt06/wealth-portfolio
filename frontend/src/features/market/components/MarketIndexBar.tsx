@@ -39,7 +39,7 @@ export function MarketIndexBar() {
               className="flex items-center gap-2.5 shrink-0 bg-zinc-900/60 border border-zinc-800/60 px-3 py-1.5 rounded-lg shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
             >
               <span className="font-semibold text-zinc-300 font-mono tracking-tight">{idx.symbol}</span>
-              <span className="font-mono font-semibold text-zinc-100">{idx.value.toLocaleString('vi-VN', { minimumFractionDigits: 2 })}</span>
+              <span className="font-mono font-semibold text-zinc-100">{idx.value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
 
               <div className={`flex items-center gap-1 font-mono font-medium text-[11px] ${
                 isPositive ? 'text-emerald-400' : isNegative ? 'text-rose-400' : 'text-amber-400'

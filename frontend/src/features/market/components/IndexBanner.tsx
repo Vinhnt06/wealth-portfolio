@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { TrendUp, TrendDown, Minus } from '@phosphor-icons/react';
 import { useMarketStore } from '../store/marketStore';
 import realIndexesData from '../data/realIndexes.json';
@@ -22,12 +22,51 @@ interface IndexInfo {
 const REAL_INDEX_DATA: IndexInfo[] = realIndexesData as IndexInfo[];
 
 export const IndexBanner: React.FC = () => {
-  const { indexes, selectedIndexSymbol, setSelectedIndexSymbol } = useMarketStore();
+  const { indexes, selectedIndexSymbol, setSelectedIndexSymbol, updateIndex } = useMarketStore();
+
+  // Initial and periodic fetch of latest live index data from DNSE via API route
+  useEffect(() => {
+    let isMounted = true;
+    const fetchIndexes = async () => {
+      const symbols = ['VNINDEX', 'VN30', 'HNX', 'UPCOM'];
+      await Promise.allSettled(
+        symbols.map(async (sym) => {
+          try {
+            const res = await fetch(`/api/market/quote?symbol=${sym}`);
+            const json = await res.json();
+            if (isMounted && json.success && json.data) {
+              const d = json.data;
+              updateIndex({
+                symbol: sym,
+                name: sym === 'VNINDEX' ? 'VN-Index' : sym === 'VN30' ? 'VN30-Index' : sym === 'HNX' ? 'HNX-Index' : 'UPCOM-Index',
+                value: d.price,
+                change: d.change,
+                changePercent: d.changePercent,
+                totalVolume: d.volume,
+                totalValue: d.totalValue || 0,
+                advances: 0,
+                declines: 0,
+                noChanges: 0,
+                timestamp: d.timestamp,
+              });
+            }
+          } catch {
+            // fallback gracefully to realIndexes.json
+          }
+        })
+      );
+    };
+
+    fetchIndexes();
+    const interval = setInterval(fetchIndexes, 15000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [updateIndex]);
 
   // Deterministic sparkline points for realistic intraday trajectory
   const getSparklinePath = (item: IndexInfo, isPositive: boolean) => {
-    const base = item.value;
-    const diff = item.change;
     // Generate 12 sample intraday points
     const factors = isPositive
       ? [-0.3, -0.1, -0.4, 0.1, 0.2, -0.05, 0.4, 0.35, 0.6, 0.5, 0.8, 1.0]
@@ -55,14 +94,21 @@ export const IndexBanner: React.FC = () => {
 
         const isPositive = chg >= 0;
         const isSelected = selectedIndexSymbol === item.symbol;
-        const totalCount = item.advances + item.declines + item.noChanges;
-        const advPct = (item.advances / totalCount) * 100;
-        const decPct = (item.declines / totalCount) * 100;
-        const ncPct = (item.noChanges / totalCount) * 100;
+        const advances = (liveIndex && liveIndex.advances > 0) ? liveIndex.advances : item.advances;
+        const declines = (liveIndex && liveIndex.declines > 0) ? liveIndex.declines : item.declines;
+        const noChanges = (liveIndex && liveIndex.noChanges > 0) ? liveIndex.noChanges : item.noChanges;
+        const totalCount = advances + declines + noChanges;
+        const advPct = (advances / totalCount) * 100;
+        const decPct = (declines / totalCount) * 100;
+        const ncPct = (noChanges / totalCount) * 100;
+
+        let displayTotalVal = item.totalValue;
+        if (liveIndex?.totalValue && liveIndex.totalValue > 0) {
+          displayTotalVal = `${(liveIndex.totalValue / 1e9).toLocaleString('en-US', { maximumFractionDigits: 0 })} Tỷ`;
+        }
 
         const { pathD, areaD } = getSparklinePath(item, isPositive);
         const strokeColor = isPositive ? '#10b981' : '#f43f5e';
-        const fillColor = isPositive ? 'rgba(16, 185, 129, 0.15)' : 'rgba(244, 63, 94, 0.15)';
 
         return (
           <div
@@ -112,11 +158,11 @@ export const IndexBanner: React.FC = () => {
               <div>
                 <div className="flex items-baseline gap-1.5">
                   <span className="font-mono font-black text-2xl tracking-tight text-zinc-100">
-                    {val.toLocaleString('vi-VN', { minimumFractionDigits: 2 })}
+                    {val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                 </div>
                 <span className="text-[10px] font-mono text-zinc-500">
-                  GTGD: <span className="text-zinc-300 font-semibold">{item.totalValue}</span>
+                  GTGD: <span className="text-zinc-300 font-semibold">{displayTotalVal}</span>
                 </span>
               </div>
 
@@ -138,16 +184,16 @@ export const IndexBanner: React.FC = () => {
             {/* Advance / Decline Progress Bar */}
             <div className="space-y-1">
               <div className="flex h-1.5 w-full rounded-full overflow-hidden bg-zinc-800">
-                <div style={{ width: `${advPct}%` }} className="bg-emerald-500 transition-all duration-300" title={`Tăng: ${item.advances}`} />
-                <div style={{ width: `${ncPct}%` }} className="bg-amber-400 transition-all duration-300" title={`TC: ${item.noChanges}`} />
-                <div style={{ width: `${decPct}%` }} className="bg-rose-500 transition-all duration-300" title={`Giảm: ${item.declines}`} />
+                <div style={{ width: `${advPct}%` }} className="bg-emerald-500 transition-all duration-300" title={`Tăng: ${advances}`} />
+                <div style={{ width: `${ncPct}%` }} className="bg-amber-400 transition-all duration-300" title={`TC: ${noChanges}`} />
+                <div style={{ width: `${decPct}%` }} className="bg-rose-500 transition-all duration-300" title={`Giảm: ${declines}`} />
               </div>
 
               <div className="flex justify-between items-center text-[10px] font-mono text-zinc-400">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-emerald-400 font-semibold">{item.advances}↑</span>
-                  <span className="text-amber-400 font-semibold">{item.noChanges}—</span>
-                  <span className="text-rose-400 font-semibold">{item.declines}↓</span>
+                  <span className="text-emerald-400 font-semibold">{advances}↑</span>
+                  <span className="text-amber-400 font-semibold">{noChanges}—</span>
+                  <span className="text-rose-400 font-semibold">{declines}↓</span>
                 </div>
                 <span className="text-[9px] text-zinc-500 font-sans">
                   {isSelected ? 'Đang chọn' : 'Bấm để xem'}

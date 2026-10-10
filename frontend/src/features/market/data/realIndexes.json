@@ -10,7 +10,7 @@
     "declines": 242,
     "noChanges": 74,
     "totalVolume": "911.3M",
-    "totalValue": "22,450B"
+    "totalValue": "22.450 Tỷ"
   },
   {
     "symbol": "VN30",
@@ -23,33 +23,32 @@
     "declines": 16,
     "noChanges": 3,
     "totalVolume": "468.2M",
-    "totalValue": "13,200B"
+    "totalValue": "13.200 Tỷ"
   },
   {
     "symbol": "HNX",
     "name": "HNX-Index",
     "exchange": "HNX",
     "value": 261.60,
-    "change": 1.15,
-    "percentChange": 0.44,
+    "change": 5.38,
+    "percentChange": 2.10,
     "advances": 92,
     "declines": 81,
     "noChanges": 55,
     "totalVolume": "78.5M",
-    "totalValue": "1,620B"
+    "totalValue": "1.620 Tỷ"
   },
   {
     "symbol": "UPCOM",
     "name": "UPCOM-Index",
     "exchange": "UPCOM",
-    "value": 98.42,
-    "change": 0.35,
-    "percentChange": 0.36,
+    "value": 124.24,
+    "change": -0.97,
+    "percentChange": -0.77,
     "advances": 134,
     "declines": 98,
     "noChanges": 62,
     "totalVolume": "45.8M",
-    "totalValue": "890B"
+    "totalValue": "890 Tỷ"
   }
 ]
-

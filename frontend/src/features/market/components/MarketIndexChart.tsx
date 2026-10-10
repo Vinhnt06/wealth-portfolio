@@ -227,7 +227,7 @@ export const MarketIndexChart: React.FC = () => {
 
           <div className="flex items-center gap-2">
             <span className="font-mono font-black text-lg text-zinc-100">
-              {currentVal.toLocaleString('vi-VN', { minimumFractionDigits: 2 })}
+              {currentVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
             <span
               className={`px-2 py-0.5 rounded-md text-xs font-mono font-bold border ${
