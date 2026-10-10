@@ -13,6 +13,7 @@ import {
   HistogramData,
   LineData,
   Time,
+  CrosshairMode,
 } from 'lightweight-charts';
 import { useMarketStore } from '../store/marketStore';
 import {
@@ -641,6 +642,23 @@ export function MarketCandleChart() {
       localStorage.setItem(`yf_drawings_${selectedSymbol}`, JSON.stringify(items));
     } catch {}
   };
+
+  // Synchronize crosshair visibility with active cursor tool to prevent frozen crosshairs
+  useEffect(() => {
+    const chart = chartRef.current;
+    if (!chart) return;
+    const hideCrosshair = activeTool === 'arrow_pointer';
+    chart.applyOptions({
+      crosshair: {
+        mode: hideCrosshair ? CrosshairMode.Hidden : CrosshairMode.Normal,
+        vertLine: { visible: !hideCrosshair },
+        horzLine: { visible: !hideCrosshair },
+      },
+    });
+    if (chartContainerRef.current) {
+      chartContainerRef.current.style.cursor = hideCrosshair ? 'default' : 'crosshair';
+    }
+  }, [activeTool]);
 
   // Fetch Minervini RS Rating & Stage 2 status for chart header
   useEffect(() => {
@@ -1896,7 +1914,7 @@ export function MarketCandleChart() {
 
     const onContainerMouseMove = (e: MouseEvent) => {
       if (isDraggingRef.current) return;
-      if (lockDrawingsRef.current || (activeToolRef.current !== 'cursor' && activeToolRef.current !== 'arrow_pointer')) {
+      if (lockDrawingsRef.current || (activeToolRef.current !== 'cursor' && activeToolRef.current !== 'arrow_pointer' && activeToolRef.current !== 'dot')) {
         return;
       }
       const canvas = canvasRef.current;
@@ -1915,7 +1933,13 @@ export function MarketCandleChart() {
         container.style.cursor = 'move';
         return;
       }
-      container.style.cursor = 'crosshair';
+      container.style.cursor = activeToolRef.current === 'arrow_pointer' ? 'default' : 'crosshair';
+    };
+
+    const onContainerMouseLeave = () => {
+      if (chartContainerRef.current) {
+        chartContainerRef.current.style.cursor = activeToolRef.current === 'arrow_pointer' ? 'default' : 'crosshair';
+      }
     };
 
     const onContainerMouseUp = (e: MouseEvent) => {
@@ -1940,11 +1964,13 @@ export function MarketCandleChart() {
 
     container.addEventListener('mousedown', onContainerMouseDown, { capture: true });
     container.addEventListener('mousemove', onContainerMouseMove);
+    container.addEventListener('mouseleave', onContainerMouseLeave);
     container.addEventListener('mouseup', onContainerMouseUp, { capture: true });
 
     return () => {
       container.removeEventListener('mousedown', onContainerMouseDown, { capture: true });
       container.removeEventListener('mousemove', onContainerMouseMove);
+      container.removeEventListener('mouseleave', onContainerMouseLeave);
       container.removeEventListener('mouseup', onContainerMouseUp, { capture: true });
       resizeObserver.disconnect();
       chart.remove();
@@ -3564,7 +3590,9 @@ export function MarketCandleChart() {
                 }
               }}
               className={`absolute inset-0 z-20 ${
-                activeTool === 'cursor' ? 'pointer-events-none' : 'pointer-events-auto cursor-crosshair'
+                activeTool === 'cursor' || activeTool === 'arrow_pointer' || activeTool === 'dot'
+                  ? 'pointer-events-none'
+                  : 'pointer-events-auto cursor-crosshair'
               }`}
             />
 
@@ -3637,8 +3665,8 @@ export function MarketCandleChart() {
               )}
             </div>
 
-            {/* Active Tool Floating Banner */}
-            {activeTool !== 'cursor' && (
+            {/* Active Tool Floating Banner (Only for actual drawing tools, never for cursor tools) */}
+            {activeTool !== 'cursor' && activeTool !== 'arrow_pointer' && activeTool !== 'dot' && activeTool !== 'eraser' && (
               <div className="absolute top-3 left-4 z-30 flex items-center gap-2 px-3 py-1.5 bg-zinc-900/90 border border-emerald-500/30 rounded-xl text-[11px] font-mono text-emerald-400 backdrop-blur-md shadow-xl">
                 <span className="font-bold">{TOOL_LABELS[activeTool]}</span>
                 <span className="text-zinc-400 text-[10px]">
@@ -3655,7 +3683,7 @@ export function MarketCandleChart() {
             )}
 
             {/* Selected Drawing Floating Banner */}
-            {selectedDrawingId && activeTool === 'cursor' && (
+            {selectedDrawingId && (activeTool === 'cursor' || activeTool === 'arrow_pointer' || activeTool === 'dot') && (
               <div className="absolute top-3 left-4 z-30 flex items-center gap-2 px-3 py-1.5 bg-zinc-900/95 border border-cyan-500/40 rounded-xl text-[11px] font-mono text-cyan-400 backdrop-blur-md shadow-2xl animate-in fade-in">
                 <span className="font-bold">Đã chọn:</span>
                 <span className="text-zinc-200 font-medium">
