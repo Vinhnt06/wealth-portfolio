@@ -38,6 +38,21 @@ import {
   ArrowsOut,
   ArrowsIn,
   Sparkle,
+  Magnet,
+  PushPin,
+  LockKey,
+  Eye,
+  EyeSlash,
+  Copy,
+  Scissors,
+  Star,
+  PaintBrush,
+  Circle,
+  Tag,
+  Target,
+  Rocket,
+  DotsSixVertical,
+  Waveform,
 } from '@phosphor-icons/react';
 import stockDatabase from '../data/stockDatabase.json';
 import { getStockPriceColor } from '../utils/priceColors';
@@ -72,7 +87,29 @@ const DATE_RANGES = [
 ] as const;
 
 // Drawing Tool Types & Schema
-export type DrawingTool = 'cursor' | 'trendline' | 'horizontal' | 'fibonacci' | 'rectangle' | 'measure' | 'text';
+export type DrawingTool =
+  | 'cursor'
+  | 'dot'
+  | 'arrow_pointer'
+  | 'eraser'
+  | 'trendline'
+  | 'ray'
+  | 'horizontal'
+  | 'horizontal_ray'
+  | 'vertical'
+  | 'parallel_channel'
+  | 'fibonacci'
+  | 'fib_extension'
+  | 'rectangle'
+  | 'circle'
+  | 'arrow_marker'
+  | 'text'
+  | 'price_label'
+  | 'callout'
+  | 'measure'
+  | 'long_position'
+  | 'short_position'
+  | 'rocket';
 
 export interface DrawingItem {
   id: string;
@@ -86,13 +123,28 @@ export interface DrawingItem {
 }
 
 const TOOL_LABELS: Record<DrawingTool, string> = {
-  cursor: 'Con trỏ chuột (Crosshair)',
-  trendline: 'Đường xu hướng (Trendline)',
+  cursor: 'Con trỏ chữ thập (Crosshair)',
+  dot: 'Điểm chấm (Dot)',
+  arrow_pointer: 'Con trỏ mũi tên (Arrow)',
+  eraser: 'Cục tẩy nét vẽ (Eraser)',
+  trendline: 'Đường xu hướng (Trend Line)',
+  ray: 'Tia xu hướng (Ray)',
   horizontal: 'Đường ngang Hỗ trợ / Kháng cự',
-  fibonacci: 'Thoái lui Fibonacci (Tỷ lệ vàng)',
+  horizontal_ray: 'Tia ngang (Horizontal Ray)',
+  vertical: 'Đường dọc (Vertical Line)',
+  parallel_channel: 'Kênh giá song song (Channel)',
+  fibonacci: 'Thoái lui Fibonacci (Retracement)',
+  fib_extension: 'Mở rộng Fibonacci (Fib Extension)',
   rectangle: 'Hộp vùng giá (Supply / Demand)',
-  measure: 'Thước đo biến động (% & Giá)',
+  circle: 'Đường tròn (Circle)',
+  arrow_marker: 'Mũi tên đánh dấu (Arrow Marker)',
   text: 'Ghi chú văn bản (Text note)',
+  price_label: 'Nhãn giá kỹ thuật (Price Label)',
+  callout: 'Bong bóng ghi chú (Callout)',
+  measure: 'Thước đo biến động (% & Nến)',
+  long_position: 'Vị thế Mua (Long Position R:R)',
+  short_position: 'Vị thế Bán (Short Position R:R)',
+  rocket: 'Mục tiêu bứt phá (Rocket 🚀)',
 };
 
 const PALETTE = ['#10b981', '#f43f5e', '#f59e0b', '#0ea5e9', '#f4f4f5'];
@@ -254,7 +306,7 @@ export function MarketCandleChart() {
   const [showTrendlinePro, setShowTrendlinePro] = useState(true);
   const [trendlineProData, setTrendlineProData] = useState<TrendlineProResult | null>(null);
 
-  // Drawing Tools State
+  // Drawing Tools State (TradingView Style)
   const [activeTool, setActiveTool] = useState<DrawingTool>('cursor');
   const [activeColor, setActiveColor] = useState<string>('#10b981');
   const [activeWidth, setActiveWidth] = useState<number>(2);
@@ -262,6 +314,13 @@ export function MarketCandleChart() {
   const [drawings, setDrawings] = useState<DrawingItem[]>([]);
   const [draftDrawing, setDraftDrawing] = useState<DrawingItem | null>(null);
   const [undoStack, setUndoStack] = useState<DrawingItem[][]>([]);
+  const [redoStack, setRedoStack] = useState<DrawingItem[][]>([]);
+  const [isMagnetMode, setIsMagnetMode] = useState<boolean>(true); // Smart magnet snap to OHLC
+  const [stayInDrawingMode, setStayInDrawingMode] = useState<boolean>(false);
+  const [lockDrawings, setLockDrawings] = useState<boolean>(false);
+  const [hideDrawings, setHideDrawings] = useState<boolean>(false);
+  const [activeFlyout, setActiveFlyout] = useState<string | null>(null);
+  const [hoverSnapPoint, setHoverSnapPoint] = useState<{ x: number; y: number; price: number } | null>(null);
   const [chartMinervini, setChartMinervini] = useState<{
     rsRating?: number;
     isStage2Eligible?: boolean;
@@ -389,6 +448,64 @@ export function MarketCandleChart() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  // Smart Magnet Snapping function (Snaps to Nearest Candle O/H/L/C)
+  const snapToCandle = useCallback(
+    (rawTime: Time | null, rawPrice: number, screenX?: number) => {
+      if (!isMagnetMode || loadedCandlesRef.current.length === 0) {
+        return { time: rawTime, price: Math.round(rawPrice * 100) / 100, isSnapped: false };
+      }
+
+      const chart = chartRef.current;
+      const candles = loadedCandlesRef.current;
+      let targetCandle: CandlestickData<Time> | null = null;
+
+      if (rawTime) {
+        const idx = candles.findIndex((c) => c.time === rawTime);
+        if (idx !== -1) {
+          targetCandle = candles[idx];
+        }
+      }
+
+      if (!targetCandle && chart && screenX !== undefined) {
+        let closestDist = Infinity;
+        for (let i = 0; i < candles.length; i++) {
+          const coord = chart.timeScale().timeToCoordinate(candles[i].time);
+          if (coord !== null) {
+            const dist = Math.abs(coord - screenX);
+            if (dist < closestDist) {
+              closestDist = dist;
+              targetCandle = candles[i];
+            }
+          }
+        }
+      }
+
+      if (!targetCandle) {
+        return { time: rawTime, price: Math.round(rawPrice * 100) / 100, isSnapped: false };
+      }
+
+      // Check OHLC points
+      const ohlc = [targetCandle.high, targetCandle.low, targetCandle.open, targetCandle.close];
+      let bestPrice = ohlc[0];
+      let minDiff = Math.abs(bestPrice - rawPrice);
+
+      for (let i = 1; i < ohlc.length; i++) {
+        const diff = Math.abs(ohlc[i] - rawPrice);
+        if (diff < minDiff) {
+          minDiff = diff;
+          bestPrice = ohlc[i];
+        }
+      }
+
+      return {
+        time: targetCandle.time,
+        price: Math.round(bestPrice * 100) / 100,
+        isSnapped: true,
+      };
+    },
+    [isMagnetMode]
+  );
+
   // Redraw Canvas Drawings overlay
   const redrawCanvas = useCallback(() => {
     const canvas = canvasRef.current;
@@ -417,153 +534,419 @@ export function MarketCandleChart() {
       return { x, y };
     };
 
-    const allItems: DrawingItem[] = [...drawings];
-    if (draftDrawing && draftDrawing.p2) {
-      allItems.push(draftDrawing);
+    // ── Render User Drawings (Respect Hide Drawings Toggle) ──
+    if (!hideDrawings) {
+      const allItems: DrawingItem[] = [...drawings];
+      if (draftDrawing && draftDrawing.p2) {
+        allItems.push(draftDrawing);
+      }
+
+      allItems.forEach((item) => {
+        ctx.save();
+        ctx.strokeStyle = item.color;
+        ctx.lineWidth = item.width || 2;
+        ctx.fillStyle = item.color;
+
+        if (item.type === 'horizontal') {
+          const y = series.priceToCoordinate(item.p1.price);
+          if (y !== null) {
+            ctx.setLineDash([4, 4]);
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(w, y);
+            ctx.stroke();
+
+            // Price Tag on right axis
+            ctx.setLineDash([]);
+            ctx.fillStyle = item.color;
+            ctx.fillRect(w - 72, y - 10, 68, 20);
+            ctx.fillStyle = '#09090b';
+            ctx.font = 'bold 10px JetBrains Mono, monospace';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(`${item.p1.price.toFixed(2)}k`, w - 38, y);
+          }
+        } else if (item.type === 'horizontal_ray') {
+          const c1 = toCoord(item.p1);
+          if (c1.x !== null && c1.y !== null) {
+            ctx.setLineDash([4, 4]);
+            ctx.beginPath();
+            ctx.moveTo(c1.x, c1.y);
+            ctx.lineTo(w, c1.y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(c1.x, c1.y, 3.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.setLineDash([]);
+            ctx.fillStyle = item.color;
+            ctx.fillRect(w - 72, c1.y - 10, 68, 20);
+            ctx.fillStyle = '#09090b';
+            ctx.font = 'bold 10px JetBrains Mono, monospace';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(`${item.p1.price.toFixed(2)}k`, w - 38, c1.y);
+          }
+        } else if (item.type === 'vertical') {
+          const c1 = toCoord(item.p1);
+          if (c1.x !== null) {
+            ctx.setLineDash([4, 4]);
+            ctx.beginPath();
+            ctx.moveTo(c1.x, 0);
+            ctx.lineTo(c1.x, h);
+            ctx.stroke();
+
+            ctx.setLineDash([]);
+            ctx.fillStyle = item.color;
+            ctx.fillRect(c1.x - 30, h - 20, 60, 18);
+            ctx.fillStyle = '#09090b';
+            ctx.font = 'bold 9px JetBrains Mono, monospace';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(String(item.p1.time).slice(5), c1.x, h - 11);
+          }
+        } else if (item.type === 'trendline' && item.p2) {
+          const c1 = toCoord(item.p1);
+          const c2 = toCoord(item.p2);
+          if (c1.x !== null && c1.y !== null && c2.x !== null && c2.y !== null) {
+            ctx.beginPath();
+            ctx.moveTo(c1.x, c1.y);
+            ctx.lineTo(c2.x, c2.y);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.arc(c1.x, c1.y, 3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(c2.x, c2.y, 3, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        } else if (item.type === 'ray' && item.p2) {
+          const c1 = toCoord(item.p1);
+          const c2 = toCoord(item.p2);
+          if (c1.x !== null && c1.y !== null && c2.x !== null && c2.y !== null) {
+            const dx = c2.x - c1.x;
+            const dy = c2.y - c1.y;
+            const endX = dx >= 0 ? w : 0;
+            const endY = dx !== 0 ? c1.y + (dy / dx) * (endX - c1.x) : (dy > 0 ? h : 0);
+            ctx.beginPath();
+            ctx.moveTo(c1.x, c1.y);
+            ctx.lineTo(endX, endY);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(c1.x, c1.y, 3.5, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        } else if (item.type === 'parallel_channel' && item.p2) {
+          const c1 = toCoord(item.p1);
+          const c2 = toCoord(item.p2);
+          if (c1.x !== null && c1.y !== null && c2.x !== null && c2.y !== null) {
+            const dyChannel = 28;
+            ctx.beginPath();
+            ctx.moveTo(c1.x, c1.y);
+            ctx.lineTo(c2.x, c2.y);
+            ctx.lineTo(c2.x, c2.y - dyChannel);
+            ctx.lineTo(c1.x, c1.y - dyChannel);
+            ctx.closePath();
+            ctx.fillStyle = item.color + '20';
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.setLineDash([3, 3]);
+            ctx.beginPath();
+            ctx.moveTo(c1.x, c1.y - dyChannel / 2);
+            ctx.lineTo(c2.x, c2.y - dyChannel / 2);
+            ctx.stroke();
+          }
+        } else if (item.type === 'rectangle' && item.p2) {
+          const c1 = toCoord(item.p1);
+          const c2 = toCoord(item.p2);
+          if (c1.x !== null && c1.y !== null && c2.x !== null && c2.y !== null) {
+            const minX = Math.min(c1.x, c2.x);
+            const minY = Math.min(c1.y, c2.y);
+            const boxW = Math.abs(c2.x - c1.x);
+            const boxH = Math.abs(c2.y - c1.y);
+
+            ctx.fillStyle = item.color + '26'; // 15% opacity fill
+            ctx.fillRect(minX, minY, boxW, boxH);
+            ctx.strokeRect(minX, minY, boxW, boxH);
+          }
+        } else if (item.type === 'circle' && item.p2) {
+          const c1 = toCoord(item.p1);
+          const c2 = toCoord(item.p2);
+          if (c1.x !== null && c1.y !== null && c2.x !== null && c2.y !== null) {
+            const radius = Math.hypot(c2.x - c1.x, c2.y - c1.y);
+            ctx.beginPath();
+            ctx.arc(c1.x, c1.y, radius, 0, Math.PI * 2);
+            ctx.fillStyle = item.color + '20';
+            ctx.fill();
+            ctx.stroke();
+          }
+        } else if (item.type === 'arrow_marker' && item.p2) {
+          const c1 = toCoord(item.p1);
+          const c2 = toCoord(item.p2);
+          if (c1.x !== null && c1.y !== null && c2.x !== null && c2.y !== null) {
+            ctx.beginPath();
+            ctx.moveTo(c1.x, c1.y);
+            ctx.lineTo(c2.x, c2.y);
+            ctx.stroke();
+
+            const angle = Math.atan2(c2.y - c1.y, c2.x - c1.x);
+            const headlen = 10;
+            ctx.beginPath();
+            ctx.moveTo(c2.x, c2.y);
+            ctx.lineTo(c2.x - headlen * Math.cos(angle - Math.PI / 6), c2.y - headlen * Math.sin(angle - Math.PI / 6));
+            ctx.lineTo(c2.x - headlen * Math.cos(angle + Math.PI / 6), c2.y - headlen * Math.sin(angle + Math.PI / 6));
+            ctx.closePath();
+            ctx.fillStyle = item.color;
+            ctx.fill();
+          }
+        } else if (item.type === 'fibonacci' && item.p2) {
+          const c1 = toCoord(item.p1);
+          const c2 = toCoord(item.p2);
+          if (c1.x !== null && c1.y !== null && c2.x !== null && c2.y !== null) {
+            const startX = Math.min(c1.x, c2.x);
+            const endX = Math.max(c1.x, c2.x, w - 80);
+            const p1 = item.p1.price;
+            const p2 = item.p2.price;
+            const levels = [
+              { ratio: 0, label: '0.0%', color: '#f43f5e' },
+              { ratio: 0.236, label: '23.6%', color: '#f59e0b' },
+              { ratio: 0.382, label: '38.2%', color: '#10b981' },
+              { ratio: 0.5, label: '50.0%', color: '#06b6d4' },
+              { ratio: 0.618, label: '61.8% (Golden)', color: '#eab308' },
+              { ratio: 0.786, label: '78.6%', color: '#818cf8' },
+              { ratio: 1.0, label: '100.0%', color: '#f43f5e' },
+            ];
+
+            levels.forEach((lvl) => {
+              const priceLvl = p1 + (p2 - p1) * lvl.ratio;
+              const y = series.priceToCoordinate(priceLvl);
+              if (y !== null) {
+                ctx.strokeStyle = lvl.color;
+                ctx.lineWidth = 1;
+                ctx.setLineDash([2, 2]);
+                ctx.beginPath();
+                ctx.moveTo(startX, y);
+                ctx.lineTo(endX, y);
+                ctx.stroke();
+
+                ctx.fillStyle = lvl.color;
+                ctx.font = '9px JetBrains Mono, monospace';
+                ctx.textAlign = 'left';
+                ctx.fillText(`${lvl.label} - ${priceLvl.toFixed(2)}k`, startX + 4, y - 3);
+              }
+            });
+          }
+        } else if (item.type === 'fib_extension' && item.p2) {
+          const c1 = toCoord(item.p1);
+          const c2 = toCoord(item.p2);
+          if (c1.x !== null && c1.y !== null && c2.x !== null && c2.y !== null) {
+            const startX = Math.min(c1.x, c2.x);
+            const endX = Math.max(c1.x, c2.x, w - 80);
+            const p1 = item.p1.price;
+            const p2 = item.p2.price;
+            const diff = Math.abs(p2 - p1);
+            const extLevels = [
+              { ratio: 0, label: '0.0%', color: '#94a3b8' },
+              { ratio: 0.618, label: '61.8%', color: '#eab308' },
+              { ratio: 1.0, label: '100.0%', color: '#10b981' },
+              { ratio: 1.618, label: '161.8% Target', color: '#06b6d4' },
+              { ratio: 2.618, label: '261.8% Ultra', color: '#f59e0b' },
+            ];
+            extLevels.forEach((lvl) => {
+              const priceLvl = p2 + diff * lvl.ratio;
+              const y = series.priceToCoordinate(priceLvl);
+              if (y !== null) {
+                ctx.strokeStyle = lvl.color;
+                ctx.lineWidth = 1;
+                ctx.setLineDash([2, 2]);
+                ctx.beginPath();
+                ctx.moveTo(startX, y);
+                ctx.lineTo(endX, y);
+                ctx.stroke();
+
+                ctx.fillStyle = lvl.color;
+                ctx.font = '9px JetBrains Mono, monospace';
+                ctx.textAlign = 'left';
+                ctx.fillText(`${lvl.label} - ${priceLvl.toFixed(2)}k`, startX + 4, y - 3);
+              }
+            });
+          }
+        } else if (item.type === 'measure' && item.p2) {
+          const c1 = toCoord(item.p1);
+          const c2 = toCoord(item.p2);
+          if (c1.x !== null && c1.y !== null && c2.x !== null && c2.y !== null) {
+            const minX = Math.min(c1.x, c2.x);
+            const minY = Math.min(c1.y, c2.y);
+            const boxW = Math.abs(c2.x - c1.x);
+            const boxH = Math.abs(c2.y - c1.y);
+
+            const deltaP = item.p2.price - item.p1.price;
+            const deltaPct = item.p1.price !== 0 ? (deltaP / item.p1.price) * 100 : 0;
+            const isUp = deltaP >= 0;
+
+            ctx.fillStyle = isUp ? 'rgba(16, 185, 129, 0.15)' : 'rgba(244, 63, 94, 0.15)';
+            ctx.fillRect(minX, minY, boxW, boxH);
+            ctx.strokeStyle = isUp ? '#10b981' : '#f43f5e';
+            ctx.setLineDash([4, 4]);
+            ctx.strokeRect(minX, minY, boxW, boxH);
+
+            const midX = minX + boxW / 2;
+            const midY = minY + boxH / 2;
+            ctx.setLineDash([]);
+            ctx.fillStyle = '#09090b';
+            ctx.fillRect(midX - 60, midY - 13, 120, 26);
+            ctx.strokeStyle = isUp ? '#10b981' : '#f43f5e';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(midX - 60, midY - 13, 120, 26);
+
+            ctx.fillStyle = isUp ? '#10b981' : '#f43f5e';
+            ctx.font = 'bold 10px JetBrains Mono, monospace';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(`${isUp ? '+' : ''}${deltaP.toFixed(2)}k (${isUp ? '+' : ''}${deltaPct.toFixed(2)}%)`, midX, midY);
+          }
+        } else if (item.type === 'text' && item.text) {
+          const c1 = toCoord(item.p1);
+          if (c1.x !== null && c1.y !== null) {
+            ctx.font = 'bold 11px JetBrains Mono, monospace';
+            const textMetrics = ctx.measureText(item.text);
+            ctx.fillStyle = 'rgba(9, 9, 11, 0.9)';
+            ctx.fillRect(c1.x - 4, c1.y - 14, textMetrics.width + 8, 18);
+            ctx.strokeStyle = item.color;
+            ctx.strokeRect(c1.x - 4, c1.y - 14, textMetrics.width + 8, 18);
+
+            ctx.fillStyle = item.color;
+            ctx.textAlign = 'left';
+            ctx.fillText(item.text, c1.x, c1.y);
+          }
+        } else if (item.type === 'price_label') {
+          const c1 = toCoord(item.p1);
+          if (c1.x !== null && c1.y !== null) {
+            const labelText = `${item.p1.price.toFixed(2)}k`;
+            ctx.font = 'bold 10px JetBrains Mono, monospace';
+            const tw = ctx.measureText(labelText).width;
+            ctx.fillStyle = item.color;
+            ctx.beginPath();
+            ctx.moveTo(c1.x, c1.y);
+            ctx.lineTo(c1.x + 8, c1.y - 10);
+            ctx.lineTo(c1.x + 12 + tw, c1.y - 10);
+            ctx.lineTo(c1.x + 12 + tw, c1.y + 10);
+            ctx.lineTo(c1.x + 8, c1.y + 10);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.fillStyle = '#09090b';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(labelText, c1.x + 10, c1.y);
+          }
+        } else if (item.type === 'callout' && item.p2) {
+          const c1 = toCoord(item.p1);
+          const c2 = toCoord(item.p2);
+          if (c1.x !== null && c1.y !== null && c2.x !== null && c2.y !== null) {
+            ctx.beginPath();
+            ctx.moveTo(c1.x, c1.y);
+            ctx.lineTo(c2.x, c2.y);
+            ctx.stroke();
+
+            const calloutText = item.text || 'Ghi chú kỹ thuật';
+            ctx.font = 'bold 10px JetBrains Mono, monospace';
+            const tw = ctx.measureText(calloutText).width;
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.95)';
+            ctx.fillRect(c2.x - tw / 2 - 8, c2.y - 12, tw + 16, 24);
+            ctx.strokeRect(c2.x - tw / 2 - 8, c2.y - 12, tw + 16, 24);
+
+            ctx.fillStyle = item.color;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(calloutText, c2.x, c2.y);
+          }
+        } else if ((item.type === 'long_position' || item.type === 'short_position') && item.p2) {
+          const c1 = toCoord(item.p1);
+          const c2 = toCoord(item.p2);
+          if (c1.x !== null && c1.y !== null && c2.x !== null && c2.y !== null) {
+            const entryPrice = item.p1.price;
+            const targetPrice = item.p2.price;
+            const isLong = item.type === 'long_position';
+            const riskPrice = isLong ? entryPrice - Math.abs(targetPrice - entryPrice) * 0.5 : entryPrice + Math.abs(targetPrice - entryPrice) * 0.5;
+            const riskY = series.priceToCoordinate(riskPrice);
+
+            const leftX = Math.min(c1.x, c2.x);
+            const rightX = Math.max(c1.x, c2.x) + 60;
+            const boxW = Math.max(80, rightX - leftX);
+
+            const pY = c2.y;
+            const eY = c1.y;
+            ctx.fillStyle = isLong ? 'rgba(16, 185, 129, 0.2)' : 'rgba(244, 63, 94, 0.2)';
+            ctx.fillRect(leftX, Math.min(eY, pY), boxW, Math.abs(pY - eY));
+            ctx.strokeStyle = isLong ? '#10b981' : '#f43f5e';
+            ctx.strokeRect(leftX, Math.min(eY, pY), boxW, Math.abs(pY - eY));
+
+            if (riskY !== null) {
+              ctx.fillStyle = isLong ? 'rgba(244, 63, 94, 0.2)' : 'rgba(16, 185, 129, 0.2)';
+              ctx.fillRect(leftX, Math.min(eY, riskY), boxW, Math.abs(riskY - eY));
+              ctx.strokeStyle = isLong ? '#f43f5e' : '#10b981';
+              ctx.strokeRect(leftX, Math.min(eY, riskY), boxW, Math.abs(riskY - eY));
+            }
+
+            const profitDiff = Math.abs(targetPrice - entryPrice);
+            const lossDiff = Math.abs(entryPrice - riskPrice);
+            const rrRatio = lossDiff > 0 ? (profitDiff / lossDiff).toFixed(2) : '2.00';
+            ctx.fillStyle = '#09090b';
+            ctx.fillRect(leftX + boxW / 2 - 40, eY - 11, 80, 22);
+            ctx.strokeStyle = '#38bdf8';
+            ctx.strokeRect(leftX + boxW / 2 - 40, eY - 11, 80, 22);
+            ctx.fillStyle = '#38bdf8';
+            ctx.font = 'bold 9px JetBrains Mono, monospace';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(`R:R = 1 : ${rrRatio}`, leftX + boxW / 2, eY);
+          }
+        } else if (item.type === 'rocket') {
+          const c1 = toCoord(item.p1);
+          if (c1.x !== null && c1.y !== null) {
+            ctx.font = '18px sans-serif';
+            ctx.fillText('🚀', c1.x - 9, c1.y + 6);
+
+            ctx.font = 'bold 9px JetBrains Mono, monospace';
+            ctx.fillStyle = '#10b981';
+            ctx.fillRect(c1.x + 14, c1.y - 9, 70, 18);
+            ctx.fillStyle = '#09090b';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(`Target ${item.p1.price.toFixed(2)}k`, c1.x + 49, c1.y);
+          }
+        }
+        ctx.restore();
+      });
     }
 
-    allItems.forEach((item) => {
+    // ── Visual Magnet Snap Indicator (Glowing Blue Ring on Candlestick Point) ──
+    if (isMagnetMode && hoverSnapPoint && activeTool !== 'cursor') {
       ctx.save();
-      ctx.strokeStyle = item.color;
-      ctx.lineWidth = item.width || 2;
-      ctx.fillStyle = item.color;
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(hoverSnapPoint.x, hoverSnapPoint.y, 7, 0, Math.PI * 2);
+      ctx.stroke();
 
-      if (item.type === 'horizontal') {
-        const y = series.priceToCoordinate(item.p1.price);
-        if (y !== null) {
-          ctx.setLineDash([4, 4]);
-          ctx.beginPath();
-          ctx.moveTo(0, y);
-          ctx.lineTo(w, y);
-          ctx.stroke();
+      ctx.fillStyle = '#0284c7';
+      ctx.beginPath();
+      ctx.arc(hoverSnapPoint.x, hoverSnapPoint.y, 3, 0, Math.PI * 2);
+      ctx.fill();
 
-          // Price Tag on right axis
-          ctx.setLineDash([]);
-          ctx.fillStyle = item.color;
-          ctx.fillRect(w - 72, y - 10, 68, 20);
-          ctx.fillStyle = '#09090b';
-          ctx.font = 'bold 10px JetBrains Mono, monospace';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(`${item.p1.price.toFixed(2)}k`, w - 38, y);
-        }
-      } else if (item.type === 'trendline' && item.p2) {
-        const c1 = toCoord(item.p1);
-        const c2 = toCoord(item.p2);
-        if (c1.x !== null && c1.y !== null && c2.x !== null && c2.y !== null) {
-          ctx.beginPath();
-          ctx.moveTo(c1.x, c1.y);
-          ctx.lineTo(c2.x, c2.y);
-          ctx.stroke();
-
-          ctx.beginPath();
-          ctx.arc(c1.x, c1.y, 3, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.beginPath();
-          ctx.arc(c2.x, c2.y, 3, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      } else if (item.type === 'rectangle' && item.p2) {
-        const c1 = toCoord(item.p1);
-        const c2 = toCoord(item.p2);
-        if (c1.x !== null && c1.y !== null && c2.x !== null && c2.y !== null) {
-          const minX = Math.min(c1.x, c2.x);
-          const minY = Math.min(c1.y, c2.y);
-          const boxW = Math.abs(c2.x - c1.x);
-          const boxH = Math.abs(c2.y - c1.y);
-
-          ctx.fillStyle = item.color + '26'; // 15% opacity fill
-          ctx.fillRect(minX, minY, boxW, boxH);
-          ctx.strokeRect(minX, minY, boxW, boxH);
-        }
-      } else if (item.type === 'fibonacci' && item.p2) {
-        const c1 = toCoord(item.p1);
-        const c2 = toCoord(item.p2);
-        if (c1.x !== null && c1.y !== null && c2.x !== null && c2.y !== null) {
-          const startX = Math.min(c1.x, c2.x);
-          const endX = Math.max(c1.x, c2.x, w - 80);
-          const p1 = item.p1.price;
-          const p2 = item.p2.price;
-          const levels = [
-            { ratio: 0, label: '0.0%', color: '#f43f5e' },
-            { ratio: 0.236, label: '23.6%', color: '#f59e0b' },
-            { ratio: 0.382, label: '38.2%', color: '#10b981' },
-            { ratio: 0.5, label: '50.0%', color: '#06b6d4' },
-            { ratio: 0.618, label: '61.8% (Golden)', color: '#eab308' },
-            { ratio: 0.786, label: '78.6%', color: '#818cf8' },
-            { ratio: 1.0, label: '100.0%', color: '#f43f5e' },
-          ];
-
-          levels.forEach((lvl) => {
-            const priceLvl = p1 + (p2 - p1) * lvl.ratio;
-            const y = series.priceToCoordinate(priceLvl);
-            if (y !== null) {
-              ctx.strokeStyle = lvl.color;
-              ctx.lineWidth = 1;
-              ctx.setLineDash([2, 2]);
-              ctx.beginPath();
-              ctx.moveTo(startX, y);
-              ctx.lineTo(endX, y);
-              ctx.stroke();
-
-              ctx.fillStyle = lvl.color;
-              ctx.font = '9px JetBrains Mono, monospace';
-              ctx.textAlign = 'left';
-              ctx.fillText(`${lvl.label} - ${priceLvl.toFixed(2)}k`, startX + 4, y - 3);
-            }
-          });
-        }
-      } else if (item.type === 'measure' && item.p2) {
-        const c1 = toCoord(item.p1);
-        const c2 = toCoord(item.p2);
-        if (c1.x !== null && c1.y !== null && c2.x !== null && c2.y !== null) {
-          const minX = Math.min(c1.x, c2.x);
-          const minY = Math.min(c1.y, c2.y);
-          const boxW = Math.abs(c2.x - c1.x);
-          const boxH = Math.abs(c2.y - c1.y);
-
-          const deltaP = item.p2.price - item.p1.price;
-          const deltaPct = item.p1.price !== 0 ? (deltaP / item.p1.price) * 100 : 0;
-          const isUp = deltaP >= 0;
-
-          ctx.fillStyle = isUp ? 'rgba(16, 185, 129, 0.15)' : 'rgba(244, 63, 94, 0.15)';
-          ctx.fillRect(minX, minY, boxW, boxH);
-          ctx.strokeStyle = isUp ? '#10b981' : '#f43f5e';
-          ctx.setLineDash([4, 4]);
-          ctx.strokeRect(minX, minY, boxW, boxH);
-
-          const midX = minX + boxW / 2;
-          const midY = minY + boxH / 2;
-          ctx.setLineDash([]);
-          ctx.fillStyle = '#09090b';
-          ctx.fillRect(midX - 60, midY - 13, 120, 26);
-          ctx.strokeStyle = isUp ? '#10b981' : '#f43f5e';
-          ctx.lineWidth = 1;
-          ctx.strokeRect(midX - 60, midY - 13, 120, 26);
-
-          ctx.fillStyle = isUp ? '#10b981' : '#f43f5e';
-          ctx.font = 'bold 10px JetBrains Mono, monospace';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(`${isUp ? '+' : ''}${deltaP.toFixed(2)}k (${isUp ? '+' : ''}${deltaPct.toFixed(2)}%)`, midX, midY);
-        }
-      } else if (item.type === 'text' && item.text) {
-        const c1 = toCoord(item.p1);
-        if (c1.x !== null && c1.y !== null) {
-          ctx.font = 'bold 11px JetBrains Mono, monospace';
-          const textMetrics = ctx.measureText(item.text);
-          ctx.fillStyle = 'rgba(9, 9, 11, 0.9)';
-          ctx.fillRect(c1.x - 4, c1.y - 14, textMetrics.width + 8, 18);
-          ctx.strokeStyle = item.color;
-          ctx.strokeRect(c1.x - 4, c1.y - 14, textMetrics.width + 8, 18);
-
-          ctx.fillStyle = item.color;
-          ctx.textAlign = 'left';
-          ctx.fillText(item.text, c1.x, c1.y);
-        }
-      }
+      // Small price pill
+      ctx.fillStyle = '#0369a1';
+      ctx.fillRect(hoverSnapPoint.x + 9, hoverSnapPoint.y - 9, 58, 18);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 9px JetBrains Mono, monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(`${hoverSnapPoint.price.toFixed(2)}k`, hoverSnapPoint.x + 38, hoverSnapPoint.y);
       ctx.restore();
-    });
+    }
 
     // ── Render Trendline Pro Overlays (Automated S/R & Fibonacci Channels) ────
     if (showTrendlinePro && trendlineProData) {
@@ -695,7 +1078,7 @@ export function MarketCandleChart() {
     }
 
     ctx.restore();
-  }, [drawings, draftDrawing, showTrendlinePro, trendlineProData]);
+  }, [drawings, draftDrawing, showTrendlinePro, trendlineProData, hideDrawings, isMagnetMode, hoverSnapPoint, activeTool]);
 
   // Keep decoupled ref for chart and window callbacks
   redrawCanvasRef.current = redrawCanvas;
@@ -1217,8 +1600,9 @@ export function MarketCandleChart() {
   };
 
   // Interactive Drawing Handlers
+  // Interactive Drawing Handlers (TradingView Magnet & Multi-Tool Engine)
   const handleCanvasMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (activeTool === 'cursor') return;
+    if (activeTool === 'cursor' || lockDrawings) return;
     const canvas = canvasRef.current;
     const chart = chartRef.current;
     const series = candleSeriesRef.current;
@@ -1228,17 +1612,58 @@ export function MarketCandleChart() {
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
-    const time = chart.timeScale().coordinateToTime(x);
-    const price = series.coordinateToPrice(y);
-    if (!time || price === null) return;
+    // Eraser Tool: Click on or near drawing to remove it
+    if (activeTool === 'eraser') {
+      let foundIdx = -1;
+      for (let i = drawings.length - 1; i >= 0; i--) {
+        const d = drawings[i];
+        const c1X = chart.timeScale().timeToCoordinate(d.p1.time);
+        const c1Y = series.priceToCoordinate(d.p1.price);
+        if (c1X !== null && c1Y !== null && Math.hypot(c1X - x, c1Y - y) < 28) {
+          foundIdx = i;
+          break;
+        }
+        if (d.p2) {
+          const c2X = chart.timeScale().timeToCoordinate(d.p2.time);
+          const c2Y = series.priceToCoordinate(d.p2.price);
+          if (c2X !== null && c2Y !== null && Math.hypot(c2X - x, c2Y - y) < 28) {
+            foundIdx = i;
+            break;
+          }
+        }
+      }
+      if (foundIdx !== -1) {
+        const removed = drawings[foundIdx];
+        setUndoStack((prev) => [...prev, [removed]]);
+        setRedoStack([]);
+        const updated = drawings.filter((_, idx) => idx !== foundIdx);
+        setDrawings(updated);
+        saveDrawings(updated);
+      }
+      return;
+    }
 
-    const point = { time, price: Math.round(price * 100) / 100 };
+    const rawTime = chart.timeScale().coordinateToTime(x);
+    const rawPrice = series.coordinateToPrice(y);
+    if (!rawTime || rawPrice === null) return;
 
-    if (activeTool === 'horizontal') {
+    // Smart Magnet Snapping
+    const snapped = snapToCandle(rawTime, rawPrice, x);
+    const point = { time: snapped.time || rawTime, price: snapped.price };
+
+    // 1-Click Tools
+    if (
+      activeTool === 'horizontal' ||
+      activeTool === 'horizontal_ray' ||
+      activeTool === 'vertical' ||
+      activeTool === 'price_label' ||
+      activeTool === 'rocket'
+    ) {
       setUndoStack((prev) => [...prev, drawings]);
+      setRedoStack([]);
       const newDrawing: DrawingItem = {
         id: `draw_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
-        type: 'horizontal',
+        type: activeTool,
         symbol: selectedSymbol,
         color: activeColor,
         width: activeWidth,
@@ -1247,13 +1672,18 @@ export function MarketCandleChart() {
       const updated = [...drawings, newDrawing];
       setDrawings(updated);
       saveDrawings(updated);
+      if (!stayInDrawingMode) {
+        setActiveTool('cursor');
+      }
       return;
     }
 
+    // Text Annotation Tool
     if (activeTool === 'text') {
-      const note = window.prompt('Nhập ghi chú giá:', 'Vùng cản kỹ thuật');
-      if (note) {
+      const note = window.prompt('Nhập ghi chú kỹ thuật:', 'Vùng cản / Hỗ trợ quan trọng');
+      if (note && note.trim()) {
         setUndoStack((prev) => [...prev, drawings]);
+        setRedoStack([]);
         const newDrawing: DrawingItem = {
           id: `draw_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
           type: 'text',
@@ -1261,16 +1691,19 @@ export function MarketCandleChart() {
           color: activeColor,
           width: activeWidth,
           p1: point,
-          text: note,
+          text: note.trim(),
         };
         const updated = [...drawings, newDrawing];
         setDrawings(updated);
         saveDrawings(updated);
       }
-      setActiveTool('cursor');
+      if (!stayInDrawingMode) {
+        setActiveTool('cursor');
+      }
       return;
     }
 
+    // 2-Click Tools (Trendline, Fib, Channels, Shapes, R:R Measure)
     if (!draftDrawing) {
       setDraftDrawing({
         id: `draw_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
@@ -1280,9 +1713,11 @@ export function MarketCandleChart() {
         width: activeWidth,
         p1: point,
         p2: point,
+        text: activeTool === 'callout' ? 'Ghi chú kỹ thuật' : undefined,
       });
     } else {
       setUndoStack((prev) => [...prev, drawings]);
+      setRedoStack([]);
       const finalDrawing: DrawingItem = {
         ...draftDrawing,
         p2: point,
@@ -1291,11 +1726,13 @@ export function MarketCandleChart() {
       setDrawings(updated);
       saveDrawings(updated);
       setDraftDrawing(null);
+      if (!stayInDrawingMode) {
+        setActiveTool('cursor');
+      }
     }
   };
 
   const handleCanvasMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!draftDrawing) return;
     const canvas = canvasRef.current;
     const chart = chartRef.current;
     const series = candleSeriesRef.current;
@@ -1305,17 +1742,37 @@ export function MarketCandleChart() {
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
-    const time = chart.timeScale().coordinateToTime(x);
-    const price = series.coordinateToPrice(y);
-    if (price === null) return;
+    const rawTime = chart.timeScale().coordinateToTime(x);
+    const rawPrice = series.coordinateToPrice(y);
+    if (!rawTime || rawPrice === null) {
+      setHoverSnapPoint(null);
+      return;
+    }
+
+    // Live magnet snap point feedback
+    if (isMagnetMode && activeTool !== 'cursor') {
+      const snapped = snapToCandle(rawTime, rawPrice, x);
+      const snapX = snapped.time ? chart.timeScale().timeToCoordinate(snapped.time) : x;
+      const snapY = series.priceToCoordinate(snapped.price);
+      if (snapX !== null && snapY !== null) {
+        setHoverSnapPoint({ x: snapX, y: snapY, price: snapped.price });
+      }
+    } else if (hoverSnapPoint) {
+      setHoverSnapPoint(null);
+    }
+
+    // Update draft drawing line preview
+    if (!draftDrawing) return;
+
+    const snapped = isMagnetMode ? snapToCandle(rawTime, rawPrice, x) : { time: rawTime, price: Math.round(rawPrice * 100) / 100 };
 
     setDraftDrawing((prev) => {
       if (!prev) return null;
       return {
         ...prev,
         p2: {
-          time: time || prev.p1.time,
-          price: Math.round(price * 100) / 100,
+          time: snapped.time || rawTime,
+          price: snapped.price,
         },
       };
     });
@@ -1324,8 +1781,34 @@ export function MarketCandleChart() {
   const handleUndo = () => {
     if (drawings.length === 0) return;
     const last = drawings[drawings.length - 1];
-    setUndoStack((prev) => [...prev, [last]]);
+    setRedoStack((prev) => [...prev, [last]]);
     const updated = drawings.slice(0, drawings.length - 1);
+    setDrawings(updated);
+    saveDrawings(updated);
+  };
+
+  const handleRedo = () => {
+    if (redoStack.length === 0) return;
+    const restored = redoStack[redoStack.length - 1];
+    setRedoStack((prev) => prev.slice(0, prev.length - 1));
+    setUndoStack((prev) => [...prev, drawings]);
+    const updated = [...drawings, ...restored];
+    setDrawings(updated);
+    saveDrawings(updated);
+  };
+
+  const handleCloneLast = () => {
+    if (drawings.length === 0) return;
+    const last = drawings[drawings.length - 1];
+    const cloned: DrawingItem = {
+      ...last,
+      id: `draw_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      p1: { ...last.p1, price: Math.round(last.p1.price * 1.01 * 100) / 100 },
+      p2: last.p2 ? { ...last.p2, price: Math.round(last.p2.price * 1.01 * 100) / 100 } : undefined,
+    };
+    setUndoStack((prev) => [...prev, drawings]);
+    setRedoStack([]);
+    const updated = [...drawings, cloned];
     setDrawings(updated);
     saveDrawings(updated);
   };
@@ -1333,6 +1816,7 @@ export function MarketCandleChart() {
   const handleClearAll = () => {
     if (drawings.length === 0) return;
     setUndoStack((prev) => [...prev, drawings]);
+    setRedoStack([]);
     setDrawings([]);
     setDraftDrawing(null);
     saveDrawings([]);
@@ -1627,146 +2111,316 @@ export function MarketCandleChart() {
       <div className={`w-full flex-1 flex relative bg-zinc-950 overflow-hidden ${
         isExpanded ? 'h-[calc(100vh-100px)] min-h-0' : 'h-[420px] lg:h-[440px] min-h-[360px]'
       }`}>
-        {/* Left Vertical Drawing Toolbar (TradingView Style) */}
-        <div className="flex flex-col items-center gap-1 py-2 px-1 bg-zinc-950 border-r border-zinc-800/70 z-30 shrink-0">
+        {/* Left Vertical Drawing Toolbar (Complete TradingView Style) */}
+        <div className="flex flex-col items-center gap-0.5 sm:gap-1 py-1.5 px-1 bg-[#131722]/95 border-r border-zinc-800/80 z-30 shrink-0 w-10 sm:w-11 select-none">
+          {/* 1. Grip Handle */}
+          <div className="text-zinc-600 py-0.5 flex justify-center cursor-grab active:cursor-grabbing hover:text-zinc-400 transition-colors">
+            <DotsSixVertical size={16} />
+          </div>
+
+          {/* 2. Star (Favorites) */}
           <button
-            onClick={() => { setActiveTool('cursor'); setDraftDrawing(null); }}
-            title="Con trỏ chuột (Crosshair)"
-            className={`p-2 rounded-lg transition-all ${
-              activeTool === 'cursor'
-                ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20'
-                : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900'
-            }`}
+            title="Công cụ ưa thích (Favorites)"
+            className="w-8 h-8 flex items-center justify-center text-amber-400 hover:text-amber-300 rounded-lg hover:bg-zinc-800/70 transition-colors"
           >
-            <Cursor size={16} weight="bold" />
+            <Star size={16} weight="fill" />
           </button>
 
+          {/* 3. Seven Drawing Tool Groups with Flyout Sub-menus */}
+          {[
+            {
+              id: 'cursor_group',
+              defaultIcon: Cursor,
+              tools: [
+                { id: 'cursor' as DrawingTool, label: 'Con trỏ chữ thập (Crosshair)', icon: Cursor },
+                { id: 'dot' as DrawingTool, label: 'Điểm chấm (Dot)', icon: Circle },
+                { id: 'arrow_pointer' as DrawingTool, label: 'Mũi tên (Arrow)', icon: Cursor },
+                { id: 'eraser' as DrawingTool, label: 'Cục tẩy nét vẽ (Eraser)', icon: Scissors },
+              ],
+            },
+            {
+              id: 'lines_group',
+              defaultIcon: TrendUp,
+              tools: [
+                { id: 'trendline' as DrawingTool, label: 'Đường xu hướng (Trend Line)', icon: TrendUp },
+                { id: 'ray' as DrawingTool, label: 'Tia xu hướng (Ray)', icon: TrendUp },
+                { id: 'horizontal' as DrawingTool, label: 'Đường ngang Hỗ trợ / Kháng cự', icon: Minus },
+                { id: 'horizontal_ray' as DrawingTool, label: 'Tia ngang (Horizontal Ray)', icon: Minus },
+                { id: 'vertical' as DrawingTool, label: 'Đường dọc (Vertical Line)', icon: Minus },
+                { id: 'parallel_channel' as DrawingTool, label: 'Kênh giá song song (Channel)', icon: Waveform },
+              ],
+            },
+            {
+              id: 'fib_group',
+              defaultIcon: Percent,
+              tools: [
+                { id: 'fibonacci' as DrawingTool, label: 'Thoái lui Fibonacci (Retracement)', icon: Percent },
+                { id: 'fib_extension' as DrawingTool, label: 'Mở rộng Fibonacci (Fib Extension)', icon: Waveform },
+              ],
+            },
+            {
+              id: 'shapes_group',
+              defaultIcon: Square,
+              tools: [
+                { id: 'rectangle' as DrawingTool, label: 'Vùng giá (Hộp Supply / Demand)', icon: Square },
+                { id: 'circle' as DrawingTool, label: 'Đường tròn (Circle)', icon: Circle },
+                { id: 'arrow_marker' as DrawingTool, label: 'Mũi tên đánh dấu (Arrow Marker)', icon: TrendUp },
+              ],
+            },
+            {
+              id: 'text_group',
+              defaultIcon: TextT,
+              tools: [
+                { id: 'text' as DrawingTool, label: 'Ghi chú văn bản (Text note)', icon: TextT },
+                { id: 'price_label' as DrawingTool, label: 'Nhãn giá kỹ thuật (Price Label)', icon: Tag },
+                { id: 'callout' as DrawingTool, label: 'Bong bóng ghi chú (Callout)', icon: TextT },
+              ],
+            },
+            {
+              id: 'measure_group',
+              defaultIcon: Target,
+              tools: [
+                { id: 'long_position' as DrawingTool, label: 'Vị thế Mua (Long Position R:R)', icon: Target },
+                { id: 'short_position' as DrawingTool, label: 'Vị thế Bán (Short Position R:R)', icon: Target },
+                { id: 'measure' as DrawingTool, label: 'Thước đo biến động (% & Nến)', icon: Ruler },
+              ],
+            },
+            {
+              id: 'sticker_group',
+              defaultIcon: Rocket,
+              tools: [
+                { id: 'rocket' as DrawingTool, label: 'Mục tiêu bứt phá (Rocket 🚀)', icon: Rocket },
+              ],
+            },
+          ].map((group) => {
+            const isGroupActive = group.tools.some((t) => t.id === activeTool);
+            const activeToolInGroup = group.tools.find((t) => t.id === activeTool);
+            const GroupIcon = activeToolInGroup ? activeToolInGroup.icon : group.defaultIcon;
+
+            return (
+              <div key={group.id} className="relative group/tool">
+                <button
+                  onClick={() => {
+                    if (isGroupActive) {
+                      setActiveFlyout(activeFlyout === group.id ? null : group.id);
+                    } else {
+                      const toolToActivate = activeToolInGroup ? activeToolInGroup.id : group.tools[0].id;
+                      setActiveTool(toolToActivate);
+                      setDraftDrawing(null);
+                      setActiveFlyout(null);
+                    }
+                  }}
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    setActiveFlyout(activeFlyout === group.id ? null : group.id);
+                  }}
+                  title={activeToolInGroup ? TOOL_LABELS[activeToolInGroup.id] : group.tools[0].label}
+                  className={`w-8 h-8 flex items-center justify-center relative rounded-lg transition-all ${
+                    isGroupActive
+                      ? 'bg-[#2962ff] text-white shadow-md shadow-blue-500/30 font-bold'
+                      : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/80'
+                  }`}
+                >
+                  <GroupIcon size={16} weight={isGroupActive ? 'bold' : 'regular'} />
+                  {/* TradingView corner triangle indicator */}
+                  <span
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveFlyout(activeFlyout === group.id ? null : group.id);
+                    }}
+                    className="absolute bottom-0.5 right-0.5 w-2 h-2 flex items-end justify-end cursor-pointer"
+                  >
+                    <svg className="w-1.5 h-1.5 opacity-60 hover:opacity-100" viewBox="0 0 6 6" fill="currentColor">
+                      <polygon points="6,0 6,6 0,6" />
+                    </svg>
+                  </span>
+                </button>
+
+                {/* Submenu Flyout */}
+                {activeFlyout === group.id && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-40 bg-transparent"
+                      onClick={() => setActiveFlyout(null)}
+                    />
+                    <div className="absolute left-full ml-1.5 top-0 z-50 bg-[#1e222d] border border-zinc-700/80 rounded-xl shadow-2xl p-1.5 min-w-[230px] backdrop-blur-xl animate-in fade-in zoom-in-95 flex flex-col gap-0.5">
+                      {group.tools.map((t) => {
+                        const ToolItemIcon = t.icon;
+                        const isSelected = activeTool === t.id;
+                        return (
+                          <button
+                            key={t.id}
+                            onClick={() => {
+                              setActiveTool(t.id);
+                              setDraftDrawing(null);
+                              setActiveFlyout(null);
+                            }}
+                            className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-sans text-left transition-all ${
+                              isSelected
+                                ? 'bg-[#2962ff] text-white font-semibold shadow-sm'
+                                : 'text-zinc-300 hover:text-zinc-100 hover:bg-zinc-800/80'
+                            }`}
+                          >
+                            <ToolItemIcon size={16} weight={isSelected ? 'bold' : 'regular'} className="shrink-0" />
+                            <span className="truncate">{t.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
+              </div>
+            );
+          })}
+
+          <div className="w-5 h-px bg-zinc-800/80 my-1" />
+
+          {/* 4. Utility Buttons: Magnet Mode (Exact Blue highlighted box from user screenshot!) */}
+          <div className="relative">
+            <button
+              onClick={() => setIsMagnetMode(!isMagnetMode)}
+              title={isMagnetMode ? 'Chế độ nam châm: BẬT (Tự động hít đỉnh/đáy nến thông minh)' : 'Chế độ nam châm: TẮT'}
+              className={`w-8 h-8 flex items-center justify-center relative rounded-lg transition-all ${
+                isMagnetMode
+                  ? 'bg-[#2962ff] text-white shadow-md shadow-blue-500/30'
+                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/80'
+              }`}
+            >
+              <Magnet size={17} weight={isMagnetMode ? 'fill' : 'regular'} />
+              <svg className="absolute bottom-0.5 right-0.5 w-1.5 h-1.5 opacity-60" viewBox="0 0 6 6" fill="currentColor">
+                <polygon points="6,0 6,6 0,6" />
+              </svg>
+            </button>
+          </div>
+
+          {/* 5. Stay in Drawing Mode (Pin 📌) */}
           <button
-            onClick={() => { setActiveTool('trendline'); setDraftDrawing(null); }}
-            title="Đường xu hướng (Trendline)"
-            className={`p-2 rounded-lg transition-all ${
-              activeTool === 'trendline'
-                ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20'
-                : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900'
+            onClick={() => setStayInDrawingMode(!stayInDrawingMode)}
+            title={stayInDrawingMode ? 'Ghim chế độ vẽ: BẬT (Vẽ liên tục nhiều nét)' : 'Ghim chế độ vẽ: TẮT (Tự đổi về con trỏ)'}
+            className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all ${
+              stayInDrawingMode
+                ? 'bg-zinc-800 text-blue-400 border border-blue-500/30'
+                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/80'
             }`}
           >
-            <TrendUp size={16} weight="bold" />
+            <PushPin size={16} weight={stayInDrawingMode ? 'fill' : 'regular'} />
           </button>
 
+          {/* 6. Hide / Show Drawings (Eye 👁️) */}
           <button
-            onClick={() => { setActiveTool('horizontal'); setDraftDrawing(null); }}
-            title="Đường ngang (Hỗ trợ / Kháng cự)"
-            className={`p-2 rounded-lg transition-all ${
-              activeTool === 'horizontal'
-                ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20'
-                : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900'
+            onClick={() => setHideDrawings(!hideDrawings)}
+            title={hideDrawings ? 'Hiện tất cả nét vẽ' : 'Ẩn tất cả nét vẽ'}
+            className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all ${
+              hideDrawings
+                ? 'text-amber-400 bg-amber-500/10 border border-amber-500/20'
+                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/80'
             }`}
           >
-            <Minus size={16} weight="bold" />
+            {hideDrawings ? <EyeSlash size={16} weight="bold" /> : <Eye size={16} />}
           </button>
 
+          {/* 7. Lock Drawings (Lock 🔒) */}
           <button
-            onClick={() => { setActiveTool('fibonacci'); setDraftDrawing(null); }}
-            title="Thoái lui Fibonacci"
-            className={`p-2 rounded-lg transition-all ${
-              activeTool === 'fibonacci'
-                ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20'
-                : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900'
+            onClick={() => setLockDrawings(!lockDrawings)}
+            title={lockDrawings ? 'Khóa nét vẽ: BẬT (Bảo vệ không bị sửa/xóa)' : 'Khóa nét vẽ: TẮT'}
+            className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all ${
+              lockDrawings
+                ? 'text-amber-400 bg-amber-500/10 border border-amber-500/20'
+                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/80'
             }`}
           >
-            <Percent size={16} weight="bold" />
+            <LockKey size={16} weight={lockDrawings ? 'fill' : 'regular'} />
           </button>
 
-          <button
-            onClick={() => { setActiveTool('rectangle'); setDraftDrawing(null); }}
-            title="Vùng giá (Hộp Supply / Demand)"
-            className={`p-2 rounded-lg transition-all ${
-              activeTool === 'rectangle'
-                ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20'
-                : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900'
-            }`}
-          >
-            <Square size={16} weight="bold" />
-          </button>
+          <div className="w-5 h-px bg-zinc-800/80 my-1" />
 
-          <button
-            onClick={() => { setActiveTool('text'); setDraftDrawing(null); }}
-            title="Ghi chú văn bản (Text Annotation)"
-            className={`p-2 rounded-lg transition-all ${
-              activeTool === 'text'
-                ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20'
-                : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900'
-            }`}
-          >
-            <TextT size={16} weight="bold" />
-          </button>
+          {/* 8. Undo & Redo */}
+          <div className="flex flex-col items-center gap-0.5">
+            <button
+              onClick={handleUndo}
+              disabled={drawings.length === 0}
+              title="Hoàn tác nét vẽ (Undo)"
+              className="w-8 h-8 flex items-center justify-center rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/80 disabled:opacity-20 disabled:hover:bg-transparent transition-colors"
+            >
+              <ArrowCounterClockwise size={15} />
+            </button>
+            <button
+              onClick={handleRedo}
+              disabled={redoStack.length === 0}
+              title="Làm lại nét vẽ (Redo)"
+              className="w-8 h-8 flex items-center justify-center rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/80 disabled:opacity-20 disabled:hover:bg-transparent transition-colors"
+            >
+              <ArrowClockwise size={15} />
+            </button>
+          </div>
 
-          <button
-            onClick={() => { setActiveTool('measure'); setDraftDrawing(null); }}
-            title="Thước đo biên độ & %"
-            className={`p-2 rounded-lg transition-all ${
-              activeTool === 'measure'
-                ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20'
-                : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900'
-            }`}
-          >
-            <Ruler size={16} weight="bold" />
-          </button>
-
-          <div className="w-4 h-px bg-zinc-800 my-1" />
-
-          {/* Palette popover */}
+          {/* 9. Color Palette & Line Width */}
           <div className="relative">
             <button
               onClick={() => setShowPalette(!showPalette)}
-              title="Chọn màu nét vẽ"
-              className="p-2 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900 relative"
+              title="Bảng màu & Độ dày nét vẽ"
+              className="w-8 h-8 flex items-center justify-center relative rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/80"
             >
-              <Palette size={16} weight="bold" />
               <span
-                className="absolute bottom-1 right-1 w-1.5 h-1.5 rounded-full"
+                className="w-4 h-4 rounded-full border border-white/40 shadow-sm"
                 style={{ backgroundColor: activeColor }}
               />
             </button>
 
             {showPalette && (
-              <div className="absolute left-full ml-2 top-0 bg-zinc-900 border border-zinc-800 rounded-xl p-2 flex flex-col gap-2 z-50 shadow-2xl backdrop-blur-xl">
-                <div className="text-[9px] font-mono text-zinc-400 uppercase tracking-wider px-1">Màu sắc</div>
-                <div className="flex items-center gap-1.5">
-                  {PALETTE.map((c) => (
-                    <button
-                      key={c}
-                      onClick={() => { setActiveColor(c); setShowPalette(false); }}
-                      className={`w-5 h-5 rounded-md border transition-transform ${
-                        activeColor === c ? 'border-white scale-110 shadow' : 'border-transparent hover:scale-105'
-                      }`}
-                      style={{ backgroundColor: c }}
-                    />
-                  ))}
+              <>
+                <div className="fixed inset-0 z-40 bg-transparent" onClick={() => setShowPalette(false)} />
+                <div className="absolute left-full ml-2 bottom-0 bg-[#1e222d] border border-zinc-700/80 rounded-xl p-2.5 flex flex-col gap-2 z-50 shadow-2xl backdrop-blur-xl min-w-[170px] animate-in fade-in">
+                  <div className="text-[10px] font-mono text-zinc-400 uppercase tracking-wider px-1">Màu sắc nét vẽ</div>
+                  <div className="flex items-center gap-1.5">
+                    {PALETTE.map((c) => (
+                      <button
+                        key={c}
+                        onClick={() => { setActiveColor(c); setShowPalette(false); }}
+                        className={`w-6 h-6 rounded-md border transition-transform ${
+                          activeColor === c ? 'border-white scale-110 shadow-md' : 'border-transparent hover:scale-105'
+                        }`}
+                        style={{ backgroundColor: c }}
+                      />
+                    ))}
+                  </div>
+                  <div className="text-[10px] font-mono text-zinc-400 uppercase tracking-wider px-1 mt-1">Độ dày nét</div>
+                  <div className="flex items-center gap-1.5">
+                    {[1, 2, 3, 4].map((w) => (
+                      <button
+                        key={w}
+                        onClick={() => { setActiveWidth(w); setShowPalette(false); }}
+                        className={`flex-1 py-1 text-[11px] font-mono rounded-lg transition-all ${
+                          activeWidth === w
+                            ? 'bg-[#2962ff] text-white font-bold shadow'
+                            : 'text-zinc-400 hover:bg-zinc-800'
+                        }`}
+                      >
+                        {w}px
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                <div className="text-[9px] font-mono text-zinc-400 uppercase tracking-wider px-1 mt-1">Độ dày</div>
-                <div className="flex items-center gap-1">
-                  {[1, 2, 3].map((w) => (
-                    <button
-                      key={w}
-                      onClick={() => { setActiveWidth(w); setShowPalette(false); }}
-                      className={`px-2 py-0.5 text-[10px] font-mono rounded ${
-                        activeWidth === w ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'text-zinc-400 hover:bg-zinc-800'
-                      }`}
-                    >
-                      {w}px
-                    </button>
-                  ))}
-                </div>
-              </div>
+              </>
             )}
           </div>
 
+          {/* 10. Clone / Duplicate */}
+          <button
+            onClick={handleCloneLast}
+            disabled={drawings.length === 0}
+            title="Nhân bản nét vẽ vừa tạo (Duplicate / Clone)"
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/80 disabled:opacity-20 disabled:hover:bg-transparent transition-colors"
+          >
+            <Copy size={16} />
+          </button>
+
+          {/* 11. Clear / Trash */}
           <button
             onClick={handleClearAll}
-            title="Xóa tất cả nét vẽ"
             disabled={drawings.length === 0}
-            className="p-2 rounded-lg text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 disabled:opacity-30 disabled:hover:bg-transparent mt-auto mb-1"
+            title="Xóa tất cả nét vẽ trên biểu đồ"
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 disabled:opacity-20 disabled:hover:bg-transparent mt-auto transition-colors"
           >
             <Trash size={16} />
           </button>
@@ -1779,6 +2433,7 @@ export function MarketCandleChart() {
             ref={canvasRef}
             onMouseDown={handleCanvasMouseDown}
             onMouseMove={handleCanvasMouseMove}
+            onMouseLeave={() => setHoverSnapPoint(null)}
             className={`absolute inset-0 z-20 ${
               activeTool === 'cursor' ? 'pointer-events-none' : 'pointer-events-auto cursor-crosshair'
             }`}
