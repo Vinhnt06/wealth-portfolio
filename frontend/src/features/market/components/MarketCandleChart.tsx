@@ -558,6 +558,20 @@ export function MarketCandleChart() {
   const isDraggingRef = useRef<boolean>(false);
   const [hideDrawings, setHideDrawings] = useState<boolean>(false);
   const [activeFlyout, setActiveFlyout] = useState<string | null>(null);
+  const [flyoutPos, setFlyoutPos] = useState<{ top: number; left: number } | null>(null);
+  const [palettePos, setPalettePos] = useState<{ top: number; left: number } | null>(null);
+
+  const triggerFlyout = (groupId: string, targetEl: HTMLElement) => {
+    if (activeFlyout === groupId) {
+      setActiveFlyout(null);
+      setFlyoutPos(null);
+    } else {
+      const rect = targetEl.getBoundingClientRect();
+      const top = Math.max(10, Math.min(rect.top, window.innerHeight - 320));
+      setFlyoutPos({ top, left: rect.right + 8 });
+      setActiveFlyout(groupId);
+    }
+  };
   const [hoverSnapPoint, setHoverSnapPoint] = useState<{ x: number; y: number; price: number } | null>(null);
   const [chartMinervini, setChartMinervini] = useState<{
     rsRating?: number;
@@ -3188,7 +3202,7 @@ export function MarketCandleChart() {
         isExpanded ? 'h-[calc(100vh-100px)] min-h-0' : 'h-[480px] lg:h-[510px] min-h-[400px]'
       }`}>
         {/* Left Vertical Drawing Toolbar (Complete TradingView Style) */}
-        <div className="flex flex-col items-center gap-0.5 sm:gap-1 py-1.5 px-1 bg-[#131722]/95 border-r border-zinc-800/80 z-30 shrink-0 w-10 sm:w-11 select-none overflow-y-auto scrollbar-none h-full">
+        <div className="flex flex-col items-center gap-0.5 sm:gap-1 py-1.5 px-1 bg-[#131722]/95 border-r border-zinc-800/80 z-30 shrink-0 w-10 sm:w-11 select-none overflow-visible relative h-full">
           {/* 1. Grip Handle */}
           <div className="text-zinc-600 py-0.5 flex justify-center cursor-grab active:cursor-grabbing hover:text-zinc-400 transition-colors">
             <DotsSixVertical size={16} />
@@ -3276,18 +3290,17 @@ export function MarketCandleChart() {
             return (
               <div key={group.id} className="relative group/tool">
                 <button
-                  onClick={() => {
-                    // Always open/toggle flyout if group has multiple tools so user can see sub-tools (e.g. Fibonacci)
-                    if (group.tools.length > 1) {
-                      setActiveFlyout(activeFlyout === group.id ? null : group.id);
-                    }
+                  onClick={(e) => {
                     const toolToActivate = activeToolInGroup ? activeToolInGroup.id : group.tools[0].id;
                     setActiveTool(toolToActivate);
                     setDraftDrawing(null);
+                    if (group.tools.length > 1) {
+                      triggerFlyout(group.id, e.currentTarget);
+                    }
                   }}
                   onContextMenu={(e) => {
                     e.preventDefault();
-                    setActiveFlyout(activeFlyout === group.id ? null : group.id);
+                    triggerFlyout(group.id, e.currentTarget);
                   }}
                   title={activeToolInGroup ? TOOL_LABELS[activeToolInGroup.id] : group.tools[0].label}
                   className={`w-8 h-8 flex items-center justify-center relative rounded-lg transition-all ${
@@ -3302,26 +3315,37 @@ export function MarketCandleChart() {
                     <span
                       onClick={(e) => {
                         e.stopPropagation();
-                        setActiveFlyout(activeFlyout === group.id ? null : group.id);
+                        const btn = e.currentTarget.closest('button');
+                        if (btn) triggerFlyout(group.id, btn);
                       }}
                       title="Mở rộng danh sách công cụ"
-                      className="absolute bottom-0.5 right-0.5 w-3 h-3 flex items-end justify-end cursor-pointer p-0.5 text-zinc-400 hover:text-white"
+                      className="absolute bottom-0 right-0 w-3.5 h-3.5 flex items-end justify-end cursor-pointer p-0.5 text-zinc-400 hover:text-white"
                     >
-                      <svg className="w-2 h-2 opacity-70 group-hover/tool:opacity-100" viewBox="0 0 6 6" fill="currentColor">
+                      <svg className="w-2.5 h-2.5 opacity-70 group-hover/tool:opacity-100" viewBox="0 0 6 6" fill="currentColor">
                         <polygon points="6,0 6,6 0,6" />
                       </svg>
                     </span>
                   )}
                 </button>
 
-                {/* Submenu Flyout */}
-                {activeFlyout === group.id && (
+                {/* Submenu Flyout (Fixed viewport position to prevent clipping) */}
+                {activeFlyout === group.id && flyoutPos && (
                   <>
                     <div
-                      className="fixed inset-0 z-40 bg-transparent"
-                      onClick={() => setActiveFlyout(null)}
+                      className="fixed inset-0 z-[9990] bg-transparent"
+                      onClick={() => {
+                        setActiveFlyout(null);
+                        setFlyoutPos(null);
+                      }}
                     />
-                    <div className="absolute left-full ml-1.5 top-0 z-50 bg-[#1e222d] border border-zinc-700/80 rounded-xl shadow-2xl p-1.5 min-w-[230px] backdrop-blur-xl animate-in fade-in zoom-in-95 flex flex-col gap-0.5">
+                    <div
+                      style={{ top: `${flyoutPos.top}px`, left: `${flyoutPos.left}px` }}
+                      className="fixed z-[9999] bg-[#1e222d] border border-zinc-700/80 rounded-xl shadow-2xl p-1.5 min-w-[240px] backdrop-blur-xl animate-in fade-in zoom-in-95 flex flex-col gap-0.5"
+                    >
+                      <div className="text-[10px] font-mono text-zinc-400 uppercase tracking-wider px-2 py-1 border-b border-zinc-800/80 mb-0.5 flex items-center justify-between">
+                        <span>Chọn công cụ</span>
+                        <span className="text-[9px] text-zinc-500 font-bold">{group.tools.length} tùy chọn</span>
+                      </div>
                       {group.tools.map((t) => {
                         const ToolItemIcon = t.icon;
                         const isSelected = activeTool === t.id;
@@ -3332,6 +3356,7 @@ export function MarketCandleChart() {
                               setActiveTool(t.id);
                               setDraftDrawing(null);
                               setActiveFlyout(null);
+                              setFlyoutPos(null);
                             }}
                             className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-sans text-left transition-all ${
                               isSelected
@@ -3340,7 +3365,8 @@ export function MarketCandleChart() {
                             }`}
                           >
                             <ToolItemIcon size={16} weight={isSelected ? 'bold' : 'regular'} className="shrink-0" />
-                            <span className="truncate">{t.label}</span>
+                            <span className="truncate flex-1">{t.label}</span>
+                            {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-white shrink-0" />}
                           </button>
                         );
                       })}
@@ -3435,7 +3461,16 @@ export function MarketCandleChart() {
           {/* 9. Color Palette & Line Width */}
           <div className="relative">
             <button
-              onClick={() => setShowPalette(!showPalette)}
+              onClick={(e) => {
+                if (showPalette) {
+                  setShowPalette(false);
+                  setPalettePos(null);
+                } else {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  setPalettePos({ top: Math.max(10, rect.top - 80), left: rect.right + 8 });
+                  setShowPalette(true);
+                }
+              }}
               title="Bảng màu & Độ dày nét vẽ"
               className="w-8 h-8 flex items-center justify-center relative rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/80"
             >
@@ -3445,10 +3480,19 @@ export function MarketCandleChart() {
               />
             </button>
 
-            {showPalette && (
+            {showPalette && palettePos && (
               <>
-                <div className="fixed inset-0 z-40 bg-transparent" onClick={() => setShowPalette(false)} />
-                <div className="absolute left-full ml-2 bottom-0 bg-[#1e222d] border border-zinc-700/80 rounded-xl p-2.5 flex flex-col gap-2 z-50 shadow-2xl backdrop-blur-xl min-w-[170px] animate-in fade-in">
+                <div
+                  className="fixed inset-0 z-[9990] bg-transparent"
+                  onClick={() => {
+                    setShowPalette(false);
+                    setPalettePos(null);
+                  }}
+                />
+                <div
+                  style={{ top: `${palettePos.top}px`, left: `${palettePos.left}px` }}
+                  className="fixed bg-[#1e222d] border border-zinc-700/80 rounded-xl p-2.5 flex flex-col gap-2 z-[9999] shadow-2xl backdrop-blur-xl min-w-[170px] animate-in fade-in"
+                >
                   <div className="text-[10px] font-mono text-zinc-400 uppercase tracking-wider px-1">Màu sắc nét vẽ</div>
                   <div className="flex items-center gap-1.5">
                     {PALETTE.map((c) => (
