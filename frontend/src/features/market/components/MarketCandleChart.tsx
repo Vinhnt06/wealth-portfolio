@@ -54,6 +54,8 @@ import {
   Rocket,
   DotsSixVertical,
   Waveform,
+  Sliders,
+  Check,
 } from '@phosphor-icons/react';
 import stockDatabase from '../data/stockDatabase.json';
 import { getStockPriceColor } from '../utils/priceColors';
@@ -546,6 +548,7 @@ export function MarketCandleChart() {
   const [draftDrawing, setDraftDrawing] = useState<DrawingItem | null>(null);
   const [selectedDrawingId, setSelectedDrawingId] = useState<string | null>(null);
   const selectedDrawingIdRef = useRef<string | null>(null);
+  const [editingDrawing, setEditingDrawing] = useState<DrawingItem | null>(null);
   const findHitDrawingRef = useRef<(x: number, y: number) => DrawingItem | null>(() => null);
   const [undoStack, setUndoStack] = useState<DrawingItem[][]>([]);
   const [redoStack, setRedoStack] = useState<DrawingItem[][]>([]);
@@ -641,6 +644,71 @@ export function MarketCandleChart() {
     try {
       localStorage.setItem(`yf_drawings_${selectedSymbol}`, JSON.stringify(items));
     } catch {}
+  };
+
+  const handleDeleteDrawing = (id: string) => {
+    setDrawings((prev) => {
+      const itemToRemove = prev.find((d) => d.id === id);
+      if (itemToRemove) {
+        setUndoStack((u) => [...u, [itemToRemove]]);
+        setRedoStack([]);
+      }
+      const updated = prev.filter((d) => d.id !== id);
+      saveDrawings(updated);
+      return updated;
+    });
+    setSelectedDrawingId(null);
+    setEditingDrawing(null);
+    setTimeout(() => redrawCanvasRef.current(), 0);
+  };
+
+  const handleUpdateDrawingColor = (id: string, color: string) => {
+    setDrawings((prev) => {
+      const updated = prev.map((d) => (d.id === id ? { ...d, color } : d));
+      saveDrawings(updated);
+      return updated;
+    });
+    if (editingDrawing && editingDrawing.id === id) {
+      setEditingDrawing((prev) => (prev ? { ...prev, color } : null));
+    }
+  };
+
+  const handleUpdateDrawingWidth = (id: string, width: number) => {
+    setDrawings((prev) => {
+      const updated = prev.map((d) => (d.id === id ? { ...d, width } : d));
+      saveDrawings(updated);
+      return updated;
+    });
+    if (editingDrawing && editingDrawing.id === id) {
+      setEditingDrawing((prev) => (prev ? { ...prev, width } : null));
+    }
+  };
+
+  const handleDuplicateDrawing = (id: string) => {
+    const item = drawings.find((d) => d.id === id);
+    if (!item) return;
+    const offsetPrice = (item.p1.price * 0.01) || 0.5;
+    const duplicated: DrawingItem = {
+      ...item,
+      id: `draw_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      p1: { ...item.p1, price: Math.round((item.p1.price + offsetPrice) * 100) / 100 },
+      p2: item.p2 ? { ...item.p2, price: Math.round((item.p2.price + offsetPrice) * 100) / 100 } : undefined,
+    };
+    const updated = [...drawings, duplicated];
+    setDrawings(updated);
+    saveDrawings(updated);
+    setSelectedDrawingId(duplicated.id);
+  };
+
+  const handleSaveDrawingCoords = (updatedItem: DrawingItem) => {
+    setDrawings((prev) => {
+      const updated = prev.map((d) => (d.id === updatedItem.id ? updatedItem : d));
+      saveDrawings(updated);
+      return updated;
+    });
+    setSelectedDrawingId(updatedItem.id);
+    setEditingDrawing(null);
+    setTimeout(() => redrawCanvasRef.current(), 0);
   };
 
   // Synchronize crosshair visibility with active cursor tool to prevent frozen crosshairs
@@ -871,8 +939,8 @@ export function MarketCandleChart() {
           item.type === 'measure'
         ) {
           if (c1.x !== null && c1.y !== null && c2 && c2.x !== null && c2.y !== null) {
-            if (distToSegment(x, y, c1.x, c1.y, c2.x, c2.y) <= 14) return item;
-            if (Math.hypot(x - c1.x, y - c1.y) <= 16 || Math.hypot(x - c2.x, y - c2.y) <= 16) return item;
+            if (distToSegment(x, y, c1.x, c1.y, c2.x, c2.y) <= 18) return item;
+            if (Math.hypot(x - c1.x, y - c1.y) <= 20 || Math.hypot(x - c2.x, y - c2.y) <= 20) return item;
             if (item.type === 'ray') {
               const dx = c2.x - c1.x;
               const dy = c2.y - c1.y;
@@ -1748,24 +1816,43 @@ export function MarketCandleChart() {
     updateCanvasSize();
 
     const getHandleAt = (x: number, y: number, selId: string | null) => {
-      if (!selId) return null;
       const chart = chartRef.current;
       const series = candleSeriesRef.current;
       if (!chart || !series) return null;
-      const item = drawingsRef.current.find((d) => d.id === selId);
-      if (!item) return null;
 
-      const c1X = chart.timeScale().timeToCoordinate(item.p1.time);
-      const c1Y = series.priceToCoordinate(item.p1.price);
-      if (c1X !== null && c1Y !== null && Math.hypot(x - c1X, y - c1Y) <= 16) {
-        return { item, part: 'p1' as const };
+      // 1. Prioritize handles of currently selected drawing
+      if (selId) {
+        const item = drawingsRef.current.find((d) => d.id === selId);
+        if (item) {
+          const c1X = chart.timeScale().timeToCoordinate(item.p1.time);
+          const c1Y = series.priceToCoordinate(item.p1.price);
+          if (c1X !== null && c1Y !== null && Math.hypot(x - c1X, y - c1Y) <= 20) {
+            return { item, part: 'p1' as const };
+          }
+          if (item.p2) {
+            const c2X = chart.timeScale().timeToCoordinate(item.p2.time);
+            const c2Y = series.priceToCoordinate(item.p2.price);
+            if (c2X !== null && c2Y !== null && Math.hypot(x - c2X, y - c2Y) <= 20) {
+              return { item, part: 'p2' as const };
+            }
+          }
+        }
       }
 
-      if (item.p2) {
-        const c2X = chart.timeScale().timeToCoordinate(item.p2.time);
-        const c2Y = series.priceToCoordinate(item.p2.price);
-        if (c2X !== null && c2Y !== null && Math.hypot(x - c2X, y - c2Y) <= 16) {
-          return { item, part: 'p2' as const };
+      // 2. Allow grabbing handles of ANY drawing directly
+      for (let i = drawingsRef.current.length - 1; i >= 0; i--) {
+        const item = drawingsRef.current[i];
+        const c1X = chart.timeScale().timeToCoordinate(item.p1.time);
+        const c1Y = series.priceToCoordinate(item.p1.price);
+        if (c1X !== null && c1Y !== null && Math.hypot(x - c1X, y - c1Y) <= 20) {
+          return { item, part: 'p1' as const };
+        }
+        if (item.p2) {
+          const c2X = chart.timeScale().timeToCoordinate(item.p2.time);
+          const c2Y = series.priceToCoordinate(item.p2.price);
+          if (c2X !== null && c2Y !== null && Math.hypot(x - c2X, y - c2Y) <= 20) {
+            return { item, part: 'p2' as const };
+          }
         }
       }
 
@@ -1789,11 +1876,12 @@ export function MarketCandleChart() {
       const clickX = e.clientX - rect.left;
       const clickY = e.clientY - rect.top;
 
-      // 1. Check if user clicked an anchor handle of the selected drawing
+      // 1. Check if user clicked an anchor handle of any drawing
       const handleHit = getHandleAt(clickX, clickY, selectedDrawingIdRef.current);
       if (handleHit) {
         e.stopPropagation();
         e.preventDefault();
+        setSelectedDrawingId(handleHit.item.id);
         isDraggingRef.current = true;
         const dragItem = handleHit.item;
 
@@ -1953,6 +2041,13 @@ export function MarketCandleChart() {
       const rect = canvas.getBoundingClientRect();
       const clickX = e.clientX - rect.left;
       const clickY = e.clientY - rect.top;
+
+      // Check handle first so clicking a handle does not deselect
+      const handleHit = getHandleAt(clickX, clickY, selectedDrawingIdRef.current);
+      if (handleHit) {
+        setSelectedDrawingId(handleHit.item.id);
+        return;
+      }
 
       const hit = findHitDrawingRef.current(clickX, clickY);
       if (hit) {
@@ -2750,8 +2845,9 @@ export function MarketCandleChart() {
       const updated = [...drawings, newDrawing];
       setDrawings(updated);
       saveDrawings(updated);
+      setSelectedDrawingId(newDrawing.id);
       if (!stayInDrawingMode) {
-        setActiveTool('cursor');
+        setActiveTool('arrow_pointer');
       }
       return;
     }
@@ -2774,9 +2870,10 @@ export function MarketCandleChart() {
         const updated = [...drawings, newDrawing];
         setDrawings(updated);
         saveDrawings(updated);
+        setSelectedDrawingId(newDrawing.id);
       }
       if (!stayInDrawingMode) {
-        setActiveTool('cursor');
+        setActiveTool('arrow_pointer');
       }
       return;
     }
@@ -2806,8 +2903,9 @@ export function MarketCandleChart() {
       setDrawings(updated);
       saveDrawings(updated);
       setDraftDrawing(null);
+      setSelectedDrawingId(finalDrawing.id);
       if (!stayInDrawingMode) {
-        setActiveTool('cursor');
+        setActiveTool('arrow_pointer');
       }
     }
   };
@@ -3154,7 +3252,7 @@ export function MarketCandleChart() {
           {/* Trendline Pro Toggle Button */}
           <button
             onClick={() => setShowTrendlinePro(!showTrendlinePro)}
-            title="Tự động kẻ Trendline Pro & Kênh Fibonacci đa tầng"
+            title="Đường tự động Trendline Pro & Kháng cự/Hỗ trợ/Fibonacci (Bấm để Bật/Tắt các đường tự động)"
             className={`flex items-center gap-1 px-2 py-0.5 text-xs font-mono font-semibold rounded-lg whitespace-nowrap shrink-0 transition-all ${
               showTrendlinePro
                 ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'
@@ -3682,43 +3780,256 @@ export function MarketCandleChart() {
               </div>
             )}
 
-            {/* Selected Drawing Floating Banner */}
-            {selectedDrawingId && (activeTool === 'cursor' || activeTool === 'arrow_pointer' || activeTool === 'dot') && (
-              <div className="absolute top-3 left-4 z-30 flex items-center gap-2 px-3 py-1.5 bg-zinc-900/95 border border-cyan-500/40 rounded-xl text-[11px] font-mono text-cyan-400 backdrop-blur-md shadow-2xl animate-in fade-in">
-                <span className="font-bold">Đã chọn:</span>
-                <span className="text-zinc-200 font-medium">
-                  {TOOL_LABELS[drawings.find((d) => d.id === selectedDrawingId)?.type || 'trendline'] || 'Nét vẽ'}
-                </span>
-                <span className="text-zinc-400 text-[10px] bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">
-                  Phím Delete / Backspace để xoá
-                </span>
-                <button
-                  onClick={() => {
-                    setDrawings((prev) => {
-                      const itemToRemove = prev.find((d) => d.id === selectedDrawingId);
-                      if (itemToRemove) {
-                        setUndoStack((u) => [...u, [itemToRemove]]);
-                        setRedoStack([]);
-                      }
-                      const updated = prev.filter((d) => d.id !== selectedDrawingId);
-                      saveDrawings(updated);
-                      return updated;
-                    });
-                    setSelectedDrawingId(null);
-                    setTimeout(() => redrawCanvasRef.current(), 0);
-                  }}
-                  className="ml-1 p-1 hover:bg-rose-500/20 rounded text-rose-400 hover:text-rose-300 transition-colors"
-                  title="Xoá nét vẽ này"
-                >
-                  <Trash size={13} />
-                </button>
-                <button
-                  onClick={() => setSelectedDrawingId(null)}
-                  className="p-1 hover:bg-zinc-800 rounded text-zinc-400 hover:text-zinc-200 transition-colors"
-                  title="Bỏ chọn (Esc)"
-                >
-                  <X size={13} />
-                </button>
+            {/* ── TradingView Floating Action Toolbar for Selected Drawing ────────── */}
+            {selectedDrawingId && (() => {
+              const selectedItem = drawings.find((d) => d.id === selectedDrawingId);
+              if (!selectedItem) return null;
+              return (
+                <div className="absolute top-3 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 px-3 py-1.5 bg-zinc-950/95 border border-cyan-500/50 rounded-2xl shadow-[0_12px_36px_rgba(0,0,0,0.85)] backdrop-blur-xl animate-in fade-in slide-in-from-top-2 duration-150 select-none">
+                  {/* Tool Label */}
+                  <div className="flex items-center gap-1.5 pr-2.5 border-r border-zinc-800 text-[11px] font-mono font-bold text-cyan-400">
+                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                    <span>{TOOL_LABELS[selectedItem.type] || 'Nét vẽ'}</span>
+                  </div>
+
+                  {/* Quick Color Palette */}
+                  <div className="flex items-center gap-1 pr-2 border-r border-zinc-800">
+                    {['#10b981', '#06b6d4', '#f59e0b', '#f43f5e', '#ffffff'].map((c) => (
+                      <button
+                        key={c}
+                        onClick={() => handleUpdateDrawingColor(selectedItem.id, c)}
+                        className={`w-4 h-4 rounded-full border transition-transform hover:scale-125 ${
+                          selectedItem.color === c ? 'border-white scale-110 shadow-[0_0_8px_currentColor]' : 'border-transparent opacity-80 hover:opacity-100'
+                        }`}
+                        style={{ backgroundColor: c, color: c }}
+                        title={`Đổi màu nét vẽ sang ${c}`}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Line Width Selector */}
+                  <div className="flex items-center gap-1 pr-2 border-r border-zinc-800 text-[10px] font-mono">
+                    {[1, 2, 3].map((w) => (
+                      <button
+                        key={w}
+                        onClick={() => handleUpdateDrawingWidth(selectedItem.id, w)}
+                        className={`px-1.5 py-0.5 rounded transition-colors ${
+                          (selectedItem.width || 2) === w
+                            ? 'bg-cyan-500/25 text-cyan-300 font-bold border border-cyan-500/50'
+                            : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/80'
+                        }`}
+                        title={`Độ dày nét ${w}px`}
+                      >
+                        {w}px
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Customize Position / Coordinates Button */}
+                  <button
+                    onClick={() => setEditingDrawing(selectedItem)}
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-medium text-zinc-200 hover:text-cyan-300 bg-zinc-900/90 hover:bg-cyan-500/15 border border-zinc-700/80 hover:border-cyan-500/40 transition-all shadow-sm active:scale-95"
+                    title="Tuỳ chỉnh toạ độ vị trí chính xác (Giá P1, P2, Ngày)"
+                  >
+                    <Sliders size={13} className="text-cyan-400" />
+                    <span>Tuỳ chỉnh vị trí</span>
+                  </button>
+
+                  {/* Clone / Duplicate */}
+                  <button
+                    onClick={() => handleDuplicateDrawing(selectedItem.id)}
+                    className="p-1.5 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/80 rounded-xl transition-colors"
+                    title="Nhân bản nét vẽ (Clone)"
+                  >
+                    <Copy size={13} />
+                  </button>
+
+                  {/* DELETE BUTTON (THÙNG RÁC XOÁ NÉT VẼ) */}
+                  <button
+                    onClick={() => handleDeleteDrawing(selectedItem.id)}
+                    className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-rose-500/20 hover:bg-rose-600 text-rose-300 hover:text-white font-medium text-xs border border-rose-500/40 transition-all shadow-sm active:scale-95 ml-1"
+                    title="Xoá nét vẽ này ngay lập tức (Delete / Backspace)"
+                  >
+                    <Trash size={13} />
+                    <span>Xoá</span>
+                  </button>
+
+                  {/* Deselect / Close */}
+                  <button
+                    onClick={() => setSelectedDrawingId(null)}
+                    className="p-1 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/80 rounded-lg transition-colors ml-0.5"
+                    title="Bỏ chọn (Esc)"
+                  >
+                    <X size={13} />
+                  </button>
+                </div>
+              );
+            })()}
+
+            {/* ── Modal: Tuỳ chỉnh Vị trí & Toạ độ nét vẽ (TradingView Coordinates) ────────── */}
+            {editingDrawing && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                <div className="w-full max-w-md bg-zinc-950 border border-cyan-500/30 rounded-2xl shadow-2xl p-5 flex flex-col gap-4 text-zinc-100 font-sans animate-in zoom-in-95 duration-150">
+                  {/* Modal Header */}
+                  <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+                    <div className="flex items-center gap-2">
+                      <Sliders size={16} className="text-cyan-400" />
+                      <h3 className="text-sm font-bold text-zinc-100">
+                        Tuỳ chỉnh vị trí: {TOOL_LABELS[editingDrawing.type] || 'Nét vẽ'}
+                      </h3>
+                    </div>
+                    <button
+                      onClick={() => setEditingDrawing(null)}
+                      className="p-1 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded-lg transition-colors"
+                    >
+                      <X size={15} />
+                    </button>
+                  </div>
+
+                  {/* Point 1 Coordinates */}
+                  <div className="p-3 bg-zinc-900/80 border border-zinc-800 rounded-xl flex flex-col gap-2">
+                    <div className="text-[11px] font-mono font-bold text-cyan-400 flex items-center justify-between">
+                      <span>Điểm 1 (P1)</span>
+                      <span className="text-[10px] text-zinc-500">Toạ độ bắt đầu</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div>
+                        <label className="text-[10px] text-zinc-400 block mb-1">Mức giá</label>
+                        <input
+                          type="number"
+                          step="0.05"
+                          value={editingDrawing.p1.price}
+                          onChange={(e) => {
+                            const val = parseFloat(e.target.value);
+                            if (!isNaN(val)) {
+                              setEditingDrawing({
+                                ...editingDrawing,
+                                p1: { ...editingDrawing.p1, price: Math.round(val * 100) / 100 },
+                              });
+                            }
+                          }}
+                          className="w-full px-2.5 py-1.5 bg-zinc-950 border border-zinc-700 rounded-lg text-emerald-400 font-mono font-bold focus:outline-none focus:border-cyan-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] text-zinc-400 block mb-1">Thời gian (Ngày)</label>
+                        <input
+                          type="text"
+                          value={String(editingDrawing.p1.time)}
+                          onChange={(e) => {
+                            setEditingDrawing({
+                              ...editingDrawing,
+                              p1: { ...editingDrawing.p1, time: e.target.value as Time },
+                            });
+                          }}
+                          className="w-full px-2.5 py-1.5 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-200 font-mono focus:outline-none focus:border-cyan-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Point 2 Coordinates (if exists) */}
+                  {editingDrawing.p2 && (
+                    <div className="p-3 bg-zinc-900/80 border border-zinc-800 rounded-xl flex flex-col gap-2">
+                      <div className="text-[11px] font-mono font-bold text-cyan-400 flex items-center justify-between">
+                        <span>Điểm 2 (P2)</span>
+                        <span className="text-[10px] text-zinc-500">Toạ độ kết thúc</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                          <label className="text-[10px] text-zinc-400 block mb-1">Mức giá</label>
+                          <input
+                            type="number"
+                            step="0.05"
+                            value={editingDrawing.p2.price}
+                            onChange={(e) => {
+                              const val = parseFloat(e.target.value);
+                              if (!isNaN(val)) {
+                                setEditingDrawing({
+                                  ...editingDrawing,
+                                  p2: { ...editingDrawing.p2!, price: Math.round(val * 100) / 100 },
+                                });
+                              }
+                            }}
+                            className="w-full px-2.5 py-1.5 bg-zinc-950 border border-zinc-700 rounded-lg text-emerald-400 font-mono font-bold focus:outline-none focus:border-cyan-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] text-zinc-400 block mb-1">Thời gian (Ngày)</label>
+                          <input
+                            type="text"
+                            value={String(editingDrawing.p2.time)}
+                            onChange={(e) => {
+                              setEditingDrawing({
+                                ...editingDrawing,
+                                p2: { ...editingDrawing.p2!, time: e.target.value as Time },
+                              });
+                            }}
+                            className="w-full px-2.5 py-1.5 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-200 font-mono focus:outline-none focus:border-cyan-500"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Styling (Color & Width) */}
+                  <div className="p-3 bg-zinc-900/50 border border-zinc-800/80 rounded-xl flex items-center justify-between text-xs">
+                    <span className="text-zinc-400 font-medium">Màu sắc & Nét vẽ:</span>
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1">
+                        {['#10b981', '#06b6d4', '#f59e0b', '#f43f5e', '#ffffff'].map((c) => (
+                          <button
+                            key={c}
+                            onClick={() => setEditingDrawing({ ...editingDrawing, color: c })}
+                            className={`w-5 h-5 rounded-full border transition-transform ${
+                              editingDrawing.color === c ? 'border-white scale-110' : 'border-transparent opacity-80'
+                            }`}
+                            style={{ backgroundColor: c }}
+                          />
+                        ))}
+                      </div>
+                      <div className="flex items-center gap-1 border-l border-zinc-700 pl-2">
+                        {[1, 2, 3].map((w) => (
+                          <button
+                            key={w}
+                            onClick={() => setEditingDrawing({ ...editingDrawing, width: w })}
+                            className={`px-1.5 py-0.5 rounded font-mono text-[10px] ${
+                              (editingDrawing.width || 2) === w ? 'bg-cyan-500/30 text-cyan-300 font-bold' : 'text-zinc-400'
+                            }`}
+                          >
+                            {w}px
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Modal Footer Actions */}
+                  <div className="flex items-center justify-between pt-2 border-t border-zinc-800/80">
+                    <button
+                      onClick={() => handleDeleteDrawing(editingDrawing.id)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-500/15 hover:bg-rose-600 text-rose-300 hover:text-white rounded-xl text-xs font-semibold border border-rose-500/30 transition-all active:scale-95"
+                    >
+                      <Trash size={14} />
+                      <span>Xoá nét vẽ</span>
+                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setEditingDrawing(null)}
+                        className="px-3 py-1.5 text-zinc-400 hover:text-zinc-200 text-xs font-medium rounded-xl hover:bg-zinc-800 transition-colors"
+                      >
+                        Đóng
+                      </button>
+                      <button
+                        onClick={() => handleSaveDrawingCoords(editingDrawing)}
+                        className="flex items-center gap-1.5 px-4 py-1.5 bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-bold text-xs rounded-xl shadow-lg shadow-cyan-500/20 transition-all active:scale-95"
+                      >
+                        <Check size={14} />
+                        <span>Lưu toạ độ</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </div>
