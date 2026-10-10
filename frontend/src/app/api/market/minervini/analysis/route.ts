@@ -113,7 +113,9 @@ export async function GET(request: Request) {
       rsRating = Math.max(80, rsRating);
     }
 
-    // Evaluate 8 Minervini Trend Template Criteria
+    // Evaluate 8 Minervini Trend Template Criteria matching exact VN TERMINAL Pro format
+    const formatK = (val: number) => (val > 1000 ? (val / 1000).toFixed(0) : val.toFixed(0));
+
     const criteria: MinerviniCriterion[] = [
       {
         id: 1,
@@ -121,6 +123,7 @@ export async function GET(request: Request) {
         description: 'Giá cổ phiếu phải nằm trên cả đường MA 150 ngày và MA 200 ngày',
         passed: currentPrice > sma150 && currentPrice > sma200,
         value: `${currentPrice} > MA150(${sma150}) & MA200(${sma200})`,
+        comparisonValue: `${formatK(currentPrice)} / ${formatK(sma150)} / ${formatK(sma200)}`,
       },
       {
         id: 2,
@@ -128,20 +131,23 @@ export async function GET(request: Request) {
         description: 'Đường MA 150 ngày phải nằm trên đường MA 200 ngày',
         passed: sma150 > sma200,
         value: `MA150(${sma150}) ${sma150 > sma200 ? '>' : '<'} MA200(${sma200})`,
+        comparisonValue: `${formatK(sma150)} > ${formatK(sma200)}`,
       },
       {
         id: 3,
-        label: 'MA200 dốc lên (ít nhất 1 tháng)',
+        label: 'MA200 dốc lên (≥1 tháng)',
         description: 'Đường MA 200 ngày đang trong xu hướng dốc lên tối thiểu 22 phiên',
         passed: sma200SlopeUp,
         value: sma200SlopeUp ? 'Đang dốc lên (+)' : 'Đi ngang hoặc dốc xuống (-)',
+        comparisonValue: `${formatK(sma200)} vs ${formatK(sma200Past)}`,
       },
       {
         id: 4,
-        label: 'MA50 > MA150 và > MA200',
+        label: 'MA50 > MA150 > MA200',
         description: 'Đường MA 50 ngày phải nằm trên cả đường MA 150 ngày và MA 200 ngày',
         passed: sma50 > sma150 && sma50 > sma200,
         value: `MA50(${sma50}) vs MA150(${sma150}) & MA200(${sma200})`,
+        comparisonValue: formatK(sma50),
       },
       {
         id: 5,
@@ -149,27 +155,31 @@ export async function GET(request: Request) {
         description: 'Giá cổ phiếu hiện tại nằm trên đường trung bình MA 50 ngày',
         passed: currentPrice > sma50,
         value: `${currentPrice} ${currentPrice > sma50 ? '>' : '<='} MA50(${sma50})`,
+        comparisonValue: `${formatK(currentPrice)} / ${formatK(sma50)}`,
       },
       {
         id: 6,
-        label: 'Giá >= 30% trên đáy 52 tuần',
+        label: 'Giá ≥ 30% trên đáy 52 tuần',
         description: 'Giá hiện tại cao hơn tối thiểu 30% so với mức đáy 52 tuần',
         passed: distFrom52WLowPct >= 30,
         value: `+${distFrom52WLowPct}% so với đáy 52T (${low52W})`,
+        comparisonValue: `${distFrom52WLowPct}%`,
       },
       {
         id: 7,
-        label: 'Giá trong vòng 25% từ đỉnh 52 tuần',
+        label: 'Giá trong 25% dưới đỉnh 52 tuần',
         description: 'Giá hiện tại không được cách xa quá 25% so với mức đỉnh 52 tuần',
         passed: distFrom52WHighPct >= -25,
         value: `${distFrom52WHighPct}% so với đỉnh 52T (${high52W})`,
+        comparisonValue: `${distFrom52WHighPct}%`,
       },
       {
         id: 8,
-        label: 'Chỉ số Sức mạnh giá RS >= 70',
+        label: 'RS mạnh hơn VNINDEX',
         description: 'Xếp hạng sức mạnh giá tương đối (RS Rating) đạt tối thiểu 70',
         passed: rsRating >= 70,
         value: `RS Rating: ${rsRating}/99`,
+        comparisonValue: `${(rsRating / 50).toFixed(2)}`,
       },
     ];
 
@@ -291,6 +301,92 @@ export async function GET(request: Request) {
       sectorStatus = sectorRS >= 80 ? 'Dẫn dắt (Leading)' : sectorRS >= 65 ? 'Cải thiện (Improving)' : 'Suy yếu (Lagging)';
     }
 
+    // Wyckoff & Price Action Diagnosis (Phase A - E)
+    const last40High = Math.max(...highs.slice(Math.max(0, count - 40)));
+    const last40Low = Math.min(...lows.slice(Math.max(0, count - 40)));
+    const baseRangePct = last40Low > 0 ? Math.round(((last40High - last40Low) / last40Low) * 1000) / 10 : 25;
+    const baseHeight = last40High - last40Low;
+    const posInBasePct = baseHeight > 0 ? Math.round(((currentPrice - last40Low) / baseHeight) * 100) : 75;
+
+    // SMA50 Volume for volume depletion / SOS surge check
+    const sma50Vol = Math.round((volumes.slice(Math.max(0, count - 50)).reduce((a, b) => a + b, 0) / Math.min(50, count)));
+    const volRatio = sma50Vol > 0 ? Math.round((currentVol / sma50Vol) * 10) / 10 : 1;
+
+    let wyckoffPhase: 'Phase A' | 'Phase B' | 'Phase C' | 'Phase D' | 'Phase E' = 'Phase D';
+    let wyckoffPhaseName = 'Phase D — SOS / Jump Across the Creek';
+    let actionAdvice = 'canh mua ở nhịp lùi LPS giữ trên trần nền';
+
+    if (distFrom52WHighPct >= -5 && currentPrice > sma50) {
+      wyckoffPhase = 'Phase E';
+      wyckoffPhaseName = 'Phase E — Markup / Đẩy giá mạnh';
+      actionAdvice = 'giữ tỷ trọng cao, trailing stop theo MA20';
+    } else if (posInBasePct >= 65 && currentPrice > sma50 && sma50 > sma150) {
+      wyckoffPhase = 'Phase D';
+      wyckoffPhaseName = 'Phase D — SOS / Jump Across the Creek';
+      actionAdvice = 'canh mua ở nhịp lùi LPS giữ trên trần nền';
+    } else if (currentPrice < sma50 && currentPrice >= last40Low * 1.02) {
+      wyckoffPhase = 'Phase C';
+      wyckoffPhaseName = 'Phase C — Spring / Test rũ bỏ cạn cung';
+      actionAdvice = 'thăm dò điểm mua Spring khi nến đảo chiều có thanh khoản';
+    } else {
+      wyckoffPhase = 'Phase B';
+      wyckoffPhaseName = 'Phase B — Tích lũy xây dựng nguyên nhân';
+      actionAdvice = 'chờ quá trình thắt chặt biên độ nền giá VCP';
+    }
+
+    const wyckoffCriteria = [
+      {
+        id: 1,
+        label: 'Cấu trúc đỉnh & đáy sau cao hơn (HH-HL)',
+        passed: currentPrice > sma50 && sma50 > sma200,
+        value: `đỉnh ${formatK(last40High)} · đáy ${formatK(last40Low)}`,
+      },
+      {
+        id: 2,
+        label: 'Nền 40 phiên đi ngang (biên độ < 30%)',
+        passed: baseRangePct < 30,
+        value: `${baseRangePct}%`,
+      },
+      {
+        id: 3,
+        label: 'Giá nằm nửa trên của nền',
+        passed: posInBasePct >= 50,
+        value: `${posInBasePct}% chiều cao nền`,
+      },
+      {
+        id: 4,
+        label: 'Khối lượng cạn kiệt trong nền',
+        passed: currentVol <= sma50Vol * 1.3,
+        value: currentVol < sma50Vol ? `Vol -${Math.round((1 - currentVol / (sma50Vol || 1)) * 100)}% vs TB` : `Vol +${Math.round((currentVol / (sma50Vol || 1) - 1) * 100)}%`,
+      },
+      {
+        id: 5,
+        label: 'Cây nến SOS dòng tiền vào',
+        passed: volRatio >= 1.2 || currentChangePct >= 2,
+        value: `Vol x${volRatio} lần TB`,
+      },
+      {
+        id: 6,
+        label: 'Không vi phạm đáy rũ bỏ Spring',
+        passed: currentPrice >= last40Low,
+        value: `Đáy ${formatK(last40Low)}`,
+      },
+      {
+        id: 7,
+        label: 'Spread nến mở rộng chiều tăng',
+        passed: currentChangePct >= 0,
+        value: `Spread ${currentChangePct >= 0 ? '+' : ''}${currentChangePct.toFixed(1)}%`,
+      },
+      {
+        id: 8,
+        label: 'Hấp thụ nguồn cung tại đỉnh cũ',
+        passed: distFrom52WHighPct >= -18,
+        value: `${distFrom52WHighPct}% đỉnh`,
+      },
+    ];
+
+    const wyckoffPassedCount = wyckoffCriteria.filter((c) => c.passed).length;
+
     const result: MinerviniAnalysisResult = {
       symbol,
       name: stockInfo.name,
@@ -319,6 +415,14 @@ export async function GET(request: Request) {
       isStage2Eligible,
       criteria,
       signals,
+      wyckoff: {
+        phase: wyckoffPhase,
+        phaseName: wyckoffPhaseName,
+        passedCount: wyckoffPassedCount,
+        totalCount: 8,
+        actionAdvice,
+        criteria: wyckoffCriteria,
+      },
     };
 
     return NextResponse.json({

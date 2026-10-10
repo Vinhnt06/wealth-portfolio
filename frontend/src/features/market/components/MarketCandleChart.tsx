@@ -97,6 +97,108 @@ const TOOL_LABELS: Record<DrawingTool, string> = {
 
 const PALETTE = ['#10b981', '#f43f5e', '#f59e0b', '#0ea5e9', '#f4f4f5'];
 
+export interface TrendlineProResult {
+  resistance: number;
+  support: number;
+  fib0618: number;
+  fib1618: number;
+  resP1: { time: Time; price: number };
+  resP2: { time: Time; price: number };
+  supP1: { time: Time; price: number };
+  supP2: { time: Time; price: number };
+}
+
+export function calculateTrendlinePro(candles: CandlestickData<Time>[]): TrendlineProResult | null {
+  if (!candles || candles.length < 10) return null;
+  const windowCandles = candles.slice(-70);
+  const n = windowCandles.length;
+
+  const swingHighs: { idx: number; time: Time; price: number }[] = [];
+  const swingLows: { idx: number; time: Time; price: number }[] = [];
+
+  for (let i = 2; i < n - 2; i++) {
+    const c = windowCandles[i];
+    const isHigh =
+      c.high >= windowCandles[i - 1].high &&
+      c.high >= windowCandles[i - 2].high &&
+      c.high >= windowCandles[i + 1].high &&
+      c.high >= windowCandles[i + 2].high;
+
+    const isLow =
+      c.low <= windowCandles[i - 1].low &&
+      c.low <= windowCandles[i - 2].low &&
+      c.low <= windowCandles[i + 1].low &&
+      c.low <= windowCandles[i + 2].low;
+
+    if (isHigh) swingHighs.push({ idx: i, time: c.time, price: c.high });
+    if (isLow) swingLows.push({ idx: i, time: c.time, price: c.low });
+  }
+
+  let resP1: { time: Time; price: number };
+  let resP2: { time: Time; price: number };
+  let supP1: { time: Time; price: number };
+  let supP2: { time: Time; price: number };
+
+  if (swingHighs.length >= 2) {
+    const sortedHighs = [...swingHighs].sort((a, b) => b.price - a.price);
+    const h1 = sortedHighs[0];
+    const h2 = swingHighs.filter((s) => Math.abs(s.idx - h1.idx) >= 4).sort((a, b) => b.price - a.price)[0] || sortedHighs[1];
+    const [pFirst, pSecond] = h1.idx < h2.idx ? [h1, h2] : [h2, h1];
+    resP1 = { time: pFirst.time, price: pFirst.price };
+    resP2 = { time: pSecond.time, price: pSecond.price };
+  } else {
+    let maxHigh = -Infinity;
+    let maxHighIdx = 0;
+    for (let i = 0; i < n; i++) {
+      if (windowCandles[i].high > maxHigh) {
+        maxHigh = windowCandles[i].high;
+        maxHighIdx = i;
+      }
+    }
+    const firstIdx = Math.max(0, maxHighIdx - 10);
+    resP1 = { time: windowCandles[firstIdx].time, price: maxHigh };
+    resP2 = { time: windowCandles[n - 1].time, price: maxHigh };
+  }
+
+  if (swingLows.length >= 2) {
+    const sortedLows = [...swingLows].sort((a, b) => a.price - b.price);
+    const l1 = sortedLows[0];
+    const l2 = swingLows.filter((s) => Math.abs(s.idx - l1.idx) >= 4).sort((a, b) => a.price - b.price)[0] || sortedLows[1];
+    const [pFirst, pSecond] = l1.idx < l2.idx ? [l1, l2] : [l2, l1];
+    supP1 = { time: pFirst.time, price: pFirst.price };
+    supP2 = { time: pSecond.time, price: pSecond.price };
+  } else {
+    let minLow = Infinity;
+    let minLowIdx = 0;
+    for (let i = 0; i < n; i++) {
+      if (windowCandles[i].low < minLow) {
+        minLow = windowCandles[i].low;
+        minLowIdx = i;
+      }
+    }
+    const firstIdx = Math.max(0, minLowIdx - 10);
+    supP1 = { time: windowCandles[firstIdx].time, price: minLow };
+    supP2 = { time: windowCandles[n - 1].time, price: minLow };
+  }
+
+  const resistance = Math.round(Math.max(resP1.price, resP2.price) * 100) / 100;
+  const support = Math.round(Math.min(supP1.price, supP2.price) * 100) / 100;
+  const delta = Math.max(0.1, resistance - support);
+  const fib0618 = Math.round((support + delta * 0.618) * 100) / 100;
+  const fib1618 = Math.round((support + delta * 1.618) * 100) / 100;
+
+  return {
+    resistance,
+    support,
+    fib0618,
+    fib1618,
+    resP1,
+    resP2,
+    supP1,
+    supP2,
+  };
+}
+
 // ── Native Stream MarketCandleChart Component ────────────────────────
 export function MarketCandleChart() {
   const fullWrapperRef = useRef<HTMLDivElement>(null);
@@ -135,6 +237,10 @@ export function MarketCandleChart() {
   const [showMA200, setShowMA200] = useState(true);
   const [showBB, setShowBB] = useState(false);
   const [showVolume, setShowVolume] = useState(true);
+
+  // Trendline Pro State
+  const [showTrendlinePro, setShowTrendlinePro] = useState(true);
+  const [trendlineProData, setTrendlineProData] = useState<TrendlineProResult | null>(null);
 
   // Drawing Tools State
   const [activeTool, setActiveTool] = useState<DrawingTool>('cursor');
@@ -447,8 +553,137 @@ export function MarketCandleChart() {
       ctx.restore();
     });
 
+    // ── Render Trendline Pro Overlays (Automated S/R & Fibonacci Channels) ────
+    if (showTrendlinePro && trendlineProData) {
+      ctx.save();
+
+      // 1. Kháng cự (Resistance line - Green/Lime #84cc16)
+      const resY = series.priceToCoordinate(trendlineProData.resistance);
+      const rC1 = toCoord(trendlineProData.resP1);
+      const rC2 = toCoord(trendlineProData.resP2);
+
+      ctx.strokeStyle = '#84cc16';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([]);
+      ctx.beginPath();
+      if (rC1.x !== null && rC1.y !== null && rC2.x !== null && rC2.y !== null && Math.abs(rC2.x - rC1.x) > 5) {
+        const slope = (rC2.y - rC1.y) / (rC2.x - rC1.x);
+        const endX = w - 75;
+        const endY = rC1.y + slope * (endX - rC1.x);
+        ctx.moveTo(rC1.x, rC1.y);
+        ctx.lineTo(endX, endY);
+        ctx.stroke();
+
+        // Tag Kháng cự at ray endpoint
+        const tagY = Math.min(Math.max(endY, 14), h - 14);
+        ctx.fillStyle = '#84cc16';
+        ctx.fillRect(w - 76, tagY - 10, 72, 20);
+        ctx.fillStyle = '#09090b';
+        ctx.font = 'bold 10px JetBrains Mono, monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(`Kháng cự: ${trendlineProData.resistance}`, w - 40, tagY);
+      } else if (resY !== null) {
+        ctx.moveTo(0, resY);
+        ctx.lineTo(w - 75, resY);
+        ctx.stroke();
+
+        ctx.fillStyle = '#84cc16';
+        ctx.fillRect(w - 76, resY - 10, 72, 20);
+        ctx.fillStyle = '#09090b';
+        ctx.font = 'bold 10px JetBrains Mono, monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(`Kháng cự: ${trendlineProData.resistance}`, w - 40, resY);
+      }
+
+      // 2. Hỗ trợ (Support line - Red/Rose #ef4444)
+      const supY = series.priceToCoordinate(trendlineProData.support);
+      const sC1 = toCoord(trendlineProData.supP1);
+      const sC2 = toCoord(trendlineProData.supP2);
+
+      ctx.strokeStyle = '#ef4444';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([]);
+      ctx.beginPath();
+      if (sC1.x !== null && sC1.y !== null && sC2.x !== null && sC2.y !== null && Math.abs(sC2.x - sC1.x) > 5) {
+        const slope = (sC2.y - sC1.y) / (sC2.x - sC1.x);
+        const endX = w - 75;
+        const endY = sC1.y + slope * (endX - sC1.x);
+        ctx.moveTo(sC1.x, sC1.y);
+        ctx.lineTo(endX, endY);
+        ctx.stroke();
+
+        // Tag Hỗ trợ at ray endpoint
+        const tagY = Math.min(Math.max(endY, 14), h - 14);
+        ctx.fillStyle = '#ef4444';
+        ctx.fillRect(w - 76, tagY - 10, 72, 20);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 10px JetBrains Mono, monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(`Hỗ trợ: ${trendlineProData.support}`, w - 40, tagY);
+      } else if (supY !== null) {
+        ctx.moveTo(0, supY);
+        ctx.lineTo(w - 75, supY);
+        ctx.stroke();
+
+        ctx.fillStyle = '#ef4444';
+        ctx.fillRect(w - 76, supY - 10, 72, 20);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 10px JetBrains Mono, monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(`Hỗ trợ: ${trendlineProData.support}`, w - 40, supY);
+      }
+
+      // 3. Fibonacci 0.618 Golden Level (#eab308)
+      const fib0618Y = series.priceToCoordinate(trendlineProData.fib0618);
+      if (fib0618Y !== null) {
+        ctx.strokeStyle = '#eab308';
+        ctx.lineWidth = 1.2;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(0, fib0618Y);
+        ctx.lineTo(w - 75, fib0618Y);
+        ctx.stroke();
+
+        ctx.setLineDash([]);
+        ctx.fillStyle = 'rgba(234, 179, 8, 0.9)';
+        ctx.fillRect(w - 76, fib0618Y - 9, 72, 18);
+        ctx.fillStyle = '#09090b';
+        ctx.font = 'bold 9px JetBrains Mono, monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(`Fib 0,618: ${trendlineProData.fib0618}`, w - 40, fib0618Y);
+      }
+
+      // 4. Fibonacci 1.618 Extension (#06b6d4)
+      const fib1618Y = series.priceToCoordinate(trendlineProData.fib1618);
+      if (fib1618Y !== null) {
+        ctx.strokeStyle = '#06b6d4';
+        ctx.lineWidth = 1.2;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(0, fib1618Y);
+        ctx.lineTo(w - 75, fib1618Y);
+        ctx.stroke();
+
+        ctx.setLineDash([]);
+        ctx.fillStyle = 'rgba(6, 182, 212, 0.9)';
+        ctx.fillRect(w - 76, fib1618Y - 9, 72, 18);
+        ctx.fillStyle = '#09090b';
+        ctx.font = 'bold 9px JetBrains Mono, monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(`Fib 1,618: ${trendlineProData.fib1618}`, w - 40, fib1618Y);
+      }
+
+      ctx.restore();
+    }
+
     ctx.restore();
-  }, [drawings, draftDrawing]);
+  }, [drawings, draftDrawing, showTrendlinePro, trendlineProData]);
 
   // Adjust canvas size to match container
   const updateCanvasSize = useCallback(() => {
@@ -619,6 +854,8 @@ export function MarketCandleChart() {
         const uniqueCandles = realCandles.filter((item, idx, arr) => idx === 0 || item.time !== arr[idx - 1].time);
         const uniqueVolumes = realVolumes.filter((item, idx, arr) => idx === 0 || item.time !== arr[idx - 1].time);
         loadedCandlesRef.current = uniqueCandles;
+        const proData = calculateTrendlinePro(uniqueCandles);
+        setTrendlineProData(proData);
 
         const realMa20: LineData<Time>[] = [];
         const realMa50: LineData<Time>[] = [];
@@ -1168,6 +1405,21 @@ export function MarketCandleChart() {
             )}
           </div>
 
+          {/* Trendline Pro Toggle Button */}
+          <button
+            onClick={() => setShowTrendlinePro(!showTrendlinePro)}
+            title="Tự động kẻ Trendline Pro & Kênh Fibonacci đa tầng"
+            className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-mono font-semibold rounded-lg transition-all ${
+              showTrendlinePro
+                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'
+                : 'bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200'
+            }`}
+          >
+            <TrendUp size={14} className={showTrendlinePro ? 'text-amber-400' : 'text-zinc-500'} />
+            <span className="hidden sm:inline">Trendline Pro</span>
+            {showTrendlinePro && <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />}
+          </button>
+
           <div className="w-px h-4 bg-zinc-800 mx-0.5" />
 
           {/* Undo / Redo for drawings */}
@@ -1212,9 +1464,44 @@ export function MarketCandleChart() {
         </div>
       </div>
 
+      {/* ── Sub-header: Live Trendline Pro Summary Bar (VN Terminal Pro Style) ── */}
+      {showTrendlinePro && trendlineProData && (
+        <div className="flex items-center gap-3 sm:gap-5 px-4 py-1.5 bg-zinc-950 border-b border-zinc-800/80 text-[11px] font-mono text-zinc-300 overflow-x-auto scrollbar-none z-20">
+          <span className="flex items-center gap-1.5 font-bold text-amber-400 shrink-0">
+            <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+            * Trendline Pro
+          </span>
+          <span className="text-zinc-600 shrink-0">|</span>
+          <span className="shrink-0 flex items-center gap-1.5">
+            <span className="text-zinc-400">Kháng cự:</span>
+            <span className="px-1.5 py-0.5 rounded bg-lime-500/15 text-lime-400 font-bold border border-lime-500/30">
+              {trendlineProData.resistance.toFixed(2)}
+            </span>
+          </span>
+          <span className="shrink-0 flex items-center gap-1.5">
+            <span className="text-zinc-400">Hỗ trợ:</span>
+            <span className="px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-400 font-bold border border-rose-500/30">
+              {trendlineProData.support.toFixed(2)}
+            </span>
+          </span>
+          <span className="shrink-0 flex items-center gap-1.5">
+            <span className="text-zinc-400">Fib 0,618:</span>
+            <span className="px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-300 font-bold border border-amber-500/30">
+              {trendlineProData.fib0618.toFixed(2)}
+            </span>
+          </span>
+          <span className="shrink-0 flex items-center gap-1.5">
+            <span className="text-zinc-400">Fib 1,618:</span>
+            <span className="px-1.5 py-0.5 rounded bg-cyan-500/15 text-cyan-300 font-bold border border-cyan-500/30">
+              {trendlineProData.fib1618.toFixed(2)}
+            </span>
+          </span>
+        </div>
+      )}
+
       {/* ── Main Chart Body with Left Drawing Toolbar ─────────────── */}
       <div className={`w-full flex-1 flex relative bg-zinc-950 overflow-hidden ${
-        isExpanded ? 'h-[calc(100vh-65px)] min-h-0' : 'h-[420px] lg:h-[440px] min-h-[360px]'
+        isExpanded ? 'h-[calc(100vh-100px)] min-h-0' : 'h-[420px] lg:h-[440px] min-h-[360px]'
       }`}>
         {/* Left Vertical Drawing Toolbar (TradingView Style) */}
         <div className="flex flex-col items-center gap-1 py-2 px-1 bg-zinc-950 border-r border-zinc-800/70 z-30 shrink-0">

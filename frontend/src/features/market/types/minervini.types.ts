@@ -4,6 +4,23 @@ export interface MinerviniCriterion {
   description: string;
   passed: boolean;
   value: string;
+  comparisonValue?: string;
+}
+
+export interface WyckoffCriterion {
+  id: number;
+  label: string;
+  passed: boolean;
+  value: string;
+}
+
+export interface WyckoffDiagnosis {
+  phase: 'Phase A' | 'Phase B' | 'Phase C' | 'Phase D' | 'Phase E';
+  phaseName: string;
+  passedCount: number;
+  totalCount: number;
+  actionAdvice: string;
+  criteria: WyckoffCriterion[];
 }
 
 export interface MinerviniStrategySignal {
@@ -44,6 +61,7 @@ export interface MinerviniAnalysisResult {
   isStage2Eligible: boolean;
   criteria: MinerviniCriterion[];
   signals: MinerviniStrategySignal[];
+  wyckoff?: WyckoffDiagnosis;
 }
 
 export interface MinerviniScreenerItem {
