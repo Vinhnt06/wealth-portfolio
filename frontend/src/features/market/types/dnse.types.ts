@@ -45,15 +45,20 @@ export interface OHLCCandle {
 export interface MarketIndexData {
   symbol: string; // VNINDEX, VN30, HNX, UPCOM
   name: string;
+  exchange?: string;
   value: number;
   change: number;
   changePercent: number;
+  open?: number;
+  high?: number;
+  low?: number;
   totalVolume: number;
   totalValue: number;
   advances: number;
   declines: number;
   noChanges: number;
   timestamp: number;
+  sparkline?: number[];
 }
 
 export interface ForeignInvestorData {

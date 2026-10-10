@@ -12,15 +12,13 @@ import {
   Time
 } from 'lightweight-charts';
 import { TrendUp, ChartLine, Eye, EyeSlash, ArrowsOutSimple, SquaresFour, ArrowsOut, ArrowsIn } from '@phosphor-icons/react';
-import vnindexHistory from '../data/vnindexHistory.json';
-import realIndexesData from '../data/realIndexes.json';
 import { useMarketStore } from '../store/marketStore';
 
-const INDEX_CONFIG: Record<string, { name: string; exchange: string; scale: number; baseVal: number }> = {
-  VNINDEX: { name: 'VN-INDEX', exchange: 'HOSE', scale: 1.0, baseVal: 1735.09 },
-  VN30: { name: 'VN30-INDEX', exchange: 'HOSE', scale: 1.07973, baseVal: 1873.43 },
-  HNX: { name: 'HNX-INDEX', exchange: 'HNX', scale: 0.15077, baseVal: 261.60 },
-  UPCOM: { name: 'UPCOM-INDEX', exchange: 'UPCOM', scale: 0.05672, baseVal: 98.42 },
+const INDEX_CONFIG: Record<string, { name: string; exchange: string }> = {
+  VNINDEX: { name: 'VN-INDEX', exchange: 'HOSE' },
+  VN30: { name: 'VN30-INDEX', exchange: 'HOSE' },
+  HNX: { name: 'HNX-INDEX', exchange: 'HNX' },
+  UPCOM: { name: 'UPCOM-INDEX', exchange: 'UPCOM' },
 };
 
 export const MarketIndexChart: React.FC = () => {
@@ -32,9 +30,9 @@ export const MarketIndexChart: React.FC = () => {
   const activeIndexKey = INDEX_CONFIG[selectedIndexSymbol] ? selectedIndexSymbol : 'VNINDEX';
   const activeCfg = INDEX_CONFIG[activeIndexKey];
   const liveIndex = indexes[activeIndexKey];
-  const currentVal = liveIndex?.value ?? activeCfg.baseVal;
-  const currentChg = liveIndex?.change ?? (activeIndexKey === 'VNINDEX' ? -3.88 : activeIndexKey === 'VN30' ? -3.57 : 1.15);
-  const currentPct = liveIndex?.changePercent ?? (activeIndexKey === 'VNINDEX' ? -0.22 : activeIndexKey === 'VN30' ? -0.19 : 0.44);
+  const currentVal = liveIndex?.value ?? 0;
+  const currentChg = liveIndex?.change ?? 0;
+  const currentPct = liveIndex?.changePercent ?? 0;
 
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
@@ -203,52 +201,62 @@ export const MarketIndexChart: React.FC = () => {
     });
     ma50SeriesRef.current = ma50Series;
 
-    // Filter historical candles according to timeframe
-    const historyData = vnindexHistory as any[];
-    let sliceCount = historyData.length;
-    if (timeframe === '3M') sliceCount = 65;
-    else if (timeframe === '6M') sliceCount = 130;
-    else if (timeframe === '1Y') sliceCount = 250;
+    let isMounted = true;
+    const fetchRealCandles = async () => {
+      try {
+        const days = timeframe === '3M' ? 90 : timeframe === '6M' ? 180 : timeframe === '1Y' ? 365 : 1825;
+        const res = await fetch(`/api/market/history?symbol=${activeIndexKey}&resolution=1D&days=${days}`);
+        const json = await res.json();
+        if (!isMounted || !json.success || !Array.isArray(json.data) || json.data.length === 0) return;
 
-    const activeHistory = historyData.slice(-sliceCount);
+        const rawData = json.data;
+        const candles = rawData.map((item: any) => {
+          const d = new Date(item.time * 1000);
+          const timeStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+          return {
+            time: timeStr as Time,
+            open: item.open,
+            high: item.high,
+            low: item.low,
+            close: item.close,
+          };
+        });
 
-    const candles = activeHistory.map((item) => ({
-      time: item.time as Time,
-      open: Math.round(item.open * activeCfg.scale * 100) / 100,
-      high: Math.round(item.high * activeCfg.scale * 100) / 100,
-      low: Math.round(item.low * activeCfg.scale * 100) / 100,
-      close: Math.round(item.close * activeCfg.scale * 100) / 100,
-    }));
+        const volumes = rawData.map((item: any) => {
+          const d = new Date(item.time * 1000);
+          const timeStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+          return {
+            time: timeStr as Time,
+            value: item.volume || 0,
+            color: item.close >= item.open ? 'rgba(16, 185, 129, 0.35)' : 'rgba(244, 63, 94, 0.35)',
+          };
+        });
 
-    const volumes = activeHistory.map((item) => {
-      let pseudoVol = Math.floor((650000000 + Math.sin(item.close) * 150000000) * activeCfg.scale);
-      return {
-        time: item.time as Time,
-        value: Math.abs(pseudoVol),
-        color: item.close >= item.open ? 'rgba(16, 185, 129, 0.35)' : 'rgba(244, 63, 94, 0.35)',
-      };
-    });
+        const ma20: { time: Time; value: number }[] = [];
+        const ma50: { time: Time; value: number }[] = [];
 
-    const ma20: { time: Time; value: number }[] = [];
-    const ma50: { time: Time; value: number }[] = [];
+        for (let i = 0; i < candles.length; i++) {
+          if (i >= 19) {
+            const sum20 = candles.slice(i - 19, i + 1).reduce((acc: number, c: any) => acc + c.close, 0);
+            ma20.push({ time: candles[i].time, value: Math.round((sum20 / 20) * 100) / 100 });
+          }
+          if (i >= 49) {
+            const sum50 = candles.slice(i - 49, i + 1).reduce((acc: number, c: any) => acc + c.close, 0);
+            ma50.push({ time: candles[i].time, value: Math.round((sum50 / 50) * 100) / 100 });
+          }
+        }
 
-    for (let i = 0; i < candles.length; i++) {
-      if (i >= 19) {
-        const sum20 = candles.slice(i - 19, i + 1).reduce((acc, c) => acc + c.close, 0);
-        ma20.push({ time: candles[i].time, value: Math.round((sum20 / 20) * 100) / 100 });
+        candleSeries.setData(candles);
+        volumeSeries.setData(volumes);
+        if (showMA20) ma20Series.setData(ma20);
+        if (showMA50) ma50Series.setData(ma50);
+        chart.timeScale().fitContent();
+      } catch (err) {
+        console.error('Failed to load real index candles:', err);
       }
-      if (i >= 49) {
-        const sum50 = candles.slice(i - 49, i + 1).reduce((acc, c) => acc + c.close, 0);
-        ma50.push({ time: candles[i].time, value: Math.round((sum50 / 50) * 100) / 100 });
-      }
-    }
+    };
 
-    candleSeries.setData(candles);
-    volumeSeries.setData(volumes);
-    if (showMA20) ma20Series.setData(ma20);
-    if (showMA50) ma50Series.setData(ma50);
-
-    chart.timeScale().fitContent();
+    fetchRealCandles();
 
     chart.subscribeCrosshairMove((param) => {
       if (!param.time || !param.seriesData) {

@@ -1,60 +1,54 @@
 'use client';
 
-import React, { useEffect } from 'react';
-import { TrendUp, TrendDown, Minus } from '@phosphor-icons/react';
+import React, { useEffect, useState } from 'react';
+import { TrendUp, TrendDown } from '@phosphor-icons/react';
 import { useMarketStore } from '../store/marketStore';
-import realIndexesData from '../data/realIndexes.json';
+import { MarketIndexData } from '../types/dnse.types';
 
-interface IndexInfo {
-  symbol: string;
-  name: string;
-  exchange: string;
-  value: number;
-  change: number;
-  percentChange: number;
-  advances: number;
-  declines: number;
-  noChanges: number;
-  totalVolume: string;
-  totalValue: string;
-}
-
-const REAL_INDEX_DATA: IndexInfo[] = realIndexesData as IndexInfo[];
+const DEFAULT_INDEX_CONFIG: { symbol: string; name: string; exchange: string }[] = [
+  { symbol: 'VNINDEX', name: 'VN-Index', exchange: 'HOSE' },
+  { symbol: 'VN30', name: 'VN30-Index', exchange: 'HOSE' },
+  { symbol: 'HNX', name: 'HNX-Index', exchange: 'HNX' },
+  { symbol: 'UPCOM', name: 'UPCOM-Index', exchange: 'UPCOM' },
+];
 
 export const IndexBanner: React.FC = () => {
   const { indexes, selectedIndexSymbol, setSelectedIndexSymbol, updateIndex } = useMarketStore();
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Initial and periodic fetch of latest live index data from DNSE via API route
+  // Periodic fetch of latest live index data from DNSE Lightspeed REST API
   useEffect(() => {
     let isMounted = true;
     const fetchIndexes = async () => {
-      const symbols = ['VNINDEX', 'VN30', 'HNX', 'UPCOM'];
-      await Promise.allSettled(
-        symbols.map(async (sym) => {
-          try {
-            const res = await fetch(`/api/market/quote?symbol=${sym}`);
-            const json = await res.json();
-            if (isMounted && json.success && json.data) {
-              const d = json.data;
-              updateIndex({
-                symbol: sym,
-                name: sym === 'VNINDEX' ? 'VN-Index' : sym === 'VN30' ? 'VN30-Index' : sym === 'HNX' ? 'HNX-Index' : 'UPCOM-Index',
-                value: d.price,
-                change: d.change,
-                changePercent: d.changePercent,
-                totalVolume: d.volume,
-                totalValue: d.totalValue || 0,
-                advances: 0,
-                declines: 0,
-                noChanges: 0,
-                timestamp: d.timestamp,
-              });
-            }
-          } catch {
-            // fallback gracefully to realIndexes.json
-          }
-        })
-      );
+      try {
+        const res = await fetch('/api/market/quotes');
+        const json = await res.json();
+        if (isMounted && json.success && Array.isArray(json.indexes)) {
+          json.indexes.forEach((idx: MarketIndexData) => {
+            updateIndex({
+              symbol: idx.symbol,
+              name: idx.name,
+              exchange: idx.exchange,
+              value: idx.value,
+              change: idx.change,
+              changePercent: (idx as any).percentChange ?? idx.changePercent ?? 0,
+              open: idx.open,
+              high: idx.high,
+              low: idx.low,
+              totalVolume: (idx as any).volume ?? idx.totalVolume ?? 0,
+              totalValue: idx.totalValue || 0,
+              advances: 0,
+              declines: 0,
+              noChanges: 0,
+              timestamp: Date.now(),
+              sparkline: idx.sparkline || [],
+            });
+          });
+          setIsLoading(false);
+        }
+      } catch {
+        // network issue - state preserved
+      }
     };
 
     fetchIndexes();
@@ -65,17 +59,18 @@ export const IndexBanner: React.FC = () => {
     };
   }, [updateIndex]);
 
-  // Deterministic sparkline points for realistic intraday trajectory
-  const getSparklinePath = (item: IndexInfo, isPositive: boolean) => {
-    // Generate 12 sample intraday points
-    const factors = isPositive
-      ? [-0.3, -0.1, -0.4, 0.1, 0.2, -0.05, 0.4, 0.35, 0.6, 0.5, 0.8, 1.0]
-      : [0.2, 0.3, 0.1, -0.2, -0.1, -0.4, -0.3, -0.6, -0.5, -0.8, -0.7, -1.0];
-    
-    const pts = factors.map((f, i) => {
-      const x = (i / (factors.length - 1)) * 120;
-      // map to height 36px, middle is 18px
-      const y = Math.max(2, Math.min(34, 18 - (f * 12)));
+  // Generate SVG path from real price points
+  const getRealSparklinePath = (points?: number[]) => {
+    if (!points || points.length < 2) {
+      return { pathD: 'M 0 18 L 120 18', areaD: 'M 0 18 L 120 18 L 120 36 L 0 36 Z' };
+    }
+    const min = Math.min(...points);
+    const max = Math.max(...points);
+    const range = max - min || 1;
+    const pts = points.map((val, idx) => {
+      const x = (idx / (points.length - 1)) * 120;
+      // map to height 34px, with 4px padding
+      const y = 30 - ((val - min) / range) * 24;
       return { x, y };
     });
 
@@ -86,34 +81,32 @@ export const IndexBanner: React.FC = () => {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      {REAL_INDEX_DATA.map((item) => {
-        const liveIndex = indexes[item.symbol];
-        const val = liveIndex?.value ?? item.value;
-        const chg = liveIndex?.change ?? item.change;
-        const pct = liveIndex?.changePercent ?? item.percentChange;
+      {DEFAULT_INDEX_CONFIG.map((cfg) => {
+        const liveIndex = indexes[cfg.symbol];
+        const val = liveIndex?.value;
+        const chg = liveIndex?.change ?? 0;
+        const pct = liveIndex?.changePercent ?? 0;
+        const open = liveIndex?.open;
+        const high = liveIndex?.high;
+        const low = liveIndex?.low;
+        const volume = liveIndex?.totalVolume ?? 0;
+        const sparkline = liveIndex?.sparkline;
 
         const isPositive = chg >= 0;
-        const isSelected = selectedIndexSymbol === item.symbol;
-        const advances = (liveIndex && liveIndex.advances > 0) ? liveIndex.advances : item.advances;
-        const declines = (liveIndex && liveIndex.declines > 0) ? liveIndex.declines : item.declines;
-        const noChanges = (liveIndex && liveIndex.noChanges > 0) ? liveIndex.noChanges : item.noChanges;
-        const totalCount = advances + declines + noChanges;
-        const advPct = (advances / totalCount) * 100;
-        const decPct = (declines / totalCount) * 100;
-        const ncPct = (noChanges / totalCount) * 100;
-
-        let displayTotalVal = item.totalValue;
-        if (liveIndex?.totalValue && liveIndex.totalValue > 0) {
-          displayTotalVal = `${(liveIndex.totalValue / 1e9).toLocaleString('en-US', { maximumFractionDigits: 0 })} Tỷ`;
-        }
-
-        const { pathD, areaD } = getSparklinePath(item, isPositive);
+        const isSelected = selectedIndexSymbol === cfg.symbol;
+        const { pathD, areaD } = getRealSparklinePath(sparkline);
         const strokeColor = isPositive ? '#10b981' : '#f43f5e';
+
+        // Calculate progress percentage of current value in day's High-Low range
+        let rangePct = 50;
+        if (high && low && high > low && val) {
+          rangePct = Math.min(100, Math.max(0, ((val - low) / (high - low)) * 100));
+        }
 
         return (
           <div
-            key={item.symbol}
-            onClick={() => setSelectedIndexSymbol(item.symbol)}
+            key={cfg.symbol}
+            onClick={() => setSelectedIndexSymbol(cfg.symbol)}
             className={`p-4 rounded-2xl transition-all duration-200 cursor-pointer group relative overflow-hidden backdrop-blur-md ${
               isSelected
                 ? 'bg-zinc-900/95 border-2 border-emerald-500/70 shadow-[0_0_25px_rgba(16,185,129,0.2)] ring-1 ring-emerald-500/30'
@@ -131,10 +124,10 @@ export const IndexBanner: React.FC = () => {
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <span className="font-mono font-bold text-sm text-zinc-100 tracking-wide group-hover:text-emerald-400 transition-colors">
-                  {item.name}
+                  {cfg.name}
                 </span>
                 <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 border border-zinc-700/50">
-                  {item.exchange}
+                  {cfg.exchange}
                 </span>
               </div>
               <div
@@ -153,51 +146,58 @@ export const IndexBanner: React.FC = () => {
               </div>
             </div>
 
-            {/* Main Value + Sparkline Mini Chart */}
+            {/* Main Value + Real Sparkline Chart */}
             <div className="flex items-center justify-between gap-3 mb-3">
               <div>
                 <div className="flex items-baseline gap-1.5">
                   <span className="font-mono font-black text-2xl tracking-tight text-zinc-100">
-                    {val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    {val ? val.toLocaleString('vi-VN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '--'}
                   </span>
                 </div>
-                <span className="text-[10px] font-mono text-zinc-500">
-                  GTGD: <span className="text-zinc-300 font-semibold">{displayTotalVal}</span>
-                </span>
+                <div className="text-[10px] font-mono text-zinc-400 mt-0.5">
+                  KL: <span className="text-cyan-400 font-semibold">{volume > 0 ? `${(volume / 1_000_000).toFixed(2)}M cp` : '--'}</span>
+                </div>
               </div>
 
-              {/* Sparkline Canvas */}
-              <div className="w-[110px] h-[34px] shrink-0">
+              {/* Sparkline Canvas from Real Historical DNSE Candles */}
+              <div className="w-[110px] h-[34px] shrink-0" title="Đường giá 15 phiên gần nhất (Real DNSE Data)">
                 <svg viewBox="0 0 120 36" className="w-full h-full overflow-visible">
                   <defs>
-                    <linearGradient id={`grad-${item.symbol}`} x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={strokeColor} stopOpacity="0.4" />
+                    <linearGradient id={`grad-${cfg.symbol}`} x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={strokeColor} stopOpacity="0.35" />
                       <stop offset="100%" stopColor={strokeColor} stopOpacity="0.0" />
                     </linearGradient>
                   </defs>
-                  <path d={areaD} fill={`url(#grad-${item.symbol})`} />
+                  <path d={areaD} fill={`url(#grad-${cfg.symbol})`} />
                   <path d={pathD} fill="none" stroke={strokeColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </div>
             </div>
 
-            {/* Advance / Decline Progress Bar */}
-            <div className="space-y-1">
-              <div className="flex h-1.5 w-full rounded-full overflow-hidden bg-zinc-800">
-                <div style={{ width: `${advPct}%` }} className="bg-emerald-500 transition-all duration-300" title={`Tăng: ${advances}`} />
-                <div style={{ width: `${ncPct}%` }} className="bg-amber-400 transition-all duration-300" title={`TC: ${noChanges}`} />
-                <div style={{ width: `${decPct}%` }} className="bg-rose-500 transition-all duration-300" title={`Giảm: ${declines}`} />
+            {/* Real Intraday Range Corridor (Low - High) */}
+            <div className="space-y-1.5 pt-2 border-t border-zinc-800/60">
+              <div className="flex justify-between items-center text-[10px] font-mono">
+                <span className="text-zinc-500">
+                  Đáy: <strong className="text-rose-400 font-bold">{low ? low.toFixed(2) : '--'}</strong>
+                </span>
+                <span className="text-zinc-500">
+                  Mở: <strong className="text-zinc-300 font-semibold">{open ? open.toFixed(2) : '--'}</strong>
+                </span>
+                <span className="text-zinc-500">
+                  Đỉnh: <strong className="text-emerald-400 font-bold">{high ? high.toFixed(2) : '--'}</strong>
+                </span>
               </div>
 
-              <div className="flex justify-between items-center text-[10px] font-mono text-zinc-400">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-emerald-400 font-semibold">{advances}↑</span>
-                  <span className="text-amber-400 font-semibold">{noChanges}—</span>
-                  <span className="text-rose-400 font-semibold">{declines}↓</span>
-                </div>
-                <span className="text-[9px] text-zinc-500 font-sans">
-                  {isSelected ? 'Đang chọn' : 'Bấm để xem'}
-                </span>
+              <div className="h-1.5 w-full rounded-full bg-zinc-800/90 overflow-hidden relative" title={`Biên độ phiên: ${low || '--'} - ${high || '--'}`}>
+                <div
+                  className={`h-full rounded-full transition-all duration-300 ${isPositive ? 'bg-emerald-500' : 'bg-rose-500'}`}
+                  style={{ width: `${rangePct}%` }}
+                />
+              </div>
+
+              <div className="flex justify-between items-center text-[9px] font-mono text-zinc-500 pt-0.5">
+                <span className="text-emerald-400/90 font-medium">DNSE Lightspeed Live</span>
+                <span className="font-sans text-zinc-400">{isSelected ? 'Đang chọn' : 'Bấm để xem'}</span>
               </div>
             </div>
           </div>

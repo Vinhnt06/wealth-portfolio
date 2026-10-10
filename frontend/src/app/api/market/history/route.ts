@@ -55,7 +55,9 @@ export async function GET(request: Request) {
   }
 
   try {
-    const url = `https://services.entrade.com.vn/chart-api/v2/ohlcs/stock?from=${fromSec}&to=${nowSec}&symbol=${encodeURIComponent(
+    const isIndex = ['VNINDEX', 'VN30', 'HNX', 'HNX30', 'UPCOM'].includes(symbol);
+    const endpointType = isIndex ? 'index' : 'stock';
+    const url = `https://services.entrade.com.vn/chart-api/v2/ohlcs/${endpointType}?from=${fromSec}&to=${nowSec}&symbol=${encodeURIComponent(
       symbol
     )}&resolution=${dnseRes}`;
 
