@@ -217,10 +217,38 @@ export function MarketCandleChart() {
       .catch(() => {});
   }, [selectedSymbol]);
 
-  // Keyboard shortcut listener: Esc cancels current drawing
+  // Listen to browser fullscreen change events
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const isFs = Boolean(document.fullscreenElement);
+      setIsExpanded(isFs);
+      setTimeout(() => {
+        if (chartRef.current && chartContainerRef.current) {
+          chartRef.current.applyOptions({
+            width: chartContainerRef.current.clientWidth,
+            height: chartContainerRef.current.clientHeight,
+          });
+          chartRef.current.timeScale().fitContent();
+          updateCanvasSize();
+        }
+      }, 100);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+    };
+  }, []);
+
+  // Keyboard shortcut listener: Esc cancels current drawing or exits fullscreen
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
+        if (document.fullscreenElement) {
+          document.exitFullscreen().catch(() => {});
+        }
         setIsExpanded(false);
         setDraftDrawing(null);
         setActiveTool('cursor');
@@ -787,8 +815,29 @@ export function MarketCandleChart() {
     }
   };
 
-  // Fullscreen / Expand Handler
-  const toggleFullscreen = () => {
+  // Fullscreen / True Expand Handler
+  const toggleFullscreen = async () => {
+    const el = fullWrapperRef.current;
+    if (!el) return;
+
+    try {
+      if (!document.fullscreenElement) {
+        if (el.requestFullscreen) {
+          await el.requestFullscreen();
+        } else if ((el as any).webkitRequestFullscreen) {
+          await (el as any).webkitRequestFullscreen();
+        }
+      } else {
+        if (document.exitFullscreen) {
+          await document.exitFullscreen();
+        } else if ((document as any).webkitExitFullscreen) {
+          await (document as any).webkitExitFullscreen();
+        }
+      }
+    } catch {
+      // Fallback to pure CSS viewport fullscreen
+    }
+
     setIsExpanded((prev) => {
       const next = !prev;
       setTimeout(() => {
@@ -800,7 +849,7 @@ export function MarketCandleChart() {
           chartRef.current.timeScale().fitContent();
           updateCanvasSize();
         }
-      }, 80);
+      }, 100);
       return next;
     });
   };
@@ -935,10 +984,10 @@ export function MarketCandleChart() {
   return (
     <div
       ref={fullWrapperRef}
-      className={`bg-zinc-950 border border-zinc-800/80 flex flex-col relative select-none transition-all duration-200 ${
+      className={`border border-zinc-800/80 flex flex-col relative select-none transition-all duration-200 ${
         isExpanded
-          ? 'fixed inset-0 z-[100] w-screen h-screen rounded-none p-2 sm:p-3 shadow-2xl'
-          : 'w-full h-[480px] lg:h-[500px] rounded-2xl shadow-xl overflow-hidden'
+          ? 'fixed inset-0 z-[99999] w-screen h-screen rounded-none p-2 sm:p-3 shadow-2xl !bg-zinc-950'
+          : 'bg-zinc-950 w-full h-[480px] lg:h-[500px] rounded-2xl shadow-xl overflow-hidden'
       }`}
     >
       {/* ── TradingView-Style Top Navigation & Header Bar ────────── */}
@@ -1122,7 +1171,7 @@ export function MarketCandleChart() {
 
           <button
             onClick={() => chartRef.current?.timeScale().fitContent()}
-            title="Căn chỉnh toàn bộ (Fit Content)"
+            title="Căn chỉnh dữ liệu nến vừa khung (Fit Content)"
             className="p-1.5 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900 rounded-lg"
           >
             <ArrowsOutSimple size={14} />
@@ -1130,10 +1179,10 @@ export function MarketCandleChart() {
 
           <button
             onClick={toggleFullscreen}
-            title={isExpanded ? 'Thu nhỏ biểu đồ (Esc)' : 'Phóng to toàn màn hình'}
+            title={isExpanded ? 'Thu nhỏ biểu đồ (Esc)' : 'Phóng to toàn bộ màn hình (Fullscreen)'}
             className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-semibold transition-all ${
               isExpanded
-                ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20'
+                ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20 font-bold'
                 : 'bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-emerald-400 hover:border-emerald-500/40'
             }`}
           >
@@ -1145,7 +1194,7 @@ export function MarketCandleChart() {
             ) : (
               <>
                 <ArrowsOut size={14} weight="bold" />
-                <span className="hidden sm:inline">Phóng to</span>
+                <span className="hidden sm:inline">Toàn màn hình</span>
               </>
             )}
           </button>
@@ -1154,7 +1203,7 @@ export function MarketCandleChart() {
 
       {/* ── Main Chart Body with Left Drawing Toolbar ─────────────── */}
       <div className={`w-full flex-1 flex relative bg-zinc-950 overflow-hidden ${
-        isExpanded ? 'h-full min-h-0' : 'h-[420px] lg:h-[440px] min-h-[360px]'
+        isExpanded ? 'h-[calc(100vh-65px)] min-h-0' : 'h-[420px] lg:h-[440px] min-h-[360px]'
       }`}>
         {/* Left Vertical Drawing Toolbar (TradingView Style) */}
         <div className="flex flex-col items-center gap-1 py-2 px-1 bg-zinc-950 border-r border-zinc-800/70 z-30 shrink-0">

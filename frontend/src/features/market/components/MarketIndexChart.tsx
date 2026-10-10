@@ -11,7 +11,7 @@ import {
   ISeriesApi,
   Time
 } from 'lightweight-charts';
-import { TrendUp, ChartLine, Eye, EyeSlash, ArrowsOutSimple, SquaresFour } from '@phosphor-icons/react';
+import { TrendUp, ChartLine, Eye, EyeSlash, ArrowsOutSimple, SquaresFour, ArrowsOut, ArrowsIn } from '@phosphor-icons/react';
 import vnindexHistory from '../data/vnindexHistory.json';
 import realIndexesData from '../data/realIndexes.json';
 import { useMarketStore } from '../store/marketStore';
@@ -26,6 +26,8 @@ const INDEX_CONFIG: Record<string, { name: string; exchange: string; scale: numb
 export const MarketIndexChart: React.FC = () => {
   const { selectedIndexSymbol, setSelectedIndexSymbol, indexes } = useMarketStore();
   const [viewGridMode, setViewGridMode] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const fullWrapperRef = useRef<HTMLDivElement>(null);
 
   const activeIndexKey = INDEX_CONFIG[selectedIndexSymbol] ? selectedIndexSymbol : 'VNINDEX';
   const activeCfg = INDEX_CONFIG[activeIndexKey];
@@ -51,6 +53,89 @@ export const MarketIndexChart: React.FC = () => {
     close?: number;
     changePct?: number;
   } | null>(null);
+
+  // Fullscreen / True Expand Handler
+  const toggleFullscreen = async () => {
+    const el = fullWrapperRef.current;
+    if (!el) return;
+
+    try {
+      if (!document.fullscreenElement) {
+        if (el.requestFullscreen) {
+          await el.requestFullscreen();
+        } else if ((el as any).webkitRequestFullscreen) {
+          await (el as any).webkitRequestFullscreen();
+        }
+      } else {
+        if (document.exitFullscreen) {
+          await document.exitFullscreen();
+        } else if ((document as any).webkitExitFullscreen) {
+          await (document as any).webkitExitFullscreen();
+        }
+      }
+    } catch {
+      // Fallback
+    }
+
+    setIsExpanded((prev) => {
+      const next = !prev;
+      setTimeout(() => {
+        if (chartRef.current && chartContainerRef.current) {
+          chartRef.current.applyOptions({
+            width: chartContainerRef.current.clientWidth,
+            height: chartContainerRef.current.clientHeight,
+          });
+          chartRef.current.timeScale().fitContent();
+        }
+      }, 100);
+      return next;
+    });
+  };
+
+  // Sync fullscreen change & Esc key
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const isFs = Boolean(document.fullscreenElement);
+      setIsExpanded(isFs);
+      setTimeout(() => {
+        if (chartRef.current && chartContainerRef.current) {
+          chartRef.current.applyOptions({
+            width: chartContainerRef.current.clientWidth,
+            height: chartContainerRef.current.clientHeight,
+          });
+          chartRef.current.timeScale().fitContent();
+        }
+      }, 100);
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (document.fullscreenElement) {
+          document.exitFullscreen().catch(() => {});
+        }
+        setIsExpanded(false);
+        setTimeout(() => {
+          if (chartRef.current && chartContainerRef.current) {
+            chartRef.current.applyOptions({
+              width: chartContainerRef.current.clientWidth,
+              height: chartContainerRef.current.clientHeight,
+            });
+            chartRef.current.timeScale().fitContent();
+          }
+        }, 100);
+      }
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
 
   useEffect(() => {
     if (!chartContainerRef.current) return;
@@ -186,7 +271,10 @@ export const MarketIndexChart: React.FC = () => {
 
     const handleResize = () => {
       if (container && chart) {
-        chart.applyOptions({ width: container.clientWidth });
+        chart.applyOptions({
+          width: container.clientWidth,
+          height: container.clientHeight,
+        });
       }
     };
 
@@ -201,7 +289,14 @@ export const MarketIndexChart: React.FC = () => {
   const isPositive = currentChg >= 0;
 
   return (
-    <div className="bg-zinc-950/90 border border-zinc-800/80 rounded-2xl p-4 sm:p-5 shadow-2xl backdrop-blur-xl relative overflow-hidden">
+    <div
+      ref={fullWrapperRef}
+      className={`border border-zinc-800/80 shadow-2xl backdrop-blur-xl relative overflow-hidden transition-all duration-200 flex flex-col ${
+        isExpanded
+          ? 'fixed inset-0 z-[99999] w-screen h-screen rounded-none p-4 !bg-zinc-950 justify-between'
+          : 'bg-zinc-950/90 rounded-2xl p-4 sm:p-5'
+      }`}
+    >
       {/* Chart Control Ribbon Header */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-800/80 pb-3 mb-3">
         {/* Index Selector Tabs */}
@@ -241,7 +336,7 @@ export const MarketIndexChart: React.FC = () => {
           </div>
         </div>
 
-        {/* Indicator toggles & Timeframe selector */}
+        {/* Indicator toggles, Timeframe selector & Fullscreen Button */}
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex items-center gap-1 bg-zinc-900/80 p-1 rounded-xl border border-zinc-800">
             <button
@@ -283,9 +378,31 @@ export const MarketIndexChart: React.FC = () => {
           <button
             onClick={() => chartRef.current?.timeScale().fitContent()}
             className="p-1.5 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded-xl border border-zinc-800"
-            title="Căn chỉnh toàn màn hình"
+            title="Căn chỉnh dữ liệu nến vừa khung (Fit Content)"
           >
             <ArrowsOutSimple size={14} />
+          </button>
+
+          <button
+            onClick={toggleFullscreen}
+            title={isExpanded ? 'Thu nhỏ biểu đồ (Esc)' : 'Phóng to toàn bộ màn hình'}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-mono font-semibold transition-all ${
+              isExpanded
+                ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20 font-bold'
+                : 'bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-emerald-400 hover:border-emerald-500/40'
+            }`}
+          >
+            {isExpanded ? (
+              <>
+                <ArrowsIn size={14} weight="bold" />
+                <span>Thu nhỏ</span>
+              </>
+            ) : (
+              <>
+                <ArrowsOut size={14} weight="bold" />
+                <span className="hidden sm:inline">Toàn màn hình</span>
+              </>
+            )}
           </button>
         </div>
       </div>
@@ -305,9 +422,11 @@ export const MarketIndexChart: React.FC = () => {
         </div>
       )}
 
-      {/* Main Chart Canvas (Fixed Full-Height, Never Collapsed) */}
-      <div className="w-full h-[420px] min-h-[420px] rounded-xl overflow-hidden">
-        <div ref={chartContainerRef} className="w-full h-full min-h-[420px]" />
+      {/* Main Chart Canvas (Fixed Full-Height or Full-Screen) */}
+      <div className={`w-full rounded-xl overflow-hidden flex-1 ${
+        isExpanded ? 'h-[calc(100vh-140px)] min-h-0' : 'h-[420px] min-h-[420px]'
+      }`}>
+        <div ref={chartContainerRef} className="w-full h-full min-h-0" />
       </div>
     </div>
   );
