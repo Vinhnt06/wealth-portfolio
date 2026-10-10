@@ -1437,30 +1437,16 @@ export function MarketCandleChart() {
             ctx.fillStyle = item.color || '#06b6d4';
             ctx.fill();
 
-            // 2 điểm chốt tròn c1, c2 kèm nhãn số 1, 2
-            [
-              { pt: c1, tag: '1' },
-              { pt: c2, tag: '2' },
-            ].forEach(({ pt, tag }) => {
+            // 2 điểm chốt tròn c1, c2
+            [c1, c2].forEach((pt) => {
               if (pt.x !== null && pt.y !== null) {
                 ctx.beginPath();
-                ctx.arc(pt.x, pt.y, 4.5, 0, Math.PI * 2);
+                ctx.arc(pt.x, pt.y, 4, 0, Math.PI * 2);
                 ctx.fillStyle = '#ffffff';
                 ctx.fill();
                 ctx.strokeStyle = item.color || '#06b6d4';
                 ctx.lineWidth = 2;
                 ctx.stroke();
-
-                ctx.fillStyle = 'rgba(9, 9, 11, 0.85)';
-                ctx.fillRect(pt.x - 7, pt.y - 19, 14, 13);
-                ctx.strokeStyle = item.color || '#06b6d4';
-                ctx.lineWidth = 1;
-                ctx.strokeRect(pt.x - 7, pt.y - 19, 14, 13);
-                ctx.fillStyle = '#e4e4e7';
-                ctx.font = 'bold 9px JetBrains Mono, monospace';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(tag, pt.x, pt.y - 12);
               }
             });
             ctx.restore();
@@ -1476,25 +1462,14 @@ export function MarketCandleChart() {
               ctx.lineTo(c3.x, c3.y);
               ctx.stroke();
 
-              // Điểm chốt tròn c3 kèm nhãn số 3
+              // Điểm chốt tròn c3
               ctx.beginPath();
-              ctx.arc(c3.x, c3.y, 4.5, 0, Math.PI * 2);
+              ctx.arc(c3.x, c3.y, 4, 0, Math.PI * 2);
               ctx.fillStyle = '#ffffff';
               ctx.fill();
               ctx.strokeStyle = '#f59e0b';
               ctx.lineWidth = 2;
               ctx.stroke();
-
-              ctx.fillStyle = 'rgba(9, 9, 11, 0.85)';
-              ctx.fillRect(c3.x - 7, c3.y - 19, 14, 13);
-              ctx.strokeStyle = '#f59e0b';
-              ctx.lineWidth = 1;
-              ctx.strokeRect(c3.x - 7, c3.y - 19, 14, 13);
-              ctx.fillStyle = '#fbbf24';
-              ctx.font = 'bold 9px JetBrains Mono, monospace';
-              ctx.textAlign = 'center';
-              ctx.textBaseline = 'middle';
-              ctx.fillText('3', c3.x, c3.y - 12);
               ctx.restore();
             }
 
@@ -4148,15 +4123,6 @@ export function MarketCandleChart() {
             {activeTool !== 'cursor' && activeTool !== 'arrow_pointer' && activeTool !== 'dot' && activeTool !== 'eraser' && (
               <div className="absolute top-3 left-4 z-30 flex items-center gap-2 px-3 py-1.5 bg-zinc-900/90 border border-emerald-500/30 rounded-xl text-[11px] font-mono text-emerald-400 backdrop-blur-md shadow-xl">
                 <span className="font-bold">{TOOL_LABELS[activeTool]}</span>
-                <span className="text-zinc-400 text-[10px]">
-                  ({!draftDrawing
-                    ? 'Nhấp điểm trên nến để bắt đầu'
-                    : draftDrawing.type === 'fib_extension'
-                    ? !draftDrawing.p3
-                      ? 'Bước 2/3: Nhấp chốt đỉnh/đáy sóng đẩy'
-                      : 'Bước 3/3: Nhấp chốt nhịp hồi để mở rộng Fibo'
-                    : 'Nhấp điểm thứ 2 để chốt'})
-                </span>
                 <button
                   onClick={() => { setDraftDrawing(null); setActiveTool('cursor'); }}
                   className="ml-1 p-0.5 hover:bg-zinc-800 rounded text-zinc-400 hover:text-zinc-200"
