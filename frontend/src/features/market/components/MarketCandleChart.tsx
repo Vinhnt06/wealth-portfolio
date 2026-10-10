@@ -655,6 +655,32 @@ export function MarketCandleChart() {
             close: last.close,
           };
 
+          // Synchronize store tick with the verified real candle close price
+          const prevCandle = uniqueCandles.length > 1 ? uniqueCandles[uniqueCandles.length - 2] : last;
+          const realCloseVnd = Math.round(last.close * 1000);
+          const realPrevVnd = Math.round(prevCandle.close * 1000);
+          const currentStoreTick = useMarketStore.getState().ticks[selectedSymbol];
+
+          // If store tick is missing, or deviates by > 15% from the actual candle (e.g. stale fallback)
+          if (!currentStoreTick || Math.abs(currentStoreTick.price - realCloseVnd) / (realCloseVnd || 1) > 0.15) {
+            useMarketStore.getState().updateTick({
+              symbol: selectedSymbol,
+              price: realCloseVnd,
+              referencePrice: realPrevVnd,
+              open: Math.round(last.open * 1000),
+              high: Math.round(last.high * 1000),
+              low: Math.round(last.low * 1000),
+              change: realCloseVnd - realPrevVnd,
+              changePercent: realPrevVnd > 0 ? Number((((realCloseVnd - realPrevVnd) / realPrevVnd) * 100).toFixed(2)) : 0,
+              volume: Math.round((uniqueVolumes[uniqueVolumes.length - 1]?.value || 100000) / 10),
+              totalVolume: Math.round(uniqueVolumes[uniqueVolumes.length - 1]?.value || 100000),
+              ceilingPrice: Math.round(realPrevVnd * 1.07),
+              floorPrice: Math.round(realPrevVnd * 0.93),
+              timestamp: Date.now(),
+              matchType: 'B',
+            });
+          }
+
           requestAnimationFrame(redrawCanvas);
         }
       })
@@ -708,6 +734,12 @@ export function MarketCandleChart() {
     const tickVol = currentTick.volume || 10000;
 
     if (lastCandleRef.current) {
+      // Guard against anomalous ticks (> 25% deviation from current candle close)
+      const currentClose = lastCandleRef.current.close;
+      if (currentClose > 0 && Math.abs(livePriceK - currentClose) / currentClose > 0.25) {
+        return; // Don't distort chart with corrupted fallback ticks
+      }
+
       const updatedHigh = Math.max(lastCandleRef.current.high, livePriceK);
       const updatedLow = Math.min(lastCandleRef.current.low, livePriceK);
       const updatedOpen = lastCandleRef.current.open;
@@ -949,15 +981,23 @@ export function MarketCandleChart() {
 
           {/* Real-time OHLC Legend */}
           <div className="hidden lg:flex items-center gap-2 font-mono text-[11px] text-zinc-400 ml-2">
-            <div>O <span className="text-zinc-200 font-bold">{hoveredData?.open ? hoveredData.open.toFixed(2) : priceDisplayK}</span></div>
-            <div>H <span className="text-emerald-400 font-bold">{hoveredData?.high ? hoveredData.high.toFixed(2) : priceDisplayK}</span></div>
-            <div>L <span className="text-rose-400 font-bold">{hoveredData?.low ? hoveredData.low.toFixed(2) : priceDisplayK}</span></div>
-            <div>C <span className="text-zinc-100 font-bold">{hoveredData?.close ? hoveredData.close.toFixed(2) : priceDisplayK}</span></div>
+            <div>O <span className="text-zinc-200 font-bold">{hoveredData?.open ? hoveredData.open.toFixed(2) : (lastCandleRef.current ? lastCandleRef.current.open.toFixed(2) : priceDisplayK)}</span></div>
+            <div>H <span className="text-emerald-400 font-bold">{hoveredData?.high ? hoveredData.high.toFixed(2) : (lastCandleRef.current ? lastCandleRef.current.high.toFixed(2) : priceDisplayK)}</span></div>
+            <div>L <span className="text-rose-400 font-bold">{hoveredData?.low ? hoveredData.low.toFixed(2) : (lastCandleRef.current ? lastCandleRef.current.low.toFixed(2) : priceDisplayK)}</span></div>
+            <div>C <span className="text-zinc-100 font-bold">{hoveredData?.close ? hoveredData.close.toFixed(2) : (lastCandleRef.current ? lastCandleRef.current.close.toFixed(2) : priceDisplayK)}</span></div>
             <div className={isPositive ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}>
-              {hoveredData?.change ? `${hoveredData.change >= 0 ? '+' : ''}${hoveredData.change.toFixed(2)} (${hoveredData.changePct?.toFixed(2)}%)` : `${isPositive ? '+' : ''}${changeK} (${isPositive ? '+' : ''}${changePct}%)`}
+              {hoveredData?.change ? (
+                `${hoveredData.change >= 0 ? '+' : ''}${hoveredData.change.toFixed(2)} (${hoveredData.changePct?.toFixed(2)}%)`
+              ) : lastCandleRef.current ? (
+                `${lastCandleRef.current.close >= lastCandleRef.current.open ? '+' : ''}${(lastCandleRef.current.close - lastCandleRef.current.open).toFixed(2)} (${(((lastCandleRef.current.close - lastCandleRef.current.open) / (lastCandleRef.current.open || 1)) * 100).toFixed(2)}%)`
+              ) : (
+                `${isPositive ? '+' : ''}${changeK} (${isPositive ? '+' : ''}${changePct}%)`
+              )}
             </div>
-            {hoveredData?.volume && (
-              <div className="text-zinc-500 ml-1">Vol: <span className="text-zinc-300 font-bold">{hoveredData.volume.toLocaleString()}</span></div>
+            {(hoveredData?.volume || lastCandleRef.current) && (
+              <div className="text-zinc-500 ml-1">
+                Vol: <span className="text-zinc-300 font-bold">{(hoveredData?.volume || (loadedCandlesRef.current.length > 0 ? (currentTick?.totalVolume || 0) : 0)).toLocaleString()}</span>
+              </div>
             )}
           </div>
         </div>

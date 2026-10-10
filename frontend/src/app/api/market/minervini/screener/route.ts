@@ -13,9 +13,9 @@ const DEFAULT_UNIVERSE = [
   'VCB', 'BID', 'CTG', 'TCB', 'MBB', 'ACB', 'VPB', 'HDB', 'STB', 'LPB', 'SHB', 'TPB', 'VIB', 'MSB', 'OCB',
   'SSI', 'VND', 'VCI', 'HCM', 'SHS', 'MBS', 'FTS', 'BSI', 'CTS', 'VIX',
   'HPG', 'HSG', 'NKG', 'VGS',
-  'VHM', 'VIC', 'VRE', 'KDH', 'NLG', 'PDR', 'DIG', 'DXG', 'CEO',
+  'VHM', 'VIC', 'VRE', 'KDH', 'NLG', 'PDR', 'DIG', 'DXG', 'CEO', 'NVL',
   'KBC', 'IDC', 'VGC', 'SZC', 'GVR', 'BCM',
-  'REE', 'PC1', 'POW', 'GEG', 'VCG', 'HHV', 'CII',
+  'REE', 'PC1', 'POW', 'GEG', 'GEE', 'VCG', 'HHV', 'CII',
   'VHC', 'ANV', 'DBC', 'HAG', 'BAF',
   'GMD', 'HAH', 'VSC', 'VTP',
   'TNG', 'MSH', 'BMP', 'NTP', 'HT1'

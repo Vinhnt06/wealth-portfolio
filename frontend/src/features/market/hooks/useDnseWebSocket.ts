@@ -223,54 +223,54 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
   // Ensure dynamically selected custom symbols fetch real quote with DNSE failover
   useEffect(() => {
     if (!selectedSymbol) return;
-    const currentStore = useMarketStore.getState();
-    if (!currentStore.ticks[selectedSymbol]) {
-      fetch(`/api/market/quote?symbol=${selectedSymbol}`)
-        .then((res) => res.json())
-        .then((resData) => {
-          if (resData.success && resData.data) {
-            const d = resData.data;
-            updateTick({
-              symbol: d.symbol,
-              price: d.price,
-              change: d.change,
-              changePercent: d.changePercent,
-              volume: Math.floor(d.volume / 10),
-              totalVolume: d.volume,
-              high: d.high,
-              low: d.low,
-              open: d.open,
-              referencePrice: d.referencePrice,
-              ceilingPrice: d.ceilingPrice,
-              floorPrice: d.floorPrice,
-              timestamp: d.timestamp,
-              matchType: 'B',
-            });
-          }
-        })
-        .catch(() => {
-          // Graceful fallback to cached snapshot
-          const real = REAL_TICKS[selectedSymbol];
-          const ref = real?.ref || real?.price || 25000;
-          const price = real?.price || ref;
+    
+    // Always fetch verified real quote from DNSE for the selected symbol
+    fetch(`/api/market/quote?symbol=${selectedSymbol}`)
+      .then((res) => res.json())
+      .then((resData) => {
+        if (resData.success && resData.data) {
+          const d = resData.data;
+          updateTick({
+            symbol: d.symbol,
+            price: d.price,
+            change: d.change,
+            changePercent: d.changePercent,
+            volume: Math.floor(d.volume / 10),
+            totalVolume: d.volume,
+            high: d.high,
+            low: d.low,
+            open: d.open,
+            referencePrice: d.referencePrice,
+            ceilingPrice: d.ceilingPrice,
+            floorPrice: d.floorPrice,
+            timestamp: d.timestamp,
+            matchType: 'B',
+          });
+        }
+      })
+      .catch(() => {
+        // Fallback to real snapshot if available
+        const real = REAL_TICKS[selectedSymbol];
+        if (real?.price) {
+          const ref = real.ref || real.price;
           updateTick({
             symbol: selectedSymbol,
-            price: price,
-            change: price - ref,
-            changePercent: ref ? ((price - ref) / ref) * 100 : 0,
+            price: real.price,
+            change: real.price - ref,
+            changePercent: ref ? ((real.price - ref) / ref) * 100 : 0,
             volume: 15000,
-            totalVolume: real?.volume || 1200000,
-            high: real?.high || Math.round(ref * 1.02),
-            low: real?.low || Math.round(ref * 0.98),
-            open: real?.open || ref,
+            totalVolume: real.volume || 1200000,
+            high: real.high || Math.round(ref * 1.02),
+            low: real.low || Math.round(ref * 0.98),
+            open: real.open || ref,
             referencePrice: ref,
             ceilingPrice: Math.round(ref * 1.07),
             floorPrice: Math.round(ref * 0.93),
             timestamp: Date.now(),
             matchType: 'B',
           });
-        });
-    }
+        }
+      });
   }, [selectedSymbol, updateTick]);
 
 

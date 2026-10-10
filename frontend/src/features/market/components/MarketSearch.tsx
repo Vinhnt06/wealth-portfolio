@@ -22,10 +22,32 @@ const REAL_TICKS_MAP = realTicksData as Record<
 export const MarketSearch: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState('');
+  const [screenerMap, setScreenerMap] = useState<Record<string, { price: number; changePercent: number; rsRating: number; volume: number }>>({});
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   
   const { setSelectedSymbol, selectedSymbol, ticks, toggleWatchlistSymbol, watchlistSymbols, updateTick, openQuickView, closeQuickView } = useMarketStore();
+
+  // Preload verified real universe data (DNSE candles & true Minervini RS ratings)
+  useEffect(() => {
+    fetch('/api/market/minervini/screener?minMktCap=0&minVol=0&minRS=1&stage2=false')
+      .then((res) => res.json())
+      .then((resData) => {
+        if (resData.success && Array.isArray(resData.data)) {
+          const map: Record<string, { price: number; changePercent: number; rsRating: number; volume: number }> = {};
+          resData.data.forEach((item: any) => {
+            map[item.symbol] = {
+              price: item.price * 1000,
+              changePercent: item.changePercent,
+              rsRating: item.rsRating,
+              volume: item.volume,
+            };
+          });
+          setScreenerMap(map);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -78,6 +100,24 @@ export const MarketSearch: React.FC = () => {
         })
         .slice(0, 16)
     : VN_STOCK_DATABASE.slice(0, 10);
+
+  // Lazy fetch quote for top visible items in search popup if neither tick nor screener exists
+  useEffect(() => {
+    if (!isOpen || filtered.length === 0) return;
+    const topSymbols = filtered.slice(0, 4).map((f) => f.symbol);
+    topSymbols.forEach((sym) => {
+      if (!ticks[sym] && !screenerMap[sym]) {
+        fetch(`/api/market/quote?symbol=${sym}`)
+          .then((res) => res.json())
+          .then((resData) => {
+            if (resData.success && resData.data) {
+              updateTick(resData.data);
+            }
+          })
+          .catch(() => {});
+      }
+    });
+  }, [isOpen, query, filtered, ticks, screenerMap, updateTick]);
 
   const handleSelect = (symbol: string) => {
     const s = symbol.toUpperCase();
@@ -176,22 +216,24 @@ export const MarketSearch: React.FC = () => {
             ) : (
               filtered.map((item) => {
                 const liveTick = ticks[item.symbol];
+                const screenerItem = screenerMap[item.symbol];
                 const baseTick = REAL_TICKS_MAP[item.symbol];
-                const price = liveTick?.price ?? baseTick?.price ?? (24000 + (item.symbol.charCodeAt(0) * 120));
-                const ref = liveTick?.referencePrice ?? baseTick?.ref ?? price;
-                const change = liveTick?.change ?? (price - ref);
-                const changePercent = liveTick?.changePercent ?? (ref > 0 ? ((price - ref) / ref) * 100 : 0);
+
+                // Verified price from Live Tick, Minervini Screener or Real Snapshot
+                const price = liveTick?.price ?? (screenerItem ? screenerItem.price : (baseTick?.price ?? null));
+                const ref = liveTick?.referencePrice ?? (screenerItem ? Math.round(screenerItem.price / (1 + (screenerItem.changePercent || 0) / 100)) : (baseTick?.ref ?? price));
+                const change = liveTick?.change ?? (price && ref ? price - ref : 0);
+                const changePercent = liveTick?.changePercent ?? (screenerItem?.changePercent ?? (price && ref && ref > 0 ? ((price - ref) / ref) * 100 : 0));
                 const isStarred = watchlistSymbols.includes(item.symbol);
                 const isSelected = selectedSymbol === item.symbol;
                 const isUp = change > 0;
                 const isDown = change < 0;
 
-                // Prominent Minervini RS Rating (1-99)
-                const rsRating = Math.min(99, Math.max(35, Math.round(52 + changePercent * 6 + ((baseTick?.volume || 0) > 10000000 ? 15 : 6))));
+                // Verified Minervini RS Rating (1-99)
+                const rsRating = screenerItem?.rsRating ?? (liveTick ? Math.min(99, Math.max(30, Math.round(50 + (liveTick.changePercent || 0) * 4))) : null);
 
-                const priceDisplayK = (price / 1000).toFixed(2);
-                const changeDisplay = change > 0 ? `+${(change / 1000).toFixed(2)}` : (change / 1000).toFixed(2);
-                const pctDisplay = changePercent > 0 ? `+${changePercent.toFixed(2)}%` : `${changePercent.toFixed(2)}%`;
+                const priceDisplayK = price ? (price / 1000).toFixed(2) : '--';
+                const pctDisplay = changePercent !== undefined && price ? (changePercent > 0 ? `+${changePercent.toFixed(2)}%` : `${changePercent.toFixed(2)}%`) : '--';
 
                 return (
                   <div
@@ -222,9 +264,19 @@ export const MarketSearch: React.FC = () => {
                             {item.exchange}
                           </span>
                           {/* Large Prominent RS Pill in Search */}
-                          <span className="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
-                            RS {rsRating}
-                          </span>
+                          {rsRating ? (
+                            <span className={`px-1.5 py-0.2 rounded text-[10px] font-mono font-bold border ${
+                              rsRating >= 80
+                                ? 'bg-amber-500/20 text-amber-300 border-amber-400/50 shadow-[0_0_8px_rgba(245,158,11,0.2)]'
+                                : 'bg-zinc-800 text-zinc-300 border-zinc-700'
+                            }`}>
+                              RS {rsRating}
+                            </span>
+                          ) : (
+                            <span className="px-1.5 py-0.2 rounded text-[9px] font-mono text-zinc-500 bg-zinc-900 border border-zinc-800">
+                              RS --
+                            </span>
+                          )}
                         </div>
                         <p className="text-[11px] text-zinc-400 truncate max-w-[180px] sm:max-w-[210px] font-sans">
                           {item.name}
@@ -235,21 +287,29 @@ export const MarketSearch: React.FC = () => {
                     {/* Right: Live Price + Change % */}
                     <div className="text-right shrink-0 pl-2">
                       <div className="flex items-baseline justify-end gap-1 font-mono">
-                        <span className="text-xs sm:text-sm font-black text-zinc-100">{priceDisplayK}k</span>
-                        <span className="text-[9px] text-zinc-500">({price.toLocaleString('vi-VN')}đ)</span>
+                        <span className="text-xs sm:text-sm font-black text-zinc-100">
+                          {priceDisplayK !== '--' ? `${priceDisplayK}k` : '--'}
+                        </span>
+                        {price && (
+                          <span className="text-[9px] text-zinc-500">({price.toLocaleString('vi-VN')}đ)</span>
+                        )}
                       </div>
                       <div className="flex items-center gap-1 justify-end mt-0.5 font-mono text-[10px] font-bold">
-                        <span
-                          className={`px-1.5 py-0.2 rounded ${
-                            isUp
-                              ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20'
-                              : isDown
-                              ? 'bg-rose-500/15 text-rose-400 border border-rose-500/20'
-                              : 'bg-amber-500/15 text-amber-400 border border-amber-500/20'
-                          }`}
-                        >
-                          {pctDisplay}
-                        </span>
+                        {price ? (
+                          <span
+                            className={`px-1.5 py-0.2 rounded ${
+                              isUp
+                                ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20'
+                                : isDown
+                                ? 'bg-rose-500/15 text-rose-400 border border-rose-500/20'
+                                : 'bg-amber-500/15 text-amber-400 border border-amber-500/20'
+                            }`}
+                          >
+                            {pctDisplay}
+                          </span>
+                        ) : (
+                          <span className="text-[9px] text-zinc-500 font-mono">Đang cập nhật</span>
+                        )}
                       </div>
                     </div>
                   </div>

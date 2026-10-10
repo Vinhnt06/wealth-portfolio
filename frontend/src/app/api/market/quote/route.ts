@@ -22,12 +22,14 @@ const CACHE_TTL_MS = 30 * 1000;
 async function fetchFromDnseLightspeed(symbol: string): Promise<any | null> {
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 2500); // 2.5s timeout
+    const timeout = setTimeout(() => controller.abort(), 3500); // 3.5s timeout
 
+    const nowSec = Math.floor(Date.now() / 1000);
+    const fromSec = nowSec - 45 * 86400; // 45 days window to ensure weekend/holiday continuity
     const isIndex = ['VNINDEX', 'VN30', 'HNX', 'HNX30', 'UPCOM'].includes(symbol);
     const endpoint = isIndex
-      ? `https://services.entrade.com.vn/chart-api/v2/ohlcs/index?resolution=1D&symbol=${symbol}`
-      : `https://services.entrade.com.vn/chart-api/v2/ohlcs/stock?resolution=1D&symbol=${symbol}`;
+      ? `https://services.entrade.com.vn/chart-api/v2/ohlcs/index?from=${fromSec}&to=${nowSec}&resolution=1D&symbol=${encodeURIComponent(symbol)}`
+      : `https://services.entrade.com.vn/chart-api/v2/ohlcs/stock?from=${fromSec}&to=${nowSec}&resolution=1D&symbol=${encodeURIComponent(symbol)}`;
 
     const res = await fetch(endpoint, {
       signal: controller.signal,
@@ -99,31 +101,31 @@ export async function GET(req: NextRequest) {
     sector: 'Tổng hợp',
   };
 
-  let dataSource = 'vnstock';
+  let dataSource = 'dnse_lightspeed';
   let priceData: any = null;
 
-  // 3. Try primary source: Vnstock pre-warmed snapshot
-  const vnstockTick = (realTicksData as Record<string, any>)[symbol];
-  if (vnstockTick) {
-    priceData = {
-      price: vnstockTick.price,
-      referencePrice: vnstockTick.ref || vnstockTick.price,
-      open: vnstockTick.open || vnstockTick.price,
-      high: vnstockTick.high || vnstockTick.price,
-      low: vnstockTick.low || vnstockTick.price,
-      volume: vnstockTick.volume || 1000000,
-      change: vnstockTick.price - (vnstockTick.ref || vnstockTick.price),
-      changePercent: vnstockTick.ref ? ((vnstockTick.price - vnstockTick.ref) / vnstockTick.ref) * 100 : 0,
-    };
-    dataSource = 'vnstock';
+  // 3. PRIMARY SOURCE: DNSE Lightspeed REST API (Always real live candles from Entrade)
+  const dnseData = await fetchFromDnseLightspeed(symbol);
+  if (dnseData) {
+    priceData = dnseData;
+    dataSource = 'dnse_lightspeed';
   } else {
-    // 4. FAILOVER TRIGGER: Vnstock missing or rate-limited -> Switch immediately to DNSE Lightspeed API
-    const dnseData = await fetchFromDnseLightspeed(symbol);
-    if (dnseData) {
-      priceData = dnseData;
-      dataSource = 'dnse_lightspeed';
+    // 4. SECONDARY SOURCE: Vnstock pre-warmed snapshot
+    const vnstockTick = (realTicksData as Record<string, any>)[symbol];
+    if (vnstockTick) {
+      priceData = {
+        price: vnstockTick.price,
+        referencePrice: vnstockTick.ref || vnstockTick.price,
+        open: vnstockTick.open || vnstockTick.price,
+        high: vnstockTick.high || vnstockTick.price,
+        low: vnstockTick.low || vnstockTick.price,
+        volume: vnstockTick.volume || 1000000,
+        change: vnstockTick.price - (vnstockTick.ref || vnstockTick.price),
+        changePercent: vnstockTick.ref ? ((vnstockTick.price - vnstockTick.ref) / vnstockTick.ref) * 100 : 0,
+      };
+      dataSource = 'vnstock';
     } else {
-      // 5. Final Graceful Fallback
+      // 5. Final fallback only if DNSE & vnstock both unavailable
       const fallbackPrice = 25000;
       priceData = {
         price: fallbackPrice,

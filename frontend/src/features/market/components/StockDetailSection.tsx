@@ -78,7 +78,7 @@ interface StockDetailSectionProps {
 }
 
 export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackToOverview }) => {
-  const { selectedSymbol, ticks, watchlistSymbols, toggleWatchlistSymbol } = useMarketStore();
+  const { selectedSymbol, ticks, watchlistSymbols, toggleWatchlistSymbol, updateTick } = useMarketStore();
   const [activeTab, setActiveTab] = useState<'profile' | 'shareholders' | 'officers' | 'financials' | 'foreign' | 'investor_flow'>('profile');
   const [sidebarMode, setSidebarMode] = useState<'minervini' | 'investor_flow' | 'orderbook'>('minervini');
   const [companyData, setCompanyData] = useState<CompanyData | null>(null);
@@ -95,10 +95,20 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
 
   const isStarred = watchlistSymbols.includes(selectedSymbol);
 
-  // Fetch company profile & Minervini Stage 2/RS when selectedSymbol changes
+  // Fetch verified real quote, company profile & Minervini Stage 2/RS when selectedSymbol changes
   useEffect(() => {
     if (!selectedSymbol) return;
     setIsLoading(true);
+
+    fetch(`/api/market/quote?symbol=${selectedSymbol}`)
+      .then((res) => res.json())
+      .then((resData) => {
+        if (resData.success && resData.data) {
+          updateTick(resData.data);
+        }
+      })
+      .catch(() => {});
+
     fetch(`/api/market/company?symbol=${selectedSymbol}`)
       .then((res) => res.json())
       .then((resData) => {
@@ -118,13 +128,17 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
         }
       })
       .catch(() => {});
-  }, [selectedSymbol]);
+  }, [selectedSymbol, updateTick]);
 
-  const price = tick?.price || 0;
-  const change = tick?.change || 0;
-  const changePercent = tick?.changePercent || 0;
+  const price = tick?.price || (minerviniData?.price ? Math.round(minerviniData.price * 1000) : 0);
+  const change = tick?.change || (minerviniData?.change ? Math.round(minerviniData.change * 1000) : 0);
+  const changePercent = tick?.changePercent || minerviniData?.changePct || 0;
   const isUp = change > 0;
   const isDown = change < 0;
+
+  const refPrice = tick?.referencePrice || (price > 0 ? Math.round(price - change) : 0);
+  const ceilPrice = tick?.ceilingPrice || (refPrice > 0 ? Math.round(refPrice * (meta.exchange === 'HNX' ? 1.10 : meta.exchange === 'UPCOM' ? 1.15 : 1.07)) : 0);
+  const floorPrice = tick?.floorPrice || (refPrice > 0 ? Math.round(refPrice * (meta.exchange === 'HNX' ? 0.90 : meta.exchange === 'UPCOM' ? 0.85 : 0.93)) : 0);
 
   const colorClass = isUp ? 'text-emerald-400' : isDown ? 'text-rose-400' : 'text-amber-400';
   const bgBadgeClass = isUp
@@ -260,15 +274,15 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
             <div className="hidden md:flex items-center gap-3 pl-4 border-l border-zinc-800 text-xs font-mono">
               <div>
                 <span className="text-[10px] text-fuchsia-400 block font-semibold">TRẦN (CE)</span>
-                <span className="font-bold text-fuchsia-400">{tick?.ceilingPrice ? tick.ceilingPrice.toLocaleString('vi-VN') : '--'}</span>
+                <span className="font-bold text-fuchsia-400">{ceilPrice > 0 ? ceilPrice.toLocaleString('vi-VN') : '--'}</span>
               </div>
               <div>
                 <span className="text-[10px] text-cyan-400 block font-semibold">SÀN (FL)</span>
-                <span className="font-bold text-cyan-400">{tick?.floorPrice ? tick.floorPrice.toLocaleString('vi-VN') : '--'}</span>
+                <span className="font-bold text-cyan-400">{floorPrice > 0 ? floorPrice.toLocaleString('vi-VN') : '--'}</span>
               </div>
               <div>
                 <span className="text-[10px] text-amber-400 block font-semibold">TC</span>
-                <span className="font-bold text-amber-400">{tick?.referencePrice ? tick.referencePrice.toLocaleString('vi-VN') : '--'}</span>
+                <span className="font-bold text-amber-400">{refPrice > 0 ? refPrice.toLocaleString('vi-VN') : '--'}</span>
               </div>
             </div>
           </div>
