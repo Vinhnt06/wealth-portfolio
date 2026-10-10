@@ -21,17 +21,21 @@ const DEFAULT_UNIVERSE = [
   'TNG', 'MSH', 'BMP', 'NTP', 'HT1'
 ];
 
+// In-memory cache for screener results (60 seconds TTL)
+let cachedUniverseData: { timestamp: number; items: MinerviniScreenerItem[] } | null = null;
+const CACHE_TTL_MS = 60 * 1000;
+
 /**
- * GET /api/market/minervini/screener?minMktCap=1&minVol=300000&minRS=70&sector=all&symbols=...
+ * GET /api/market/minervini/screener?minMktCap=0&minVol=0&minRS=1&sector=all&stage2=false
  * Returns stocks dynamically filtered by Mark Minervini Trend Template & Fundamentals
  */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const minMktCapT = parseFloat(searchParams.get('minMktCap') || '1'); // >= 1 nghìn tỷ VND
-  const minVol = parseInt(searchParams.get('minVol') || '300000', 10);  // >= 300k
-  const minRS = parseInt(searchParams.get('minRS') || '70', 10);        // >= 70
+  const minMktCapT = parseFloat(searchParams.get('minMktCap') || '0');
+  const minVol = parseInt(searchParams.get('minVol') || '0', 10);
+  const minRS = parseInt(searchParams.get('minRS') || '1', 10);
   const sectorFilter = (searchParams.get('sector') || 'all').toLowerCase();
-  const onlyStage2 = searchParams.get('stage2') !== 'false';
+  const onlyStage2 = searchParams.get('stage2') === 'true';
   const customSymbolsParam = searchParams.get('symbols');
 
   const symbolsToScan = customSymbolsParam
@@ -57,6 +61,23 @@ export async function GET(request: Request) {
   };
 
   try {
+    // Fast-path: return from cached data if available and fresh
+    if (!customSymbolsParam && cachedUniverseData && Date.now() - cachedUniverseData.timestamp < CACHE_TTL_MS) {
+      const filtered = cachedUniverseData.items.filter((item) => {
+        if (sectorFilter !== 'all' && !item.sector.toLowerCase().includes(sectorFilter)) return false;
+        if (onlyStage2 && !item.isStage2Eligible) return false;
+        if (item.rsRating < minRS) return false;
+        if (minVol > 0 && item.volume < minVol) return false;
+        if (minMktCapT > 0 && item.mktCapT < minMktCapT) return false;
+        return true;
+      });
+      return NextResponse.json({
+        success: true,
+        total: filtered.length,
+        data: filtered,
+      });
+    }
+
     const dbMap = new Map<string, any>();
     (stockDatabase as any[]).forEach((s) => dbMap.set(s.symbol.toUpperCase(), s));
 
@@ -183,6 +204,11 @@ export async function GET(request: Request) {
 
     // Sort by RS Rating descending (Top Leaders first)
     results.sort((a, b) => b.rsRating - a.rsRating);
+
+    // Save to universe cache if full universe
+    if (!customSymbolsParam) {
+      cachedUniverseData = { timestamp: Date.now(), items: results };
+    }
 
     return NextResponse.json({
       success: true,
