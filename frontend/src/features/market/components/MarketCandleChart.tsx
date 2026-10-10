@@ -215,6 +215,18 @@ export function MarketCandleChart() {
   const bbLowerSeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
   const lastCandleRef = useRef<{ time: Time; open: number; high: number; low: number; close: number } | null>(null);
   const loadedCandlesRef = useRef<CandlestickData<Time>[]>([]);
+  const redrawCanvasRef = useRef<() => void>(() => {});
+  const candleCacheRef = useRef<Map<string, {
+    candles: CandlestickData<Time>[];
+    volumes: HistogramData<Time>[];
+    ma20: LineData<Time>[];
+    ma50: LineData<Time>[];
+    ma150: LineData<Time>[];
+    ma200: LineData<Time>[];
+    bbUpper: LineData<Time>[];
+    bbLower: LineData<Time>[];
+    proData: TrendlineProResult | null;
+  }>>(new Map());
 
   const { selectedSymbol, ticks } = useMarketStore();
   const stockInfo = STOCK_MAP.get(selectedSymbol.toUpperCase()) || {
@@ -685,7 +697,10 @@ export function MarketCandleChart() {
     ctx.restore();
   }, [drawings, draftDrawing, showTrendlinePro, trendlineProData]);
 
-  // Adjust canvas size to match container
+  // Keep decoupled ref for chart and window callbacks
+  redrawCanvasRef.current = redrawCanvas;
+
+  // Adjust canvas size to match container without re-creating functions
   const updateCanvasSize = useCallback(() => {
     const canvas = canvasRef.current;
     const container = chartContainerRef.current;
@@ -697,18 +712,17 @@ export function MarketCandleChart() {
     canvas.height = h * dpr;
     canvas.style.width = `${w}px`;
     canvas.style.height = `${h}px`;
-    redrawCanvas();
-  }, [redrawCanvas]);
+    redrawCanvasRef.current();
+  }, []);
 
   useEffect(() => {
     redrawCanvas();
   }, [redrawCanvas]);
 
-  // Mount Lightweight Chart
+  // ── 1. Mount Lightweight Chart ONCE per lifecycle ────────────────────────
   useEffect(() => {
     const container = chartContainerRef.current;
     if (!container) return;
-    const isDaily = resolution === '1D' || resolution === '1W';
 
     const chart = createChart(container, {
       layout: {
@@ -731,7 +745,7 @@ export function MarketCandleChart() {
       },
       timeScale: {
         borderColor: 'rgba(255, 255, 255, 0.08)',
-        timeVisible: !isDaily,
+        timeVisible: false,
         secondsVisible: false,
       },
       width: container.clientWidth,
@@ -762,6 +776,7 @@ export function MarketCandleChart() {
       lineWidth: 1,
       priceFormat: { type: 'price', precision: 2, minMove: 0.05 },
       title: 'MA20',
+      visible: showMA20,
     });
     ma20SeriesRef.current = ma20Series;
 
@@ -770,6 +785,7 @@ export function MarketCandleChart() {
       lineWidth: 1,
       priceFormat: { type: 'price', precision: 2, minMove: 0.05 },
       title: 'MA50',
+      visible: showMA50,
     });
     ma50SeriesRef.current = ma50Series;
 
@@ -778,6 +794,7 @@ export function MarketCandleChart() {
       lineWidth: 1,
       priceFormat: { type: 'price', precision: 2, minMove: 0.05 },
       title: 'MA150',
+      visible: showMA150,
     });
     ma150SeriesRef.current = ma150Series;
 
@@ -786,6 +803,7 @@ export function MarketCandleChart() {
       lineWidth: 2,
       priceFormat: { type: 'price', precision: 2, minMove: 0.05 },
       title: 'MA200',
+      visible: showMA200,
     });
     ma200SeriesRef.current = ma200Series;
 
@@ -794,6 +812,7 @@ export function MarketCandleChart() {
       lineWidth: 1,
       priceFormat: { type: 'price', precision: 2, minMove: 0.05 },
       title: 'BB Upper',
+      visible: showBB,
     });
     bbUpperSeriesRef.current = bbUpperSeries;
 
@@ -802,15 +821,148 @@ export function MarketCandleChart() {
       lineWidth: 1,
       priceFormat: { type: 'price', precision: 2, minMove: 0.05 },
       title: 'BB Lower',
+      visible: showBB,
     });
     bbLowerSeriesRef.current = bbLowerSeries;
 
     chart.timeScale().subscribeVisibleLogicalRangeChange(() => {
-      requestAnimationFrame(redrawCanvas);
+      requestAnimationFrame(() => redrawCanvasRef.current());
     });
     chart.timeScale().subscribeVisibleTimeRangeChange(() => {
-      requestAnimationFrame(redrawCanvas);
+      requestAnimationFrame(() => redrawCanvasRef.current());
     });
+
+    chart.subscribeCrosshairMove((param) => {
+      if (!param.time || !param.seriesData) {
+        setHoveredData(null);
+        return;
+      }
+      const candle = param.seriesData.get(candlestickSeries) as any;
+      const vol = param.seriesData.get(volumeSeries) as any;
+      if (candle) {
+        const change = candle.close - candle.open;
+        const changePct = candle.open ? (change / candle.open) * 100 : 0;
+        setHoveredData({
+          open: candle.open,
+          high: candle.high,
+          low: candle.low,
+          close: candle.close,
+          volume: vol?.value,
+          change,
+          changePct,
+        });
+      }
+    });
+
+    const resizeObserver = new ResizeObserver(() => {
+      if (container) {
+        chart.applyOptions({ width: container.clientWidth, height: container.clientHeight });
+        updateCanvasSize();
+      }
+    });
+    resizeObserver.observe(container);
+    updateCanvasSize();
+
+    return () => {
+      resizeObserver.disconnect();
+      chart.remove();
+      chartRef.current = null;
+      candleSeriesRef.current = null;
+      volumeSeriesRef.current = null;
+      ma20SeriesRef.current = null;
+      ma50SeriesRef.current = null;
+      ma150SeriesRef.current = null;
+      ma200SeriesRef.current = null;
+      bbUpperSeriesRef.current = null;
+      bbLowerSeriesRef.current = null;
+    };
+  }, [updateCanvasSize]);
+
+  // ── 2. Toggle Indicators instantly without re-fetching data ──────────────
+  useEffect(() => {
+    ma20SeriesRef.current?.applyOptions({ visible: showMA20 });
+  }, [showMA20]);
+
+  useEffect(() => {
+    ma50SeriesRef.current?.applyOptions({ visible: showMA50 });
+  }, [showMA50]);
+
+  useEffect(() => {
+    ma150SeriesRef.current?.applyOptions({ visible: showMA150 });
+  }, [showMA150]);
+
+  useEffect(() => {
+    ma200SeriesRef.current?.applyOptions({ visible: showMA200 });
+  }, [showMA200]);
+
+  useEffect(() => {
+    bbUpperSeriesRef.current?.applyOptions({ visible: showBB });
+    bbLowerSeriesRef.current?.applyOptions({ visible: showBB });
+  }, [showBB]);
+
+  useEffect(() => {
+    volumeSeriesRef.current?.applyOptions({ visible: showVolume });
+  }, [showVolume]);
+
+  // ── 3. Fetch DNSE History ONLY when symbol or resolution changes ──────────
+  useEffect(() => {
+    const chart = chartRef.current;
+    const candlestickSeries = candleSeriesRef.current;
+    const volumeSeries = volumeSeriesRef.current;
+    const ma20Series = ma20SeriesRef.current;
+    const ma50Series = ma50SeriesRef.current;
+    const ma150Series = ma150SeriesRef.current;
+    const ma200Series = ma200SeriesRef.current;
+    const bbUpperSeries = bbUpperSeriesRef.current;
+    const bbLowerSeries = bbLowerSeriesRef.current;
+
+    if (!chart || !candlestickSeries || !volumeSeries) return;
+
+    const isDaily = resolution === '1D' || resolution === '1W';
+    chart.applyOptions({
+      timeScale: {
+        timeVisible: !isDaily,
+      },
+    });
+
+    const cacheKey = `${selectedSymbol}_${resolution}`;
+    const cached = candleCacheRef.current.get(cacheKey);
+
+    if (cached) {
+      // Instant render from memory (0ms lag, no flashing!)
+      candlestickSeries.setData(cached.candles);
+      volumeSeries.setData(cached.volumes);
+      ma20Series?.setData(cached.ma20);
+      ma50Series?.setData(cached.ma50);
+      ma150Series?.setData(cached.ma150);
+      ma200Series?.setData(cached.ma200);
+      bbUpperSeries?.setData(cached.bbUpper);
+      bbLowerSeries?.setData(cached.bbLower);
+      loadedCandlesRef.current = cached.candles;
+      setTrendlineProData(cached.proData);
+
+      if (cached.candles.length > 150) {
+        chart.timeScale().setVisibleLogicalRange({
+          from: cached.candles.length - 140,
+          to: cached.candles.length + 5,
+        });
+      } else {
+        chart.timeScale().fitContent();
+      }
+
+      if (cached.candles.length > 0) {
+        const last = cached.candles[cached.candles.length - 1];
+        lastCandleRef.current = {
+          time: last.time,
+          open: last.open,
+          high: last.high,
+          low: last.low,
+          close: last.close,
+        };
+      }
+      requestAnimationFrame(() => redrawCanvasRef.current());
+      return;
+    }
 
     let isCancelled = false;
     let daysToFetch = 0;
@@ -818,7 +970,7 @@ export function MarketCandleChart() {
     else if (resolution === '5m') daysToFetch = 5;
     else if (resolution === '15m') daysToFetch = 14;
     else if (resolution === '1h') daysToFetch = 60;
-    else if (resolution === '1D' || resolution === '1W') daysToFetch = 0; // Từ ngày đầu tiên niêm yết
+    else if (resolution === '1D' || resolution === '1W') daysToFetch = 0;
 
     setIsLoading(true);
     fetch(`/api/market/history?symbol=${selectedSymbol}&resolution=${resolution}&days=${daysToFetch}`)
@@ -827,7 +979,6 @@ export function MarketCandleChart() {
         if (isCancelled) return;
         setIsLoading(false);
         if (!resData.success || !resData.data || resData.data.length === 0) return;
-        const isDaily = resolution === '1D' || resolution === '1W';
 
         const realCandles: CandlestickData<Time>[] = [];
         const realVolumes: HistogramData<Time>[] = [];
@@ -871,7 +1022,6 @@ export function MarketCandleChart() {
             const mean20 = sum20 / 20;
             realMa20.push({ time: uniqueCandles[i].time, value: Math.round(mean20 * 100) / 100 });
 
-            // Bollinger Bands (20, 2)
             const variance = slice20.reduce((acc, x) => acc + Math.pow(x.close - mean20, 2), 0) / 20;
             const std = Math.sqrt(variance);
             bbUpperData.push({ time: uniqueCandles[i].time, value: Math.round((mean20 + 2 * std) * 100) / 100 });
@@ -891,17 +1041,28 @@ export function MarketCandleChart() {
           }
         }
 
+        // Cache the processed dataset
+        candleCacheRef.current.set(cacheKey, {
+          candles: uniqueCandles,
+          volumes: uniqueVolumes,
+          ma20: realMa20,
+          ma50: realMa50,
+          ma150: realMa150,
+          ma200: realMa200,
+          bbUpper: bbUpperData,
+          bbLower: bbLowerData,
+          proData,
+        });
+
         if (uniqueCandles.length > 0) {
           candlestickSeries.setData(uniqueCandles);
-          if (showVolume) volumeSeries.setData(uniqueVolumes);
-          if (showMA20) ma20Series.setData(realMa20);
-          if (showMA50) ma50Series.setData(realMa50);
-          if (showMA150) ma150Series.setData(realMa150);
-          if (showMA200) ma200Series.setData(realMa200);
-          if (showBB) {
-            bbUpperSeries.setData(bbUpperData);
-            bbLowerSeries.setData(bbLowerData);
-          }
+          volumeSeries.setData(uniqueVolumes);
+          ma20Series?.setData(realMa20);
+          ma50Series?.setData(realMa50);
+          ma150Series?.setData(realMa150);
+          ma200Series?.setData(realMa200);
+          bbUpperSeries?.setData(bbUpperData);
+          bbLowerSeries?.setData(bbLowerData);
 
           if (uniqueCandles.length > 150) {
             chart.timeScale().setVisibleLogicalRange({
@@ -921,13 +1082,11 @@ export function MarketCandleChart() {
             close: last.close,
           };
 
-          // Synchronize store tick with the verified real candle close price
           const prevCandle = uniqueCandles.length > 1 ? uniqueCandles[uniqueCandles.length - 2] : last;
           const realCloseVnd = Math.round(last.close * 1000);
           const realPrevVnd = Math.round(prevCandle.close * 1000);
           const currentStoreTick = useMarketStore.getState().ticks[selectedSymbol];
 
-          // If store tick is missing, or deviates by > 15% from the actual candle (e.g. stale fallback)
           if (!currentStoreTick || Math.abs(currentStoreTick.price - realCloseVnd) / (realCloseVnd || 1) > 0.15) {
             useMarketStore.getState().updateTick({
               symbol: selectedSymbol,
@@ -947,63 +1106,28 @@ export function MarketCandleChart() {
             });
           }
 
-          requestAnimationFrame(redrawCanvas);
+          requestAnimationFrame(() => redrawCanvasRef.current());
         }
       })
       .catch(() => {
         setIsLoading(false);
       });
 
-    chart.subscribeCrosshairMove((param) => {
-      if (!param.time || !param.seriesData) {
-        setHoveredData(null);
-        return;
-      }
-      const candle = param.seriesData.get(candlestickSeries) as any;
-      const vol = param.seriesData.get(volumeSeries) as any;
-      if (candle) {
-        const change = candle.close - candle.open;
-        const changePct = candle.open ? (change / candle.open) * 100 : 0;
-        setHoveredData({
-          open: candle.open,
-          high: candle.high,
-          low: candle.low,
-          close: candle.close,
-          volume: vol?.value,
-          change,
-          changePct,
-        });
-      }
-    });
-
-    const resizeObserver = new ResizeObserver(() => {
-      if (container) {
-        chart.applyOptions({ width: container.clientWidth, height: container.clientHeight });
-        updateCanvasSize();
-      }
-    });
-    resizeObserver.observe(container);
-    updateCanvasSize();
-
     return () => {
       isCancelled = true;
-      resizeObserver.disconnect();
-      chart.remove();
-      chartRef.current = null;
     };
-  }, [resolution, selectedSymbol, showMA20, showMA50, showMA150, showMA200, showBB, showVolume, redrawCanvas, updateCanvasSize]);
+  }, [resolution, selectedSymbol]);
 
-  // Real-time tick update to candle
+  // ── 4. 60fps Real-Time WebSocket Tick Update (Smooth & No Re-fetch) ────────
   useEffect(() => {
     if (!currentTick?.price || !candleSeriesRef.current || !volumeSeriesRef.current) return;
     const livePriceK = Math.round((currentTick.price / 1000) * 100) / 100;
     const tickVol = currentTick.volume || 10000;
 
     if (lastCandleRef.current) {
-      // Guard against anomalous ticks (> 25% deviation from current candle close)
       const currentClose = lastCandleRef.current.close;
       if (currentClose > 0 && Math.abs(livePriceK - currentClose) / currentClose > 0.25) {
-        return; // Don't distort chart with corrupted fallback ticks
+        return;
       }
 
       const updatedHigh = Math.max(lastCandleRef.current.high, livePriceK);
@@ -1031,9 +1155,9 @@ export function MarketCandleChart() {
         color: livePriceK >= updatedOpen ? 'rgba(16, 185, 129, 0.4)' : 'rgba(244, 63, 94, 0.4)',
       });
 
-      requestAnimationFrame(redrawCanvas);
+      requestAnimationFrame(() => redrawCanvasRef.current());
     }
-  }, [currentTick, redrawCanvas]);
+  }, [currentTick]);
 
   // Switch Quick Date Ranges instantaneously
   const handleRangeSelect = (rangeId: string, bars: number) => {
