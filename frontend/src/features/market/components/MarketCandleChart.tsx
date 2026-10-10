@@ -1556,11 +1556,17 @@ export function MarketCandleChart() {
       rightPriceScale: {
         borderColor: 'rgba(255, 255, 255, 0.08)',
         alignLabels: true,
+        scaleMargins: {
+          top: 0.12,
+          bottom: 0.14,
+        },
       },
       timeScale: {
         borderColor: 'rgba(255, 255, 255, 0.08)',
         timeVisible: false,
         secondsVisible: false,
+        rightOffset: 8,
+        barSpacing: 9,
       },
       width: container.clientWidth,
       height: 580,
@@ -2709,7 +2715,7 @@ export function MarketCandleChart() {
       className={`border border-zinc-800/80 flex flex-col relative select-none transition-all duration-200 ${
         isExpanded
           ? 'fixed inset-0 z-[99999] w-screen h-screen rounded-none p-2 sm:p-3 shadow-2xl !bg-zinc-950'
-          : 'bg-zinc-950 w-full h-[520px] lg:h-[550px] rounded-2xl shadow-xl overflow-hidden'
+          : 'bg-zinc-950 w-full h-[550px] lg:h-[580px] rounded-2xl shadow-xl overflow-hidden'
       }`}
     >
       {/* ── TradingView-Style Single-Row Controls Bar (Zero Scroll / Always 1-Screen) ────────── */}
@@ -2961,7 +2967,7 @@ export function MarketCandleChart() {
 
       {/* ── Main Chart Body with Left Drawing Toolbar ─────────────── */}
       <div className={`w-full flex-1 flex relative bg-zinc-950 overflow-hidden ${
-        isExpanded ? 'h-[calc(100vh-100px)] min-h-0' : 'h-[420px] lg:h-[440px] min-h-[360px]'
+        isExpanded ? 'h-[calc(100vh-100px)] min-h-0' : 'h-[480px] lg:h-[510px] min-h-[400px]'
       }`}>
         {/* Left Vertical Drawing Toolbar (Complete TradingView Style) */}
         <div className="flex flex-col items-center gap-0.5 sm:gap-1 py-1.5 px-1 bg-[#131722]/95 border-r border-zinc-800/80 z-30 shrink-0 w-10 sm:w-11 select-none overflow-y-auto scrollbar-none h-full">

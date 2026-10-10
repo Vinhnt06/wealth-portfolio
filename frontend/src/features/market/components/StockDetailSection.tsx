@@ -80,8 +80,7 @@ interface StockDetailSectionProps {
 
 export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackToOverview }) => {
   const { selectedSymbol, ticks, watchlistSymbols, toggleWatchlistSymbol, updateTick } = useMarketStore();
-  const [activeTab, setActiveTab] = useState<'profile' | 'shareholders' | 'officers' | 'financials' | 'foreign' | 'investor_flow'>('profile');
-  const [sidebarMode, setSidebarMode] = useState<'minervini' | 'investor_flow' | 'orderbook'>('minervini');
+  const [activeTab, setActiveTab] = useState<'profile' | 'shareholders' | 'officers' | 'financials' | 'foreign' | 'investor_flow' | 'orderbook'>('profile');
   const [companyData, setCompanyData] = useState<CompanyData | null>(null);
   const [minerviniData, setMinerviniData] = useState<MinerviniAnalysisResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -296,59 +295,22 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
         </div>
       </div>
 
-      {/* Main Terminal Grid: Candlestick Chart (8 Cols) + Investor Flow / Order Book (4 Cols) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        <div className="lg:col-span-8">
+      {/* Main Terminal Grid: Candlestick Chart (Expanded Space) + Minervini Strategy Terminal */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-5 items-start">
+        <div className="lg:col-span-8 xl:col-span-9">
           <MarketCandleChart />
         </div>
-        <div className="lg:col-span-4 h-[480px] lg:h-[500px] flex flex-col gap-3 overflow-hidden">
-          {/* Quick Sub-tab Toggle between Minervini 8/8, Phân loại NĐT & Sổ lệnh */}
-          <div className="grid grid-cols-3 gap-1 p-1 rounded-xl bg-zinc-900 border border-zinc-800 shrink-0">
-            <button
-              onClick={() => setSidebarMode('minervini')}
-              className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-mono font-bold transition-all ${
-                sidebarMode === 'minervini'
-                  ? 'bg-amber-400 text-zinc-950 shadow-sm'
-                  : 'text-zinc-400 hover:text-zinc-200'
-              }`}
-            >
+        <div className="lg:col-span-4 xl:col-span-3 h-[550px] lg:h-[580px] flex flex-col overflow-hidden bg-zinc-950/80 border border-zinc-800/80 rounded-2xl p-2.5 shadow-xl">
+          <div className="flex items-center justify-between pb-2 mb-2 border-b border-zinc-800/80 text-xs font-mono font-bold text-amber-400 shrink-0">
+            <div className="flex items-center gap-1.5">
               <Sparkle className="w-3.5 h-3.5" weight="fill" />
-              <span>Minervini 8/8</span>
-            </button>
-
-            <button
-              onClick={() => setSidebarMode('investor_flow')}
-              className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-mono font-bold transition-all ${
-                sidebarMode === 'investor_flow'
-                  ? 'bg-emerald-500 text-zinc-950 shadow-sm'
-                  : 'text-zinc-400 hover:text-zinc-200'
-              }`}
-            >
-              <Fish className="w-3.5 h-3.5" />
-              <span>Cá Mập/NĐT</span>
-            </button>
-
-            <button
-              onClick={() => setSidebarMode('orderbook')}
-              className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-mono font-bold transition-all ${
-                sidebarMode === 'orderbook'
-                  ? 'bg-emerald-500 text-zinc-950 shadow-sm'
-                  : 'text-zinc-400 hover:text-zinc-200'
-              }`}
-            >
-              <ListNumbers className="w-3.5 h-3.5" />
-              <span>Sổ Lệnh</span>
-            </button>
+              <span>Chiến Lược Minervini</span>
+            </div>
+            <span className="text-[10px] text-zinc-500 font-semibold uppercase">Stage 2</span>
           </div>
 
           <div className="flex-1 overflow-y-auto scrollbar-none">
-            {sidebarMode === 'minervini' ? (
-              <MinerviniStrategyPanel symbol={selectedSymbol} />
-            ) : sidebarMode === 'investor_flow' ? (
-              <InvestorFlowAnalysis />
-            ) : (
-              <OrderBook />
-            )}
+            <MinerviniStrategyPanel symbol={selectedSymbol} />
           </div>
         </div>
       </div>
@@ -426,7 +388,19 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
             }`}
           >
             <Fish className="w-4 h-4" />
-            <span>Phân Loại Nhà Đầu Tư (Cá Mập)</span>
+            <span>Phân Loại NĐT (Cá Mập)</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('orderbook')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all ${
+              activeTab === 'orderbook'
+                ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20'
+                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
+            }`}
+          >
+            <ListNumbers className="w-4 h-4" />
+            <span>Sổ Lệnh (Order Book)</span>
           </button>
         </div>
 
@@ -635,6 +609,12 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
           {!isLoading && activeTab === 'investor_flow' && (
             <div className="p-1">
               <InvestorFlowAnalysis />
+            </div>
+          )}
+
+          {!isLoading && activeTab === 'orderbook' && (
+            <div className="p-1 max-w-xl mx-auto">
+              <OrderBook />
             </div>
           )}
         </div>
