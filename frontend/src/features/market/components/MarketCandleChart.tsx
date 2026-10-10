@@ -2712,34 +2712,36 @@ export function MarketCandleChart() {
           : 'bg-zinc-950 w-full h-[520px] lg:h-[550px] rounded-2xl shadow-xl overflow-hidden'
       }`}
     >
-      {/* ── TradingView-Style Single-Row Controls Bar ────────── */}
-      <div className="flex items-center justify-between px-2.5 py-1.5 border-b border-zinc-800/80 bg-[#131722] text-zinc-300 text-xs gap-2 z-30 overflow-x-auto scrollbar-none whitespace-nowrap">
+      {/* ── TradingView-Style Single-Row Controls Bar (Zero Scroll / Always 1-Screen) ────────── */}
+      <div className="flex items-center justify-between px-2 py-1 border-b border-zinc-800/80 bg-[#131722] text-zinc-300 text-xs gap-1.5 z-30 overflow-hidden whitespace-nowrap select-none">
         {/* Left: Ticker & Timeframe & Indicators */}
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          {/* Symbol & Name */}
-          <div className="flex items-center gap-1.5 font-sans shrink-0">
-            <span className={`font-mono font-extrabold text-xs px-2 py-0.5 rounded border shadow-sm ${priceColor.badgeBgClass}`}>
+        <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 min-w-0">
+          {/* Symbol & Tooltip Name */}
+          <div className="flex items-center gap-1 font-sans shrink-0">
+            <span
+              className={`font-mono font-extrabold text-xs px-2 py-0.5 rounded border shadow-sm cursor-default ${priceColor.badgeBgClass}`}
+              title={`${stockInfo.name} (${stockInfo.exchange})`}
+            >
               {selectedSymbol}
             </span>
             <span
-              className="font-bold text-zinc-200 text-xs tracking-tight truncate max-w-[100px] sm:max-w-[140px] md:max-w-[200px]"
+              className="font-bold text-zinc-300 text-xs tracking-tight truncate max-w-[90px] xl:max-w-[140px] hidden md:inline-block"
               title={stockInfo.name}
             >
               {stockInfo.name}
             </span>
-            <span className="text-zinc-600 hidden sm:inline">·</span>
-            <span className="font-mono text-zinc-400 text-xs shrink-0 hidden sm:inline">{stockInfo.exchange}</span>
+            <span className="font-mono text-zinc-500 text-[11px] shrink-0 hidden sm:inline">{stockInfo.exchange}</span>
           </div>
 
           <div className="w-px h-3.5 bg-zinc-800/80 shrink-0 mx-0.5" />
 
-          {/* Timeframe Resolution buttons */}
+          {/* Timeframe Resolution buttons (Ultra Compact) */}
           <div className="flex items-center bg-zinc-900 border border-zinc-800 rounded-lg p-0.5 shrink-0">
             {RESOLUTIONS.map((res) => (
               <button
                 key={res.id}
                 onClick={() => setResolution(res.id)}
-                className={`px-1.5 sm:px-2 py-0.5 text-[11px] font-mono font-medium rounded whitespace-nowrap transition-all ${
+                className={`px-1.5 py-0.5 text-[10.5px] font-mono font-medium rounded whitespace-nowrap transition-all ${
                   resolution === res.id
                     ? 'bg-emerald-500 text-zinc-950 font-bold shadow'
                     : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
@@ -2756,16 +2758,17 @@ export function MarketCandleChart() {
           <div className="relative shrink-0">
             <button
               onClick={() => setShowIndicatorsModal(!showIndicatorsModal)}
-              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-mono font-semibold border rounded-lg whitespace-nowrap transition-all ${
+              title="Danh mục các chỉ báo kỹ thuật (Indicators)"
+              className={`flex items-center gap-1 px-2 py-0.5 text-xs font-mono font-semibold border rounded-lg whitespace-nowrap transition-all ${
                 activeSubIndicator !== 'none'
                   ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300 shadow-sm'
                   : 'bg-zinc-900 border-zinc-800 hover:border-zinc-700 text-zinc-200'
               }`}
             >
-              <FxIcon size={14} className={activeSubIndicator !== 'none' ? 'text-emerald-400 shrink-0' : 'text-zinc-400 shrink-0'} />
-              <span className="whitespace-nowrap">Các chỉ báo</span>
+              <FxIcon size={13} className={activeSubIndicator !== 'none' ? 'text-emerald-400 shrink-0' : 'text-zinc-400 shrink-0'} />
+              <span>Chỉ báo</span>
               {activeSubIndicator !== 'none' && (
-                <span className="text-[10px] uppercase font-bold bg-emerald-500/20 text-emerald-300 px-1.5 py-0.2 rounded border border-emerald-500/30">
+                <span className="text-[9px] uppercase font-bold bg-emerald-500/20 text-emerald-300 px-1 py-0.2 rounded border border-emerald-500/30">
                   {activeSubIndicator}
                 </span>
               )}
@@ -2914,38 +2917,29 @@ export function MarketCandleChart() {
           <button
             onClick={() => setShowTrendlinePro(!showTrendlinePro)}
             title="Tự động kẻ Trendline Pro & Kênh Fibonacci đa tầng"
-            className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-mono font-semibold rounded-lg whitespace-nowrap shrink-0 transition-all ${
+            className={`flex items-center gap-1 px-2 py-0.5 text-xs font-mono font-semibold rounded-lg whitespace-nowrap shrink-0 transition-all ${
               showTrendlinePro
                 ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'
                 : 'bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200'
             }`}
           >
-            <TrendUp size={14} className={showTrendlinePro ? 'text-amber-400 shrink-0' : 'text-zinc-500 shrink-0'} />
-            <span className="whitespace-nowrap">Trendline Pro</span>
+            <TrendUp size={13} className={showTrendlinePro ? 'text-amber-400 shrink-0' : 'text-zinc-500 shrink-0'} />
+            <span>Trendline</span>
             {showTrendlinePro && <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />}
           </button>
         </div>
 
         {/* Right: Minervini RS Rating, Fit & Fullscreen */}
-        <div className="flex items-center gap-1.5 shrink-0 ml-auto">
+        <div className="flex items-center gap-1 shrink-0 ml-auto">
           {chartMinervini?.rsRating !== undefined && (
-            <div className="flex items-center gap-1 shrink-0">
-              <span className="font-mono font-black text-xs px-2 py-0.5 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-400/50 flex items-center gap-1 shrink-0">
-                <Sparkle weight="fill" className="w-3 h-3 text-amber-400" />
-                <span className="text-[10px] text-amber-300/90 uppercase font-bold tracking-wider">RS</span>
-                <span className="text-xs font-black text-amber-300">{chartMinervini.rsRating}</span>
-                <span className="text-[10px] text-amber-400/60 font-semibold">/99</span>
-              </span>
-              <span
-                className={`font-mono text-[10px] font-bold px-1.5 py-0.5 rounded-md border shrink-0 hidden sm:inline-block ${
-                  chartMinervini.isStage2Eligible
-                    ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
-                    : 'bg-zinc-900 text-zinc-400 border-zinc-800'
-                }`}
-              >
-                {chartMinervini.isStage2Eligible ? 'Stage 2 (8/8)' : `${chartMinervini.passedCount || 0}/8`}
-              </span>
-            </div>
+            <span
+              title={`Minervini RS Rating: ${chartMinervini.rsRating}/99 - Stage 2: ${chartMinervini.passedCount || 0}/8`}
+              className="font-mono font-black text-xs px-1.5 py-0.5 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-400/50 flex items-center gap-1 shrink-0 cursor-default"
+            >
+              <Sparkle weight="fill" className="w-2.5 h-2.5 text-amber-400" />
+              <span className="text-[9px] text-amber-300/90 uppercase font-bold">RS</span>
+              <span className="text-xs font-black text-amber-300">{chartMinervini.rsRating}</span>
+            </span>
           )}
 
           <div className="w-px h-3.5 bg-zinc-800 shrink-0 mx-0.5" />
@@ -2953,31 +2947,21 @@ export function MarketCandleChart() {
           <button
             onClick={() => chartRef.current?.timeScale().fitContent()}
             title="Căn chỉnh dữ liệu nến vừa khung (Fit Content)"
-            className="p-1 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900 rounded-lg shrink-0"
+            className="p-1 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded-lg shrink-0"
           >
-            <ArrowsOutSimple size={14} />
+            <ArrowsOutSimple size={13} />
           </button>
 
           <button
             onClick={toggleFullscreen}
-            title={isExpanded ? 'Thu nhỏ biểu đồ (Esc)' : 'Phóng to toàn bộ màn hình (Fullscreen)'}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-semibold whitespace-nowrap shrink-0 transition-all ${
+            title={isExpanded ? 'Thu nhỏ biểu đồ (Esc)' : 'Toàn màn hình (Fullscreen)'}
+            className={`p-1 rounded-lg shrink-0 transition-all ${
               isExpanded
                 ? 'bg-emerald-500 text-zinc-950 font-bold'
-                : 'bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-emerald-400 hover:border-emerald-500/40'
+                : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 border border-zinc-800'
             }`}
           >
-            {isExpanded ? (
-              <>
-                <ArrowsIn size={14} weight="bold" />
-                <span className="whitespace-nowrap">Thu nhỏ</span>
-              </>
-            ) : (
-              <>
-                <ArrowsOut size={14} weight="bold" />
-                <span className="whitespace-nowrap hidden sm:inline">Toàn màn hình</span>
-              </>
-            )}
+            {isExpanded ? <ArrowsIn size={14} weight="bold" /> : <ArrowsOut size={14} weight="bold" />}
           </button>
         </div>
       </div>
