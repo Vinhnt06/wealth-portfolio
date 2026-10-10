@@ -2712,23 +2712,23 @@ export function MarketCandleChart() {
           : 'bg-zinc-950 w-full h-[520px] lg:h-[550px] rounded-2xl shadow-xl overflow-hidden'
       }`}
     >
-      {/* ── TradingView-Style Top Navigation & Header Bar (Tier 1: Controls) ────────── */}
-      <div className="flex items-center justify-between px-3 py-1.5 border-b border-zinc-800/80 bg-zinc-950 text-zinc-300 text-xs gap-2 z-30 overflow-x-auto scrollbar-none whitespace-nowrap">
+      {/* ── TradingView-Style Single-Row Controls Bar ────────── */}
+      <div className="flex items-center justify-between px-2.5 py-1.5 border-b border-zinc-800/80 bg-[#131722] text-zinc-300 text-xs gap-2 z-30 overflow-x-auto scrollbar-none whitespace-nowrap">
         {/* Left: Ticker & Timeframe & Indicators */}
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {/* Symbol & Name */}
           <div className="flex items-center gap-1.5 font-sans shrink-0">
             <span className={`font-mono font-extrabold text-xs px-2 py-0.5 rounded border shadow-sm ${priceColor.badgeBgClass}`}>
               {selectedSymbol}
             </span>
             <span
-              className="font-bold text-zinc-100 text-xs sm:text-sm tracking-tight truncate max-w-[130px] sm:max-w-[200px] md:max-w-[260px] whitespace-nowrap"
+              className="font-bold text-zinc-200 text-xs tracking-tight truncate max-w-[100px] sm:max-w-[140px] md:max-w-[200px]"
               title={stockInfo.name}
             >
               {stockInfo.name}
             </span>
-            <span className="text-zinc-600">·</span>
-            <span className="font-mono text-zinc-400 text-xs shrink-0">{stockInfo.exchange}</span>
+            <span className="text-zinc-600 hidden sm:inline">·</span>
+            <span className="font-mono text-zinc-400 text-xs shrink-0 hidden sm:inline">{stockInfo.exchange}</span>
           </div>
 
           <div className="w-px h-3.5 bg-zinc-800/80 shrink-0 mx-0.5" />
@@ -2926,52 +2926,34 @@ export function MarketCandleChart() {
           </button>
         </div>
 
-        {/* Right: Actions & Fullscreen */}
-        <div className="flex items-center gap-1.5 shrink-0">
-          {/* Drawing Actions: Undo, Redo, Hide, Clear Trash */}
-          <div className="flex items-center gap-0.5 bg-zinc-900 border border-zinc-800 rounded-lg p-0.5 shrink-0">
-            <button
-              onClick={handleUndo}
-              disabled={drawings.length === 0}
-              title="Hoàn tác nét vẽ (Undo)"
-              className="p-1 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded disabled:opacity-25"
-            >
-              <ArrowCounterClockwise size={13} />
-            </button>
-            <button
-              onClick={handleRedo}
-              disabled={redoStack.length === 0}
-              title="Làm lại nét vẽ (Redo)"
-              className="p-1 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded disabled:opacity-25"
-            >
-              <ArrowClockwise size={13} />
-            </button>
-            <div className="w-px h-3.5 bg-zinc-800 mx-0.5" />
-            <button
-              onClick={() => setHideDrawings(!hideDrawings)}
-              title={hideDrawings ? 'Hiện tất cả nét vẽ' : 'Ẩn tất cả nét vẽ'}
-              className={`p-1 rounded transition-colors ${
-                hideDrawings
-                  ? 'text-amber-400 bg-amber-500/20 font-bold'
-                  : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
-              }`}
-            >
-              {hideDrawings ? <EyeSlash size={13} weight="bold" /> : <Eye size={13} />}
-            </button>
-            <button
-              onClick={handleClearAll}
-              disabled={drawings.length === 0}
-              title="Xóa tất cả nét vẽ"
-              className="p-1 text-zinc-400 hover:text-rose-400 hover:bg-rose-500/15 rounded disabled:opacity-25 transition-colors"
-            >
-              <Trash size={13} />
-            </button>
-          </div>
+        {/* Right: Minervini RS Rating, Fit & Fullscreen */}
+        <div className="flex items-center gap-1.5 shrink-0 ml-auto">
+          {chartMinervini?.rsRating !== undefined && (
+            <div className="flex items-center gap-1 shrink-0">
+              <span className="font-mono font-black text-xs px-2 py-0.5 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-400/50 flex items-center gap-1 shrink-0">
+                <Sparkle weight="fill" className="w-3 h-3 text-amber-400" />
+                <span className="text-[10px] text-amber-300/90 uppercase font-bold tracking-wider">RS</span>
+                <span className="text-xs font-black text-amber-300">{chartMinervini.rsRating}</span>
+                <span className="text-[10px] text-amber-400/60 font-semibold">/99</span>
+              </span>
+              <span
+                className={`font-mono text-[10px] font-bold px-1.5 py-0.5 rounded-md border shrink-0 hidden sm:inline-block ${
+                  chartMinervini.isStage2Eligible
+                    ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+                    : 'bg-zinc-900 text-zinc-400 border-zinc-800'
+                }`}
+              >
+                {chartMinervini.isStage2Eligible ? 'Stage 2 (8/8)' : `${chartMinervini.passedCount || 0}/8`}
+              </span>
+            </div>
+          )}
+
+          <div className="w-px h-3.5 bg-zinc-800 shrink-0 mx-0.5" />
 
           <button
             onClick={() => chartRef.current?.timeScale().fitContent()}
             title="Căn chỉnh dữ liệu nến vừa khung (Fit Content)"
-            className="p-1.5 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900 rounded-lg shrink-0"
+            className="p-1 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900 rounded-lg shrink-0"
           >
             <ArrowsOutSimple size={14} />
           </button>
@@ -2981,7 +2963,7 @@ export function MarketCandleChart() {
             title={isExpanded ? 'Thu nhỏ biểu đồ (Esc)' : 'Phóng to toàn bộ màn hình (Fullscreen)'}
             className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-semibold whitespace-nowrap shrink-0 transition-all ${
               isExpanded
-                ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20 font-bold'
+                ? 'bg-emerald-500 text-zinc-950 font-bold'
                 : 'bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-emerald-400 hover:border-emerald-500/40'
             }`}
           >
@@ -2998,111 +2980,6 @@ export function MarketCandleChart() {
             )}
           </button>
         </div>
-      </div>
-
-      {/* ── Sub-header: Live Realtime OHLC & Trendline Pro & Indicators Bar (Tier 2: Legend) ── */}
-      <div className="flex items-center justify-between px-3 py-1.5 bg-zinc-950/90 border-b border-zinc-800/60 text-[11px] font-mono text-zinc-300 overflow-x-auto scrollbar-none whitespace-nowrap gap-3 z-20">
-        {/* Left: Real-time OHLC Legend & Moving Averages & Trendline Pro */}
-        <div className="flex items-center gap-2.5 shrink-0">
-          {/* Live OHLC */}
-          <div className="flex items-center gap-2 text-[11px] font-mono text-zinc-400 shrink-0">
-            <div>O <span className="text-zinc-200 font-bold">{hoveredData?.open ? hoveredData.open.toFixed(2) : (lastCandleRef.current ? lastCandleRef.current.open.toFixed(2) : priceDisplayK)}</span></div>
-            <div>H <span className="text-emerald-400 font-bold">{hoveredData?.high ? hoveredData.high.toFixed(2) : (lastCandleRef.current ? lastCandleRef.current.high.toFixed(2) : priceDisplayK)}</span></div>
-            <div>L <span className="text-rose-400 font-bold">{hoveredData?.low ? hoveredData.low.toFixed(2) : (lastCandleRef.current ? lastCandleRef.current.low.toFixed(2) : priceDisplayK)}</span></div>
-            <div>C <span className="text-zinc-100 font-bold">{hoveredData?.close ? hoveredData.close.toFixed(2) : (lastCandleRef.current ? lastCandleRef.current.close.toFixed(2) : priceDisplayK)}</span></div>
-            <div className={`font-bold ${priceColor.colorClass}`}>
-              {hoveredData?.change ? (
-                `${hoveredData.change >= 0 ? '+' : ''}${hoveredData.change.toFixed(2)} (${hoveredData.changePct?.toFixed(2)}%)`
-              ) : lastCandleRef.current ? (
-                `${lastCandleRef.current.close >= lastCandleRef.current.open ? '+' : ''}${(lastCandleRef.current.close - lastCandleRef.current.open).toFixed(2)} (${(((lastCandleRef.current.close - lastCandleRef.current.open) / (lastCandleRef.current.open || 1)) * 100).toFixed(2)}%)`
-              ) : (
-                `${isPositive ? '+' : ''}${changeK} (${isPositive ? '+' : ''}${changePct}%)`
-              )}
-            </div>
-            {(hoveredData?.volume || lastCandleRef.current) && (
-              <div className="text-zinc-500 ml-1">
-                Vol: <span className="text-zinc-300 font-bold">{(hoveredData?.volume || (loadedCandlesRef.current.length > 0 ? (currentTick?.totalVolume || 0) : 0)).toLocaleString()}</span>
-              </div>
-            )}
-          </div>
-
-          {/* Live Moving Average Values */}
-          {(showMA20 || showMA50 || showMA150 || showMA200) && (
-            <>
-              <span className="text-zinc-700 shrink-0">|</span>
-              <div className="flex items-center gap-2 text-[11px] shrink-0">
-                {showMA20 && activeMA20 !== undefined && (
-                  <span className="text-[#f59e0b] font-medium shrink-0">
-                    MA20: <strong className="font-bold">{activeMA20.toFixed(2)}</strong>
-                  </span>
-                )}
-                {showMA50 && activeMA50 !== undefined && (
-                  <span className="text-[#06b6d4] font-medium shrink-0">
-                    MA50: <strong className="font-bold">{activeMA50.toFixed(2)}</strong>
-                  </span>
-                )}
-                {showMA150 && activeMA150 !== undefined && (
-                  <span className="text-[#f97316] font-medium shrink-0">
-                    MA150: <strong className="font-bold">{activeMA150.toFixed(2)}</strong>
-                  </span>
-                )}
-                {showMA200 && activeMA200 !== undefined && (
-                  <span className="text-[#f43f5e] font-medium shrink-0">
-                    MA200: <strong className="font-bold">{activeMA200.toFixed(2)}</strong>
-                  </span>
-                )}
-              </div>
-            </>
-          )}
-
-          {/* Trendline Pro Support / Resistance */}
-          {showTrendlinePro && trendlineProData && (
-            <>
-              <span className="text-zinc-700 shrink-0">|</span>
-              <div className="flex items-center gap-2 text-[11px] shrink-0">
-                <span className="shrink-0 flex items-center gap-1">
-                  <span className="text-zinc-400">Kháng cự:</span>
-                  <span className="px-1.5 py-0.2 rounded bg-lime-500/15 text-lime-400 font-bold border border-lime-500/30">
-                    {trendlineProData.resistance.toFixed(2)}
-                  </span>
-                </span>
-                <span className="shrink-0 flex items-center gap-1">
-                  <span className="text-zinc-400">Hỗ trợ:</span>
-                  <span className="px-1.5 py-0.2 rounded bg-rose-500/15 text-rose-400 font-bold border border-rose-500/30">
-                    {trendlineProData.support.toFixed(2)}
-                  </span>
-                </span>
-                <span className="shrink-0 flex items-center gap-1">
-                  <span className="text-zinc-400">Fib 0.618:</span>
-                  <span className="px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-300 font-bold border border-amber-500/30">
-                    {trendlineProData.fib0618.toFixed(2)}
-                  </span>
-                </span>
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* Right: Minervini Live RS Rating on Chart Bar */}
-        {chartMinervini?.rsRating !== undefined && (
-          <div className="flex items-center gap-1.5 shrink-0 ml-auto">
-            <span className="font-mono font-black text-xs px-2 py-0.5 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-400/50 shadow-[0_0_12px_rgba(245,158,11,0.25)] flex items-center gap-1 shrink-0">
-              <Sparkle weight="fill" className="w-3 h-3 text-amber-400" />
-              <span className="text-[10px] text-amber-300/90 uppercase font-bold tracking-wider">RS</span>
-              <span className="text-xs font-black text-amber-300">{chartMinervini.rsRating}</span>
-              <span className="text-[10px] text-amber-400/60 font-semibold">/99</span>
-            </span>
-            <span
-              className={`font-mono text-[10px] font-bold px-1.5 py-0.5 rounded-md border shrink-0 ${
-                chartMinervini.isStage2Eligible
-                  ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
-                  : 'bg-zinc-900 text-zinc-400 border-zinc-800'
-              }`}
-            >
-              {chartMinervini.isStage2Eligible ? 'Stage 2 (8/8)' : `${chartMinervini.passedCount || 0}/8`}
-            </span>
-          </div>
-        )}
       </div>
 
       {/* ── Main Chart Body with Left Drawing Toolbar ─────────────── */}
@@ -3451,6 +3328,71 @@ export function MarketCandleChart() {
                 <p className="text-xs font-mono text-zinc-300">Đang đồng bộ nến lịch sử DNSE từ ngày đầu tiên...</p>
               </div>
             )}
+
+            {/* ── TradingView In-Chart Legend (Top-Left Canvas Overlay - Screenshot 2 style) ────────── */}
+            <div className="absolute top-2 left-3 z-20 pointer-events-none flex flex-col gap-0.5 select-none font-mono text-[11px] leading-tight drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)]">
+              {/* Row 1: Symbol & Realtime OHLC */}
+              <div className="flex items-center gap-1.5 flex-wrap text-zinc-300">
+                <span className="font-extrabold text-zinc-100">{selectedSymbol}</span>
+                <span className="text-zinc-600">·</span>
+                <span className="text-zinc-400 font-semibold">{resolution}</span>
+                <span className="text-zinc-600">·</span>
+                <span className="text-zinc-400 font-semibold">{stockInfo.exchange}</span>
+                <span className="text-zinc-700">|</span>
+                <span>O <strong className="text-zinc-100 font-bold">{hoveredData?.open ? hoveredData.open.toFixed(2) : (lastCandleRef.current ? lastCandleRef.current.open.toFixed(2) : priceDisplayK)}</strong></span>
+                <span>H <strong className="text-emerald-400 font-bold">{hoveredData?.high ? hoveredData.high.toFixed(2) : (lastCandleRef.current ? lastCandleRef.current.high.toFixed(2) : priceDisplayK)}</strong></span>
+                <span>L <strong className="text-rose-400 font-bold">{hoveredData?.low ? hoveredData.low.toFixed(2) : (lastCandleRef.current ? lastCandleRef.current.low.toFixed(2) : priceDisplayK)}</strong></span>
+                <span>C <strong className="text-zinc-100 font-bold">{hoveredData?.close ? hoveredData.close.toFixed(2) : (lastCandleRef.current ? lastCandleRef.current.close.toFixed(2) : priceDisplayK)}</strong></span>
+                <span className={`font-bold ${priceColor.colorClass}`}>
+                  {hoveredData?.change ? (
+                    `${hoveredData.change >= 0 ? '+' : ''}${hoveredData.change.toFixed(2)} (${hoveredData.changePct?.toFixed(2)}%)`
+                  ) : lastCandleRef.current ? (
+                    `${lastCandleRef.current.close >= lastCandleRef.current.open ? '+' : ''}${(lastCandleRef.current.close - lastCandleRef.current.open).toFixed(2)} (${(((lastCandleRef.current.close - lastCandleRef.current.open) / (lastCandleRef.current.open || 1)) * 100).toFixed(2)}%)`
+                  ) : (
+                    `${isPositive ? '+' : ''}${changeK} (${isPositive ? '+' : ''}${changePct}%)`
+                  )}
+                </span>
+              </div>
+
+              {/* Row 2: Volume 20 (Screenshot 2: Vol 20 3.38M) */}
+              {showVolume && (
+                <div className="flex items-center gap-2 text-zinc-400">
+                  <span>Vol 20</span>
+                  <span className="text-emerald-400 font-bold">
+                    {(hoveredData?.volume || (loadedCandlesRef.current.length > 0 ? (currentTick?.totalVolume || 0) : 0)).toLocaleString()}
+                  </span>
+                </div>
+              )}
+
+              {/* Row 3: SMA 20 50 150 200 (Matches Screenshot 2: SMA 20 50 150 200 ...) */}
+              {(showMA20 || showMA50 || showMA150 || showMA200) && (
+                <div className="flex items-center gap-2">
+                  <span className="text-zinc-400">SMA 20 50 150 200</span>
+                  {showMA20 && activeMA20 !== undefined && (
+                    <span className="text-[#f59e0b] font-bold">{activeMA20.toFixed(2)}</span>
+                  )}
+                  {showMA50 && activeMA50 !== undefined && (
+                    <span className="text-[#06b6d4] font-bold">{activeMA50.toFixed(2)}</span>
+                  )}
+                  {showMA150 && activeMA150 !== undefined && (
+                    <span className="text-[#f97316] font-bold">{activeMA150.toFixed(2)}</span>
+                  )}
+                  {showMA200 && activeMA200 !== undefined && (
+                    <span className="text-[#f43f5e] font-bold">{activeMA200.toFixed(2)}</span>
+                  )}
+                </div>
+              )}
+
+              {/* Row 4: Trendline Pro Support / Resistance */}
+              {showTrendlinePro && trendlineProData && (
+                <div className="flex items-center gap-2 text-[10px]">
+                  <span className="text-amber-400/90 font-bold">Trendline Pro</span>
+                  <span className="text-lime-400">Kháng cự: <strong>{trendlineProData.resistance.toFixed(2)}</strong></span>
+                  <span className="text-rose-400">Hỗ trợ: <strong>{trendlineProData.support.toFixed(2)}</strong></span>
+                  <span className="text-amber-300">Fib 0.618: <strong>{trendlineProData.fib0618.toFixed(2)}</strong></span>
+                </div>
+              )}
+            </div>
 
             {/* Active Tool Floating Banner */}
             {activeTool !== 'cursor' && (
