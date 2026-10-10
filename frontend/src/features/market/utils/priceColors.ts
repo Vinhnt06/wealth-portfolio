@@ -34,12 +34,34 @@ export function getStockPriceColor(params: {
   const pct = changePercent != null ? changePercent : (ref && chg ? (chg / ref) * 100 : 0);
 
   const ex = (exchange || 'HOSE').toUpperCase();
-  const limitPct = ex === 'UPCOM' ? 14.5 : ex === 'HNX' ? 9.5 : 6.8;
+  // Biên độ sàn: HOSE ~6.7-7.0%, HNX ~9.5-10.0%, UPCOM ~14.3-15.0%
+  const limitPct = ex === 'UPCOM' ? 14.3 : ex === 'HNX' ? 9.5 : 6.7;
+
+  // Chuẩn hóa đơn vị p, ceil, floor nếu có chênh lệch đơn vị (nghìn VNĐ vs đồng)
+  let normP = p;
+  let normCeil = ceil;
+  let normFloor = floor;
+  if (normP > 0 && normCeil > 0) {
+    if (normP > 1000 && normCeil < 1000) normCeil *= 1000;
+    else if (normP < 1000 && normCeil > 1000) normP *= 1000;
+  }
+  if (normP > 0 && normFloor > 0) {
+    if (normP > 1000 && normFloor < 1000) normFloor *= 1000;
+    else if (normP < 1000 && normFloor > 1000) normP *= 1000;
+  }
 
   // 1. Ceiling (Trần - Tím)
+  // BẮT BUỘC:
+  // - Phải là phiên TĂNG GIÁ (pct > 0 và chg > 0)
+  // - pct phải chạm ngưỡng trần (>= limitPct) HOẶC nếu giá chạm ceilingPrice thì pct cũng phải gần ngưỡng trần (>= limitPct - 1.0)
+  const isCeilPriceMatch =
+    normCeil > 0 &&
+    normP > 0 &&
+    (normP >= normCeil || Math.abs(normP - normCeil) <= (normCeil > 1000 ? 50 : 0.05));
+
   const isCeil =
-    (ceil > 0 && p > 0 && (p >= ceil || Math.abs(p - ceil) <= (ceil > 1000 ? 50 : 0.05))) ||
-    pct >= limitPct;
+    (chg > 0 || pct > 0) &&
+    (pct >= limitPct || (isCeilPriceMatch && pct >= limitPct - 1.0));
 
   if (isCeil) {
     return {
@@ -51,9 +73,17 @@ export function getStockPriceColor(params: {
   }
 
   // 2. Floor (Sàn - Xanh Lơ)
+  // BẮT BUỘC:
+  // - Phải là phiên GIẢM GIÁ (pct < 0 và chg < 0)
+  // - pct phải chạm ngưỡng sàn (<= -limitPct) HOẶC nếu giá chạm floorPrice thì pct cũng phải gần ngưỡng sàn (<= -limitPct + 1.0)
+  const isFloorPriceMatch =
+    normFloor > 0 &&
+    normP > 0 &&
+    (normP <= normFloor || Math.abs(normP - normFloor) <= (normFloor > 1000 ? 50 : 0.05));
+
   const isFloor =
-    (floor > 0 && p > 0 && (p <= floor || Math.abs(p - floor) <= (floor > 1000 ? 50 : 0.05))) ||
-    pct <= -limitPct;
+    (chg < 0 || pct < 0) &&
+    (pct <= -limitPct || (isFloorPriceMatch && pct <= -limitPct + 1.0));
 
   if (isFloor) {
     return {

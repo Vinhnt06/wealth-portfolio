@@ -19,22 +19,22 @@ interface StockRow {
 }
 
 const INITIAL_STOCKS: StockRow[] = [
+  { symbol: 'NVL', name: 'Novaland', exchange: 'HOSE', refPrice: 10.25, ceilPrice: 10.95, floorPrice: 9.55, matchPrice: 10.95, change: +0.70, changePct: +6.83, volume: 73096900 },
+  { symbol: 'PDR', name: 'Phát Đạt', exchange: 'HOSE', refPrice: 11.10, ceilPrice: 11.85, floorPrice: 10.35, matchPrice: 11.30, change: +0.20, changePct: +1.80, volume: 9396600 },
+  { symbol: 'VPB', name: 'Ngân hàng VPBank', exchange: 'HOSE', refPrice: 23.45, ceilPrice: 25.05, floorPrice: 21.85, matchPrice: 23.80, change: +0.35, changePct: +1.49, volume: 20155900 },
+  { symbol: 'TCB', name: 'Techcombank', exchange: 'HOSE', refPrice: 31.90, ceilPrice: 34.10, floorPrice: 29.70, matchPrice: 32.35, change: +0.45, changePct: +1.41, volume: 15207700 },
+  { symbol: 'DIG', name: 'DIC Corp', exchange: 'HOSE', refPrice: 9.30, ceilPrice: 9.95, floorPrice: 8.65, matchPrice: 9.40, change: +0.10, changePct: +1.08, volume: 7428200 },
+  { symbol: 'MBB', name: 'Ngân hàng Quân đội', exchange: 'HOSE', refPrice: 18.90, ceilPrice: 20.20, floorPrice: 17.60, matchPrice: 19.05, change: +0.15, changePct: +0.79, volume: 14094300 },
+  { symbol: 'VHM', name: 'Vinhomes', exchange: 'HOSE', refPrice: 65.70, ceilPrice: 70.30, floorPrice: 61.10, matchPrice: 66.00, change: +0.30, changePct: +0.46, volume: 6604000 },
+  { symbol: 'VCB', name: 'Vietcombank', exchange: 'HOSE', refPrice: 56.60, ceilPrice: 60.55, floorPrice: 52.65, matchPrice: 56.70, change: +0.10, changePct: +0.18, volume: 3049500 },
   { symbol: 'HPG', name: 'Thép Hòa Phát', exchange: 'HOSE', refPrice: 28.0, ceilPrice: 29.95, floorPrice: 26.05, matchPrice: 28.5, change: +0.5, changePct: +1.78, volume: 14850000 },
-  { symbol: 'VCB', name: 'Vietcombank', exchange: 'HOSE', refPrice: 92.0, ceilPrice: 98.4, floorPrice: 85.6, matchPrice: 92.5, change: +0.5, changePct: +0.54, volume: 3200000 },
   { symbol: 'SSI', name: 'Chứng khoán SSI', exchange: 'HOSE', refPrice: 35.2, ceilPrice: 37.6, floorPrice: 32.8, matchPrice: 36.0, change: +0.8, changePct: +2.27, volume: 11400000 },
-  { symbol: 'VHM', name: 'Vinhomes', exchange: 'HOSE', refPrice: 42.0, ceilPrice: 44.9, floorPrice: 39.1, matchPrice: 41.5, change: -0.5, changePct: -1.19, volume: 6500000 },
-  { symbol: 'TCB', name: 'Techcombank', exchange: 'HOSE', refPrice: 23.2, ceilPrice: 24.8, floorPrice: 21.6, matchPrice: 23.8, change: +0.6, changePct: +2.59, volume: 9800000 },
   { symbol: 'FPT', name: 'Tập đoàn FPT', exchange: 'HOSE', refPrice: 128.0, ceilPrice: 136.9, floorPrice: 119.1, matchPrice: 130.5, change: +2.5, changePct: +1.95, volume: 4100000 },
-  { symbol: 'MBB', name: 'Ngân hàng Quân đội', exchange: 'HOSE', refPrice: 22.0, ceilPrice: 23.5, floorPrice: 20.5, matchPrice: 22.4, change: +0.4, changePct: +1.82, volume: 8900000 },
   { symbol: 'MWG', name: 'Thế Giới Di Động', exchange: 'HOSE', refPrice: 65.0, ceilPrice: 69.5, floorPrice: 60.5, matchPrice: 64.2, change: -0.8, changePct: -1.23, volume: 5300000 },
   { symbol: 'VNM', name: 'Vinamilk', exchange: 'HOSE', refPrice: 67.5, ceilPrice: 72.2, floorPrice: 62.8, matchPrice: 67.8, change: +0.3, changePct: +0.44, volume: 2900000 },
   { symbol: 'VIC', name: 'Vingroup', exchange: 'HOSE', refPrice: 45.0, ceilPrice: 48.1, floorPrice: 41.9, matchPrice: 44.6, change: -0.4, changePct: -0.88, volume: 4800000 },
   { symbol: 'STB', name: 'Ngân hàng Sacombank', exchange: 'HOSE', refPrice: 29.2, ceilPrice: 31.2, floorPrice: 27.2, matchPrice: 29.8, change: +0.6, changePct: +2.05, volume: 12500000 },
-  { symbol: 'VPB', name: 'Ngân hàng VPBank', exchange: 'HOSE', refPrice: 18.9, ceilPrice: 20.2, floorPrice: 17.6, matchPrice: 19.2, change: +0.3, changePct: +1.59, volume: 16800000 },
   { symbol: 'BID', name: 'Ngân hàng BIDV', exchange: 'HOSE', refPrice: 49.0, ceilPrice: 52.4, floorPrice: 45.6, matchPrice: 49.5, change: +0.5, changePct: +1.02, volume: 2100000 },
-  { symbol: 'NVL', name: 'Novaland', exchange: 'HOSE', refPrice: 14.5, ceilPrice: 15.5, floorPrice: 13.5, matchPrice: 14.2, change: -0.3, changePct: -2.07, volume: 18900000 },
-  { symbol: 'DIG', name: 'DIC Corp', exchange: 'HOSE', refPrice: 26.0, ceilPrice: 27.8, floorPrice: 24.2, matchPrice: 26.5, change: +0.5, changePct: +1.92, volume: 9400000 },
-  { symbol: 'PDR', name: 'Phát Đạt', exchange: 'HOSE', refPrice: 22.5, ceilPrice: 24.0, floorPrice: 21.0, matchPrice: 22.1, change: -0.4, changePct: -1.78, volume: 6200000 },
   { symbol: 'SHB', name: 'Ngân hàng SHB', exchange: 'HOSE', refPrice: 11.4, ceilPrice: 12.1, floorPrice: 10.7, matchPrice: 11.5, change: +0.1, changePct: +0.88, volume: 22000000 },
   { symbol: 'ACB', name: 'Ngân hàng ACB', exchange: 'HOSE', refPrice: 24.5, ceilPrice: 26.2, floorPrice: 22.8, matchPrice: 24.8, change: +0.3, changePct: +1.22, volume: 7500000 },
   { symbol: 'EIB', name: 'Eximbank', exchange: 'HOSE', refPrice: 18.2, ceilPrice: 19.4, floorPrice: 17.0, matchPrice: 18.5, change: +0.3, changePct: +1.65, volume: 8300000 },
@@ -63,14 +63,22 @@ export const WatchlistTable: React.FC = () => {
   const processedRows = INITIAL_STOCKS.map((stock) => {
     const tick = ticks[stock.symbol];
     if (tick) {
-      const matchP = tick.price ? tick.price / 1000 : stock.matchPrice;
-      const refP = tick.referencePrice ? tick.referencePrice / 1000 : stock.refPrice;
+      const matchP = tick.price ? (tick.price > 1000 ? tick.price / 1000 : tick.price) : stock.matchPrice;
+      const refP = tick.referencePrice ? (tick.referencePrice > 1000 ? tick.referencePrice / 1000 : tick.referencePrice) : stock.refPrice;
+      const ceilP = tick.ceilingPrice
+        ? (tick.ceilingPrice > 1000 ? tick.ceilingPrice / 1000 : tick.ceilingPrice)
+        : Math.round(refP * 1.07 * 100) / 100;
+      const floorP = tick.floorPrice
+        ? (tick.floorPrice > 1000 ? tick.floorPrice / 1000 : tick.floorPrice)
+        : Math.round(refP * 0.93 * 100) / 100;
       const chg = matchP - refP;
       const pct = (chg / refP) * 100;
       return {
         ...stock,
         matchPrice: matchP,
         refPrice: refP,
+        ceilPrice: ceilP,
+        floorPrice: floorP,
         change: chg,
         changePct: pct,
         volume: tick.totalVolume || stock.volume,
