@@ -40,6 +40,7 @@ import {
   Sparkle,
 } from '@phosphor-icons/react';
 import stockDatabase from '../data/stockDatabase.json';
+import { getStockPriceColor } from '../utils/priceColors';
 
 const STOCK_MAP = new Map<string, { name: string; exchange: string }>();
 (stockDatabase as any[]).forEach((item) => {
@@ -981,6 +982,16 @@ export function MarketCandleChart() {
   const changePct = currentTick?.changePercent ? currentTick.changePercent.toFixed(2) : '0.00';
   const isPositive = currentTick ? currentTick.change >= 0 : true;
 
+  const activePrice = hoveredData?.close ? hoveredData.close * 1000 : currentTick?.price;
+  const activeChange = hoveredData?.change ? hoveredData.change * 1000 : currentTick?.change;
+  const activeChangePct = hoveredData?.changePct !== undefined ? hoveredData.changePct : currentTick?.changePercent;
+  const priceColor = getStockPriceColor({
+    price: activePrice,
+    change: activeChange,
+    changePercent: activeChangePct,
+    exchange: stockInfo.exchange,
+  });
+
   return (
     <div
       ref={fullWrapperRef}
@@ -997,7 +1008,7 @@ export function MarketCandleChart() {
           <div className="flex items-center gap-1.5 font-sans">
             <span className="font-bold text-zinc-100 text-sm tracking-tight">{stockInfo.name}</span>
             <span className="text-zinc-500">·</span>
-            <span className="font-mono font-extrabold text-emerald-400 text-xs px-1.5 py-0.5 bg-emerald-500/10 rounded border border-emerald-500/20">
+            <span className={`font-mono font-extrabold text-xs px-1.5 py-0.5 rounded border ${priceColor.badgeBgClass}`}>
               {selectedSymbol}
             </span>
             <span className="text-zinc-500">·</span>
@@ -1034,7 +1045,7 @@ export function MarketCandleChart() {
             <div>H <span className="text-emerald-400 font-bold">{hoveredData?.high ? hoveredData.high.toFixed(2) : (lastCandleRef.current ? lastCandleRef.current.high.toFixed(2) : priceDisplayK)}</span></div>
             <div>L <span className="text-rose-400 font-bold">{hoveredData?.low ? hoveredData.low.toFixed(2) : (lastCandleRef.current ? lastCandleRef.current.low.toFixed(2) : priceDisplayK)}</span></div>
             <div>C <span className="text-zinc-100 font-bold">{hoveredData?.close ? hoveredData.close.toFixed(2) : (lastCandleRef.current ? lastCandleRef.current.close.toFixed(2) : priceDisplayK)}</span></div>
-            <div className={isPositive ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}>
+            <div className={`font-bold ${priceColor.colorClass}`}>
               {hoveredData?.change ? (
                 `${hoveredData.change >= 0 ? '+' : ''}${hoveredData.change.toFixed(2)} (${hoveredData.changePct?.toFixed(2)}%)`
               ) : lastCandleRef.current ? (

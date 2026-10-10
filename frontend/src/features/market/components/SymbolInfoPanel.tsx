@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Star, ChartLine, ShieldCheck, Coins, ArrowsLeftRight, Lightning } from '@phosphor-icons/react';
 import { useMarketStore } from '../store/marketStore';
 import stockDatabase from '../data/stockDatabase.json';
+import { getStockPriceColor } from '../utils/priceColors';
 
 interface StockMetadata {
   symbol: string;
@@ -67,6 +68,16 @@ export const SymbolInfoPanel: React.FC = () => {
   const ceilPrice = tick?.ceilingPrice ? tick.ceilingPrice / 1000 : (refPrice ? refPrice * 1.07 : null);
   const floorPrice = tick?.floorPrice ? tick.floorPrice / 1000 : (refPrice ? refPrice * 0.93 : null);
 
+  const priceColor = getStockPriceColor({
+    price: tick?.price,
+    refPrice: tick?.referencePrice,
+    ceilPrice: tick?.ceilingPrice,
+    floorPrice: tick?.floorPrice,
+    change: tick?.change,
+    changePercent: tick?.changePercent,
+    exchange: stockMeta.exchange,
+  });
+
   const change = currentPrice && refPrice ? currentPrice - refPrice : 0;
   const changePct = refPrice ? (change / refPrice) * 100 : 0;
   const isUp = change >= 0;
@@ -129,7 +140,7 @@ export const SymbolInfoPanel: React.FC = () => {
 
         {/* Live Price Display */}
         <div className="flex items-baseline gap-3 my-4 p-3 bg-zinc-950/60 rounded-xl border border-zinc-800/60">
-          <span className={`font-mono text-3xl font-black ${currentPrice === null ? 'text-zinc-500 animate-pulse' : isUp ? 'text-emerald-400' : 'text-rose-400'}`}>
+          <span className={`font-mono text-3xl font-black ${currentPrice === null ? 'text-zinc-500 animate-pulse' : priceColor.colorClass}`}>
             {currentPrice !== null ? currentPrice.toFixed(2) : '--.--'}
           </span>
           <span className="text-xs font-mono text-zinc-400">x 1.000 VNĐ</span>
@@ -138,9 +149,7 @@ export const SymbolInfoPanel: React.FC = () => {
             className={`ml-auto px-2.5 py-1 rounded-lg text-xs font-mono font-bold ${
               currentPrice === null
                 ? 'bg-zinc-800/40 text-zinc-400'
-                : isUp
-                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                : priceColor.badgeBgClass
             }`}
           >
             {currentPrice !== null ? (
@@ -166,8 +175,8 @@ export const SymbolInfoPanel: React.FC = () => {
             <div className="font-bold text-amber-300">{refPrice !== null ? refPrice.toFixed(2) : '--'}</div>
           </div>
           <div className="p-2 bg-zinc-950/40 rounded-lg border border-zinc-800/40">
-            <div className="text-[10px] text-purple-400 mb-0.5 font-semibold font-sans">TRẦN</div>
-            <div className="font-bold text-purple-300">{ceilPrice !== null ? ceilPrice.toFixed(2) : '--'}</div>
+            <div className="text-[10px] text-fuchsia-400 mb-0.5 font-semibold font-sans">TRẦN</div>
+            <div className="font-bold text-fuchsia-300">{ceilPrice !== null ? ceilPrice.toFixed(2) : '--'}</div>
           </div>
         </div>
       </div>

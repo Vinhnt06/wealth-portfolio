@@ -6,6 +6,7 @@ import { useMarketStore } from '../store/marketStore';
 
 import stockDatabase from '../data/stockDatabase.json';
 import realTicksData from '../data/realTicks.json';
+import { getStockPriceColor } from '../utils/priceColors';
 
 const VN_STOCK_DATABASE = stockDatabase as Array<{
   symbol: string;
@@ -239,8 +240,14 @@ export const MarketSearch: React.FC = () => {
                 const changePercent = liveTick?.changePercent ?? (screenerItem?.changePercent ?? (price && ref && ref > 0 ? ((price - ref) / ref) * 100 : 0));
                 const isStarred = watchlistSymbols.includes(item.symbol);
                 const isSelected = selectedSymbol === item.symbol;
-                const isUp = changePercent > 0;
-                const isDown = changePercent < 0;
+
+                const priceColor = getStockPriceColor({
+                  price,
+                  refPrice: ref,
+                  change,
+                  changePercent,
+                  exchange: item.exchange,
+                });
 
                 // Verified Minervini RS Rating (1-99)
                 const rsRating = screenerItem?.rsRating ?? (liveTick ? Math.min(99, Math.max(30, Math.round(50 + (liveTick.changePercent || 0) * 4))) : null);
@@ -300,7 +307,7 @@ export const MarketSearch: React.FC = () => {
                     {/* Right: Live Price + Change % */}
                     <div className="text-right shrink-0 pl-2">
                       <div className="flex items-baseline justify-end gap-1 font-mono">
-                        <span className="text-xs sm:text-sm font-black text-zinc-100">
+                        <span className={`text-xs sm:text-sm font-black ${priceColor.colorClass}`}>
                           {priceDisplayK !== '--' ? `${priceDisplayK}k` : '--'}
                         </span>
                         {price && (
@@ -309,15 +316,7 @@ export const MarketSearch: React.FC = () => {
                       </div>
                       <div className="flex items-center gap-1 justify-end mt-0.5 font-mono text-[10px] font-bold">
                         {price ? (
-                          <span
-                            className={`px-1.5 py-0.2 rounded ${
-                              isUp
-                                ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20'
-                                : isDown
-                                ? 'bg-rose-500/15 text-rose-400 border border-rose-500/20'
-                                : 'bg-amber-500/15 text-amber-400 border border-amber-500/20'
-                            }`}
-                          >
+                          <span className={`px-1.5 py-0.2 rounded border ${priceColor.badgeBgClass}`}>
                             {pctDisplay}
                           </span>
                         ) : (

@@ -16,6 +16,7 @@ import {
 } from '@phosphor-icons/react';
 import { useMarketStore } from '../store/marketStore';
 import stockDatabase from '../data/stockDatabase.json';
+import { getStockPriceColor } from '../utils/priceColors';
 
 interface StockMetadata {
   symbol: string;
@@ -119,17 +120,18 @@ export const StockQuickViewModal: React.FC = () => {
   const floorPrice = tick?.floorPrice ? (tick.floorPrice < 1000 ? Math.round(tick.floorPrice * 1000) : tick.floorPrice) : 0;
   const refPrice = tick?.referencePrice ? (tick.referencePrice < 1000 ? Math.round(tick.referencePrice * 1000) : tick.referencePrice) : 0;
 
-  const colorClass = isUp
-    ? 'text-emerald-400'
-    : isDown
-    ? 'text-rose-400'
-    : 'text-amber-400';
+  const priceColor = getStockPriceColor({
+    price,
+    refPrice,
+    ceilPrice,
+    floorPrice,
+    change,
+    changePercent,
+    exchange: meta?.exchange,
+  });
 
-  const badgeBgClass = isUp
-    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-    : isDown
-    ? 'bg-rose-500/10 text-rose-400 border-rose-500/20'
-    : 'bg-amber-500/10 text-amber-400 border-amber-500/20';
+  const colorClass = priceColor.colorClass;
+  const badgeBgClass = priceColor.badgeBgClass;
 
   const rsRating = realRsRating ?? Math.min(
     99,

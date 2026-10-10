@@ -28,6 +28,7 @@ import { InvestorFlowAnalysis } from './InvestorFlowAnalysis';
 import { MinerviniStrategyPanel } from './MinerviniStrategyPanel';
 import { MinerviniAnalysisResult } from '../types/minervini.types';
 import stockDatabase from '../data/stockDatabase.json';
+import { getStockPriceColor } from '../utils/priceColors';
 
 interface StockMetadata {
   symbol: string;
@@ -140,12 +141,18 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
   const ceilPrice = tick?.ceilingPrice || (refPrice > 0 ? Math.round(refPrice * (meta.exchange === 'HNX' ? 1.10 : meta.exchange === 'UPCOM' ? 1.15 : 1.07)) : 0);
   const floorPrice = tick?.floorPrice || (refPrice > 0 ? Math.round(refPrice * (meta.exchange === 'HNX' ? 0.90 : meta.exchange === 'UPCOM' ? 0.85 : 0.93)) : 0);
 
-  const colorClass = isUp ? 'text-emerald-400' : isDown ? 'text-rose-400' : 'text-amber-400';
-  const bgBadgeClass = isUp
-    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-    : isDown
-    ? 'bg-rose-500/10 text-rose-400 border-rose-500/20'
-    : 'bg-amber-500/10 text-amber-400 border-amber-500/20';
+  const priceColor = getStockPriceColor({
+    price,
+    refPrice,
+    ceilPrice,
+    floorPrice,
+    change,
+    changePercent,
+    exchange: meta.exchange,
+  });
+
+  const colorClass = priceColor.colorClass;
+  const bgBadgeClass = priceColor.badgeBgClass;
 
   const info = companyData?.info;
   const shareholders = companyData?.shareholders || [];

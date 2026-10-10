@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Star, ArrowsDownUp, TrendUp, TrendDown, Lightning } from '@phosphor-icons/react';
 import { useMarketStore } from '../store/marketStore';
+import { getStockPriceColor } from '../utils/priceColors';
 
 interface StockRow {
   symbol: string;
@@ -168,6 +169,16 @@ export const WatchlistTable: React.FC = () => {
               const isStarred = watchlistSymbols.includes(stock.symbol);
               const isUp = stock.change >= 0;
 
+              const priceColor = getStockPriceColor({
+                price: stock.matchPrice,
+                refPrice: stock.refPrice,
+                ceilPrice: stock.ceilPrice,
+                floorPrice: stock.floorPrice,
+                change: stock.change,
+                changePercent: stock.changePct,
+                exchange: stock.exchange,
+              });
+
               return (
                 <tr
                   key={stock.symbol}
@@ -199,15 +210,13 @@ export const WatchlistTable: React.FC = () => {
                     </div>
                   </td>
 
-                  <td className={`py-2.5 text-right font-bold text-sm ${isUp ? 'text-emerald-400' : 'text-rose-400'}`}>
+                  <td className={`py-2.5 text-right font-bold text-sm ${priceColor.colorClass}`}>
                     {stock.matchPrice.toFixed(2)}
                   </td>
 
                   <td className="py-2.5 text-right">
                     <span
-                      className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[11px] font-bold ${
-                        isUp ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'
-                      }`}
+                      className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[11px] font-bold border ${priceColor.badgeBgClass}`}
                     >
                       {isUp ? <TrendUp className="w-3 h-3" /> : <TrendDown className="w-3 h-3" />}
                       {isUp ? '+' : ''}

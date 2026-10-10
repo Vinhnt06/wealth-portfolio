@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import { useMarketStore } from '../store/marketStore';
 import { TrendUp, TrendDown, Star, ArrowRight } from '@phosphor-icons/react';
+import { getStockPriceColor } from '../utils/priceColors';
 
 export function MarketTicker() {
   const { ticks, selectedSymbol, setSelectedSymbol } = useMarketStore();
@@ -45,11 +46,12 @@ export function MarketTicker() {
           const isPositive = tick.change > 0;
           const isNegative = tick.change < 0;
 
-          const textColor = isPositive
-            ? 'text-emerald-400'
-            : isNegative
-            ? 'text-rose-400'
-            : 'text-amber-400';
+          const priceColor = getStockPriceColor({
+            price: tick.price,
+            change: tick.change,
+            changePercent: tick.changePercent,
+          });
+          const textColor = priceColor.colorClass;
 
           const bgHighlight = isSelected
             ? 'bg-zinc-800/80 border-zinc-700/80 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]'

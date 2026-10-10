@@ -26,6 +26,7 @@ import {
 } from '@phosphor-icons/react';
 import { useMarketStore } from '../store/marketStore';
 import { MinerviniScreenerItem } from '../types/minervini.types';
+import { getStockPriceColor } from '../utils/priceColors';
 
 type ScreenerTab = 'overview' | 'performance' | 'technicals' | 'valuation';
 type ViewMode = 'table' | 'sectors';
@@ -431,7 +432,12 @@ export const MarkMinerviniScreener: React.FC = () => {
                         Top Cổ Phiếu Dẫn Dắt (Leaders):
                       </span>
                       {group.items.slice(0, 4).map((stock, sIdx) => {
-                        const isUp = stock.changePct >= 0;
+                        const priceColor = getStockPriceColor({
+                          price: stock.price,
+                          changePercent: stock.changePct,
+                          exchange: stock.exchange,
+                        });
+                        const isUp = stock.changePct > 0;
                         return (
                           <div
                             key={stock.symbol}
@@ -471,13 +477,11 @@ export const MarkMinerviniScreener: React.FC = () => {
                               </div>
 
                               <div>
-                                <div className="font-mono text-xs font-bold text-zinc-200">
+                                <div className={`font-mono text-xs font-bold ${priceColor.colorClass}`}>
                                   {(stock.price / 1000).toFixed(2)}k
                                 </div>
                                 <div
-                                  className={`font-mono text-[10px] font-bold ${
-                                    isUp ? 'text-emerald-400' : 'text-rose-400'
-                                  }`}
+                                  className={`font-mono text-[10px] font-bold ${priceColor.colorClass}`}
                                 >
                                   {isUp ? '+' : ''}
                                   {stock.changePct.toFixed(2)}%
@@ -868,9 +872,12 @@ export const MarkMinerviniScreener: React.FC = () => {
                     </tr>
                   ) : (
                     filteredAndSortedItems.map((item) => {
+                      const priceColor = getStockPriceColor({
+                        price: item.price,
+                        changePercent: item.changePct,
+                        exchange: item.exchange,
+                      });
                       const isUp = item.changePct > 0;
-                      const isDown = item.changePct < 0;
-                      const priceColor = isUp ? 'text-emerald-400' : isDown ? 'text-rose-400' : 'text-amber-400';
 
                       const rsBadgeColor =
                         item.rsRating >= 90
@@ -904,7 +911,7 @@ export const MarkMinerviniScreener: React.FC = () => {
 
                           {/* Price */}
                           <td className="py-3 px-3 text-right">
-                            <span className={`font-mono font-bold text-xs ${priceColor}`}>
+                            <span className={`font-mono font-bold text-xs ${priceColor.colorClass}`}>
                               {item.price.toLocaleString('vi-VN')}
                             </span>
                           </td>
@@ -912,13 +919,7 @@ export const MarkMinerviniScreener: React.FC = () => {
                           {/* Change % */}
                           <td className="py-3 px-3 text-right">
                             <span
-                              className={`inline-block px-1.5 py-0.5 rounded text-[11px] font-mono font-bold ${
-                                isUp
-                                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                                  : isDown
-                                  ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-                                  : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                              }`}
+                              className={`inline-block px-1.5 py-0.5 rounded text-[11px] font-mono font-bold ${priceColor.badgeBgClass}`}
                             >
                               {isUp ? '+' : ''}
                               {item.changePct.toFixed(2)}%

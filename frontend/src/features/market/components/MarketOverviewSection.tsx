@@ -47,7 +47,7 @@ export const MarketOverviewSection: React.FC = () => {
               <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
                 <span className="text-[10px] text-emerald-400 block font-semibold">TĂNG GIÁ</span>
                 <span className="text-base font-bold text-emerald-400 mt-0.5 block">248 (53%)</span>
-                <span className="text-[9px] text-emerald-500/80 block mt-0.5">14 mã Trần</span>
+                <span className="text-[9px] text-fuchsia-400/90 block mt-0.5 font-medium">14 mã Trần (CE)</span>
               </div>
 
               <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20">
@@ -59,7 +59,7 @@ export const MarketOverviewSection: React.FC = () => {
               <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20">
                 <span className="text-[10px] text-rose-400 block font-semibold">GIẢM GIÁ</span>
                 <span className="text-base font-bold text-rose-400 mt-0.5 block">159 (34%)</span>
-                <span className="text-[9px] text-rose-500/80 block mt-0.5">3 mã Sàn</span>
+                <span className="text-[9px] text-cyan-400/90 block mt-0.5 font-medium">3 mã Sàn (FL)</span>
               </div>
             </div>
 

@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useMarketStore } from '../store/marketStore';
 import { Stack, ChartBar, ArrowsClockwise } from '@phosphor-icons/react';
+import { getStockPriceColor } from '../utils/priceColors';
 
 export function OrderBook() {
   const { selectedSymbol, quotes, ticks, updateQuotes, updateTick } = useMarketStore();
@@ -118,18 +119,26 @@ export function OrderBook() {
             <ArrowsClockwise className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-emerald-400' : ''}`} />
           </button>
 
-          {currentTick && (
-            <div className="text-right">
-              <div className="text-sm font-mono font-bold text-zinc-100">
-                {formatPrice(currentTick.price)}
+          {currentTick && (() => {
+            const tickColor = getStockPriceColor({
+              price: currentTick.price,
+              refPrice: currentTick.referencePrice,
+              ceilPrice: currentTick.ceilingPrice,
+              floorPrice: currentTick.floorPrice,
+              change: currentTick.change,
+              changePercent: currentTick.changePercent,
+            });
+            return (
+              <div className="text-right">
+                <div className={`text-sm font-mono font-bold ${tickColor.colorClass}`}>
+                  {formatPrice(currentTick.price)}
+                </div>
+                <div className={`text-[11px] font-mono font-semibold ${tickColor.colorClass}`}>
+                  {currentTick.change >= 0 ? '+' : ''}{(currentTick.change / 1000).toFixed(2)} ({currentTick.changePercent.toFixed(2)}%)
+                </div>
               </div>
-              <div className={`text-[11px] font-mono font-semibold ${
-                currentTick.change >= 0 ? 'text-emerald-400' : 'text-rose-400'
-              }`}>
-                {currentTick.change >= 0 ? '+' : ''}{(currentTick.change / 1000).toFixed(2)} ({currentTick.changePercent.toFixed(2)}%)
-              </div>
-            </div>
-          )}
+            );
+          })()}
         </div>
       </div>
 
@@ -153,9 +162,23 @@ export function OrderBook() {
           const bidPct = bid && bid.volume > 0 ? (bid.volume / maxVolume) * 100 : 0;
           const askPct = ask && ask.volume > 0 ? (ask.volume / maxVolume) * 100 : 0;
 
+          const bidPriceColor = bid && bid.price > 0 ? getStockPriceColor({
+            price: bid.price,
+            refPrice: currentTick?.referencePrice,
+            ceilPrice: currentTick?.ceilingPrice,
+            floorPrice: currentTick?.floorPrice,
+          }).colorClass : 'text-emerald-400';
+
+          const askPriceColor = ask && ask.price > 0 ? getStockPriceColor({
+            price: ask.price,
+            refPrice: currentTick?.referencePrice,
+            ceilPrice: currentTick?.ceilingPrice,
+            floorPrice: currentTick?.floorPrice,
+          }).colorClass : 'text-rose-400';
+
           return (
             <div key={idx} className="grid grid-cols-2 gap-4 text-xs font-mono py-1 px-1 rounded hover:bg-zinc-900/40 transition-colors relative">
-              {/* Bid Column (Buy side - Green) */}
+              {/* Bid Column (Buy side) */}
               <div className="relative grid grid-cols-2 items-center overflow-hidden rounded">
                 <div
                   className="absolute right-0 top-0 bottom-0 bg-emerald-500/10 border-r border-emerald-500/30 transition-all duration-300 pointer-events-none"
@@ -164,18 +187,18 @@ export function OrderBook() {
                 <span className="text-zinc-400 text-left z-10 font-mono text-[11px]">
                   {bid && bid.volume > 0 ? formatVol(bid.volume) : '-'}
                 </span>
-                <span className="text-emerald-400 font-bold text-right z-10 font-mono">
+                <span className={`font-bold text-right z-10 font-mono ${bidPriceColor}`}>
                   {bid && bid.price > 0 ? formatPrice(bid.price) : '-'}
                 </span>
               </div>
 
-              {/* Ask Column (Sell side - Red) */}
+              {/* Ask Column (Sell side) */}
               <div className="relative grid grid-cols-2 items-center overflow-hidden rounded">
                 <div
                   className="absolute left-0 top-0 bottom-0 bg-rose-500/10 border-l border-rose-500/30 transition-all duration-300 pointer-events-none"
                   style={{ width: `${askPct}%` }}
                 />
-                <span className="text-rose-400 font-bold text-left z-10 font-mono">
+                <span className={`font-bold text-left z-10 font-mono ${askPriceColor}`}>
                   {ask && ask.price > 0 ? formatPrice(ask.price) : '-'}
                 </span>
                 <span className="text-zinc-400 text-right z-10 font-mono text-[11px]">
