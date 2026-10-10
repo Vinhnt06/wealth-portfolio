@@ -23,7 +23,7 @@ interface MinerviniStrategyPanelProps {
 }
 
 export const MinerviniStrategyPanel: React.FC<MinerviniStrategyPanelProps> = ({ symbol }) => {
-  const [activeTab, setActiveTab] = useState<'screener' | 'strategies' | 'indicators' | 'leaderboard' | 'news' | 'ai'>('screener');
+  const [activeTab, setActiveTab] = useState<'screener' | 'strategies' | 'indicators' | 'leaderboard' | 'ai'>('screener');
   const [data, setData] = useState<MinerviniAnalysisResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
@@ -102,14 +102,6 @@ export const MinerviniStrategyPanel: React.FC<MinerviniStrategyPanelProps> = ({ 
             }`}
           >
             Bảng Vàng
-          </button>
-          <button
-            onClick={() => setActiveTab('news')}
-            className={`px-2.5 py-1 rounded text-[11px] font-bold transition-colors ${
-              activeTab === 'news' ? 'text-amber-400 bg-zinc-900 border border-zinc-800' : 'text-zinc-400 hover:text-zinc-200'
-            }`}
-          >
-            Tin tức
           </button>
           <button
             onClick={() => setActiveTab('ai')}

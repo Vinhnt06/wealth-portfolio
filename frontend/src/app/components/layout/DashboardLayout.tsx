@@ -58,7 +58,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     const navItems = [
         { icon: House, labelKey: 'dash.nav.overview', href: '/dashboard' },
         { icon: ChartBar, labelKey: 'Thị Trường Realtime', href: '/market' },
-        { icon: Newspaper, labelKey: 'Tin Tức Tài Chính', href: '/news' },
         { icon: TrendUp, labelKey: 'dash.nav.markets', href: '/dashboard/markets' },
         { icon: GraduationCap, labelKey: 'dash.nav.learn', href: '/dashboard/learn' },
         { icon: ClockCounterClockwise, labelKey: 'dash.nav.history', href: '/dashboard/history' },
@@ -69,7 +68,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     const topNavItems = [
         { labelKey: 'dash.nav.portfolio', href: '/dashboard' },
         { labelKey: 'Thị Trường Realtime', href: '/market' },
-        { labelKey: 'Tin Tức (21+ Nguồn)', href: '/news' },
         { labelKey: 'dash.nav.analytics', href: '/dashboard/analytics' },
         { labelKey: 'dash.nav.settings', href: '/dashboard/settings' },
     ];
@@ -189,11 +187,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                         </nav>
                     </div>
                     <div className="flex items-center gap-5">
-                        <input
-                            type="text"
-                            placeholder={t('dash.search')}
-                            className="px-4 py-2 bg-black/60 rounded-lg text-[10px] tracking-wider text-white placeholder:text-zinc-700 focus:outline-none focus:ring-1 focus:ring-zinc-700 w-56 border border-white/5 font-medium"
-                        />
                         <LanguageSwitcher />
                         <button className="text-zinc-500 hover:text-white transition-colors relative">
                             <Bell size={18} />
