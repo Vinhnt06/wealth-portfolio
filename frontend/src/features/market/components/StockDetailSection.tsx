@@ -306,7 +306,7 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
               <Sparkle className="w-3.5 h-3.5" weight="fill" />
               <span>Chiến Lược Minervini</span>
             </div>
-            <span className="text-[10px] text-zinc-500 font-semibold uppercase">Stage 2</span>
+            <span className="text-[10px] text-zinc-500 font-semibold uppercase">Trend Template</span>
           </div>
 
           <div className="flex-1 overflow-y-auto scrollbar-none">

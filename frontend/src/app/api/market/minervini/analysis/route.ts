@@ -199,63 +199,8 @@ export async function GET(request: Request) {
       stageName = 'Stage 3 (Phân phối / Rủi ro)';
     }
 
-    // Dynamic Strategy Signals matching VN TERMINAL Pro
-    const signals: MinerviniStrategySignal[] = [
-      {
-        id: 'wyckoff',
-        name: 'Wyckoff LPS / Back-Up to TR',
-        school: 'WYCKOFF / VSA',
-        status: passedCount >= 6 ? 'MUA' : 'ĐANG GIỮ',
-        sessionsAgo: 5,
-        winRate: 48,
-        profitPct: 13,
-      },
-      {
-        id: 'inside_bar',
-        name: 'Inside bar / NR7 breakout',
-        school: 'SWING',
-        status: currentChangePct > 1.5 ? 'MUA' : 'ĐANG GIỮ',
-        sessionsAgo: 4,
-        winRate: 29,
-        profitPct: 1,
-      },
-      {
-        id: 'range_filter',
-        name: 'UTP - Hợp lưu Range Filter',
-        school: 'TREND FOLLOWING',
-        status: 'ĐANG GIỮ',
-        sessionsAgo: 105,
-        winRate: 33,
-        profitPct: 124,
-      },
-      {
-        id: 'break_trendline',
-        name: 'Phá trendline giảm (2 đỉnh)',
-        school: 'PRICE ACTION',
-        status: currentPrice > sma50 ? 'MUA' : 'ĐANG GIỮ',
-        sessionsAgo: 47,
-        winRate: 60,
-        profitPct: 116,
-      },
-      {
-        id: 'choch',
-        name: 'CHoCH - Đảo cấu trúc giảm',
-        school: 'PRICE ACTION',
-        status: 'ĐANG GIỮ',
-        sessionsAgo: 39,
-        winRate: 58,
-        profitPct: 73,
-      },
-      {
-        id: 'golden_cross',
-        name: 'Golden Cross 50/200 + pullback',
-        school: 'TREND FOLLOWING',
-        status: sma50 > sma200 ? 'MUA' : 'ĐANG GIỮ',
-        sessionsAgo: 118,
-        winRate: 70,
-        profitPct: 70,
-      },
-    ];
+    // Zero Mock Data: Không bịa đặt số liệu thống kê winRate hay profitPct giả
+    const signals: MinerviniStrategySignal[] = [];
 
     // Dynamic Sector Rank & RS based on VN Market industry groups
     const sectorLower = (stockInfo.sector || '').toLowerCase();
