@@ -220,22 +220,30 @@ export const MinerviniStrategyPanel: React.FC<MinerviniStrategyPanelProps> = ({ 
 
           {/* Sức Mạnh Giá (Relative Strength - RS Rating 1-99) */}
           <div className="mt-3.5 pt-3 border-t border-zinc-800/80">
-            <div className="flex items-center justify-between text-xs font-mono mb-1.5">
-              <span className="text-zinc-400 flex items-center gap-1.5 font-bold">
-                <Gauge size={14} className="text-cyan-400" />
-                Chỉ Số Sức Mạnh Giá RS (IBD/Minervini)
+            <div className="flex items-center justify-between text-xs font-mono mb-2">
+              <span className="text-zinc-300 flex items-center gap-1.5 font-bold">
+                <Gauge size={16} className="text-amber-400" />
+                Chỉ Số Sức Mạnh Giá RS (Minervini)
               </span>
-              <span className="font-extrabold text-cyan-400 text-sm">
-                {data?.rsRating || 50}/99
-              </span>
+              <div className="flex items-baseline gap-1 px-3 py-1 rounded-xl bg-amber-500/20 border border-amber-400/50 shadow-[0_0_15px_rgba(245,158,11,0.25)]">
+                <span className="font-mono font-black text-amber-300 text-lg leading-none">
+                  {data?.rsRating || 50}
+                </span>
+                <span className="text-[10px] text-amber-400/70 font-semibold font-mono">/99</span>
+                {(data?.rsRating || 0) >= 80 && (
+                  <span className="ml-1 px-1.5 py-0.2 rounded text-[9px] font-black uppercase tracking-wider bg-amber-400 text-zinc-950">
+                    Leader
+                  </span>
+                )}
+              </div>
             </div>
 
             {/* Gauge Progress Bar */}
-            <div className="w-full bg-zinc-900 h-2 rounded-full overflow-hidden border border-zinc-800">
+            <div className="w-full bg-zinc-900 h-2.5 rounded-full overflow-hidden border border-zinc-800">
               <div
                 className={`h-full transition-all duration-500 rounded-full ${
                   (data?.rsRating || 0) >= 80
-                    ? 'bg-gradient-to-r from-emerald-500 to-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.5)]'
+                    ? 'bg-gradient-to-r from-amber-400 to-emerald-400 shadow-[0_0_12px_rgba(245,158,11,0.5)]'
                     : (data?.rsRating || 0) >= 70
                     ? 'bg-emerald-500'
                     : 'bg-zinc-600'
@@ -246,7 +254,7 @@ export const MinerviniStrategyPanel: React.FC<MinerviniStrategyPanelProps> = ({ 
             <div className="flex justify-between text-[9px] font-mono text-zinc-500 mt-1">
               <span>Yếu (RS 1-49)</span>
               <span>Trung bình (RS 50-69)</span>
-              <span className="text-emerald-400 font-bold">Leader (RS 70-99)</span>
+              <span className="text-amber-400 font-bold">Leader (RS 70-99)</span>
             </div>
           </div>
         </div>

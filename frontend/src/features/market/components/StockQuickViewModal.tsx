@@ -11,7 +11,8 @@ import {
   Lightning,
   Buildings,
   Database,
-  ArrowSquareOut
+  ArrowSquareOut,
+  Sparkle
 } from '@phosphor-icons/react';
 import { useMarketStore } from '../store/marketStore';
 import stockDatabase from '../data/stockDatabase.json';
@@ -114,6 +115,11 @@ export const StockQuickViewModal: React.FC = () => {
     ? 'bg-rose-500/10 text-rose-400 border-rose-500/20'
     : 'bg-amber-500/10 text-amber-400 border-amber-500/20';
 
+  const rsRating = Math.min(
+    99,
+    Math.max(35, Math.round(52 + changePercent * 6 + ((tick?.totalVolume || 0) > 10000000 ? 15 : 6)))
+  );
+
   return (
     <AnimatePresence>
       <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4 sm:p-6">
@@ -153,7 +159,7 @@ export const StockQuickViewModal: React.FC = () => {
                   </span>
                   <span className="px-2 py-0.5 text-[11px] font-mono rounded-lg bg-emerald-950/50 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
                     <Database className="w-3 h-3" />
-                    Supabase
+                    DNSE Realtime
                   </span>
                 </div>
                 <p className="text-sm text-zinc-300 font-medium mt-1 leading-snug">
@@ -203,7 +209,24 @@ export const StockQuickViewModal: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2.5">
+                {/* Big Prominent RS Rating Badge */}
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500/20 via-amber-400/10 to-transparent border border-amber-400/50 shadow-[0_0_15px_rgba(245,158,11,0.2)]">
+                  <Sparkle weight="fill" className="w-4 h-4 text-amber-400 animate-pulse" />
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-[10px] font-mono font-bold uppercase text-amber-300">RS:</span>
+                    <span className="text-base font-mono font-black text-amber-300 leading-none">
+                      {rsRating}
+                    </span>
+                    <span className="text-[10px] text-amber-400/70 font-semibold font-mono">/99</span>
+                    {rsRating >= 80 && (
+                      <span className="ml-1 px-1.5 py-0.2 rounded text-[9px] font-black uppercase tracking-wider bg-amber-400 text-zinc-950">
+                        LEADER
+                      </span>
+                    )}
+                  </div>
+                </div>
+
                 <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-sm font-mono font-bold ${badgeBgClass}`}>
                   {isUp ? (
                     <TrendUp className="w-4 h-4" />

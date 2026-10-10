@@ -37,6 +37,7 @@ import {
   ChartBar,
   ArrowsOut,
   ArrowsIn,
+  Sparkle,
 } from '@phosphor-icons/react';
 import stockDatabase from '../data/stockDatabase.json';
 
@@ -927,8 +928,11 @@ export function MarketCandleChart() {
             {chartMinervini?.rsRating !== undefined && (
               <>
                 <span className="text-zinc-500">·</span>
-                <span className="font-mono font-bold text-xs px-2 py-0.5 rounded-md bg-amber-400/10 text-amber-400 border border-amber-400/30 shadow-sm flex items-center gap-1">
-                  RS: {chartMinervini.rsRating}/99
+                <span className="font-mono font-black text-xs sm:text-sm px-2.5 py-0.5 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-400/50 shadow-[0_0_12px_rgba(245,158,11,0.25)] flex items-center gap-1.5">
+                  <Sparkle weight="fill" className="w-3.5 h-3.5 text-amber-400" />
+                  <span className="text-[10px] text-amber-300/90 uppercase font-bold tracking-wider">RS</span>
+                  <span className="text-sm font-black text-amber-300">{chartMinervini.rsRating}</span>
+                  <span className="text-[10px] text-amber-400/60 font-semibold">/99</span>
                 </span>
                 <span
                   className={`font-mono text-[10px] font-bold px-1.5 py-0.5 rounded-md border hidden sm:inline-block ${

@@ -37,5 +37,19 @@
     "noChanges": 55,
     "totalVolume": "78.5M",
     "totalValue": "1,620B"
+  },
+  {
+    "symbol": "UPCOM",
+    "name": "UPCOM-Index",
+    "exchange": "UPCOM",
+    "value": 98.42,
+    "change": 0.35,
+    "percentChange": 0.36,
+    "advances": 134,
+    "declines": 98,
+    "noChanges": 62,
+    "totalVolume": "45.8M",
+    "totalValue": "890B"
   }
 ]
+

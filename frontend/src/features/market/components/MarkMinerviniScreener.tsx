@@ -571,7 +571,7 @@ export const MarkMinerviniScreener: React.FC = () => {
 
                       {/* RS Rating */}
                       <td className="py-3 px-3 text-center">
-                        <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-mono font-black border ${rsBadgeColor}`}>
+                        <span className={`inline-block px-2.5 py-0.5 rounded-lg text-sm font-mono font-black border shadow-sm ${rsBadgeColor}`}>
                           {item.rsRating}
                         </span>
                       </td>

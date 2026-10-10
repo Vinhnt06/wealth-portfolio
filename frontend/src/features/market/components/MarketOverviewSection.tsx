@@ -99,15 +99,15 @@ export const MarketOverviewSection: React.FC = () => {
         </div>
       </div>
 
-      {/* 3. High-Density Realtime Watchlist (8 cols) & Top Movers (4 cols) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      {/* 3. High-Density Realtime Watchlist (8 cols) & Top Movers Terminal (4 cols) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Interactive Live Watchlist (Clicking any stock opens deep detail) */}
-        <div className="lg:col-span-8">
+        <div className="lg:col-span-7 xl:col-span-8">
           <WatchlistTable />
         </div>
 
         {/* Top Market Gainers / Losers / Volume Movers */}
-        <div className="lg:col-span-4">
+        <div className="lg:col-span-5 xl:col-span-4">
           <MarketSummaryBar />
         </div>
       </div>

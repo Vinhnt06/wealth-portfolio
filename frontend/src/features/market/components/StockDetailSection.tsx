@@ -193,29 +193,41 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
 
                 {/* Minervini Live RS Rating & Stage 2 Status Pill */}
                 {minerviniData && (
-                  <>
-                    <span className="px-2.5 py-0.5 text-xs font-mono font-bold rounded-lg bg-amber-400/10 text-amber-400 border border-amber-400/30 flex items-center gap-1 shadow-sm">
-                      <Sparkle weight="fill" className="w-3.5 h-3.5 text-amber-400" />
-                      <span>RS: {minerviniData.rsRating}/99</span>
-                    </span>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {/* Big Bold Prominent RS Rating Badge */}
+                    <div className="flex items-center gap-2 px-3 py-1 rounded-xl bg-gradient-to-r from-amber-500/20 via-amber-500/10 to-transparent border border-amber-400/50 shadow-[0_0_15px_rgba(245,158,11,0.25)]">
+                      <Sparkle weight="fill" className="w-4 h-4 text-amber-400 animate-pulse" />
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-[10px] font-mono font-bold uppercase text-amber-300">RS Rating:</span>
+                        <span className="text-lg sm:text-xl font-mono font-black text-amber-300 leading-none">
+                          {minerviniData.rsRating}
+                        </span>
+                        <span className="text-[10px] text-amber-400/70 font-semibold font-mono">/99</span>
+                        {minerviniData.rsRating >= 80 && (
+                          <span className="ml-1 px-1.5 py-0.2 rounded text-[9px] font-black uppercase tracking-wider bg-amber-400 text-zinc-950">
+                            LEADER
+                          </span>
+                        )}
+                      </div>
+                    </div>
 
                     <span
-                      className={`px-2.5 py-0.5 text-xs font-mono font-bold rounded-lg border flex items-center gap-1 ${
+                      className={`px-2.5 py-1 text-xs font-mono font-bold rounded-xl border flex items-center gap-1.5 ${
                         minerviniData.isStage2Eligible
                           ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30 shadow-[0_0_12px_rgba(16,185,129,0.2)]'
                           : 'bg-zinc-900 text-zinc-400 border-zinc-800'
                       }`}
                     >
-                      <ShieldCheck className="w-3.5 h-3.5" />
+                      <ShieldCheck className="w-4 h-4" />
                       <span>{minerviniData.isStage2Eligible ? 'Stage 2 (8/8 ĐẠT)' : `${minerviniData.passedCount}/8 Tiêu chí`}</span>
                     </span>
 
-                    <span className="hidden md:inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-mono text-zinc-300 bg-zinc-900 border border-zinc-800 rounded-lg">
-                      <Buildings className="w-3.5 h-3.5 text-cyan-400" />
+                    <span className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-mono text-zinc-300 bg-zinc-900 border border-zinc-800 rounded-xl">
+                      <Buildings className="w-4 h-4 text-cyan-400" />
                       <span>{minerviniData.sectorRank || 'Top Ngành'}</span>
                       <span className="text-[10px] text-emerald-400 font-bold">({minerviniData.sectorStatus?.split(' ')[0] || 'Dẫn dắt'})</span>
                     </span>
-                  </>
+                  </div>
                 )}
               </div>
               <p className="text-sm text-zinc-300 font-medium mt-1">{meta.name}</p>

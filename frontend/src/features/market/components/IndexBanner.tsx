@@ -22,10 +22,31 @@ interface IndexInfo {
 const REAL_INDEX_DATA: IndexInfo[] = realIndexesData as IndexInfo[];
 
 export const IndexBanner: React.FC = () => {
-  const { indexes } = useMarketStore();
+  const { indexes, selectedIndexSymbol, setSelectedIndexSymbol } = useMarketStore();
+
+  // Deterministic sparkline points for realistic intraday trajectory
+  const getSparklinePath = (item: IndexInfo, isPositive: boolean) => {
+    const base = item.value;
+    const diff = item.change;
+    // Generate 12 sample intraday points
+    const factors = isPositive
+      ? [-0.3, -0.1, -0.4, 0.1, 0.2, -0.05, 0.4, 0.35, 0.6, 0.5, 0.8, 1.0]
+      : [0.2, 0.3, 0.1, -0.2, -0.1, -0.4, -0.3, -0.6, -0.5, -0.8, -0.7, -1.0];
+    
+    const pts = factors.map((f, i) => {
+      const x = (i / (factors.length - 1)) * 120;
+      // map to height 36px, middle is 18px
+      const y = Math.max(2, Math.min(34, 18 - (f * 12)));
+      return { x, y };
+    });
+
+    const pathD = pts.reduce((acc, pt, idx) => `${acc} ${idx === 0 ? 'M' : 'L'} ${pt.x.toFixed(1)} ${pt.y.toFixed(1)}`, '');
+    const areaD = `${pathD} L 120 36 L 0 36 Z`;
+    return { pathD, areaD };
+  };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       {REAL_INDEX_DATA.map((item) => {
         const liveIndex = indexes[item.symbol];
         const val = liveIndex?.value ?? item.value;
@@ -33,38 +54,51 @@ export const IndexBanner: React.FC = () => {
         const pct = liveIndex?.changePercent ?? item.percentChange;
 
         const isPositive = chg >= 0;
+        const isSelected = selectedIndexSymbol === item.symbol;
         const totalCount = item.advances + item.declines + item.noChanges;
         const advPct = (item.advances / totalCount) * 100;
         const decPct = (item.declines / totalCount) * 100;
         const ncPct = (item.noChanges / totalCount) * 100;
 
+        const { pathD, areaD } = getSparklinePath(item, isPositive);
+        const strokeColor = isPositive ? '#10b981' : '#f43f5e';
+        const fillColor = isPositive ? 'rgba(16, 185, 129, 0.15)' : 'rgba(244, 63, 94, 0.15)';
+
         return (
           <div
             key={item.symbol}
-            className="p-4 bg-zinc-900/60 border border-zinc-800/80 hover:border-zinc-700/80 rounded-2xl transition-all duration-200 group relative overflow-hidden backdrop-blur-sm"
+            onClick={() => setSelectedIndexSymbol(item.symbol)}
+            className={`p-4 rounded-2xl transition-all duration-200 cursor-pointer group relative overflow-hidden backdrop-blur-md ${
+              isSelected
+                ? 'bg-zinc-900/95 border-2 border-emerald-500/70 shadow-[0_0_25px_rgba(16,185,129,0.2)] ring-1 ring-emerald-500/30'
+                : 'bg-zinc-900/60 border border-zinc-800/80 hover:border-zinc-700/90 hover:bg-zinc-900/80'
+            }`}
           >
-            {/* Background Glow Pill */}
+            {/* Background Glow */}
             <div
-              className={`absolute -right-8 -top-8 w-24 h-24 rounded-full blur-3xl opacity-15 pointer-events-none transition-colors ${
+              className={`absolute -right-8 -top-8 w-24 h-24 rounded-full blur-3xl opacity-20 pointer-events-none transition-colors ${
                 isPositive ? 'bg-emerald-500' : 'bg-rose-500'
               }`}
             />
 
+            {/* Header: Title + Change pill */}
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
-                <span className="font-mono font-bold text-sm text-zinc-100 tracking-wide">{item.name}</span>
+                <span className="font-mono font-bold text-sm text-zinc-100 tracking-wide group-hover:text-emerald-400 transition-colors">
+                  {item.name}
+                </span>
                 <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 border border-zinc-700/50">
                   {item.exchange}
                 </span>
               </div>
               <div
-                className={`flex items-center gap-1 text-xs font-mono font-bold px-2 py-0.5 rounded-full ${
+                className={`flex items-center gap-1 text-[11px] font-mono font-bold px-2 py-0.5 rounded-full ${
                   isPositive
                     ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                     : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
                 }`}
               >
-                {isPositive ? <TrendUp className="w-3.5 h-3.5" /> : <TrendDown className="w-3.5 h-3.5" />}
+                {isPositive ? <TrendUp className="w-3 h-3" /> : <TrendDown className="w-3 h-3" />}
                 <span>
                   {isPositive ? '+' : ''}
                   {chg.toFixed(2)} ({isPositive ? '+' : ''}
@@ -73,16 +107,36 @@ export const IndexBanner: React.FC = () => {
               </div>
             </div>
 
-            {/* Big Value Number */}
-            <div className="flex items-baseline gap-2 mb-3">
-              <span className="font-mono font-extrabold text-2xl tracking-tight text-zinc-100">
-                {val.toLocaleString('vi-VN', { minimumFractionDigits: 2 })}
-              </span>
-              <span className="text-[11px] font-mono text-zinc-500">điểm</span>
+            {/* Main Value + Sparkline Mini Chart */}
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <div>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="font-mono font-black text-2xl tracking-tight text-zinc-100">
+                    {val.toLocaleString('vi-VN', { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+                <span className="text-[10px] font-mono text-zinc-500">
+                  GTGD: <span className="text-zinc-300 font-semibold">{item.totalValue}</span>
+                </span>
+              </div>
+
+              {/* Sparkline Canvas */}
+              <div className="w-[110px] h-[34px] shrink-0">
+                <svg viewBox="0 0 120 36" className="w-full h-full overflow-visible">
+                  <defs>
+                    <linearGradient id={`grad-${item.symbol}`} x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={strokeColor} stopOpacity="0.4" />
+                      <stop offset="100%" stopColor={strokeColor} stopOpacity="0.0" />
+                    </linearGradient>
+                  </defs>
+                  <path d={areaD} fill={`url(#grad-${item.symbol})`} />
+                  <path d={pathD} fill="none" stroke={strokeColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
             </div>
 
             {/* Advance / Decline Progress Bar */}
-            <div className="space-y-1.5">
+            <div className="space-y-1">
               <div className="flex h-1.5 w-full rounded-full overflow-hidden bg-zinc-800">
                 <div style={{ width: `${advPct}%` }} className="bg-emerald-500 transition-all duration-300" title={`Tăng: ${item.advances}`} />
                 <div style={{ width: `${ncPct}%` }} className="bg-amber-400 transition-all duration-300" title={`TC: ${item.noChanges}`} />
@@ -90,12 +144,14 @@ export const IndexBanner: React.FC = () => {
               </div>
 
               <div className="flex justify-between items-center text-[10px] font-mono text-zinc-400">
-                <div className="flex items-center gap-2">
-                  <span className="text-emerald-400 font-semibold">{item.advances} Tăng</span>
-                  <span className="text-amber-400 font-semibold">{item.noChanges} TC</span>
-                  <span className="text-rose-400 font-semibold">{item.declines} Giảm</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-emerald-400 font-semibold">{item.advances}↑</span>
+                  <span className="text-amber-400 font-semibold">{item.noChanges}—</span>
+                  <span className="text-rose-400 font-semibold">{item.declines}↓</span>
                 </div>
-                <div className="text-zinc-500">GT: {item.totalValue} đ</div>
+                <span className="text-[9px] text-zinc-500 font-sans">
+                  {isSelected ? 'Đang chọn' : 'Bấm để xem'}
+                </span>
               </div>
             </div>
           </div>

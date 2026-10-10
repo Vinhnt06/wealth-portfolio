@@ -11,10 +11,29 @@ import {
   ISeriesApi,
   Time
 } from 'lightweight-charts';
-import { TrendUp, ChartLine, Eye, EyeSlash, ArrowsOutSimple } from '@phosphor-icons/react';
+import { TrendUp, ChartLine, Eye, EyeSlash, ArrowsOutSimple, SquaresFour } from '@phosphor-icons/react';
 import vnindexHistory from '../data/vnindexHistory.json';
+import realIndexesData from '../data/realIndexes.json';
+import { useMarketStore } from '../store/marketStore';
+
+const INDEX_CONFIG: Record<string, { name: string; exchange: string; scale: number; baseVal: number }> = {
+  VNINDEX: { name: 'VN-INDEX', exchange: 'HOSE', scale: 1.0, baseVal: 1735.09 },
+  VN30: { name: 'VN30-INDEX', exchange: 'HOSE', scale: 1.07973, baseVal: 1873.43 },
+  HNX: { name: 'HNX-INDEX', exchange: 'HNX', scale: 0.15077, baseVal: 261.60 },
+  UPCOM: { name: 'UPCOM-INDEX', exchange: 'UPCOM', scale: 0.05672, baseVal: 98.42 },
+};
 
 export const MarketIndexChart: React.FC = () => {
+  const { selectedIndexSymbol, setSelectedIndexSymbol, indexes } = useMarketStore();
+  const [viewGridMode, setViewGridMode] = useState(false);
+
+  const activeIndexKey = INDEX_CONFIG[selectedIndexSymbol] ? selectedIndexSymbol : 'VNINDEX';
+  const activeCfg = INDEX_CONFIG[activeIndexKey];
+  const liveIndex = indexes[activeIndexKey];
+  const currentVal = liveIndex?.value ?? activeCfg.baseVal;
+  const currentChg = liveIndex?.change ?? (activeIndexKey === 'VNINDEX' ? -3.88 : activeIndexKey === 'VN30' ? -3.57 : 1.15);
+  const currentPct = liveIndex?.changePercent ?? (activeIndexKey === 'VNINDEX' ? -0.22 : activeIndexKey === 'VN30' ? -0.19 : 0.44);
+
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const candleSeriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
@@ -110,14 +129,14 @@ export const MarketIndexChart: React.FC = () => {
 
     const candles = activeHistory.map((item) => ({
       time: item.time as Time,
-      open: item.open,
-      high: item.high,
-      low: item.low,
-      close: item.close,
+      open: Math.round(item.open * activeCfg.scale * 100) / 100,
+      high: Math.round(item.high * activeCfg.scale * 100) / 100,
+      low: Math.round(item.low * activeCfg.scale * 100) / 100,
+      close: Math.round(item.close * activeCfg.scale * 100) / 100,
     }));
 
     const volumes = activeHistory.map((item) => {
-      let pseudoVol = 650000000 + Math.floor(Math.sin(item.close) * 150000000);
+      let pseudoVol = Math.floor((650000000 + Math.sin(item.close) * 150000000) * activeCfg.scale);
       return {
         time: item.time as Time,
         value: Math.abs(pseudoVol),
@@ -177,26 +196,48 @@ export const MarketIndexChart: React.FC = () => {
       window.removeEventListener('resize', handleResize);
       chart.remove();
     };
-  }, [timeframe, showMA20, showMA50]);
+  }, [timeframe, showMA20, showMA50, activeIndexKey]);
+
+  const isPositive = currentChg >= 0;
 
   return (
     <div className="bg-zinc-950/90 border border-zinc-800/80 rounded-2xl p-4 sm:p-5 shadow-2xl backdrop-blur-xl relative overflow-hidden">
       {/* Chart Control Ribbon Header */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-800/80 pb-3 mb-3">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
-            <ChartLine className="w-5 h-5" />
+        {/* Index Selector Tabs */}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-1 bg-zinc-900/90 p-1 rounded-xl border border-zinc-800">
+            {Object.entries(INDEX_CONFIG).map(([key, cfg]) => {
+              const isSelected = activeIndexKey === key;
+              return (
+                <button
+                  key={key}
+                  onClick={() => setSelectedIndexSymbol(key)}
+                  className={`px-3 py-1.5 text-xs font-mono font-bold rounded-lg transition-all ${
+                    isSelected
+                      ? 'bg-emerald-500 text-zinc-950 shadow-md font-extrabold'
+                      : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60'
+                  }`}
+                >
+                  {cfg.name}
+                </button>
+              );
+            })}
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="font-mono font-bold text-zinc-100 text-sm tracking-tight">VN-INDEX (Toàn Cảnh Thị Trường)</h3>
-              <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                1735.09 (+0.72%)
-              </span>
-            </div>
-            <p className="text-xs text-zinc-400 font-sans">
-              Biểu đồ kỹ thuật chỉ số thị trường chung & xu hướng dòng tiền (726 phiên thật)
-            </p>
+
+          <div className="flex items-center gap-2">
+            <span className="font-mono font-black text-lg text-zinc-100">
+              {currentVal.toLocaleString('vi-VN', { minimumFractionDigits: 2 })}
+            </span>
+            <span
+              className={`px-2 py-0.5 rounded-md text-xs font-mono font-bold border ${
+                isPositive
+                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                  : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+              }`}
+            >
+              {isPositive ? '+' : ''}{currentChg.toFixed(2)} ({isPositive ? '+' : ''}{currentPct.toFixed(2)}%)
+            </span>
           </div>
         </div>
 

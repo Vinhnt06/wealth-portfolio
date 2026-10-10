@@ -6,6 +6,7 @@ interface MarketState {
   wsStatus: WsStatus;
   lastHeartbeat: number | null;
   selectedSymbol: string;
+  selectedIndexSymbol: string;
 
   // Real-time market state map
   ticks: Record<string, TickData>;
@@ -24,6 +25,7 @@ interface MarketState {
   // Actions
   setWsStatus: (status: WsStatus) => void;
   setSelectedSymbol: (symbol: string) => void;
+  setSelectedIndexSymbol: (symbol: string) => void;
   setViewMode: (viewMode: 'overview' | 'detail' | 'screener') => void;
   setActiveTab: (tab: 'orderbook' | 'info' | 'foreign') => void;
   openQuickView: (symbol?: string) => void;
@@ -44,6 +46,7 @@ export const useMarketStore = create<MarketState>((set) => ({
   wsStatus: 'disconnected',
   lastHeartbeat: null,
   selectedSymbol: 'HPG',
+  selectedIndexSymbol: 'VNINDEX',
   searchQuery: '',
   watchlistSymbols: ['HPG', 'VCB', 'SSI', 'VHM', 'TCB', 'FPT', 'MBB', 'MWG', 'VNM', 'VIC'],
   isChartExpanded: true,
@@ -54,6 +57,7 @@ export const useMarketStore = create<MarketState>((set) => ({
   setWsStatus: (wsStatus) => set({ wsStatus }),
   setSelectedSymbol: (selectedSymbol) =>
     set({ selectedSymbol, isChartExpanded: true, activeTab: 'info', viewMode: 'detail' }),
+  setSelectedIndexSymbol: (selectedIndexSymbol) => set({ selectedIndexSymbol }),
   setViewMode: (viewMode) => set({ viewMode }),
   setActiveTab: (activeTab) => set({ activeTab }),
   openQuickView: (symbol) =>

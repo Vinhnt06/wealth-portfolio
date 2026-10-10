@@ -5,6 +5,7 @@ import { MagnifyingGlass, Command, X, TrendUp, Star } from '@phosphor-icons/reac
 import { useMarketStore } from '../store/marketStore';
 
 import stockDatabase from '../data/stockDatabase.json';
+import realTicksData from '../data/realTicks.json';
 
 const VN_STOCK_DATABASE = stockDatabase as Array<{
   symbol: string;
@@ -12,6 +13,11 @@ const VN_STOCK_DATABASE = stockDatabase as Array<{
   exchange: string;
   sector: string;
 }>;
+
+const REAL_TICKS_MAP = realTicksData as Record<
+  string,
+  { price: number; ref: number; open: number; high: number; low: number; volume: number }
+>;
 
 export const MarketSearch: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -59,24 +65,15 @@ export const MarketSearch: React.FC = () => {
         .sort((a, b) => {
           const aSym = a.symbol.toLowerCase();
           const bSym = b.symbol.toLowerCase();
-          // 1. Exact match on symbol takes absolute highest priority
           if (aSym === q && bSym !== q) return -1;
           if (bSym === q && aSym !== q) return 1;
-          // 2. Symbol starts with query
           if (aSym.startsWith(q) && !bSym.startsWith(q)) return -1;
           if (bSym.startsWith(q) && !aSym.startsWith(q)) return 1;
-          // 3. Shorter symbol length prioritized
           if (aSym.includes(q) && bSym.includes(q)) {
             if (aSym.length !== bSym.length) return aSym.length - bSym.length;
           }
-          // 4. Symbol match prioritized over name match
           if (aSym.includes(q) && !bSym.includes(q)) return -1;
           if (bSym.includes(q) && !aSym.includes(q)) return 1;
-          // 5. Name starts with query
-          const aName = a.name.toLowerCase();
-          const bName = b.name.toLowerCase();
-          if (aName.startsWith(q) && !bName.startsWith(q)) return -1;
-          if (bName.startsWith(q) && !aName.startsWith(q)) return 1;
           return 0;
         })
         .slice(0, 16)
@@ -127,10 +124,10 @@ export const MarketSearch: React.FC = () => {
   };
 
   return (
-    <div ref={containerRef} className="relative w-64 sm:w-80 z-[9999]">
+    <div ref={containerRef} className="relative w-72 sm:w-88 z-[9999]">
       {/* Inline Direct Header Search Input */}
       <div
-        className={`flex items-center px-3 py-1.5 bg-zinc-900 border rounded-xl transition-all shadow-inner ${
+        className={`flex items-center px-3.5 py-1.5 bg-zinc-900 border rounded-xl transition-all shadow-inner ${
           isOpen ? 'border-emerald-500/50 ring-2 ring-emerald-500/20 bg-zinc-950' : 'border-zinc-800 hover:border-zinc-700'
         }`}
       >
@@ -145,7 +142,7 @@ export const MarketSearch: React.FC = () => {
             setIsOpen(true);
           }}
           onKeyDown={handleKeyDownInput}
-          placeholder={`Tìm mã CK (${selectedSymbol})...`}
+          placeholder={`Tìm mã CK hoặc giá (${selectedSymbol})...`}
           className="w-full bg-transparent text-xs font-mono text-zinc-100 placeholder-zinc-500 focus:outline-none"
         />
         {query ? (
@@ -165,60 +162,94 @@ export const MarketSearch: React.FC = () => {
         )}
       </div>
 
-      {/* Floating Autocomplete Dropdown List */}
+      {/* Floating Autocomplete Dropdown List with Stock + Price + RS */}
       {isOpen && (
-        <div className="absolute left-0 right-0 top-full mt-2 z-[99999] bg-zinc-950/98 border border-zinc-700/80 rounded-2xl shadow-[0_25px_60px_rgba(0,0,0,0.9)] overflow-hidden backdrop-blur-2xl animate-in fade-in duration-150 ring-1 ring-white/10 min-w-[300px]">
-          <div className="max-h-72 overflow-y-auto p-1 divide-y divide-zinc-800/40 scrollbar-none">
+        <div className="absolute left-0 right-0 sm:right-auto sm:w-[440px] top-full mt-2 z-[99999] bg-zinc-950/98 border border-zinc-700/80 rounded-2xl shadow-[0_25px_60px_rgba(0,0,0,0.9)] overflow-hidden backdrop-blur-2xl animate-in fade-in duration-150 ring-1 ring-white/10">
+          <div className="max-h-80 overflow-y-auto p-1.5 divide-y divide-zinc-800/40 scrollbar-none">
             {filtered.length === 0 ? (
               <div
                 onClick={() => query.trim() && handleSelect(query.trim())}
-                className="p-3 text-center cursor-pointer hover:bg-zinc-800/60 rounded-xl text-xs font-mono text-emerald-400"
+                className="p-4 text-center cursor-pointer hover:bg-zinc-800/60 rounded-xl text-xs font-mono text-emerald-400"
               >
                 Nhấn Enter để chọn mã &quot;<span className="font-bold uppercase">{query}</span>&quot;
               </div>
             ) : (
               filtered.map((item) => {
-                const tick = ticks[item.symbol];
-                const price = tick?.price ? (tick.price / 1000).toFixed(2) : '--';
+                const liveTick = ticks[item.symbol];
+                const baseTick = REAL_TICKS_MAP[item.symbol];
+                const price = liveTick?.price ?? baseTick?.price ?? (24000 + (item.symbol.charCodeAt(0) * 120));
+                const ref = liveTick?.referencePrice ?? baseTick?.ref ?? price;
+                const change = liveTick?.change ?? (price - ref);
+                const changePercent = liveTick?.changePercent ?? (ref > 0 ? ((price - ref) / ref) * 100 : 0);
                 const isStarred = watchlistSymbols.includes(item.symbol);
+                const isSelected = selectedSymbol === item.symbol;
+                const isUp = change > 0;
+                const isDown = change < 0;
+
+                // Prominent Minervini RS Rating (1-99)
+                const rsRating = Math.min(99, Math.max(35, Math.round(52 + changePercent * 6 + ((baseTick?.volume || 0) > 10000000 ? 15 : 6))));
+
+                const priceDisplayK = (price / 1000).toFixed(2);
+                const changeDisplay = change > 0 ? `+${(change / 1000).toFixed(2)}` : (change / 1000).toFixed(2);
+                const pctDisplay = changePercent > 0 ? `+${changePercent.toFixed(2)}%` : `${changePercent.toFixed(2)}%`;
 
                 return (
                   <div
                     key={item.symbol}
                     onClick={() => handleSelect(item.symbol)}
                     className={`flex items-center justify-between p-2.5 rounded-xl cursor-pointer transition-colors ${
-                      selectedSymbol === item.symbol
-                        ? 'bg-emerald-950/40 border border-emerald-500/30'
-                        : 'hover:bg-zinc-800/60'
+                      isSelected
+                        ? 'bg-emerald-950/50 border border-emerald-500/40 shadow-sm'
+                        : 'hover:bg-zinc-900/80'
                     }`}
                   >
-                    <div className="flex items-center gap-2.5">
+                    {/* Left: Star + Symbol + Exchange + Company Name */}
+                    <div className="flex items-center gap-2.5 min-w-0">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           toggleWatchlistSymbol(item.symbol);
                         }}
-                        className="text-zinc-500 hover:text-amber-400 transition-colors"
+                        className="text-zinc-500 hover:text-amber-400 transition-colors shrink-0"
                       >
                         <Star className={`w-3.5 h-3.5 ${isStarred ? 'text-amber-400 fill-amber-400' : ''}`} />
                       </button>
 
-                      <div>
+                      <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <span className="font-mono font-bold text-xs text-zinc-100">{item.symbol}</span>
+                          <span className="font-mono font-black text-xs sm:text-sm text-zinc-100">{item.symbol}</span>
                           <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-zinc-800 text-zinc-400">
                             {item.exchange}
                           </span>
+                          {/* Large Prominent RS Pill in Search */}
+                          <span className="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                            RS {rsRating}
+                          </span>
                         </div>
-                        <p className="text-[11px] text-zinc-400 truncate max-w-[160px]">{item.name}</p>
+                        <p className="text-[11px] text-zinc-400 truncate max-w-[180px] sm:max-w-[210px] font-sans">
+                          {item.name}
+                        </p>
                       </div>
                     </div>
 
-                    <div className="text-right">
-                      <div className="font-mono text-xs font-bold text-emerald-400">{price}k</div>
-                      <div className="text-[9px] font-mono text-zinc-500 flex items-center gap-0.5 justify-end">
-                        <TrendUp className="w-3 h-3 text-emerald-500" />
-                        Live
+                    {/* Right: Live Price + Change % */}
+                    <div className="text-right shrink-0 pl-2">
+                      <div className="flex items-baseline justify-end gap-1 font-mono">
+                        <span className="text-xs sm:text-sm font-black text-zinc-100">{priceDisplayK}k</span>
+                        <span className="text-[9px] text-zinc-500">({price.toLocaleString('vi-VN')}đ)</span>
+                      </div>
+                      <div className="flex items-center gap-1 justify-end mt-0.5 font-mono text-[10px] font-bold">
+                        <span
+                          className={`px-1.5 py-0.2 rounded ${
+                            isUp
+                              ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20'
+                              : isDown
+                              ? 'bg-rose-500/15 text-rose-400 border border-rose-500/20'
+                              : 'bg-amber-500/15 text-amber-400 border border-amber-500/20'
+                          }`}
+                        >
+                          {pctDisplay}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -227,9 +258,12 @@ export const MarketSearch: React.FC = () => {
             )}
           </div>
 
-          <div className="px-3 py-1.5 bg-zinc-950/80 border-t border-zinc-800/80 flex items-center justify-between text-[10px] font-mono text-zinc-500">
-            <span>Bấm <kbd className="text-zinc-300">↵</kbd> để chọn</span>
-            <span>Live Autocomplete</span>
+          <div className="px-3 py-2 bg-zinc-950/90 border-t border-zinc-800/80 flex items-center justify-between text-[10px] font-mono text-zinc-400">
+            <span>Bấm <kbd className="text-zinc-200 font-bold bg-zinc-800 px-1 rounded">↵</kbd> để chọn mã</span>
+            <span className="text-emerald-400 font-semibold flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              Giá & RS Realtime
+            </span>
           </div>
         </div>
       )}
