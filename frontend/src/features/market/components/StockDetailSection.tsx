@@ -153,6 +153,15 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
   const colorClass = priceColor.colorClass;
   const bgBadgeClass = priceColor.badgeBgClass;
 
+  const totalVol = tick?.totalVolume || tick?.volume || (minerviniData?.volume ? minerviniData.volume : 0);
+  const rawHigh = tick?.high || 0;
+  const rawLow = tick?.low || 0;
+  const rawOpen = tick?.open || 0;
+  const highPrice = rawHigh > 0 ? (rawHigh < 1000 ? Math.round(rawHigh * 1000) : rawHigh) : 0;
+  const lowPrice = rawLow > 0 ? (rawLow < 1000 ? Math.round(rawLow * 1000) : rawLow) : 0;
+  const openPrice = rawOpen > 0 ? (rawOpen < 1000 ? Math.round(rawOpen * 1000) : rawOpen) : 0;
+  const matchValueBillion = price > 0 && totalVol > 0 ? (price * totalVol) / 1_000_000_000 : 0;
+
   const info = companyData?.info;
   const shareholders = companyData?.shareholders || [];
   const officers = companyData?.officers || [];
@@ -193,102 +202,137 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
           </div>
         </div>
 
-        {/* Stock Headline Info & Realtime Pricing */}
-        <div className="flex flex-wrap items-center justify-between gap-6 pt-4">
-          <div className="flex items-start gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-zinc-900 border border-zinc-700/80 flex items-center justify-center text-emerald-400 font-mono font-black text-2xl shadow-inner shrink-0">
-              {selectedSymbol.slice(0, 1)}
-            </div>
-            <div>
-              <div className="flex items-center gap-2.5">
-                <h1 className="text-2xl sm:text-3xl font-mono font-black text-zinc-100 tracking-tight">
-                  {selectedSymbol}
-                </h1>
-                <span className="px-2 py-0.5 text-xs font-mono font-bold rounded-lg bg-zinc-800 text-zinc-300 border border-zinc-700/80">
-                  {meta.exchange}
-                </span>
-                <span className="px-2.5 py-0.5 text-xs text-zinc-400 bg-zinc-900 border border-zinc-800/80 rounded-lg">
-                  {meta.sector}
-                </span>
-
-                {/* Minervini Live RS Rating & Stage 2 Status Pill */}
-                {minerviniData && (
-                  <div className="flex flex-wrap items-center gap-2">
-                    {/* Big Bold Prominent RS Rating Badge */}
-                    <div className="flex items-center gap-2 px-3 py-1 rounded-xl bg-gradient-to-r from-amber-500/20 via-amber-500/10 to-transparent border border-amber-400/50 shadow-[0_0_15px_rgba(245,158,11,0.25)]">
-                      <Sparkle weight="fill" className="w-4 h-4 text-amber-400 animate-pulse" />
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-[10px] font-mono font-bold uppercase text-amber-300">RS Rating:</span>
-                        <span className="text-lg sm:text-xl font-mono font-black text-amber-300 leading-none">
-                          {minerviniData.rsRating}
-                        </span>
-                        <span className="text-[10px] text-amber-400/70 font-semibold font-mono">/99</span>
-                        {minerviniData.rsRating >= 80 && (
-                          <span className="ml-1 px-1.5 py-0.2 rounded text-[9px] font-black uppercase tracking-wider bg-amber-400 text-zinc-950">
-                            LEADER
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    <span
-                      className={`px-2.5 py-1 text-xs font-mono font-bold rounded-xl border flex items-center gap-1.5 ${
-                        minerviniData.isStage2Eligible
-                          ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30 shadow-[0_0_12px_rgba(16,185,129,0.2)]'
-                          : 'bg-zinc-900 text-zinc-400 border-zinc-800'
-                      }`}
-                    >
-                      <ShieldCheck className="w-4 h-4" />
-                      <span>{minerviniData.isStage2Eligible ? 'Stage 2 (8/8 ĐẠT)' : `${minerviniData.passedCount}/8 Tiêu chí`}</span>
-                    </span>
-
-                    <span className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-mono text-zinc-300 bg-zinc-900 border border-zinc-800 rounded-xl">
-                      <Buildings className="w-4 h-4 text-cyan-400" />
-                      <span>{minerviniData.sectorRank || 'Top Ngành'}</span>
-                      <span className="text-[10px] text-emerald-400 font-bold">({minerviniData.sectorStatus?.split(' ')[0] || 'Dẫn dắt'})</span>
-                    </span>
-                  </div>
-                )}
+        {/* Stock Headline Info & Full-Width Realtime Telemetry Bar */}
+        <div className="space-y-4 pt-4">
+          {/* Row 1: Stock Identity & Minervini Tags */}
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-zinc-900 border border-zinc-700/80 flex items-center justify-center text-emerald-400 font-mono font-black text-2xl shadow-inner shrink-0">
+                {selectedSymbol.slice(0, 1)}
               </div>
-              <p className="text-sm text-zinc-300 font-medium mt-1">{meta.name}</p>
+              <div>
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  <h1 className="text-2xl sm:text-3xl font-mono font-black text-zinc-100 tracking-tight">
+                    {selectedSymbol}
+                  </h1>
+                  <span className="px-2 py-0.5 text-xs font-mono font-bold rounded-lg bg-zinc-800 text-zinc-300 border border-zinc-700/80">
+                    {meta.exchange}
+                  </span>
+                  <span className="px-2.5 py-0.5 text-xs text-zinc-400 bg-zinc-900 border border-zinc-800/80 rounded-lg">
+                    {meta.sector}
+                  </span>
+                </div>
+                <p className="text-sm text-zinc-300 font-medium mt-1">{meta.name}</p>
+              </div>
             </div>
+
+            {/* Minervini Live RS Rating & Stage 2 Status Pill */}
+            {minerviniData && (
+              <div className="flex flex-wrap items-center gap-2">
+                {/* Big Bold Prominent RS Rating Badge */}
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500/20 via-amber-500/10 to-transparent border border-amber-400/50 shadow-[0_0_15px_rgba(245,158,11,0.25)]">
+                  <Sparkle weight="fill" className="w-4 h-4 text-amber-400 animate-pulse" />
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-[10px] font-mono font-bold uppercase text-amber-300">RS Rating:</span>
+                    <span className="text-lg sm:text-xl font-mono font-black text-amber-300 leading-none">
+                      {minerviniData.rsRating}
+                    </span>
+                    <span className="text-[10px] text-amber-400/70 font-semibold font-mono">/99</span>
+                    {minerviniData.rsRating >= 80 && (
+                      <span className="ml-1 px-1.5 py-0.2 rounded text-[9px] font-black uppercase tracking-wider bg-amber-400 text-zinc-950">
+                        LEADER
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <span
+                  className={`px-3 py-1.5 text-xs font-mono font-bold rounded-xl border flex items-center gap-1.5 ${
+                    minerviniData.isStage2Eligible
+                      ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30 shadow-[0_0_12px_rgba(16,185,129,0.2)]'
+                      : 'bg-zinc-900 text-zinc-400 border-zinc-800'
+                  }`}
+                >
+                  <ShieldCheck className="w-4 h-4" />
+                  <span>{minerviniData.isStage2Eligible ? 'Stage 2 (8/8 ĐẠT)' : `${minerviniData.passedCount}/8 Tiêu chí`}</span>
+                </span>
+
+                <span className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono text-zinc-300 bg-zinc-900 border border-zinc-800 rounded-xl">
+                  <Buildings className="w-4 h-4 text-cyan-400" />
+                  <span>{minerviniData.sectorRank || 'Top Ngành'}</span>
+                  <span className="text-[10px] text-emerald-400 font-bold">({minerviniData.sectorStatus?.split(' ')[0] || 'Dẫn dắt'})</span>
+                </span>
+              </div>
+            )}
           </div>
 
-          {/* Pricing block */}
-          <div className="flex flex-wrap items-baseline gap-4 sm:gap-6 bg-zinc-900/60 border border-zinc-800/80 px-5 py-3 rounded-2xl">
-            <div>
+          {/* Row 2: Full-Width Realtime Pricing & Market Telemetry Bar */}
+          <div className="w-full grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3 sm:gap-4 bg-zinc-900/70 border border-zinc-800/80 p-4 rounded-2xl backdrop-blur-md shadow-xl items-center">
+            {/* 1. Giá khớp lệnh */}
+            <div className="col-span-2 sm:col-span-1 border-r border-zinc-800/80 pr-3">
               <span className="text-[10px] uppercase font-mono tracking-wider text-zinc-500 block">GIÁ KHỚP LỆNH</span>
-              <div className="flex items-baseline gap-1.5 mt-0.5">
-                <span className={`text-3xl font-mono font-black tracking-tight ${colorClass}`}>
+              <div className="flex items-baseline gap-1 mt-0.5">
+                <span className={`text-2xl sm:text-3xl font-mono font-black tracking-tight ${colorClass}`}>
                   {price > 0 ? price.toLocaleString('vi-VN') : '--'}
                 </span>
                 <span className="text-xs font-mono text-zinc-500 font-bold">đ</span>
               </div>
             </div>
 
-            <div className="text-right">
+            {/* 2. Biến động */}
+            <div className="border-r border-zinc-800/80 pr-3">
               <span className="text-[10px] uppercase font-mono tracking-wider text-zinc-500 block">BIẾN ĐỘNG</span>
-              <div className={`flex items-center gap-1 mt-0.5 text-sm font-mono font-bold ${bgBadgeClass} px-2.5 py-1 rounded-xl border`}>
-                {isUp ? <TrendUp className="w-4 h-4" /> : isDown ? <TrendDown className="w-4 h-4" /> : null}
+              <div className={`inline-flex items-center gap-1 mt-1 text-xs sm:text-sm font-mono font-bold ${bgBadgeClass} px-2.5 py-0.5 rounded-xl border`}>
+                {isUp ? <TrendUp className="w-3.5 h-3.5" /> : isDown ? <TrendDown className="w-3.5 h-3.5" /> : null}
                 <span>
                   {change > 0 ? `+${change}` : change} ({changePercent > 0 ? `+${changePercent.toFixed(2)}` : changePercent.toFixed(2)}%)
                 </span>
               </div>
             </div>
 
-            {/* Bounds corridor */}
-            <div className="hidden md:flex items-center gap-3 pl-4 border-l border-zinc-800 text-xs font-mono">
-              <div>
-                <span className="text-[10px] text-fuchsia-400 block font-semibold">TRẦN (CE)</span>
-                <span className="font-bold text-fuchsia-400">{ceilPrice > 0 ? ceilPrice.toLocaleString('vi-VN') : '--'}</span>
+            {/* 3. Khung Trần / Sàn / TC */}
+            <div className="border-r border-zinc-800/80 pr-3">
+              <span className="text-[10px] uppercase font-mono tracking-wider text-zinc-500 block">TRẦN / SÀN / TC</span>
+              <div className="flex items-center gap-2 mt-1 text-xs font-mono font-bold">
+                <span className="text-fuchsia-400" title="Giá Trần (CE)">{ceilPrice > 0 ? ceilPrice.toLocaleString('vi-VN') : '--'}</span>
+                <span className="text-zinc-600">/</span>
+                <span className="text-cyan-400" title="Giá Sàn (FL)">{floorPrice > 0 ? floorPrice.toLocaleString('vi-VN') : '--'}</span>
+                <span className="text-zinc-600">/</span>
+                <span className="text-amber-400" title="Tham Chiếu (TC)">{refPrice > 0 ? refPrice.toLocaleString('vi-VN') : '--'}</span>
               </div>
-              <div>
-                <span className="text-[10px] text-cyan-400 block font-semibold">SÀN (FL)</span>
-                <span className="font-bold text-cyan-400">{floorPrice > 0 ? floorPrice.toLocaleString('vi-VN') : '--'}</span>
+            </div>
+
+            {/* 4. Cao / Thấp trong phiên */}
+            <div className="border-r border-zinc-800/80 pr-3">
+              <span className="text-[10px] uppercase font-mono tracking-wider text-zinc-500 block">CAO / THẤP PHIÊN</span>
+              <div className="flex items-center gap-1.5 mt-1 text-xs font-mono font-bold">
+                <span className="text-emerald-400">{highPrice > 0 ? highPrice.toLocaleString('vi-VN') : '--'}</span>
+                <span className="text-zinc-600">/</span>
+                <span className="text-rose-400">{lowPrice > 0 ? lowPrice.toLocaleString('vi-VN') : '--'}</span>
               </div>
-              <div>
-                <span className="text-[10px] text-amber-400 block font-semibold">TC</span>
-                <span className="font-bold text-amber-400">{refPrice > 0 ? refPrice.toLocaleString('vi-VN') : '--'}</span>
+            </div>
+
+            {/* 5. Mở cửa */}
+            <div className="border-r border-zinc-800/80 pr-3">
+              <span className="text-[10px] uppercase font-mono tracking-wider text-zinc-500 block">GIÁ MỞ CỬA</span>
+              <div className="mt-1 text-xs font-mono font-bold text-zinc-200">
+                {openPrice > 0 ? openPrice.toLocaleString('vi-VN') : (refPrice > 0 ? refPrice.toLocaleString('vi-VN') : '--')}
+              </div>
+            </div>
+
+            {/* 6. Tổng khối lượng */}
+            <div className="border-r border-zinc-800/80 pr-3">
+              <span className="text-[10px] uppercase font-mono tracking-wider text-zinc-500 block">TỔNG KHỐI LƯỢNG</span>
+              <div className="mt-1 text-xs font-mono font-bold text-cyan-400">
+                {totalVol > 0 ? totalVol.toLocaleString('vi-VN') : '--'} <span className="text-[10px] text-zinc-500 font-normal">cp</span>
+              </div>
+            </div>
+
+            {/* 7. Giá trị giao dịch */}
+            <div>
+              <span className="text-[10px] uppercase font-mono tracking-wider text-zinc-500 block">GIÁ TRỊ GD</span>
+              <div className="mt-1 text-xs font-mono font-bold text-amber-300">
+                {matchValueBillion > 0 ? `${matchValueBillion.toFixed(2)} tỷ` : '--'}
               </div>
             </div>
           </div>
