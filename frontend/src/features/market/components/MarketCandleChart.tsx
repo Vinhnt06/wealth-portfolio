@@ -2716,21 +2716,14 @@ export function MarketCandleChart() {
       <div className="flex items-center justify-between px-2 py-1 border-b border-zinc-800/80 bg-[#131722] text-zinc-300 text-xs gap-1.5 z-30 overflow-hidden whitespace-nowrap select-none">
         {/* Left: Ticker & Timeframe & Indicators */}
         <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 min-w-0">
-          {/* Symbol & Tooltip Name */}
-          <div className="flex items-center gap-1 font-sans shrink-0">
+          {/* Symbol Badge */}
+          <div className="flex items-center font-sans shrink-0">
             <span
               className={`font-mono font-extrabold text-xs px-2 py-0.5 rounded border shadow-sm cursor-default ${priceColor.badgeBgClass}`}
               title={`${stockInfo.name} (${stockInfo.exchange})`}
             >
               {selectedSymbol}
             </span>
-            <span
-              className="font-bold text-zinc-300 text-xs tracking-tight truncate max-w-[90px] xl:max-w-[140px] hidden md:inline-block"
-              title={stockInfo.name}
-            >
-              {stockInfo.name}
-            </span>
-            <span className="font-mono text-zinc-500 text-[11px] shrink-0 hidden sm:inline">{stockInfo.exchange}</span>
           </div>
 
           <div className="w-px h-3.5 bg-zinc-800/80 shrink-0 mx-0.5" />
@@ -3315,13 +3308,9 @@ export function MarketCandleChart() {
 
             {/* ── TradingView In-Chart Legend (Top-Left Canvas Overlay - Screenshot 2 style) ────────── */}
             <div className="absolute top-2 left-3 z-20 pointer-events-none flex flex-col gap-0.5 select-none font-mono text-[11px] leading-tight drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)]">
-              {/* Row 1: Symbol & Realtime OHLC */}
+              {/* Row 1: Realtime OHLC */}
               <div className="flex items-center gap-1.5 flex-wrap text-zinc-300">
-                <span className="font-extrabold text-zinc-100">{selectedSymbol}</span>
-                <span className="text-zinc-600">·</span>
-                <span className="text-zinc-400 font-semibold">{resolution}</span>
-                <span className="text-zinc-600">·</span>
-                <span className="text-zinc-400 font-semibold">{stockInfo.exchange}</span>
+                <span className="text-zinc-400 font-bold">{resolution}</span>
                 <span className="text-zinc-700">|</span>
                 <span>O <strong className="text-zinc-100 font-bold">{hoveredData?.open ? hoveredData.open.toFixed(2) : (lastCandleRef.current ? lastCandleRef.current.open.toFixed(2) : priceDisplayK)}</strong></span>
                 <span>H <strong className="text-emerald-400 font-bold">{hoveredData?.high ? hoveredData.high.toFixed(2) : (lastCandleRef.current ? lastCandleRef.current.high.toFixed(2) : priceDisplayK)}</strong></span>
