@@ -145,25 +145,45 @@ export function OrderBook() {
         </div>
       </div>
 
-      {/* Table Headers */}
-      <div className="grid grid-cols-2 gap-4 text-[11px] font-mono text-zinc-400 border-b border-zinc-800/60 pb-2 mb-2 px-1">
-        <div className="grid grid-cols-2 text-left">
-          <span>Khối lượng mua</span>
-          <span className="text-right">Giá mua</span>
+      {/* Center Market Snapshot & Bid/Ask Ratio Badge */}
+      <div className="p-3 rounded-xl bg-zinc-900/60 border border-zinc-800/80 mb-3 flex items-center justify-between font-mono">
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] text-zinc-400 uppercase font-bold">Lực Cầu Mua:</span>
+          <span className="text-xs font-bold text-emerald-400">
+            {formatVol(currentQuotes?.totalBidVol || 0)} CP
+          </span>
         </div>
-        <div className="grid grid-cols-2 text-right">
-          <span className="text-left">Giá bán</span>
-          <span>Khối lượng bán</span>
+        <div className="h-3 w-px bg-zinc-800" />
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] text-zinc-400 uppercase font-bold">Lực Cung Bán:</span>
+          <span className="text-xs font-bold text-rose-400">
+            {formatVol(currentQuotes?.totalAskVol || 0)} CP
+          </span>
         </div>
       </div>
 
-      {/* Depth Rows */}
-      <div className="flex-1 flex flex-col justify-center space-y-1">
+      {/* Table Headers */}
+      <div className="grid grid-cols-12 gap-1 text-[11px] font-mono text-zinc-400 border-b border-zinc-800/80 pb-2 mb-2 px-1">
+        <div className="col-span-5 flex justify-between pr-2 border-r border-zinc-800/60">
+          <span>KL Mua</span>
+          <span className="font-bold text-emerald-400">Giá Mua</span>
+        </div>
+        <div className="col-span-2 text-center text-zinc-500 font-bold">
+          Bước
+        </div>
+        <div className="col-span-5 flex justify-between pl-2 border-l border-zinc-800/60">
+          <span className="font-bold text-rose-400">Giá Bán</span>
+          <span>KL Bán</span>
+        </div>
+      </div>
+
+      {/* 3 Depth Rows (3 Mức Giá Tốt Nhất) */}
+      <div className="flex-1 flex flex-col justify-center space-y-2">
         {[0, 1, 2].map((idx) => {
           const bid = bids[idx];
           const ask = asks[idx];
-          const bidPct = bid && bid.volume > 0 ? (bid.volume / maxVolume) * 100 : 0;
-          const askPct = ask && ask.volume > 0 ? (ask.volume / maxVolume) * 100 : 0;
+          const bidPct = bid && bid.volume > 0 ? Math.min(100, (bid.volume / maxVolume) * 100) : 0;
+          const askPct = ask && ask.volume > 0 ? Math.min(100, (ask.volume / maxVolume) * 100) : 0;
 
           const bidPriceColor = bid && bid.price > 0 ? getStockPriceColor({
             price: bid.price,
@@ -180,31 +200,41 @@ export function OrderBook() {
           }).colorClass : 'text-rose-400';
 
           return (
-            <div key={idx} className="grid grid-cols-2 gap-4 text-xs font-mono py-1 px-1 rounded hover:bg-zinc-900/40 transition-colors relative">
-              {/* Bid Column (Buy side) */}
-              <div className="relative grid grid-cols-2 items-center overflow-hidden rounded">
+            <div 
+              key={idx} 
+              className="grid grid-cols-12 gap-1 text-xs font-mono py-1.5 px-1.5 rounded-lg bg-zinc-900/40 hover:bg-zinc-900/80 border border-zinc-800/40 transition-all items-center relative overflow-hidden"
+            >
+              {/* Bên Dư Mua (5 Cột) */}
+              <div className="col-span-5 relative flex items-center justify-between pr-2 overflow-hidden rounded">
                 <div
-                  className="absolute right-0 top-0 bottom-0 bg-emerald-500/10 border-r border-emerald-500/30 transition-all duration-300 pointer-events-none"
+                  className="absolute right-0 top-0 bottom-0 bg-emerald-500/15 border-r-2 border-emerald-500/50 transition-all duration-500 pointer-events-none rounded-l"
                   style={{ width: `${bidPct}%` }}
                 />
-                <span className="text-zinc-400 text-left z-10 font-mono text-[11px]">
+                <span className="text-zinc-300 z-10 font-mono text-[11px] font-medium">
                   {bid && bid.volume > 0 ? formatVol(bid.volume) : '-'}
                 </span>
-                <span className={`font-bold text-right z-10 font-mono ${bidPriceColor}`}>
+                <span className={`font-black z-10 font-mono text-sm ${bidPriceColor}`}>
                   {bid && bid.price > 0 ? formatPrice(bid.price) : '-'}
                 </span>
               </div>
 
-              {/* Ask Column (Sell side) */}
-              <div className="relative grid grid-cols-2 items-center overflow-hidden rounded">
+              {/* Nhãn Mức Giá (Giá 1, 2, 3) (2 Cột ở Giữa) */}
+              <div className="col-span-2 flex items-center justify-center">
+                <span className="w-5 h-5 rounded-md bg-zinc-800/80 border border-zinc-700/60 text-[10px] font-mono text-zinc-400 font-bold flex items-center justify-center">
+                  #{idx + 1}
+                </span>
+              </div>
+
+              {/* Bên Dư Bán (5 Cột) */}
+              <div className="col-span-5 relative flex items-center justify-between pl-2 overflow-hidden rounded">
                 <div
-                  className="absolute left-0 top-0 bottom-0 bg-rose-500/10 border-l border-rose-500/30 transition-all duration-300 pointer-events-none"
+                  className="absolute left-0 top-0 bottom-0 bg-rose-500/15 border-l-2 border-rose-500/50 transition-all duration-500 pointer-events-none rounded-r"
                   style={{ width: `${askPct}%` }}
                 />
-                <span className={`font-bold text-left z-10 font-mono ${askPriceColor}`}>
+                <span className={`font-black z-10 font-mono text-sm ${askPriceColor}`}>
                   {ask && ask.price > 0 ? formatPrice(ask.price) : '-'}
                 </span>
-                <span className="text-zinc-400 text-right z-10 font-mono text-[11px]">
+                <span className="text-zinc-300 z-10 font-mono text-[11px] font-medium">
                   {ask && ask.volume > 0 ? formatVol(ask.volume) : '-'}
                 </span>
               </div>
@@ -213,19 +243,22 @@ export function OrderBook() {
         })}
       </div>
 
-      {/* Volume Summary Bar */}
-      <div className="mt-4 pt-3 border-t border-zinc-800/80">
-        <div className="flex justify-between items-center text-[11px] font-mono text-zinc-400 mb-1.5">
-          <span className="text-emerald-400 font-semibold flex items-center gap-1">
-            <ChartBar size={12} /> Mua: {formatVol(currentQuotes?.totalBidVol || 0)}
+      {/* Realtime Order Book Imbalance Meter */}
+      <div className="mt-4 pt-3.5 border-t border-zinc-800/80 space-y-2">
+        <div className="flex justify-between items-center text-xs font-mono">
+          <span className="text-emerald-400 font-bold flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-emerald-400" />
+            Bên Mua: {Math.round(((currentQuotes?.totalBidVol || 1) / ((currentQuotes?.totalBidVol || 1) + (currentQuotes?.totalAskVol || 1))) * 100)}%
           </span>
-          <span className="text-rose-400 font-semibold flex items-center gap-1">
-            Bán: {formatVol(currentQuotes?.totalAskVol || 0)} <ChartBar size={12} />
+          <span className="text-zinc-400 text-[10px]">TƯƠNG QUAN CUNG - CẦU</span>
+          <span className="text-rose-400 font-bold flex items-center gap-1.5">
+            Bên Bán: {Math.round(((currentQuotes?.totalAskVol || 1) / ((currentQuotes?.totalBidVol || 1) + (currentQuotes?.totalAskVol || 1))) * 100)}%
+            <span className="w-2 h-2 rounded-full bg-rose-400" />
           </span>
         </div>
-        <div className="h-2 w-full bg-zinc-900 rounded-full overflow-hidden flex border border-zinc-800">
+        <div className="h-2.5 w-full bg-zinc-900 rounded-full overflow-hidden flex border border-zinc-800 p-0.5 gap-0.5">
           <motion.div
-            className="h-full bg-emerald-500/80"
+            className="h-full bg-emerald-500 rounded-sm"
             initial={{ width: '50%' }}
             animate={{
               width: `${
@@ -236,7 +269,7 @@ export function OrderBook() {
             }}
             transition={{ type: 'spring', stiffness: 100, damping: 20 }}
           />
-          <div className="h-full flex-1 bg-rose-500/80" />
+          <div className="h-full flex-1 bg-rose-500 rounded-sm" />
         </div>
       </div>
     </div>
