@@ -4,23 +4,32 @@ import { motion } from 'framer-motion';
 import { useMarketStore } from '../store/marketStore';
 import { TrendUp, TrendDown, Minus, Broadcast, WifiHigh, WifiSlash } from '@phosphor-icons/react';
 
+import { getMarketSessionInfo } from '../utils/marketHours';
+
 export function MarketIndexBar() {
   const { indexes, wsStatus } = useMarketStore();
   const indexList = Object.values(indexes);
+  const sessionInfo = getMarketSessionInfo();
 
   return (
     <div className="w-full bg-zinc-950/80 backdrop-blur-xl border-b border-zinc-800/80 px-4 py-2.5 flex items-center justify-between text-xs overflow-x-auto gap-6 scrollbar-none">
       {/* Live Stream Indicator */}
       <div className="flex items-center gap-2 shrink-0">
         <div className="relative flex items-center justify-center w-6 h-6 rounded-full bg-zinc-900 border border-zinc-800">
-          <Broadcast size={14} className={wsStatus === 'connected' ? 'text-emerald-400 animate-pulse' : 'text-amber-400'} />
+          <Broadcast size={14} className={wsStatus === 'connected' ? 'text-emerald-400 animate-pulse' : sessionInfo.isOpen ? 'text-amber-400 animate-pulse' : 'text-zinc-500'} />
         </div>
-        <span className="font-semibold tracking-wide text-zinc-300 uppercase text-[11px]">Trực Tuyến</span>
+        <span className="font-semibold tracking-wide text-zinc-300 uppercase text-[11px]">
+          {sessionInfo.isOpen ? 'Thị Trường' : 'Chốt Phiên'}
+        </span>
         <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-medium ${
-          wsStatus === 'connected' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+          wsStatus === 'connected'
+            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+            : sessionInfo.isOpen
+            ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+            : 'bg-zinc-800/80 text-zinc-400 border border-zinc-700/60'
         }`}>
           {wsStatus === 'connected' ? <WifiHigh size={10} className="mr-1 inline" /> : <WifiSlash size={10} className="mr-1 inline" />}
-          {wsStatus.toUpperCase()}
+          {wsStatus === 'connected' ? 'REALTIME' : sessionInfo.isOpen ? 'CHỜ KẾT NỐI' : 'ĐÃ ĐÓNG CỬA'}
         </span>
       </div>
 
