@@ -57,6 +57,7 @@ export const CommoditiesAndGoldSection: React.FC = () => {
   const [bankSearch, setBankSearch] = useState('');
   const [loading, setLoading] = useState(false);
   const [lastRefreshed, setLastRefreshed] = useState<string>('');
+  const [lastDate, setLastDate] = useState<string>('');
 
   const fetchData = async () => {
     setLoading(true);
@@ -76,7 +77,9 @@ export const CommoditiesAndGoldSection: React.FC = () => {
         if (bankJson.success) setBankRates(bankJson.data);
       }
 
-      setLastRefreshed(new Date().toLocaleTimeString('vi-VN', { hour12: false }));
+      const now = new Date();
+      setLastRefreshed(now.toLocaleTimeString('vi-VN', { hour12: false }));
+      setLastDate(now.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }));
     } catch (err) {
       console.error('Lỗi tải dữ liệu hàng hóa & lãi suất:', err);
     } finally {
@@ -123,15 +126,19 @@ export const CommoditiesAndGoldSection: React.FC = () => {
             <Coins className="w-5 h-5" weight="duotone" />
           </div>
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2.5">
               <h2 className="font-mono font-black text-lg text-zinc-100 tracking-tight">
                 GIÁ DẦU, GIÁ VÀNG & LÃI SUẤT TIẾT KIỆM
               </h2>
               <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
                 REAL DATA 100%
               </span>
+              <span className="text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300 flex items-center gap-1.5 shadow-inner">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                Cập nhật ngày {lastDate || new Date().toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })} {lastRefreshed ? `lúc ${lastRefreshed}` : ''}
+              </span>
             </div>
-            <p className="text-xs text-zinc-400">
+            <p className="text-xs text-zinc-400 mt-1">
               Dữ liệu năng lượng quốc tế theo thời gian thực & biểu giá vàng, lãi suất ngân hàng 24HMoney
             </p>
           </div>

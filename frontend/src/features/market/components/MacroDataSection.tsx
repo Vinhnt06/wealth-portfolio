@@ -54,9 +54,9 @@ export const MacroDataSection: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="px-3 py-1 text-[11px] font-mono font-bold rounded-xl bg-zinc-900/80 border border-zinc-800 text-zinc-400 flex items-center gap-1.5">
-            <Info className="w-3.5 h-3.5 text-zinc-500" />
-            <span>Kỳ cập nhật: {currentGdp.period}</span>
+          <span className="px-3 py-1 text-[11px] font-mono font-bold rounded-xl bg-zinc-900/80 border border-zinc-800 text-zinc-300 flex items-center gap-1.5 shadow-sm">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span>Cập nhật ngày 11/10/2026 (Kỳ {currentGdp.period})</span>
           </span>
           <span className="px-2.5 py-1 text-[10px] font-mono font-extrabold rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
             SBV & GSO DATA
