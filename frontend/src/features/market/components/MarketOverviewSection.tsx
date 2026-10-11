@@ -22,14 +22,14 @@ import { EconomicCycleWheel } from './EconomicCycleWheel';
 
 interface MarketOverviewSectionProps {
   onSelectSector?: (sectorName: string) => void;
-  defaultTab?: 'heatmap' | 'chart' | 'cycle';
+  defaultTab?: 'heatmap' | 'chart';
 }
 
 export const MarketOverviewSection: React.FC<MarketOverviewSectionProps> = ({
   onSelectSector,
-  defaultTab = 'cycle'
+  defaultTab = 'heatmap'
 }) => {
-  const [overviewTab, setOverviewTab] = useState<'heatmap' | 'chart' | 'cycle'>(defaultTab);
+  const [overviewTab, setOverviewTab] = useState<'heatmap' | 'chart'>(defaultTab);
 
   return (
     <div className="space-y-6">
@@ -39,18 +39,6 @@ export const MarketOverviewSection: React.FC<MarketOverviewSectionProps> = ({
       {/* Overview View Switcher */}
       <div className="flex items-center justify-between">
         <div className="flex items-center p-1 rounded-xl bg-zinc-950/80 border border-zinc-800/80 backdrop-blur-xl">
-          <button
-            onClick={() => setOverviewTab('cycle')}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold transition-all ${
-              overviewTab === 'cycle'
-                ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20'
-                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
-            }`}
-          >
-            <Compass className="w-4 h-4" weight="fill" />
-            <span>Chu Kỳ Kinh Tế Vĩ Mô</span>
-          </button>
-
           <button
             onClick={() => setOverviewTab('heatmap')}
             className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold transition-all ${
@@ -77,10 +65,8 @@ export const MarketOverviewSection: React.FC<MarketOverviewSectionProps> = ({
         </div>
       </div>
 
-      {/* 2. Main Terminal Hub: Economic Cycle Wheel, Heatmap or Index Chart */}
-      {overviewTab === 'cycle' ? (
-        <EconomicCycleWheel onSelectSector={onSelectSector} />
-      ) : overviewTab === 'heatmap' ? (
+      {/* 2. Main Terminal Hub: Heatmap or Index Chart */}
+      {overviewTab === 'heatmap' ? (
         <MarketHeatmap />
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">

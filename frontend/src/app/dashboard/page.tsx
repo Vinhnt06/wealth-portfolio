@@ -15,6 +15,9 @@ import {
 import { Shield, Target, Plus, TrendUp, Sparkle, ArrowRight, Wallet, ChartPie, Globe } from '@phosphor-icons/react';
 import vnindexCandles from '../../features/market/data/vnindexHistory.json';
 
+import { EconomicCycleWheel } from '../../features/market/components/EconomicCycleWheel';
+import { MacroDataSection } from '../../features/market/components/MacroDataSection';
+
 const realChartData = (vnindexCandles as unknown as CandlestickData[]).slice(-120);
 
 const PORTFOLIO = {
@@ -100,6 +103,12 @@ export default function DashboardPage() {
             </Link>
           </div>
           <IndexBanner />
+        </section>
+
+        {/* ── 3. Vòng Xoay Chu Kỳ Kinh Tế Vĩ Mô & Dữ Liệu Vĩ Mô ── */}
+        <section className="space-y-6">
+          <EconomicCycleWheel />
+          <MacroDataSection />
         </section>
 
         {/* ── 4. Portfolio Asset Allocation & Chart ── */}
