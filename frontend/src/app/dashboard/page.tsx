@@ -17,6 +17,7 @@ import vnindexCandles from '../../features/market/data/vnindexHistory.json';
 
 import { EconomicCycleWheel } from '../../features/market/components/EconomicCycleWheel';
 import { MacroDataSection } from '../../features/market/components/MacroDataSection';
+import { CommoditiesAndGoldSection } from '../../features/market/components/CommoditiesAndGoldSection';
 
 const realChartData = (vnindexCandles as unknown as CandlestickData[]).slice(-120);
 
@@ -105,10 +106,11 @@ export default function DashboardPage() {
           <IndexBanner />
         </section>
 
-        {/* ── 3. Vòng Xoay Chu Kỳ Kinh Tế Vĩ Mô & Dữ Liệu Vĩ Mô ── */}
-        <section className="space-y-6">
-          <EconomicCycleWheel />
+        {/* ── 3. Chỉ Số Kinh Tế Vĩ Mô, Hàng Hóa & Lãi Suất Ngân Hàng ── */}
+        <section className="space-y-8">
           <MacroDataSection />
+          <CommoditiesAndGoldSection />
+          <EconomicCycleWheel />
         </section>
 
         {/* ── 4. Portfolio Asset Allocation & Chart ── */}
