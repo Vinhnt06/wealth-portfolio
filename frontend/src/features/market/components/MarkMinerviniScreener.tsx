@@ -23,6 +23,7 @@ import {
   CaretUpDown,
   SquaresFour,
   Table as TableIcon,
+  X,
 } from '@phosphor-icons/react';
 import { useMarketStore } from '../store/marketStore';
 import { MinerviniScreenerItem } from '../types/minervini.types';
@@ -46,7 +47,7 @@ export const MarkMinerviniScreener: React.FC = () => {
   // Filter states
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSector, setSelectedSector] = useState<string>('all');
-  const [minRs, setMinRs] = useState<number>(50);
+  const [minRs, setMinRs] = useState<number>(0);
   const [onlyStage2, setOnlyStage2] = useState<boolean>(false);
 
   // Sorting state (Auto-sorts dynamically when clicked)
@@ -126,8 +127,12 @@ export const MarkMinerviniScreener: React.FC = () => {
         if (!matchSymbol && !matchName) return false;
       }
 
-      if (selectedSector !== 'all' && item.sector !== selectedSector) {
-        return false;
+      if (selectedSector !== 'all') {
+        const itemSec = (item.sector || '').trim().toLowerCase();
+        const selSec = selectedSector.trim().toLowerCase();
+        if (itemSec !== selSec) {
+          return false;
+        }
       }
 
       if (item.rsRating < minRs) {
@@ -562,6 +567,9 @@ export const MarkMinerviniScreener: React.FC = () => {
                     <button
                       onClick={() => {
                         setSelectedSector(group.sector);
+                        setMinRs(0);
+                        setOnlyStage2(false);
+                        setSearchQuery('');
                         setMainViewMode('table');
                       }}
                       className="text-amber-400 hover:text-amber-300 font-bold transition-colors inline-flex items-center gap-1"
@@ -644,21 +652,38 @@ export const MarkMinerviniScreener: React.FC = () => {
               </div>
 
               {/* Sector Selector */}
-              <select
-                value={selectedSector}
-                onChange={(e) => setSelectedSector(e.target.value)}
-                className="px-3 py-1.5 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-300 text-xs font-mono focus:outline-none focus:border-amber-400"
-              >
-                <option value="all">Tất cả ngành ({items.length} mã)</option>
-                {sectors.map((s) => {
-                  const count = items.filter((it) => it.sector === s).length;
-                  return (
-                    <option key={s} value={s}>
-                      {s} ({count})
-                    </option>
-                  );
-                })}
-              </select>
+              <div className="flex items-center gap-1.5">
+                <select
+                  value={selectedSector}
+                  onChange={(e) => setSelectedSector(e.target.value)}
+                  className={`px-3 py-1.5 rounded-xl border text-xs font-mono focus:outline-none transition-all ${
+                    selectedSector !== 'all'
+                      ? 'bg-amber-400/10 border-amber-400/50 text-amber-300 font-bold ring-1 ring-amber-400/30'
+                      : 'bg-zinc-900 border-zinc-800 text-zinc-300 focus:border-amber-400'
+                  }`}
+                >
+                  <option value="all">Tất cả ngành ({items.length} mã)</option>
+                  {sectors.map((s) => {
+                    const count = items.filter((it) => (it.sector || '').trim().toLowerCase() === s.trim().toLowerCase()).length;
+                    return (
+                      <option key={s} value={s}>
+                        {s} ({count})
+                      </option>
+                    );
+                  })}
+                </select>
+
+                {selectedSector !== 'all' && (
+                  <button
+                    onClick={() => setSelectedSector('all')}
+                    className="px-2 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 hover:text-amber-300 transition-colors flex items-center gap-1 text-[11px] font-mono"
+                    title="Bỏ lọc riêng ngành"
+                  >
+                    <X className="w-3.5 h-3.5 text-amber-400" />
+                    <span className="hidden sm:inline">Bỏ lọc</span>
+                  </button>
+                )}
+              </div>
 
               {/* Min RS rating */}
               <div className="flex items-center gap-1.5 bg-zinc-900 border border-zinc-800 px-2.5 py-1 rounded-xl text-xs font-mono">
@@ -932,7 +957,22 @@ export const MarkMinerviniScreener: React.FC = () => {
                             <span>Đang tính toán tiêu chuẩn Minervini từ hệ thống DNSE...</span>
                           </div>
                         ) : (
-                          'Không tìm thấy cổ phiếu nào khớp với bộ lọc hiện tại.'
+                          <div className="flex flex-col items-center justify-center gap-3">
+                            <p>Không tìm thấy cổ phiếu nào khớp với bộ lọc hiện tại.</p>
+                            {(selectedSector !== 'all' || minRs > 0 || onlyStage2 || searchQuery) && (
+                              <button
+                                onClick={() => {
+                                  setSelectedSector('all');
+                                  setMinRs(0);
+                                  setOnlyStage2(false);
+                                  setSearchQuery('');
+                                }}
+                                className="px-3.5 py-1.5 rounded-xl bg-amber-400/10 border border-amber-400/30 text-amber-300 text-xs font-bold hover:bg-amber-400/20 transition-all inline-flex items-center gap-1.5"
+                              >
+                                <span>Đặt lại tất cả bộ lọc</span>
+                              </button>
+                            )}
+                          </div>
                         )}
                       </td>
                     </tr>

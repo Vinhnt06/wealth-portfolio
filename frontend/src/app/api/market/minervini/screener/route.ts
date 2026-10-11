@@ -1,26 +1,12 @@
 import { NextResponse } from 'next/server';
 import stockDatabase from '../../../../../features/market/data/stockDatabase.json';
 import { MinerviniScreenerItem } from '../../../../../features/market/types/minervini.types';
-import { SECTOR_MAPPING } from '../../../../../features/market/data/sectorMapping';
+import { SECTOR_MAPPING, SECTOR_LEADER_UNIVERSE } from '../../../../../features/market/data/sectorMapping';
 
 export const runtime = 'nodejs';
 
-// Comprehensive universe of 80+ liquid VN equities across all 18 industry sectors
-const DEFAULT_UNIVERSE = [
-  'PVP', 'PHP', 'PET', 'BSR', 'PVT', 'PVD', 'PVS', 'GAS', 'PLX',
-  'FPT', 'CMG', 'ELC',
-  'MWG', 'FRT', 'DGW', 'PNJ', 'MSN', 'VNM', 'SAB',
-  'DGC', 'DCM', 'DPM', 'CSV', 'BFC', 'LAS',
-  'VCB', 'BID', 'CTG', 'TCB', 'MBB', 'ACB', 'VPB', 'HDB', 'STB', 'LPB', 'SHB', 'TPB', 'VIB', 'MSB', 'OCB',
-  'SSI', 'VND', 'VCI', 'HCM', 'SHS', 'MBS', 'FTS', 'BSI', 'CTS', 'VIX',
-  'HPG', 'HSG', 'NKG', 'VGS',
-  'VHM', 'VIC', 'VRE', 'KDH', 'NLG', 'PDR', 'DIG', 'DXG', 'CEO', 'NVL',
-  'KBC', 'IDC', 'VGC', 'SZC', 'GVR', 'BCM',
-  'REE', 'PC1', 'POW', 'GEG', 'GEE', 'VCG', 'HHV', 'CII',
-  'VHC', 'ANV', 'DBC', 'HAG', 'BAF',
-  'GMD', 'HAH', 'VSC', 'VTP',
-  'TNG', 'MSH', 'BMP', 'NTP', 'HT1'
-];
+// Comprehensive universe of 140+ liquid VN equities across all 14 industry sectors
+const DEFAULT_UNIVERSE = SECTOR_LEADER_UNIVERSE;
 
 // In-memory cache for screener results (60 seconds TTL)
 let cachedUniverseData: { timestamp: number; items: MinerviniScreenerItem[] } | null = null;
@@ -48,29 +34,36 @@ const OUTSTANDING_SHARES_M: Record<string, number> = {
   // Ngân hàng
   VCB: 5589, BID: 5700, CTG: 5369, TCB: 7067, MBB: 5287, ACB: 4466, VPB: 7933,
   HDB: 2900, STB: 1885, LPB: 2557, SHB: 3662, TPB: 2201, VIB: 2536, MSB: 2600,
-  OCB: 2054, SSB: 2490, EIB: 1740,
+  OCB: 2054, SSB: 2490, EIB: 1740, NAB: 1058, BAB: 825, BVB: 501,
   // Chứng khoán
   SSI: 1511, VND: 1522, VCI: 718, HCM: 705, SHS: 813, MBS: 437, FTS: 242,
-  BSI: 202, CTS: 148, VIX: 1459,
+  BSI: 202, CTS: 148, VIX: 1459, AGR: 215, ORS: 200, TVS: 151, PHS: 210,
   // Bất động sản
   VHM: 4354, VIC: 3880, VRE: 2272, KDH: 800, NLG: 384, PDR: 873, DIG: 609,
-  DXG: 720, CEO: 514, NVL: 1950, KBC: 767, IDC: 330, VGC: 448, SZC: 180,
-  BCM: 1035, TCH: 668, VPI: 241, HDG: 305,
-  // Thép & Vật liệu
-  HPG: 8443, HSG: 616, NKG: 263, VGS: 107, HT1: 381, BMP: 81, NTP: 129,
+  DXG: 720, CEO: 514, NVL: 1950, TCH: 668, HQC: 516, DRH: 124, KHG: 450,
+  VPI: 241, HDG: 305, DXS: 474, NTL: 61,
+  // BĐS Khu công nghiệp
+  KBC: 767, IDC: 330, VGC: 448, SZC: 180, BCM: 1035, TIP: 65, LHG: 50, SIP: 191, D2D: 30, PHR: 135,
+  // Thép & Kim loại
+  HPG: 8443, HSG: 616, NKG: 263, VGS: 107, SMC: 73, TLH: 102, TVN: 678,
   // Công nghệ
-  FPT: 1460, CMG: 150, ELC: 82, CTR: 114, VGI: 3043,
-  // Bán lẻ & Tiêu dùng
-  MSN: 1430, MWG: 1463, VNM: 2089, SAB: 1282, PNJ: 338, FRT: 136, DGW: 167,
-  DBC: 242, HAG: 1057, BAF: 239, VHC: 224, ANV: 266,
-  // Năng lượng & Dầu khí
-  GAS: 2296, PLX: 1270, BSR: 3100, PVD: 555, PVS: 478, PVT: 356, PVP: 94,
-  POW: 2341, REE: 409, PC1: 310, GEG: 338,
+  FPT: 1460, CMG: 150, ELC: 82, CTR: 114, VGI: 3043, FOX: 792, VNZ: 35, ITD: 24,
+  // Dầu khí
+  GAS: 2296, PLX: 1270, BSR: 3100, PVD: 555, PVS: 478, PVT: 356, PVP: 94, PVC: 50, PVB: 21,
+  // Điện & Tiện ích
+  POW: 2341, REE: 409, PC1: 310, GEG: 338, GEE: 300, NT2: 287, QTP: 378, VSH: 236, TV2: 67, BCG: 533,
   // Hóa chất & Phân bón
-  DGC: 379, DCM: 529, DPM: 391, CSV: 132, GVR: 4000, BFC: 77, LAS: 112,
-  // Công nghiệp & Vận tải
-  GEX: 851, VSC: 266, GMD: 335, HAH: 121, VCG: 534, HHV: 411, CII: 318,
-  VJC: 541, TNG: 113, MSH: 75
+  DGC: 379, DCM: 529, DPM: 391, CSV: 132, GVR: 4000, BFC: 77, LAS: 112, DPR: 43, DRC: 118, DDV: 146,
+  // Bán lẻ & Tiêu dùng
+  MSN: 1430, MWG: 1463, VNM: 2089, SAB: 1282, PNJ: 338, FRT: 136, DGW: 167, KDC: 289, MCH: 716,
+  // Thủy sản & Nông nghiệp
+  VHC: 224, ANV: 266, ASM: 335, IDI: 227, PAN: 208, DBC: 242, HAG: 1057, BAF: 239, HNG: 1108,
+  // Cảng biển & Logistics
+  GMD: 335, HAH: 121, VSC: 266, VTP: 121, PHP: 326, PET: 99, SGP: 216, VJC: 541, HVN: 2214,
+  // Xây dựng & Vật liệu
+  VCG: 534, HHV: 411, CII: 318, CTD: 103, FCN: 157, LCG: 190, C4G: 337, HT1: 381, BCC: 123, BMP: 81, NTP: 129,
+  // Dệt may
+  TNG: 113, MSH: 75, GIL: 69, STK: 102, TCM: 101, VGT: 500,
 };
 
   // Real market cap calculation from verified shares outstanding (in nghìn tỷ VND)
@@ -232,8 +225,8 @@ const OUTSTANDING_SHARES_M: Record<string, number> = {
     // Sort by RS Rating descending (Top Leaders first)
     results.sort((a, b) => b.rsRating - a.rsRating);
 
-    // Save to universe cache if full universe
-    if (!customSymbolsParam) {
+    // Save to universe cache only if full unfiltered universe was fetched
+    if (!customSymbolsParam && sectorFilter === 'all' && !onlyStage2 && minRS <= 1 && minVol === 0 && minMktCapT === 0) {
       cachedUniverseData = { timestamp: Date.now(), items: results };
     }
 
