@@ -19,6 +19,10 @@ import {
   FirstAid,
   Car,
   TreeEvergreen,
+  BookOpen,
+  Info,
+  Scales,
+  Sparkle,
 } from '@phosphor-icons/react';
 import { MinerviniScreenerItem } from '../types/minervini.types';
 import { SECTOR_MAPPING } from '../data/sectorMapping';
@@ -33,12 +37,16 @@ export interface CyclePhaseConfig {
   glowColor: string;
   bgLight: string;
   borderLight: string;
-  angleRange: [number, number]; // degrees for wheel representation
+  needleAngle: number; // góc kim chỉ (độ)
   macroStatus: string;
+  growthStatus: string;
+  inflationStatus: string;
+  interestRateStatus: string;
   primarySectors: string[];
   description: string;
   keyDrivers: string[];
   minerviniStrategy: string;
+  fidelityAssetAlloc: string;
 }
 
 export const CYCLE_PHASES: Record<CyclePhaseKey, CyclePhaseConfig> = {
@@ -50,42 +58,54 @@ export const CYCLE_PHASES: Record<CyclePhaseKey, CyclePhaseConfig> = {
     glowColor: 'rgba(6, 182, 212, 0.4)',
     bgLight: 'bg-cyan-500/10',
     borderLight: 'border-cyan-500/30',
-    angleRange: [0, 90],
-    macroStatus: 'Lãi suất chạm đáy, nới lỏng tiền tệ, tín dụng hồi phục',
+    needleAngle: 45,
+    macroStatus: 'Lãi suất chạm đáy, nới lỏng tiền tệ, tín dụng bắt đầu tăng tốc',
+    growthStatus: 'Phục hồi từ đáy (Đang tăng tốc)',
+    inflationStatus: 'Thấp hoặc đang hạ nhiệt',
+    interestRateStatus: 'Thấp / Nới lỏng định lượng',
     primarySectors: ['Ngân hàng', 'Dịch vụ tài chính', 'Bất động sản', 'Phân phối, bán lẻ', 'Ô tô, linh kiện'],
-    description: 'Chính sách tiền tệ hỗ trợ dòng vốn rẻ, định giá P/E & P/B bắt đầu hồi phục từ đáy sâu. Nhóm tài chính & bất động sản dẫn dắt nhịp hồi đầu tiên.',
-    keyDrivers: ['Hạ lãi suất điều hành', 'Tín dụng mở rộng', 'Tâm lý thị trường đảo chiều tích cực'],
-    minerviniStrategy: 'Tìm các mã tạo đáy đôi (Double Bottom) hoặc thoát đáy sâu với khối lượng mua đột biến (Pocket Pivot).',
+    description: 'Chính sách tiền tệ mở rộng kích hoạt dòng tiền rẻ, định giá P/E & P/B hồi phục mạnh mẽ từ đáy sâu. Nhóm Tài chính (Bank/Chứng khoán) và Tiêu dùng nhạy cảm lãi suất dẫn dắt nhịp sóng đầu tiên.',
+    keyDrivers: ['Hạ lãi suất điều hành & kích cầu tín dụng', 'Thị trường chứng khoán phục hồi thanh khoản', 'Niềm tin tiêu dùng & đơn hàng phục hồi'],
+    minerviniStrategy: 'Tìm kiếm cổ phiếu tạo đáy kép (Double Bottom) hoặc thoát nền tích luỹ đầu tiên với điểm mua Pocket Pivot và khối lượng đột biến.',
+    fidelityAssetAlloc: 'Cổ phiếu (Equities) vượt trội hoàn toàn so với Tiền mặt & Trái phiếu.',
   },
   expansion: {
     key: 'expansion',
     title: 'TĂNG TRƯỞNG MỞ RỘNG',
-    subTitle: 'Mid-Cycle Boom (Pha Hiện Tại)',
+    subTitle: 'Mid-Cycle Boom (Pha Dẫn Dắt)',
     color: '#10b981', // Emerald
     glowColor: 'rgba(16, 185, 129, 0.45)',
     bgLight: 'bg-emerald-500/10',
     borderLight: 'border-emerald-500/30',
-    angleRange: [90, 180],
-    macroStatus: 'GDP tăng tốc, FDI & xuất khẩu bùng nổ, doanh thu DN lập kỷ lục',
+    needleAngle: 135,
+    macroStatus: 'GDP tăng tốc cao, thặng dư xuất khẩu, giải ngân FDI & đầu tư công bùng nổ',
+    growthStatus: 'Tăng trưởng mạnh mẽ (Trên xu hướng dài hạn)',
+    inflationStatus: 'Ổn định / Tăng nhẹ trong tầm kiểm soát',
+    interestRateStatus: 'Trung tính / Duy trì hỗ trợ tăng trưởng',
     primarySectors: ['Phần mềm', 'Hàng hóa công nghiệp', 'Nguyên vật liệu', 'Vận tải', 'Viễn thông'],
-    description: 'Pha mạnh nhất và kéo dài nhất của chu kỳ kinh tế. Các doanh nghiệp đầu ngành tăng trưởng EPS & doanh thu vượt trội, liên tục bứt phá đỉnh 52 tuần.',
-    keyDrivers: ['Tăng trưởng GDP vượt kỳ vọng', 'Xuất nhập khẩu thặng dư cao', 'Đầu tư công & FDI giải ngân mạnh mẽ'],
-    minerviniStrategy: 'Tập trung 100% tỷ trọng vào các Siêu Cổ Phiếu Giai Đoạn 2 (Stage 2) có RS Rating >= 80, mô hình nền giá VCP (Volatility Contraction Pattern) siết chặt.',
+    description: 'Pha mạnh nhất và kéo dài nhất của chu kỳ kinh tế theo mô hình Merrill Lynch & Fidelity. Lợi nhuận EPS và doanh thu doanh nghiệp bứt phá ngoạn mục. Dòng tiền cuộn sóng vào các ngành công nghệ, sản xuất, xuất khẩu và logistic.',
+    keyDrivers: ['GDP tăng trưởng 7-8% vượt kế hoạch', 'Xuất siêu kỷ lục, chuỗi cung ứng mở rộng', 'Đầu tư công và dòng vốn FDI giải ngân tăng tốc'],
+    minerviniStrategy: 'Tập trung 100% danh mục vào Siêu Cổ Phiếu Giai Đoạn 2 (Stage 2 Uptrend) có RS Rating >= 80, bứt phá mô hình VCP (Thu hẹp độ biến động) và Pivot Point.',
+    fidelityAssetAlloc: 'Tập trung cổ phiếu tăng trưởng (Growth Stocks), tỷ trọng cổ phiếu tối đa.',
   },
   late: {
     key: 'late',
     title: 'CUỐI CHU KỲ / ĐẠT ĐỈNH',
-    subTitle: 'Late-Cycle Peak',
+    subTitle: 'Late-Cycle Peak & Overheat',
     color: '#f59e0b', // Amber
     glowColor: 'rgba(245, 158, 11, 0.4)',
     bgLight: 'bg-amber-500/10',
     borderLight: 'border-amber-500/30',
-    angleRange: [180, 270],
-    macroStatus: 'Lạm phát tăng, công suất tối đa, áp lực thắt chặt tiền tệ',
+    needleAngle: 225,
+    macroStatus: 'Lạm phát tăng nhanh, công suất chạm trần, áp lực thắt chặt tiền tệ gia tăng',
+    growthStatus: 'Bắt đầu chậm lại (Tăng trưởng hạ nhiệt)',
+    inflationStatus: 'Tăng cao / Chạm trần mục tiêu',
+    interestRateStatus: 'Bắt đầu nâng lãi suất / Thắt chặt',
     primarySectors: ['Năng lượng', 'Nguyên vật liệu', 'Hóa chất'],
-    description: 'Chi phí đầu vào và lạm phát tăng cao. Dòng tiền dịch chuyển sang các tài sản vật chất và năng lượng để phòng ngừa mất giá tiền tệ.',
-    keyDrivers: ['Giá dầu & hàng hóa lập đỉnh', 'Lạm phát chạm ngưỡng cảnh báo', 'Tăng trưởng kinh tế bắt đầu hạ nhiệt'],
-    minerviniStrategy: 'Thắt chặt lệnh dừng lỗ (Stop-loss), chốt lời từng phần khi cổ phiếu xuất hiện Climax Top (đỉnh cao trào).',
+    description: 'Nền kinh tế có dấu hiệu quá nhiệt, chi phí nguyên liệu và nhân công tăng đẩy lạm phát lên cao. Lợi nhuận doanh nghiệp bắt đầu bị bào mòn bởi chi phí vốn. Dòng tiền xoay tua tìm đến hàng hóa cơ bản, năng lượng và dầu khí.',
+    keyDrivers: ['Giá dầu thô & hàng hóa neo cao', 'Lạm phát tiệm cận ngưỡng cảnh báo', 'Chính sách tiền tệ chuyển sang kiểm soát rủi ro'],
+    minerviniStrategy: 'Thắt chặt chặn lãi (Trailing stop), chốt lời từng phần khi xuất hiện Climax Top (đỉnh cao trào khối lượng lớn mà giá không tăng thêm), không mua mới nến mở rộng.',
+    fidelityAssetAlloc: 'Hàng hóa (Commodities) & Nhóm Năng lượng; hạ tỷ trọng cổ phiếu nói chung.',
   },
   recession: {
     key: 'recession',
@@ -95,17 +115,18 @@ export const CYCLE_PHASES: Record<CyclePhaseKey, CyclePhaseConfig> = {
     glowColor: 'rgba(244, 63, 94, 0.4)',
     bgLight: 'bg-rose-500/10',
     borderLight: 'border-rose-500/30',
-    angleRange: [270, 360],
-    macroStatus: 'Kinh tế suy giảm, lợi nhuận DN suy yếu, dòng tiền phòng thủ',
+    needleAngle: 315,
+    macroStatus: 'Kinh tế suy giảm, tín dụng thắt nghẹt, lợi nhuận DN toàn thị trường sụt giảm',
+    growthStatus: 'Thu hẹp / Suy thoái (Dưới xu hướng)',
+    inflationStatus: 'Hạ nhiệt nhanh / Nguy cơ thiểu phát',
+    interestRateStatus: 'Bắt đầu chu kỳ nới lỏng cứu trợ',
     primarySectors: ['Tiện ích', 'Dược phẩm', 'Thực phẩm, đồ uống', 'Bảo hiểm'],
-    description: 'Tăng trưởng chậm lại, dòng tiền tìm đến các doanh nghiệp trả cổ tức tiền mặt cao, dòng tiền kinh doanh ổn định không phụ thuộc chu kỳ.',
-    keyDrivers: ['Lợi nhuận DN toàn thị trường sụt giảm', 'Thắt chặt chi tiêu tiêu dùng', 'Ưu tiên dòng tiền mặt an toàn'],
-    minerviniStrategy: 'Nâng tỷ trọng tiền mặt, kiên nhẫn đứng ngoài quan sát hoặc chỉ giao dịch phòng thủ, kiên quyết cắt lỗ nhanh nếu vi phạm 7-8%.',
+    description: 'Doanh nghiệp gặp khó khăn dòng tiền, người tiêu dùng thắt chặt hầu bao. Nhà đầu tư tìm kiếm sự an toàn tại các doanh nghiệp có dòng tiền đều đặn, cổ tức tiền mặt cao, không phụ thuộc chu kỳ kinh tế.',
+    keyDrivers: ['Doanh thu bán lẻ & xuất khẩu sụt giảm', 'Tỷ lệ nợ xấu ngân hàng gia tăng', 'Dòng tiền rút về tài sản phòng thủ'],
+    minerviniStrategy: 'Quy tắc vàng số 1: Giữ 70-100% tiền mặt, tuyệt đối kiên nhẫn đứng ngoài thị trường giá xuống (Bear Market), kiên quyết cắt lỗ 7-8% không nhân nhượng.',
+    fidelityAssetAlloc: 'Trái phiếu (Bonds) & Tiền mặt (Cash); chỉ giữ cổ phiếu phòng thủ thiết yếu.',
   },
 };
-
-// Current calibrated phase for Vietnam Stock Market (Mid-Cycle Expansion)
-export const CURRENT_PHASE_KEY: CyclePhaseKey = 'expansion';
 
 interface EconomicCycleWheelProps {
   items: MinerviniScreenerItem[];
@@ -116,9 +137,10 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
   items,
   onSelectSector,
 }) => {
-  const [selectedPhase, setSelectedPhase] = useState<CyclePhaseKey>(CURRENT_PHASE_KEY);
+  const [selectedPhase, setSelectedPhase] = useState<CyclePhaseKey>('expansion');
+  const [activeResearchTab, setActiveResearchTab] = useState<'matrix' | 'macro' | 'methodology'>('matrix');
 
-  // Compute live RS stats per sector based on scanned items
+  // 1. Live Quantitative Sector RS & Stage 2 Computation
   const sectorLiveStats = useMemo(() => {
     const statsMap: Record<
       string,
@@ -163,19 +185,61 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
       .sort((a, b) => b.avgRs - a.avgRs);
   }, [items]);
 
-  // Phase-specific summary
-  const currentPhaseCfg = CYCLE_PHASES[CURRENT_PHASE_KEY];
-  const activeCfg = CYCLE_PHASES[selectedPhase];
+  // 2. Quantitative Cycle Phase Momentum Scoring
+  // Evaluates which phase has the highest actual RS & Stage 2 concentration
+  const phaseScores = useMemo(() => {
+    const scores: Record<CyclePhaseKey, { totalRs: number; totalStage2: number; count: number; score: number }> = {
+      recovery: { totalRs: 0, totalStage2: 0, count: 0, score: 0 },
+      expansion: { totalRs: 0, totalStage2: 0, count: 0, score: 0 },
+      late: { totalRs: 0, totalStage2: 0, count: 0, score: 0 },
+      recession: { totalRs: 0, totalStage2: 0, count: 0, score: 0 },
+    };
 
-  // Top 5 Leading Sectors by RS Rating
+    (Object.keys(CYCLE_PHASES) as CyclePhaseKey[]).forEach((pKey) => {
+      const cfg = CYCLE_PHASES[pKey];
+      cfg.primarySectors.forEach((secName) => {
+        const found = sectorLiveStats.find(
+          (s) => s.sector.toLowerCase().includes(secName.toLowerCase()) || secName.toLowerCase().includes(s.sector.toLowerCase())
+        );
+        if (found) {
+          scores[pKey].totalRs += found.avgRs * found.count;
+          scores[pKey].totalStage2 += found.stage2Count;
+          scores[pKey].count += found.count;
+        }
+      });
+
+      const avgRs = scores[pKey].count > 0 ? scores[pKey].totalRs / scores[pKey].count : 50;
+      const stage2Ratio = scores[pKey].count > 0 ? (scores[pKey].totalStage2 / scores[pKey].count) * 100 : 0;
+      // Combined Momentum Score: 60% RS Rating + 40% Stage 2 Breadth Ratio
+      scores[pKey].score = Math.round((avgRs * 0.6 + stage2Ratio * 0.4) * 10) / 10;
+    });
+
+    return scores;
+  }, [sectorLiveStats]);
+
+  // Dynamically detected active phase (highest score)
+  const detectedActivePhaseKey = useMemo(() => {
+    let topKey: CyclePhaseKey = 'expansion';
+    let maxScore = -1;
+    (Object.keys(phaseScores) as CyclePhaseKey[]).forEach((k) => {
+      if (phaseScores[k].score > maxScore) {
+        maxScore = phaseScores[k].score;
+        topKey = k;
+      }
+    });
+    return topKey;
+  }, [phaseScores]);
+
+  const activeCfg = CYCLE_PHASES[selectedPhase];
+  const detectedCfg = CYCLE_PHASES[detectedActivePhaseKey];
   const topLeadingSectors = sectorLiveStats.slice(0, 5);
 
   return (
     <div className="space-y-6">
-      {/* 1. Header Banner & Current Position Overview */}
-      <div className="p-6 rounded-2xl bg-zinc-950/90 border border-zinc-800/80 backdrop-blur-xl shadow-2xl relative overflow-hidden">
-        <div className="absolute -right-20 -top-20 w-72 h-72 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
-        <div className="absolute -left-20 -bottom-20 w-72 h-72 rounded-full bg-cyan-500/10 blur-3xl pointer-events-none" />
+      {/* ── 1. Hero Header & Macro Research Synthesis ─────────────────────── */}
+      <div className="p-6 rounded-2xl bg-zinc-950/95 border border-zinc-800/80 backdrop-blur-xl shadow-2xl relative overflow-hidden">
+        <div className="absolute -right-24 -top-24 w-80 h-80 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
+        <div className="absolute -left-24 -bottom-24 w-80 h-80 rounded-full bg-cyan-500/10 blur-3xl pointer-events-none" />
 
         <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 pb-6 border-b border-zinc-800/80">
           <div>
@@ -185,97 +249,107 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
               </span>
               <span className="text-xs font-mono font-bold tracking-wider uppercase text-emerald-400">
-                Mô Hình Luân Chuyển Ngành & Chu Kỳ Kinh Tế (Sector Rotation Clock)
+                Nghiên Cứu Định Lượng Vĩ Mô & Luân Chuyển Ngành (Sector Rotation Model)
               </span>
             </div>
             <h2 className="text-2xl font-mono font-bold text-zinc-100 tracking-tight">
-              Vòng Tròn Chu Kỳ Kinh Tế & Phân Tích Sức Mạnh Ngành (RS)
+              Đồng Hồ Chu Kỳ Kinh Tế & Bản Đồ Sức Mạnh RS 20 Nhóm Ngành
             </h2>
-            <p className="text-xs text-zinc-400 max-w-2xl mt-1">
-              Định vị pha tăng trưởng của nền kinh tế dựa trên lý thuyết Merrill Lynch Investment Clock kết hợp phương pháp Trend Template của Mark Minervini để tìm nhóm ngành dẫn dắt dòng tiền.
+            <p className="text-xs text-zinc-400 max-w-3xl mt-1 leading-relaxed">
+              Tổng hợp lý thuyết định chế tài chính quốc tế (<strong>Merrill Lynch Investment Clock</strong> &amp; <strong>Fidelity Business Cycle Framework</strong>) kết hợp mô hình lọc cổ phiếu <strong>Mark Minervini SEPA Trend Template</strong> từ dữ liệu 180+ mã niêm yết chuẩn xác.
             </p>
           </div>
 
-          {/* Current Cycle Pill Badge */}
-          <div className="flex items-center gap-3 p-3.5 rounded-xl bg-zinc-900/90 border border-emerald-500/30 shadow-lg shrink-0">
-            <div className="w-10 h-10 rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-              <Compass className="w-6 h-6 animate-spin-slow" />
+          {/* Dynamic Macro Phase Detection Badge */}
+          <div className="flex items-center gap-3.5 p-4 rounded-xl bg-zinc-900/90 border border-emerald-500/30 shadow-lg shrink-0">
+            <div className="w-11 h-11 rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+              <Compass className="w-6 h-6 animate-[spin_12s_linear_infinite]" />
             </div>
             <div>
-              <span className="text-[10px] font-mono uppercase text-zinc-400 block font-semibold">
-                ĐỊNH VỊ CHU KỲ HIỆN TẠI
-              </span>
-              <span className="text-sm font-mono font-black text-emerald-400 block">
-                {currentPhaseCfg.title}
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-mono uppercase text-zinc-400 font-bold block">
+                  KẾT QUẢ ĐỊNH LƯỢNG THỰC TẾ
+                </span>
+                <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">
+                  Điểm: {phaseScores[detectedActivePhaseKey].score}
+                </span>
+              </div>
+              <span className="text-sm font-mono font-black text-emerald-400 block mt-0.5">
+                {detectedCfg.title}
               </span>
               <span className="text-[10px] font-mono text-zinc-400 block">
-                {currentPhaseCfg.subTitle}
+                {detectedCfg.subTitle}
               </span>
             </div>
           </div>
         </div>
 
-        {/* 2. Interactive SVG Cycle Wheel & Phase Dial */}
+        {/* ── 2. Interactive SVG Cycle Dial Clock (360 degrees) ───────────── */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 pt-6 items-center">
-          {/* Wheel Graphic Container (5 Cols) */}
+          {/* Wheel SVG & Sector Dial (5 Cols) */}
           <div className="lg:col-span-5 flex flex-col items-center justify-center">
             <div className="relative w-[320px] h-[320px] sm:w-[360px] sm:h-[360px] flex items-center justify-center">
-              {/* Outer decorative ring */}
-              <div className="absolute inset-0 rounded-full border border-dashed border-zinc-800 animate-[spin_60s_linear_infinite]" />
-              <div className="absolute inset-4 rounded-full border border-zinc-800/80" />
+              {/* Outer decorative orbit ring with degrees markings */}
+              <div className="absolute inset-0 rounded-full border border-dashed border-zinc-800 animate-[spin_80s_linear_infinite]" />
+              <div className="absolute inset-3 rounded-full border border-zinc-800/80" />
 
-              {/* Central Clock SVG */}
+              {/* Main SVG Dial */}
               <svg viewBox="0 0 400 400" className="w-full h-full transform -rotate-90">
-                {/* 4 Quadrants (Arcs) */}
-                {/* Quadrant 1: Recovery (Top-Right / 0 to 90 deg) */}
+                {/* 1. Quadrant Recovery (0° -> 90°) */}
                 <path
                   d="M 200 200 L 360 200 A 160 160 0 0 1 200 360 Z"
                   className={`cursor-pointer transition-all duration-300 ${
                     selectedPhase === 'recovery'
-                      ? 'fill-cyan-500/30 stroke-cyan-400 stroke-2'
+                      ? 'fill-cyan-500/35 stroke-cyan-400 stroke-2 filter drop-shadow-[0_0_12px_rgba(6,182,212,0.4)]'
                       : 'fill-cyan-500/10 hover:fill-cyan-500/20 stroke-cyan-500/20'
                   }`}
                   onClick={() => setSelectedPhase('recovery')}
                 />
 
-                {/* Quadrant 2: Expansion (Bottom-Right / 90 to 180 deg) -> CURRENT */}
+                {/* 2. Quadrant Expansion (90° -> 180°) -> DETECTED ACTIVE */}
                 <path
                   d="M 200 200 L 200 360 A 160 160 0 0 1 40 200 Z"
                   className={`cursor-pointer transition-all duration-300 ${
                     selectedPhase === 'expansion'
-                      ? 'fill-emerald-500/35 stroke-emerald-400 stroke-2 filter drop-shadow-[0_0_12px_rgba(16,185,129,0.5)]'
+                      ? 'fill-emerald-500/40 stroke-emerald-400 stroke-2 filter drop-shadow-[0_0_16px_rgba(16,185,129,0.55)]'
                       : 'fill-emerald-500/15 hover:fill-emerald-500/25 stroke-emerald-500/30'
                   }`}
                   onClick={() => setSelectedPhase('expansion')}
                 />
 
-                {/* Quadrant 3: Late Cycle (Bottom-Left / 180 to 270 deg) */}
+                {/* 3. Quadrant Late-Cycle (180° -> 270°) */}
                 <path
                   d="M 200 200 L 40 200 A 160 160 0 0 1 200 40 Z"
                   className={`cursor-pointer transition-all duration-300 ${
                     selectedPhase === 'late'
-                      ? 'fill-amber-500/30 stroke-amber-400 stroke-2'
+                      ? 'fill-amber-500/35 stroke-amber-400 stroke-2 filter drop-shadow-[0_0_12px_rgba(245,158,11,0.4)]'
                       : 'fill-amber-500/10 hover:fill-amber-500/20 stroke-amber-500/20'
                   }`}
                   onClick={() => setSelectedPhase('late')}
                 />
 
-                {/* Quadrant 4: Recession (Top-Left / 270 to 360 deg) */}
+                {/* 4. Quadrant Recession (270° -> 360°) */}
                 <path
                   d="M 200 200 L 200 40 A 160 160 0 0 1 360 200 Z"
                   className={`cursor-pointer transition-all duration-300 ${
                     selectedPhase === 'recession'
-                      ? 'fill-rose-500/30 stroke-rose-400 stroke-2'
+                      ? 'fill-rose-500/35 stroke-rose-400 stroke-2 filter drop-shadow-[0_0_12px_rgba(244,63,94,0.4)]'
                       : 'fill-rose-500/10 hover:fill-rose-500/20 stroke-rose-500/20'
                   }`}
                   onClick={() => setSelectedPhase('recession')}
                 />
 
-                {/* Center Core Circle */}
-                <circle cx="200" cy="200" r="75" fill="#09090b" stroke="#27272a" strokeWidth="3" />
+                {/* Inner Core Center */}
+                <circle cx="200" cy="200" r="76" fill="#09090b" stroke="#27272a" strokeWidth="3" />
 
-                {/* Current Needle pointer aimed at Mid-Cycle Expansion (approx 135 deg) */}
-                <g className="transition-transform duration-700 ease-out" style={{ transformOrigin: '200px 200px', transform: 'rotate(135deg)' }}>
+                {/* Dynamic Indicator Needle aimed at active phase (135° for Expansion) */}
+                <g
+                  className="transition-transform duration-1000 ease-out"
+                  style={{
+                    transformOrigin: '200px 200px',
+                    transform: `rotate(${CYCLE_PHASES[detectedActivePhaseKey].needleAngle}deg)`,
+                  }}
+                >
                   <line x1="200" y1="200" x2="330" y2="200" stroke="#10b981" strokeWidth="4" strokeLinecap="round" />
                   <circle cx="330" cy="200" r="8" fill="#10b981" className="animate-pulse" />
                   <circle cx="200" cy="200" r="14" fill="#10b981" />
@@ -283,30 +357,31 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                 </g>
               </svg>
 
-              {/* Center Hub Overlay Content */}
+              {/* Center Core HUD Label */}
               <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none p-4">
                 <span className="text-[10px] font-mono text-zinc-400 font-bold uppercase">CHU KỲ KINH TẾ</span>
                 <span className="text-xs font-mono font-black text-emerald-400 uppercase mt-0.5">
-                  TĂNG TRƯỞNG
+                  {detectedCfg.title}
                 </span>
-                <span className="text-[9px] font-mono text-zinc-500 mt-1">Mid-Cycle</span>
+                <span className="text-[9px] font-mono text-zinc-500 mt-0.5">Score: {phaseScores[detectedActivePhaseKey].score}</span>
               </div>
             </div>
 
-            {/* Quick interactive phase switchers */}
+            {/* Phase Selector Tabs with Quantitative Scores */}
             <div className="grid grid-cols-2 gap-2 w-full mt-4">
               {(Object.keys(CYCLE_PHASES) as CyclePhaseKey[]).map((phaseKey) => {
                 const p = CYCLE_PHASES[phaseKey];
                 const isSelected = selectedPhase === phaseKey;
-                const isCurrent = phaseKey === CURRENT_PHASE_KEY;
+                const isDetected = phaseKey === detectedActivePhaseKey;
+                const pScore = phaseScores[phaseKey].score;
 
                 return (
                   <button
                     key={phaseKey}
                     onClick={() => setSelectedPhase(phaseKey)}
-                    className={`px-3 py-2 rounded-xl text-left font-mono transition-all border ${
+                    className={`px-3 py-2.5 rounded-xl text-left font-mono transition-all border ${
                       isSelected
-                        ? `${p.bgLight} ${p.borderLight} text-zinc-100 shadow-md`
+                        ? `${p.bgLight} ${p.borderLight} text-zinc-100 shadow-lg`
                         : 'bg-zinc-900/60 border-zinc-800/80 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900'
                     }`}
                   >
@@ -314,18 +389,21 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                       <span className="text-[11px] font-bold block" style={{ color: isSelected ? p.color : undefined }}>
                         {p.title}
                       </span>
-                      {isCurrent && (
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" title="Vị trí hiện tại" />
+                      {isDetected && (
+                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" title="Pha dẫn dắt theo dữ liệu thật" />
                       )}
                     </div>
-                    <span className="text-[9px] text-zinc-500 block truncate">{p.subTitle}</span>
+                    <div className="flex items-center justify-between mt-1">
+                      <span className="text-[9px] text-zinc-500 block truncate">{p.subTitle}</span>
+                      <span className="text-[9px] font-mono font-bold text-zinc-400">{pScore} pts</span>
+                    </div>
                   </button>
                 );
               })}
             </div>
           </div>
 
-          {/* Detailed Phase Analysis & Sector Rotation Breakdown (7 Cols) */}
+          {/* ── Detailed Research Card & Phase Strategy (7 Cols) ──────────── */}
           <div className="lg:col-span-7 flex flex-col gap-4">
             <AnimatePresence mode="wait">
               <motion.div
@@ -334,19 +412,19 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2 }}
-                className={`p-5 rounded-2xl border ${activeCfg.bgLight} ${activeCfg.borderLight} backdrop-blur-md`}
+                className={`p-5 rounded-2xl border ${activeCfg.bgLight} ${activeCfg.borderLight} backdrop-blur-md shadow-xl`}
               >
-                <div className="flex items-center justify-between pb-3 border-b border-zinc-800/80 mb-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3.5 border-b border-zinc-800/80 mb-3.5 gap-2">
                   <div>
                     <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 font-semibold block">
-                      CHI TIẾT PHA ĐANG XEM {selectedPhase === CURRENT_PHASE_KEY ? '(HIỆN TẠI)' : ''}
+                      PHÂN TÍCH CHUYÊN SÂU PHA {selectedPhase === detectedActivePhaseKey ? '(HIỆN TẠI DẪN DẮT)' : ''}
                     </span>
                     <h3 className="text-lg font-mono font-bold" style={{ color: activeCfg.color }}>
                       {activeCfg.title} — {activeCfg.subTitle}
                     </h3>
                   </div>
 
-                  <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold border bg-zinc-900/80" style={{ borderColor: activeCfg.color, color: activeCfg.color }}>
+                  <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold border bg-zinc-900/90 shrink-0 self-start sm:self-auto" style={{ borderColor: activeCfg.color, color: activeCfg.color }}>
                     {activeCfg.macroStatus}
                   </span>
                 </div>
@@ -355,14 +433,32 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                   {activeCfg.description}
                 </p>
 
-                {/* Primary Sectors in this Phase */}
+                {/* 3 Macro Pillars Checklist */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 p-3 rounded-xl bg-zinc-950/70 border border-zinc-800/80 mb-4 text-[11px] font-mono">
+                  <div>
+                    <span className="text-[9px] text-zinc-500 block uppercase font-bold">1. Tăng Trưởng GDP:</span>
+                    <span className="text-zinc-200 font-bold">{activeCfg.growthStatus}</span>
+                  </div>
+                  <div>
+                    <span className="text-[9px] text-zinc-500 block uppercase font-bold">2. Lạm Phát (CPI):</span>
+                    <span className="text-zinc-200 font-bold">{activeCfg.inflationStatus}</span>
+                  </div>
+                  <div>
+                    <span className="text-[9px] text-zinc-500 block uppercase font-bold">3. Lãi Suất Điều Hành:</span>
+                    <span className="text-zinc-200 font-bold">{activeCfg.interestRateStatus}</span>
+                  </div>
+                </div>
+
+                {/* Sector Rotation Targets in this Phase */}
                 <div className="mb-4">
                   <span className="text-[10px] font-mono text-zinc-400 uppercase font-semibold block mb-2">
-                    CÁC NHÓM NGÀNH HƯỞNG LỢI TRỌNG TÂM:
+                    CÁC NHÓM NGÀNH HƯỞNG LỢI TRỌNG TÂM (CLICK ĐỂ LỌC TRÊN SCREENER):
                   </span>
                   <div className="flex flex-wrap gap-2">
                     {activeCfg.primarySectors.map((sec) => {
-                      const matchStat = sectorLiveStats.find((s) => s.sector.toLowerCase().includes(sec.toLowerCase()) || sec.toLowerCase().includes(s.sector.toLowerCase()));
+                      const matchStat = sectorLiveStats.find(
+                        (s) => s.sector.toLowerCase().includes(sec.toLowerCase()) || sec.toLowerCase().includes(s.sector.toLowerCase())
+                      );
                       const rsScore = matchStat?.avgRs || 75;
                       const stage2Count = matchStat?.stage2Count || 0;
 
@@ -370,7 +466,7 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                         <button
                           key={sec}
                           onClick={() => onSelectSector && onSelectSector(sec)}
-                          className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-zinc-900/90 border border-zinc-700/60 hover:border-emerald-500/60 hover:bg-zinc-800 transition-all text-xs font-mono group"
+                          className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-zinc-900/90 border border-zinc-700/60 hover:border-emerald-500/60 hover:bg-zinc-800 transition-all text-xs font-mono group cursor-pointer"
                           title="Bấm để lọc mã ngành này trên bảng Screener"
                         >
                           <span className="text-zinc-200 group-hover:text-emerald-400 font-semibold">{sec}</span>
@@ -389,26 +485,38 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                   </div>
                 </div>
 
-                {/* Minervini Strategy Playbook */}
-                <div className="p-3.5 rounded-xl bg-zinc-950/70 border border-zinc-800/80 text-xs font-mono">
-                  <div className="flex items-center gap-2 text-emerald-400 font-bold mb-1">
-                    <Flame className="w-4 h-4" />
-                    <span>CHIẾN LƯỢC MARK MINERVINI KHUYẾN NGHỊ:</span>
+                {/* Minervini & Fidelity Playbook */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-mono">
+                  <div className="p-3 rounded-xl bg-zinc-950/70 border border-zinc-800/80">
+                    <div className="flex items-center gap-1.5 text-emerald-400 font-bold mb-1">
+                      <Flame className="w-3.5 h-3.5" />
+                      <span>MARK MINERVINI PLAYBOOK:</span>
+                    </div>
+                    <p className="text-zinc-300 text-[11px] leading-relaxed">
+                      {activeCfg.minerviniStrategy}
+                    </p>
                   </div>
-                  <p className="text-zinc-300 text-[11px] leading-relaxed">
-                    {activeCfg.minerviniStrategy}
-                  </p>
+
+                  <div className="p-3 rounded-xl bg-zinc-950/70 border border-zinc-800/80">
+                    <div className="flex items-center gap-1.5 text-cyan-400 font-bold mb-1">
+                      <Scales className="w-3.5 h-3.5" />
+                      <span>PHÂN BỔ TÀI SẢN (FIDELITY):</span>
+                    </div>
+                    <p className="text-zinc-300 text-[11px] leading-relaxed">
+                      {activeCfg.fidelityAssetAlloc}
+                    </p>
+                  </div>
                 </div>
               </motion.div>
             </AnimatePresence>
 
-            {/* Top RS Leading Sectors Today */}
+            {/* Top 5 RS Leader Sectors Ranking */}
             <div className="p-5 rounded-2xl bg-zinc-950/90 border border-zinc-800/80 shadow-xl">
               <div className="flex items-center justify-between pb-3 border-b border-zinc-800/80 mb-3">
                 <div className="flex items-center gap-2">
                   <ChartLineUp className="w-4 h-4 text-emerald-400" />
                   <h4 className="text-xs font-mono font-bold text-zinc-200 uppercase">
-                    BẢNG XẾP HẠNG SỨC MẠNH NGÀNH THỰC TẾ (LIVE RS RANKING)
+                    BẢNG XẾP HẠNG SỨC MẠNH NGÀNH THỰC TẾ (LIVE RS RANKING TỪ SCREENER)
                   </h4>
                 </div>
                 <span className="text-[10px] font-mono text-zinc-400">
@@ -450,7 +558,7 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                             {sec.avgChange >= 0 ? '+' : ''}{sec.avgChange}%
                           </span>
                         </div>
-                        <div className="flex items-center gap-1">
+                        <div className="hidden sm:flex items-center gap-1">
                           {sec.topLeaders.map((lead) => (
                             <span key={lead} className="text-[9px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 font-bold border border-zinc-700/50">
                               {lead}
