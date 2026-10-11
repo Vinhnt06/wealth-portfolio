@@ -23,6 +23,7 @@ import {
   Info,
   Scales,
   Sparkle,
+  ArrowsClockwise,
 } from '@phosphor-icons/react';
 import { MinerviniScreenerItem } from '../types/minervini.types';
 import { SECTOR_MAPPING } from '../data/sectorMapping';
@@ -137,30 +138,39 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
   items,
   onSelectSector,
 }) => {
-  const [selectedPhase, setSelectedPhase] = useState<CyclePhaseKey>('expansion');
+  const [userSelectedPhase, setUserSelectedPhase] = useState<CyclePhaseKey | null>(null);
   const [activeResearchTab, setActiveResearchTab] = useState<'matrix' | 'macro' | 'methodology'>('matrix');
   const [internalItems, setInternalItems] = useState<MinerviniScreenerItem[]>(items || []);
+  const [isLoading, setIsLoading] = useState<boolean>(!items || items.length === 0);
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
 
   useEffect(() => {
     if (items && items.length > 0) {
       setInternalItems(items);
+      setIsLoading(false);
+      setLastUpdated(new Date());
       return;
     }
     let isMounted = true;
+    setIsLoading(true);
     fetch('/api/market/minervini/screener?stage2=false&minRS=1')
       .then((res) => res.json())
       .then((data) => {
         if (isMounted && data.success && Array.isArray(data.data)) {
           setInternalItems(data.data);
+          setLastUpdated(new Date());
         }
       })
-      .catch(() => {});
+      .catch((err) => console.error('Error fetching screener items for cycle wheel:', err))
+      .finally(() => {
+        if (isMounted) setIsLoading(false);
+      });
     return () => {
       isMounted = false;
     };
   }, [items]);
 
-  // 1. Live Quantitative Sector RS & Stage 2 Computation
+  // 1. Live Quantitative Sector RS & Stage 2 Computation (from real screener data)
   const sectorLiveStats = useMemo(() => {
     const statsMap: Record<
       string,
@@ -175,7 +185,7 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
     > = {};
 
     internalItems.forEach((item) => {
-      const sec = SECTOR_MAPPING[item.symbol] || item.sector || 'Khác';
+      const sec = item.sector || SECTOR_MAPPING[item.symbol] || 'Khác';
       if (!statsMap[sec]) {
         statsMap[sec] = {
           sector: sec,
@@ -203,23 +213,35 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
         stage2Pct: s.count > 0 ? Math.round((s.stage2Count / s.count) * 100) : 0,
       }))
       .sort((a, b) => b.avgRs - a.avgRs);
-  }, [items]);
+  }, [internalItems]);
 
   // 2. Quantitative Cycle Phase Momentum Scoring
   // Evaluates which phase has the highest actual RS & Stage 2 concentration
   const phaseScores = useMemo(() => {
-    const scores: Record<CyclePhaseKey, { totalRs: number; totalStage2: number; count: number; score: number }> = {
-      recovery: { totalRs: 0, totalStage2: 0, count: 0, score: 0 },
-      expansion: { totalRs: 0, totalStage2: 0, count: 0, score: 0 },
-      late: { totalRs: 0, totalStage2: 0, count: 0, score: 0 },
-      recession: { totalRs: 0, totalStage2: 0, count: 0, score: 0 },
+    const scores: Record<
+      CyclePhaseKey,
+      {
+        totalRs: number;
+        totalStage2: number;
+        count: number;
+        avgRs: number;
+        stage2Ratio: number;
+        score: number;
+      }
+    > = {
+      recovery: { totalRs: 0, totalStage2: 0, count: 0, avgRs: 0, stage2Ratio: 0, score: 0 },
+      expansion: { totalRs: 0, totalStage2: 0, count: 0, avgRs: 0, stage2Ratio: 0, score: 0 },
+      late: { totalRs: 0, totalStage2: 0, count: 0, avgRs: 0, stage2Ratio: 0, score: 0 },
+      recession: { totalRs: 0, totalStage2: 0, count: 0, avgRs: 0, stage2Ratio: 0, score: 0 },
     };
 
     (Object.keys(CYCLE_PHASES) as CyclePhaseKey[]).forEach((pKey) => {
       const cfg = CYCLE_PHASES[pKey];
       cfg.primarySectors.forEach((secName) => {
         const found = sectorLiveStats.find(
-          (s) => s.sector.toLowerCase().includes(secName.toLowerCase()) || secName.toLowerCase().includes(s.sector.toLowerCase())
+          (s) =>
+            s.sector.toLowerCase().includes(secName.toLowerCase()) ||
+            secName.toLowerCase().includes(s.sector.toLowerCase())
         );
         if (found) {
           scores[pKey].totalRs += found.avgRs * found.count;
@@ -228,8 +250,10 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
         }
       });
 
-      const avgRs = scores[pKey].count > 0 ? scores[pKey].totalRs / scores[pKey].count : 50;
-      const stage2Ratio = scores[pKey].count > 0 ? (scores[pKey].totalStage2 / scores[pKey].count) * 100 : 0;
+      const avgRs = scores[pKey].count > 0 ? Math.round(scores[pKey].totalRs / scores[pKey].count) : 0;
+      const stage2Ratio = scores[pKey].count > 0 ? Math.round((scores[pKey].totalStage2 / scores[pKey].count) * 100) : 0;
+      scores[pKey].avgRs = avgRs;
+      scores[pKey].stage2Ratio = stage2Ratio;
       // Combined Momentum Score: 60% RS Rating + 40% Stage 2 Breadth Ratio
       scores[pKey].score = Math.round((avgRs * 0.6 + stage2Ratio * 0.4) * 10) / 10;
     });
@@ -239,7 +263,7 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
 
   // Dynamically detected active phase (highest score)
   const detectedActivePhaseKey = useMemo(() => {
-    let topKey: CyclePhaseKey = 'expansion';
+    let topKey: CyclePhaseKey = 'recession';
     let maxScore = -1;
     (Object.keys(phaseScores) as CyclePhaseKey[]).forEach((k) => {
       if (phaseScores[k].score > maxScore) {
@@ -250,7 +274,8 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
     return topKey;
   }, [phaseScores]);
 
-  const activeCfg = CYCLE_PHASES[selectedPhase];
+  const activePhaseKey = userSelectedPhase ?? detectedActivePhaseKey;
+  const activeCfg = CYCLE_PHASES[activePhaseKey];
   const detectedCfg = CYCLE_PHASES[detectedActivePhaseKey];
   const topLeadingSectors = sectorLiveStats.slice(0, 5);
 
@@ -281,8 +306,8 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
           </div>
 
           {/* Dynamic Macro Phase Detection Badge */}
-          <div className="flex items-center gap-3.5 p-4 rounded-xl bg-zinc-900/90 border border-emerald-500/30 shadow-lg shrink-0">
-            <div className="w-11 h-11 rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3.5 p-4 rounded-xl bg-zinc-900/90 border border-emerald-500/30 shadow-lg shrink-0">
+            <div className="w-11 h-11 rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
               <Compass className="w-6 h-6 animate-[spin_12s_linear_infinite]" />
             </div>
             <div>
@@ -290,17 +315,28 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                 <span className="text-[10px] font-mono uppercase text-zinc-400 font-bold block">
                   KẾT QUẢ ĐỊNH LƯỢNG THỰC TẾ
                 </span>
-                <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">
-                  Điểm: {phaseScores[detectedActivePhaseKey].score}
+                <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">
+                  RS TB: {phaseScores[detectedActivePhaseKey].avgRs} • Score: {phaseScores[detectedActivePhaseKey].score}
                 </span>
               </div>
               <span className="text-sm font-mono font-black text-emerald-400 block mt-0.5">
                 {detectedCfg.title}
               </span>
               <span className="text-[10px] font-mono text-zinc-400 block">
-                {detectedCfg.subTitle}
+                {detectedCfg.subTitle} (Stage 2: {phaseScores[detectedActivePhaseKey].stage2Ratio}%)
               </span>
             </div>
+
+            {userSelectedPhase && (
+              <button
+                onClick={() => setUserSelectedPhase(null)}
+                className="mt-2 sm:mt-0 sm:ml-2 px-2.5 py-1.5 rounded-lg text-[10px] font-mono font-bold bg-zinc-800 hover:bg-zinc-700 text-emerald-400 border border-emerald-500/30 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+                title="Bấm để quay về pha dẫn dắt theo dữ liệu thực tế"
+              >
+                <ArrowsClockwise className="w-3.5 h-3.5" />
+                <span>Pha Dẫn Dắt Tự Động</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -319,60 +355,60 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                 <path
                   d="M 200 200 L 360 200 A 160 160 0 0 1 200 360 Z"
                   className={`cursor-pointer transition-all duration-300 ${
-                    selectedPhase === 'recovery'
+                    activePhaseKey === 'recovery'
                       ? 'fill-cyan-500/35 stroke-cyan-400 stroke-2 filter drop-shadow-[0_0_12px_rgba(6,182,212,0.4)]'
                       : 'fill-cyan-500/10 hover:fill-cyan-500/20 stroke-cyan-500/20'
                   }`}
-                  onClick={() => setSelectedPhase('recovery')}
+                  onClick={() => setUserSelectedPhase('recovery')}
                 />
 
-                {/* 2. Quadrant Expansion (90° -> 180°) -> DETECTED ACTIVE */}
+                {/* 2. Quadrant Expansion (90° -> 180°) */}
                 <path
                   d="M 200 200 L 200 360 A 160 160 0 0 1 40 200 Z"
                   className={`cursor-pointer transition-all duration-300 ${
-                    selectedPhase === 'expansion'
+                    activePhaseKey === 'expansion'
                       ? 'fill-emerald-500/40 stroke-emerald-400 stroke-2 filter drop-shadow-[0_0_16px_rgba(16,185,129,0.55)]'
                       : 'fill-emerald-500/15 hover:fill-emerald-500/25 stroke-emerald-500/30'
                   }`}
-                  onClick={() => setSelectedPhase('expansion')}
+                  onClick={() => setUserSelectedPhase('expansion')}
                 />
 
                 {/* 3. Quadrant Late-Cycle (180° -> 270°) */}
                 <path
                   d="M 200 200 L 40 200 A 160 160 0 0 1 200 40 Z"
                   className={`cursor-pointer transition-all duration-300 ${
-                    selectedPhase === 'late'
+                    activePhaseKey === 'late'
                       ? 'fill-amber-500/35 stroke-amber-400 stroke-2 filter drop-shadow-[0_0_12px_rgba(245,158,11,0.4)]'
                       : 'fill-amber-500/10 hover:fill-amber-500/20 stroke-amber-500/20'
                   }`}
-                  onClick={() => setSelectedPhase('late')}
+                  onClick={() => setUserSelectedPhase('late')}
                 />
 
                 {/* 4. Quadrant Recession (270° -> 360°) */}
                 <path
                   d="M 200 200 L 200 40 A 160 160 0 0 1 360 200 Z"
                   className={`cursor-pointer transition-all duration-300 ${
-                    selectedPhase === 'recession'
+                    activePhaseKey === 'recession'
                       ? 'fill-rose-500/35 stroke-rose-400 stroke-2 filter drop-shadow-[0_0_12px_rgba(244,63,94,0.4)]'
                       : 'fill-rose-500/10 hover:fill-rose-500/20 stroke-rose-500/20'
                   }`}
-                  onClick={() => setSelectedPhase('recession')}
+                  onClick={() => setUserSelectedPhase('recession')}
                 />
 
                 {/* Inner Core Center */}
                 <circle cx="200" cy="200" r="76" fill="#09090b" stroke="#27272a" strokeWidth="3" />
 
-                {/* Dynamic Indicator Needle aimed at active phase (135° for Expansion) */}
+                {/* Dynamic Indicator Needle aimed at active phase */}
                 <g
                   className="transition-transform duration-1000 ease-out"
                   style={{
                     transformOrigin: '200px 200px',
-                    transform: `rotate(${CYCLE_PHASES[detectedActivePhaseKey].needleAngle}deg)`,
+                    transform: `rotate(${CYCLE_PHASES[activePhaseKey].needleAngle}deg)`,
                   }}
                 >
-                  <line x1="200" y1="200" x2="330" y2="200" stroke="#10b981" strokeWidth="4" strokeLinecap="round" />
-                  <circle cx="330" cy="200" r="8" fill="#10b981" className="animate-pulse" />
-                  <circle cx="200" cy="200" r="14" fill="#10b981" />
+                  <line x1="200" y1="200" x2="330" y2="200" stroke={activeCfg.color} strokeWidth="4" strokeLinecap="round" />
+                  <circle cx="330" cy="200" r="8" fill={activeCfg.color} className="animate-pulse" />
+                  <circle cx="200" cy="200" r="14" fill={activeCfg.color} />
                   <circle cx="200" cy="200" r="6" fill="#09090b" />
                 </g>
               </svg>
@@ -380,10 +416,12 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
               {/* Center Core HUD Label */}
               <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none p-4">
                 <span className="text-[10px] font-mono text-zinc-400 font-bold uppercase">CHU KỲ KINH TẾ</span>
-                <span className="text-xs font-mono font-black text-emerald-400 uppercase mt-0.5">
-                  {detectedCfg.title}
+                <span className="text-xs font-mono font-black uppercase mt-0.5" style={{ color: activeCfg.color }}>
+                  {activeCfg.title}
                 </span>
-                <span className="text-[9px] font-mono text-zinc-500 mt-0.5">Score: {phaseScores[detectedActivePhaseKey].score}</span>
+                <span className="text-[9px] font-mono text-zinc-300 mt-0.5 font-bold">
+                  RS {phaseScores[activePhaseKey].avgRs} • {phaseScores[activePhaseKey].score} pts
+                </span>
               </div>
             </div>
 
@@ -391,14 +429,14 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
             <div className="grid grid-cols-2 gap-2 w-full mt-4">
               {(Object.keys(CYCLE_PHASES) as CyclePhaseKey[]).map((phaseKey) => {
                 const p = CYCLE_PHASES[phaseKey];
-                const isSelected = selectedPhase === phaseKey;
+                const isSelected = activePhaseKey === phaseKey;
                 const isDetected = phaseKey === detectedActivePhaseKey;
-                const pScore = phaseScores[phaseKey].score;
+                const pData = phaseScores[phaseKey];
 
                 return (
                   <button
                     key={phaseKey}
-                    onClick={() => setSelectedPhase(phaseKey)}
+                    onClick={() => setUserSelectedPhase(phaseKey)}
                     className={`px-3 py-2.5 rounded-xl text-left font-mono transition-all border ${
                       isSelected
                         ? `${p.bgLight} ${p.borderLight} text-zinc-100 shadow-lg`
@@ -415,7 +453,9 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                     </div>
                     <div className="flex items-center justify-between mt-1">
                       <span className="text-[9px] text-zinc-500 block truncate">{p.subTitle}</span>
-                      <span className="text-[9px] font-mono font-bold text-zinc-400">{pScore} pts</span>
+                      <span className="text-[9px] font-mono font-bold text-zinc-300">
+                        RS {pData.avgRs} • {pData.score} pts
+                      </span>
                     </div>
                   </button>
                 );
@@ -427,7 +467,7 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
           <div className="lg:col-span-7 flex flex-col gap-4">
             <AnimatePresence mode="wait">
               <motion.div
-                key={selectedPhase}
+                key={activePhaseKey}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
@@ -437,7 +477,7 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3.5 border-b border-zinc-800/80 mb-3.5 gap-2">
                   <div>
                     <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 font-semibold block">
-                      PHÂN TÍCH CHUYÊN SÂU PHA {selectedPhase === detectedActivePhaseKey ? '(HIỆN TẠI DẪN DẮT)' : ''}
+                      PHÂN TÍCH CHUYÊN SÂU PHA {activePhaseKey === detectedActivePhaseKey ? '(HIỆN TẠI DẪN DẮT)' : ''}
                     </span>
                     <h3 className="text-lg font-mono font-bold" style={{ color: activeCfg.color }}>
                       {activeCfg.title} — {activeCfg.subTitle}
@@ -477,9 +517,12 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                   <div className="flex flex-wrap gap-2">
                     {activeCfg.primarySectors.map((sec) => {
                       const matchStat = sectorLiveStats.find(
-                        (s) => s.sector.toLowerCase().includes(sec.toLowerCase()) || sec.toLowerCase().includes(s.sector.toLowerCase())
+                        (s) =>
+                          s.sector.toLowerCase().includes(sec.toLowerCase()) ||
+                          sec.toLowerCase().includes(s.sector.toLowerCase())
                       );
-                      const rsScore = matchStat?.avgRs || 75;
+                      const hasData = !!matchStat;
+                      const rsScore = matchStat?.avgRs;
                       const stage2Count = matchStat?.stage2Count || 0;
 
                       return (
@@ -490,11 +533,17 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                           title="Bấm để lọc mã ngành này trên bảng Screener"
                         >
                           <span className="text-zinc-200 group-hover:text-emerald-400 font-semibold">{sec}</span>
-                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-zinc-800 text-cyan-400">
-                            RS {rsScore}
+                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                            !hasData
+                              ? 'bg-zinc-800 text-zinc-500'
+                              : (rsScore || 0) >= 50
+                              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                              : 'bg-zinc-800 text-cyan-400 border border-zinc-700/50'
+                          }`}>
+                            {hasData ? `RS ${rsScore}` : (isLoading ? 'Đang tải...' : 'RS --')}
                           </span>
                           {stage2Count > 0 && (
-                            <span className="px-1 py-0.5 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-400">
+                            <span className="px-1 py-0.5 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
                               {stage2Count} Stage 2
                             </span>
                           )}
