@@ -30,6 +30,14 @@ import { SECTOR_MAPPING } from '../data/sectorMapping';
 
 export type CyclePhaseKey = 'recovery' | 'expansion' | 'late' | 'recession';
 
+export interface AssetPriorityItem {
+  asset: string;
+  rank: number;
+  weight: string;
+  status: 'overweight' | 'neutral' | 'underweight';
+  desc: string;
+}
+
 export interface CyclePhaseConfig {
   key: CyclePhaseKey;
   title: string;
@@ -50,6 +58,8 @@ export interface CyclePhaseConfig {
   keyDrivers: string[];
   minerviniStrategy: string;
   fidelityAssetAlloc: string;
+  topPriorityAsset: string; // Tài sản ưu tiên hàng đầu nên nắm giữ
+  priorityAssets: AssetPriorityItem[]; // Thứ tự ưu tiên & tỷ trọng phân bổ
 }
 
 export const CYCLE_PHASES: Record<CyclePhaseKey, CyclePhaseConfig> = {
@@ -73,6 +83,13 @@ export const CYCLE_PHASES: Record<CyclePhaseKey, CyclePhaseConfig> = {
     keyDrivers: ['Hạ lãi suất điều hành & kích cầu tín dụng', 'Thị trường chứng khoán phục hồi thanh khoản', 'Niềm tin tiêu dùng & đơn hàng phục hồi'],
     minerviniStrategy: 'Tìm kiếm cổ phiếu tạo đáy kép (Double Bottom) hoặc thoát nền tích luỹ đầu tiên với điểm mua Pocket Pivot và khối lượng đột biến.',
     fidelityAssetAlloc: 'Cổ phiếu (Equities) vượt trội hoàn toàn so với Tiền mặt & Trái phiếu.',
+    topPriorityAsset: 'Cổ Phiếu (Equities) — Nhóm Tài Chính, Bất Động Sản & Bán Lẻ Tiêu Dùng',
+    priorityAssets: [
+      { asset: 'Cổ phiếu (Equities)', rank: 1, weight: '65% - 75%', status: 'overweight', desc: 'Vượt trội tuyệt đối khi định giá rẻ và lãi suất chạm đáy kích hoạt dòng tiền rẻ bùng nổ' },
+      { asset: 'Bất động sản / REITs', rank: 2, weight: '15% - 20%', status: 'overweight', desc: 'Hưởng lợi tức thì từ chính sách hạ lãi suất vay và thanh khoản thị trường phục hồi' },
+      { asset: 'Trái phiếu (Bonds)', rank: 3, weight: '10% - 15%', status: 'neutral', desc: 'Lợi suất giảm (giá trái phiếu tăng) nhưng hiệu suất sinh lời kém hấp dẫn hơn cổ phiếu' },
+      { asset: 'Tiền mặt & Hàng hóa', rank: 4, weight: '5% - 10%', status: 'underweight', desc: 'Hạ tiền mặt tối thiểu; chi phí cơ hội rất cao khi giữ tiền mặt trong pha phục hồi' },
+    ],
   },
   expansion: {
     key: 'expansion',
@@ -94,6 +111,13 @@ export const CYCLE_PHASES: Record<CyclePhaseKey, CyclePhaseConfig> = {
     keyDrivers: ['GDP tăng trưởng 7-8% vượt kế hoạch', 'Xuất siêu kỷ lục, chuỗi cung ứng mở rộng', 'Đầu tư công và dòng vốn FDI giải ngân tăng tốc'],
     minerviniStrategy: 'Tập trung 100% danh mục vào Siêu Cổ Phiếu Giai Đoạn 2 (Stage 2 Uptrend) có RS Rating >= 80, bứt phá mô hình VCP (Thu hẹp độ biến động) và Pivot Point.',
     fidelityAssetAlloc: 'Tập trung cổ phiếu tăng trưởng (Growth Stocks), tỷ trọng cổ phiếu tối đa.',
+    topPriorityAsset: 'Cổ Phiếu Tăng Trưởng (Growth Equities) — Công Nghệ, Bán Dẫn & Sản Xuất Công Nghiệp',
+    priorityAssets: [
+      { asset: 'Cổ phiếu Tăng trưởng', rank: 1, weight: '70% - 85%', status: 'overweight', desc: 'Tập trung tối đa vào siêu cổ phiếu Stage 2 có tốc độ tăng trưởng EPS và doanh thu bứt phá' },
+      { asset: 'Hàng hóa / Nguyên liệu', rank: 2, weight: '10% - 15%', status: 'overweight', desc: 'Nhu cầu sản xuất và tiêu thụ toàn cầu bùng nổ kéo theo đà tăng giá nguyên vật liệu' },
+      { asset: 'Tiền mặt (Cash)', rank: 3, weight: '5% - 10%', status: 'underweight', desc: 'Duy trì tiền mặt mức tối thiểu để sẵn sàng gia tăng tỷ trọng tại các điểm Pivot mới' },
+      { asset: 'Trái phiếu (Bonds)', rank: 4, weight: '0% - 5%', status: 'underweight', desc: 'Hiệu suất sinh lời kém nhất chu kỳ; chịu áp lực khi nền kinh tế tăng trưởng nóng' },
+    ],
   },
   late: {
     key: 'late',
@@ -115,6 +139,13 @@ export const CYCLE_PHASES: Record<CyclePhaseKey, CyclePhaseConfig> = {
     keyDrivers: ['Giá dầu thô & hàng hóa neo cao', 'Lạm phát tiệm cận ngưỡng cảnh báo', 'Chính sách tiền tệ chuyển sang kiểm soát rủi ro'],
     minerviniStrategy: 'Thắt chặt chặn lãi (Trailing stop), chốt lời từng phần khi xuất hiện Climax Top (đỉnh cao trào khối lượng lớn mà giá không tăng thêm), không mua mới nến mở rộng.',
     fidelityAssetAlloc: 'Hàng hóa (Commodities) & Nhóm Năng lượng; hạ tỷ trọng cổ phiếu nói chung.',
+    topPriorityAsset: 'Hàng Hóa (Commodities / Dầu Khí) & Tiền Mặt Phòng Thủ (Cash / USD)',
+    priorityAssets: [
+      { asset: 'Hàng hóa & Năng lượng', rank: 1, weight: '35% - 45%', status: 'overweight', desc: 'Hưởng lợi đỉnh cao từ lạm phát, khủng hoảng nguồn cung dầu thô và nguyên liệu cơ bản' },
+      { asset: 'Tiền mặt & Tiết kiệm', rank: 2, weight: '30% - 40%', status: 'overweight', desc: 'Tăng mạnh tiền mặt hưởng lãi suất cao và chuẩn bị thanh khoản gom tài sản chiết khấu' },
+      { asset: 'Vàng & Kim loại quý', rank: 3, weight: '15% - 20%', status: 'overweight', desc: 'Hàng rào phòng hộ hữu hiệu trước áp lực lạm phát và nguy cơ đảo chiều thị trường' },
+      { asset: 'Cổ phiếu (Equities)', rank: 4, weight: '10% - 15%', status: 'underweight', desc: 'Hạ tỷ trọng mạnh mẽ; chỉ giữ nhóm năng lượng/vật liệu và chốt lời theo Climax Top' },
+    ],
   },
   recession: {
     key: 'recession',
@@ -136,6 +167,13 @@ export const CYCLE_PHASES: Record<CyclePhaseKey, CyclePhaseConfig> = {
     keyDrivers: ['Doanh thu bán lẻ & xuất khẩu sụt giảm', 'Tỷ lệ nợ xấu ngân hàng gia tăng', 'Dòng tiền rút về tài sản phòng thủ'],
     minerviniStrategy: 'Quy tắc vàng số 1: Giữ 70-100% tiền mặt, tuyệt đối kiên nhẫn đứng ngoài thị trường giá xuống (Bear Market), kiên quyết cắt lỗ 7-8% không nhân nhượng.',
     fidelityAssetAlloc: 'Trái phiếu (Bonds) & Tiền mặt (Cash); chỉ giữ cổ phiếu phòng thủ thiết yếu.',
+    topPriorityAsset: 'Tiền Mặt (Cash is King) & Trái Phiếu Chính Phủ / Cổ Phiếu Cổ Tức Bền Vững',
+    priorityAssets: [
+      { asset: 'Tiền mặt (Cash / USD)', rank: 1, weight: '60% - 75%', status: 'overweight', desc: 'Bảo toàn vốn tuyệt đối; "Tiền mặt là vua" trong thị trường gấu (Bear market khốc liệt)' },
+      { asset: 'Trái phiếu chính phủ', rank: 2, weight: '20% - 25%', status: 'overweight', desc: 'Hưởng lợi lớn khi ngân hàng trung ương cắt giảm lãi suất khẩn cấp để kích cầu' },
+      { asset: 'Vàng trú ẩn an toàn', rank: 3, weight: '10% - 15%', status: 'neutral', desc: 'Kênh phòng thủ bảo toàn sức mua trước rủi ro nợ xấu gia tăng và biến động vĩ mô' },
+      { asset: 'Cổ phiếu phòng thủ', rank: 4, weight: '0% - 10%', status: 'underweight', desc: 'Chỉ nắm giữ nhóm tiện ích/dược phẩm thiết yếu có cổ tức tiền mặt vững chắc và beta thấp' },
+    ],
   },
 };
 
@@ -784,27 +822,119 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                   </div>
                 </div>
 
-                {/* Minervini & Fidelity Playbook */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-mono">
-                  <div className="p-3 rounded-xl bg-zinc-950/70 border border-zinc-800/80">
-                    <div className="flex items-center gap-1.5 text-emerald-400 font-bold mb-1">
-                      <Flame className="w-3.5 h-3.5" />
-                      <span>MARK MINERVINI PLAYBOOK:</span>
+                {/* ── Asset Allocation Strategy & Top Priority Assets (Fidelity Model) ── */}
+                <div className="p-4 rounded-xl bg-zinc-950/80 border border-zinc-800/90 text-xs font-mono mb-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2.5 border-b border-zinc-800/80 mb-3 gap-2">
+                    <div className="flex items-center gap-2">
+                      <Scales className="w-4 h-4 text-cyan-400" />
+                      <span className="font-bold text-zinc-100 uppercase tracking-wide">
+                        ƯU TIÊN PHÂN BỔ TÀI SẢN (FIDELITY &amp; MERRILL LYNCH):
+                      </span>
                     </div>
-                    <p className="text-zinc-300 text-[11px] leading-relaxed">
-                      {activeCfg.minerviniStrategy}
-                    </p>
+                    <span className="text-[10px] text-zinc-400">
+                      Mô hình tối ưu hóa danh mục theo chu kỳ
+                    </span>
                   </div>
 
-                  <div className="p-3 rounded-xl bg-zinc-950/70 border border-zinc-800/80">
-                    <div className="flex items-center gap-1.5 text-cyan-400 font-bold mb-1">
-                      <Scales className="w-3.5 h-3.5" />
-                      <span>PHÂN BỔ TÀI SẢN (FIDELITY):</span>
+                  {/* Top Priority Asset Highlight Banner */}
+                  <div className="p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/30 mb-3 flex items-start gap-3">
+                    <div className="p-2 rounded-lg bg-cyan-500/20 text-cyan-300 shrink-0 mt-0.5">
+                      <Coins className="w-4 h-4" />
                     </div>
-                    <p className="text-zinc-300 text-[11px] leading-relaxed">
-                      {activeCfg.fidelityAssetAlloc}
-                    </p>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                        <span className="text-[10px] text-cyan-400 font-bold uppercase tracking-wider">
+                          TÀI SẢN ƯU TIÊN HÀNG ĐẦU NÊN NẮM GIỮ:
+                        </span>
+                        <span className="px-1.5 py-0.5 rounded text-[9px] font-black bg-cyan-400 text-zinc-950">
+                          TOP #1 PRIORITY
+                        </span>
+                      </div>
+                      <div className="text-sm font-bold text-zinc-100">
+                        {activeCfg.topPriorityAsset}
+                      </div>
+                      <p className="text-[11px] text-zinc-400 mt-1 leading-relaxed">
+                        {activeCfg.fidelityAssetAlloc}
+                      </p>
+                    </div>
                   </div>
+
+                  {/* 4 Asset Classes Priority Breakdown Cards */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+                    {activeCfg.priorityAssets.map((item) => (
+                      <div
+                        key={item.asset}
+                        className={`p-2.5 rounded-xl border flex flex-col justify-between transition-all ${
+                          item.rank === 1
+                            ? 'bg-cyan-500/10 border-cyan-500/40 shadow-sm'
+                            : 'bg-zinc-900/70 border-zinc-800/90'
+                        }`}
+                      >
+                        <div>
+                          <div className="flex items-center justify-between mb-1.5">
+                            <div className="flex items-center gap-1.5">
+                              <span
+                                className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold ${
+                                  item.rank === 1
+                                    ? 'bg-cyan-400 text-zinc-950 font-black'
+                                    : 'bg-zinc-800 text-zinc-300 border border-zinc-700'
+                                }`}
+                              >
+                                {item.rank}
+                              </span>
+                              <span className="text-[11px] font-bold text-zinc-200 truncate">
+                                {item.asset}
+                              </span>
+                            </div>
+                            <span
+                              className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
+                                item.status === 'overweight'
+                                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                                  : item.status === 'neutral'
+                                  ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                                  : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                              }`}
+                            >
+                              {item.weight}
+                            </span>
+                          </div>
+                          <p className="text-[10px] text-zinc-400 leading-snug">
+                            {item.desc}
+                          </p>
+                        </div>
+
+                        <div className="mt-2 pt-1.5 border-t border-zinc-800/60 flex items-center justify-between text-[9px] text-zinc-500">
+                          <span>Vị thế:</span>
+                          <span
+                            className={`font-semibold ${
+                              item.status === 'overweight'
+                                ? 'text-emerald-400'
+                                : item.status === 'neutral'
+                                ? 'text-amber-400'
+                                : 'text-rose-400'
+                            }`}
+                          >
+                            {item.status === 'overweight'
+                              ? 'Tăng Tỷ Trọng'
+                              : item.status === 'neutral'
+                              ? 'Trung Lập'
+                              : 'Hạ Tỷ Trọng'}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Mark Minervini Playbook */}
+                <div className="p-3.5 rounded-xl bg-zinc-950/70 border border-zinc-800/80 text-xs font-mono">
+                  <div className="flex items-center gap-1.5 text-emerald-400 font-bold mb-1">
+                    <Flame className="w-3.5 h-3.5" />
+                    <span>MARK MINERVINI PLAYBOOK (QUY TẮC GIAO DỊCH THEO XU HƯỚNG):</span>
+                  </div>
+                  <p className="text-zinc-300 text-[11px] leading-relaxed">
+                    {activeCfg.minerviniStrategy}
+                  </p>
                 </div>
               </motion.div>
             </AnimatePresence>
