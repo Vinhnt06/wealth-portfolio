@@ -449,9 +449,9 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
         </div>
 
         {/* ── 2. Interactive Precision Cycle Wheel & Analysis Hub ───────────── */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-6 items-start">
-          {/* Wheel Dial Pedestal (5 Cols - Compact Fit & Sticky) */}
-          <div className="lg:col-span-5 flex flex-col gap-3.5 p-5 rounded-2xl bg-zinc-950/90 border border-zinc-800/80 shadow-xl backdrop-blur-xl lg:sticky lg:top-24">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 pt-4 items-start">
+          {/* Wheel Dial Pedestal (4 Cols - Compact, Fitted & Left-anchored) */}
+          <div className="lg:col-span-4 flex flex-col gap-3.5 p-4 sm:p-5 rounded-2xl bg-zinc-950/90 border border-zinc-800/80 shadow-xl backdrop-blur-xl lg:sticky lg:top-24">
             {/* Header Hint & Realtime Status */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-zinc-800/80 mb-1 gap-2">
               <div className="flex items-center gap-2 flex-wrap">
@@ -656,8 +656,8 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
             </div>
           </div>
 
-          {/* ── Detailed Research Card & Phase Strategy (7 Cols) ──────────── */}
-          <div className="lg:col-span-7 flex flex-col gap-4">
+          {/* ── Detailed Research Card & Phase Strategy (8 Cols - Expanded & Left-fitted) ──────────── */}
+          <div className="lg:col-span-8 flex flex-col gap-4">
             <AnimatePresence mode="wait">
               <motion.div
                 key={activePhaseKey}
