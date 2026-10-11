@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
 import stockDatabase from '../../../../../features/market/data/stockDatabase.json';
 import { MinerviniScreenerItem } from '../../../../../features/market/types/minervini.types';
-import { SECTOR_MAPPING, SECTOR_LEADER_UNIVERSE } from '../../../../../features/market/data/sectorMapping';
+import { SECTOR_MAPPING, SECTOR_LEADER_UNIVERSE, getSymbolsBySector } from '../../../../../features/market/data/sectorMapping';
 
 export const runtime = 'nodejs';
 
-// Comprehensive universe of 140+ liquid VN equities across all 14 industry sectors
+// Comprehensive universe of 180+ liquid VN equities across all 20 industry sectors
 const DEFAULT_UNIVERSE = SECTOR_LEADER_UNIVERSE;
 
 // In-memory cache for screener results (60 seconds TTL)
@@ -27,6 +27,11 @@ export async function GET(request: Request) {
 
   const symbolsToScan = customSymbolsParam
     ? customSymbolsParam.split(',').map((s) => s.trim().toUpperCase()).filter(Boolean)
+    : sectorFilter !== 'all'
+    ? (() => {
+        const sectorMatches = getSymbolsBySector(sectorFilter);
+        return sectorMatches.length > 0 ? sectorMatches.slice(0, 60) : DEFAULT_UNIVERSE;
+      })()
     : DEFAULT_UNIVERSE;
 
 // Real Shares Outstanding (Cổ phiếu lưu hành) for Vietnamese equities (in millions of shares)

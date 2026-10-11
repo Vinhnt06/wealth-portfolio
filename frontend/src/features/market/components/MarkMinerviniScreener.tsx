@@ -28,7 +28,7 @@ import {
 import { useMarketStore } from '../store/marketStore';
 import { MinerviniScreenerItem } from '../types/minervini.types';
 import { getStockPriceColor } from '../utils/priceColors';
-import { SECTOR_MAPPING } from '../data/sectorMapping';
+import { SECTOR_MAPPING, ICB_20_SECTORS } from '../data/sectorMapping';
 
 type ScreenerTab = 'overview' | 'performance' | 'technicals' | 'valuation';
 type ViewMode = 'table' | 'sectors';
@@ -97,14 +97,10 @@ export const MarkMinerviniScreener: React.FC = () => {
     fetchScreenerData();
   }, []);
 
-  // Distinct sectors
+  // Distinct sectors: use canonical 20 ICB sectors order
   const sectors = useMemo(() => {
-    const set = new Set<string>();
-    items.forEach((item) => {
-      if (item.sector) set.add(item.sector);
-    });
-    return Array.from(set).sort();
-  }, [items]);
+    return Array.from(ICB_20_SECTORS);
+  }, []);
 
   // Handle column header click to auto-sort
   const handleSort = (key: string) => {

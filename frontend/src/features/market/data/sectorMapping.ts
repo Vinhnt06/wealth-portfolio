@@ -1,187 +1,114 @@
+import sectorFullMapping from './sectorFullMapping.json';
+
 /**
- * Chuẩn phân ngành ngành nghề thị trường chứng khoán Việt Nam (ICB)
- * Dành cho Screener Minervini, Heatmap, và Market Analysis.
- * Tập hợp các cổ phiếu hàng đầu (Leaders & Top thanh khoản) cho từng ngành.
+ * Danh sách 20 nhóm ngành chuẩn ICB Cấp 2 của thị trường chứng khoán Việt Nam
  */
-export const SECTOR_MAPPING: Record<string, string> = {
+export const ICB_20_SECTORS = [
+  'Vận tải',
+  'Phân phối, bán lẻ',
+  'Nguyên vật liệu',
+  'Hàng tiêu dùng',
+  'Năng lượng',
+  'Tiện ích',
+  'Thực phẩm, đồ uống',
+  'Ngân hàng',
+  'Hàng hóa công nghiệp',
+  'Bất động sản',
+  'Dịch vụ tài chính',
+  'Dịch vụ thương mại',
+  'Bảo hiểm',
+  'Dược phẩm',
+  'Truyền thông, giải trí',
+  'Ô tô, linh kiện',
+  'Dịch vụ tiêu dùng',
+  'Viễn thông',
+  'Phần mềm',
+  'Dịch vụ chăm sóc sức khỏe',
+] as const;
+
+export type ICB20Sector = typeof ICB_20_SECTORS[number];
+
+/**
+ * Toàn bộ bản đồ phân loại ngành ICB cho 2.060+ mã cổ phiếu Việt Nam
+ */
+export const SECTOR_MAPPING: Record<string, string> = sectorFullMapping as Record<string, string>;
+
+/**
+ * Top 180+ Cổ phiếu Tiêu biểu (Leaders & Thanh khoản cao) bao phủ toàn diện 20 nhóm ngành
+ * Được tối ưu để quét siêu tốc qua Entrade/DNSE mà không bị timeout hay nghẽn mạng.
+ */
+export const SECTOR_LEADER_UNIVERSE: string[] = [
   // 1. Ngân hàng (18 mã thanh khoản cao nhất)
-  VCB: 'Ngân hàng',
-  BID: 'Ngân hàng',
-  CTG: 'Ngân hàng',
-  TCB: 'Ngân hàng',
-  MBB: 'Ngân hàng',
-  ACB: 'Ngân hàng',
-  VPB: 'Ngân hàng',
-  HDB: 'Ngân hàng',
-  STB: 'Ngân hàng',
-  LPB: 'Ngân hàng',
-  SHB: 'Ngân hàng',
-  TPB: 'Ngân hàng',
-  VIB: 'Ngân hàng',
-  MSB: 'Ngân hàng',
-  OCB: 'Ngân hàng',
-  SSB: 'Ngân hàng',
-  EIB: 'Ngân hàng',
-  NAB: 'Ngân hàng',
+  'VCB', 'BID', 'CTG', 'TCB', 'MBB', 'ACB', 'VPB', 'HDB', 'STB', 'LPB', 'SHB', 'TPB', 'VIB', 'MSB', 'OCB', 'SSB', 'EIB', 'NAB',
 
-  // 2. Chứng khoán (14 mã tiêu biểu)
-  SSI: 'Chứng khoán',
-  VND: 'Chứng khoán',
-  VCI: 'Chứng khoán',
-  HCM: 'Chứng khoán',
-  SHS: 'Chứng khoán',
-  MBS: 'Chứng khoán',
-  FTS: 'Chứng khoán',
-  BSI: 'Chứng khoán',
-  CTS: 'Chứng khoán',
-  VIX: 'Chứng khoán',
-  AGR: 'Chứng khoán',
-  ORS: 'Chứng khoán',
-  TVS: 'Chứng khoán',
-  PHS: 'Chứng khoán',
+  // 2. Dịch vụ tài chính (14 mã chứng khoán tiêu biểu)
+  'SSI', 'VND', 'VCI', 'HCM', 'SHS', 'MBS', 'FTS', 'BSI', 'CTS', 'VIX', 'AGR', 'ORS', 'TVS', 'PHS',
 
-  // 3. Bất động sản Dân dụng (17 mã tiêu biểu)
-  VHM: 'Bất động sản',
-  VIC: 'Bất động sản',
-  VRE: 'Bất động sản',
-  KDH: 'Bất động sản',
-  NLG: 'Bất động sản',
-  PDR: 'Bất động sản',
-  DIG: 'Bất động sản',
-  DXG: 'Bất động sản',
-  CEO: 'Bất động sản',
-  NVL: 'Bất động sản',
-  TCH: 'Bất động sản',
-  HQC: 'Bất động sản',
-  DRH: 'Bất động sản',
-  KHG: 'Bất động sản',
-  VPI: 'Bất động sản',
-  HDG: 'Bất động sản',
-  DXS: 'Bất động sản',
-  NTL: 'Bất động sản',
+  // 3. Bất động sản (18 mã dân dụng & KCN)
+  'VHM', 'VIC', 'VRE', 'KDH', 'NLG', 'PDR', 'DIG', 'DXG', 'CEO', 'NVL', 'TCH', 'KBC', 'IDC', 'SZC', 'BCM', 'SIP', 'HDG', 'NTL',
 
-  // 4. Bất động sản Khu công nghiệp (10 mã tiêu biểu)
-  KBC: 'BĐS Khu công nghiệp',
-  IDC: 'BĐS Khu công nghiệp',
-  VGC: 'BĐS Khu công nghiệp',
-  SZC: 'BĐS Khu công nghiệp',
-  BCM: 'BĐS Khu công nghiệp',
-  TIP: 'BĐS Khu công nghiệp',
-  LHG: 'BĐS Khu công nghiệp',
-  SIP: 'BĐS Khu công nghiệp',
-  D2D: 'BĐS Khu công nghiệp',
-  PHR: 'BĐS Khu công nghiệp',
+  // 4. Nguyên vật liệu (Thép, Hóa chất, Cao su, Xi măng)
+  'HPG', 'HSG', 'NKG', 'VGS', 'DGC', 'DCM', 'DPM', 'GVR', 'CSV', 'LAS', 'BMP', 'NTP', 'HT1', 'BCC',
 
-  // 5. Thép & Kim loại (7 mã tiêu biểu)
-  HPG: 'Thép & Kim loại',
-  HSG: 'Thép & Kim loại',
-  NKG: 'Thép & Kim loại',
-  VGS: 'Thép & Kim loại',
-  SMC: 'Thép & Kim loại',
-  TLH: 'Thép & Kim loại',
-  TVN: 'Thép & Kim loại',
+  // 5. Năng lượng (Dầu khí, Khai thác dầu khí)
+  'GAS', 'PLX', 'BSR', 'PVD', 'PVS', 'PVT', 'PVP', 'PVC', 'PVB', 'OIL',
 
-  // 6. Công nghệ & Viễn thông (8 mã tiêu biểu)
-  FPT: 'Công nghệ & Viễn thông',
-  CMG: 'Công nghệ & Viễn thông',
-  ELC: 'Công nghệ & Viễn thông',
-  FOX: 'Công nghệ & Viễn thông',
-  VGI: 'Công nghệ & Viễn thông',
-  CTR: 'Công nghệ & Viễn thông',
-  VNZ: 'Công nghệ & Viễn thông',
-  ITD: 'Công nghệ & Viễn thông',
+  // 6. Tiện ích (Điện, Nước, Phân phối khí)
+  'POW', 'REE', 'PC1', 'GEG', 'GEE', 'NT2', 'QTP', 'VSH', 'BWE', 'TDM', 'PGV',
 
-  // 7. Dầu khí (9 mã tiêu biểu)
-  GAS: 'Dầu khí',
-  PLX: 'Dầu khí',
-  BSR: 'Dầu khí',
-  PVD: 'Dầu khí',
-  PVS: 'Dầu khí',
-  PVT: 'Dầu khí',
-  PVP: 'Dầu khí',
-  PVC: 'Dầu khí',
-  PVB: 'Dầu khí',
+  // 7. Thực phẩm, đồ uống (Thực phẩm, Chăn nuôi, Thủy sản)
+  'VNM', 'SAB', 'MCH', 'KDC', 'QNS', 'DBC', 'BAF', 'HAG', 'PAN', 'VHC', 'ANV', 'ASM', 'IDI', 'FMC',
 
-  // 8. Điện & Tiện ích (10 mã tiêu biểu)
-  POW: 'Điện & Tiện ích',
-  REE: 'Điện & Tiện ích',
-  PC1: 'Điện & Tiện ích',
-  GEG: 'Điện & Tiện ích',
-  GEE: 'Điện & Tiện ích',
-  NT2: 'Điện & Tiện ích',
-  QTP: 'Điện & Tiện ích',
-  VSH: 'Điện & Tiện ích',
-  TV2: 'Điện & Tiện ích',
-  BCG: 'Điện & Tiện ích',
+  // 8. Phân phối, bán lẻ
+  'MWG', 'FRT', 'DGW', 'PET', 'PNJ', 'AST', 'CLX',
 
-  // 9. Hóa chất & Phân bón (11 mã tiêu biểu)
-  DGC: 'Hóa chất & Phân bón',
-  DCM: 'Hóa chất & Phân bón',
-  DPM: 'Hóa chất & Phân bón',
-  CSV: 'Hóa chất & Phân bón',
-  BFC: 'Hóa chất & Phân bón',
-  LAS: 'Hóa chất & Phân bón',
-  GVR: 'Hóa chất & Phân bón',
-  DPR: 'Hóa chất & Phân bón',
-  DRC: 'Hóa chất & Phân bón',
-  DDV: 'Hóa chất & Phân bón',
+  // 9. Vận tải (Cảng biển, Hàng không, Logistics)
+  'GMD', 'HAH', 'VSC', 'VJC', 'HVN', 'VTP', 'PHP', 'SGP', 'VOS', 'VIP', 'VTO',
 
-  // 10. Bán lẻ & Hàng tiêu dùng (9 mã tiêu biểu)
-  MWG: 'Bán lẻ & Tiêu dùng',
-  FRT: 'Bán lẻ & Tiêu dùng',
-  DGW: 'Bán lẻ & Tiêu dùng',
-  PNJ: 'Bán lẻ & Tiêu dùng',
-  MSN: 'Bán lẻ & Tiêu dùng',
-  VNM: 'Bán lẻ & Tiêu dùng',
-  SAB: 'Bán lẻ & Tiêu dùng',
-  KDC: 'Bán lẻ & Tiêu dùng',
-  MCH: 'Bán lẻ & Tiêu dùng',
+  // 10. Hàng hóa công nghiệp (Xây dựng, Hạ tầng, Cơ điện)
+  'VCG', 'HHV', 'CII', 'CTD', 'FCN', 'LCG', 'C4G', 'GEX', 'SAM',
 
-  // 11. Thủy sản & Nông nghiệp (9 mã tiêu biểu)
-  VHC: 'Thủy sản & Nông nghiệp',
-  ANV: 'Thủy sản & Nông nghiệp',
-  ASM: 'Thủy sản & Nông nghiệp',
-  IDI: 'Thủy sản & Nông nghiệp',
-  PAN: 'Thủy sản & Nông nghiệp',
-  DBC: 'Thủy sản & Nông nghiệp',
-  HAG: 'Thủy sản & Nông nghiệp',
-  BAF: 'Thủy sản & Nông nghiệp',
-  HNG: 'Thủy sản & Nông nghiệp',
+  // 11. Phần mềm (CNTT & Dịch vụ máy tính)
+  'FPT', 'CMG', 'ELC', 'ITD', 'SGT', 'HPT',
 
-  // 12. Cảng biển & Logistics (9 mã tiêu biểu)
-  GMD: 'Cảng biển & Logistics',
-  HAH: 'Cảng biển & Logistics',
-  VSC: 'Cảng biển & Logistics',
-  VTP: 'Cảng biển & Logistics',
-  PHP: 'Cảng biển & Logistics',
-  PET: 'Cảng biển & Logistics',
-  SGP: 'Cảng biển & Logistics',
-  VJC: 'Cảng biển & Logistics',
-  HVN: 'Cảng biển & Logistics',
+  // 12. Viễn thông
+  'FOX', 'VGI', 'CTR', 'TTN', 'MFS',
 
-  // 13. Xây dựng & Vật liệu (11 mã tiêu biểu)
-  VCG: 'Xây dựng & Vật liệu',
-  HHV: 'Xây dựng & Vật liệu',
-  CII: 'Xây dựng & Vật liệu',
-  CTD: 'Xây dựng & Vật liệu',
-  FCN: 'Xây dựng & Vật liệu',
-  LCG: 'Xây dựng & Vật liệu',
-  C4G: 'Xây dựng & Vật liệu',
-  HT1: 'Xây dựng & Vật liệu',
-  BCC: 'Xây dựng & Vật liệu',
-  BMP: 'Xây dựng & Vật liệu',
-  NTP: 'Xây dựng & Vật liệu',
+  // 13. Hàng tiêu dùng (Dệt may, Đồ gia dụng)
+  'TNG', 'MSH', 'GIL', 'STK', 'TCM', 'VGT', 'GDT', 'SAV',
 
-  // 14. Dệt may (6 mã tiêu biểu)
-  TNG: 'Dệt may',
-  MSH: 'Dệt may',
-  GIL: 'Dệt may',
-  STK: 'Dệt may',
-  TCM: 'Dệt may',
-  VGT: 'Dệt may',
-};
+  // 14. Dược phẩm
+  'DHG', 'IMP', 'TRA', 'DVN', 'DBD', 'DMC', 'OPC', 'DCL',
+
+  // 15. Dịch vụ chăm sóc sức khỏe
+  'JVC', 'TNH', 'AMV', 'DKP',
+
+  // 16. Ô tô, linh kiện
+  'HAX', 'DRC', 'CSM', 'TMT', 'HHS', 'VEA', 'SRC',
+
+  // 17. Bảo hiểm
+  'BVH', 'PVI', 'MIG', 'BIC', 'BMI', 'PTI', 'PRE', 'ABI',
+
+  // 18. Truyền thông, giải trí
+  'VNZ', 'YEG', 'EID', 'ADC', 'DAE',
+
+  // 19. Dịch vụ thương mại
+  'SFI', 'MHC', 'CLC', 'MEC',
+
+  // 20. Dịch vụ tiêu dùng (Du lịch, Khách sạn)
+  'DAH', 'TCT', 'WCS', 'OCH', 'DXL',
+];
 
 /**
- * Toàn bộ danh sách cổ phiếu tiêu biểu của 14 nhóm ngành (Universe mở rộng 140+ mã)
+ * Lấy toàn bộ danh sách mã theo một ngành cụ thể trong 20 ngành ICB
  */
-export const SECTOR_LEADER_UNIVERSE = Object.keys(SECTOR_MAPPING);
+export function getSymbolsBySector(sector: string): string[] {
+  const norm = sector.trim().toLowerCase();
+  const results: string[] = [];
+  for (const [sym, sec] of Object.entries(SECTOR_MAPPING)) {
+    if (sec.toLowerCase().includes(norm)) {
+      results.push(sym);
+    }
+  }
+  return results;
+}
