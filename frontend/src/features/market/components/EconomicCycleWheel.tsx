@@ -196,7 +196,8 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
   const [internalItems, setInternalItems] = useState<MinerviniScreenerItem[]>(items || []);
   const [isLoading, setIsLoading] = useState<boolean>(!items || items.length === 0);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
-  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [isClient, setIsClient] = useState<boolean>(false);
 
   const fetchScreenerData = useCallback(async (isBackground = false) => {
     if (!isBackground) {
@@ -220,10 +221,12 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
   }, []);
 
   useEffect(() => {
+    setIsClient(true);
+    setLastUpdated(new Date());
+
     if (items && items.length > 0) {
       setInternalItems(items);
       setIsLoading(false);
-      setLastUpdated(new Date());
     } else {
       fetchScreenerData(false);
     }
@@ -407,11 +410,11 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
         </div>
 
         {/* ── 2. Interactive Precision Cycle Wheel & Analysis Hub ───────────── */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-6 items-stretch">
-          {/* Wheel Dial Pedestal (5 Cols) */}
-          <div className="lg:col-span-5 flex flex-col justify-between p-5 rounded-2xl bg-zinc-950/80 border border-zinc-800/80 shadow-xl backdrop-blur-xl">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-6 items-start">
+          {/* Wheel Dial Pedestal (5 Cols - Compact Fit & Sticky) */}
+          <div className="lg:col-span-5 flex flex-col gap-3.5 p-5 rounded-2xl bg-zinc-950/90 border border-zinc-800/80 shadow-xl backdrop-blur-xl lg:sticky lg:top-24">
             {/* Header Hint & Realtime Status */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-zinc-800/80 mb-2 gap-2">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-zinc-800/80 mb-1 gap-2">
               <div className="flex items-center gap-2 flex-wrap">
                 <Sparkle className="w-4 h-4 text-emerald-400" />
                 <span className="text-xs font-mono font-bold text-zinc-200">LA BÀN 4 PHA KINH TẾ</span>
@@ -421,8 +424,8 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-mono text-zinc-400">
-                  {lastUpdated ? lastUpdated.toLocaleTimeString('vi-VN') : '--:--:--'}
+                <span suppressHydrationWarning className="text-[10px] font-mono text-zinc-400">
+                  {isClient && lastUpdated ? lastUpdated.toLocaleTimeString('vi-VN') : '--:--:--'}
                 </span>
                 <button
                   onClick={() => fetchScreenerData(true)}
@@ -435,9 +438,9 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
               </div>
             </div>
 
-            {/* Circular Dial Interactive Graphic */}
-            <div className="relative flex items-center justify-center my-auto py-2">
-              <div className="relative w-[310px] h-[310px] sm:w-[340px] sm:h-[340px] flex items-center justify-center">
+            {/* Circular Dial Interactive Graphic (Fit dimension, no vertical dead space) */}
+            <div className="relative flex items-center justify-center py-1">
+              <div className="relative w-[280px] h-[280px] sm:w-[320px] sm:h-[320px] flex items-center justify-center">
                 {/* Decorative orbit ring */}
                 <div className="absolute inset-0 rounded-full border border-dashed border-zinc-800/80 animate-[spin_100s_linear_infinite] pointer-events-none" />
                 <div className="absolute inset-2 rounded-full border border-zinc-800/50 pointer-events-none" />
@@ -569,7 +572,7 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
             </div>
 
             {/* 4 Interactive Phase Pills with Quantitative Scores */}
-            <div className="grid grid-cols-2 gap-2 w-full mt-3">
+            <div className="grid grid-cols-2 gap-2 w-full mt-1">
               {QUADRANTS.map((quad) => {
                 const p = CYCLE_PHASES[quad.key];
                 const isActive = activePhaseKey === quad.key;
