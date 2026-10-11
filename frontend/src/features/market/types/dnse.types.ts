@@ -57,6 +57,9 @@ export interface MarketIndexData {
   advances: number;
   declines: number;
   noChanges: number;
+  ceilingCount?: number;
+  floorCount?: number;
+  totalStocks?: number;
   timestamp: number;
   sparkline?: number[];
 }

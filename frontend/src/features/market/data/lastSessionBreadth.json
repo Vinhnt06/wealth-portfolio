@@ -1,0 +1,42 @@
+{
+  "VN30": {
+    "symbol": "VN30",
+    "ceilingCount": 0,
+    "advances": 11,
+    "noChanges": 3,
+    "declines": 16,
+    "floorCount": 0,
+    "totalStocks": 30,
+    "updatedAt": 1791688371863
+  },
+  "VNINDEX": {
+    "symbol": "VNINDEX",
+    "ceilingCount": 9,
+    "advances": 121,
+    "noChanges": 101,
+    "declines": 170,
+    "floorCount": 5,
+    "totalStocks": 406,
+    "updatedAt": 1791688372288
+  },
+  "HNX": {
+    "symbol": "HNX",
+    "ceilingCount": 8,
+    "advances": 53,
+    "noChanges": 165,
+    "declines": 68,
+    "floorCount": 5,
+    "totalStocks": 299,
+    "updatedAt": 1791688372628
+  },
+  "UPCOM": {
+    "symbol": "UPCOM",
+    "ceilingCount": 20,
+    "advances": 90,
+    "noChanges": 571,
+    "declines": 119,
+    "floorCount": 17,
+    "totalStocks": 817,
+    "updatedAt": 1791688373165
+  }
+}

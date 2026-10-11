@@ -127,7 +127,10 @@ export const useMarketStore = create<MarketState>((set) => ({
     set((state) => ({
       indexes: {
         ...state.indexes,
-        [indexData.symbol]: indexData,
+        [indexData.symbol]: {
+          ...(state.indexes[indexData.symbol] || {}),
+          ...indexData,
+        },
       },
     })),
 

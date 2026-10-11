@@ -37,9 +37,12 @@ export const IndexBanner: React.FC = () => {
               low: idx.low,
               totalVolume: (idx as any).volume ?? idx.totalVolume ?? 0,
               totalValue: idx.totalValue || 0,
-              advances: 0,
-              declines: 0,
-              noChanges: 0,
+              ceilingCount: idx.ceilingCount ?? 0,
+              advances: idx.advances ?? 0,
+              noChanges: idx.noChanges ?? 0,
+              declines: idx.declines ?? 0,
+              floorCount: idx.floorCount ?? 0,
+              totalStocks: idx.totalStocks,
               timestamp: Date.now(),
               sparkline: idx.sparkline || [],
             });
@@ -102,6 +105,20 @@ export const IndexBanner: React.FC = () => {
         if (high && low && high > low && val) {
           rangePct = Math.min(100, Math.max(0, ((val - low) / (high - low)) * 100));
         }
+
+        // Real Market Breadth counts (Tím / Xanh / Vàng / Đỏ / Sàn)
+        const ceil = liveIndex?.ceilingCount ?? 0;
+        const adv = liveIndex?.advances ?? 0;
+        const ref = liveIndex?.noChanges ?? 0;
+        const dec = liveIndex?.declines ?? 0;
+        const flr = liveIndex?.floorCount ?? 0;
+        const totalBreadth = ceil + adv + ref + dec + flr;
+
+        const ceilPct = totalBreadth > 0 ? (ceil / totalBreadth) * 100 : 0;
+        const advPct = totalBreadth > 0 ? (adv / totalBreadth) * 100 : 0;
+        const refPct = totalBreadth > 0 ? (ref / totalBreadth) * 100 : 0;
+        const decPct = totalBreadth > 0 ? (dec / totalBreadth) * 100 : 0;
+        const flrPct = totalBreadth > 0 ? (flr / totalBreadth) * 100 : 0;
 
         return (
           <div
@@ -193,6 +210,54 @@ export const IndexBanner: React.FC = () => {
                   className={`h-full rounded-full transition-all duration-300 ${isPositive ? 'bg-emerald-500' : 'bg-rose-500'}`}
                   style={{ width: `${rangePct}%` }}
                 />
+              </div>
+            </div>
+
+            {/* Real Market Breadth (Thống kê mã: Tím / Xanh / Vàng / Đỏ / Sàn) */}
+            <div className="pt-2 border-t border-zinc-800/60 space-y-1.5">
+              <div className="flex justify-between items-center text-[10px] font-mono">
+                <span className="text-zinc-400 font-medium">
+                  Độ rộng ({totalBreadth > 0 ? totalBreadth : liveIndex?.totalStocks || '--'} mã):
+                </span>
+                <span className="text-[9px] text-zinc-500 font-sans">Dữ liệu thực</span>
+              </div>
+
+              {/* 5-Color Proportion Bar */}
+              {totalBreadth > 0 && (
+                <div
+                  className="h-1.5 w-full rounded-full bg-zinc-800/90 overflow-hidden flex"
+                  title={`Trần: ${ceil} | Tăng: ${adv} | TC: ${ref} | Giảm: ${dec} | Sàn: ${flr}`}
+                >
+                  {ceil > 0 && <div style={{ width: `${ceilPct}%` }} className="h-full bg-fuchsia-500" />}
+                  {adv > 0 && <div style={{ width: `${advPct}%` }} className="h-full bg-emerald-500" />}
+                  {ref > 0 && <div style={{ width: `${refPct}%` }} className="h-full bg-amber-400" />}
+                  {dec > 0 && <div style={{ width: `${decPct}%` }} className="h-full bg-rose-500" />}
+                  {flr > 0 && <div style={{ width: `${flrPct}%` }} className="h-full bg-cyan-400" />}
+                </div>
+              )}
+
+              {/* 5 Badges for Trần / Tăng / TC / Giảm / Sàn */}
+              <div className="grid grid-cols-5 gap-1 text-center font-mono text-[10px]">
+                <div className="px-1 py-0.5 rounded bg-fuchsia-500/10 border border-fuchsia-500/20 text-fuchsia-400" title="Mã Trần">
+                  <div className="text-[8px] text-fuchsia-400/80 font-sans">Trần</div>
+                  <span className="font-bold">{ceil}</span>
+                </div>
+                <div className="px-1 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400" title="Mã Tăng">
+                  <div className="text-[8px] text-emerald-400/80 font-sans">Tăng</div>
+                  <span className="font-bold">{adv}</span>
+                </div>
+                <div className="px-1 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 text-amber-400" title="Mã Tham chiếu">
+                  <div className="text-[8px] text-amber-400/80 font-sans">TC</div>
+                  <span className="font-bold">{ref}</span>
+                </div>
+                <div className="px-1 py-0.5 rounded bg-rose-500/10 border border-rose-500/20 text-rose-400" title="Mã Giảm">
+                  <div className="text-[8px] text-rose-400/80 font-sans">Giảm</div>
+                  <span className="font-bold">{dec}</span>
+                </div>
+                <div className="px-1 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/20 text-cyan-400" title="Mã Sàn">
+                  <div className="text-[8px] text-cyan-400/80 font-sans">Sàn</div>
+                  <span className="font-bold">{flr}</span>
+                </div>
               </div>
 
               <div className="flex justify-between items-center text-[9px] font-mono text-zinc-500 pt-0.5">

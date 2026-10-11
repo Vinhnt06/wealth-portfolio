@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import realTicks from '../../../../features/market/data/realTicks.json';
+import lastSessionBreadth from '../../../../features/market/data/lastSessionBreadth.json';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -30,6 +31,15 @@ export async function GET() {
           const ref = j.c[prev];
           const chg = close - ref;
           const pct = ref ? (chg / ref) * 100 : 0;
+          const breadth = (lastSessionBreadth as Record<string, any>)[s] || {
+            ceilingCount: 0,
+            advances: 0,
+            noChanges: 0,
+            declines: 0,
+            floorCount: 0,
+            totalStocks: 0,
+          };
+
           return {
             symbol: s,
             name: s === 'VNINDEX' ? 'VN-Index' : s === 'VN30' ? 'VN30-Index' : s === 'HNX' ? 'HNX-Index' : 'UPCOM-Index',
@@ -42,6 +52,12 @@ export async function GET() {
             low: j.l[last],
             volume: j.v[last] || 0,
             sparkline: j.c.slice(-15),
+            ceilingCount: breadth.ceilingCount,
+            advances: breadth.advances,
+            noChanges: breadth.noChanges,
+            declines: breadth.declines,
+            floorCount: breadth.floorCount,
+            totalStocks: breadth.totalStocks,
           };
         } catch {
           return null;
