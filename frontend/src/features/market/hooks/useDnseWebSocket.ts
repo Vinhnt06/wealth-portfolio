@@ -225,11 +225,25 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
       value: 261.60,
       change: 1.15,
       changePercent: 0.44,
-      totalVolume: 78500000,
+      totalVolume: 70117939,
       totalValue: 1620000000000,
       advances: 92,
       declines: 81,
       noChanges: 55,
+      timestamp: Date.now(),
+    });
+
+    updateIndex({
+      symbol: 'UPCOM',
+      name: 'UPCOM-INDEX',
+      value: 124.24,
+      change: -0.97,
+      changePercent: -0.77,
+      totalVolume: 37646708,
+      totalValue: 650000000000,
+      advances: 145,
+      declines: 120,
+      noChanges: 88,
       timestamp: Date.now(),
     });
   }, [updateTick, updateQuotes, updateIndex]);

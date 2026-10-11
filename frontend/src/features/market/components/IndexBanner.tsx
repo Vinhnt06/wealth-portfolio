@@ -154,8 +154,14 @@ export const IndexBanner: React.FC = () => {
                     {val ? val.toLocaleString('vi-VN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '--'}
                   </span>
                 </div>
-                <div className="text-[10px] font-mono text-zinc-400 mt-0.5">
-                  KL: <span className="text-cyan-400 font-semibold">{volume > 0 ? `${(volume / 1_000_000).toFixed(2)}M cp` : '--'}</span>
+                <div className="text-[10px] font-mono text-zinc-400 mt-0.5 flex items-center gap-1.5 flex-wrap">
+                  <span>KL: <span className="text-cyan-400 font-semibold">{volume > 0 ? `${(volume / 1_000_000).toFixed(2)}M cp` : '--'}</span></span>
+                  {liveIndex?.totalValue ? (
+                    <>
+                      <span className="text-zinc-600">•</span>
+                      <span className="text-amber-400/90 font-medium">{(liveIndex.totalValue / 1_000_000_000).toLocaleString('vi-VN', { maximumFractionDigits: 0 })} tỷ</span>
+                    </>
+                  ) : null}
                 </div>
               </div>
 

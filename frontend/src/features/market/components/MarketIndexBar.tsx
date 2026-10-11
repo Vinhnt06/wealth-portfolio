@@ -57,6 +57,12 @@ export function MarketIndexBar() {
                 <span>{isPositive ? '+' : ''}{idx.change.toFixed(2)}</span>
                 <span>({isPositive ? '+' : ''}{idx.changePercent.toFixed(2)}%)</span>
               </div>
+
+              {idx.totalVolume ? (
+                <span className="hidden md:inline text-[10px] font-mono text-zinc-400 border-l border-zinc-800 pl-2">
+                  {(idx.totalVolume / 1_000_000).toFixed(1)}M cp
+                </span>
+              ) : null}
             </motion.div>
           );
         })}
