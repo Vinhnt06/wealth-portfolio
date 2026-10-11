@@ -15,9 +15,20 @@ import {
 import { Shield, Target, Plus, TrendUp, Sparkle, ArrowRight, Wallet, ChartPie, Globe } from '@phosphor-icons/react';
 import vnindexCandles from '../../features/market/data/vnindexHistory.json';
 
-import { EconomicCycleWheel } from '../../features/market/components/EconomicCycleWheel';
-import { MacroDataSection } from '../../features/market/components/MacroDataSection';
-import { CommoditiesAndGoldSection } from '../../features/market/components/CommoditiesAndGoldSection';
+import dynamic from 'next/dynamic';
+
+const EconomicCycleWheel = dynamic(
+  () => import('../../features/market/components/EconomicCycleWheel').then((m) => m.EconomicCycleWheel),
+  { ssr: false }
+);
+const MacroDataSection = dynamic(
+  () => import('../../features/market/components/MacroDataSection').then((m) => m.MacroDataSection),
+  { ssr: false }
+);
+const CommoditiesAndGoldSection = dynamic(
+  () => import('../../features/market/components/CommoditiesAndGoldSection').then((m) => m.CommoditiesAndGoldSection),
+  { ssr: false }
+);
 
 const realChartData = (vnindexCandles as unknown as CandlestickData[]).slice(-120);
 
