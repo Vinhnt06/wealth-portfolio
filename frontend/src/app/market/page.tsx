@@ -15,7 +15,9 @@ import {
   Sparkle,
   TrendUp,
   Funnel,
+  Clock,
 } from '@phosphor-icons/react';
+import { getMarketSessionInfo } from '../../features/market/utils/marketHours';
 
 export default function MarketTerminalPage() {
   // Connect to Realtime WebSocket Data Stream
@@ -23,6 +25,16 @@ export default function MarketTerminalPage() {
 
   // Mode and active stock selection from unified store
   const { viewMode, setViewMode, selectedSymbol } = useMarketStore();
+
+  // Market session state (HOSE/HNX trading schedule)
+  const [sessionInfo, setSessionInfo] = React.useState(getMarketSessionInfo());
+
+  React.useEffect(() => {
+    const timer = setInterval(() => {
+      setSessionInfo(getMarketSessionInfo());
+    }, 30000); // Cập nhật mỗi 30s
+    return () => clearInterval(timer);
+  }, []);
 
   return (
     <DashboardLayout>
@@ -93,31 +105,47 @@ export default function MarketTerminalPage() {
 
           {/* Right Tools: WebSocket Status Pill */}
           <div className="flex items-center gap-3">
-            {/* Connection Status Pill */}
+            {/* Connection Status & Market Session Pill */}
             <div
-              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl border text-xs font-mono font-semibold transition-all ${
+              title={
+                wsStatus === 'connected'
+                  ? 'WebSocket DNSE đang kết nối trực tiếp, độ trễ < 12ms'
+                  : sessionInfo.isOpen
+                  ? 'Hệ thống đang sẵn sàng nhận dữ liệu khớp lệnh trực tiếp'
+                  : `${sessionInfo.sessionName} • ${sessionInfo.nextSessionText}`
+              }
+              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl border text-xs font-mono font-semibold transition-all cursor-default ${
                 wsStatus === 'connected'
                   ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.15)]'
                   : wsStatus === 'connecting'
                   ? 'bg-amber-500/10 text-amber-400 border-amber-500/20 animate-pulse'
-                  : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                  : sessionInfo.isOpen
+                  ? 'bg-amber-500/10 text-amber-300 border-amber-500/20'
+                  : 'bg-zinc-800/80 text-zinc-300 border-zinc-700/60 shadow-inner'
               }`}
             >
               {wsStatus === 'connected' ? (
                 <>
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                  <WifiHigh className="w-4 h-4" />
+                  <WifiHigh className="w-4 h-4 text-emerald-400" />
                   <span className="hidden sm:inline">TRỰC TUYẾN (&lt; 12ms)</span>
                 </>
               ) : wsStatus === 'connecting' ? (
                 <>
-                  <span className="w-2 h-2 rounded-full bg-amber-400" />
+                  <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
                   <span className="hidden sm:inline">ĐANG KẾT NỐI...</span>
+                </>
+              ) : sessionInfo.isOpen ? (
+                <>
+                  <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                  <WifiHigh className="w-4 h-4 text-amber-400" />
+                  <span className="hidden sm:inline">CHỜ DỮ LIỆU PHIÊN</span>
                 </>
               ) : (
                 <>
-                  <WifiSlash className="w-4 h-4" />
-                  <span className="hidden sm:inline">NGOẠI TUYẾN</span>
+                  <span className="w-2 h-2 rounded-full bg-zinc-500" />
+                  <Clock className="w-4 h-4 text-zinc-400" />
+                  <span className="hidden sm:inline">{sessionInfo.sessionBadge}</span>
                 </>
               )}
             </div>
