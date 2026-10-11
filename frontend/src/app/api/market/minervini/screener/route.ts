@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import stockDatabase from '../../../../../features/market/data/stockDatabase.json';
 import { MinerviniScreenerItem } from '../../../../../features/market/types/minervini.types';
+import { SECTOR_MAPPING } from '../../../../../features/market/data/sectorMapping';
 
 export const runtime = 'nodejs';
 
@@ -107,10 +108,11 @@ const OUTSTANDING_SHARES_M: Record<string, number> = {
     await Promise.all(
       symbolsToScan.map(async (sym) => {
         try {
-          const info = dbMap.get(sym) || { name: sym, exchange: 'HOSE', sector: 'Tài chính' };
+          const info = dbMap.get(sym) || { name: sym, exchange: 'HOSE' };
+          const sector = SECTOR_MAPPING[sym] || info.sector || 'Khác';
 
           // Filter sector early if specified
-          if (sectorFilter !== 'all' && !info.sector.toLowerCase().includes(sectorFilter)) {
+          if (sectorFilter !== 'all' && !sector.toLowerCase().includes(sectorFilter)) {
             return;
           }
 
@@ -192,7 +194,7 @@ const OUTSTANDING_SHARES_M: Record<string, number> = {
           results.push({
             symbol: sym,
             name: info.name,
-            sector: info.sector || 'Chung',
+            sector,
             exchange: info.exchange,
             price: price * 1000,
             changePct: chgPct,

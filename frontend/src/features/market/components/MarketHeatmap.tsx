@@ -32,65 +32,7 @@ interface PlacedItem<T> extends Rect {
   data: T;
 }
 
-// Map stock ticker symbols to official Vietnamese Industry Sectors
-const SECTOR_MAPPING: Record<string, string> = {
-  // Ngân hàng
-  VCB: 'Ngân hàng', BID: 'Ngân hàng', CTG: 'Ngân hàng', TCB: 'Ngân hàng',
-  MBB: 'Ngân hàng', ACB: 'Ngân hàng', VPB: 'Ngân hàng', HDB: 'Ngân hàng',
-  STB: 'Ngân hàng', LPB: 'Ngân hàng', SHB: 'Ngân hàng', TPB: 'Ngân hàng',
-  VIB: 'Ngân hàng', MSB: 'Ngân hàng', OCB: 'Ngân hàng', SSB: 'Ngân hàng',
-  EIB: 'Ngân hàng', NAB: 'Ngân hàng', BAB: 'Ngân hàng', BVB: 'Ngân hàng',
-
-  // Chứng khoán
-  SSI: 'Chứng khoán', VND: 'Chứng khoán', VCI: 'Chứng khoán', HCM: 'Chứng khoán',
-  SHS: 'Chứng khoán', MBS: 'Chứng khoán', FTS: 'Chứng khoán', BSI: 'Chứng khoán',
-  CTS: 'Chứng khoán', VIX: 'Chứng khoán', AGR: 'Chứng khoán', ORS: 'Chứng khoán',
-  TVS: 'Chứng khoán', PHS: 'Chứng khoán',
-
-  // Bất động sản
-  VHM: 'Bất động sản', VIC: 'Bất động sản', VRE: 'Bất động sản', KDH: 'Bất động sản',
-  NLG: 'Bất động sản', PDR: 'Bất động sản', DIG: 'Bất động sản', DXG: 'Bất động sản',
-  CEO: 'Bất động sản', NVL: 'Bất động sản', KBC: 'Bất động sản', IDC: 'Bất động sản',
-  VGC: 'Bất động sản', SZC: 'Bất động sản', BCM: 'Bất động sản', TCH: 'Bất động sản',
-  HQC: 'Bất động sản', DRH: 'Bất động sản', KHG: 'Bất động sản', VPI: 'Bất động sản',
-  HDG: 'Bất động sản', DXS: 'Bất động sản', NTL: 'Bất động sản',
-
-  // Thép & Vật liệu
-  HPG: 'Thép & Vật liệu', HSG: 'Thép & Vật liệu', NKG: 'Thép & Vật liệu',
-  VGS: 'Thép & Vật liệu', SMC: 'Thép & Vật liệu', TLH: 'Thép & Vật liệu',
-  HT1: 'Thép & Vật liệu', BCC: 'Thép & Vật liệu', BMP: 'Thép & Vật liệu',
-  NTP: 'Thép & Vật liệu',
-
-  // Công nghệ & Viễn thông
-  FPT: 'Công nghệ', CMG: 'Công nghệ', ELC: 'Công nghệ', FOX: 'Công nghệ',
-  VGI: 'Công nghệ', CTR: 'Công nghệ', VNZ: 'Công nghệ', ITD: 'Công nghệ',
-
-  // Năng lượng & Dầu khí
-  GAS: 'Năng lượng & Dầu khí', PLX: 'Năng lượng & Dầu khí', BSR: 'Năng lượng & Dầu khí',
-  PVD: 'Năng lượng & Dầu khí', PVS: 'Năng lượng & Dầu khí', PVT: 'Năng lượng & Dầu khí',
-  PVP: 'Năng lượng & Dầu khí', POW: 'Năng lượng & Dầu khí', NT2: 'Năng lượng & Dầu khí',
-  GEG: 'Năng lượng & Dầu khí', GEE: 'Năng lượng & Dầu khí', PC1: 'Năng lượng & Dầu khí',
-  REE: 'Năng lượng & Dầu khí',
-
-  // Hóa chất & Phân bón
-  DGC: 'Hóa chất & Phân bón', DCM: 'Hóa chất & Phân bón', DPM: 'Hóa chất & Phân bón',
-  CSV: 'Hóa chất & Phân bón', BFC: 'Hóa chất & Phân bón', LAS: 'Hóa chất & Phân bón',
-  GVR: 'Hóa chất & Phân bón', PHR: 'Hóa chất & Phân bón', DPR: 'Hóa chất & Phân bón',
-
-  // Bán lẻ & Hàng tiêu dùng
-  MSN: 'Bán lẻ & Tiêu dùng', VNM: 'Bán lẻ & Tiêu dùng', SAB: 'Bán lẻ & Tiêu dùng',
-  MWG: 'Bán lẻ & Tiêu dùng', FRT: 'Bán lẻ & Tiêu dùng', DGW: 'Bán lẻ & Tiêu dùng',
-  PNJ: 'Bán lẻ & Tiêu dùng', DBC: 'Bán lẻ & Tiêu dùng', HAG: 'Bán lẻ & Tiêu dùng',
-  BAF: 'Bán lẻ & Tiêu dùng', VHC: 'Bán lẻ & Tiêu dùng', ANV: 'Bán lẻ & Tiêu dùng',
-  KDC: 'Bán lẻ & Tiêu dùng', MCH: 'Bán lẻ & Tiêu dùng',
-
-  // Xây dựng, Công nghiệp & Vận tải
-  GEX: 'Công nghiệp & Xây dựng', VCG: 'Công nghiệp & Xây dựng', HHV: 'Công nghiệp & Xây dựng',
-  CII: 'Công nghiệp & Xây dựng', CTD: 'Công nghiệp & Xây dựng', FCN: 'Công nghiệp & Xây dựng',
-  GMD: 'Vận tải & Cảng biển', HAH: 'Vận tải & Cảng biển', VSC: 'Vận tải & Cảng biển',
-  VTP: 'Vận tải & Cảng biển', PHP: 'Vận tải & Cảng biển', VJC: 'Vận tải & Cảng biển',
-  HVN: 'Vận tải & Cảng biển', TNG: 'Dệt may & Sản xuất', MSH: 'Dệt may & Sản xuất'
-};
+import { SECTOR_MAPPING } from '../data/sectorMapping';
 
 const VN30_LIST = new Set([
   'ACB', 'BCM', 'BID', 'CTG', 'FPT', 'GAS', 'GVR', 'HDB', 'HPG', 'MBB',

@@ -27,9 +27,11 @@ import {
 import { useMarketStore } from '../store/marketStore';
 import { MinerviniScreenerItem } from '../types/minervini.types';
 import { getStockPriceColor } from '../utils/priceColors';
+import { SECTOR_MAPPING } from '../data/sectorMapping';
 
 type ScreenerTab = 'overview' | 'performance' | 'technicals' | 'valuation';
 type ViewMode = 'table' | 'sectors';
+type SectorSortOption = 'rs' | 'change' | 'stage2' | 'name';
 
 export const MarkMinerviniScreener: React.FC = () => {
   const { setSelectedSymbol, setViewMode } = useMarketStore();
@@ -39,6 +41,7 @@ export const MarkMinerviniScreener: React.FC = () => {
   const [lastUpdated, setLastUpdated] = useState<string>('');
   const [activeTab, setActiveTab] = useState<ScreenerTab>('overview');
   const [mainViewMode, setMainViewMode] = useState<ViewMode>('table');
+  const [sectorSortBy, setSectorSortBy] = useState<SectorSortOption>('rs');
 
   // Filter states
   const [searchQuery, setSearchQuery] = useState('');
@@ -70,7 +73,11 @@ export const MarkMinerviniScreener: React.FC = () => {
       const res = await fetch('/api/market/minervini/screener?stage2=false&minRS=1');
       const data = await res.json();
       if (data.success && Array.isArray(data.data)) {
-        setItems(data.data);
+        const enrichedItems = data.data.map((it: MinerviniScreenerItem) => ({
+          ...it,
+          sector: SECTOR_MAPPING[it.symbol] || it.sector || 'Khác',
+        }));
+        setItems(enrichedItems);
         setLastUpdated(
           new Date().toLocaleTimeString('vi-VN', {
             hour12: false,
@@ -164,7 +171,7 @@ export const MarkMinerviniScreener: React.FC = () => {
     > = {};
 
     items.forEach((item) => {
-      const sec = item.sector || 'Chung';
+      const sec = SECTOR_MAPPING[item.symbol] || item.sector || 'Khác';
       if (!groups[sec]) {
         groups[sec] = {
           sector: sec,
@@ -174,7 +181,10 @@ export const MarkMinerviniScreener: React.FC = () => {
           avgChange: 0,
         };
       }
-      groups[sec].items.push(item);
+      groups[sec].items.push({
+        ...item,
+        sector: sec,
+      });
     });
 
     return Object.values(groups)
@@ -188,8 +198,13 @@ export const MarkMinerviniScreener: React.FC = () => {
         g.stage2Count = g.items.filter((x) => x.isStage2Eligible).length;
         return g;
       })
-      .sort((a, b) => b.avgRs - a.avgRs); // Rank leading industry sectors first
-  }, [items]);
+      .sort((a, b) => {
+        if (sectorSortBy === 'change') return b.avgChange - a.avgChange;
+        if (sectorSortBy === 'stage2') return b.stage2Count - a.stage2Count;
+        if (sectorSortBy === 'name') return a.sector.localeCompare(b.sector);
+        return b.avgRs - a.avgRs; // default: rank leading industry sectors by RS
+      });
+  }, [items, sectorSortBy]);
 
   // Summary counts
   const stage2Count = useMemo(() => items.filter((x) => x.isStage2Eligible).length, [items]);
@@ -355,19 +370,67 @@ export const MarkMinerviniScreener: React.FC = () => {
               <Buildings className="w-5 h-5 text-amber-400" />
               <div>
                 <h3 className="font-mono font-bold text-zinc-100 text-sm">
-                  XẾP HẠNG VÀ TOP CỔ PHIẾU THEO TỪNG NHÓM NGÀNH
+                  XẾP HẠNG VÀ TOP CỔ PHIẾU THEO TỪNG NHÓM NGÀNH ({sectorGroups.length} NGÀNH)
                 </h3>
                 <p className="text-xs text-zinc-400 font-sans">
                   Sức mạnh ngành trung bình (Average RS) & Các mã dẫn sóng (Leaders) đạt chuẩn Minervini
                 </p>
               </div>
             </div>
-            <button
-              onClick={() => setMainViewMode('table')}
-              className="text-xs font-mono font-bold text-amber-400 hover:text-amber-300 px-3 py-1.5 rounded-xl bg-amber-400/10 border border-amber-400/30 transition-colors"
-            >
-              Chuyển sang Bảng Lọc Toàn Bộ →
-            </button>
+
+            {/* Sector Sorting Options */}
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-[11px] font-mono text-zinc-500">Xếp hạng theo:</span>
+              <div className="flex items-center bg-zinc-900 p-1 rounded-xl border border-zinc-800 font-mono text-xs">
+                <button
+                  onClick={() => setSectorSortBy('rs')}
+                  className={`px-2.5 py-1 rounded-lg font-bold transition-all ${
+                    sectorSortBy === 'rs'
+                      ? 'bg-amber-400 text-zinc-950 shadow-sm'
+                      : 'text-zinc-400 hover:text-zinc-200'
+                  }`}
+                >
+                  🏆 RS Ngành
+                </button>
+                <button
+                  onClick={() => setSectorSortBy('change')}
+                  className={`px-2.5 py-1 rounded-lg font-bold transition-all ${
+                    sectorSortBy === 'change'
+                      ? 'bg-amber-400 text-zinc-950 shadow-sm'
+                      : 'text-zinc-400 hover:text-zinc-200'
+                  }`}
+                >
+                  📈 % Tăng giá
+                </button>
+                <button
+                  onClick={() => setSectorSortBy('stage2')}
+                  className={`px-2.5 py-1 rounded-lg font-bold transition-all ${
+                    sectorSortBy === 'stage2'
+                      ? 'bg-amber-400 text-zinc-950 shadow-sm'
+                      : 'text-zinc-400 hover:text-zinc-200'
+                  }`}
+                >
+                  🛡️ Mã Stage 2
+                </button>
+                <button
+                  onClick={() => setSectorSortBy('name')}
+                  className={`px-2.5 py-1 rounded-lg font-bold transition-all ${
+                    sectorSortBy === 'name'
+                      ? 'bg-amber-400 text-zinc-950 shadow-sm'
+                      : 'text-zinc-400 hover:text-zinc-200'
+                  }`}
+                >
+                  🔤 Tên A-Z
+                </button>
+              </div>
+
+              <button
+                onClick={() => setMainViewMode('table')}
+                className="text-xs font-mono font-bold text-amber-400 hover:text-amber-300 px-3 py-1.5 rounded-xl bg-amber-400/10 border border-amber-400/30 transition-colors"
+              >
+                Bảng Lọc Chi Tiết →
+              </button>
+            </div>
           </div>
 
           {/* Grid of Sector Cards */}
@@ -586,12 +649,15 @@ export const MarkMinerviniScreener: React.FC = () => {
                 onChange={(e) => setSelectedSector(e.target.value)}
                 className="px-3 py-1.5 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-300 text-xs font-mono focus:outline-none focus:border-amber-400"
               >
-                <option value="all">Tất cả ngành ({items.length})</option>
-                {sectors.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
+                <option value="all">Tất cả ngành ({items.length} mã)</option>
+                {sectors.map((s) => {
+                  const count = items.filter((it) => it.sector === s).length;
+                  return (
+                    <option key={s} value={s}>
+                      {s} ({count})
+                    </option>
+                  );
+                })}
               </select>
 
               {/* Min RS rating */}
