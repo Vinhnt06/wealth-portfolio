@@ -6,37 +6,45 @@
     "noChanges": 3,
     "declines": 16,
     "floorCount": 0,
+    "noTradeCount": 0,
+    "tradedStocks": 30,
     "totalStocks": 30,
-    "updatedAt": 1791688371863
+    "updatedAt": 1791688985669
   },
   "VNINDEX": {
     "symbol": "VNINDEX",
     "ceilingCount": 9,
-    "advances": 121,
-    "noChanges": 101,
-    "declines": 170,
+    "advances": 130,
+    "noChanges": 63,
+    "declines": 175,
     "floorCount": 5,
+    "noTradeCount": 38,
+    "tradedStocks": 368,
     "totalStocks": 406,
-    "updatedAt": 1791688372288
+    "updatedAt": 1791688986148
   },
   "HNX": {
     "symbol": "HNX",
     "ceilingCount": 8,
-    "advances": 53,
-    "noChanges": 165,
-    "declines": 68,
+    "advances": 61,
+    "noChanges": 67,
+    "declines": 73,
     "floorCount": 5,
+    "noTradeCount": 98,
+    "tradedStocks": 201,
     "totalStocks": 299,
-    "updatedAt": 1791688372628
+    "updatedAt": 1791688986504
   },
   "UPCOM": {
     "symbol": "UPCOM",
     "ceilingCount": 20,
-    "advances": 90,
-    "noChanges": 571,
-    "declines": 119,
+    "advances": 110,
+    "noChanges": 115,
+    "declines": 136,
     "floorCount": 17,
+    "noTradeCount": 456,
+    "tradedStocks": 361,
     "totalStocks": 817,
-    "updatedAt": 1791688373165
+    "updatedAt": 1791688987026
   }
 }

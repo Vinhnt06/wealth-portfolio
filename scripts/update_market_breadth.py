@@ -3,6 +3,10 @@
 Calculate verified market breadth (Ceiling, Advances, Ref, Declines, Floor)
 from real stock prices across HOSE, VN30, HNX, UPCOM via vnstock.
 Zero mock data: all values are directly computed from actual exchange trading boards.
+Follows Vietnamese official exchange reporting standards:
+- Total Advances includes ceiling stocks
+- Total Declines includes floor stocks
+- Reference / NoChanges counts active traded stocks at reference price (excludes no-trade stocks)
 """
 import json
 import os
@@ -34,33 +38,35 @@ def compute_breadth():
         t0 = time.time()
         if kind == 'group':
             stocks = l.symbols_by_group(target)
-            if isinstance(stocks, list):
-                stock_list = stocks
-            elif hasattr(stocks, 'tolist'):
-                stock_list = stocks.tolist()
-            else:
-                stock_list = list(stocks)
+            stock_list = stocks if isinstance(stocks, list) else stocks.tolist() if hasattr(stocks, 'tolist') else list(stocks)
         else:
             stock_list = df_sym[(df_sym['exchange'] == target) & (df_sym['type'] == 'stock')]['symbol'].tolist()
 
         df_pb = trading.price_board(stock_list)
-        ceil = int(((df_pb['close_price'] > 0) & (df_pb['close_price'] == df_pb['ceiling_price'])).sum())
-        floor = int(((df_pb['close_price'] > 0) & (df_pb['close_price'] == df_pb['floor_price'])).sum())
-        up = int(((df_pb['close_price'] > df_pb['reference_price']) & (df_pb['close_price'] < df_pb['ceiling_price'])).sum())
-        down = int(((df_pb['close_price'] < df_pb['reference_price']) & (df_pb['close_price'] > df_pb['floor_price'])).sum())
-        ref = int(((df_pb['close_price'] == df_pb['reference_price']) | (df_pb['close_price'] == 0)).sum())
+        df_traded = df_pb[df_pb['close_price'] > 0]
+
+        total_up = int((df_traded['close_price'] > df_traded['reference_price']).sum())
+        ceil = int((df_traded['close_price'] == df_traded['ceiling_price']).sum())
+
+        total_down = int((df_traded['close_price'] < df_traded['reference_price']).sum())
+        floor = int((df_traded['close_price'] == df_traded['floor_price']).sum())
+
+        ref = int((df_traded['close_price'] == df_traded['reference_price']).sum())
+        no_trade = int((df_pb['close_price'] == 0).sum())
 
         result[sym] = {
             'symbol': sym,
             'ceilingCount': ceil,
-            'advances': up,
+            'advances': total_up,
             'noChanges': ref,
-            'declines': down,
+            'declines': total_down,
             'floorCount': floor,
+            'noTradeCount': no_trade,
+            'tradedStocks': len(df_traded),
             'totalStocks': len(stock_list),
             'updatedAt': int(time.time() * 1000)
         }
-        print(f"[{sym}] Ceil={ceil}, Up={up}, Ref={ref}, Down={down}, Floor={floor} (Total={len(stock_list)}) in {time.time()-t0:.2f}s")
+        print(f"[{sym}] Tăng={total_up} (Trần={ceil}) | TC={ref} | Giảm={total_down} (Sàn={floor}) | Không GD={no_trade} (Tổng={len(stock_list)}) in {time.time()-t0:.2f}s")
 
     root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
     out_path = os.path.join(root_dir, 'frontend', 'src', 'features', 'market', 'data', 'lastSessionBreadth.json')

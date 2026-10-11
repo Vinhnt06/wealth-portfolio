@@ -107,18 +107,22 @@ export const IndexBanner: React.FC = () => {
         }
 
         // Real Market Breadth counts (Tím / Xanh / Vàng / Đỏ / Sàn)
+        // adv includes ceil, dec includes flr (standard Vietnam exchange format)
         const ceil = liveIndex?.ceilingCount ?? 0;
         const adv = liveIndex?.advances ?? 0;
         const ref = liveIndex?.noChanges ?? 0;
         const dec = liveIndex?.declines ?? 0;
         const flr = liveIndex?.floorCount ?? 0;
-        const totalBreadth = ceil + adv + ref + dec + flr;
 
-        const ceilPct = totalBreadth > 0 ? (ceil / totalBreadth) * 100 : 0;
-        const advPct = totalBreadth > 0 ? (adv / totalBreadth) * 100 : 0;
-        const refPct = totalBreadth > 0 ? (ref / totalBreadth) * 100 : 0;
-        const decPct = totalBreadth > 0 ? (dec / totalBreadth) * 100 : 0;
-        const flrPct = totalBreadth > 0 ? (flr / totalBreadth) * 100 : 0;
+        const totalTraded = adv + ref + dec;
+        const pureUp = Math.max(0, adv - ceil);
+        const pureDown = Math.max(0, dec - flr);
+
+        const ceilPct = totalTraded > 0 ? (ceil / totalTraded) * 100 : 0;
+        const advPct = totalTraded > 0 ? (pureUp / totalTraded) * 100 : 0;
+        const refPct = totalTraded > 0 ? (ref / totalTraded) * 100 : 0;
+        const decPct = totalTraded > 0 ? (pureDown / totalTraded) * 100 : 0;
+        const flrPct = totalTraded > 0 ? (flr / totalTraded) * 100 : 0;
 
         return (
           <div
@@ -217,21 +221,21 @@ export const IndexBanner: React.FC = () => {
             <div className="pt-2 border-t border-zinc-800/60 space-y-1.5">
               <div className="flex justify-between items-center text-[10px] font-mono">
                 <span className="text-zinc-400 font-medium">
-                  Độ rộng ({totalBreadth > 0 ? totalBreadth : liveIndex?.totalStocks || '--'} mã):
+                  Độ rộng ({totalTraded > 0 ? totalTraded : liveIndex?.totalStocks || '--'} mã):
                 </span>
-                <span className="text-[9px] text-zinc-500 font-sans">Dữ liệu thực</span>
+                <span className="text-[9px] text-zinc-500 font-sans">Phiên gần nhất</span>
               </div>
 
               {/* 5-Color Proportion Bar */}
-              {totalBreadth > 0 && (
+              {totalTraded > 0 && (
                 <div
                   className="h-1.5 w-full rounded-full bg-zinc-800/90 overflow-hidden flex"
                   title={`Trần: ${ceil} | Tăng: ${adv} | TC: ${ref} | Giảm: ${dec} | Sàn: ${flr}`}
                 >
                   {ceil > 0 && <div style={{ width: `${ceilPct}%` }} className="h-full bg-fuchsia-500" />}
-                  {adv > 0 && <div style={{ width: `${advPct}%` }} className="h-full bg-emerald-500" />}
+                  {pureUp > 0 && <div style={{ width: `${advPct}%` }} className="h-full bg-emerald-500" />}
                   {ref > 0 && <div style={{ width: `${refPct}%` }} className="h-full bg-amber-400" />}
-                  {dec > 0 && <div style={{ width: `${decPct}%` }} className="h-full bg-rose-500" />}
+                  {pureDown > 0 && <div style={{ width: `${decPct}%` }} className="h-full bg-rose-500" />}
                   {flr > 0 && <div style={{ width: `${flrPct}%` }} className="h-full bg-cyan-400" />}
                 </div>
               )}
