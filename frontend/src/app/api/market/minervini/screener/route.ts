@@ -72,24 +72,12 @@ const OUTSTANDING_SHARES_M: Record<string, number> = {
   VJC: 541, TNG: 113, MSH: 75
 };
 
-  // Seeded deterministic fundamental figures per symbol
-  const getFundMetrics = (sym: string, price: number) => {
-    let hash = 0;
-    for (let i = 0; i < sym.length; i++) hash = (hash << 5) - hash + sym.charCodeAt(i);
-    const posHash = Math.abs(hash);
-
-    const sharesM = OUTSTANDING_SHARES_M[sym] || (posHash % 400 + 50);
-    // Real market cap in nghìn tỷ VND = (sharesM * 10^6 * price) / 10^12 = (sharesM * price) / 10^6
-    const mktCapT = Math.round(((sharesM * (price || 10000)) / 1000000) * 10) / 10;
-    const pe = Math.round(((posHash % 25) + 6.5) * 10) / 10;
-    const epsDilTTM = Math.round((price * 1000) / pe);
-    const epsGrowthYoY = Math.round(((posHash % 80) - 10) * 10) / 10;
-    const divYieldPct = Math.round((posHash % 6) * 10) / 10;
-    const relVol = Math.round(((posHash % 150) / 100 + 0.6) * 100) / 100;
-    const analystRating: 'Strong buy' | 'Buy' | 'Hold' | 'Sell' | 'No rating' =
-      epsGrowthYoY > 30 ? 'Strong buy' : epsGrowthYoY > 10 ? 'Buy' : epsGrowthYoY < -5 ? 'Sell' : 'No rating';
-
-    return { mktCapT, pe, epsDilTTM, epsGrowthYoY, divYieldPct, relVol, analystRating };
+  // Real market cap calculation from verified shares outstanding (in nghìn tỷ VND)
+  const getRealMarketCapT = (sym: string, price: number) => {
+    const sharesM = OUTSTANDING_SHARES_M[sym];
+    if (!sharesM) return 0;
+    // Market cap (nghìn tỷ VNĐ) = (sharesM * 10^6 * price) / 10^12 = (sharesM * price) / 10^6
+    return Math.round(((sharesM * (price || 0)) / 1000000) * 10) / 10;
   };
 
   try {
@@ -189,8 +177,13 @@ const OUTSTANDING_SHARES_M: Record<string, number> = {
           if (rsRating < minRS) return;
           if (vol < minVol && vol > 0) return;
 
-          const fund = getFundMetrics(sym, price);
-          if (fund.mktCapT < minMktCapT) return;
+          // Real relative volume vs 20-session average volume
+          const volSlice = d.v.slice(Math.max(0, len - 20));
+          const avgVol20 = volSlice.reduce((a: number, b: number) => a + b, 0) / Math.max(1, volSlice.length);
+          const relVol = avgVol20 > 0 ? Math.round((vol / avgVol20) * 100) / 100 : 1;
+
+          const mktCapT = getRealMarketCapT(sym, price);
+          if (minMktCapT > 0 && mktCapT < minMktCapT) return;
 
           const p1W = len > 5 ? Math.round(((price - d.c[len - 5]) / d.c[len - 5]) * 10000) / 100 : chgPct;
           const p1M = len > 22 ? Math.round(((price - d.c[len - 22]) / d.c[len - 22]) * 10000) / 100 : 0;
@@ -204,13 +197,13 @@ const OUTSTANDING_SHARES_M: Record<string, number> = {
             price: price * 1000,
             changePct: chgPct,
             volume: vol,
-            relVol: fund.relVol,
-            mktCapT: fund.mktCapT,
-            pe: fund.pe,
-            epsDilTTM: fund.epsDilTTM,
-            epsGrowthYoY: fund.epsGrowthYoY,
-            divYieldPct: fund.divYieldPct,
-            analystRating: fund.analystRating,
+            relVol,
+            mktCapT,
+            pe: null,
+            epsDilTTM: null,
+            epsGrowthYoY: null,
+            divYieldPct: null,
+            analystRating: 'No rating',
             rsRating,
             score,
             isStage2,
@@ -226,9 +219,9 @@ const OUTSTANDING_SHARES_M: Record<string, number> = {
             perf1W: p1W,
             perf1M: p1M,
             perf1Y: p1Y,
-            epsDiluted: fund.epsDilTTM,
-            epsDilutedGrowthYoY: fund.epsGrowthYoY,
-            dividendYield: fund.divYieldPct,
+            epsDiluted: null,
+            epsDilutedGrowthYoY: null,
+            dividendYield: null,
           });
         } catch {}
       })

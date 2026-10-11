@@ -952,21 +952,25 @@ export const MarkMinerviniScreener: React.FC = () => {
                               <td className="py-3 px-3 text-right text-zinc-300">
                                 {item.mktCapT.toFixed(1)}
                               </td>
-                              <td className="py-3 px-3 text-right text-zinc-400">
-                                {item.pe ? item.pe.toFixed(1) : 'N/A'}
+                              <td className="py-3 px-3 text-right text-zinc-500 font-mono">
+                                {item.pe ? item.pe.toFixed(1) : '--'}
                               </td>
                               <td className="py-3 px-3 text-right">
-                                <span
-                                  className={
-                                    item.epsGrowthYoY >= 25
-                                      ? 'text-emerald-400 font-bold'
-                                      : item.epsGrowthYoY >= 0
-                                      ? 'text-zinc-300'
-                                      : 'text-rose-400'
-                                  }
-                                >
-                                  {item.epsGrowthYoY ? `${item.epsGrowthYoY > 0 ? '+' : ''}${item.epsGrowthYoY.toFixed(1)}%` : 'N/A'}
-                                </span>
+                                {item.epsGrowthYoY !== null && item.epsGrowthYoY !== undefined ? (
+                                  <span
+                                    className={
+                                      item.epsGrowthYoY >= 25
+                                        ? 'text-emerald-400 font-bold'
+                                        : item.epsGrowthYoY >= 0
+                                        ? 'text-zinc-300'
+                                        : 'text-rose-400'
+                                    }
+                                  >
+                                    {item.epsGrowthYoY > 0 ? '+' : ''}{item.epsGrowthYoY.toFixed(1)}%
+                                  </span>
+                                ) : (
+                                  <span className="text-zinc-500 font-mono">--</span>
+                                )}
                               </td>
                               <td className="py-3 px-3 text-zinc-400 truncate max-w-[130px]">
                                 {item.sector}
@@ -1020,17 +1024,19 @@ export const MarkMinerviniScreener: React.FC = () => {
 
                           {activeTab === 'valuation' && (
                             <>
-                              <td className="py-3 px-3 text-right text-zinc-400">
-                                {item.pe ? item.pe.toFixed(1) : 'N/A'}
+                              <td className="py-3 px-3 text-right text-zinc-500 font-mono">
+                                {item.pe ? item.pe.toFixed(1) : '--'}
                               </td>
-                              <td className="py-3 px-3 text-right text-zinc-300">
-                                {item.epsDiluted ? item.epsDiluted.toLocaleString('vi-VN') : 'N/A'}
+                              <td className="py-3 px-3 text-right text-zinc-500 font-mono">
+                                {item.epsDiluted ? item.epsDiluted.toLocaleString('vi-VN') : '--'}
                               </td>
-                              <td className="py-3 px-3 text-right text-emerald-400 font-bold">
-                                +{item.epsDilutedGrowthYoY ? item.epsDilutedGrowthYoY.toFixed(1) : '0'}%
+                              <td className="py-3 px-3 text-right text-zinc-500 font-mono">
+                                {item.epsDilutedGrowthYoY !== null && item.epsDilutedGrowthYoY !== undefined
+                                  ? `${item.epsDilutedGrowthYoY > 0 ? '+' : ''}${item.epsDilutedGrowthYoY.toFixed(1)}%`
+                                  : '--'}
                               </td>
-                              <td className="py-3 px-3 text-right text-zinc-400">
-                                {item.dividendYield ? `${item.dividendYield.toFixed(1)}%` : '0.0%'}
+                              <td className="py-3 px-3 text-right text-zinc-500 font-mono">
+                                {item.dividendYield ? `${item.dividendYield.toFixed(1)}%` : '--'}
                               </td>
                             </>
                           )}

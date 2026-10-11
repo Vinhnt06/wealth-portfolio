@@ -74,11 +74,11 @@ export interface MinerviniScreenerItem {
   volume: number;
   relVol: number;
   mktCapT: number;
-  pe: number;
-  epsDilTTM: number;
-  epsGrowthYoY: number;
-  divYieldPct: number;
-  analystRating: 'Strong buy' | 'Buy' | 'Hold' | 'Sell' | 'No rating';
+  pe: number | null;
+  epsDilTTM: number | null;
+  epsGrowthYoY: number | null;
+  divYieldPct: number | null;
+  analystRating?: 'Strong buy' | 'Buy' | 'Hold' | 'Sell' | 'No rating';
   rsRating: number;
   score: number; // 0 to 8
   isStage2: boolean;
@@ -94,7 +94,7 @@ export interface MinerviniScreenerItem {
   perf1W?: number;
   perf1M?: number;
   perf1Y?: number;
-  epsDiluted?: number;
-  epsDilutedGrowthYoY?: number;
-  dividendYield?: number;
+  epsDiluted?: number | null;
+  epsDilutedGrowthYoY?: number | null;
+  dividendYield?: number | null;
 }
