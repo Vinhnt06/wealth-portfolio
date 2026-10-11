@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Compass,
   TrendUp,
+  TrendDown,
   ShieldCheck,
   Flame,
   Lightning,
@@ -703,123 +704,124 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                 </div>
 
 
-                <p className="text-xs text-zinc-300 leading-relaxed mb-4">
+                <p className="text-xs text-zinc-300 font-sans leading-relaxed mb-3 line-clamp-2">
                   {activeCfg.description}
                 </p>
 
-                {/* 3 Macro Pillars Checklist */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 p-3 rounded-xl bg-zinc-950/70 border border-zinc-800/80 mb-4 text-[11px] font-mono">
-                  <div>
-                    <span className="text-[9px] text-zinc-500 block uppercase font-bold">1. Tăng Trưởng GDP:</span>
-                    <span className="text-zinc-200 font-bold">{activeCfg.growthStatus}</span>
+                {/* 3 Macro Pillars Checklist - Streamlined Minimal Grid */}
+                <div className="grid grid-cols-3 gap-2.5 p-3 rounded-xl bg-zinc-950/80 border border-zinc-800/80 mb-3.5 text-xs font-mono">
+                  <div className="space-y-0.5">
+                    <span className="text-[10px] text-zinc-500 uppercase font-bold block">GDP:</span>
+                    <span className="text-zinc-200 font-bold block truncate">{activeCfg.growthStatus}</span>
                   </div>
-                  <div>
-                    <span className="text-[9px] text-zinc-500 block uppercase font-bold">2. Lạm Phát (CPI):</span>
-                    <span className="text-zinc-200 font-bold">{activeCfg.inflationStatus}</span>
+                  <div className="space-y-0.5 border-x border-zinc-800/80 px-2.5">
+                    <span className="text-[10px] text-zinc-500 uppercase font-bold block">Lạm Phát:</span>
+                    <span className="text-zinc-200 font-bold block truncate">{activeCfg.inflationStatus}</span>
                   </div>
-                  <div>
-                    <span className="text-[9px] text-zinc-500 block uppercase font-bold">3. Lãi Suất Điều Hành:</span>
-                    <span className="text-zinc-200 font-bold">{activeCfg.interestRateStatus}</span>
-                  </div>
-                </div>
-
-                {/* Sector Rotation Targets in this Phase */}
-                <div className="mb-4">
-                  <span className="text-[10px] font-mono text-zinc-400 uppercase font-semibold block mb-2">
-                    CÁC NHÓM NGÀNH HƯỞNG LỢI TRỌNG TÂM (CLICK ĐỂ LỌC TRÊN SCREENER):
-                  </span>
-                  <div className="flex flex-wrap gap-2">
-                    {activeCfg.primarySectors.map((sec) => {
-                      const matchStat = sectorLiveStats.find(
-                        (s) =>
-                          s.sector.toLowerCase().includes(sec.toLowerCase()) ||
-                          sec.toLowerCase().includes(s.sector.toLowerCase())
-                      );
-                      const hasData = !!matchStat;
-                      const rsScore = matchStat?.avgRs;
-                      const stage2Count = matchStat?.stage2Count || 0;
-
-                      return (
-                        <button
-                          key={sec}
-                          onClick={() => onSelectSector && onSelectSector(sec)}
-                          className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-zinc-900/90 border border-zinc-700/60 hover:border-emerald-500/60 hover:bg-zinc-800 transition-all text-xs font-mono group cursor-pointer"
-                          title="Bấm để lọc mã ngành này trên bảng Screener"
-                        >
-                          <span className="text-zinc-200 group-hover:text-emerald-400 font-semibold">{sec}</span>
-                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                            !hasData
-                              ? 'bg-zinc-800 text-zinc-500'
-                              : (rsScore || 0) >= 50
-                              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                              : 'bg-zinc-800 text-cyan-400 border border-zinc-700/50'
-                          }`}>
-                            {hasData ? `RS ${rsScore}` : (isLoading ? 'Đang tải...' : 'RS --')}
-                          </span>
-                          {stage2Count > 0 && (
-                            <span className="px-1 py-0.5 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                              {stage2Count} Stage 2
-                            </span>
-                          )}
-                          <ArrowRight className="w-3 h-3 text-zinc-500 group-hover:text-emerald-400 group-hover:translate-x-0.5 transition-all" />
-                        </button>
-                      );
-                    })}
+                  <div className="space-y-0.5 pl-1">
+                    <span className="text-[10px] text-zinc-500 uppercase font-bold block">Lãi Suất:</span>
+                    <span className="text-zinc-200 font-bold block truncate">{activeCfg.interestRateStatus}</span>
                   </div>
                 </div>
 
-                {/* Unfavorable Sectors in this Phase */}
-                <div className="mb-4 p-3.5 rounded-xl bg-rose-500/5 border border-rose-500/20">
-                  <div className="flex items-center gap-1.5 mb-1.5 text-rose-400 font-mono text-[10px] font-bold">
-                    <WarningCircle className="w-4 h-4 shrink-0" />
-                    <span>CÁC NHÓM NGÀNH BẤT LỢI / NÊN TRÁNH (TỤ HẬU CHU KỲ):</span>
-                  </div>
-                  <p className="text-[11px] text-zinc-400 mb-2.5 font-mono leading-relaxed">
-                    {activeCfg.unfavorableReason}
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {activeCfg.unfavorableSectors.map((sec) => {
-                      const matchStat = sectorLiveStats.find(
-                        (s) =>
-                          s.sector.toLowerCase().includes(sec.toLowerCase()) ||
-                          sec.toLowerCase().includes(s.sector.toLowerCase())
-                      );
-                      const hasData = !!matchStat;
-                      const rsScore = matchStat?.avgRs;
-                      const stage2Count = matchStat?.stage2Count || 0;
+                {/* ── Symmetrical 2-Column Sector Rotation Matrix (Đồng bộ khung, tinh gọn text) ── */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3.5">
+                  {/* Left Column: Benefited Sectors */}
+                  <div className="p-3.5 rounded-xl bg-zinc-950/70 border border-emerald-500/25 flex flex-col justify-between">
+                    <div className="flex items-center justify-between pb-2 mb-2.5 border-b border-zinc-800/80">
+                      <div className="flex items-center gap-1.5 text-emerald-400 font-mono text-[11px] font-bold">
+                        <TrendUp className="w-4 h-4" weight="bold" />
+                        <span>HƯỞNG LỢI (DẪN SÓNG)</span>
+                      </div>
+                      <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-bold border border-emerald-500/20">
+                        Ưu tiên
+                      </span>
+                    </div>
 
-                      return (
-                        <button
-                          key={sec}
-                          onClick={() => onSelectSector && onSelectSector(sec)}
-                          className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-zinc-900/90 border border-rose-500/30 hover:border-rose-500 hover:bg-zinc-800 transition-all text-xs font-mono group cursor-pointer"
-                          title="Bấm để lọc mã ngành bất lợi này trên bảng Screener"
-                        >
-                          <span className="text-zinc-200 group-hover:text-rose-400 font-semibold">{sec}</span>
-                          <span
-                            className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                              !hasData
-                                ? 'bg-zinc-800 text-zinc-500'
-                                : (rsScore || 0) < 50
-                                ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
-                                : 'bg-zinc-800 text-amber-400 border border-zinc-700/50'
-                            }`}
+                    <div className="space-y-1.5">
+                      {activeCfg.primarySectors.map((sec) => {
+                        const matchStat = sectorLiveStats.find(
+                          (s) =>
+                            s.sector.toLowerCase().includes(sec.toLowerCase()) ||
+                            sec.toLowerCase().includes(s.sector.toLowerCase())
+                        );
+                        const hasData = !!matchStat;
+                        const rsScore = matchStat?.avgRs || 45;
+
+                        return (
+                          <button
+                            key={sec}
+                            onClick={() => onSelectSector && onSelectSector(sec)}
+                            className="w-full flex items-center justify-between p-2 rounded-lg bg-zinc-900/80 hover:bg-zinc-800/90 border border-zinc-800 hover:border-emerald-500/40 transition-all text-xs font-mono group cursor-pointer"
                           >
-                            {hasData ? `RS ${rsScore}` : (isLoading ? 'Đang tải...' : 'RS --')}
-                          </span>
-                          {stage2Count > 0 ? (
-                            <span className="px-1 py-0.5 rounded text-[9px] font-bold bg-zinc-800 text-zinc-400 border border-zinc-700/50">
-                              {stage2Count} Stage 2
+                            <span className="text-zinc-200 group-hover:text-emerald-400 font-bold truncate">
+                              {sec}
                             </span>
-                          ) : (
-                            <span className="px-1 py-0.5 rounded text-[9px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">
-                              0 Stage 2
+                            <div className="flex items-center gap-2">
+                              {/* Mini RS Bar Visual */}
+                              <div className="w-12 h-1.5 bg-zinc-800 rounded-full overflow-hidden hidden sm:block">
+                                <div 
+                                  className="h-full bg-emerald-400 rounded-full" 
+                                  style={{ width: `${Math.min(100, rsScore)}%` }}
+                                />
+                              </div>
+                              <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                                {hasData ? `RS ${rsScore}` : 'RS --'}
+                              </span>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Right Column: Unfavorable Sectors */}
+                  <div className="p-3.5 rounded-xl bg-zinc-950/70 border border-rose-500/25 flex flex-col justify-between">
+                    <div className="flex items-center justify-between pb-2 mb-2.5 border-b border-zinc-800/80">
+                      <div className="flex items-center gap-1.5 text-rose-400 font-mono text-[11px] font-bold">
+                        <TrendDown className="w-4 h-4" weight="bold" />
+                        <span>BẤT LỢI (TỤ HẬU)</span>
+                      </div>
+                      <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-rose-500/10 text-rose-400 font-bold border border-rose-500/20">
+                        Nên tránh
+                      </span>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      {activeCfg.unfavorableSectors.map((sec) => {
+                        const matchStat = sectorLiveStats.find(
+                          (s) =>
+                            s.sector.toLowerCase().includes(sec.toLowerCase()) ||
+                            sec.toLowerCase().includes(s.sector.toLowerCase())
+                        );
+                        const hasData = !!matchStat;
+                        const rsScore = matchStat?.avgRs || 32;
+
+                        return (
+                          <button
+                            key={sec}
+                            onClick={() => onSelectSector && onSelectSector(sec)}
+                            className="w-full flex items-center justify-between p-2 rounded-lg bg-zinc-900/80 hover:bg-zinc-800/90 border border-zinc-800 hover:border-rose-500/40 transition-all text-xs font-mono group cursor-pointer"
+                          >
+                            <span className="text-zinc-300 group-hover:text-rose-400 font-bold truncate">
+                              {sec}
                             </span>
-                          )}
-                          <ArrowRight className="w-3 h-3 text-zinc-500 group-hover:text-rose-400 group-hover:translate-x-0.5 transition-all" />
-                        </button>
-                      );
-                    })}
+                            <div className="flex items-center gap-2">
+                              {/* Mini RS Bar Visual */}
+                              <div className="w-12 h-1.5 bg-zinc-800 rounded-full overflow-hidden hidden sm:block">
+                                <div 
+                                  className="h-full bg-rose-400 rounded-full" 
+                                  style={{ width: `${Math.min(100, rsScore)}%` }}
+                                />
+                              </div>
+                              <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-500/15 text-rose-400 border border-rose-500/30">
+                                {hasData ? `RS ${rsScore}` : 'RS --'}
+                              </span>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
 
