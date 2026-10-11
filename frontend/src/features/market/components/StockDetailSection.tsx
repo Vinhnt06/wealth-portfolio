@@ -72,6 +72,29 @@ interface CompanyData {
     owner_code: string;
     from_date?: string;
   }>;
+  financials?: {
+    pe?: number | null;
+    pb?: number | null;
+    roe?: number | null;
+    roa?: number | null;
+    year?: string | null;
+    quarter?: number | null;
+  };
+}
+
+interface ForeignTradingData {
+  symbol: string;
+  foreignBuyVolume: number;
+  foreignSellVolume: number;
+  foreignNetVolume: number;
+  foreignBuyValue: number;
+  foreignSellValue: number;
+  foreignNetValue: number;
+  currentRoom: number;
+  totalRoom: number;
+  roomRemainingPercent: number;
+  roomUsedPercent: number;
+  tradingSession: string;
 }
 
 interface StockDetailSectionProps {
@@ -82,6 +105,7 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
   const { selectedSymbol, ticks, watchlistSymbols, toggleWatchlistSymbol, updateTick } = useMarketStore();
   const [activeTab, setActiveTab] = useState<'profile' | 'shareholders' | 'officers' | 'financials' | 'foreign' | 'orderbook'>('profile');
   const [companyData, setCompanyData] = useState<CompanyData | null>(null);
+  const [foreignData, setForeignData] = useState<ForeignTradingData | null>(null);
   const [minerviniData, setMinerviniData] = useState<MinerviniAnalysisResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -95,7 +119,7 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
 
   const isStarred = watchlistSymbols.includes(selectedSymbol);
 
-  // Fetch verified real quote, company profile & Minervini Stage 2/RS when selectedSymbol changes
+  // Fetch verified real quote, company profile, foreign trading & Minervini Stage 2/RS when selectedSymbol changes
   useEffect(() => {
     if (!selectedSymbol) return;
     setIsLoading(true);
@@ -118,6 +142,15 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
       })
       .catch(() => {})
       .finally(() => setIsLoading(false));
+
+    fetch(`/api/market/foreign?symbol=${selectedSymbol}`)
+      .then((res) => res.json())
+      .then((resData) => {
+        if (resData.success && resData.data) {
+          setForeignData(resData.data);
+        }
+      })
+      .catch(() => {});
 
     // Fetch Minervini RS and Trend Template
     fetch(`/api/market/minervini/analysis?symbol=${selectedSymbol}`)
@@ -599,42 +632,174 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/70">
                   <span className="text-[10px] font-mono text-zinc-500 block uppercase">P/E Hiện Tại</span>
-                  <span className="text-lg font-mono font-bold text-emerald-400 mt-1 block">11.8x</span>
+                  <span className="text-lg font-mono font-bold text-emerald-400 mt-1 block">
+                    {companyData?.financials?.pe ? `${companyData.financials.pe}x` : 'N/A'}
+                  </span>
                 </div>
                 <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/70">
                   <span className="text-[10px] font-mono text-zinc-500 block uppercase">P/B</span>
-                  <span className="text-lg font-mono font-bold text-zinc-200 mt-1 block">1.45x</span>
+                  <span className="text-lg font-mono font-bold text-zinc-200 mt-1 block">
+                    {companyData?.financials?.pb ? `${companyData.financials.pb}x` : 'N/A'}
+                  </span>
                 </div>
                 <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/70">
                   <span className="text-[10px] font-mono text-zinc-500 block uppercase">ROE</span>
-                  <span className="text-lg font-mono font-bold text-emerald-400 mt-1 block">18.2%</span>
+                  <span className="text-lg font-mono font-bold text-emerald-400 mt-1 block">
+                    {companyData?.financials?.roe ? `${companyData.financials.roe}%` : 'N/A'}
+                  </span>
                 </div>
                 <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/70">
-                  <span className="text-[10px] font-mono text-zinc-500 block uppercase">EPS (TTM)</span>
-                  <span className="text-lg font-mono font-bold text-zinc-200 mt-1 block">2,410 đ</span>
+                  <span className="text-[10px] font-mono text-zinc-500 block uppercase">ROA</span>
+                  <span className="text-lg font-mono font-bold text-zinc-200 mt-1 block">
+                    {companyData?.financials?.roa ? `${companyData.financials.roa}%` : 'N/A'}
+                  </span>
                 </div>
               </div>
 
-              <div className="p-4 rounded-xl bg-zinc-900/30 border border-zinc-800/50 text-xs text-zinc-400 leading-relaxed font-mono">
-                Chỉ số tài chính được đồng bộ định kỳ theo Báo Cáo Tài Chính Quý gần nhất. Tốc độ tăng trưởng doanh thu 4 quý liên tiếp đạt trạng thái tích cực.
+              <div className="p-4 rounded-xl bg-zinc-900/30 border border-zinc-800/50 text-xs text-zinc-400 leading-relaxed font-mono flex items-center justify-between">
+                <span>
+                  Chỉ số định giá & hiệu quả sinh lời kỳ{' '}
+                  <strong className="text-zinc-200">
+                    {companyData?.financials?.quarter ? `Quý ${companyData.financials.quarter}/` : ''}
+                    {companyData?.financials?.year || 'Mới nhất'}
+                  </strong>{' '}
+                  được đồng bộ chuẩn xác từ cổng báo cáo tài chính Vietcap IQ.
+                </span>
+                <span className="px-2.5 py-1 rounded bg-zinc-800/70 text-zinc-400 text-[11px] font-mono border border-zinc-700/40">
+                  Vietcap Official
+                </span>
               </div>
             </div>
           )}
 
           {!isLoading && activeTab === 'foreign' && (
             <div className="space-y-4">
-              <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/70 flex items-center justify-between">
-                <div>
-                  <span className="text-xs font-medium text-zinc-400">Khối Ngoại Giao Dịch Phiên Hôm Nay</span>
-                  <div className="text-lg font-mono font-bold text-emerald-400 mt-1">+1,240,000 CP (Mua Ròng)</div>
+              {foreignData ? (
+                <>
+                  <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/70 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                      <span className="text-xs font-medium text-zinc-400">Khối Ngoại Giao Dịch Phiên Gần Nhất</span>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span
+                          className={`text-xl font-mono font-bold ${
+                            foreignData.foreignNetVolume > 0
+                              ? 'text-emerald-400'
+                              : foreignData.foreignNetVolume < 0
+                              ? 'text-rose-400'
+                              : 'text-zinc-300'
+                          }`}
+                        >
+                          {foreignData.foreignNetVolume > 0 ? '+' : ''}
+                          {foreignData.foreignNetVolume.toLocaleString('vi-VN')} CP
+                        </span>
+                        <span
+                          className={`px-2 py-0.5 rounded text-[11px] font-mono font-semibold ${
+                            foreignData.foreignNetVolume > 0
+                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                              : foreignData.foreignNetVolume < 0
+                              ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                              : 'bg-zinc-800 text-zinc-400 border border-zinc-700'
+                          }`}
+                        >
+                          {foreignData.foreignNetVolume > 0
+                            ? 'Mua Ròng'
+                            : foreignData.foreignNetVolume < 0
+                            ? 'Bán Ròng'
+                            : 'Cân Bằng'}
+                        </span>
+                      </div>
+                      <div className="text-xs font-mono text-zinc-400 mt-1">
+                        Giá trị ròng:{' '}
+                        <strong
+                          className={
+                            foreignData.foreignNetValue >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                          }
+                        >
+                          {foreignData.foreignNetValue >= 0 ? '+' : ''}
+                          {(foreignData.foreignNetValue / 1_000_000_000).toFixed(2)} Tỷ VNĐ
+                        </strong>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col items-start md:items-end gap-1.5">
+                      <span className="px-3 py-1 rounded-xl bg-zinc-800/80 border border-zinc-700/60 text-zinc-200 text-xs font-mono">
+                        Tỷ lệ hở Room:{' '}
+                        <strong className="text-emerald-400 font-bold">
+                          {foreignData.roomRemainingPercent}%
+                        </strong>
+                      </span>
+                      <span className="text-[11px] font-mono text-zinc-500">
+                        Room ngoại sở hữu: {foreignData.roomUsedPercent}%
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Chi tiết Mua/Bán & Room */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div className="p-3 rounded-xl bg-zinc-900/30 border border-zinc-800/60">
+                      <span className="text-[10px] font-mono text-zinc-500 block uppercase">Khối Ngoại Mua</span>
+                      <span className="text-sm font-mono font-bold text-emerald-400 mt-1 block">
+                        +{foreignData.foreignBuyVolume.toLocaleString('vi-VN')} CP
+                      </span>
+                      <span className="text-[11px] font-mono text-zinc-500 block mt-0.5">
+                        {(foreignData.foreignBuyValue / 1_000_000_000).toFixed(2)} Tỷ VNĐ
+                      </span>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-zinc-900/30 border border-zinc-800/60">
+                      <span className="text-[10px] font-mono text-zinc-500 block uppercase">Khối Ngoại Bán</span>
+                      <span className="text-sm font-mono font-bold text-rose-400 mt-1 block">
+                        -{foreignData.foreignSellVolume.toLocaleString('vi-VN')} CP
+                      </span>
+                      <span className="text-[11px] font-mono text-zinc-500 block mt-0.5">
+                        {(foreignData.foreignSellValue / 1_000_000_000).toFixed(2)} Tỷ VNĐ
+                      </span>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-zinc-900/30 border border-zinc-800/60">
+                      <span className="text-[10px] font-mono text-zinc-500 block uppercase">Room Còn Trống</span>
+                      <span className="text-sm font-mono font-bold text-zinc-200 mt-1 block">
+                        {foreignData.currentRoom.toLocaleString('vi-VN')} CP
+                      </span>
+                      <span className="text-[11px] font-mono text-emerald-400 block mt-0.5">
+                        {foreignData.roomRemainingPercent}% room trống
+                      </span>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-zinc-900/30 border border-zinc-800/60">
+                      <span className="text-[10px] font-mono text-zinc-500 block uppercase">Tổng Room Tối Đa</span>
+                      <span className="text-sm font-mono font-bold text-zinc-200 mt-1 block">
+                        {foreignData.totalRoom.toLocaleString('vi-VN')} CP
+                      </span>
+                      <span className="text-[11px] font-mono text-zinc-500 block mt-0.5">
+                        {foreignData.roomUsedPercent}% đã sở hữu
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Thanh trực quan Room Sở Hữu */}
+                  <div className="p-3.5 rounded-xl bg-zinc-900/40 border border-zinc-800/60 space-y-2">
+                    <div className="flex justify-between text-xs font-mono">
+                      <span className="text-zinc-400">Tỷ lệ lấp đầy Room nước ngoài</span>
+                      <span className="text-zinc-200 font-bold">{foreignData.roomUsedPercent}%</span>
+                    </div>
+                    <div className="w-full h-2 rounded-full bg-zinc-800 overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-500"
+                        style={{ width: `${Math.min(foreignData.roomUsedPercent, 100)}%` }}
+                      />
+                    </div>
+                    <div className="flex justify-between text-[11px] font-mono text-zinc-500 pt-0.5">
+                      <span>Đã sở hữu: {(foreignData.totalRoom - foreignData.currentRoom).toLocaleString('vi-VN')} CP</span>
+                      <span>Còn trống: {foreignData.currentRoom.toLocaleString('vi-VN')} CP</span>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="p-6 text-center text-xs text-zinc-500 font-mono">
+                  Đang tải dữ liệu giao dịch khối ngoại thời gian thực từ sàn...
                 </div>
-                <span className="px-3 py-1 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono font-bold">
-                  Tỷ lệ hở Room: 42.8%
-                </span>
-              </div>
-              <p className="text-xs text-zinc-500 font-mono">
-                Dòng tiền khối ngoại duy trì vị thế tích cực đối với {selectedSymbol} trong các phiên giao dịch gần đây.
-              </p>
+              )}
             </div>
           )}
 
