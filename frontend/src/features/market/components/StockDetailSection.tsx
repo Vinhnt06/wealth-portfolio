@@ -80,7 +80,7 @@ interface StockDetailSectionProps {
 
 export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackToOverview }) => {
   const { selectedSymbol, ticks, watchlistSymbols, toggleWatchlistSymbol, updateTick } = useMarketStore();
-  const [activeTab, setActiveTab] = useState<'profile' | 'shareholders' | 'officers' | 'financials' | 'foreign' | 'investor_flow' | 'orderbook'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'shareholders' | 'officers' | 'financials' | 'foreign' | 'orderbook'>('profile');
   const [companyData, setCompanyData] = useState<CompanyData | null>(null);
   const [minerviniData, setMinerviniData] = useState<MinerviniAnalysisResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -424,18 +424,6 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
           </button>
 
           <button
-            onClick={() => setActiveTab('investor_flow')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all ${
-              activeTab === 'investor_flow'
-                ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20'
-                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
-            }`}
-          >
-            <Fish className="w-4 h-4" />
-            <span>Phân Loại NĐT (Cá Mập)</span>
-          </button>
-
-          <button
             onClick={() => setActiveTab('orderbook')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all ${
               activeTab === 'orderbook'
@@ -444,7 +432,7 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
             }`}
           >
             <ListNumbers className="w-4 h-4" />
-            <span>Sổ Lệnh (Order Book)</span>
+            <span>Sổ Lệnh & Dòng Tiền (Order Book & Trades)</span>
           </button>
         </div>
 
@@ -650,15 +638,16 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
             </div>
           )}
 
-          {!isLoading && activeTab === 'investor_flow' && (
-            <div className="p-1">
-              <InvestorFlowAnalysis />
-            </div>
-          )}
-
           {!isLoading && activeTab === 'orderbook' && (
-            <div className="p-1 max-w-xl mx-auto">
-              <OrderBook />
+            <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
+              {/* Cột trái: Sổ lệnh 3 bước giá dư mua / dư bán */}
+              <div className="xl:col-span-5 xl:sticky xl:top-4">
+                <OrderBook />
+              </div>
+              {/* Cột phải: Dòng tiền Cá Mập / Sói / Cừu & Nhật ký khớp lệnh chi tiết */}
+              <div className="xl:col-span-7">
+                <InvestorFlowAnalysis />
+              </div>
             </div>
           )}
         </div>
