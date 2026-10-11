@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Compass,
@@ -129,7 +129,7 @@ export const CYCLE_PHASES: Record<CyclePhaseKey, CyclePhaseConfig> = {
 };
 
 interface EconomicCycleWheelProps {
-  items: MinerviniScreenerItem[];
+  items?: MinerviniScreenerItem[];
   onSelectSector?: (sector: string) => void;
 }
 
@@ -139,6 +139,26 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
 }) => {
   const [selectedPhase, setSelectedPhase] = useState<CyclePhaseKey>('expansion');
   const [activeResearchTab, setActiveResearchTab] = useState<'matrix' | 'macro' | 'methodology'>('matrix');
+  const [internalItems, setInternalItems] = useState<MinerviniScreenerItem[]>(items || []);
+
+  useEffect(() => {
+    if (items && items.length > 0) {
+      setInternalItems(items);
+      return;
+    }
+    let isMounted = true;
+    fetch('/api/market/minervini/screener?stage2=false&minRS=1')
+      .then((res) => res.json())
+      .then((data) => {
+        if (isMounted && data.success && Array.isArray(data.data)) {
+          setInternalItems(data.data);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, [items]);
 
   // 1. Live Quantitative Sector RS & Stage 2 Computation
   const sectorLiveStats = useMemo(() => {
@@ -154,7 +174,7 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
       }
     > = {};
 
-    items.forEach((item) => {
+    internalItems.forEach((item) => {
       const sec = SECTOR_MAPPING[item.symbol] || item.sector || 'Khác';
       if (!statsMap[sec]) {
         statsMap[sec] = {

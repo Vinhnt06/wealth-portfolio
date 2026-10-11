@@ -154,7 +154,7 @@ export default function MarketTerminalPage() {
 
         {/* Dynamic Context View: Macro Overview vs Minervini Screener vs Stock Deep-Dive */}
         {viewMode === 'overview' ? (
-          <MarketOverviewSection />
+          <MarketOverviewSection onSelectSector={() => setViewMode('screener')} />
         ) : viewMode === 'screener' ? (
           <MarkMinerviniScreener />
         ) : (
