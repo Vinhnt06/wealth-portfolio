@@ -79,7 +79,10 @@ export function OrderBook() {
   };
 
   const formatVol = (vol: number) => {
-    return vol >= 1000 ? `${(vol / 1000).toFixed(1)}k` : vol.toString();
+    if (!vol) return '0';
+    if (vol >= 1_000_000) return `${(vol / 1_000_000).toFixed(2)}M`;
+    if (vol >= 1_000) return `${(vol / 1_000).toFixed(1)}K`;
+    return vol.toLocaleString('vi-VN');
   };
 
   return (

@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Star, ArrowsDownUp, TrendUp, TrendDown, Lightning } from '@phosphor-icons/react';
 import { useMarketStore } from '../store/marketStore';
 import { getStockPriceColor } from '../utils/priceColors';
+import { formatCompactVolume } from '../utils/formatters';
 
 interface StockRow {
   symbol: string;
@@ -232,8 +233,8 @@ export const WatchlistTable: React.FC = () => {
                     </span>
                   </td>
 
-                  <td className="py-2.5 text-right pr-2 text-zinc-400">
-                    {(stock.volume / 1000).toLocaleString('vi-VN')}k
+                  <td className="py-2.5 text-right pr-2 text-zinc-400 font-mono">
+                    {formatCompactVolume(stock.volume)}
                   </td>
                 </tr>
               );
