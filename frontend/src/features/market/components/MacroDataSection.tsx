@@ -250,31 +250,6 @@ export const MacroDataSection: React.FC = () => {
           </div>
         </motion.div>
       </div>
-
-      {/* ── CARD 4: COMMODITY TICKER BAR (Full-Width High-Velocity Strip) ── */}
-      <div className="p-3.5 bg-zinc-900/80 border border-zinc-800/80 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4 font-mono text-xs">
-        <div className="flex items-center gap-2 text-zinc-300 font-bold shrink-0">
-          <Flame className="w-4 h-4 text-amber-400 animate-pulse" weight="fill" />
-          <span className="text-xs tracking-wider">HÀNG HÓA TRỌNG YẾU:</span>
-        </div>
-
-        <div className="flex flex-wrap items-center justify-around w-full gap-3 md:gap-6">
-          {commodities.map((item, idx) => (
-            <div 
-              key={idx} 
-              className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-zinc-950/60 border border-zinc-800/60 hover:border-zinc-700 transition-colors"
-            >
-              <span className="text-zinc-400 font-medium">{item.item}:</span>
-              <span className="text-zinc-100 font-extrabold">
-                {'sell' in item ? `${item.sell} Tr` : `${item.price}`}
-              </span>
-              <span className={`text-[11px] font-black flex items-center ${item.change >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                {item.change >= 0 ? '+' : ''}{item.change}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
     </div>
   );
 };

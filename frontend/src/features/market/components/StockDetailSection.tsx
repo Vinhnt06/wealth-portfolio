@@ -804,13 +804,13 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
           )}
 
           {!isLoading && activeTab === 'orderbook' && (
-            <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
+            <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-stretch">
               {/* Cột trái: Sổ lệnh 3 bước giá dư mua / dư bán */}
-              <div className="xl:col-span-5 xl:sticky xl:top-4">
+              <div className="xl:col-span-5 flex flex-col">
                 <OrderBook />
               </div>
               {/* Cột phải: Dòng tiền Cá Mập / Sói / Cừu & Nhật ký khớp lệnh chi tiết */}
-              <div className="xl:col-span-7">
+              <div className="xl:col-span-7 flex flex-col">
                 <InvestorFlowAnalysis />
               </div>
             </div>

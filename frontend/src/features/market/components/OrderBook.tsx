@@ -272,6 +272,65 @@ export function OrderBook() {
           <div className="h-full flex-1 bg-rose-500 rounded-sm" />
         </div>
       </div>
+
+      {/* Thông số kỹ thuật phiên khớp lệnh thật (Cân bằng chiều cao với bảng Dòng tiền) */}
+      {currentTick && (
+        <div className="mt-4 pt-3.5 border-t border-zinc-800/80 space-y-2.5 font-mono">
+          <div className="flex items-center justify-between text-[11px] text-zinc-400">
+            <span className="font-bold uppercase tracking-wider text-zinc-300">Biên Độ & Giá Khớp {selectedSymbol}</span>
+            <span className="text-[10px] text-zinc-500">HOSE / HNX REAL DATA</span>
+          </div>
+
+          <div className="grid grid-cols-3 gap-2 text-center text-xs">
+            <div className="p-2 rounded-xl bg-zinc-900/60 border border-zinc-800/60">
+              <span className="text-[10px] text-purple-400 font-bold block uppercase">Giá Trần</span>
+              <span className="font-black text-purple-400">
+                {currentTick.ceilingPrice ? formatPrice(currentTick.ceilingPrice) : '-'}
+              </span>
+            </div>
+            <div className="p-2 rounded-xl bg-zinc-900/60 border border-zinc-800/60">
+              <span className="text-[10px] text-yellow-400 font-bold block uppercase">Tham Chiếu</span>
+              <span className="font-black text-yellow-400">
+                {currentTick.referencePrice ? formatPrice(currentTick.referencePrice) : '-'}
+              </span>
+            </div>
+            <div className="p-2 rounded-xl bg-zinc-900/60 border border-zinc-800/60">
+              <span className="text-[10px] text-cyan-400 font-bold block uppercase">Giá Sàn</span>
+              <span className="font-black text-cyan-400">
+                {currentTick.floorPrice ? formatPrice(currentTick.floorPrice) : '-'}
+              </span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-2 text-center text-xs">
+            <div className="p-2 rounded-xl bg-zinc-900/40 border border-zinc-800/40">
+              <span className="text-[10px] text-zinc-500 block uppercase">Cao Nhất</span>
+              <span className="font-bold text-zinc-200">
+                {currentTick.high ? formatPrice(currentTick.high) : '-'}
+              </span>
+            </div>
+            <div className="p-2 rounded-xl bg-zinc-900/40 border border-zinc-800/40">
+              <span className="text-[10px] text-zinc-500 block uppercase">Thấp Nhất</span>
+              <span className="font-bold text-zinc-200">
+                {currentTick.low ? formatPrice(currentTick.low) : '-'}
+              </span>
+            </div>
+            <div className="p-2 rounded-xl bg-zinc-900/40 border border-zinc-800/40">
+              <span className="text-[10px] text-zinc-500 block uppercase">Mở Cửa</span>
+              <span className="font-bold text-zinc-200">
+                {currentTick.open ? formatPrice(currentTick.open) : '-'}
+              </span>
+            </div>
+          </div>
+
+          <div className="p-2.5 rounded-xl bg-zinc-900/80 border border-zinc-800 flex items-center justify-between text-xs">
+            <span className="text-zinc-400">Tổng Khối Lượng Khớp:</span>
+            <span className="font-black text-emerald-400">
+              {formatVol(currentTick.totalVolume || 0)} CP
+            </span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
