@@ -58,6 +58,7 @@ export const CommoditiesAndGoldSection: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [lastRefreshed, setLastRefreshed] = useState<string>('');
   const [lastDate, setLastDate] = useState<string>('');
+  const [mounted, setMounted] = useState(false);
 
   const fetchData = async () => {
     setLoading(true);
@@ -88,6 +89,7 @@ export const CommoditiesAndGoldSection: React.FC = () => {
   };
 
   useEffect(() => {
+    setMounted(true);
     fetchData();
     // Auto-refresh commodities every 30s
     const timer = setInterval(fetchData, 30000);
@@ -115,7 +117,7 @@ export const CommoditiesAndGoldSection: React.FC = () => {
   };
 
   return (
-    <div className="p-6 md:p-8 bg-zinc-950/90 border border-zinc-800/80 rounded-3xl backdrop-blur-2xl space-y-6 shadow-2xl relative overflow-hidden">
+    <div suppressHydrationWarning className="p-6 md:p-8 bg-zinc-950/90 border border-zinc-800/80 rounded-3xl backdrop-blur-2xl space-y-6 shadow-2xl relative overflow-hidden">
       {/* Background Accent Blur */}
       <div className="absolute top-0 right-0 w-80 h-80 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
 
@@ -133,9 +135,9 @@ export const CommoditiesAndGoldSection: React.FC = () => {
               <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
                 REAL DATA 100%
               </span>
-              <span className="text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300 flex items-center gap-1.5 shadow-inner">
+              <span suppressHydrationWarning className="text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300 flex items-center gap-1.5 shadow-inner">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                Cập nhật ngày {lastDate || new Date().toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })} {lastRefreshed ? `lúc ${lastRefreshed}` : ''}
+                Cập nhật ngày {mounted && lastDate ? lastDate : '11/10/2026'} {mounted && lastRefreshed ? `lúc ${lastRefreshed}` : ''}
               </span>
             </div>
             <p className="text-xs text-zinc-400 mt-1">

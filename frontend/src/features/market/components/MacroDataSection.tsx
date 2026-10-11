@@ -1,15 +1,13 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   ChartLineUp, 
   TrendUp, 
   TrendDown, 
   Bank, 
   Globe, 
-  ArrowsLeftRight,
   CurrencyCircleDollar,
-  Flame,
   Info,
   Scales
 } from '@phosphor-icons/react';
@@ -17,7 +15,12 @@ import { motion } from 'framer-motion';
 import macroDatabase from '../data/macroDatabase.json';
 
 export const MacroDataSection: React.FC = () => {
-  const { gdp, cpi, exchangeRate, commodities, interestRate } = macroDatabase;
+  const { gdp, cpi, exchangeRate, interestRate } = macroDatabase;
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const currentGdp = gdp[0];
   const currentCpi = cpi[0];
@@ -26,7 +29,7 @@ export const MacroDataSection: React.FC = () => {
   const refRate = interestRate[1];
 
   return (
-    <div className="relative overflow-hidden p-6 md:p-8 bg-zinc-950/90 border border-zinc-800/80 rounded-3xl backdrop-blur-2xl space-y-6 shadow-2xl">
+    <div suppressHydrationWarning className="relative overflow-hidden p-6 md:p-8 bg-zinc-950/90 border border-zinc-800/80 rounded-3xl backdrop-blur-2xl space-y-6 shadow-2xl">
       {/* Background Ambient Glow */}
       <div className="absolute -top-24 -left-24 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />

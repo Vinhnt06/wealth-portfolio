@@ -86,7 +86,7 @@ export function OrderBook() {
   };
 
   return (
-    <div className="bg-zinc-950/90 border border-zinc-800/80 rounded-2xl p-5 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] backdrop-blur-xl flex flex-col h-full">
+    <div suppressHydrationWarning className="bg-zinc-950/90 border border-zinc-800/80 rounded-2xl p-5 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] backdrop-blur-xl flex flex-col h-full">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-zinc-800/80 pb-3 mb-4">
         <div className="flex items-center gap-2">
