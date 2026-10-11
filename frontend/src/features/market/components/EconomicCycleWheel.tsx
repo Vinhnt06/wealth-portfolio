@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Compass,
@@ -43,7 +43,9 @@ export interface CyclePhaseConfig {
   growthStatus: string;
   inflationStatus: string;
   interestRateStatus: string;
-  primarySectors: string[];
+  primarySectors: string[]; // Các nhóm ngành hưởng lợi trọng tâm (Dẫn sóng)
+  unfavorableSectors: string[]; // Các nhóm ngành bất lợi / nên tránh (Tụ hậu)
+  unfavorableReason: string; // Lý do chịu áp lực / thoái trào
   description: string;
   keyDrivers: string[];
   minerviniStrategy: string;
@@ -65,6 +67,8 @@ export const CYCLE_PHASES: Record<CyclePhaseKey, CyclePhaseConfig> = {
     inflationStatus: 'Thấp hoặc đang hạ nhiệt',
     interestRateStatus: 'Thấp / Nới lỏng định lượng',
     primarySectors: ['Ngân hàng', 'Dịch vụ tài chính', 'Bất động sản', 'Phân phối, bán lẻ', 'Ô tô, linh kiện'],
+    unfavorableSectors: ['Tiện ích', 'Năng lượng', 'Bảo hiểm'],
+    unfavorableReason: 'Các ngành phòng thủ có cổ tức cố định bị rút ròng mạnh khi dòng tiền thông minh chuyển dịch sang nhóm beta cao và tăng trưởng nhạy cảm lãi suất rẻ.',
     description: 'Chính sách tiền tệ mở rộng kích hoạt dòng tiền rẻ, định giá P/E & P/B hồi phục mạnh mẽ từ đáy sâu. Nhóm Tài chính (Bank/Chứng khoán) và Tiêu dùng nhạy cảm lãi suất dẫn dắt nhịp sóng đầu tiên.',
     keyDrivers: ['Hạ lãi suất điều hành & kích cầu tín dụng', 'Thị trường chứng khoán phục hồi thanh khoản', 'Niềm tin tiêu dùng & đơn hàng phục hồi'],
     minerviniStrategy: 'Tìm kiếm cổ phiếu tạo đáy kép (Double Bottom) hoặc thoát nền tích luỹ đầu tiên với điểm mua Pocket Pivot và khối lượng đột biến.',
@@ -84,6 +88,8 @@ export const CYCLE_PHASES: Record<CyclePhaseKey, CyclePhaseConfig> = {
     inflationStatus: 'Ổn định / Tăng nhẹ trong tầm kiểm soát',
     interestRateStatus: 'Trung tính / Duy trì hỗ trợ tăng trưởng',
     primarySectors: ['Phần mềm', 'Hàng hóa công nghiệp', 'Nguyên vật liệu', 'Vận tải', 'Viễn thông'],
+    unfavorableSectors: ['Tiện ích', 'Dược phẩm', 'Thực phẩm, đồ uống'],
+    unfavorableReason: 'Tụ hậu sâu so với tốc độ bứt phá của thị trường; dòng tiền đầu cơ và dòng vốn tổ chức tập trung toàn lực vào nhóm sản xuất và công nghệ bứt phá.',
     description: 'Pha mạnh nhất và kéo dài nhất của chu kỳ kinh tế theo mô hình Merrill Lynch & Fidelity. Lợi nhuận EPS và doanh thu doanh nghiệp bứt phá ngoạn mục. Dòng tiền cuộn sóng vào các ngành công nghệ, sản xuất, xuất khẩu và logistic.',
     keyDrivers: ['GDP tăng trưởng 7-8% vượt kế hoạch', 'Xuất siêu kỷ lục, chuỗi cung ứng mở rộng', 'Đầu tư công và dòng vốn FDI giải ngân tăng tốc'],
     minerviniStrategy: 'Tập trung 100% danh mục vào Siêu Cổ Phiếu Giai Đoạn 2 (Stage 2 Uptrend) có RS Rating >= 80, bứt phá mô hình VCP (Thu hẹp độ biến động) và Pivot Point.',
@@ -103,6 +109,8 @@ export const CYCLE_PHASES: Record<CyclePhaseKey, CyclePhaseConfig> = {
     inflationStatus: 'Tăng cao / Chạm trần mục tiêu',
     interestRateStatus: 'Bắt đầu nâng lãi suất / Thắt chặt',
     primarySectors: ['Năng lượng', 'Nguyên vật liệu', 'Hóa chất'],
+    unfavorableSectors: ['Bất động sản', 'Dịch vụ tài chính', 'Phân phối, bán lẻ'],
+    unfavorableReason: 'Lạm phát leo thang và lãi suất điều hành bị thắt chặt làm chi phí vốn tăng vọt, biên lợi nhuận bị ép nghẹt và sức mua của người tiêu dùng suy kiệt.',
     description: 'Nền kinh tế có dấu hiệu quá nhiệt, chi phí nguyên liệu và nhân công tăng đẩy lạm phát lên cao. Lợi nhuận doanh nghiệp bắt đầu bị bào mòn bởi chi phí vốn. Dòng tiền xoay tua tìm đến hàng hóa cơ bản, năng lượng và dầu khí.',
     keyDrivers: ['Giá dầu thô & hàng hóa neo cao', 'Lạm phát tiệm cận ngưỡng cảnh báo', 'Chính sách tiền tệ chuyển sang kiểm soát rủi ro'],
     minerviniStrategy: 'Thắt chặt chặn lãi (Trailing stop), chốt lời từng phần khi xuất hiện Climax Top (đỉnh cao trào khối lượng lớn mà giá không tăng thêm), không mua mới nến mở rộng.',
@@ -122,6 +130,8 @@ export const CYCLE_PHASES: Record<CyclePhaseKey, CyclePhaseConfig> = {
     inflationStatus: 'Hạ nhiệt nhanh / Nguy cơ thiểu phát',
     interestRateStatus: 'Bắt đầu chu kỳ nới lỏng cứu trợ',
     primarySectors: ['Tiện ích', 'Dược phẩm', 'Thực phẩm, đồ uống', 'Bảo hiểm'],
+    unfavorableSectors: ['Bất động sản', 'Dịch vụ tài chính', 'Hàng hóa công nghiệp', 'Phần mềm'],
+    unfavorableReason: 'Áp lực nợ xấu và khủng hoảng thanh khoản diện rộng; định giá P/E bị nén hạ (de-rating), doanh thu và lợi nhuận sụt giảm theo đà suy giảm của nền kinh tế.',
     description: 'Doanh nghiệp gặp khó khăn dòng tiền, người tiêu dùng thắt chặt hầu bao. Nhà đầu tư tìm kiếm sự an toàn tại các doanh nghiệp có dòng tiền đều đặn, cổ tức tiền mặt cao, không phụ thuộc chu kỳ kinh tế.',
     keyDrivers: ['Doanh thu bán lẻ & xuất khẩu sụt giảm', 'Tỷ lệ nợ xấu ngân hàng gia tăng', 'Dòng tiền rút về tài sản phòng thủ'],
     minerviniStrategy: 'Quy tắc vàng số 1: Giữ 70-100% tiền mặt, tuyệt đối kiên nhẫn đứng ngoài thị trường giá xuống (Bear Market), kiên quyết cắt lỗ 7-8% không nhân nhượng.',
@@ -185,33 +195,46 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
   const [activeResearchTab, setActiveResearchTab] = useState<'matrix' | 'macro' | 'methodology'>('matrix');
   const [internalItems, setInternalItems] = useState<MinerviniScreenerItem[]>(items || []);
   const [isLoading, setIsLoading] = useState<boolean>(!items || items.length === 0);
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+
+  const fetchScreenerData = useCallback(async (isBackground = false) => {
+    if (!isBackground) {
+      setIsLoading(true);
+    } else {
+      setIsRefreshing(true);
+    }
+    try {
+      const res = await fetch('/api/market/minervini/screener?stage2=false&minRS=1');
+      const data = await res.json();
+      if (data.success && Array.isArray(data.data)) {
+        setInternalItems(data.data);
+        setLastUpdated(new Date());
+      }
+    } catch (err) {
+      console.error('Error fetching screener items for cycle wheel:', err);
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (items && items.length > 0) {
       setInternalItems(items);
       setIsLoading(false);
       setLastUpdated(new Date());
-      return;
+    } else {
+      fetchScreenerData(false);
     }
-    let isMounted = true;
-    setIsLoading(true);
-    fetch('/api/market/minervini/screener?stage2=false&minRS=1')
-      .then((res) => res.json())
-      .then((data) => {
-        if (isMounted && data.success && Array.isArray(data.data)) {
-          setInternalItems(data.data);
-          setLastUpdated(new Date());
-        }
-      })
-      .catch((err) => console.error('Error fetching screener items for cycle wheel:', err))
-      .finally(() => {
-        if (isMounted) setIsLoading(false);
-      });
-    return () => {
-      isMounted = false;
-    };
-  }, [items]);
+
+    // Auto-update polling interval (Realtime every 30 seconds)
+    const interval = setInterval(() => {
+      fetchScreenerData(true);
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [items, fetchScreenerData]);
 
   // 1. Live Quantitative Sector RS & Stage 2 Computation (from real screener data)
   const sectorLiveStats = useMemo(() => {
@@ -387,15 +410,29 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-6 items-stretch">
           {/* Wheel Dial Pedestal (5 Cols) */}
           <div className="lg:col-span-5 flex flex-col justify-between p-5 rounded-2xl bg-zinc-950/80 border border-zinc-800/80 shadow-xl backdrop-blur-xl">
-            {/* Header Hint */}
-            <div className="flex items-center justify-between pb-3 border-b border-zinc-800/80 mb-2">
-              <div className="flex items-center gap-2">
+            {/* Header Hint & Realtime Status */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-zinc-800/80 mb-2 gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <Sparkle className="w-4 h-4 text-emerald-400" />
                 <span className="text-xs font-mono font-bold text-zinc-200">LA BÀN 4 PHA KINH TẾ</span>
+                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-mono text-emerald-400">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span>Realtime (30s)</span>
+                </div>
               </div>
-              <span className="text-[10px] font-mono text-zinc-400">
-                Rà chuột (hover) để xem nhanh
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-mono text-zinc-400">
+                  {lastUpdated ? lastUpdated.toLocaleTimeString('vi-VN') : '--:--:--'}
+                </span>
+                <button
+                  onClick={() => fetchScreenerData(true)}
+                  disabled={isRefreshing || isLoading}
+                  className="p-1 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-emerald-400 hover:border-emerald-500/40 transition-all cursor-pointer disabled:opacity-50"
+                  title="Cập nhật dữ liệu ngay lập tức"
+                >
+                  <ArrowsClockwise className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-emerald-400' : ''}`} />
+                </button>
+              </div>
             </div>
 
             {/* Circular Dial Interactive Graphic */}
@@ -683,6 +720,61 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                             </span>
                           )}
                           <ArrowRight className="w-3 h-3 text-zinc-500 group-hover:text-emerald-400 group-hover:translate-x-0.5 transition-all" />
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Unfavorable Sectors in this Phase */}
+                <div className="mb-4 p-3.5 rounded-xl bg-rose-500/5 border border-rose-500/20">
+                  <div className="flex items-center gap-1.5 mb-1.5 text-rose-400 font-mono text-[10px] font-bold">
+                    <WarningCircle className="w-4 h-4 shrink-0" />
+                    <span>CÁC NHÓM NGÀNH BẤT LỢI / NÊN TRÁNH (TỤ HẬU CHU KỲ):</span>
+                  </div>
+                  <p className="text-[11px] text-zinc-400 mb-2.5 font-mono leading-relaxed">
+                    {activeCfg.unfavorableReason}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {activeCfg.unfavorableSectors.map((sec) => {
+                      const matchStat = sectorLiveStats.find(
+                        (s) =>
+                          s.sector.toLowerCase().includes(sec.toLowerCase()) ||
+                          sec.toLowerCase().includes(s.sector.toLowerCase())
+                      );
+                      const hasData = !!matchStat;
+                      const rsScore = matchStat?.avgRs;
+                      const stage2Count = matchStat?.stage2Count || 0;
+
+                      return (
+                        <button
+                          key={sec}
+                          onClick={() => onSelectSector && onSelectSector(sec)}
+                          className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-zinc-900/90 border border-rose-500/30 hover:border-rose-500 hover:bg-zinc-800 transition-all text-xs font-mono group cursor-pointer"
+                          title="Bấm để lọc mã ngành bất lợi này trên bảng Screener"
+                        >
+                          <span className="text-zinc-200 group-hover:text-rose-400 font-semibold">{sec}</span>
+                          <span
+                            className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                              !hasData
+                                ? 'bg-zinc-800 text-zinc-500'
+                                : (rsScore || 0) < 50
+                                ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                                : 'bg-zinc-800 text-amber-400 border border-zinc-700/50'
+                            }`}
+                          >
+                            {hasData ? `RS ${rsScore}` : (isLoading ? 'Đang tải...' : 'RS --')}
+                          </span>
+                          {stage2Count > 0 ? (
+                            <span className="px-1 py-0.5 rounded text-[9px] font-bold bg-zinc-800 text-zinc-400 border border-zinc-700/50">
+                              {stage2Count} Stage 2
+                            </span>
+                          ) : (
+                            <span className="px-1 py-0.5 rounded text-[9px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                              0 Stage 2
+                            </span>
+                          )}
+                          <ArrowRight className="w-3 h-3 text-zinc-500 group-hover:text-rose-400 group-hover:translate-x-0.5 transition-all" />
                         </button>
                       );
                     })}
