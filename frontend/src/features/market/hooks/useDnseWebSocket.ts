@@ -4,7 +4,6 @@ import { useEffect, useRef, useCallback } from 'react';
 import { useMarketStore } from '../store/marketStore';
 import { TickData, QuotesData, MarketIndexData } from '../types/dnse.types';
 import realTicksData from '../data/realTicks.json';
-import lastSessionBreadth from '../data/lastSessionBreadth.json';
 
 const WS_URL = 'wss://ws-openapi.dnse.com.vn';
 
@@ -140,7 +139,6 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
       // 4. Market Index (market_index.{index}.json)
       if (data.channel?.startsWith('market_index') || data.indexName || data.valueIndexes) {
         const sym = (data.indexName || data.indexSymbol || data.symbol || 'VNINDEX').toUpperCase();
-        const fallbackBreadth = (lastSessionBreadth as Record<string, any>)[sym];
         const val = Number(data.valueIndexes ?? data.value ?? 0);
         const chg = Number(data.changedValue ?? data.change ?? 0);
         const chgPct = Number(data.changedRatio ?? data.changePercent ?? 0);
@@ -155,12 +153,9 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
           changePercent: chgPct,
           totalVolume: vol,
           totalValue: grossAmount > 0 && grossAmount < 1000000 ? grossAmount * 1000000000 : grossAmount,
-          ceilingCount: data.fluctuationCeilingIssueCount !== undefined ? Number(data.fluctuationCeilingIssueCount) : fallbackBreadth?.ceilingCount,
-          advances: data.fluctuationUpIssueCount !== undefined ? Number(data.fluctuationUpIssueCount) : (fallbackBreadth?.advances ?? 0),
-          declines: data.fluctuationDownIssueCount !== undefined ? Number(data.fluctuationDownIssueCount) : (fallbackBreadth?.declines ?? 0),
-          noChanges: data.fluctuationSteadinessIssueCount !== undefined ? Number(data.fluctuationSteadinessIssueCount) : (fallbackBreadth?.noChanges ?? 0),
-          floorCount: data.fluctuationFloorIssueCount !== undefined ? Number(data.fluctuationFloorIssueCount) : fallbackBreadth?.floorCount,
-          totalStocks: fallbackBreadth?.totalStocks,
+          advances: data.fluctuationUpIssueCount !== undefined ? Number(data.fluctuationUpIssueCount) : 0,
+          declines: data.fluctuationDownIssueCount !== undefined ? Number(data.fluctuationDownIssueCount) : 0,
+          noChanges: data.fluctuationSteadinessIssueCount !== undefined ? Number(data.fluctuationSteadinessIssueCount) : 0,
           timestamp: Date.now(),
         });
       }
