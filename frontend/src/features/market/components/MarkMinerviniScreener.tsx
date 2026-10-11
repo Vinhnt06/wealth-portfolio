@@ -478,7 +478,7 @@ export const MarkMinerviniScreener: React.FC = () => {
 
                               <div>
                                 <div className={`font-mono text-xs font-bold ${priceColor.colorClass}`}>
-                                  {(stock.price / 1000).toFixed(2)}k
+                                  {(stock.price / 1000).toFixed(2)}
                                 </div>
                                 <div
                                   className={`font-mono text-[10px] font-bold ${priceColor.colorClass}`}

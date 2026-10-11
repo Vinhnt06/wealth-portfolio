@@ -824,7 +824,7 @@ export const MarketHeatmap: React.FC = () => {
 
                         {child.w > 70 && child.h > 52 && (
                           <span className="text-[9px] text-white/70 mt-0.5">
-                            {(stock.price / 1000).toFixed(2)}k
+                            {(stock.price / 1000).toFixed(2)}
                           </span>
                         )}
                       </>
@@ -887,7 +887,7 @@ export const MarketHeatmap: React.FC = () => {
 
                     {item.w > 70 && item.h > 52 && (
                       <span className="text-[9px] text-white/70 mt-0.5">
-                        {(stock.price / 1000).toFixed(2)}k
+                        {(stock.price / 1000).toFixed(2)}
                       </span>
                     )}
                   </>

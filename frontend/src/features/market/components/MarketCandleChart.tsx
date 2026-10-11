@@ -1202,7 +1202,7 @@ export function MarketCandleChart() {
             ctx.font = 'bold 10px JetBrains Mono, monospace';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText(`${item.p1.price.toFixed(2)}k`, w - 38, y);
+            ctx.fillText(`${item.p1.price.toFixed(2)}`, w - 38, y);
           }
         } else if (item.type === 'horizontal_ray') {
           if (c1.x !== null && c1.y !== null) {
@@ -1222,7 +1222,7 @@ export function MarketCandleChart() {
             ctx.font = 'bold 10px JetBrains Mono, monospace';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText(`${item.p1.price.toFixed(2)}k`, w - 38, c1.y);
+            ctx.fillText(`${item.p1.price.toFixed(2)}`, w - 38, c1.y);
           }
         } else if (item.type === 'vertical') {
           if (c1.x !== null) {
@@ -1572,7 +1572,7 @@ export function MarketCandleChart() {
             ctx.font = 'bold 10px JetBrains Mono, monospace';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText(`${isUp ? '+' : ''}${deltaP.toFixed(2)}k (${isUp ? '+' : ''}${deltaPct.toFixed(2)}%)`, midX, midY);
+            ctx.fillText(`${isUp ? '+' : ''}${deltaP.toFixed(2)} (${isUp ? '+' : ''}${deltaPct.toFixed(2)}%)`, midX, midY);
           }
         } else if (item.type === 'text' && item.text) {
           if (c1.x !== null && c1.y !== null) {
@@ -1589,7 +1589,7 @@ export function MarketCandleChart() {
           }
         } else if (item.type === 'price_label') {
           if (c1.x !== null && c1.y !== null) {
-            const labelText = `${item.p1.price.toFixed(2)}k`;
+            const labelText = `${item.p1.price.toFixed(2)}`;
             ctx.font = 'bold 10px JetBrains Mono, monospace';
             const tw = ctx.measureText(labelText).width;
             ctx.fillStyle = item.color;
@@ -1676,7 +1676,7 @@ export function MarketCandleChart() {
             ctx.fillStyle = '#09090b';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText(`Target ${item.p1.price.toFixed(2)}k`, c1.x + 49, c1.y);
+            ctx.fillText(`Target ${item.p1.price.toFixed(2)}`, c1.x + 49, c1.y);
           }
         }
 
@@ -1748,7 +1748,7 @@ export function MarketCandleChart() {
       ctx.font = 'bold 9px JetBrains Mono, monospace';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(`${hoverSnapPoint.price.toFixed(2)}k`, hoverSnapPoint.x + 38, hoverSnapPoint.y);
+      ctx.fillText(`${hoverSnapPoint.price.toFixed(2)}`, hoverSnapPoint.x + 38, hoverSnapPoint.y);
       ctx.restore();
     }
 

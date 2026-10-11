@@ -316,7 +316,7 @@ export const MarketSearch: React.FC = () => {
                     <div className="text-right shrink-0 pl-2">
                       <div className="flex items-baseline justify-end gap-1 font-mono">
                         <span className={`text-xs sm:text-sm font-black ${priceColor.colorClass}`}>
-                          {priceDisplayK !== '--' ? `${priceDisplayK}k` : '--'}
+                          {priceDisplayK !== '--' ? priceDisplayK : '--'}
                         </span>
                         {price && (
                           <span className="text-[9px] text-zinc-500">({price.toLocaleString('vi-VN')}đ)</span>

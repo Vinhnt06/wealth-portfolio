@@ -278,15 +278,15 @@ export const MinerviniStrategyPanel: React.FC<MinerviniStrategyPanelProps> = ({ 
               <div className="space-y-2 text-xs">
                 <div className="flex justify-between items-center py-1 border-b border-zinc-800/50">
                   <span className="text-zinc-400">SMA 50 ngày (Ngắn hạn)</span>
-                  <span className="font-bold text-cyan-400">{data.sma50.toFixed(2)}k</span>
+                  <span className="font-bold text-cyan-400">{data.sma50.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between items-center py-1 border-b border-zinc-800/50">
                   <span className="text-zinc-400">SMA 150 ngày (Trung hạn)</span>
-                  <span className="font-bold text-amber-300">{data.sma150.toFixed(2)}k</span>
+                  <span className="font-bold text-amber-300">{data.sma150.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between items-center py-1 border-b border-zinc-800/50">
                   <span className="text-zinc-400">SMA 200 ngày (Dài hạn)</span>
-                  <span className="font-bold text-rose-400">{data.sma200.toFixed(2)}k</span>
+                  <span className="font-bold text-rose-400">{data.sma200.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between items-center py-1">
                   <span className="text-zinc-400">Xu hướng SMA 200 (1 tháng)</span>
@@ -305,7 +305,7 @@ export const MinerviniStrategyPanel: React.FC<MinerviniStrategyPanelProps> = ({ 
               <div className="space-y-2 text-xs">
                 <div className="flex justify-between items-center py-1 border-b border-zinc-800/50">
                   <span className="text-zinc-400">Đỉnh 52 tuần</span>
-                  <span className="font-bold text-zinc-100">{data.high52W.toFixed(2)}k</span>
+                  <span className="font-bold text-zinc-100">{data.high52W.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between items-center py-1 border-b border-zinc-800/50">
                   <span className="text-zinc-400">Khoảng cách tới Đỉnh 52T</span>
@@ -315,7 +315,7 @@ export const MinerviniStrategyPanel: React.FC<MinerviniStrategyPanelProps> = ({ 
                 </div>
                 <div className="flex justify-between items-center py-1 border-b border-zinc-800/50">
                   <span className="text-zinc-400">Đáy 52 tuần</span>
-                  <span className="font-bold text-zinc-100">{data.low52W.toFixed(2)}k</span>
+                  <span className="font-bold text-zinc-100">{data.low52W.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between items-center py-1">
                   <span className="text-zinc-400">Cách đáy 52T</span>

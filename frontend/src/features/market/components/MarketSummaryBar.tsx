@@ -193,7 +193,7 @@ export const MarketSummaryBar: React.FC = () => {
                   </div>
 
                   <div className="text-right">
-                    <div className="font-mono text-xs font-black text-zinc-100">{formattedPrice}k</div>
+                    <div className="font-mono text-xs font-black text-zinc-100">{formattedPrice}</div>
                     <div className="flex items-center gap-1 justify-end mt-0.5">
                       <span className="text-[11px] font-mono font-black px-1.5 py-0.2 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">
                         +{item.changePct.toFixed(2)}%
@@ -247,7 +247,7 @@ export const MarketSummaryBar: React.FC = () => {
                   </div>
 
                   <div className="text-right">
-                    <div className="font-mono text-xs font-black text-zinc-100">{formattedPrice}k</div>
+                    <div className="font-mono text-xs font-black text-zinc-100">{formattedPrice}</div>
                     <div className="flex items-center gap-1 justify-end mt-0.5">
                       <span className="text-[11px] font-mono font-black px-1.5 py-0.2 rounded bg-rose-500/15 text-rose-400 border border-rose-500/20">
                         {item.changePct.toFixed(2)}%
@@ -300,7 +300,7 @@ export const MarketSummaryBar: React.FC = () => {
                   </div>
 
                   <div className="text-right">
-                    <div className="font-mono text-xs font-black text-zinc-100">{formattedPrice}k</div>
+                    <div className="font-mono text-xs font-black text-zinc-100">{formattedPrice}</div>
                     <div className="flex items-center gap-1 justify-end mt-0.5">
                       <span
                         className={`text-[11px] font-mono font-bold px-1.5 py-0.2 rounded ${
@@ -354,7 +354,7 @@ export const MarketSummaryBar: React.FC = () => {
                       <div className="flex items-center gap-1.5">
                         <span className="font-mono font-black text-xs text-zinc-100">{item.symbol}</span>
                         <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-zinc-800 text-zinc-400">
-                          {formattedPrice}k
+                          {formattedPrice}
                         </span>
                       </div>
                       <p className="text-[10px] text-zinc-400 font-sans">
