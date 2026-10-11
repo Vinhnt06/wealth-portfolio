@@ -28,8 +28,8 @@ CREATE POLICY "Allow service_role manage market_prices" ON public.market_prices
 -- ────────────────────────────────────────────────────────────────────
 -- 2. Table: public.assets (User Portfolio Holdings / Multi-Tenant Data)
 -- ────────────────────────────────────────────────────────────────────
--- Ensure index exists on user_id for optimal RLS query plan performance
-CREATE INDEX IF NOT EXISTS idx_assets_user_id ON public.assets(user_id);
+-- Ensure index exists on "userId" for optimal RLS query plan performance
+CREATE INDEX IF NOT EXISTS idx_assets_user_id ON public.assets("userId");
 
 -- Enable Row Level Security
 ALTER TABLE IF EXISTS public.assets ENABLE ROW LEVEL SECURITY;
@@ -39,26 +39,26 @@ ALTER TABLE IF EXISTS public.assets ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Users can view own assets" ON public.assets;
 CREATE POLICY "Users can view own assets" ON public.assets
     FOR SELECT TO authenticated
-    USING ((select auth.uid()) = user_id);
+    USING ((select auth.uid())::text = "userId");
 
 -- Authenticated users can only insert assets assigned to themselves
 DROP POLICY IF EXISTS "Users can insert own assets" ON public.assets;
 CREATE POLICY "Users can insert own assets" ON public.assets
     FOR INSERT TO authenticated
-    WITH CHECK ((select auth.uid()) = user_id);
+    WITH CHECK ((select auth.uid())::text = "userId");
 
 -- Authenticated users can only update their own assets
 DROP POLICY IF EXISTS "Users can update own assets" ON public.assets;
 CREATE POLICY "Users can update own assets" ON public.assets
     FOR UPDATE TO authenticated
-    USING ((select auth.uid()) = user_id)
-    WITH CHECK ((select auth.uid()) = user_id);
+    USING ((select auth.uid())::text = "userId")
+    WITH CHECK ((select auth.uid())::text = "userId");
 
 -- Authenticated users can only delete their own assets
 DROP POLICY IF EXISTS "Users can delete own assets" ON public.assets;
 CREATE POLICY "Users can delete own assets" ON public.assets
     FOR DELETE TO authenticated
-    USING ((select auth.uid()) = user_id);
+    USING ((select auth.uid())::text = "userId");
 
 -- Allow service_role full management access
 DROP POLICY IF EXISTS "Allow service_role manage assets" ON public.assets;
