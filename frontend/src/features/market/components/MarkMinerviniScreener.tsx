@@ -18,6 +18,7 @@ import {
   ShieldCheck,
   Flame,
   Buildings,
+  Compass,
   CaretUp,
   CaretDown,
   CaretUpDown,
@@ -29,9 +30,10 @@ import { useMarketStore } from '../store/marketStore';
 import { MinerviniScreenerItem } from '../types/minervini.types';
 import { getStockPriceColor } from '../utils/priceColors';
 import { SECTOR_MAPPING, ICB_20_SECTORS } from '../data/sectorMapping';
+import { EconomicCycleWheel } from './EconomicCycleWheel';
 
 type ScreenerTab = 'overview' | 'performance' | 'technicals' | 'valuation';
-type ViewMode = 'table' | 'sectors';
+type ViewMode = 'table' | 'sectors' | 'cycle';
 type SectorSortOption = 'rs' | 'change' | 'stage2' | 'name';
 
 export const MarkMinerviniScreener: React.FC = () => {
@@ -254,7 +256,7 @@ export const MarkMinerviniScreener: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-3">
-            {/* View Mode Toggle: Table vs Sectors */}
+            {/* View Mode Toggle: Table vs Sectors vs Cycle */}
             <div className="flex items-center bg-zinc-900 p-1 rounded-xl border border-zinc-800 font-mono text-xs">
               <button
                 onClick={() => setMainViewMode('table')}
@@ -276,7 +278,18 @@ export const MarkMinerviniScreener: React.FC = () => {
                 }`}
               >
                 <Buildings className="w-4 h-4" />
-                <span>Top CP Theo Nhóm Ngành</span>
+                <span>Top CP Theo Ngành</span>
+              </button>
+              <button
+                onClick={() => setMainViewMode('cycle')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition-all ${
+                  mainViewMode === 'cycle'
+                    ? 'bg-emerald-400 text-zinc-950 shadow-sm'
+                    : 'text-zinc-400 hover:text-zinc-200'
+                }`}
+              >
+                <Compass className="w-4 h-4" />
+                <span>Vòng Tròn Chu Kỳ</span>
               </button>
             </div>
 
@@ -580,6 +593,19 @@ export const MarkMinerviniScreener: React.FC = () => {
             })}
           </div>
         </div>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* VIEW MODE 3: VÒNG TRÒN CHU KỲ KINH TẾ (ECONOMIC CYCLE WHEEL) */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {mainViewMode === 'cycle' && (
+        <EconomicCycleWheel
+          items={items}
+          onSelectSector={(sec) => {
+            setSelectedSector(sec);
+            setMainViewMode('table');
+          }}
+        />
       )}
 
       {/* ═══════════════════════════════════════════════════════════════ */}
