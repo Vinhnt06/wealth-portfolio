@@ -37,11 +37,11 @@
   },
   "UPCOM": {
     "symbol": "UPCOM",
-    "ceilingCount": 14,
+    "ceilingCount": 20,
     "advances": 106,
     "noChanges": 114,
     "declines": 123,
-    "floorCount": 12,
+    "floorCount": 17,
     "noTradeCount": 474,
     "tradedStocks": 343,
     "totalStocks": 817,
