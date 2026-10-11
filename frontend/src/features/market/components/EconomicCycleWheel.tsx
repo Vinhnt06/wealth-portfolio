@@ -129,6 +129,48 @@ export const CYCLE_PHASES: Record<CyclePhaseKey, CyclePhaseConfig> = {
   },
 };
 
+function polarToCartesian(centerX: number, centerY: number, radius: number, angleInDegrees: number) {
+  const angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180.0;
+  return {
+    x: Math.round((centerX + radius * Math.cos(angleInRadians)) * 10) / 10,
+    y: Math.round((centerY + radius * Math.sin(angleInRadians)) * 10) / 10,
+  };
+}
+
+function describeDonutSegment(
+  cx: number,
+  cy: number,
+  rInner: number,
+  rOuter: number,
+  startAngle: number,
+  endAngle: number
+) {
+  const startOuter = polarToCartesian(cx, cy, rOuter, startAngle);
+  const endOuter = polarToCartesian(cx, cy, rOuter, endAngle);
+  const startInner = polarToCartesian(cx, cy, rInner, endAngle);
+  const endInner = polarToCartesian(cx, cy, rInner, startAngle);
+
+  const largeArcFlag = endAngle - startAngle <= 180 ? 0 : 1;
+
+  return `M ${startOuter.x} ${startOuter.y} A ${rOuter} ${rOuter} 0 ${largeArcFlag} 1 ${endOuter.x} ${endOuter.y} L ${startInner.x} ${startInner.y} A ${rInner} ${rInner} 0 ${largeArcFlag} 0 ${endInner.x} ${endInner.y} Z`;
+}
+
+interface QuadrantConfig {
+  key: CyclePhaseKey;
+  startAngle: number;
+  endAngle: number;
+  labelAngle: number;
+  shortTitle: string;
+  sub: string;
+}
+
+const QUADRANTS: QuadrantConfig[] = [
+  { key: 'recovery', startAngle: 2, endAngle: 88, labelAngle: 45, shortTitle: 'PHỤC HỒI SỚM', sub: 'Early-Cycle' },
+  { key: 'expansion', startAngle: 92, endAngle: 178, labelAngle: 135, shortTitle: 'TĂNG TRƯỞNG', sub: 'Mid-Cycle' },
+  { key: 'late', startAngle: 182, endAngle: 268, labelAngle: 225, shortTitle: 'CUỐI CHU KỲ', sub: 'Late-Cycle' },
+  { key: 'recession', startAngle: 272, endAngle: 358, labelAngle: 315, shortTitle: 'SUY THOÁI', sub: 'Contraction' },
+];
+
 interface EconomicCycleWheelProps {
   items?: MinerviniScreenerItem[];
   onSelectSector?: (sector: string) => void;
@@ -138,7 +180,8 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
   items,
   onSelectSector,
 }) => {
-  const [userSelectedPhase, setUserSelectedPhase] = useState<CyclePhaseKey | null>(null);
+  const [hoveredPhase, setHoveredPhase] = useState<CyclePhaseKey | null>(null);
+  const [pinnedPhase, setPinnedPhase] = useState<CyclePhaseKey | null>(null);
   const [activeResearchTab, setActiveResearchTab] = useState<'matrix' | 'macro' | 'methodology'>('matrix');
   const [internalItems, setInternalItems] = useState<MinerviniScreenerItem[]>(items || []);
   const [isLoading, setIsLoading] = useState<boolean>(!items || items.length === 0);
@@ -274,7 +317,7 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
     return topKey;
   }, [phaseScores]);
 
-  const activePhaseKey = userSelectedPhase ?? detectedActivePhaseKey;
+  const activePhaseKey = hoveredPhase || pinnedPhase || detectedActivePhaseKey;
   const activeCfg = CYCLE_PHASES[activePhaseKey];
   const detectedCfg = CYCLE_PHASES[detectedActivePhaseKey];
   const topLeadingSectors = sectorLiveStats.slice(0, 5);
@@ -301,14 +344,14 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
               Đồng Hồ Chu Kỳ Kinh Tế & Bản Đồ Sức Mạnh RS 20 Nhóm Ngành
             </h2>
             <p className="text-xs text-zinc-400 max-w-3xl mt-1 leading-relaxed">
-              Tổng hợp lý thuyết định chế tài chính quốc tế (<strong>Merrill Lynch Investment Clock</strong> &amp; <strong>Fidelity Business Cycle Framework</strong>) kết hợp mô hình lọc cổ phiếu <strong>Mark Minervini SEPA Trend Template</strong> từ dữ liệu 180+ mã niêm yết chuẩn xác.
+              Mô hình kết hợp <strong>Merrill Lynch Investment Clock</strong> &amp; <strong>Fidelity Business Cycle</strong> với dữ liệu thực 180+ mã cổ phiếu. Kim chỉ cố định vào pha vĩ mô dẫn dắt; rà chuột vào bất kỳ góc phần tư nào để xem ngay chiến lược.
             </p>
           </div>
 
           {/* Dynamic Macro Phase Detection Badge */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3.5 p-4 rounded-xl bg-zinc-900/90 border border-emerald-500/30 shadow-lg shrink-0">
             <div className="w-11 h-11 rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
-              <Compass className="w-6 h-6 animate-[spin_12s_linear_infinite]" />
+              <Compass className="w-6 h-6 animate-[spin_16s_linear_infinite]" />
             </div>
             <div>
               <div className="flex items-center gap-2">
@@ -327,132 +370,203 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
               </span>
             </div>
 
-            {userSelectedPhase && (
+            {pinnedPhase && (
               <button
-                onClick={() => setUserSelectedPhase(null)}
+                onClick={() => setPinnedPhase(null)}
                 className="mt-2 sm:mt-0 sm:ml-2 px-2.5 py-1.5 rounded-lg text-[10px] font-mono font-bold bg-zinc-800 hover:bg-zinc-700 text-emerald-400 border border-emerald-500/30 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
-                title="Bấm để quay về pha dẫn dắt theo dữ liệu thực tế"
+                title="Bỏ ghim và quay về pha thực tế"
               >
                 <ArrowsClockwise className="w-3.5 h-3.5" />
-                <span>Pha Dẫn Dắt Tự Động</span>
+                <span>Bỏ Ghim</span>
               </button>
             )}
           </div>
         </div>
 
-        {/* ── 2. Interactive SVG Cycle Dial Clock (360 degrees) ───────────── */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 pt-6 items-center">
-          {/* Wheel SVG & Sector Dial (5 Cols) */}
-          <div className="lg:col-span-5 flex flex-col items-center justify-center">
-            <div className="relative w-[320px] h-[320px] sm:w-[360px] sm:h-[360px] flex items-center justify-center">
-              {/* Outer decorative orbit ring with degrees markings */}
-              <div className="absolute inset-0 rounded-full border border-dashed border-zinc-800 animate-[spin_80s_linear_infinite]" />
-              <div className="absolute inset-3 rounded-full border border-zinc-800/80" />
+        {/* ── 2. Interactive Precision Cycle Wheel & Analysis Hub ───────────── */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-6 items-stretch">
+          {/* Wheel Dial Pedestal (5 Cols) */}
+          <div className="lg:col-span-5 flex flex-col justify-between p-5 rounded-2xl bg-zinc-950/80 border border-zinc-800/80 shadow-xl backdrop-blur-xl">
+            {/* Header Hint */}
+            <div className="flex items-center justify-between pb-3 border-b border-zinc-800/80 mb-2">
+              <div className="flex items-center gap-2">
+                <Sparkle className="w-4 h-4 text-emerald-400" />
+                <span className="text-xs font-mono font-bold text-zinc-200">LA BÀN 4 PHA KINH TẾ</span>
+              </div>
+              <span className="text-[10px] font-mono text-zinc-400">
+                Rà chuột (hover) để xem nhanh
+              </span>
+            </div>
 
-              {/* Main SVG Dial */}
-              <svg viewBox="0 0 400 400" className="w-full h-full transform -rotate-90">
-                {/* 1. Quadrant Recovery (0° -> 90°) */}
-                <path
-                  d="M 200 200 L 360 200 A 160 160 0 0 1 200 360 Z"
-                  className={`cursor-pointer transition-all duration-300 ${
-                    activePhaseKey === 'recovery'
-                      ? 'fill-cyan-500/35 stroke-cyan-400 stroke-2 filter drop-shadow-[0_0_12px_rgba(6,182,212,0.4)]'
-                      : 'fill-cyan-500/10 hover:fill-cyan-500/20 stroke-cyan-500/20'
-                  }`}
-                  onClick={() => setUserSelectedPhase('recovery')}
-                />
+            {/* Circular Dial Interactive Graphic */}
+            <div className="relative flex items-center justify-center my-auto py-2">
+              <div className="relative w-[310px] h-[310px] sm:w-[340px] sm:h-[340px] flex items-center justify-center">
+                {/* Decorative orbit ring */}
+                <div className="absolute inset-0 rounded-full border border-dashed border-zinc-800/80 animate-[spin_100s_linear_infinite] pointer-events-none" />
+                <div className="absolute inset-2 rounded-full border border-zinc-800/50 pointer-events-none" />
 
-                {/* 2. Quadrant Expansion (90° -> 180°) */}
-                <path
-                  d="M 200 200 L 200 360 A 160 160 0 0 1 40 200 Z"
-                  className={`cursor-pointer transition-all duration-300 ${
-                    activePhaseKey === 'expansion'
-                      ? 'fill-emerald-500/40 stroke-emerald-400 stroke-2 filter drop-shadow-[0_0_16px_rgba(16,185,129,0.55)]'
-                      : 'fill-emerald-500/15 hover:fill-emerald-500/25 stroke-emerald-500/30'
-                  }`}
-                  onClick={() => setUserSelectedPhase('expansion')}
-                />
+                {/* SVG Precision Donut Dial */}
+                <svg viewBox="0 0 400 400" className="w-full h-full overflow-visible">
+                  <defs>
+                    <filter id="glowCyan" x="-20%" y="-20%" width="140%" height="140%">
+                      <feDropShadow dx="0" dy="0" stdDeviation="6" floodColor="rgba(6,182,212,0.6)" />
+                    </filter>
+                    <filter id="glowEmerald" x="-20%" y="-20%" width="140%" height="140%">
+                      <feDropShadow dx="0" dy="0" stdDeviation="6" floodColor="rgba(16,185,129,0.6)" />
+                    </filter>
+                    <filter id="glowAmber" x="-20%" y="-20%" width="140%" height="140%">
+                      <feDropShadow dx="0" dy="0" stdDeviation="6" floodColor="rgba(245,158,11,0.6)" />
+                    </filter>
+                    <filter id="glowRose" x="-20%" y="-20%" width="140%" height="140%">
+                      <feDropShadow dx="0" dy="0" stdDeviation="6" floodColor="rgba(244,63,94,0.6)" />
+                    </filter>
+                  </defs>
 
-                {/* 3. Quadrant Late-Cycle (180° -> 270°) */}
-                <path
-                  d="M 200 200 L 40 200 A 160 160 0 0 1 200 40 Z"
-                  className={`cursor-pointer transition-all duration-300 ${
-                    activePhaseKey === 'late'
-                      ? 'fill-amber-500/35 stroke-amber-400 stroke-2 filter drop-shadow-[0_0_12px_rgba(245,158,11,0.4)]'
-                      : 'fill-amber-500/10 hover:fill-amber-500/20 stroke-amber-500/20'
-                  }`}
-                  onClick={() => setUserSelectedPhase('late')}
-                />
+                  {/* 4 Precision Donut Quadrants */}
+                  {QUADRANTS.map((quad) => {
+                    const p = CYCLE_PHASES[quad.key];
+                    const isHovered = hoveredPhase === quad.key;
+                    const isActive = activePhaseKey === quad.key;
+                    const isDetected = detectedActivePhaseKey === quad.key;
+                    const dPath = describeDonutSegment(200, 200, 80, 175, quad.startAngle, quad.endAngle);
 
-                {/* 4. Quadrant Recession (270° -> 360°) */}
-                <path
-                  d="M 200 200 L 200 40 A 160 160 0 0 1 360 200 Z"
-                  className={`cursor-pointer transition-all duration-300 ${
-                    activePhaseKey === 'recession'
-                      ? 'fill-rose-500/35 stroke-rose-400 stroke-2 filter drop-shadow-[0_0_12px_rgba(244,63,94,0.4)]'
-                      : 'fill-rose-500/10 hover:fill-rose-500/20 stroke-rose-500/20'
-                  }`}
-                  onClick={() => setUserSelectedPhase('recession')}
-                />
+                    const filterMap: Record<CyclePhaseKey, string> = {
+                      recovery: 'url(#glowCyan)',
+                      expansion: 'url(#glowEmerald)',
+                      late: 'url(#glowAmber)',
+                      recession: 'url(#glowRose)',
+                    };
 
-                {/* Inner Core Center */}
-                <circle cx="200" cy="200" r="76" fill="#09090b" stroke="#27272a" strokeWidth="3" />
+                    return (
+                      <g
+                        key={quad.key}
+                        className="cursor-pointer transition-all duration-200"
+                        onMouseEnter={() => setHoveredPhase(quad.key)}
+                        onMouseLeave={() => setHoveredPhase(null)}
+                        onClick={() => setPinnedPhase(pinnedPhase === quad.key ? null : quad.key)}
+                      >
+                        <path
+                          d={dPath}
+                          fill={p.color}
+                          fillOpacity={isActive ? (isHovered ? 0.45 : 0.32) : 0.12}
+                          stroke={p.color}
+                          strokeWidth={isActive ? (isHovered ? 3 : 2.5) : 1}
+                          className="transition-all duration-200"
+                          style={{
+                            filter: isActive ? filterMap[quad.key] : undefined,
+                          }}
+                        />
 
-                {/* Dynamic Indicator Needle aimed at active phase */}
-                <g
-                  className="transition-transform duration-1000 ease-out"
-                  style={{
-                    transformOrigin: '200px 200px',
-                    transform: `rotate(${CYCLE_PHASES[activePhaseKey].needleAngle}deg)`,
-                  }}
-                >
-                  <line x1="200" y1="200" x2="330" y2="200" stroke={activeCfg.color} strokeWidth="4" strokeLinecap="round" />
-                  <circle cx="330" cy="200" r="8" fill={activeCfg.color} className="animate-pulse" />
-                  <circle cx="200" cy="200" r="14" fill={activeCfg.color} />
-                  <circle cx="200" cy="200" r="6" fill="#09090b" />
-                </g>
-              </svg>
+                        {/* Quadrant short text arc preview */}
+                        {(() => {
+                          const labelPos = polarToCartesian(200, 200, 128, quad.labelAngle);
+                          return (
+                            <text
+                              x={labelPos.x}
+                              y={labelPos.y}
+                              textAnchor="middle"
+                              dominantBaseline="central"
+                              fill={isActive ? p.color : '#a1a1aa'}
+                              fontSize={isActive ? '11' : '10'}
+                              fontWeight="bold"
+                              fontFamily="monospace"
+                              className="pointer-events-none select-none transition-all duration-200"
+                            >
+                              {quad.shortTitle}
+                            </text>
+                          );
+                        })()}
+                      </g>
+                    );
+                  })}
 
-              {/* Center Core HUD Label */}
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none p-4">
-                <span className="text-[10px] font-mono text-zinc-400 font-bold uppercase">CHU KỲ KINH TẾ</span>
-                <span className="text-xs font-mono font-black uppercase mt-0.5" style={{ color: activeCfg.color }}>
-                  {activeCfg.title}
-                </span>
-                <span className="text-[9px] font-mono text-zinc-300 mt-0.5 font-bold">
-                  RS {phaseScores[activePhaseKey].avgRs} • {phaseScores[activePhaseKey].score} pts
-                </span>
+                  {/* Inner Circular Boss Boundary */}
+                  <circle cx="200" cy="200" r="78" fill="#09090b" stroke="#27272a" strokeWidth="2.5" />
+
+                  {/* ── FIXED COMPASS NEEDLE (Permanently points to DETECTED MACRO PHASE) ── */}
+                  <g
+                    className="pointer-events-none transition-transform duration-1000 ease-out"
+                    style={{
+                      transformOrigin: '200px 200px',
+                      transform: `rotate(${CYCLE_PHASES[detectedActivePhaseKey].needleAngle}deg)`,
+                    }}
+                  >
+                    {/* Shadow underneath */}
+                    <line x1="200" y1="200" x2="200" y2="40" stroke="rgba(0,0,0,0.7)" strokeWidth="6" strokeLinecap="round" />
+                    {/* Main needle shaft */}
+                    <line x1="200" y1="200" x2="200" y2="44" stroke={detectedCfg.color} strokeWidth="3.5" strokeLinecap="round" />
+                    {/* Arrowhead polygon pointing outward */}
+                    <polygon points="193,52 207,52 200,34" fill={detectedCfg.color} />
+                    {/* Pulsing focal beacon at tip */}
+                    <circle cx="200" cy="38" r="4" fill={detectedCfg.color} className="animate-pulse" />
+                    {/* Center brass pivot */}
+                    <circle cx="200" cy="200" r="10" fill={detectedCfg.color} />
+                    <circle cx="200" cy="200" r="4" fill="#09090b" />
+                  </g>
+                </svg>
+
+                {/* Center Core HUD Label (Opaque dark glass, zero overlapping lines) */}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="w-[140px] h-[140px] rounded-full bg-zinc-950/95 border-2 border-zinc-800 shadow-2xl flex flex-col items-center justify-center p-2.5 text-center backdrop-blur-xl">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                      <span className="text-[8px] font-mono text-zinc-400 font-bold uppercase tracking-wider">
+                        PHA THỰC TẾ
+                      </span>
+                    </div>
+                    <span
+                      className="text-[11px] font-mono font-black uppercase leading-tight px-1"
+                      style={{ color: detectedCfg.color }}
+                    >
+                      {detectedCfg.title}
+                    </span>
+                    <span className="text-[9px] font-mono font-bold text-zinc-300 mt-1">
+                      RS {phaseScores[detectedActivePhaseKey].avgRs} • {phaseScores[detectedActivePhaseKey].score} pts
+                    </span>
+                    <span className="text-[8px] font-mono text-emerald-400/90 mt-0.5">
+                      (Kim chỉ cố định)
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Phase Selector Tabs with Quantitative Scores */}
-            <div className="grid grid-cols-2 gap-2 w-full mt-4">
-              {(Object.keys(CYCLE_PHASES) as CyclePhaseKey[]).map((phaseKey) => {
-                const p = CYCLE_PHASES[phaseKey];
-                const isSelected = activePhaseKey === phaseKey;
-                const isDetected = phaseKey === detectedActivePhaseKey;
-                const pData = phaseScores[phaseKey];
+            {/* 4 Interactive Phase Pills with Quantitative Scores */}
+            <div className="grid grid-cols-2 gap-2 w-full mt-3">
+              {QUADRANTS.map((quad) => {
+                const p = CYCLE_PHASES[quad.key];
+                const isActive = activePhaseKey === quad.key;
+                const isDetected = detectedActivePhaseKey === quad.key;
+                const isPinned = pinnedPhase === quad.key;
+                const pData = phaseScores[quad.key];
 
                 return (
                   <button
-                    key={phaseKey}
-                    onClick={() => setUserSelectedPhase(phaseKey)}
-                    className={`px-3 py-2.5 rounded-xl text-left font-mono transition-all border ${
-                      isSelected
-                        ? `${p.bgLight} ${p.borderLight} text-zinc-100 shadow-lg`
-                        : 'bg-zinc-900/60 border-zinc-800/80 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900'
+                    key={quad.key}
+                    onMouseEnter={() => setHoveredPhase(quad.key)}
+                    onMouseLeave={() => setHoveredPhase(null)}
+                    onClick={() => setPinnedPhase(pinnedPhase === quad.key ? null : quad.key)}
+                    className={`px-3 py-2 rounded-xl text-left font-mono transition-all border cursor-pointer ${
+                      isActive
+                        ? `${p.bgLight} ${p.borderLight} text-zinc-100 shadow-md`
+                        : 'bg-zinc-900/60 border-zinc-800/80 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/90'
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-bold block" style={{ color: isSelected ? p.color : undefined }}>
+                      <span className="text-[11px] font-bold block" style={{ color: isActive ? p.color : undefined }}>
                         {p.title}
                       </span>
-                      {isDetected && (
-                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" title="Pha dẫn dắt theo dữ liệu thật" />
-                      )}
+                      <div className="flex items-center gap-1">
+                        {isPinned && (
+                          <span className="text-[8px] px-1 rounded bg-zinc-800 text-zinc-300 font-bold">Ghim</span>
+                        )}
+                        {isDetected && (
+                          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" title="Kim chỉ thực tế" />
+                        )}
+                      </div>
                     </div>
                     <div className="flex items-center justify-between mt-1">
-                      <span className="text-[9px] text-zinc-500 block truncate">{p.subTitle}</span>
+                      <span className="text-[9px] text-zinc-500 block truncate">{quad.sub}</span>
                       <span className="text-[9px] font-mono font-bold text-zinc-300">
                         RS {pData.avgRs} • {pData.score} pts
                       </span>
@@ -476,18 +590,39 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
               >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3.5 border-b border-zinc-800/80 mb-3.5 gap-2">
                   <div>
-                    <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 font-semibold block">
-                      PHÂN TÍCH CHUYÊN SÂU PHA {activePhaseKey === detectedActivePhaseKey ? '(HIỆN TẠI DẪN DẮT)' : ''}
-                    </span>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 font-semibold block">
+                        PHÂN TÍCH CHUYÊN SÂU PHA
+                      </span>
+                      <span
+                        className={`text-[9px] font-mono font-bold px-1.5 py-0.2 rounded border ${
+                          hoveredPhase === activePhaseKey
+                            ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/40'
+                            : pinnedPhase === activePhaseKey
+                            ? 'bg-amber-500/20 text-amber-400 border-amber-500/40'
+                            : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
+                        }`}
+                      >
+                        {hoveredPhase === activePhaseKey
+                          ? '👁️ Đang rà chuột xem trước'
+                          : pinnedPhase === activePhaseKey
+                          ? '📌 Đang ghim xem'
+                          : '⚡ Pha dẫn dắt thực tế (Kim chỉ)'}
+                      </span>
+                    </div>
                     <h3 className="text-lg font-mono font-bold" style={{ color: activeCfg.color }}>
                       {activeCfg.title} — {activeCfg.subTitle}
                     </h3>
                   </div>
 
-                  <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold border bg-zinc-900/90 shrink-0 self-start sm:self-auto" style={{ borderColor: activeCfg.color, color: activeCfg.color }}>
+                  <span
+                    className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold border bg-zinc-900/90 shrink-0 self-start sm:self-auto"
+                    style={{ borderColor: activeCfg.color, color: activeCfg.color }}
+                  >
                     {activeCfg.macroStatus}
                   </span>
                 </div>
+
 
                 <p className="text-xs text-zinc-300 leading-relaxed mb-4">
                   {activeCfg.description}
