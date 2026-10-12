@@ -224,10 +224,7 @@ export function calculateTrendlinePro(candles: CandlestickData<Time>[]): Trendli
     let maxP = -Infinity;
     let maxIdx = startOffset;
     for (let i = startOffset; i < total; i++) {
-      if (candles[i].high > maxP) {
-        maxP = candles[i].high;
-        maxIdx = i;
-      }
+      if (candles[i].high > maxP) { maxP = candles[i].high; maxIdx = i; }
     }
     swingHighs.push({ idx: maxIdx, time: candles[maxIdx].time, price: maxP });
   }
@@ -235,81 +232,57 @@ export function calculateTrendlinePro(candles: CandlestickData<Time>[]): Trendli
     let minP = Infinity;
     let minIdx = startOffset;
     for (let i = startOffset; i < total; i++) {
-      if (candles[i].low < minP) {
-        minP = candles[i].low;
-        minIdx = i;
-      }
+      if (candles[i].low < minP) { minP = candles[i].low; minIdx = i; }
     }
     swingLows.push({ idx: minIdx, time: candles[minIdx].time, price: minP });
   }
 
-  // Pick anchor points H1 and H2 for the upper resistance trendline
-  let h1 = swingHighs[0];
-  let h2 = swingHighs[swingHighs.length - 1];
+  // ── Use Linear Regression on swing highs to find the best-fit resistance slope ──
+  // This is far more stable than picking just 2 points.
+  const linReg = (pts: { idx: number; price: number }[]) => {
+    const n = pts.length;
+    if (n === 1) return { slope: 0, intercept: pts[0].price, anchorIdx: pts[0].idx };
+    let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
+    for (const p of pts) { sumX += p.idx; sumY += p.price; sumXY += p.idx * p.price; sumXX += p.idx * p.idx; }
+    const denom = n * sumXX - sumX * sumX;
+    if (Math.abs(denom) < 1e-9) return { slope: 0, intercept: sumY / n, anchorIdx: pts[0].idx };
+    const s = (n * sumXY - sumX * sumY) / denom;
+    const b = (sumY - s * sumX) / n;
+    return { slope: s, intercept: b, anchorIdx: pts[0].idx };
+  };
 
-  if (swingHighs.length >= 2) {
-    // Sort by price descending to find major peaks
-    const sortedHighs = [...swingHighs].sort((a, b) => b.price - a.price);
-    const topHigh = sortedHighs[0];
-    // Find second peak separated by at least 8 bars
-    const candidate2 = swingHighs
-      .filter((sh) => Math.abs(sh.idx - topHigh.idx) >= 8)
-      .sort((a, b) => b.price - a.price)[0];
-    if (candidate2) {
-      if (topHigh.idx < candidate2.idx) {
-        h1 = topHigh;
-        h2 = candidate2;
-      } else {
-        h1 = candidate2;
-        h2 = topHigh;
-      }
-    } else {
-      h1 = swingHighs[0];
-      h2 = swingHighs[swingHighs.length - 1];
-    }
-  }
+  const resFit = linReg(swingHighs);
+  const slope = resFit.slope;
+  // Anchor: use the leftmost swing high as resP1
+  const anchorHigh = swingHighs.reduce((a, b) => a.idx < b.idx ? a : b);
+  const lastHigh = swingHighs.reduce((a, b) => a.idx > b.idx ? a : b);
+  const h1 = anchorHigh;
+  const h2 = lastHigh;
+  // Recompute h1.price to lie exactly ON the regression line so the channel is anchored correctly
+  const resLineAtH1 = resFit.intercept + slope * h1.idx;
+  const resLineAtH2 = resFit.intercept + slope * h2.idx;
 
-  const dxHigh = Math.max(1, h2.idx - h1.idx);
-  const slope = (h2.price - h1.price) / dxHigh;
-
-  // Compute channel width (Delta) by evaluating swing lows against the resistance trendline
-  // At any index i: P_res(i) = h1.price + slope * (i - h1.idx)
+  // ── Channel width: max distance from regression line to any swing low ──
   let maxChannelDist = 0;
   let primaryLow = swingLows[0];
-
   swingLows.forEach((sl) => {
-    const resAtSl = h1.price + slope * (sl.idx - h1.idx);
+    const resAtSl = resFit.intercept + slope * sl.idx;
     const dist = resAtSl - sl.price;
-    if (dist > maxChannelDist) {
-      maxChannelDist = dist;
-      primaryLow = sl;
-    }
+    if (dist > maxChannelDist) { maxChannelDist = dist; primaryLow = sl; }
   });
-
   if (maxChannelDist <= 0.1) {
     const minLowPrice = Math.min(...candles.slice(startOffset).map((c) => c.low));
-    maxChannelDist = Math.max(0.5, h1.price - minLowPrice);
+    maxChannelDist = Math.max(0.5, resLineAtH1 - minLowPrice);
   }
-
   const channelDelta = maxChannelDist;
 
-  // Support anchors parallel to resistance
-  const supP1 = {
-    idx: h1.idx,
-    time: h1.time,
-    price: Math.round((h1.price - channelDelta) * 100) / 100,
-  };
-  const supP2 = {
-    idx: h2.idx,
-    time: h2.time,
-    price: Math.round((h2.price - channelDelta) * 100) / 100,
-  };
+  // Anchors on the regression line (not raw swing prices)
+  const resP1 = { idx: h1.idx, time: h1.time, price: resLineAtH1 };
+  const resP2 = { idx: h2.idx, time: h2.time, price: resLineAtH2 };
+  const supP1 = { idx: h1.idx, time: h1.time, price: Math.round((resLineAtH1 - channelDelta) * 100) / 100 };
+  const supP2 = { idx: h2.idx, time: h2.time, price: Math.round((resLineAtH2 - channelDelta) * 100) / 100 };
 
-  const resP1 = { idx: h1.idx, time: h1.time, price: h1.price };
-  const resP2 = { idx: h2.idx, time: h2.time, price: h2.price };
-
-  // Horizontal Support & Resistance levels
-  const resistance = Math.round(Math.max(h1.price, h2.price) * 100) / 100;
+  const resistance = Math.round(Math.max(resLineAtH1, resLineAtH2) * 100) / 100;
   const support = Math.round(primaryLow.price * 100) / 100;
   const delta = Math.max(0.1, resistance - support);
   const fib0618 = Math.round((support + delta * 0.618) * 100) / 100;
@@ -317,14 +290,17 @@ export function calculateTrendlinePro(candles: CandlestickData<Time>[]): Trendli
 
   // Current price position relative to channel
   const lastClose = candles[total - 1].close;
-  const currSup = h1.price + slope * (total - 1 - h1.idx) - channelDelta;
-  const currRatio = (lastClose - currSup) / channelDelta;
+  const currResAtLast = resFit.intercept + slope * (total - 1);
+  const currSup = currResAtLast - channelDelta;
+  const currRatio = channelDelta > 0 ? (lastClose - currSup) / channelDelta : 0.5;
 
   let recommendation: 'GIỮ' | 'MUA' | 'BÁN' | 'QUAN SÁT' = 'GIỮ';
-  if (currRatio < 0.2) recommendation = 'QUAN SÁT';
-  else if (currRatio >= 0.2 && currRatio <= 0.7) recommendation = 'GIỮ';
-  else if (currRatio > 0.7 && currRatio <= 1.0) recommendation = 'GIỮ';
-  else recommendation = 'MUA';
+  if (currRatio < 0.25) recommendation = 'MUA';
+  else if (currRatio > 0.85) recommendation = 'QUAN SÁT';
+  else recommendation = 'GIỮ';
+
+  // Store regression fit params for rendering
+  (resP1 as any)._regIntercept = resFit.intercept;
 
   return {
     resistance,
@@ -1863,74 +1839,78 @@ export function MarketCandleChart() {
         swingLows,
       } = trendlineProData;
 
+      // ── Screen-space projection (the correct approach) ──
+      // Convert the two channel anchor points to screen coords, then
+      // compute screen-space slope. All fib rays use the SAME screen slope,
+      // just offset vertically. This avoids price-scale non-linearity bugs.
       const lastCandleIdx = Math.max(0, candles.length - 1);
-      const startX = timeScale.logicalToCoordinate(startIdx as any) ?? 0;
-      // Project into future (20 bars) or to chart right margin
-      const targetEndLogical = lastCandleIdx + 20;
-      const rawEndX = timeScale.logicalToCoordinate(targetEndLogical as any);
-      const endX = rawEndX !== null ? Math.min(w - 75, rawEndX) : (w - 75);
+      const projEndLogical = lastCandleIdx + 25;   // project 25 bars into future
 
-      // Support baseline and Fibonacci channels:
-      // P_res(L) = resP1.price + slope * (L - startIdx)
-      // P_sup(L) = P_res(L) - channelDelta
-      // P_fib(L, r) = P_sup(L) + r * channelDelta
-      const getFibPrice = (logical: number, r: number) => {
-        const pRes = resP1.price + slope * (logical - startIdx);
-        const pSup = pRes - channelDelta;
-        return pSup + r * channelDelta;
-      };
+      // Anchor X coordinates
+      const x1 = timeScale.logicalToCoordinate(startIdx as any);
+      const x2 = timeScale.logicalToCoordinate(projEndLogical as any);
+      if (x1 === null || x2 === null) { ctx.restore(); return; }
+
+      // Right edge: never overlap price axis labels
+      const rightEdge = Math.min(w - 78, x2);
+
+      // Anchor Y for resistance line at startIdx and at projEnd (price-space, then pixel)
+      const resAtStart = resP1.price;                                    // Y on resistance @ startIdx
+      const resAtEnd   = resP1.price + slope * (projEndLogical - startIdx); // Y on resistance @ projEnd
+      const y1Res = series.priceToCoordinate(resAtStart);
+      const y2Res = series.priceToCoordinate(resAtEnd);
+      if (y1Res === null || y2Res === null) { ctx.restore(); return; }
+
+      // Screen-space slope (pixels per logical bar)
+      const dxScreen = x2 - x1;   // total pixel width
+      const dyScreen = y2Res - y1Res;  // pixel drop/rise of the resistance line
+      // For any fib ratio r:  yScreen(x) = y1Res + dyScreen*(x - x1)/dxScreen - r*channelPxHeight
+      // channelPxHeight = pixel height of the full channel
+      const y1Sup = series.priceToCoordinate(resAtStart - channelDelta);
+      const channelPxHeight = y1Sup !== null ? (y1Sup - y1Res) : 60;   // positive = downward
+
+      const getScreenY = (x: number, r: number) =>
+        y1Res + (dyScreen * (x - x1)) / dxScreen + r * channelPxHeight;
 
       // 1. Draw Diagonal Fib Xiên (Fibonacci Channel Parallel Rays)
       const allRatios = [0.0, ...FIB_CHANNEL_RATIOS, 1.0];
       allRatios.sort((a, b) => a - b);
 
+      ctx.setLineDash([]);
       allRatios.forEach((r) => {
-        const priceStart = getFibPrice(startIdx, r);
-        const priceEnd = getFibPrice(targetEndLogical, r);
+        const sy1 = getScreenY(x1, r);
+        const sy2 = getScreenY(rightEdge, r);
 
-        const yStart = series.priceToCoordinate(priceStart);
-        const yEnd = series.priceToCoordinate(priceEnd);
+        ctx.beginPath();
+        ctx.moveTo(x1, sy1);
+        ctx.lineTo(rightEdge, sy2);
 
-        if (yStart !== null && yEnd !== null) {
-          let finalYEnd = yEnd;
-          if (rawEndX !== null && rawEndX !== startX) {
-            const screenSlope = (yEnd - yStart) / (rawEndX - startX);
-            finalYEnd = yStart + screenSlope * (endX - startX);
-          }
+        if (r === 1.0) {
+          // Lower Support Channel Line - Orange solid
+          ctx.strokeStyle = '#f97316';
+          ctx.lineWidth = 2.0;
+          ctx.setLineDash([]);
+        } else if (r === 0.0) {
+          // Upper Resistance Channel Line - Lime Green solid
+          ctx.strokeStyle = '#84cc16';
+          ctx.lineWidth = 2.0;
+          ctx.setLineDash([]);
+        } else {
+          // Inner Fib rays - Amber dashed
+          ctx.strokeStyle = 'rgba(234, 179, 8, 0.80)';
+          ctx.lineWidth = 1.0;
+          ctx.setLineDash([4, 5]);
+        }
+        ctx.stroke();
+        ctx.setLineDash([]);
 
-          ctx.beginPath();
-          ctx.moveTo(startX, yStart);
-          ctx.lineTo(endX, finalYEnd);
-
-          if (r === 1.0) {
-            // Upper Resistance Channel Line - Solid Lime Green
-            ctx.strokeStyle = '#84cc16';
-            ctx.lineWidth = 2.0;
-            ctx.setLineDash([]);
-            ctx.stroke();
-          } else if (r === 0.0) {
-            // Lower Support Channel Line - Solid Vibrant Orange
-            ctx.strokeStyle = '#f97316';
-            ctx.lineWidth = 2.0;
-            ctx.setLineDash([]);
-            ctx.stroke();
-          } else {
-            // Fibonacci Channel Ray - Golden/Amber Dashed
-            ctx.strokeStyle = 'rgba(234, 179, 8, 0.75)';
-            ctx.lineWidth = 1.1;
-            ctx.setLineDash([3, 4]);
-            ctx.stroke();
-          }
-
-          // Ratio Label at the right end of the ray (matching reference image: 0.236, 0.382, 0.5, 0.618, 0.786, 1.13, 1.272, 1.41, 1.618)
-          if (r !== 0.0 && r !== 1.0 && finalYEnd >= 15 && finalYEnd <= h - 15) {
-            ctx.setLineDash([]);
-            ctx.fillStyle = '#facc15';
-            ctx.font = 'bold 9.5px JetBrains Mono, monospace';
-            ctx.textAlign = 'right';
-            ctx.textBaseline = 'bottom';
-            ctx.fillText(r.toString(), endX - 4, finalYEnd - 2);
-          }
+        // Ratio label at right edge
+        if (r !== 0.0 && r !== 1.0 && sy2 >= 12 && sy2 <= h - 12) {
+          ctx.fillStyle = '#facc15';
+          ctx.font = 'bold 9px JetBrains Mono, monospace';
+          ctx.textAlign = 'left';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(r.toString(), rightEdge + 4, sy2);
         }
       });
 
@@ -1964,90 +1944,42 @@ export function MarketCandleChart() {
       });
 
       // 3. Horizontal Support & Resistance Lines & Badges
-      const resY = series.priceToCoordinate(resistance);
-      const supY = series.priceToCoordinate(support);
+      const resY    = series.priceToCoordinate(resistance);
+      const supY    = series.priceToCoordinate(support);
       const fib0618Y = series.priceToCoordinate(fib0618);
       const fib1618Y = series.priceToCoordinate(fib1618);
 
-      // Horizontal Kháng cự
-      if (resY !== null) {
-        ctx.strokeStyle = 'rgba(239, 68, 68, 0.65)';
+      const drawHzBadge = (
+        y: number,
+        label: string,
+        lineColor: string,
+        textColor: string,
+        borderColor: string,
+      ) => {
+        ctx.strokeStyle = lineColor;
         ctx.lineWidth = 1.2;
         ctx.setLineDash([5, 4]);
         ctx.beginPath();
-        ctx.moveTo(0, resY);
-        ctx.lineTo(w - 75, resY);
+        ctx.moveTo(0, y);
+        ctx.lineTo(w - 78, y);
         ctx.stroke();
-
         ctx.setLineDash([]);
-        ctx.fillStyle = 'rgba(24, 24, 27, 0.9)';
-        ctx.fillRect(w - 74, resY - 9, 68, 18);
-        ctx.strokeStyle = 'rgba(239, 68, 68, 0.4)';
-        ctx.strokeRect(w - 74, resY - 9, 68, 18);
-        ctx.fillStyle = '#f8fafc';
-        ctx.font = 'bold 10px JetBrains Mono, monospace';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('Kháng cự', w - 40, resY);
-      }
-
-      // Horizontal Fib 0,618
-      if (fib0618Y !== null) {
-        ctx.strokeStyle = 'rgba(234, 179, 8, 0.65)';
-        ctx.lineWidth = 1.2;
-        ctx.setLineDash([5, 4]);
-        ctx.beginPath();
-        ctx.moveTo(0, fib0618Y);
-        ctx.lineTo(w - 75, fib0618Y);
-        ctx.stroke();
-
-        ctx.setLineDash([]);
-        ctx.fillStyle = 'rgba(24, 24, 27, 0.9)';
-        ctx.fillRect(w - 74, fib0618Y - 9, 68, 18);
-        ctx.strokeStyle = 'rgba(234, 179, 8, 0.4)';
-        ctx.strokeRect(w - 74, fib0618Y - 9, 68, 18);
-        ctx.fillStyle = '#facc15';
+        ctx.fillStyle = 'rgba(15, 15, 20, 0.92)';
+        ctx.fillRect(w - 77, y - 9, 70, 18);
+        ctx.strokeStyle = borderColor;
+        ctx.lineWidth = 0.8;
+        ctx.strokeRect(w - 77, y - 9, 70, 18);
+        ctx.fillStyle = textColor;
         ctx.font = 'bold 9.5px JetBrains Mono, monospace';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText('Fib 0,618', w - 40, fib0618Y);
-      }
+        ctx.fillText(label, w - 42, y);
+      };
 
-      // Horizontal Hỗ trợ
-      if (supY !== null) {
-        ctx.strokeStyle = 'rgba(239, 68, 68, 0.65)';
-        ctx.lineWidth = 1.2;
-        ctx.setLineDash([5, 4]);
-        ctx.beginPath();
-        ctx.moveTo(0, supY);
-        ctx.lineTo(w - 75, supY);
-        ctx.stroke();
-
-        ctx.setLineDash([]);
-        ctx.fillStyle = 'rgba(24, 24, 27, 0.9)';
-        ctx.fillRect(w - 74, supY - 9, 68, 18);
-        ctx.strokeStyle = 'rgba(239, 68, 68, 0.4)';
-        ctx.strokeRect(w - 74, supY - 9, 68, 18);
-        ctx.fillStyle = '#f8fafc';
-        ctx.font = 'bold 10px JetBrains Mono, monospace';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('Hỗ trợ', w - 40, supY);
-      }
-
-      // Horizontal Fib 1,618 Top Badge
-      if (fib1618Y !== null && fib1618Y >= 20) {
-        ctx.setLineDash([]);
-        ctx.fillStyle = 'rgba(24, 24, 27, 0.9)';
-        ctx.fillRect(w - 74, fib1618Y - 9, 68, 18);
-        ctx.strokeStyle = 'rgba(6, 182, 212, 0.4)';
-        ctx.strokeRect(w - 74, fib1618Y - 9, 68, 18);
-        ctx.fillStyle = '#38bdf8';
-        ctx.font = 'bold 9.5px JetBrains Mono, monospace';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('Fib 1,618', w - 40, fib1618Y);
-      }
+      if (resY    !== null) drawHzBadge(resY,    'Kháng cự', 'rgba(132,204,22,0.7)', '#f8fafc', 'rgba(132,204,22,0.45)');
+      if (fib0618Y !== null) drawHzBadge(fib0618Y, 'Fib 0,618', 'rgba(234,179,8,0.65)', '#facc15', 'rgba(234,179,8,0.4)');
+      if (supY    !== null) drawHzBadge(supY,    'Hỗ trợ',   'rgba(249,115,22,0.7)', '#f8fafc', 'rgba(249,115,22,0.45)');
+      if (fib1618Y !== null && fib1618Y >= 15) drawHzBadge(fib1618Y, 'Fib 1,618', 'rgba(6,182,212,0.6)', '#38bdf8', 'rgba(6,182,212,0.4)');
 
       ctx.restore();
     }
