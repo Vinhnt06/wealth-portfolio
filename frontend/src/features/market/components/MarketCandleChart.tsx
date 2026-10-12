@@ -4165,10 +4165,10 @@ export function MarketCandleChart() {
             )}
           </div>
 
-          {/* Trendline Pro & Fib Xiên Toggle Button */}
+          {/* Unified Trendline Pro Toggle Button (Trendline, Fib Xiên, S/R, Pivots) */}
           <button
             onClick={() => setShowTrendlinePro(!showTrendlinePro)}
-            title="Bật/Tắt Trendline Pro & Fib Xiên (Fibonacci Channel tự động theo xu hướng nến)"
+            title="Bật/Tắt Trendline Pro (Chỉ báo duy nhất tự động phân tích Kháng cự, Hỗ trợ, Kênh Fib Xiên, Swing Pivots & Mức tỷ lệ Fibonacci)"
             className={`flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-mono font-semibold rounded-lg whitespace-nowrap shrink-0 transition-all ${
               showTrendlinePro
                 ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'
@@ -4176,7 +4176,7 @@ export function MarketCandleChart() {
             }`}
           >
             <TrendUp size={13} className={showTrendlinePro ? 'text-amber-400 shrink-0' : 'text-zinc-500 shrink-0'} />
-            <span>Trendline & Fib Xiên</span>
+            <span>Trendline Pro</span>
             {showTrendlinePro && <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />}
           </button>
         </div>
@@ -4615,6 +4615,17 @@ export function MarketCandleChart() {
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-950/80 backdrop-blur-sm z-30">
                 <SpinnerGap size={28} className="text-emerald-400 animate-spin mb-2" />
                 <p className="text-xs font-mono text-zinc-300">Đang đồng bộ nến lịch sử DNSE từ ngày đầu tiên...</p>
+              </div>
+            )}
+
+            {/* ── Top-Right In-Chart Status Pill (Matching TradingView Reference Image) ────────── */}
+            {showTrendlinePro && trendlineProData && (
+              <div className="absolute top-2 right-16 z-20 pointer-events-none flex items-center gap-1.5 select-none font-mono text-[10.5px]">
+                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-[#18181b]/90 border border-amber-500/40 text-amber-300 shadow-md backdrop-blur-md">
+                  <span className="text-zinc-400 font-semibold">Fib 1.618</span>
+                  <span className="text-zinc-600">|</span>
+                  <span className="text-emerald-400 font-black tracking-wider">{trendlineProData.recommendation}</span>
+                </div>
               </div>
             )}
 
