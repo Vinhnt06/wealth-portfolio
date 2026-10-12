@@ -170,7 +170,7 @@ export const MarkMinerviniScreener: React.FC = () => {
             score: newItem.criteriaPassed,
             rsRating: newItem.rsRating,
             isStage2: true,
-            message: `🎉 ĐẠT CHUẨN MARK MINERVINI: Cổ phiếu [${sym}] đạt ${newItem.criteriaPassed}/8 tiêu chí Trend Template (Giai đoạn 2 Tăng trưởng), RS Rating: ${newItem.rsRating}/99. Đã đưa vào bộ lọc!`,
+            message: `🎉 ĐÃ TỰ ĐỘNG LƯU VÀO BỘ LỌC & XẾP VÀO NHÓM NGÀNH [${newItem.sector}]: Cổ phiếu [${sym}] đạt ${newItem.criteriaPassed}/8 tiêu chí Trend Template (Stage 2 Tăng trưởng), RS Rating: ${newItem.rsRating}/99.`,
           });
         } else {
           setScanFeedback({
@@ -179,7 +179,7 @@ export const MarkMinerviniScreener: React.FC = () => {
             score: newItem.criteriaPassed,
             rsRating: newItem.rsRating,
             isStage2: false,
-            message: `⚠️ KẾT QUẢ XÉT CHUẨN: Cổ phiếu [${sym}] đạt ${newItem.criteriaPassed}/8 tiêu chí Trend Template (Chưa đạt Stage 2), RS Rating: ${newItem.rsRating}/99. Đã thêm vào danh sách để bạn theo dõi.`,
+            message: `⚠️ ĐÃ TỰ ĐỘNG LƯU VÀO BỘ LỌC & XẾP VÀO NHÓM NGÀNH [${newItem.sector}]: Cổ phiếu [${sym}] đạt ${newItem.criteriaPassed}/8 tiêu chí Trend Template (Chưa đạt Stage 2), RS Rating: ${newItem.rsRating}/99.`,
           });
         }
       } else {

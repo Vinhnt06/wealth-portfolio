@@ -125,20 +125,24 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
     setIsScanningMinervini(true);
     setScanFeedback(null);
     try {
-      const res = await fetch(`/api/market/minervini/analysis?symbol=${selectedSymbol}&refresh=true`);
-      const resData = await res.json();
-      if (resData.success && resData.data) {
-        setMinerviniData(resData.data);
-        const d = resData.data;
+      const [analysisRes, screenerRes] = await Promise.all([
+        fetch(`/api/market/minervini/analysis?symbol=${selectedSymbol}&refresh=true`).then((r) => r.json()),
+        fetch(`/api/market/minervini/screener?symbols=${selectedSymbol}&refresh=true`).then((r) => r.json()),
+      ]);
+
+      if (analysisRes.success && analysisRes.data) {
+        setMinerviniData(analysisRes.data);
+        const d = analysisRes.data;
+        const targetSector = meta.sector || d.sector || 'Chung';
         if (d.isStage2Eligible) {
           setScanFeedback({
             type: 'success',
-            message: `🎉 ${selectedSymbol} ĐẠT CHUẨN MARK MINERVINI: ${d.passedCount}/8 tiêu chí Trend Template (Stage 2 Tăng trưởng), RS Rating: ${d.rsRating}/99.`,
+            message: `🎉 ${selectedSymbol} ĐẠT CHUẨN MARK MINERVINI: ${d.passedCount}/8 tiêu chí Trend Template (Stage 2 Tăng trưởng), RS Rating: ${d.rsRating}/99. ĐÃ TỰ ĐỘNG THÊM VÀO BỘ LỌC VÀ NHÓM NGÀNH [${targetSector}]!`,
           });
         } else {
           setScanFeedback({
             type: 'warning',
-            message: `⚠️ ${selectedSymbol}: Đạt ${d.passedCount}/8 tiêu chí Trend Template (${d.stageName || 'Chưa đạt Stage 2'}), RS Rating: ${d.rsRating}/99.`,
+            message: `⚠️ ${selectedSymbol}: Đạt ${d.passedCount}/8 tiêu chí Trend Template (${d.stageName || 'Chưa đạt Stage 2'}), RS Rating: ${d.rsRating}/99. ĐÃ TỰ ĐỘNG LƯU VÀO BỘ LỌC VÀ NHÓM NGÀNH [${targetSector}] ĐỂ BẠN THEO DÕI.`,
           });
         }
       }
@@ -343,7 +347,7 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
         {/* Scan feedback alert banner if present */}
         {scanFeedback && (
           <div
-            className={`mt-4 p-3.5 rounded-xl border flex items-center justify-between gap-3 text-xs font-mono transition-all animate-in fade-in ${
+            className={`mt-4 p-3.5 rounded-xl border flex flex-wrap items-center justify-between gap-3 text-xs font-mono transition-all animate-in fade-in ${
               scanFeedback.type === 'success'
                 ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
                 : scanFeedback.type === 'warning'
@@ -351,18 +355,29 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
                 : 'bg-rose-500/10 border-rose-500/30 text-rose-300'
             }`}
           >
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap flex-1">
               {scanFeedback.type === 'success' && <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />}
               {scanFeedback.type === 'warning' && <Warning className="w-4 h-4 text-amber-400 shrink-0" />}
               {scanFeedback.type === 'error' && <X className="w-4 h-4 text-rose-400 shrink-0" />}
               <span className="font-medium">{scanFeedback.message}</span>
             </div>
-            <button
-              onClick={() => setScanFeedback(null)}
-              className="p-1 text-zinc-400 hover:text-zinc-200"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
+            <div className="flex items-center gap-2">
+              {scanFeedback.type !== 'error' && (
+                <button
+                  onClick={() => setViewMode('screener')}
+                  className="px-3 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-zinc-950 font-mono font-black text-xs transition-all shadow-md active:scale-95 cursor-pointer flex items-center gap-1.5"
+                >
+                  <Sparkle className="w-3.5 h-3.5" weight="fill" />
+                  <span>XEM TRONG BỘ LỌC MINERVINI</span>
+                </button>
+              )}
+              <button
+                onClick={() => setScanFeedback(null)}
+                className="p-1 text-zinc-400 hover:text-zinc-200"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
         )}
 

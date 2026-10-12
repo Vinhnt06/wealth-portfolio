@@ -89,6 +89,60 @@ function enrichWithLiveTicks(items: MinerviniScreenerItem[], liveMap: Map<string
 }
 
 /**
+ * Tự động upsert danh sách cổ phiếu mới quét vào tệp quét Minervini bền vững (lastMinerviniScan.json)
+ * và cập nhật in-memory universe cache để cổ phiếu được lưu trữ vĩnh viễn và hiển thị chuẩn trong bộ lọc & phân ngành.
+ */
+function upsertScanFile(itemsToUpsert: MinerviniScreenerItem[]) {
+  if (!itemsToUpsert || itemsToUpsert.length === 0) return null;
+  const scanFile = getScanFilePath();
+  try {
+    const vnTime = new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
+    const vnDate = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }));
+    const isMorning = vnDate.getHours() < 13;
+
+    let fileJson: any = {
+      success: true,
+      scannedAt: Date.now(),
+      scannedAtText: vnTime,
+      session: isMorning ? 'MORNING' : 'AFTERNOON',
+      sessionLabel: isMorning ? 'Phiên Sáng (11:30)' : 'Phiên Chiều (15:00)',
+      source: '100% REAL DNSE ENTRADE API',
+      data: [],
+    };
+    if (fs.existsSync(scanFile)) {
+      try {
+        fileJson = JSON.parse(fs.readFileSync(scanFile, 'utf8'));
+      } catch {}
+    }
+    const existingList: MinerviniScreenerItem[] = Array.isArray(fileJson.data) ? fileJson.data : [];
+    const itemMap = new Map<string, MinerviniScreenerItem>();
+    existingList.forEach((it) => itemMap.set(it.symbol.toUpperCase(), it));
+    itemsToUpsert.forEach((it) => itemMap.set(it.symbol.toUpperCase(), it));
+
+    const updatedList = Array.from(itemMap.values()).sort((a, b) => b.rsRating - a.rsRating);
+    fileJson.data = updatedList;
+    fileJson.totalScanned = updatedList.length;
+    fileJson.stage2Count = updatedList.filter((s) => s.isStage2Eligible || s.isStage2).length;
+    fileJson.leadersCount = updatedList.filter((s) => s.rsRating >= 90).length;
+    fileJson.scannedAt = Date.now();
+    fileJson.scannedAtText = vnTime;
+
+    fs.writeFileSync(scanFile, JSON.stringify(fileJson, null, 2), 'utf8');
+
+    if (cachedUniverseData) {
+      cachedUniverseData.items = updatedList;
+      cachedUniverseData.timestamp = Date.now();
+    } else {
+      cachedUniverseData = { timestamp: Date.now(), items: updatedList };
+    }
+    return fileJson;
+  } catch (err: any) {
+    console.error('Lỗi upsert scan file:', err.message);
+    return null;
+  }
+}
+
+/**
  * GET /api/market/minervini/screener?minMktCap=0&minVol=0&minRS=1&sector=all&stage2=false
  * Returns stocks dynamically filtered by Mark Minervini Trend Template & Fundamentals
  */
@@ -355,33 +409,22 @@ const OUTSTANDING_SHARES_M: Record<string, number> = {
     // Sort by RS Rating descending (Top Leaders first)
     results.sort((a, b) => b.rsRating - a.rsRating);
 
-    // Save to universe cache and persistent scan file
+    // Save or upsert to universe cache and persistent scan file
     let scanMeta: any = null;
-    if (!customSymbolsParam && sectorFilter === 'all' && !onlyStage2 && minRS <= 1 && minVol === 0 && minMktCapT === 0) {
-      cachedUniverseData = { timestamp: Date.now(), items: results };
-
-      try {
-        const vnTime = new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
-        const vnDate = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }));
-        const isMorning = vnDate.getHours() < 13;
+    if (results.length > 0) {
+      const updatedFile = upsertScanFile(results);
+      if (updatedFile) {
         scanMeta = {
-          scannedAt: Date.now(),
-          scannedAtText: vnTime,
-          session: isMorning ? 'MORNING' : 'AFTERNOON',
-          sessionLabel: isMorning ? 'Phiên Sáng (11:30)' : 'Phiên Chiều (15:00)',
-          totalScanned: results.length,
-          stage2Count: results.filter((s) => s.isStage2).length,
-          leadersCount: results.filter((s) => s.rsRating >= 90).length,
-          source: '100% REAL DNSE ENTRADE API',
+          scannedAt: updatedFile.scannedAt,
+          scannedAtText: updatedFile.scannedAtText,
+          session: updatedFile.session,
+          sessionLabel: updatedFile.sessionLabel,
+          totalScanned: updatedFile.totalScanned,
+          stage2Count: updatedFile.stage2Count,
+          leadersCount: updatedFile.leadersCount,
+          source: updatedFile.source,
+          autoPersisted: true,
         };
-        const scanPayload = {
-          success: true,
-          ...scanMeta,
-          data: results,
-        };
-        fs.writeFileSync(getScanFilePath(), JSON.stringify(scanPayload, null, 2), 'utf8');
-      } catch (err: any) {
-        console.error('Lỗi lưu scan file:', err.message);
       }
     }
 
