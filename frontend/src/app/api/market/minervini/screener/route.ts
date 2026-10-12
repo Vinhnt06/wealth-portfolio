@@ -64,7 +64,7 @@ const OUTSTANDING_SHARES_M: Record<string, number> = {
   // BĐS Khu công nghiệp
   KBC: 767, IDC: 330, VGC: 448, SZC: 180, BCM: 1035, TIP: 65, LHG: 50, SIP: 191, D2D: 30, PHR: 135,
   // Thép & Kim loại
-  HPG: 8443, HSG: 616, NKG: 263, VGS: 107, SMC: 73, TLH: 102, TVN: 678,
+  HPG: 8443, HSG: 616, NKG: 263, VGS: 107, SMC: 73, TLH: 102, TVN: 678, MSR: 1105,
   // Công nghệ
   FPT: 1460, CMG: 150, ELC: 82, CTR: 114, VGI: 3043, FOX: 792, VNZ: 35, ITD: 24,
   // Dầu khí
@@ -89,8 +89,10 @@ const OUTSTANDING_SHARES_M: Record<string, number> = {
   const getRealMarketCapT = (sym: string, price: number) => {
     const sharesM = OUTSTANDING_SHARES_M[sym];
     if (!sharesM) return 0;
-    // Market cap (nghìn tỷ VNĐ) = (sharesM * 10^6 * price) / 10^12 = (sharesM * price) / 10^6
-    return Math.round(((sharesM * (price || 0)) / 1000000) * 10) / 10;
+    // price is in 1,000 VND (from Entrade), sharesM is in millions of shares (10^6).
+    // Total market cap in VND = sharesM * 10^6 * price * 10^3 = sharesM * price * 10^9 VND.
+    // In nghìn tỷ VND (10^12 VND) = (sharesM * price * 10^9) / 10^12 = (sharesM * price) / 1000.
+    return Math.round(((sharesM * (price || 0)) / 1000) * 10) / 10;
   };
 
   try {

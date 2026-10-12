@@ -114,6 +114,59 @@ export const MarkMinerviniScreener: React.FC = () => {
     fetchScreenerData();
   }, []);
 
+  // Dynamic On-Demand Scan for custom searched symbols not in the pre-scanned dataset
+  useEffect(() => {
+    const sym = searchQuery.trim().toUpperCase();
+    if (sym.length === 3 && /^[A-Z0-9]{3}$/.test(sym)) {
+      const exists = items.some((it) => it.symbol === sym);
+      if (!exists) {
+        fetch(`/api/market/minervini/analysis?symbol=${sym}`)
+          .then((res) => res.json())
+          .then((resData) => {
+            if (resData.success && resData.data) {
+              const d = resData.data;
+              const newItem: MinerviniScreenerItem = {
+                symbol: d.symbol,
+                name: d.name,
+                sector: SECTOR_MAPPING[d.symbol] || d.sector || 'Khác',
+                exchange: d.exchange || 'HOSE',
+                price: Math.round(d.price * 1000),
+                changePct: d.changePct || 0,
+                volume: d.volume || 0,
+                relVol: 1,
+                mktCapT: 0,
+                pe: null,
+                epsDilTTM: null,
+                epsGrowthYoY: null,
+                divYieldPct: null,
+                analystRating: 'No rating',
+                rsRating: d.rsRating,
+                score: d.passedCount,
+                isStage2: d.isStage2Eligible,
+                isStage2Eligible: d.isStage2Eligible,
+                criteriaPassed: d.passedCount,
+                sma50: d.sma50,
+                sma150: d.sma150,
+                sma200: d.sma200,
+                distHigh: d.distFrom52WHighPct,
+                distLow: d.distFrom52WLowPct,
+                pctFrom52WHigh: Math.round(100 + d.distFrom52WHighPct),
+                pctAbove52WLow: Math.round(100 + d.distFrom52WLowPct),
+                perf1W: 0,
+                perf1M: 0,
+                perf1Y: 0,
+                epsDiluted: null,
+                epsDilutedGrowthYoY: null,
+                dividendYield: null,
+              };
+              setItems((prev) => (prev.some((p) => p.symbol === sym) ? prev : [newItem, ...prev]));
+            }
+          })
+          .catch(() => {});
+      }
+    }
+  }, [searchQuery, items]);
+
   // Distinct sectors: use canonical 20 ICB sectors order
   const sectors = useMemo(() => {
     return Array.from(ICB_20_SECTORS);

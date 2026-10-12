@@ -47,8 +47,8 @@ export const SECTOR_LEADER_UNIVERSE: string[] = [
   // 3. Bất động sản (18 mã dân dụng & KCN)
   'VHM', 'VIC', 'VRE', 'KDH', 'NLG', 'PDR', 'DIG', 'DXG', 'CEO', 'NVL', 'TCH', 'KBC', 'IDC', 'SZC', 'BCM', 'SIP', 'HDG', 'NTL',
 
-  // 4. Nguyên vật liệu (Thép, Hóa chất, Cao su, Xi măng)
-  'HPG', 'HSG', 'NKG', 'VGS', 'DGC', 'DCM', 'DPM', 'GVR', 'CSV', 'LAS', 'BMP', 'NTP', 'HT1', 'BCC',
+  // 4. Nguyên vật liệu (Thép, Hóa chất, Cao su, Xi măng, Khoáng sản)
+  'HPG', 'HSG', 'NKG', 'VGS', 'DGC', 'DCM', 'DPM', 'GVR', 'CSV', 'LAS', 'BMP', 'NTP', 'HT1', 'BCC', 'MSR', 'DDV', 'BFC', 'DPR',
 
   // 5. Năng lượng (Dầu khí, Khai thác dầu khí)
   'GAS', 'PLX', 'BSR', 'PVD', 'PVS', 'PVT', 'PVP', 'PVC', 'PVB', 'OIL',
@@ -57,7 +57,7 @@ export const SECTOR_LEADER_UNIVERSE: string[] = [
   'POW', 'REE', 'PC1', 'GEG', 'GEE', 'NT2', 'QTP', 'VSH', 'BWE', 'TDM', 'PGV',
 
   // 7. Thực phẩm, đồ uống (Thực phẩm, Chăn nuôi, Thủy sản)
-  'VNM', 'SAB', 'MCH', 'KDC', 'QNS', 'DBC', 'BAF', 'HAG', 'PAN', 'VHC', 'ANV', 'ASM', 'IDI', 'FMC',
+  'VNM', 'MSN', 'SAB', 'MCH', 'KDC', 'QNS', 'DBC', 'BAF', 'HAG', 'PAN', 'VHC', 'ANV', 'ASM', 'IDI', 'FMC',
 
   // 8. Phân phối, bán lẻ
   'MWG', 'FRT', 'DGW', 'PET', 'PNJ', 'AST', 'CLX',
