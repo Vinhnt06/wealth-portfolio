@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server';
 import stockDatabase from '../../../../features/market/data/stockDatabase.json';
 import { SECTOR_MAPPING } from '../../../../features/market/data/sectorMapping';
+import lastMinerviniScanData from '../../../../features/market/data/lastMinerviniScan.json';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+export const preferredRegion = 'sin1';
 
 interface StockMeta {
   symbol: string;
@@ -58,6 +60,46 @@ const OUTSTANDING_SHARES_M: Record<string, number> = {
 let cachedData: { timestamp: number; data: any[] } | null = null;
 const CACHE_TTL_MS = 3000;
 
+function getFallbackHeatmapData(): any[] {
+  try {
+    const list = (lastMinerviniScanData as any)?.data || [];
+    if (Array.isArray(list) && list.length > 0) {
+      return list.map((item: any) => {
+        const sym = (item.symbol || '').toUpperCase();
+        const price = item.price || 0;
+        const changePercent = item.changePct !== undefined && item.changePct !== null ? Number(item.changePct) : 0;
+        const refPrice = price > 0 ? Math.round(price / (1 + changePercent / 100)) : 0;
+        const change = price - refPrice;
+        const ceiling = Math.round(refPrice * 1.07);
+        const floor = Math.round(refPrice * 0.93);
+        const sharesM = OUTSTANDING_SHARES_M[sym] || (price > 0 ? 250 : 0);
+        const mktCapT = item.mktCapT || Math.round(((sharesM * price) / 1000000) * 10) / 10;
+        return {
+          symbol: sym,
+          name: item.name || sym,
+          sector: item.sector || SECTOR_MAPPING[sym] || 'Khác',
+          exchange: item.exchange || 'HOSE',
+          price,
+          refPrice,
+          ceiling,
+          floor,
+          change,
+          changePercent,
+          volume: item.volume || 0,
+          totalValue: (item.volume || 0) * price,
+          high: price,
+          low: price,
+          mktCapT,
+          rsRating: item.rsRating || 50,
+        };
+      });
+    }
+  } catch (e) {
+    console.error('Error generating fallback heatmap:', e);
+  }
+  return [];
+}
+
 export async function GET() {
   const now = Date.now();
   if (cachedData && now - cachedData.timestamp < CACHE_TTL_MS) {
@@ -72,7 +114,7 @@ export async function GET() {
 
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 4000);
+    const timeout = setTimeout(() => controller.abort(), 7000);
 
     const [resHose, resHnx] = await Promise.all([
       fetch('https://iboard-query.ssi.com.vn/stock/exchange/hose', {
@@ -100,6 +142,17 @@ export async function GET() {
           total: cachedData.data.length,
           data: cachedData.data,
           cached: true,
+        });
+      }
+      const fallbackList = getFallbackHeatmapData();
+      if (fallbackList.length > 0) {
+        cachedData = { timestamp: now, data: fallbackList };
+        return NextResponse.json({
+          success: true,
+          timestamp: now,
+          total: fallbackList.length,
+          data: fallbackList,
+          isFallback: true,
         });
       }
       return NextResponse.json({ success: false, message: 'Dữ liệu chưa sẵn sàng' }, { status: 503 });
@@ -179,6 +232,17 @@ export async function GET() {
         total: cachedData.data.length,
         data: cachedData.data,
         cached: true,
+      });
+    }
+    const fallbackList = getFallbackHeatmapData();
+    if (fallbackList.length > 0) {
+      cachedData = { timestamp: now, data: fallbackList };
+      return NextResponse.json({
+        success: true,
+        timestamp: now,
+        total: fallbackList.length,
+        data: fallbackList,
+        isFallback: true,
       });
     }
     return NextResponse.json({ success: false, error: err.message }, { status: 500 });

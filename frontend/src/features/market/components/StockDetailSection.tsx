@@ -134,6 +134,17 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
         setMinerviniData(analysisRes.data);
         const d = analysisRes.data;
         const targetSector = meta.sector || d.sector || 'Chung';
+
+        // Persist scanned symbol into browser localStorage
+        try {
+          if (typeof window !== 'undefined') {
+            const saved: string[] = JSON.parse(localStorage.getItem('yourfin_minervini_custom_scans') || '[]');
+            if (!saved.includes(selectedSymbol)) {
+              localStorage.setItem('yourfin_minervini_custom_scans', JSON.stringify([...saved, selectedSymbol]));
+            }
+          }
+        } catch {}
+
         if (d.isStage2Eligible) {
           setScanFeedback({
             type: 'success',

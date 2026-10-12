@@ -101,10 +101,32 @@ export const MarkMinerviniScreener: React.FC = () => {
       const res = await fetch(url);
       const data = await res.json();
       if (data.success && Array.isArray(data.data)) {
-        const enrichedItems = data.data.map((it: MinerviniScreenerItem) => ({
+        let enrichedItems = data.data.map((it: MinerviniScreenerItem) => ({
           ...it,
           sector: SECTOR_MAPPING[it.symbol] || it.sector || 'Khác',
         }));
+
+        // Restore and merge custom scanned symbols from localStorage
+        try {
+          if (typeof window !== 'undefined') {
+            const saved: string[] = JSON.parse(localStorage.getItem('yourfin_minervini_custom_scans') || '[]');
+            if (Array.isArray(saved) && saved.length > 0) {
+              const missing = saved.filter((s) => !enrichedItems.some((it: any) => it.symbol === s));
+              if (missing.length > 0) {
+                const customRes = await fetch(`/api/market/minervini/screener?symbols=${missing.join(',')}`);
+                const customData = await customRes.json();
+                if (customData.success && Array.isArray(customData.data)) {
+                  const extraItems = customData.data.map((it: MinerviniScreenerItem) => ({
+                    ...it,
+                    sector: SECTOR_MAPPING[it.symbol] || it.sector || 'Khác',
+                  }));
+                  enrichedItems = [...extraItems, ...enrichedItems];
+                }
+              }
+            }
+          }
+        } catch {}
+
         setItems(enrichedItems);
         if (data.scanMeta) {
           setScanMeta(data.scanMeta);
@@ -162,6 +184,16 @@ export const MarkMinerviniScreener: React.FC = () => {
           return [newItem, ...without];
         });
         setSearchQuery(sym);
+
+        // Persist scanned symbol into browser localStorage
+        try {
+          if (typeof window !== 'undefined') {
+            const saved: string[] = JSON.parse(localStorage.getItem('yourfin_minervini_custom_scans') || '[]');
+            if (!saved.includes(sym)) {
+              localStorage.setItem('yourfin_minervini_custom_scans', JSON.stringify([...saved, sym]));
+            }
+          }
+        } catch {}
 
         if (newItem.isStage2Eligible) {
           setScanFeedback({

@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import { TickData, QuotesData, OHLCCandle, MarketIndexData, WsStatus } from '../types/dnse.types';
 
 interface MarketState {
@@ -42,17 +43,19 @@ interface MarketState {
   setLastHeartbeat: (timestamp: number) => void;
 }
 
-export const useMarketStore = create<MarketState>((set) => ({
-  wsStatus: 'disconnected',
-  lastHeartbeat: null,
-  selectedSymbol: 'HPG',
-  selectedIndexSymbol: 'VNINDEX',
-  searchQuery: '',
-  watchlistSymbols: ['HPG', 'VCB', 'SSI', 'VHM', 'TCB', 'FPT', 'MBB', 'MWG', 'VNM', 'VIC'],
-  isChartExpanded: true,
-  activeTab: 'info',
-  isQuickViewOpen: false,
-  viewMode: 'overview',
+export const useMarketStore = create<MarketState>()(
+  persist(
+    (set) => ({
+      wsStatus: 'disconnected',
+      lastHeartbeat: null,
+      selectedSymbol: 'HPG',
+      selectedIndexSymbol: 'VNINDEX',
+      searchQuery: '',
+      watchlistSymbols: ['HPG', 'VCB', 'SSI', 'VHM', 'TCB', 'FPT', 'MBB', 'MWG', 'VNM', 'VIC'],
+      isChartExpanded: true,
+      activeTab: 'info',
+      isQuickViewOpen: false,
+      viewMode: 'overview',
 
   setWsStatus: (wsStatus) => set({ wsStatus }),
   setSelectedSymbol: (selectedSymbol) =>
@@ -135,4 +138,12 @@ export const useMarketStore = create<MarketState>((set) => ({
     })),
 
   setLastHeartbeat: (lastHeartbeat) => set({ lastHeartbeat }),
-}));
+    }),
+    {
+      name: 'yourfin_market_store',
+      partialize: (state) => ({
+        watchlistSymbols: state.watchlistSymbols,
+      }),
+    }
+  )
+);
