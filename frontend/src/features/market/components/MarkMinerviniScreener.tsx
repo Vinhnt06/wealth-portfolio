@@ -69,11 +69,23 @@ export const MarkMinerviniScreener: React.FC = () => {
     'RS Rating >= 70',
   ]);
 
-  const fetchScreenerData = async () => {
+  const [scanMeta, setScanMeta] = useState<{
+    scannedAt?: number;
+    scannedAtText?: string;
+    session?: string;
+    sessionLabel?: string;
+    stage2Count?: number;
+    leadersCount?: number;
+    source?: string;
+  } | null>(null);
+
+  const fetchScreenerData = async (forceRefresh = false) => {
     setIsLoading(true);
     try {
-      // Fetch full universe (stage2=false & minRS=1) so client has all 80+ stocks to filter and sort
-      const res = await fetch('/api/market/minervini/screener?stage2=false&minRS=1');
+      const url = forceRefresh
+        ? '/api/market/minervini/screener?stage2=false&minRS=1&refresh=true'
+        : '/api/market/minervini/screener?stage2=false&minRS=1';
+      const res = await fetch(url);
       const data = await res.json();
       if (data.success && Array.isArray(data.data)) {
         const enrichedItems = data.data.map((it: MinerviniScreenerItem) => ({
@@ -81,11 +93,14 @@ export const MarkMinerviniScreener: React.FC = () => {
           sector: SECTOR_MAPPING[it.symbol] || it.sector || 'Khác',
         }));
         setItems(enrichedItems);
+        if (data.scanMeta) {
+          setScanMeta(data.scanMeta);
+        }
         setLastUpdated(
-          new Date().toLocaleTimeString('vi-VN', {
+          (data.scanMeta?.scannedAtText || new Date().toLocaleTimeString('vi-VN', {
             hour12: false,
             timeZone: 'Asia/Ho_Chi_Minh',
-          }) + ' (UTC+7)'
+          })) + ' (VN)'
         );
       }
     } catch (err) {
@@ -295,12 +310,13 @@ export const MarkMinerviniScreener: React.FC = () => {
 
             {/* Quick Scan Button */}
             <button
-              onClick={fetchScreenerData}
+              onClick={() => fetchScreenerData(true)}
               disabled={isLoading}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-rose-600 hover:from-amber-400 hover:via-orange-400 hover:to-rose-500 text-zinc-950 font-mono font-black text-xs transition-all shadow-lg shadow-amber-500/25 active:scale-95 border border-amber-300/40 cursor-pointer"
+              title="Quét lại 182 mã thị trường thật qua DNSE"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-rose-600 hover:from-amber-400 hover:via-orange-400 hover:to-rose-500 text-zinc-950 font-mono font-black text-xs transition-all shadow-lg shadow-amber-500/25 active:scale-95 border border-amber-300/40 cursor-pointer disabled:opacity-50"
             >
               <ArrowClockwise className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} weight="bold" />
-              <span>{isLoading ? 'ĐANG QUÉT...' : '⚡ QUÉT LẠI'}</span>
+              <span>{isLoading ? 'ĐANG QUÉT THẬT...' : '⚡ QUÉT LẠI'}</span>
             </button>
           </div>
         </div>
@@ -341,13 +357,16 @@ export const MarkMinerviniScreener: React.FC = () => {
 
           <div className="p-3.5 rounded-xl bg-zinc-900/60 border border-zinc-800">
             <div className="flex items-center justify-between text-zinc-400 text-xs font-mono mb-1">
-              <span>Nguồn Dữ Liệu</span>
+              <span>Lịch Quét Tự Động</span>
               <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-1.5 py-0.2 rounded border border-emerald-500/20">
-                100% REAL DNSE
+                2 LẦN/NGÀY
               </span>
             </div>
-            <div className="text-xs font-mono text-zinc-300 mt-1">
-              DNSE Entrade API (365 phiên thật)
+            <div className="text-xs font-mono text-zinc-200 mt-1 flex flex-col gap-0.5">
+              <span className="font-semibold text-zinc-100">{scanMeta?.sessionLabel || 'Phiên Sáng (11:30) & Chiều (15:00)'}</span>
+              <span className="text-[10px] text-zinc-400">
+                {scanMeta?.scannedAtText ? `Lúc: ${scanMeta.scannedAtText}` : 'Nguồn 100% Real DNSE'}
+              </span>
             </div>
           </div>
         </div>

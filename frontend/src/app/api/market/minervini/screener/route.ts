@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import fs from 'fs';
+import path from 'path';
 import stockDatabase from '../../../../../features/market/data/stockDatabase.json';
 import { MinerviniScreenerItem } from '../../../../../features/market/types/minervini.types';
 import { SECTOR_MAPPING, SECTOR_LEADER_UNIVERSE, getSymbolsBySector } from '../../../../../features/market/data/sectorMapping';
@@ -7,6 +9,18 @@ export const runtime = 'nodejs';
 
 // Comprehensive universe of 180+ liquid VN equities across all 20 industry sectors
 const DEFAULT_UNIVERSE = SECTOR_LEADER_UNIVERSE;
+
+// Persistent scan file locator
+function getScanFilePath() {
+  const possiblePaths = [
+    path.resolve(process.cwd(), 'src/features/market/data/lastMinerviniScan.json'),
+    path.resolve(process.cwd(), 'frontend/src/features/market/data/lastMinerviniScan.json'),
+  ];
+  for (const p of possiblePaths) {
+    if (fs.existsSync(p)) return p;
+  }
+  return possiblePaths[0];
+}
 
 // In-memory cache for screener results (60 seconds TTL)
 let cachedUniverseData: { timestamp: number; items: MinerviniScreenerItem[] } | null = null;
@@ -80,8 +94,45 @@ const OUTSTANDING_SHARES_M: Record<string, number> = {
   };
 
   try {
-    // Fast-path: return from cached data if available and fresh
-    if (!customSymbolsParam && cachedUniverseData && Date.now() - cachedUniverseData.timestamp < CACHE_TTL_MS) {
+    const forceRefresh = searchParams.get('refresh') === 'true';
+
+    // Fast-path 1: Load from persistent scan file if not force refresh
+    if (!forceRefresh && !customSymbolsParam) {
+      const scanFile = getScanFilePath();
+      if (fs.existsSync(scanFile)) {
+        try {
+          const fileRaw = fs.readFileSync(scanFile, 'utf8');
+          const fileJson = JSON.parse(fileRaw);
+          if (Array.isArray(fileJson.data) && fileJson.data.length > 0) {
+            const filtered = fileJson.data.filter((item: any) => {
+              if (sectorFilter !== 'all' && !item.sector.toLowerCase().includes(sectorFilter)) return false;
+              if (onlyStage2 && !item.isStage2Eligible) return false;
+              if (item.rsRating < minRS) return false;
+              if (minVol > 0 && item.volume < minVol) return false;
+              if (minMktCapT > 0 && item.mktCapT < minMktCapT) return false;
+              return true;
+            });
+            return NextResponse.json({
+              success: true,
+              total: filtered.length,
+              data: filtered,
+              scanMeta: {
+                scannedAt: fileJson.scannedAt,
+                scannedAtText: fileJson.scannedAtText,
+                session: fileJson.session,
+                sessionLabel: fileJson.sessionLabel,
+                stage2Count: fileJson.stage2Count,
+                leadersCount: fileJson.leadersCount,
+                source: fileJson.source,
+              },
+            });
+          }
+        } catch {}
+      }
+    }
+
+    // Fast-path 2: return from memory cache if available and fresh
+    if (!forceRefresh && !customSymbolsParam && cachedUniverseData && Date.now() - cachedUniverseData.timestamp < CACHE_TTL_MS) {
       const filtered = cachedUniverseData.items.filter((item) => {
         if (sectorFilter !== 'all' && !item.sector.toLowerCase().includes(sectorFilter)) return false;
         if (onlyStage2 && !item.isStage2Eligible) return false;
@@ -230,15 +281,41 @@ const OUTSTANDING_SHARES_M: Record<string, number> = {
     // Sort by RS Rating descending (Top Leaders first)
     results.sort((a, b) => b.rsRating - a.rsRating);
 
-    // Save to universe cache only if full unfiltered universe was fetched
+    // Save to universe cache and persistent scan file
+    let scanMeta: any = null;
     if (!customSymbolsParam && sectorFilter === 'all' && !onlyStage2 && minRS <= 1 && minVol === 0 && minMktCapT === 0) {
       cachedUniverseData = { timestamp: Date.now(), items: results };
+
+      try {
+        const vnTime = new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
+        const vnDate = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }));
+        const isMorning = vnDate.getHours() < 13;
+        scanMeta = {
+          scannedAt: Date.now(),
+          scannedAtText: vnTime,
+          session: isMorning ? 'MORNING' : 'AFTERNOON',
+          sessionLabel: isMorning ? 'Phiên Sáng (11:30)' : 'Phiên Chiều (15:00)',
+          totalScanned: results.length,
+          stage2Count: results.filter((s) => s.isStage2).length,
+          leadersCount: results.filter((s) => s.rsRating >= 90).length,
+          source: '100% REAL DNSE ENTRADE API',
+        };
+        const scanPayload = {
+          success: true,
+          ...scanMeta,
+          data: results,
+        };
+        fs.writeFileSync(getScanFilePath(), JSON.stringify(scanPayload, null, 2), 'utf8');
+      } catch (err: any) {
+        console.error('Lỗi lưu scan file:', err.message);
+      }
     }
 
     return NextResponse.json({
       success: true,
       total: results.length,
       data: results,
+      scanMeta,
     });
   } catch (err: any) {
     return NextResponse.json({ success: false, error: err.message }, { status: 500 });
