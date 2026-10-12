@@ -57,7 +57,16 @@ import {
   Waveform,
   Sliders,
   Check,
+  Gear,
 } from '@phosphor-icons/react';
+import {
+  calculateFibonacciPivots,
+  DEFAULT_FIBO_SETTINGS,
+  FiboPivotsSettings,
+  FiboPivotPeriod,
+  formatPivotPrice,
+} from '../utils/fibonacciPivots';
+import { FiboPivotsModal } from './FiboPivotsModal';
 import stockDatabase from '../data/stockDatabase.json';
 import { getStockPriceColor } from '../utils/priceColors';
 
@@ -624,6 +633,11 @@ export function MarketCandleChart() {
   // Trendline Pro State
   const [showTrendlinePro, setShowTrendlinePro] = useState(true);
   const [trendlineProData, setTrendlineProData] = useState<TrendlineProResult | null>(null);
+
+  // Fibonacci Pivot Points State (PineScript v6 - 13 Levels)
+  const [fiboSettings, setFiboSettings] = useState<FiboPivotsSettings>(DEFAULT_FIBO_SETTINGS);
+  const [fiboPeriods, setFiboPeriods] = useState<FiboPivotPeriod[]>([]);
+  const [showFiboSettingsModal, setShowFiboSettingsModal] = useState(false);
 
   // Drawing Tools State (TradingView Style)
   const [activeTool, setActiveTool] = useState<DrawingTool>('cursor');
@@ -1890,8 +1904,93 @@ export function MarketCandleChart() {
       ctx.restore();
     }
 
+    // ── 5. Render Fibonacci Pivot Points (13 Fibonacci Levels) ──────────────
+    if (fiboSettings.enabled && fiboPeriods.length > 0) {
+      ctx.save();
+      const chart = chartRef.current;
+      const series = candleSeriesRef.current;
+      const candles = loadedCandlesRef.current;
+
+      if (chart && series && candles.length > 0) {
+        const timeScale = chart.timeScale();
+        const lastCandleIndex = candles.length - 1;
+        const lastCandleX = timeScale.logicalToCoordinate(lastCandleIndex as any);
+
+        fiboPeriods.forEach((period) => {
+          // Precise coordinate for the first bar of this period
+          const periodStartX = timeScale.logicalToCoordinate(period.startIndex as any);
+          const periodEndX = timeScale.logicalToCoordinate(period.endIndex as any);
+
+          let startX = periodStartX !== null ? Math.max(0, periodStartX) : 0;
+          let endX: number;
+
+          if (period.isCurrent) {
+            // If the latest candle is on or near the screen, line extends 40px past the candle
+            if (lastCandleX !== null) {
+              endX = lastCandleX + 40;
+            } else {
+              endX = w - 120;
+            }
+            // Ensure minimum line length
+            if (endX < startX + 30) {
+              endX = startX + 50;
+            }
+          } else {
+            // Historical period: strictly contained within its candle range
+            endX = periodEndX !== null ? Math.min(w, periodEndX) : startX + 50;
+          }
+
+          period.levels.forEach((lvl) => {
+            const y = series.priceToCoordinate(lvl.price);
+            if (y === null || y < -30 || y > h + 30) return;
+
+            ctx.save();
+            ctx.strokeStyle = lvl.color;
+            ctx.lineWidth = lvl.style === 'Solid' ? fiboSettings.lineWidth + 0.5 : fiboSettings.lineWidth;
+            if (lvl.style === 'Dashed') {
+              ctx.setLineDash([5, 4]);
+            } else {
+              ctx.setLineDash([]);
+            }
+
+            // Draw line
+            const drawEndX = Math.min(w - 10, endX);
+            ctx.beginPath();
+            ctx.moveTo(startX, y);
+            ctx.lineTo(drawEndX, y);
+            ctx.stroke();
+
+            // Clean TradingView text labels:
+            if (lvl.label && (fiboSettings.showLabels || fiboSettings.showPrices) && (period.isCurrent || fiboPeriods.length === 1)) {
+              ctx.setLineDash([]);
+              const isLeft = fiboSettings.positionLabels === 'Left';
+
+              // Dynamically position text so it follows chart and stays legible
+              let textX: number;
+              if (isLeft) {
+                textX = Math.max(10, startX - 8);
+              } else {
+                // If endX is visible, place text at endX + 8; if endX extends offscreen, clamp to w - 120
+                textX = Math.min(w - 120, endX + 8);
+              }
+
+              ctx.font = '500 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "JetBrains Mono", monospace';
+              ctx.fillStyle = lvl.color;
+              ctx.textAlign = isLeft ? 'right' : 'left';
+              ctx.textBaseline = 'middle';
+              ctx.fillText(lvl.label, textX, y);
+            }
+
+            ctx.restore();
+          });
+        });
+      }
+
+      ctx.restore();
+    }
+
     ctx.restore();
-  }, [drawings, draftDrawing, showTrendlinePro, trendlineProData, hideDrawings, isMagnetMode, hoverSnapPoint, activeTool, selectedDrawingId]);
+  }, [drawings, draftDrawing, showTrendlinePro, trendlineProData, hideDrawings, isMagnetMode, hoverSnapPoint, activeTool, selectedDrawingId, fiboSettings, fiboPeriods]);
 
   // Keep decoupled ref for chart and window callbacks
   redrawCanvasRef.current = redrawCanvas;
@@ -2477,16 +2576,22 @@ export function MarketCandleChart() {
       }
     };
 
+    const onContainerWheel = () => {
+      requestAnimationFrame(() => redrawCanvasRef.current());
+    };
+
     container.addEventListener('mousedown', onContainerMouseDown, { capture: true });
     container.addEventListener('mousemove', onContainerMouseMove);
     container.addEventListener('mouseleave', onContainerMouseLeave);
     container.addEventListener('mouseup', onContainerMouseUp, { capture: true });
+    container.addEventListener('wheel', onContainerWheel, { passive: true });
 
     return () => {
       container.removeEventListener('mousedown', onContainerMouseDown, { capture: true });
       container.removeEventListener('mousemove', onContainerMouseMove);
       container.removeEventListener('mouseleave', onContainerMouseLeave);
       container.removeEventListener('mouseup', onContainerMouseUp, { capture: true });
+      container.removeEventListener('wheel', onContainerWheel);
       resizeObserver.disconnect();
       chart.remove();
       chartRef.current = null;
@@ -2767,6 +2872,18 @@ export function MarketCandleChart() {
       isCancelled = true;
     };
   }, [resolution, selectedSymbol]);
+
+  // ── Calculate Fibonacci Pivot Points (PineScript v6) ──────────────────────
+  useEffect(() => {
+    if (!fiboSettings.enabled || loadedCandlesRef.current.length === 0) {
+      setFiboPeriods([]);
+      requestAnimationFrame(() => redrawCanvasRef.current());
+      return;
+    }
+    const periods = calculateFibonacciPivots(loadedCandlesRef.current, resolution, fiboSettings);
+    setFiboPeriods(periods);
+    requestAnimationFrame(() => redrawCanvasRef.current());
+  }, [fiboSettings, dataVersion, resolution, selectedSymbol]);
 
   // ── 4. 60fps Real-Time WebSocket Tick Update (Smooth & No Re-fetch) ────────
   useEffect(() => {
@@ -3609,7 +3726,7 @@ export function MarketCandleChart() {
                   : 'bg-zinc-900/90 border-zinc-800 hover:border-zinc-700 text-zinc-200'
               }`}
             >
-              <FxIcon size={14} className={activeSubIndicator !== 'none' || showMA20 || showBB ? 'text-emerald-400 shrink-0' : 'text-zinc-400 shrink-0'} />
+              <FxIcon size={14} className={activeSubIndicator !== 'none' || showMA20 || showBB || fiboSettings.enabled ? 'text-emerald-400 shrink-0' : 'text-zinc-400 shrink-0'} />
               <span>Chỉ báo</span>
               {activeSubIndicator !== 'none' ? (
                 <span className="text-[9px] uppercase font-bold bg-emerald-500/20 text-emerald-300 px-1.5 py-0.2 rounded border border-emerald-500/30">
@@ -3617,7 +3734,7 @@ export function MarketCandleChart() {
                 </span>
               ) : (
                 <span className="text-[10px] text-zinc-500 font-mono">
-                  ({(showMA20 ? 1 : 0) + (showMA50 ? 1 : 0) + (showMA150 ? 1 : 0) + (showMA200 ? 1 : 0) + (showBB ? 1 : 0) + (showVolume ? 1 : 0)})
+                  ({(showMA20 ? 1 : 0) + (showMA50 ? 1 : 0) + (showMA150 ? 1 : 0) + (showMA200 ? 1 : 0) + (showBB ? 1 : 0) + (showVolume ? 1 : 0) + (fiboSettings.enabled ? 1 : 0)})
                 </span>
               )}
             </button>
@@ -3745,6 +3862,42 @@ export function MarketCandleChart() {
                         {showBB ? 'BẬT' : 'TẮT'}
                       </span>
                     </button>
+
+                    {/* Fibonacci Pivot Points (13 Levels) */}
+                    <div className="flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-mono text-zinc-200 hover:bg-zinc-800/70 transition-all border border-transparent hover:border-zinc-800 group">
+                      <span className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full bg-gradient-to-tr from-teal-400 via-indigo-400 to-amber-400 shrink-0" />
+                        <span className="font-semibold">Fibo Pivots</span>
+                        <span className="text-[10px] text-teal-400/90 font-bold hidden sm:inline">(13 Levels)</span>
+                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowFiboSettingsModal(true);
+                          }}
+                          className="p-1 rounded-md text-zinc-400 hover:text-zinc-100 hover:bg-zinc-700/60 transition-colors"
+                          title="Cấu hình Fibonacci Pivot Points"
+                        >
+                          <Gear size={13} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setFiboSettings((prev) => ({ ...prev, enabled: !prev.enabled }));
+                          }}
+                          className={`text-[10px] px-2 py-0.5 rounded-md font-bold transition-colors ${
+                            fiboSettings.enabled
+                              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                              : 'bg-zinc-800/60 text-zinc-500'
+                          }`}
+                        >
+                          {fiboSettings.enabled ? 'BẬT' : 'TẮT'}
+                        </button>
+                      </div>
+                    </div>
 
                     {/* Volume */}
                     <button
@@ -4379,6 +4532,29 @@ export function MarketCandleChart() {
                   <span className="text-amber-300">Fib 0.618: <strong>{trendlineProData.fib0618.toFixed(2)}</strong></span>
                 </div>
               )}
+
+              {/* Row 5: Fibonacci Pivot Points Legend */}
+              {fiboSettings.enabled && fiboPeriods.length > 0 && (
+                <div className="flex items-center gap-2 text-[10px]">
+                  <span className="text-teal-400 font-bold flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" />
+                    Fibo Pivots ({fiboSettings.timeframe})
+                  </span>
+                  {fiboPeriods[fiboPeriods.length - 1] && (
+                    <>
+                      <span className="text-zinc-300">PP: <strong>{formatPivotPrice(fiboPeriods[fiboPeriods.length - 1].pp)}</strong></span>
+                      <span className="text-teal-300">Range: <strong>{formatPivotPrice(fiboPeriods[fiboPeriods.length - 1].range)}</strong></span>
+                    </>
+                  )}
+                  <button
+                    onClick={() => setShowFiboSettingsModal(true)}
+                    className="p-0.5 rounded text-zinc-400 hover:text-teal-300 hover:bg-zinc-800 transition-colors ml-0.5"
+                    title="Cài đặt Fibonacci Pivots"
+                  >
+                    <Gear size={12} />
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Active Tool Floating Banner (Only for actual drawing tools, never for cursor tools) */}
@@ -4538,6 +4714,14 @@ export function MarketCandleChart() {
           </span>
         </div>
       </div>
+
+      {/* ── Fibonacci Pivots Modal ───────────────────────────────── */}
+      <FiboPivotsModal
+        isOpen={showFiboSettingsModal}
+        onClose={() => setShowFiboSettingsModal(false)}
+        settings={fiboSettings}
+        onUpdateSettings={(newSettings) => setFiboSettings(newSettings)}
+      />
     </div>
   );
 }
