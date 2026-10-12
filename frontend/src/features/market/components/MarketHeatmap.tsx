@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useMarketStore } from '../store/marketStore';
 import {
   Flame,
   SlidersHorizontal,
   MagnifyingGlass,
+  ArrowsClockwise,
 } from '@phosphor-icons/react';
 
 export interface HeatmapStock {
@@ -198,8 +199,10 @@ export const MarketHeatmap: React.FC = () => {
   const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [searchFilter, setSearchFilter] = useState('');
 
-  const { ticks, wsStatus, setSelectedSymbol } = useMarketStore();
+  const { ticks, wsStatus, setSelectedSymbol, updateTick } = useMarketStore();
   const [flashMap, setFlashMap] = useState<Record<string, 'up' | 'down'>>({});
+  const [lastUpdated, setLastUpdated] = useState<string>('');
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const prevPricesRef = useRef<Record<string, number>>({});
 
   // Realtime tick price change detector for visual flash
@@ -224,45 +227,69 @@ export const MarketHeatmap: React.FC = () => {
     }
   }, [ticks]);
 
-  // Load verified market universe (80+ sector leaders)
-  useEffect(() => {
-    let isMounted = true;
-    fetch('/api/market/minervini/screener?minMktCap=0&minVol=0&minRS=1&stage2=false')
-      .then((res) => res.json())
-      .then((resData) => {
-        if (!isMounted) return;
-        if (resData.success && Array.isArray(resData.data)) {
-          const mapped: HeatmapStock[] = resData.data.map((item: any) => {
-            const sym = item.symbol.toUpperCase();
-            const sector = SECTOR_MAPPING[sym] || item.sector || 'Khác';
-            const price = item.price || 0;
-            const sharesM = OUTSTANDING_SHARES_M[sym] || (item.mktCapT > 0 && price > 0 ? (item.mktCapT * 1000000) / price : 250);
-            const mktCapT = Math.round(((sharesM * (price || 10000)) / 1000000) * 10) / 10;
-            return {
-              symbol: sym,
-              name: item.name || sym,
-              sector,
-              exchange: item.exchange || 'HOSE',
-              price,
-              change: item.change || 0,
-              changePercent: item.changePct !== undefined ? item.changePct : (item.changePercent || 0),
-              volume: item.volume || 0,
-              mktCapT,
-              rsRating: item.rsRating || 50,
-            };
-          });
-          setRawStocks(mapped);
-        }
-        setIsLoading(false);
-      })
-      .catch(() => {
-        if (isMounted) setIsLoading(false);
-      });
+  // Load verified market universe (700+ equities from SSI iBoard Realtime)
+  const fetchHeatmapData = useCallback(async (isManual = false) => {
+    if (isManual) setIsRefreshing(true);
+    try {
+      const res = await fetch('/api/market/heatmap');
+      const resData = await res.json();
+      if (resData.success && Array.isArray(resData.data)) {
+        const newFlashes: Record<string, 'up' | 'down'> = {};
+        let hasFlashes = false;
 
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+        resData.data.forEach((s: HeatmapStock) => {
+          const prev = prevPricesRef.current[s.symbol];
+          if (prev !== undefined && s.price !== prev) {
+            newFlashes[s.symbol] = s.price > prev ? 'up' : 'down';
+            hasFlashes = true;
+          }
+          prevPricesRef.current[s.symbol] = s.price;
+
+          // Propagate live price to global store for active stocks
+          if (s.volume > 0 || s.price > 0) {
+            updateTick({
+              symbol: s.symbol,
+              price: s.price,
+              change: s.change,
+              changePercent: s.changePercent,
+              volume: Math.floor(s.volume / 10),
+              totalVolume: s.volume,
+              high: s.price,
+              low: s.price,
+              open: s.price - s.change,
+              referencePrice: s.price - s.change,
+              ceilingPrice: Math.round((s.price - s.change) * 1.07),
+              floorPrice: Math.round((s.price - s.change) * 0.93),
+              timestamp: Date.now(),
+              matchType: s.change >= 0 ? 'B' : 'S',
+            });
+          }
+        });
+
+        if (hasFlashes) {
+          setFlashMap((prev) => ({ ...prev, ...newFlashes }));
+          setTimeout(() => setFlashMap({}), 700);
+        }
+
+        setRawStocks(resData.data);
+        setLastUpdated(new Date().toLocaleTimeString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh', hour12: false }));
+      }
+    } catch (err) {
+      console.error('Lỗi nạp dữ liệu Heatmap realtime:', err);
+    } finally {
+      setIsLoading(false);
+      if (isManual) setIsRefreshing(false);
+    }
+  }, [updateTick]);
+
+  useEffect(() => {
+    fetchHeatmapData();
+    // Auto-polling every 4 seconds during active trading session
+    const interval = setInterval(() => {
+      fetchHeatmapData();
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [fetchHeatmapData]);
 
   // Responsive container observer
   useEffect(() => {
@@ -535,10 +562,17 @@ export const MarketHeatmap: React.FC = () => {
                 </h3>
                 <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  <span>LIVE DNSE WS</span>
+                  <span>LIVE REALTIME</span>
                 </span>
               </div>
-              <span className="text-[10px] text-zinc-400 font-medium">Realtime TradingView Layer</span>
+              <div className="flex items-center gap-1.5 text-[10px] text-zinc-400 font-medium">
+                <span>SSI iBoard • {rawStocks.length} mã</span>
+                {lastUpdated && (
+                  <span className="text-zinc-500">
+                    • Cập nhật: <strong className="text-emerald-400 font-mono">{lastUpdated}</strong>
+                  </span>
+                )}
+              </div>
             </div>
           </div>
 
@@ -609,6 +643,17 @@ export const MarketHeatmap: React.FC = () => {
           >
             <SlidersHorizontal className="w-3.5 h-3.5" />
             <span>Theo Ngành</span>
+          </button>
+
+          {/* Manual Refresh button */}
+          <button
+            onClick={() => fetchHeatmapData(true)}
+            disabled={isRefreshing}
+            title="Làm mới dữ liệu Realtime"
+            className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-bold rounded-lg border border-zinc-800 bg-zinc-900 text-zinc-300 hover:text-emerald-400 hover:border-emerald-500/40 transition-all disabled:opacity-50"
+          >
+            <ArrowsClockwise className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-emerald-400' : ''}`} />
+            <span className="hidden sm:inline">Làm mới</span>
           </button>
         </div>
       </div>
