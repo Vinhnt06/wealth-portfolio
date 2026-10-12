@@ -137,7 +137,7 @@ export const CommoditiesAndGoldSection: React.FC = () => {
               </span>
               <span suppressHydrationWarning className="text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300 flex items-center gap-1.5 shadow-inner">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                Cập nhật ngày {mounted && lastDate ? lastDate : '11/10/2026'} {mounted && lastRefreshed ? `lúc ${lastRefreshed}` : ''}
+                Cập nhật {mounted && (lastDate || lastRefreshed) ? `${lastDate ? `ngày ${lastDate}` : ''} ${lastRefreshed ? `lúc ${lastRefreshed}` : ''}`.trim() : 'theo thời gian thực'}
               </span>
             </div>
             <p className="text-xs text-zinc-400 mt-1">

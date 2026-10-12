@@ -31,8 +31,10 @@ export async function GET() {
     });
   }
 
-  const items: CommodityItem[] = [];
-  const timeStr = new Date().toLocaleTimeString('vi-VN', { hour12: false });
+  const timeStr = new Date().toLocaleTimeString('vi-VN', {
+    timeZone: 'Asia/Ho_Chi_Minh',
+    hour12: false,
+  });
 
   // 1. Fetch Realtime Global Commodities from Yahoo Finance
   const symbols = [

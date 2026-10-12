@@ -39,7 +39,10 @@ export async function GET() {
   ];
 
   const results: ExchangeRateItem[] = [];
-  const updateTime = new Date().toLocaleTimeString('vi-VN', { hour12: false });
+  const updateTime = new Date().toLocaleTimeString('vi-VN', {
+    timeZone: 'Asia/Ho_Chi_Minh',
+    hour12: false,
+  });
 
   await Promise.all(
     pairs.map(async (p) => {
