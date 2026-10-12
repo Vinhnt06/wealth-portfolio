@@ -80,8 +80,10 @@ export const MarkMinerviniScreener: React.FC = () => {
     source?: string;
   } | null>(null);
 
-  const fetchScreenerData = async (forceRefresh = false) => {
-    setIsLoading(true);
+  const fetchScreenerData = async (forceRefresh = false, isBackground = false) => {
+    if (!isBackground) {
+      setIsLoading(true);
+    }
     try {
       const url = forceRefresh
         ? '/api/market/minervini/screener?stage2=false&minRS=1&refresh=true'
@@ -98,21 +100,28 @@ export const MarkMinerviniScreener: React.FC = () => {
           setScanMeta(data.scanMeta);
         }
         setLastUpdated(
-          (data.scanMeta?.scannedAtText || new Date().toLocaleTimeString('vi-VN', {
+          new Date().toLocaleTimeString('vi-VN', {
             hour12: false,
             timeZone: 'Asia/Ho_Chi_Minh',
-          })) + ' (VN)'
+          }) + ' (SSI Live)'
         );
       }
     } catch (err) {
       console.error('Failed to fetch Minervini screener:', err);
     } finally {
-      setIsLoading(false);
+      if (!isBackground) {
+        setIsLoading(false);
+      }
     }
   };
 
   useEffect(() => {
     fetchScreenerData();
+    // Auto-refresh realtime market data from SSI every 10 seconds during trading sessions
+    const interval = setInterval(() => {
+      fetchScreenerData(false, true);
+    }, 10000);
+    return () => clearInterval(interval);
   }, []);
 
   // Dynamic On-Demand Scan for custom searched symbols not in the pre-scanned dataset
@@ -427,11 +436,17 @@ export const MarkMinerviniScreener: React.FC = () => {
             <div className="flex items-center gap-2">
               <Buildings className="w-5 h-5 text-amber-400" />
               <div>
-                <h3 className="font-mono font-bold text-zinc-100 text-sm">
-                  XẾP HẠNG VÀ TOP CỔ PHIẾU THEO TỪNG NHÓM NGÀNH ({sectorGroups.length} NGÀNH)
-                </h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-mono font-bold text-zinc-100 text-sm">
+                    XẾP HẠNG VÀ TOP CỔ PHIẾU THEO TỪNG NHÓM NGÀNH ({sectorGroups.length} NGÀNH)
+                  </h3>
+                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    LIVE REALTIME
+                  </span>
+                </div>
                 <p className="text-xs text-zinc-400 font-sans">
-                  Sức mạnh ngành trung bình (Average RS) & Các mã dẫn sóng (Leaders) đạt chuẩn Minervini
+                  Sức mạnh ngành trung bình (Average RS) & Các mã dẫn sóng (Leaders) đạt chuẩn Minervini (Cập nhật trực tiếp SSI 10s/lần)
                 </p>
               </div>
             </div>

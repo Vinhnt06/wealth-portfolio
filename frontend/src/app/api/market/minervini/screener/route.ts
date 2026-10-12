@@ -26,6 +26,68 @@ function getScanFilePath() {
 let cachedUniverseData: { timestamp: number; items: MinerviniScreenerItem[] } | null = null;
 const CACHE_TTL_MS = 60 * 1000;
 
+interface LiveTick {
+  price: number;
+  changePct: number;
+  volume: number;
+}
+let ssiCache: { timestamp: number; map: Map<string, LiveTick> } | null = null;
+const SSI_CACHE_TTL_MS = 3000; // 3 seconds TTL
+
+async function getLiveSsiTicks(): Promise<Map<string, LiveTick>> {
+  if (ssiCache && Date.now() - ssiCache.timestamp < SSI_CACHE_TTL_MS) {
+    return ssiCache.map;
+  }
+  const exchanges = ['hose', 'hnx', 'upcom'];
+  const map = new Map<string, LiveTick>();
+  try {
+    const results = await Promise.all(
+      exchanges.map((ex) =>
+        fetch(`https://iboard-query.ssi.com.vn/stock/exchange/${ex}`, {
+          headers: { 'User-Agent': 'Mozilla/5.0' },
+          cache: 'no-store',
+        })
+          .then((r) => r.json())
+          .catch(() => ({ data: [] }))
+      )
+    );
+    for (const res of results) {
+      for (const it of res?.data || []) {
+        if (!it.stockSymbol) continue;
+        const matched = Number(it.matchedPrice || 0);
+        const expected = Number(it.expectedMatchedPrice || 0);
+        const ref = Number(it.refPrice || 0);
+        const price = matched > 0 ? matched : (expected > 0 ? expected : ref);
+        const changePct =
+          it.priceChangePercent !== undefined && it.priceChangePercent !== null
+            ? Number(it.priceChangePercent)
+            : 0;
+        const volume = Number(it.nmTotalTradedQty || it.stockVol || 0);
+        map.set(it.stockSymbol.toUpperCase(), { price, changePct, volume });
+      }
+    }
+    if (map.size > 0) {
+      ssiCache = { timestamp: Date.now(), map };
+    }
+  } catch (e) {
+    console.error('Error fetching live SSI ticks:', e);
+  }
+  return ssiCache?.map || map;
+}
+
+function enrichWithLiveTicks(items: MinerviniScreenerItem[], liveMap: Map<string, LiveTick>): MinerviniScreenerItem[] {
+  return items.map((item) => {
+    const live = liveMap.get(item.symbol.toUpperCase());
+    if (!live) return item;
+    return {
+      ...item,
+      price: live.price > 0 ? live.price : item.price,
+      changePct: live.changePct !== undefined && live.changePct !== null ? live.changePct : item.changePct,
+      volume: live.volume > 0 ? live.volume : item.volume,
+    };
+  });
+}
+
 /**
  * GET /api/market/minervini/screener?minMktCap=0&minVol=0&minRS=1&sector=all&stage2=false
  * Returns stocks dynamically filtered by Mark Minervini Trend Template & Fundamentals
@@ -114,10 +176,12 @@ const OUTSTANDING_SHARES_M: Record<string, number> = {
               if (minMktCapT > 0 && item.mktCapT < minMktCapT) return false;
               return true;
             });
+            const liveMap = await getLiveSsiTicks();
+            const enriched = enrichWithLiveTicks(filtered, liveMap);
             return NextResponse.json({
               success: true,
-              total: filtered.length,
-              data: filtered,
+              total: enriched.length,
+              data: enriched,
               scanMeta: {
                 scannedAt: fileJson.scannedAt,
                 scannedAtText: fileJson.scannedAtText,
@@ -126,6 +190,7 @@ const OUTSTANDING_SHARES_M: Record<string, number> = {
                 stage2Count: fileJson.stage2Count,
                 leadersCount: fileJson.leadersCount,
                 source: fileJson.source,
+                isLiveRealtime: true,
               },
             });
           }
@@ -143,10 +208,15 @@ const OUTSTANDING_SHARES_M: Record<string, number> = {
         if (minMktCapT > 0 && item.mktCapT < minMktCapT) return false;
         return true;
       });
+      const liveMap = await getLiveSsiTicks();
+      const enriched = enrichWithLiveTicks(filtered, liveMap);
       return NextResponse.json({
         success: true,
-        total: filtered.length,
-        data: filtered,
+        total: enriched.length,
+        data: enriched,
+        scanMeta: {
+          isLiveRealtime: true,
+        },
       });
     }
 
@@ -313,11 +383,14 @@ const OUTSTANDING_SHARES_M: Record<string, number> = {
       }
     }
 
+    const liveMap = await getLiveSsiTicks();
+    const enrichedResults = enrichWithLiveTicks(results, liveMap);
+
     return NextResponse.json({
       success: true,
-      total: results.length,
-      data: results,
-      scanMeta,
+      total: enrichedResults.length,
+      data: enrichedResults,
+      scanMeta: scanMeta ? { ...scanMeta, isLiveRealtime: true } : { isLiveRealtime: true },
     });
   } catch (err: any) {
     return NextResponse.json({ success: false, error: err.message }, { status: 500 });
