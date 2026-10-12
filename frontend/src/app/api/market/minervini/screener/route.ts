@@ -6,6 +6,7 @@ import { MinerviniScreenerItem } from '../../../../../features/market/types/mine
 import { SECTOR_MAPPING, SECTOR_LEADER_UNIVERSE, getSymbolsBySector } from '../../../../../features/market/data/sectorMapping';
 
 export const runtime = 'nodejs';
+export const preferredRegion = 'sin1';
 
 // Comprehensive universe of 180+ liquid VN equities across all 20 industry sectors
 const DEFAULT_UNIVERSE = SECTOR_LEADER_UNIVERSE;

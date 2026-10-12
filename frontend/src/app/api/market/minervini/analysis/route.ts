@@ -3,6 +3,7 @@ import stockDatabase from '../../../../../features/market/data/stockDatabase.jso
 import { MinerviniAnalysisResult, MinerviniCriterion, MinerviniStrategySignal } from '../../../../../features/market/types/minervini.types';
 
 export const runtime = 'nodejs';
+export const preferredRegion = 'sin1';
 
 const STOCK_MAP = new Map<string, { name: string; exchange: string; sector: string }>();
 (stockDatabase as any[]).forEach((item) => {

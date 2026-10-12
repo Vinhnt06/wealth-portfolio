@@ -5,6 +5,7 @@ import { calculateExchangeCeilFloor } from '../../../../features/market/utils/pr
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+export const preferredRegion = 'sin1';
 
 interface StockMeta {
   symbol: string;
