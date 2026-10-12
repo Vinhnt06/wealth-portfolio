@@ -20,6 +20,11 @@ import {
   Fish,
   ListNumbers,
   Sparkle,
+  ArrowClockwise,
+  Warning,
+  X,
+  Funnel,
+  MagnifyingGlass,
 } from '@phosphor-icons/react';
 import { useMarketStore } from '../store/marketStore';
 import { MarketCandleChart } from './MarketCandleChart';
@@ -102,12 +107,58 @@ interface StockDetailSectionProps {
 }
 
 export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackToOverview }) => {
-  const { selectedSymbol, ticks, watchlistSymbols, toggleWatchlistSymbol, updateTick } = useMarketStore();
+  const { selectedSymbol, setSelectedSymbol, ticks, watchlistSymbols, toggleWatchlistSymbol, updateTick, setViewMode } = useMarketStore();
   const [activeTab, setActiveTab] = useState<'profile' | 'shareholders' | 'officers' | 'financials' | 'foreign' | 'orderbook'>('profile');
   const [companyData, setCompanyData] = useState<CompanyData | null>(null);
   const [foreignData, setForeignData] = useState<ForeignTradingData | null>(null);
   const [minerviniData, setMinerviniData] = useState<MinerviniAnalysisResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isScanningMinervini, setIsScanningMinervini] = useState(false);
+  const [quickSymbolInput, setQuickSymbolInput] = useState('');
+  const [scanFeedback, setScanFeedback] = useState<{
+    type: 'success' | 'warning' | 'error';
+    message: string;
+  } | null>(null);
+
+  const handleScanCurrentSymbol = async () => {
+    if (!selectedSymbol) return;
+    setIsScanningMinervini(true);
+    setScanFeedback(null);
+    try {
+      const res = await fetch(`/api/market/minervini/analysis?symbol=${selectedSymbol}&refresh=true`);
+      const resData = await res.json();
+      if (resData.success && resData.data) {
+        setMinerviniData(resData.data);
+        const d = resData.data;
+        if (d.isStage2Eligible) {
+          setScanFeedback({
+            type: 'success',
+            message: `🎉 ${selectedSymbol} ĐẠT CHUẨN MARK MINERVINI: ${d.passedCount}/8 tiêu chí Trend Template (Stage 2 Tăng trưởng), RS Rating: ${d.rsRating}/99.`,
+          });
+        } else {
+          setScanFeedback({
+            type: 'warning',
+            message: `⚠️ ${selectedSymbol}: Đạt ${d.passedCount}/8 tiêu chí Trend Template (${d.stageName || 'Chưa đạt Stage 2'}), RS Rating: ${d.rsRating}/99.`,
+          });
+        }
+      }
+    } catch (err: any) {
+      setScanFeedback({
+        type: 'error',
+        message: `Lỗi khi quét mã ${selectedSymbol}: ${err.message || 'Không thể kết nối API'}`,
+      });
+    } finally {
+      setIsScanningMinervini(false);
+    }
+  };
+
+  const handleSwitchAndScanSymbol = (inputVal: string) => {
+    const sym = inputVal.trim().toUpperCase();
+    if (!sym || sym.length !== 3) return;
+    setSelectedSymbol(sym);
+    setQuickSymbolInput('');
+    setScanFeedback(null);
+  };
 
   const tick = ticks[selectedSymbol];
   const meta = STOCK_META_MAP.get(selectedSymbol) || {
@@ -213,7 +264,7 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
       {/* Top Navigation & Stock Header Bar */}
       <div className="bg-zinc-950/90 border border-zinc-800/80 rounded-2xl p-5 shadow-2xl backdrop-blur-xl">
         <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-zinc-800/80">
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <button
               onClick={onBackToOverview}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700/80 text-zinc-300 hover:text-zinc-100 text-xs font-mono font-medium transition-all"
@@ -221,11 +272,56 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
               <ArrowLeft className="w-4 h-4" />
               <span>Tổng Quan Thị Trường</span>
             </button>
+            <button
+              onClick={() => setViewMode('screener')}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-400/10 hover:bg-amber-400/20 border border-amber-400/30 text-amber-300 hover:text-amber-200 text-xs font-mono font-bold transition-all"
+            >
+              <Funnel className="w-4 h-4" />
+              <span>Bộ Lọc Minervini</span>
+            </button>
             <span className="text-zinc-600">/</span>
             <span className="text-xs font-mono text-emerald-400 font-bold uppercase">{selectedSymbol} Terminal</span>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Quick Symbol Switcher */}
+            <div className="flex items-center gap-1 bg-zinc-900 border border-zinc-800 p-1 rounded-xl">
+              <input
+                type="text"
+                placeholder="Đổi mã (vd: ABB)..."
+                value={quickSymbolInput}
+                onChange={(e) => setQuickSymbolInput(e.target.value.toUpperCase())}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && quickSymbolInput.trim().length === 3) {
+                    handleSwitchAndScanSymbol(quickSymbolInput);
+                  }
+                }}
+                className="w-24 sm:w-28 px-2 py-0.5 text-xs font-mono bg-transparent text-zinc-100 placeholder:text-zinc-600 focus:outline-none"
+              />
+              <button
+                onClick={() => handleSwitchAndScanSymbol(quickSymbolInput)}
+                disabled={quickSymbolInput.trim().length !== 3}
+                className="px-2 py-0.5 rounded-lg bg-zinc-800 hover:bg-amber-400 hover:text-zinc-950 text-zinc-300 text-[11px] font-mono font-bold transition-all disabled:opacity-30 cursor-pointer"
+              >
+                Xem
+              </button>
+            </div>
+
+            {/* Nút QUÉT CHUẨN MINERVINI NỔI BẬT */}
+            <button
+              onClick={handleScanCurrentSymbol}
+              disabled={isScanningMinervini}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-zinc-950 font-mono font-black text-xs transition-all shadow-[0_0_15px_rgba(245,158,11,0.3)] active:scale-95 cursor-pointer disabled:opacity-50"
+              title={`Bấm để quét và xét duyệt 8 tiêu chí Trend Template & RS Rating cho mã ${selectedSymbol}`}
+            >
+              {isScanningMinervini ? (
+                <ArrowClockwise className="w-4 h-4 animate-spin text-zinc-950" />
+              ) : (
+                <Sparkle className="w-4 h-4 text-zinc-950" weight="fill" />
+              )}
+              <span>{isScanningMinervini ? 'ĐANG QUÉT...' : `⚡ QUÉT CHUẨN (${selectedSymbol})`}</span>
+            </button>
+
             <button
               onClick={() => toggleWatchlistSymbol(selectedSymbol)}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-mono font-semibold transition-all ${
@@ -243,6 +339,32 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
             </span>
           </div>
         </div>
+
+        {/* Scan feedback alert banner if present */}
+        {scanFeedback && (
+          <div
+            className={`mt-4 p-3.5 rounded-xl border flex items-center justify-between gap-3 text-xs font-mono transition-all animate-in fade-in ${
+              scanFeedback.type === 'success'
+                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+                : scanFeedback.type === 'warning'
+                ? 'bg-amber-500/10 border-amber-500/30 text-amber-300'
+                : 'bg-rose-500/10 border-rose-500/30 text-rose-300'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              {scanFeedback.type === 'success' && <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />}
+              {scanFeedback.type === 'warning' && <Warning className="w-4 h-4 text-amber-400 shrink-0" />}
+              {scanFeedback.type === 'error' && <X className="w-4 h-4 text-rose-400 shrink-0" />}
+              <span className="font-medium">{scanFeedback.message}</span>
+            </div>
+            <button
+              onClick={() => setScanFeedback(null)}
+              className="p-1 text-zinc-400 hover:text-zinc-200"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
 
         {/* Stock Headline Info & Full-Width Realtime Telemetry Bar */}
         <div className="space-y-4 pt-4">

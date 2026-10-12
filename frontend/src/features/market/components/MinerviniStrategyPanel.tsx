@@ -113,10 +113,11 @@ export const MinerviniStrategyPanel: React.FC<MinerviniStrategyPanelProps> = ({ 
         <button
           onClick={handleScan}
           disabled={isScanning || isLoading}
-          className="p-1.5 text-zinc-400 hover:text-emerald-400 rounded-lg transition-colors shrink-0"
-          title="Làm mới phân tích dữ liệu thực tế"
+          className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-400 hover:bg-amber-300 text-zinc-950 text-[11px] font-mono font-bold transition-all shadow-sm active:scale-95 cursor-pointer disabled:opacity-50 shrink-0"
+          title="Bấm để tính toán và quét lại 8 tiêu chí Trend Template & RS Rating"
         >
-          <ArrowsClockwise size={14} className={isScanning ? 'animate-spin text-emerald-400' : ''} />
+          <ArrowsClockwise size={13} className={isScanning ? 'animate-spin' : ''} />
+          <span>{isScanning ? 'Đang Quét...' : '⚡ Quét Lại'}</span>
         </button>
       </div>
 
