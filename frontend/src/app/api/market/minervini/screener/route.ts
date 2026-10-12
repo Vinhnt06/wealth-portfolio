@@ -232,8 +232,8 @@ const OUTSTANDING_SHARES_M: Record<string, number> = {
           const info = dbMap.get(sym) || { name: sym, exchange: 'HOSE' };
           const sector = SECTOR_MAPPING[sym] || info.sector || 'Khác';
 
-          // Filter sector early if specified
-          if (sectorFilter !== 'all' && !sector.toLowerCase().includes(sectorFilter)) {
+          // Filter sector early if specified (unless custom symbol on-demand scan)
+          if (!customSymbolsParam && sectorFilter !== 'all' && !sector.toLowerCase().includes(sectorFilter)) {
             return;
           }
 
@@ -296,17 +296,19 @@ const OUTSTANDING_SHARES_M: Record<string, number> = {
           if (rsRating >= 70) score++;
 
           const isStage2 = score >= 7;
-          if (onlyStage2 && !isStage2) return;
-          if (rsRating < minRS) return;
-          if (vol < minVol && vol > 0) return;
+          if (!customSymbolsParam) {
+            if (onlyStage2 && !isStage2) return;
+            if (rsRating < minRS) return;
+            if (vol < minVol && vol > 0) return;
+            const mktCapT = getRealMarketCapT(sym, price);
+            if (minMktCapT > 0 && mktCapT < minMktCapT) return;
+          }
 
           // Real relative volume vs 20-session average volume
           const volSlice = d.v.slice(Math.max(0, len - 20));
           const avgVol20 = volSlice.reduce((a: number, b: number) => a + b, 0) / Math.max(1, volSlice.length);
           const relVol = avgVol20 > 0 ? Math.round((vol / avgVol20) * 100) / 100 : 1;
-
           const mktCapT = getRealMarketCapT(sym, price);
-          if (minMktCapT > 0 && mktCapT < minMktCapT) return;
 
           const p1W = len > 5 ? Math.round(((price - d.c[len - 5]) / d.c[len - 5]) * 10000) / 100 : chgPct;
           const p1M = len > 22 ? Math.round(((price - d.c[len - 22]) / d.c[len - 22]) * 10000) / 100 : 0;

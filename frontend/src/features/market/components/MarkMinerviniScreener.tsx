@@ -25,6 +25,7 @@ import {
   SquaresFour,
   Table as TableIcon,
   X,
+  Warning,
 } from '@phosphor-icons/react';
 import { useMarketStore } from '../store/marketStore';
 import { MinerviniScreenerItem } from '../types/minervini.types';
@@ -69,6 +70,15 @@ export const MarkMinerviniScreener: React.FC = () => {
     'Hiệu suất 1Y >= 20%',
     'RS Rating >= 70',
   ]);
+
+  const [scanFeedback, setScanFeedback] = useState<{
+    symbol: string;
+    type: 'success' | 'warning' | 'error';
+    message: string;
+    score?: number;
+    rsRating?: number;
+    isStage2?: boolean;
+  } | null>(null);
 
   const [scanMeta, setScanMeta] = useState<{
     scannedAt?: number;
@@ -124,26 +134,82 @@ export const MarkMinerviniScreener: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Dynamic On-Demand Scan for custom searched symbols not in the pre-scanned dataset
+  // Explicit Manual Scan and Validation for Any Custom Symbol
+  const handleScanCustomSymbol = async (symbolOverride?: string) => {
+    const sym = (symbolOverride || searchQuery).trim().toUpperCase();
+    if (!sym || sym.length !== 3 || !/^[A-Z0-9]{3}$/.test(sym)) {
+      setScanFeedback({
+        symbol: sym || '---',
+        type: 'warning',
+        message: 'Vui lòng nhập đúng mã cổ phiếu gồm 3 ký tự (Ví dụ: ABB, MSR, VND, DIG).',
+      });
+      return;
+    }
+
+    setIsSearchingOnDemand(true);
+    setScanFeedback(null);
+    try {
+      const res = await fetch(`/api/market/minervini/screener?symbols=${sym}`);
+      const resData = await res.json();
+      if (resData.success && Array.isArray(resData.data) && resData.data.length > 0) {
+        const raw = resData.data[0];
+        const newItem: MinerviniScreenerItem = {
+          ...raw,
+          sector: SECTOR_MAPPING[sym] || raw.sector || 'Khác',
+        };
+        setItems((prev) => {
+          const without = prev.filter((p) => p.symbol !== sym);
+          return [newItem, ...without];
+        });
+        setSearchQuery(sym);
+
+        if (newItem.isStage2Eligible) {
+          setScanFeedback({
+            symbol: sym,
+            type: 'success',
+            score: newItem.criteriaPassed,
+            rsRating: newItem.rsRating,
+            isStage2: true,
+            message: `🎉 ĐẠT CHUẨN MARK MINERVINI: Cổ phiếu [${sym}] đạt ${newItem.criteriaPassed}/8 tiêu chí Trend Template (Giai đoạn 2 Tăng trưởng), RS Rating: ${newItem.rsRating}/99. Đã đưa vào bộ lọc!`,
+          });
+        } else {
+          setScanFeedback({
+            symbol: sym,
+            type: 'warning',
+            score: newItem.criteriaPassed,
+            rsRating: newItem.rsRating,
+            isStage2: false,
+            message: `⚠️ KẾT QUẢ XÉT CHUẨN: Cổ phiếu [${sym}] đạt ${newItem.criteriaPassed}/8 tiêu chí Trend Template (Chưa đạt Stage 2), RS Rating: ${newItem.rsRating}/99. Đã thêm vào danh sách để bạn theo dõi.`,
+          });
+        }
+      } else {
+        setScanFeedback({
+          symbol: sym,
+          type: 'error',
+          message: `Không tìm thấy dữ liệu giao dịch cho mã [${sym}] trên sàn HOSE/HNX/UPCoM. Vui lòng kiểm tra lại mã.`,
+        });
+      }
+    } catch (err: any) {
+      setScanFeedback({
+        symbol: sym,
+        type: 'error',
+        message: `Lỗi khi quét mã [${sym}]: ${err.message || 'Không thể kết nối API'}`,
+      });
+    } finally {
+      setIsSearchingOnDemand(false);
+    }
+  };
+
+  // Dynamic On-Demand Auto-Scan for custom searched symbols when typing 3 characters
   useEffect(() => {
     const sym = searchQuery.trim().toUpperCase();
     if (sym.length === 3 && /^[A-Z0-9]{3}$/.test(sym)) {
       const exists = items.some((it) => it.symbol === sym);
       if (!exists) {
-        setIsSearchingOnDemand(true);
-        fetch(`/api/market/minervini/screener?symbols=${sym}`)
-          .then((res) => res.json())
-          .then((resData) => {
-            if (resData.success && Array.isArray(resData.data) && resData.data.length > 0) {
-              const newItem = resData.data[0];
-              setItems((prev) => (prev.some((p) => p.symbol === sym) ? prev : [newItem, ...prev]));
-            }
-          })
-          .catch(() => {})
-          .finally(() => setIsSearchingOnDemand(false));
+        handleScanCustomSymbol(sym);
       }
     }
-  }, [searchQuery, items]);
+  }, [searchQuery]);
 
   // Distinct sectors: use canonical 20 ICB sectors order
   const sectors = useMemo(() => {
@@ -506,6 +572,94 @@ export const MarkMinerviniScreener: React.FC = () => {
             </div>
           </div>
 
+          {/* ── Tra Cứu Nhanh & Quét Xét Tiêu Chí Cổ Phiếu Bất Kỳ ─────────────────── */}
+          <div className="p-3.5 rounded-2xl bg-zinc-950/90 border border-zinc-800/80 flex flex-wrap items-center justify-between gap-3 shadow-lg">
+            <div className="flex flex-wrap items-center gap-2 flex-1">
+              <div className="relative flex-1 min-w-[200px] max-w-xs">
+                <MagnifyingGlass className="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="Nhập mã CP (vd: ABB, MSR, VND)..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleScanCustomSymbol(searchQuery);
+                    }
+                  }}
+                  className="pl-9 pr-8 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-200 text-xs font-mono placeholder:text-zinc-600 focus:outline-none focus:border-amber-400 w-full transition-all"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => {
+                      setSearchQuery('');
+                      setScanFeedback(null);
+                    }}
+                    className="p-1 text-zinc-500 hover:text-zinc-300 absolute right-2.5 top-1/2 -translate-y-1/2"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+
+              {/* Nút Bấm Quét & Xét Chuẩn Minervini */}
+              <button
+                onClick={() => handleScanCustomSymbol(searchQuery)}
+                disabled={isSearchingOnDemand}
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-zinc-950 font-mono font-black text-xs transition-all shadow-md active:scale-95 cursor-pointer disabled:opacity-50"
+                title="Bấm để quét dữ liệu thực tế và xét duyệt 8 tiêu chí Trend Template của mã này"
+              >
+                {isSearchingOnDemand ? (
+                  <ArrowClockwise className="w-4 h-4 animate-spin text-zinc-950" />
+                ) : (
+                  <Sparkle className="w-4 h-4 text-zinc-950" weight="fill" />
+                )}
+                <span>{isSearchingOnDemand ? 'ĐANG QUÉT & XÉT...' : '⚡ QUÉT & XÉT TIÊU CHÍ'}</span>
+              </button>
+            </div>
+
+            <div className="text-[11px] font-mono text-zinc-400">
+              <span>💡 Nhập mã bất kỳ và bấm nút để quét nến kỹ thuật & xếp hạng RS tự động</span>
+            </div>
+          </div>
+
+          {/* Feedback kết quả quét */}
+          {scanFeedback && (
+            <div
+              className={`p-3.5 rounded-xl border flex items-center justify-between gap-3 text-xs font-mono transition-all animate-in fade-in ${
+                scanFeedback.type === 'success'
+                  ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+                  : scanFeedback.type === 'warning'
+                  ? 'bg-amber-500/10 border-amber-500/30 text-amber-300'
+                  : 'bg-rose-500/10 border-rose-500/30 text-rose-300'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                {scanFeedback.type === 'success' && <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />}
+                {scanFeedback.type === 'warning' && <Warning className="w-4 h-4 text-amber-400 shrink-0" />}
+                {scanFeedback.type === 'error' && <X className="w-4 h-4 text-rose-400 shrink-0" />}
+                <span className="font-medium">{scanFeedback.message}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    setSelectedSector('all');
+                    setMainViewMode('table');
+                  }}
+                  className="px-2.5 py-1 rounded-lg bg-zinc-900 border border-zinc-700 hover:border-amber-400 text-amber-300 text-[11px] font-bold"
+                >
+                  Xem Bảng Lọc Chi Tiết →
+                </button>
+                <button
+                  onClick={() => setScanFeedback(null)}
+                  className="p-1 text-zinc-400 hover:text-zinc-200"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Grid of Sector Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {sectorGroups.map((group, gIdx) => {
@@ -720,45 +874,48 @@ export const MarkMinerviniScreener: React.FC = () => {
 
             {/* Quick Filter Controls */}
             <div className="flex flex-wrap items-center gap-3">
-              {/* Quick Search */}
-              <div className="relative">
-                <MagnifyingGlass className="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  placeholder="Tìm mã hoặc tên (vd: ABB)..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      const sym = searchQuery.trim().toUpperCase();
-                      if (sym.length === 3) {
-                        setIsSearchingOnDemand(true);
-                        fetch(`/api/market/minervini/screener?symbols=${sym}`)
-                          .then((res) => res.json())
-                          .then((resData) => {
-                            if (resData.success && Array.isArray(resData.data) && resData.data.length > 0) {
-                              const newItem = resData.data[0];
-                              setItems((prev) => (prev.some((p) => p.symbol === sym) ? prev : [newItem, ...prev]));
-                            }
-                          })
-                          .catch(() => {})
-                          .finally(() => setIsSearchingOnDemand(false));
+              {/* Quick Search & Explicit Scan Button */}
+              <div className="flex items-center gap-1.5">
+                <div className="relative">
+                  <MagnifyingGlass className="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    placeholder="Mã CP (vd: ABB, MSR)..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleScanCustomSymbol(searchQuery);
                       }
-                    }
-                  }}
-                  className="pl-9 pr-8 py-1.5 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-200 text-xs font-mono placeholder:text-zinc-600 focus:outline-none focus:border-amber-400 w-52 transition-all"
-                />
-                {isSearchingOnDemand && (
-                  <ArrowClockwise className="w-3.5 h-3.5 text-amber-400 animate-spin absolute right-2.5 top-1/2 -translate-y-1/2" />
-                )}
-                {!isSearchingOnDemand && searchQuery && (
-                  <button
-                    onClick={() => setSearchQuery('')}
-                    className="p-0.5 text-zinc-500 hover:text-zinc-300 absolute right-2.5 top-1/2 -translate-y-1/2"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                )}
+                    }}
+                    className="pl-9 pr-8 py-1.5 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-200 text-xs font-mono placeholder:text-zinc-600 focus:outline-none focus:border-amber-400 w-44 sm:w-52 transition-all"
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => {
+                        setSearchQuery('');
+                        setScanFeedback(null);
+                      }}
+                      className="p-0.5 text-zinc-500 hover:text-zinc-300 absolute right-2.5 top-1/2 -translate-y-1/2"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                <button
+                  onClick={() => handleScanCustomSymbol(searchQuery)}
+                  disabled={isSearchingOnDemand}
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-zinc-950 font-mono font-black text-xs transition-all shadow-sm active:scale-95 cursor-pointer disabled:opacity-50"
+                  title="Quét và kiểm tra cổ phiếu theo chuẩn Minervini"
+                >
+                  {isSearchingOnDemand ? (
+                    <ArrowClockwise className="w-3.5 h-3.5 animate-spin text-zinc-950" />
+                  ) : (
+                    <Sparkle className="w-3.5 h-3.5 text-zinc-950" weight="fill" />
+                  )}
+                  <span>{isSearchingOnDemand ? 'ĐANG QUÉT...' : '⚡ QUÉT MÃ'}</span>
+                </button>
               </div>
 
               {/* Sector Selector */}
@@ -825,6 +982,32 @@ export const MarkMinerviniScreener: React.FC = () => {
               </button>
             </div>
           </div>
+
+          {/* Feedback kết quả quét cho Bảng Lọc */}
+          {scanFeedback && (
+            <div
+              className={`p-3.5 rounded-xl border flex items-center justify-between gap-3 text-xs font-mono transition-all animate-in fade-in ${
+                scanFeedback.type === 'success'
+                  ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+                  : scanFeedback.type === 'warning'
+                  ? 'bg-amber-500/10 border-amber-500/30 text-amber-300'
+                  : 'bg-rose-500/10 border-rose-500/30 text-rose-300'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                {scanFeedback.type === 'success' && <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />}
+                {scanFeedback.type === 'warning' && <Warning className="w-4 h-4 text-amber-400 shrink-0" />}
+                {scanFeedback.type === 'error' && <X className="w-4 h-4 text-rose-400 shrink-0" />}
+                <span className="font-medium">{scanFeedback.message}</span>
+              </div>
+              <button
+                onClick={() => setScanFeedback(null)}
+                className="p-1 text-zinc-400 hover:text-zinc-200"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
 
           {/* ── Quick Sort Shortcuts Ribbon ───────────────────────────────── */}
           <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 rounded-xl bg-zinc-950/80 border border-zinc-800/80 text-xs font-mono text-zinc-400">
@@ -1073,6 +1256,16 @@ export const MarkMinerviniScreener: React.FC = () => {
                         ) : (
                           <div className="flex flex-col items-center justify-center gap-3">
                             <p>Không tìm thấy cổ phiếu nào khớp với bộ lọc hiện tại.</p>
+                            {searchQuery.trim().length >= 3 && (
+                              <button
+                                onClick={() => handleScanCustomSymbol(searchQuery)}
+                                disabled={isSearchingOnDemand}
+                                className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-zinc-950 font-mono font-black text-xs transition-all shadow-md active:scale-95 inline-flex items-center gap-2 cursor-pointer"
+                              >
+                                <Sparkle className="w-4 h-4 text-zinc-950" weight="fill" />
+                                <span>Bấm vào đây để Quét & Xét chuẩn Minervini cho mã [{searchQuery.toUpperCase()}] ngay ⚡</span>
+                              </button>
+                            )}
                             {(selectedSector !== 'all' || minRs > 0 || onlyStage2 || searchQuery) && (
                               <button
                                 onClick={() => {
