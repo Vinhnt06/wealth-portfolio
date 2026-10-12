@@ -1,31 +1,37 @@
 {
   "gdp": [
     {
-      "period": "Q1/2026",
-      "growthRate": 6.82,
+      "period": "Q3/2026",
+      "growthRate": 9.95,
       "target": 6.5,
-      "value": "1,920,000 tỷ VNĐ"
+      "value": "2,580,000 tỷ VNĐ"
+    },
+    {
+      "period": "Q2/2026",
+      "growthRate": 8.81,
+      "target": 6.5,
+      "value": "2,240,000 tỷ VNĐ"
+    },
+    {
+      "period": "Q1/2026",
+      "growthRate": 8.15,
+      "target": 6.5,
+      "value": "2,010,000 tỷ VNĐ"
     },
     {
       "period": "Q4/2025",
       "growthRate": 7.15,
       "target": 6.5,
       "value": "2,450,000 tỷ VNĐ"
-    },
-    {
-      "period": "Q3/2025",
-      "growthRate": 6.88,
-      "target": 6.5,
-      "value": "2,180,000 tỷ VNĐ"
-    },
-    {
-      "period": "Q2/2025",
-      "growthRate": 6.93,
-      "target": 6.5,
-      "value": "2,050,000 tỷ VNĐ"
     }
   ],
   "cpi": [
+    {
+      "period": "T9/2026",
+      "yoy": 3.48,
+      "mom": 0.15,
+      "target": 4.5
+    },
     {
       "period": "T8/2026",
       "yoy": 3.45,
@@ -36,12 +42,6 @@
       "period": "T7/2026",
       "yoy": 3.52,
       "mom": 0.18,
-      "target": 4.5
-    },
-    {
-      "period": "T6/2026",
-      "yoy": 3.6,
-      "mom": 0.22,
       "target": 4.5
     }
   ],
@@ -91,7 +91,7 @@
   "interestRate": [
     {
       "bank": "Lãi suất Liên Ngân hàng (ON)",
-      "rate": "4.25%"
+      "rate": "4.50%"
     },
     {
       "bank": "Lãi suất Tái cấp vốn NHNN",

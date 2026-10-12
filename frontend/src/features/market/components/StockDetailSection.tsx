@@ -279,31 +279,29 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
       {/* Top Navigation & Stock Header Bar */}
       <div className="bg-zinc-950/90 border border-zinc-800/80 rounded-2xl p-5 shadow-2xl backdrop-blur-xl">
         <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-zinc-800/80">
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <button
               onClick={onBackToOverview}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700/80 text-zinc-300 hover:text-zinc-100 text-xs font-mono font-medium transition-all"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-900/80 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 hover:text-zinc-100 text-xs font-medium transition-colors"
             >
-              <ArrowLeft className="w-4 h-4" />
-              <span>Tổng Quan Thị Trường</span>
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Tổng quan</span>
             </button>
             <button
               onClick={() => setViewMode('screener')}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-400/10 hover:bg-amber-400/20 border border-amber-400/30 text-amber-300 hover:text-amber-200 text-xs font-mono font-bold transition-all"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-900/80 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 hover:text-amber-300 text-xs font-medium transition-colors"
             >
-              <Funnel className="w-4 h-4" />
-              <span>Bộ Lọc Minervini</span>
+              <Funnel className="w-3.5 h-3.5" />
+              <span>Bộ lọc Minervini</span>
             </button>
-            <span className="text-zinc-600">/</span>
-            <span className="text-xs font-mono text-emerald-400 font-bold uppercase">{selectedSymbol} Terminal</span>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
             {/* Quick Symbol Switcher */}
-            <div className="flex items-center gap-1 bg-zinc-900 border border-zinc-800 p-1 rounded-xl">
+            <div className="flex items-center gap-1.5 bg-zinc-900/80 border border-zinc-800 px-2.5 py-1 rounded-xl">
               <input
                 type="text"
-                placeholder="Đổi mã (vd: ABB)..."
+                placeholder="Đổi mã..."
                 value={quickSymbolInput}
                 onChange={(e) => setQuickSymbolInput(e.target.value.toUpperCase())}
                 onKeyDown={(e) => {
@@ -311,12 +309,12 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
                     handleSwitchAndScanSymbol(quickSymbolInput);
                   }
                 }}
-                className="w-24 sm:w-28 px-2 py-0.5 text-xs font-mono bg-transparent text-zinc-100 placeholder:text-zinc-600 focus:outline-none"
+                className="w-20 sm:w-24 text-xs font-mono bg-transparent text-zinc-100 placeholder:text-zinc-600 focus:outline-none"
               />
               <button
                 onClick={() => handleSwitchAndScanSymbol(quickSymbolInput)}
                 disabled={quickSymbolInput.trim().length !== 3}
-                className="px-2 py-0.5 rounded-lg bg-zinc-800 hover:bg-amber-400 hover:text-zinc-950 text-zinc-300 text-[11px] font-mono font-bold transition-all disabled:opacity-30 cursor-pointer"
+                className="px-2 py-0.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[11px] font-medium transition-colors disabled:opacity-30 cursor-pointer"
               >
                 Xem
               </button>
@@ -326,31 +324,32 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
             <button
               onClick={handleScanCurrentSymbol}
               disabled={isScanningMinervini}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-zinc-950 font-mono font-black text-xs transition-all shadow-[0_0_15px_rgba(245,158,11,0.3)] active:scale-95 cursor-pointer disabled:opacity-50"
-              title={`Bấm để quét và xét duyệt 8 tiêu chí Trend Template & RS Rating cho mã ${selectedSymbol}`}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-zinc-950 font-semibold text-xs transition-colors active:scale-95 cursor-pointer disabled:opacity-50"
+              title={`Quét tiêu chí Minervini cho ${selectedSymbol}`}
             >
               {isScanningMinervini ? (
-                <ArrowClockwise className="w-4 h-4 animate-spin text-zinc-950" />
+                <ArrowClockwise className="w-3.5 h-3.5 animate-spin" />
               ) : (
-                <Sparkle className="w-4 h-4 text-zinc-950" weight="fill" />
+                <Sparkle className="w-3.5 h-3.5" weight="fill" />
               )}
-              <span>{isScanningMinervini ? 'ĐANG QUÉT...' : `⚡ QUÉT CHUẨN (${selectedSymbol})`}</span>
+              <span>{isScanningMinervini ? 'Đang quét...' : `Quét chuẩn (${selectedSymbol})`}</span>
             </button>
 
             <button
               onClick={() => toggleWatchlistSymbol(selectedSymbol)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-mono font-semibold transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-medium transition-colors ${
                 isStarred
-                  ? 'bg-amber-500/10 border-amber-500/40 text-amber-400'
-                  : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-amber-400'
+                  ? 'bg-amber-400/10 border-amber-400/30 text-amber-300'
+                  : 'bg-zinc-900/80 border-zinc-800 text-zinc-400 hover:text-zinc-200'
               }`}
             >
-              <Star className={`w-4 h-4 ${isStarred ? 'fill-amber-400' : ''}`} />
-              <span>{isStarred ? 'Đã Theo Dõi' : 'Thêm Theo Dõi'}</span>
+              <Star className={`w-3.5 h-3.5 ${isStarred ? 'fill-amber-400' : ''}`} />
+              <span>{isStarred ? 'Đang theo dõi' : 'Theo dõi'}</span>
             </button>
-            <span className="px-2.5 py-1 text-[11px] font-mono rounded-xl bg-emerald-950/40 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
-              <Database className="w-3.5 h-3.5" />
-              Supabase Verified
+
+            <span className="hidden lg:inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-mono text-zinc-500">
+              <Database className="w-3 h-3 text-emerald-500" />
+              <span>Verified</span>
             </span>
           </div>
         </div>
@@ -394,64 +393,71 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
 
         {/* Stock Headline Info & Full-Width Realtime Telemetry Bar */}
         <div className="space-y-4 pt-4">
-          {/* Row 1: Stock Identity & Minervini Tags */}
+          {/* Row 1: Stock Identity & Minervini Telemetry */}
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-zinc-900 border border-zinc-700/80 flex items-center justify-center text-emerald-400 font-mono font-black text-2xl shadow-inner shrink-0">
+            <div className="flex items-center gap-3.5">
+              <div className="w-11 h-11 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-emerald-400 font-bold text-lg shrink-0">
                 {selectedSymbol.slice(0, 1)}
               </div>
               <div>
-                <div className="flex items-center gap-2.5 flex-wrap">
-                  <h1 className="text-2xl sm:text-3xl font-mono font-black text-zinc-100 tracking-tight">
+                <div className="flex items-center flex-wrap gap-x-2.5 gap-y-1">
+                  <h1 className="text-2xl font-bold text-zinc-100 tracking-tight">
                     {selectedSymbol}
                   </h1>
-                  <span className="px-2 py-0.5 text-xs font-mono font-bold rounded-lg bg-zinc-800 text-zinc-300 border border-zinc-700/80">
+                  <span className="text-zinc-600 font-light select-none">|</span>
+                  <span className="text-xs font-mono text-zinc-400">
                     {meta.exchange}
                   </span>
-                  <span className="px-2.5 py-0.5 text-xs text-zinc-400 bg-zinc-900 border border-zinc-800/80 rounded-lg">
+                  <span className="text-zinc-600 font-light select-none">|</span>
+                  <span className="text-xs text-zinc-400">
                     {meta.sector}
                   </span>
                 </div>
-                <p className="text-sm text-zinc-300 font-medium mt-1">{meta.name}</p>
+                <p className="text-xs text-zinc-400 mt-0.5">{meta.name}</p>
               </div>
             </div>
 
-            {/* Minervini Live RS Rating & Stage 2 Status Pill */}
+            {/* Minervini Live RS Rating & Stage 2 Status */}
             {minerviniData && (
-              <div className="flex flex-wrap items-center gap-2">
-                {/* Big Bold Prominent RS Rating Badge */}
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500/20 via-amber-500/10 to-transparent border border-amber-400/50 shadow-[0_0_15px_rgba(245,158,11,0.25)]">
-                  <Sparkle weight="fill" className="w-4 h-4 text-amber-400 animate-pulse" />
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-[10px] font-mono font-bold uppercase text-amber-300">RS Rating:</span>
-                    <span className="text-lg sm:text-xl font-mono font-black text-amber-300 leading-none">
-                      {minerviniData.rsRating}
+              <div className="flex items-center gap-3 px-3.5 py-1.5 rounded-xl bg-zinc-900/60 border border-zinc-800/80 text-xs">
+                {/* 1. RS Rating (Hero Stat) */}
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-[11px] text-zinc-400 font-medium">RS Rating:</span>
+                  <span className="font-mono font-bold text-amber-300 text-base leading-none">
+                    {minerviniData.rsRating}
+                  </span>
+                  <span className="text-[10px] font-mono text-zinc-500">/99</span>
+                  {minerviniData.rsRating >= 80 && (
+                    <span className="ml-1 px-1.5 py-0.2 rounded text-[9px] font-bold uppercase tracking-wider bg-amber-400/20 text-amber-300 border border-amber-400/30">
+                      Leader
                     </span>
-                    <span className="text-[10px] text-amber-400/70 font-semibold font-mono">/99</span>
-                    {minerviniData.rsRating >= 80 && (
-                      <span className="ml-1 px-1.5 py-0.2 rounded text-[9px] font-black uppercase tracking-wider bg-amber-400 text-zinc-950">
-                        LEADER
-                      </span>
-                    )}
-                  </div>
+                  )}
                 </div>
 
-                <span
-                  className={`px-3 py-1.5 text-xs font-mono font-bold rounded-xl border flex items-center gap-1.5 ${
-                    minerviniData.isStage2Eligible
-                      ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30 shadow-[0_0_12px_rgba(16,185,129,0.2)]'
-                      : 'bg-zinc-900 text-zinc-400 border-zinc-800'
-                  }`}
-                >
-                  <ShieldCheck className="w-4 h-4" />
-                  <span>{minerviniData.isStage2Eligible ? 'Stage 2 (8/8 ĐẠT)' : `${minerviniData.passedCount}/8 Tiêu chí`}</span>
-                </span>
+                <span className="text-zinc-700 font-light select-none">|</span>
 
-                <span className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono text-zinc-300 bg-zinc-900 border border-zinc-800 rounded-xl">
-                  <Buildings className="w-4 h-4 text-cyan-400" />
-                  <span>{minerviniData.sectorRank || 'Top Ngành'}</span>
-                  <span className="text-[10px] text-emerald-400 font-bold">({minerviniData.sectorStatus?.split(' ')[0] || 'Dẫn dắt'})</span>
-                </span>
+                {/* 2. Minervini Trend Template Criteria */}
+                <div className="flex items-center gap-1.5">
+                  <span className={`w-1.5 h-1.5 rounded-full ${minerviniData.isStage2Eligible ? 'bg-emerald-400' : 'bg-zinc-500'}`} />
+                  <span className="text-zinc-300 font-medium">
+                    {minerviniData.isStage2Eligible ? 'Stage 2 (8/8 Đạt)' : `${minerviniData.passedCount}/8 Tiêu chí`}
+                  </span>
+                </div>
+
+                {minerviniData.sectorRank && (
+                  <>
+                    <span className="text-zinc-700 font-light select-none hidden sm:inline">|</span>
+                    {/* 3. Sector Rank */}
+                    <div className="hidden sm:flex items-center gap-1 text-zinc-400">
+                      <span>{minerviniData.sectorRank}</span>
+                      {minerviniData.sectorStatus && (
+                        <span className="text-zinc-500">
+                          ({minerviniData.sectorStatus.split(' ')[0]})
+                        </span>
+                      )}
+                    </div>
+                  </>
+                )}
               </div>
             )}
           </div>

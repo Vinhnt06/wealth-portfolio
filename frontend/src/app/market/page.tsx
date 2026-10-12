@@ -43,70 +43,62 @@ export default function MarketTerminalPage() {
     <DashboardLayout>
       <div className="space-y-6 pb-12">
         {/* Top Header Command Bar */}
-        <div className="relative z-10 flex flex-wrap items-center justify-between gap-4 p-4 bg-zinc-950/80 border border-zinc-800/80 rounded-2xl backdrop-blur-xl shadow-xl">
-          {/* Left Title & System Status */}
+        <div className="relative z-10 flex flex-wrap items-center justify-between gap-4 p-4 bg-zinc-950/80 border border-zinc-800/80 rounded-2xl backdrop-blur-xl">
+          {/* Left Title */}
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
-              <Sparkle className="w-5 h-5 animate-pulse" weight="fill" />
+            <div className="w-9 h-9 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-emerald-400 shrink-0">
+              <ChartPieSlice className="w-4 h-4" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h1 className="font-mono font-black text-lg sm:text-xl text-zinc-100 tracking-tight">
-                  THỊ TRƯỜNG CHỨNG KHOÁN
-                </h1>
-                <span className="px-2 py-0.5 text-[10px] font-mono font-bold rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                  REALTIME TERMINAL
-                </span>
-                <span className="px-2 py-0.5 text-[10px] font-mono font-bold rounded-full bg-amber-400/10 text-amber-400 border border-amber-400/20 hidden md:inline-block">
-                  MINERVINI SYSTEM
-                </span>
-              </div>
+              <h1 className="text-base sm:text-lg font-semibold text-zinc-100 tracking-tight">
+                Thị Trường Chứng Khoán
+              </h1>
               <p className="text-xs text-zinc-400">
-                Hệ thống dữ liệu giao dịch trực tiếp Lightspeed & Bộ lọc Mark Minervini SEPA
+                Dữ liệu giao dịch trực tiếp & Bộ lọc Mark Minervini SEPA
               </p>
             </div>
           </div>
 
           {/* Center Mode Switcher Tabs */}
-          <div className="flex items-center p-1 rounded-xl bg-zinc-900 border border-zinc-800/80">
+          <div className="flex items-center p-1 rounded-xl bg-zinc-900/90 border border-zinc-800">
             <button
               onClick={() => setViewMode('overview')}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all ${
+              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
                 viewMode === 'overview'
-                  ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20'
-                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
+                  ? 'bg-zinc-800 text-zinc-100 shadow-sm'
+                  : 'text-zinc-400 hover:text-zinc-200'
               }`}
             >
-              <ChartPieSlice className="w-4 h-4" />
-              <span>Tổng Quan</span>
+              <ChartPieSlice className="w-3.5 h-3.5" />
+              <span>Tổng quan</span>
             </button>
 
             <button
               onClick={() => setViewMode('screener')}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all ${
+              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
                 viewMode === 'screener'
-                  ? 'bg-amber-400 text-zinc-950 shadow-md shadow-amber-400/20'
-                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
+                  ? 'bg-zinc-800 text-amber-300 shadow-sm'
+                  : 'text-zinc-400 hover:text-zinc-200'
               }`}
             >
-              <Funnel className="w-4 h-4" weight="fill" />
-              <span>Bộ Lọc Minervini</span>
+              <Funnel className="w-3.5 h-3.5" />
+              <span>Bộ lọc Minervini</span>
             </button>
 
             <button
               onClick={() => setViewMode('detail')}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all ${
+              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
                 viewMode === 'detail'
-                  ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20'
-                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
+                  ? 'bg-zinc-800 text-emerald-400 shadow-sm'
+                  : 'text-zinc-400 hover:text-zinc-200'
               }`}
             >
-              <Buildings className="w-4 h-4" />
-              <span>Chart & Chi Tiết: {selectedSymbol}</span>
+              <Buildings className="w-3.5 h-3.5" />
+              <span>Biểu đồ & Chi tiết: {selectedSymbol}</span>
             </button>
           </div>
 
-          {/* Right Tools: WebSocket Status Pill */}
+          {/* Right Tools: Connection Status */}
           <div className="flex items-center gap-3">
             {/* Connection Status & Market Session Pill */}
             <div

@@ -397,53 +397,43 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
 
         <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 pb-6 border-b border-zinc-800/80">
           <div>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="flex h-2.5 w-2.5 relative">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
-              </span>
-              <span className="text-xs font-mono font-bold tracking-wider uppercase text-emerald-400">
-                Nghiên Cứu Định Lượng Vĩ Mô & Luân Chuyển Ngành (Sector Rotation Model)
-              </span>
-            </div>
-            <h2 className="text-2xl font-mono font-bold text-zinc-100 tracking-tight">
-              Đồng Hồ Chu Kỳ Kinh Tế & Bản Đồ Sức Mạnh RS 20 Nhóm Ngành
+            <h2 className="text-xl sm:text-2xl font-bold text-zinc-100 tracking-tight">
+              Chu Kỳ Kinh Tế & Sức Mạnh Nhóm Ngành
             </h2>
-            <p className="text-xs text-zinc-400 max-w-3xl mt-1 leading-relaxed">
-              Mô hình kết hợp <strong>Merrill Lynch Investment Clock</strong> &amp; <strong>Fidelity Business Cycle</strong> với dữ liệu thực 180+ mã cổ phiếu. Kim chỉ cố định vào pha vĩ mô dẫn dắt; rà chuột vào bất kỳ góc phần tư nào để xem ngay chiến lược.
+            <p className="text-xs text-zinc-400 mt-1">
+              Luân chuyển chu kỳ và sức mạnh RS thực tế 20 nhóm ngành
             </p>
           </div>
 
           {/* Dynamic Macro Phase Detection Badge */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3.5 p-4 rounded-xl bg-zinc-900/90 border border-emerald-500/30 shadow-lg shrink-0">
-            <div className="w-11 h-11 rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
-              <Compass className="w-6 h-6 animate-[spin_16s_linear_infinite]" />
+          <div className="flex items-center gap-3 px-3.5 py-2 rounded-xl bg-zinc-900/60 border border-zinc-800/80 text-xs shrink-0">
+            <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-emerald-400 shrink-0">
+              <Compass className="w-4 h-4" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-mono uppercase text-zinc-400 font-bold block">
-                  KẾT QUẢ ĐỊNH LƯỢNG THỰC TẾ
+                <span className="font-bold text-emerald-400 text-sm tracking-tight">
+                  {detectedCfg.title}
                 </span>
-                <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">
-                  RS TB: {phaseScores[detectedActivePhaseKey].avgRs} • Score: {phaseScores[detectedActivePhaseKey].score}
+                <span className="text-zinc-600 font-light select-none">|</span>
+                <span className="font-mono text-zinc-300 font-medium">
+                  RS {phaseScores[detectedActivePhaseKey].avgRs}
+                </span>
+                <span className="text-zinc-600 font-light select-none">|</span>
+                <span className="text-zinc-400">
+                  Stage 2: {phaseScores[detectedActivePhaseKey].stage2Ratio}%
                 </span>
               </div>
-              <span className="text-sm font-mono font-black text-emerald-400 block mt-0.5">
-                {detectedCfg.title}
-              </span>
-              <span className="text-[10px] font-mono text-zinc-400 block">
-                {detectedCfg.subTitle} (Stage 2: {phaseScores[detectedActivePhaseKey].stage2Ratio}%)
-              </span>
+              <p className="text-[11px] text-zinc-500 mt-0.5">{detectedCfg.subTitle}</p>
             </div>
 
             {pinnedPhase && (
               <button
                 onClick={() => setPinnedPhase(null)}
-                className="mt-2 sm:mt-0 sm:ml-2 px-2.5 py-1.5 rounded-lg text-[10px] font-mono font-bold bg-zinc-800 hover:bg-zinc-700 text-emerald-400 border border-emerald-500/30 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+                className="ml-2 px-2 py-1 rounded-lg text-[11px] font-medium bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700 transition-colors cursor-pointer"
                 title="Bỏ ghim và quay về pha thực tế"
               >
-                <ArrowsClockwise className="w-3.5 h-3.5" />
-                <span>Bỏ Ghim</span>
+                Bỏ ghim
               </button>
             )}
           </div>
@@ -668,77 +658,61 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                 transition={{ duration: 0.2 }}
                 className={`p-5 rounded-2xl border ${activeCfg.bgLight} ${activeCfg.borderLight} backdrop-blur-md shadow-xl`}
               >
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3.5 border-b border-zinc-800/80 mb-3.5 gap-2">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-zinc-800/80 mb-3 gap-2">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 font-semibold block">
-                        PHÂN TÍCH CHUYÊN SÂU PHA
+                      <span className="text-[10px] uppercase tracking-wider text-zinc-400 font-medium">
+                        Phân tích chu kỳ
                       </span>
-                      <span
-                        className={`text-[9px] font-mono font-bold px-1.5 py-0.2 rounded border ${
-                          hoveredPhase === activePhaseKey
-                            ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/40'
-                            : pinnedPhase === activePhaseKey
-                            ? 'bg-amber-500/20 text-amber-400 border-amber-500/40'
-                            : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
-                        }`}
-                      >
+                      <span className="text-zinc-600 font-light select-none">|</span>
+                      <span className="text-[10px] text-zinc-400 font-medium">
                         {hoveredPhase === activePhaseKey
-                          ? '👁️ Đang rà chuột xem trước'
+                          ? 'Đang xem trước'
                           : pinnedPhase === activePhaseKey
-                          ? '📌 Đang ghim xem'
-                          : '⚡ Pha dẫn dắt thực tế (Kim chỉ)'}
+                          ? 'Đang ghim'
+                          : 'Pha dẫn dắt hiện tại'}
                       </span>
                     </div>
-                    <h3 className="text-lg font-mono font-bold" style={{ color: activeCfg.color }}>
-                      {activeCfg.title} — {activeCfg.subTitle}
+                    <h3 className="text-lg font-bold tracking-tight" style={{ color: activeCfg.color }}>
+                      {activeCfg.title}
+                      <span className="text-xs text-zinc-400 font-normal ml-2 tracking-normal">
+                        ({activeCfg.subTitle})
+                      </span>
                     </h3>
                   </div>
-
-                  <span
-                    className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold border bg-zinc-900/90 shrink-0 self-start sm:self-auto"
-                    style={{ borderColor: activeCfg.color, color: activeCfg.color }}
-                  >
-                    {activeCfg.macroStatus}
-                  </span>
                 </div>
 
-
-                <p className="text-xs text-zinc-300 font-sans leading-relaxed mb-3 line-clamp-2">
-                  {activeCfg.description}
-                </p>
-
-                {/* 3 Macro Pillars Checklist - Streamlined Minimal Grid */}
-                <div className="grid grid-cols-3 gap-2.5 p-3 rounded-xl bg-zinc-950/80 border border-zinc-800/80 mb-3.5 text-xs font-mono">
-                  <div className="space-y-0.5">
-                    <span className="text-[10px] text-zinc-500 uppercase font-bold block">GDP:</span>
-                    <span className="text-zinc-200 font-bold block truncate">{activeCfg.growthStatus}</span>
+                {/* 3 Macro Pillars - Minimal Row */}
+                <div className="grid grid-cols-3 gap-3 py-2 px-3 rounded-xl bg-zinc-950/60 border border-zinc-800/70 mb-3.5 text-xs">
+                  <div>
+                    <span className="text-[10px] text-zinc-500 font-medium block">GDP</span>
+                    <span className="text-zinc-200 font-medium block truncate mt-0.5">{activeCfg.growthStatus}</span>
                   </div>
-                  <div className="space-y-0.5 border-x border-zinc-800/80 px-2.5">
-                    <span className="text-[10px] text-zinc-500 uppercase font-bold block">Lạm Phát:</span>
-                    <span className="text-zinc-200 font-bold block truncate">{activeCfg.inflationStatus}</span>
+                  <div className="border-l border-zinc-800/80 pl-3">
+                    <span className="text-[10px] text-zinc-500 font-medium block">Lạm phát</span>
+                    <span className="text-zinc-200 font-medium block truncate mt-0.5">{activeCfg.inflationStatus}</span>
                   </div>
-                  <div className="space-y-0.5 pl-1">
-                    <span className="text-[10px] text-zinc-500 uppercase font-bold block">Lãi Suất:</span>
-                    <span className="text-zinc-200 font-bold block truncate">{activeCfg.interestRateStatus}</span>
+                  <div className="border-l border-zinc-800/80 pl-3">
+                    <span className="text-[10px] text-zinc-500 font-medium block">Lãi suất</span>
+                    <span className="text-zinc-200 font-medium block truncate mt-0.5">{activeCfg.interestRateStatus}</span>
                   </div>
                 </div>
 
-                {/* ── Symmetrical 2-Column Sector Rotation Matrix (Đồng bộ khung, tinh gọn text) ── */}
+                {/* ── Symmetrical 2-Column Sector Rotation Matrix (Minimalist Typography & Clean RS) ── */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3.5">
                   {/* Left Column: Benefited Sectors */}
-                  <div className="p-3.5 rounded-xl bg-zinc-950/70 border border-emerald-500/25 flex flex-col justify-between">
-                    <div className="flex items-center justify-between pb-2 mb-2.5 border-b border-zinc-800/80">
-                      <div className="flex items-center gap-1.5 text-emerald-400 font-mono text-[11px] font-bold">
-                        <TrendUp className="w-4 h-4" weight="bold" />
-                        <span>HƯỞNG LỢI (DẪN SÓNG)</span>
+                  <div className="p-3.5 rounded-xl bg-zinc-950/70 border border-zinc-800/80 flex flex-col justify-between">
+                    <div className="flex items-center justify-between pb-2 mb-2 border-b border-zinc-800/80">
+                      <div className="flex items-center gap-1.5 text-emerald-400 text-xs font-semibold">
+                        <TrendUp className="w-3.5 h-3.5" weight="bold" />
+                        <span>Hưởng lợi (Dẫn sóng)</span>
                       </div>
-                      <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-bold border border-emerald-500/20">
+                      <span className="text-[10px] text-emerald-400 font-medium">
                         Ưu tiên
                       </span>
                     </div>
 
-                    <div className="space-y-1.5">
+                    <div className="space-y-1">
                       {activeCfg.primarySectors.map((sec) => {
                         const matchStat = sectorLiveStats.find(
                           (s) =>
@@ -752,20 +726,13 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                           <button
                             key={sec}
                             onClick={() => onSelectSector && onSelectSector(sec)}
-                            className="w-full flex items-center justify-between p-2 rounded-lg bg-zinc-900/80 hover:bg-zinc-800/90 border border-zinc-800 hover:border-emerald-500/40 transition-all text-xs font-mono group cursor-pointer"
+                            className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-zinc-900/80 transition-colors text-xs group cursor-pointer"
                           >
-                            <span className="text-zinc-200 group-hover:text-emerald-400 font-bold truncate">
+                            <span className="text-zinc-300 group-hover:text-emerald-400 font-medium truncate">
                               {sec}
                             </span>
                             <div className="flex items-center gap-2">
-                              {/* Mini RS Bar Visual */}
-                              <div className="w-12 h-1.5 bg-zinc-800 rounded-full overflow-hidden hidden sm:block">
-                                <div 
-                                  className="h-full bg-emerald-400 rounded-full" 
-                                  style={{ width: `${Math.min(100, rsScore)}%` }}
-                                />
-                              </div>
-                              <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                              <span className="font-mono font-medium text-emerald-400">
                                 {hasData ? `RS ${rsScore}` : 'RS --'}
                               </span>
                             </div>
@@ -776,18 +743,18 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                   </div>
 
                   {/* Right Column: Unfavorable Sectors */}
-                  <div className="p-3.5 rounded-xl bg-zinc-950/70 border border-rose-500/25 flex flex-col justify-between">
-                    <div className="flex items-center justify-between pb-2 mb-2.5 border-b border-zinc-800/80">
-                      <div className="flex items-center gap-1.5 text-rose-400 font-mono text-[11px] font-bold">
-                        <TrendDown className="w-4 h-4" weight="bold" />
-                        <span>BẤT LỢI (TỤ HẬU)</span>
+                  <div className="p-3.5 rounded-xl bg-zinc-950/70 border border-zinc-800/80 flex flex-col justify-between">
+                    <div className="flex items-center justify-between pb-2 mb-2 border-b border-zinc-800/80">
+                      <div className="flex items-center gap-1.5 text-zinc-400 text-xs font-semibold">
+                        <TrendDown className="w-3.5 h-3.5" weight="bold" />
+                        <span>Bất lợi (Tụ hậu)</span>
                       </div>
-                      <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-rose-500/10 text-rose-400 font-bold border border-rose-500/20">
+                      <span className="text-[10px] text-zinc-500 font-medium">
                         Nên tránh
                       </span>
                     </div>
 
-                    <div className="space-y-1.5">
+                    <div className="space-y-1">
                       {activeCfg.unfavorableSectors.map((sec) => {
                         const matchStat = sectorLiveStats.find(
                           (s) =>
@@ -801,20 +768,13 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                           <button
                             key={sec}
                             onClick={() => onSelectSector && onSelectSector(sec)}
-                            className="w-full flex items-center justify-between p-2 rounded-lg bg-zinc-900/80 hover:bg-zinc-800/90 border border-zinc-800 hover:border-rose-500/40 transition-all text-xs font-mono group cursor-pointer"
+                            className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-zinc-900/80 transition-colors text-xs group cursor-pointer"
                           >
-                            <span className="text-zinc-300 group-hover:text-rose-400 font-bold truncate">
+                            <span className="text-zinc-400 group-hover:text-zinc-200 font-medium truncate">
                               {sec}
                             </span>
                             <div className="flex items-center gap-2">
-                              {/* Mini RS Bar Visual */}
-                              <div className="w-12 h-1.5 bg-zinc-800 rounded-full overflow-hidden hidden sm:block">
-                                <div 
-                                  className="h-full bg-rose-400 rounded-full" 
-                                  style={{ width: `${Math.min(100, rsScore)}%` }}
-                                />
-                              </div>
-                              <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-500/15 text-rose-400 border border-rose-500/30">
+                              <span className="font-mono font-medium text-zinc-500">
                                 {hasData ? `RS ${rsScore}` : 'RS --'}
                               </span>
                             </div>
@@ -829,39 +789,32 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                 <div className="p-4 rounded-2xl bg-zinc-950/90 border border-zinc-800/80 text-xs font-mono mb-3 space-y-3.5 shadow-lg">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-zinc-800/80 gap-2">
                     <div className="flex items-center gap-2">
-                      <div className="p-1.5 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-400">
-                        <Scales className="w-4 h-4" weight="bold" />
+                      <div className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300">
+                        <Scales className="w-4 h-4" />
                       </div>
                       <div>
-                        <span className="font-bold text-zinc-100 uppercase tracking-wide block">
-                          ƯU TIÊN PHÂN BỔ TÀI SẢN (FIDELITY &amp; MERRILL LYNCH)
+                        <span className="font-semibold text-zinc-100 text-xs block">
+                          Phân bổ tài sản khuyến nghị
                         </span>
-                        <span className="text-[10px] text-zinc-400 font-sans block">
-                          Mô hình ma trận tối ưu danh mục đầu tư theo chu kỳ vĩ mô
+                        <span className="text-[11px] text-zinc-500 font-sans block">
+                          Tối ưu hóa theo chu kỳ kinh tế
                         </span>
                       </div>
                     </div>
-                    <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-zinc-900 border border-zinc-800 text-zinc-400 shrink-0 self-start sm:self-auto">
-                      DANH MỤC KHUYẾN NGHỊ
-                    </span>
                   </div>
 
                   {/* Top Priority Asset Highlight Banner */}
-                  <div className="p-3.5 rounded-xl bg-gradient-to-r from-cyan-950/40 via-zinc-900/60 to-zinc-950/40 border border-cyan-500/30 flex items-start gap-3 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-cyan-500/10 rounded-full blur-xl pointer-events-none" />
-                    <div className="p-2.5 rounded-xl bg-cyan-500/20 text-cyan-300 shrink-0 mt-0.5 border border-cyan-500/30">
-                      <Coins className="w-5 h-5" weight="duotone" />
+                  <div className="p-3 rounded-xl bg-zinc-900/40 border border-zinc-800 flex items-start gap-3">
+                    <div className="p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300 shrink-0 mt-0.5">
+                      <Coins className="w-4 h-4" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        <span className="text-[10px] text-cyan-400 font-bold uppercase tracking-wider">
-                          TÀI SẢN ƯU TIÊN HÀNG ĐẦU:
-                        </span>
-                        <span className="px-2 py-0.5 rounded-md text-[9px] font-black bg-cyan-400 text-zinc-950 shadow-sm shadow-cyan-400/20">
-                          TOP #1 PRIORITY
+                      <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                        <span className="text-[10px] text-zinc-400 font-medium uppercase tracking-wider">
+                          Tài sản dẫn đầu
                         </span>
                       </div>
-                      <div className="text-sm md:text-base font-extrabold text-zinc-100 leading-tight">
+                      <div className="text-sm font-semibold text-zinc-100 leading-tight">
                         {activeCfg.topPriorityAsset}
                       </div>
                       <p className="text-[11px] text-zinc-400 mt-1 font-sans leading-relaxed">

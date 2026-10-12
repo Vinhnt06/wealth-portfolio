@@ -17,14 +17,35 @@ import macroDatabase from '../data/macroDatabase.json';
 export const MacroDataSection: React.FC = () => {
   const { gdp, cpi, exchangeRate, interestRate } = macroDatabase;
   const [mounted, setMounted] = useState(false);
+  const [liveExchangeRates, setLiveExchangeRates] = useState<any[]>(exchangeRate);
+  const [exchangeUpdateTime, setExchangeUpdateTime] = useState<string>('Live');
+  const [isLiveRates, setIsLiveRates] = useState<boolean>(false);
 
   useEffect(() => {
     setMounted(true);
+
+    const fetchRates = async () => {
+      try {
+        const res = await fetch('/api/macro/exchange-rate');
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+          setLiveExchangeRates(json.data);
+          setExchangeUpdateTime(json.updateTime || 'Hôm nay');
+          setIsLiveRates(true);
+        }
+      } catch (err) {
+        console.error('Error fetching live exchange rates:', err);
+      }
+    };
+
+    fetchRates();
+    const interval = setInterval(fetchRates, 60000);
+    return () => clearInterval(interval);
   }, []);
 
   const currentGdp = gdp[0];
   const currentCpi = cpi[0];
-  const currentUsd = exchangeRate[0];
+  const currentUsd = liveExchangeRates[0] || exchangeRate[0];
   const overnightRate = interestRate[0];
   const refRate = interestRate[1];
 
@@ -37,18 +58,14 @@ export const MacroDataSection: React.FC = () => {
       {/* Header Bar */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-800/80 pb-5">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shadow-inner">
-            <Globe className="w-5 h-5 animate-spin-slow" weight="duotone" />
+          <div className="w-10 h-10 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-emerald-400">
+            <Globe className="w-5 h-5" weight="duotone" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="font-mono font-black text-lg text-zinc-100 tracking-tight">
-                VĨ MÔ & THỊ TRƯỜNG TIỀN TỆ
+              <h2 className="text-lg font-bold text-zinc-100 tracking-tight">
+                Vĩ Mô & Thị Trường Tiền Tệ
               </h2>
-              <span className="flex h-2 w-2 relative">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-              </span>
             </div>
             <p className="text-xs text-zinc-400 font-sans">
               Dữ liệu chu kỳ kinh tế vĩ mô, lạm phát mục tiêu, tỷ giá & lãi suất liên ngân hàng
@@ -56,13 +73,12 @@ export const MacroDataSection: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <span className="px-3 py-1 text-[11px] font-mono font-bold rounded-xl bg-zinc-900/80 border border-zinc-800 text-zinc-300 flex items-center gap-1.5 shadow-sm">
+        <div className="flex items-center gap-2 text-xs">
+          <span className="px-3 py-1.5 rounded-xl bg-zinc-900/80 border border-zinc-800 text-zinc-300 flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span>Cập nhật ngày 11/10/2026 (Kỳ {currentGdp.period})</span>
-          </span>
-          <span className="px-2.5 py-1 text-[10px] font-mono font-extrabold rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
-            SBV & GSO DATA
+            <span>Kỳ {currentGdp.period} (GDP {currentGdp.growthRate}%)</span>
+            <span className="text-zinc-600 font-light select-none">|</span>
+            <span className="text-zinc-400">GSO & SBV</span>
           </span>
         </div>
       </div>
@@ -209,37 +225,40 @@ export const MacroDataSection: React.FC = () => {
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2 text-amber-400">
                 <CurrencyCircleDollar className="w-5 h-5" weight="bold" />
-                <span className="font-mono text-xs font-bold uppercase tracking-wider">Tỷ Giá Ngoại Tệ</span>
+                <span className="text-xs font-semibold text-zinc-200">Tỷ Giá Ngoại Tệ</span>
               </div>
-              <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 text-amber-400 font-bold">
-                CHÍNH THỨC
+              <span className="flex items-center gap-1.5 text-[10px] font-mono text-zinc-400">
+                <span className={`w-1.5 h-1.5 rounded-full ${isLiveRates ? 'bg-emerald-400 animate-pulse' : 'bg-zinc-500'}`} />
+                <span>{isLiveRates ? `Live ${exchangeUpdateTime}` : 'Hôm nay'}</span>
               </span>
             </div>
 
             {/* USD Primary */}
             <div className="p-3.5 rounded-xl bg-zinc-950/80 border border-zinc-800/80 mb-3 space-y-1">
               <div className="flex items-center justify-between text-xs font-mono">
-                <span className="text-zinc-200 font-bold">USD/VND</span>
-                <span className="text-emerald-400 font-bold">+{currentUsd.change}đ</span>
+                <span className="text-zinc-200 font-bold">{currentUsd.pair}</span>
+                <span className={`font-bold ${currentUsd.change >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                  {currentUsd.change >= 0 ? `+${currentUsd.change}` : currentUsd.change}đ
+                </span>
               </div>
               <div className="text-2xl font-black text-white font-mono">
-                {currentUsd.sell.toLocaleString('vi-VN')} <span className="text-xs text-zinc-400 font-normal">đ</span>
+                {Number(currentUsd.sell).toLocaleString('vi-VN')} <span className="text-xs text-zinc-400 font-normal">đ</span>
               </div>
               <div className="text-[10px] text-zinc-400 font-mono flex justify-between">
                 <span>Mua vào:</span>
-                <span className="text-zinc-300 font-bold">{currentUsd.buy.toLocaleString('vi-VN')} đ</span>
+                <span className="text-zinc-300 font-medium">{Number(currentUsd.buy).toLocaleString('vi-VN')} đ</span>
               </div>
             </div>
 
             {/* Other Pairs */}
-            <div className="space-y-2 font-mono text-xs">
-              {exchangeRate.slice(1).map((pair, idx) => (
+            <div className="space-y-1.5 font-mono text-xs">
+              {liveExchangeRates.slice(1).map((pair, idx) => (
                 <div key={idx} className="flex items-center justify-between p-2 rounded-lg bg-zinc-950/40 border border-zinc-800/40">
-                  <span className="text-zinc-400 font-bold">{pair.pair}</span>
+                  <span className="text-zinc-400 font-medium">{pair.pair}</span>
                   <div className="text-right">
-                    <span className="text-zinc-200 font-bold block">{pair.sell.toLocaleString('vi-VN')}</span>
-                    <span className={`text-[10px] font-bold ${pair.change >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                      {pair.change >= 0 ? '+' : ''}{pair.change}
+                    <span className="text-zinc-200 font-bold block">{Number(pair.sell).toLocaleString('vi-VN')}</span>
+                    <span className={`text-[10px] font-medium ${pair.change >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                      {pair.change >= 0 ? '+' : ''}{pair.change}đ
                     </span>
                   </div>
                 </div>
@@ -249,7 +268,7 @@ export const MacroDataSection: React.FC = () => {
 
           <div className="pt-3 border-t border-zinc-800/60 text-[10px] font-mono text-zinc-500 flex justify-between">
             <span>Biên độ SBV:</span>
-            <span className="text-zinc-300 font-bold">±5.0%</span>
+            <span className="text-zinc-300 font-medium">±5.0%</span>
           </div>
         </motion.div>
       </div>
