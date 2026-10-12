@@ -26,10 +26,13 @@ export default function MarketTerminalPage() {
   // Mode and active stock selection from unified store
   const { viewMode, setViewMode, selectedSymbol } = useMarketStore();
 
-  // Market session state (HOSE/HNX trading schedule)
-  const [sessionInfo, setSessionInfo] = React.useState(getMarketSessionInfo());
+  // Mount state & market session state (HOSE/HNX trading schedule)
+  const [mounted, setMounted] = React.useState(false);
+  const [sessionInfo, setSessionInfo] = React.useState<ReturnType<typeof getMarketSessionInfo> | null>(null);
 
   React.useEffect(() => {
+    setMounted(true);
+    setSessionInfo(getMarketSessionInfo());
     const timer = setInterval(() => {
       setSessionInfo(getMarketSessionInfo());
     }, 30000); // Cập nhật mỗi 30s
@@ -107,32 +110,43 @@ export default function MarketTerminalPage() {
           <div className="flex items-center gap-3">
             {/* Connection Status & Market Session Pill */}
             <div
-              title={`${sessionInfo.sessionName} • ${sessionInfo.nextSessionText}`}
+              suppressHydrationWarning
+              title={
+                mounted && sessionInfo
+                  ? `${sessionInfo.sessionName} • ${sessionInfo.nextSessionText}`
+                  : 'Đang kết nối phiên thị trường...'
+              }
               className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl border text-xs font-mono font-semibold transition-all cursor-default ${
-                sessionInfo.isOpen
+                mounted && sessionInfo?.isOpen
                   ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.15)]'
-                  : sessionInfo.isLunchBreak
+                  : mounted && sessionInfo?.isLunchBreak
                   ? 'bg-amber-500/10 text-amber-300 border-amber-500/20'
                   : 'bg-zinc-900/90 text-zinc-400 border-zinc-800/80'
               }`}
             >
-              {sessionInfo.isOpen ? (
+              {mounted && sessionInfo?.isOpen ? (
                 <>
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                   <WifiHigh className="w-4 h-4 text-emerald-400" />
                   <span className="hidden sm:inline">TRỰC TUYẾN • {sessionInfo.sessionBadge}</span>
                 </>
-              ) : sessionInfo.isLunchBreak ? (
+              ) : mounted && sessionInfo?.isLunchBreak ? (
                 <>
                   <span className="w-2 h-2 rounded-full bg-amber-400" />
                   <Clock className="w-4 h-4 text-amber-400" />
                   <span className="hidden sm:inline">NGHỈ TRƯA (11:30 - 13:00)</span>
                 </>
-              ) : (
+              ) : mounted && sessionInfo ? (
                 <>
                   <span className="w-2 h-2 rounded-full bg-zinc-500" />
                   <Clock className="w-4 h-4 text-zinc-400" />
                   <span className="hidden sm:inline">{sessionInfo.sessionBadge}</span>
+                </>
+              ) : (
+                <>
+                  <span className="w-2 h-2 rounded-full bg-zinc-600 animate-pulse" />
+                  <Clock className="w-4 h-4 text-zinc-500" />
+                  <span className="hidden sm:inline">ĐANG KẾT NỐI...</span>
                 </>
               )}
             </div>
