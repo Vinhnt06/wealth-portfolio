@@ -2887,11 +2887,11 @@ export function MarketCandleChart() {
 
   // ── 4. 60fps Real-Time WebSocket Tick Update (Smooth & No Re-fetch) ────────
   useEffect(() => {
-    if (!currentTick?.price || !candleSeriesRef.current || !volumeSeriesRef.current) return;
-    const livePriceK = Math.round((currentTick.price / 1000) * 100) / 100;
-    const tickVol = currentTick.volume || 10000;
+    try {
+      if (!currentTick?.price || !candleSeriesRef.current || !volumeSeriesRef.current || !lastCandleRef.current) return;
+      const livePriceK = Math.round((currentTick.price / 1000) * 100) / 100;
+      const tickVol = currentTick.volume || 10000;
 
-    if (lastCandleRef.current) {
       const currentClose = lastCandleRef.current.close;
       if (currentClose > 0 && Math.abs(livePriceK - currentClose) / currentClose > 0.25) {
         return;
@@ -2901,7 +2901,7 @@ export function MarketCandleChart() {
       const todayDateStr = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' });
       const lastCandleTime = String(lastCandleRef.current.time);
 
-      if (isDaily && lastCandleTime !== todayDateStr) {
+      if (isDaily && todayDateStr > lastCandleTime) {
         // We have a new day's tick! Add new candle for today instead of mutating past candle
         const newCandle = {
           time: todayDateStr as unknown as Time,
@@ -2917,7 +2917,7 @@ export function MarketCandleChart() {
           value: tickVol,
           color: 'rgba(16, 185, 129, 0.4)',
         });
-        requestAnimationFrame(() => redrawCanvasRef.current());
+        requestAnimationFrame(() => redrawCanvasRef.current?.());
         return;
       }
 
@@ -2946,7 +2946,9 @@ export function MarketCandleChart() {
         color: livePriceK >= updatedOpen ? 'rgba(16, 185, 129, 0.4)' : 'rgba(244, 63, 94, 0.4)',
       });
 
-      requestAnimationFrame(() => redrawCanvasRef.current());
+      requestAnimationFrame(() => redrawCanvasRef.current?.());
+    } catch (err) {
+      console.warn('Silent tick update error ignored:', err);
     }
   }, [currentTick, resolution]);
 
