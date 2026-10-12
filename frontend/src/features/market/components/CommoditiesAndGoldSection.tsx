@@ -79,8 +79,8 @@ export const CommoditiesAndGoldSection: React.FC = () => {
       }
 
       const now = new Date();
-      setLastRefreshed(now.toLocaleTimeString('vi-VN', { hour12: false }));
-      setLastDate(now.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }));
+      setLastRefreshed(now.toLocaleTimeString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh', hour12: false }));
+      setLastDate(now.toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh', day: '2-digit', month: '2-digit', year: 'numeric' }));
     } catch (err) {
       console.error('Lỗi tải dữ liệu hàng hóa & lãi suất:', err);
     } finally {

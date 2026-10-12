@@ -14,6 +14,7 @@ import {
   LineData,
   Time,
   CrosshairMode,
+  TickMarkType,
 } from 'lightweight-charts';
 import { useMarketStore } from '../store/marketStore';
 import {
@@ -676,6 +677,7 @@ export function MarketCandleChart() {
 
   // Hovered Crosshair inspection data
   const [hoveredData, setHoveredData] = useState<{
+    timeStr?: string;
     open?: number;
     high?: number;
     low?: number;
@@ -1932,6 +1934,31 @@ export function MarketCandleChart() {
         vertLine: { color: '#10b981', labelBackgroundColor: '#18181b' },
         horzLine: { color: '#10b981', labelBackgroundColor: '#18181b' },
       },
+      localization: {
+        locale: 'vi-VN',
+        dateFormat: 'yyyy-MM-dd',
+        timeFormatter: (time: Time) => {
+          if (typeof time === 'number') {
+            const d = new Date(time * 1000);
+            return d.toLocaleString('vi-VN', {
+              timeZone: 'Asia/Ho_Chi_Minh',
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: false,
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric',
+            });
+          }
+          if (typeof time === 'string') {
+            return time;
+          }
+          if (typeof time === 'object' && time !== null && 'year' in time) {
+            return `${String(time.day).padStart(2, '0')}/${String(time.month).padStart(2, '0')}/${time.year}`;
+          }
+          return String(time);
+        },
+      },
       rightPriceScale: {
         borderColor: 'rgba(255, 255, 255, 0.08)',
         alignLabels: true,
@@ -1946,6 +1973,51 @@ export function MarketCandleChart() {
         secondsVisible: false,
         rightOffset: 8,
         barSpacing: 9,
+        tickMarkFormatter: (time: Time, tickMarkType: TickMarkType) => {
+          if (typeof time === 'number') {
+            const d = new Date(time * 1000);
+            if (tickMarkType === TickMarkType.Time || tickMarkType === TickMarkType.TimeWithSeconds) {
+              return d.toLocaleTimeString('vi-VN', {
+                timeZone: 'Asia/Ho_Chi_Minh',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false,
+              });
+            }
+            if (tickMarkType === TickMarkType.DayOfMonth) {
+              return d.toLocaleDateString('vi-VN', {
+                timeZone: 'Asia/Ho_Chi_Minh',
+                day: '2-digit',
+                month: '2-digit',
+              });
+            }
+            if (tickMarkType === TickMarkType.Month) {
+              return d.toLocaleDateString('vi-VN', {
+                timeZone: 'Asia/Ho_Chi_Minh',
+                month: '2-digit',
+                year: '2-digit',
+              });
+            }
+            if (tickMarkType === TickMarkType.Year) {
+              return d.toLocaleDateString('vi-VN', {
+                timeZone: 'Asia/Ho_Chi_Minh',
+                year: 'numeric',
+              });
+            }
+            return d.toLocaleTimeString('vi-VN', {
+              timeZone: 'Asia/Ho_Chi_Minh',
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: false,
+            });
+          }
+          if (typeof time === 'string') {
+            const parts = time.split('-');
+            if (parts.length === 3) return `${parts[2]}/${parts[1]}`;
+            return time;
+          }
+          return null;
+        },
       },
       width: container.clientWidth,
       height: 580,
@@ -2057,7 +2129,19 @@ export function MarketCandleChart() {
       if (candle) {
         const change = candle.close - candle.open;
         const changePct = candle.open ? (change / candle.open) * 100 : 0;
+        let timeStr = '';
+        if (typeof param.time === 'number') {
+          timeStr = new Date(param.time * 1000).toLocaleTimeString('vi-VN', {
+            timeZone: 'Asia/Ho_Chi_Minh',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+          });
+        } else if (typeof param.time === 'string') {
+          timeStr = param.time;
+        }
         setHoveredData({
+          timeStr,
           open: candle.open,
           high: candle.high,
           low: candle.low,
@@ -2538,7 +2622,7 @@ export function MarketCandleChart() {
 
         resData.data.forEach((c: any) => {
           const timeVal = isDaily
-            ? (new Date(c.time * 1000).toISOString().split('T')[0] as unknown as Time)
+            ? (new Date(c.time * 1000).toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' }) as unknown as Time)
             : (c.time as unknown as Time);
           realCandles.push({
             time: timeVal,
@@ -2753,6 +2837,25 @@ export function MarketCandleChart() {
         textColor: '#71717a',
         fontSize: 10,
         fontFamily: 'JetBrains Mono, monospace',
+      },
+      localization: {
+        locale: 'vi-VN',
+        dateFormat: 'yyyy-MM-dd',
+        timeFormatter: (time: Time) => {
+          if (typeof time === 'number') {
+            const d = new Date(time * 1000);
+            return d.toLocaleString('vi-VN', {
+              timeZone: 'Asia/Ho_Chi_Minh',
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: false,
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric',
+            });
+          }
+          return String(time);
+        },
       },
       grid: {
         vertLines: { color: 'rgba(255, 255, 255, 0.03)' },
@@ -4188,6 +4291,11 @@ export function MarketCandleChart() {
               {/* Row 1: Realtime OHLC */}
               <div className="flex items-center gap-1.5 flex-wrap text-zinc-300">
                 <span className="text-zinc-400 font-bold">{resolution}</span>
+                {hoveredData?.timeStr && (
+                  <span className="text-emerald-400 font-mono text-[10px] px-1.5 py-0.2 rounded bg-emerald-500/10 border border-emerald-500/20 font-bold">
+                    {hoveredData.timeStr} (VN)
+                  </span>
+                )}
                 <span className="text-zinc-700">|</span>
                 <span>O <strong className="text-zinc-100 font-bold">{hoveredData?.open ? hoveredData.open.toFixed(2) : (lastCandleRef.current ? lastCandleRef.current.open.toFixed(2) : priceDisplayK)}</strong></span>
                 <span>H <strong className="text-emerald-400 font-bold">{hoveredData?.high ? hoveredData.high.toFixed(2) : (lastCandleRef.current ? lastCandleRef.current.high.toFixed(2) : priceDisplayK)}</strong></span>

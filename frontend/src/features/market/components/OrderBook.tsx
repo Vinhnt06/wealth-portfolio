@@ -50,7 +50,7 @@ export function OrderBook() {
             matchType: 'B',
           });
         }
-        setLastUpdated(new Date().toLocaleTimeString('vi-VN', { hour12: false }));
+        setLastUpdated(new Date().toLocaleTimeString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh', hour12: false }));
       }
     } catch (err) {
       console.error('Lỗi tải sổ lệnh thật:', err);

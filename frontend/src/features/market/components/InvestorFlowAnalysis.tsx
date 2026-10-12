@@ -75,7 +75,7 @@ export const InvestorFlowAnalysis: React.FC = () => {
       const resJson = await res.json();
       if (resJson.success && resJson.data) {
         setTradesData(resJson.data);
-        setLastUpdated(new Date().toLocaleTimeString('vi-VN', { hour12: false }));
+        setLastUpdated(new Date().toLocaleTimeString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh', hour12: false }));
       }
     } catch (err) {
       console.error('Lỗi tải dữ liệu khớp lệnh thật:', err);
