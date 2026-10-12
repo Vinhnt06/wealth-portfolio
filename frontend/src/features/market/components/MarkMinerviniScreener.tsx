@@ -41,6 +41,7 @@ export const MarkMinerviniScreener: React.FC = () => {
 
   const [items, setItems] = useState<MinerviniScreenerItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSearchingOnDemand, setIsSearchingOnDemand] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<string>('');
   const [activeTab, setActiveTab] = useState<ScreenerTab>('overview');
   const [mainViewMode, setMainViewMode] = useState<ViewMode>('table');
@@ -120,49 +121,17 @@ export const MarkMinerviniScreener: React.FC = () => {
     if (sym.length === 3 && /^[A-Z0-9]{3}$/.test(sym)) {
       const exists = items.some((it) => it.symbol === sym);
       if (!exists) {
-        fetch(`/api/market/minervini/analysis?symbol=${sym}`)
+        setIsSearchingOnDemand(true);
+        fetch(`/api/market/minervini/screener?symbols=${sym}`)
           .then((res) => res.json())
           .then((resData) => {
-            if (resData.success && resData.data) {
-              const d = resData.data;
-              const newItem: MinerviniScreenerItem = {
-                symbol: d.symbol,
-                name: d.name,
-                sector: SECTOR_MAPPING[d.symbol] || d.sector || 'Khác',
-                exchange: d.exchange || 'HOSE',
-                price: Math.round(d.price * 1000),
-                changePct: d.changePct || 0,
-                volume: d.volume || 0,
-                relVol: 1,
-                mktCapT: 0,
-                pe: null,
-                epsDilTTM: null,
-                epsGrowthYoY: null,
-                divYieldPct: null,
-                analystRating: 'No rating',
-                rsRating: d.rsRating,
-                score: d.passedCount,
-                isStage2: d.isStage2Eligible,
-                isStage2Eligible: d.isStage2Eligible,
-                criteriaPassed: d.passedCount,
-                sma50: d.sma50,
-                sma150: d.sma150,
-                sma200: d.sma200,
-                distHigh: d.distFrom52WHighPct,
-                distLow: d.distFrom52WLowPct,
-                pctFrom52WHigh: Math.round(100 + d.distFrom52WHighPct),
-                pctAbove52WLow: Math.round(100 + d.distFrom52WLowPct),
-                perf1W: 0,
-                perf1M: 0,
-                perf1Y: 0,
-                epsDiluted: null,
-                epsDilutedGrowthYoY: null,
-                dividendYield: null,
-              };
+            if (resData.success && Array.isArray(resData.data) && resData.data.length > 0) {
+              const newItem = resData.data[0];
               setItems((prev) => (prev.some((p) => p.symbol === sym) ? prev : [newItem, ...prev]));
             }
           })
-          .catch(() => {});
+          .catch(() => {})
+          .finally(() => setIsSearchingOnDemand(false));
       }
     }
   }, [searchQuery, items]);
@@ -184,13 +153,16 @@ export const MarkMinerviniScreener: React.FC = () => {
 
   // Filtered and automatically sorted items
   const filteredAndSortedItems = useMemo(() => {
+    const hasSearch = searchQuery.trim().length > 0;
+
     // 1. Filter
     const filtered = items.filter((item) => {
-      if (searchQuery) {
+      // If user typed a search query, prioritize finding that stock across all sectors & criteria
+      if (hasSearch) {
         const query = searchQuery.toUpperCase().trim();
         const matchSymbol = item.symbol.toUpperCase().includes(query);
         const matchName = item.name.toLowerCase().includes(searchQuery.toLowerCase());
-        if (!matchSymbol && !matchName) return false;
+        return matchSymbol || matchName;
       }
 
       if (selectedSector !== 'all') {
@@ -738,11 +710,40 @@ export const MarkMinerviniScreener: React.FC = () => {
                 <MagnifyingGlass className="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
-                  placeholder="Tìm mã hoặc tên..."
+                  placeholder="Tìm mã hoặc tên (vd: ABB)..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 pr-3 py-1.5 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-200 text-xs font-mono placeholder:text-zinc-600 focus:outline-none focus:border-amber-400 w-44 transition-all"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      const sym = searchQuery.trim().toUpperCase();
+                      if (sym.length === 3) {
+                        setIsSearchingOnDemand(true);
+                        fetch(`/api/market/minervini/screener?symbols=${sym}`)
+                          .then((res) => res.json())
+                          .then((resData) => {
+                            if (resData.success && Array.isArray(resData.data) && resData.data.length > 0) {
+                              const newItem = resData.data[0];
+                              setItems((prev) => (prev.some((p) => p.symbol === sym) ? prev : [newItem, ...prev]));
+                            }
+                          })
+                          .catch(() => {})
+                          .finally(() => setIsSearchingOnDemand(false));
+                      }
+                    }
+                  }}
+                  className="pl-9 pr-8 py-1.5 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-200 text-xs font-mono placeholder:text-zinc-600 focus:outline-none focus:border-amber-400 w-52 transition-all"
                 />
+                {isSearchingOnDemand && (
+                  <ArrowClockwise className="w-3.5 h-3.5 text-amber-400 animate-spin absolute right-2.5 top-1/2 -translate-y-1/2" />
+                )}
+                {!isSearchingOnDemand && searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="p-0.5 text-zinc-500 hover:text-zinc-300 absolute right-2.5 top-1/2 -translate-y-1/2"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </div>
 
               {/* Sector Selector */}
@@ -1045,10 +1046,14 @@ export const MarkMinerviniScreener: React.FC = () => {
                   {filteredAndSortedItems.length === 0 ? (
                     <tr>
                       <td colSpan={14} className="py-12 text-center text-zinc-500 font-mono">
-                        {isLoading ? (
-                          <div className="flex items-center justify-center gap-2">
-                            <ArrowClockwise className="w-5 h-5 animate-spin text-amber-400" />
-                            <span>Đang tính toán tiêu chuẩn Minervini từ hệ thống DNSE...</span>
+                        {isLoading || isSearchingOnDemand ? (
+                          <div className="flex items-center justify-center gap-2 text-amber-400">
+                            <ArrowClockwise className="w-5 h-5 animate-spin" />
+                            <span>
+                              {isSearchingOnDemand
+                                ? `Đang phân tích trực tiếp mã ${searchQuery.toUpperCase()} theo chuẩn Minervini (Trend Template & RS)...`
+                                : 'Đang tính toán tiêu chuẩn Minervini từ hệ thống DNSE...'}
+                            </span>
                           </div>
                         ) : (
                           <div className="flex flex-col items-center justify-center gap-3">

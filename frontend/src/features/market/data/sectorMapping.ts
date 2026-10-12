@@ -38,8 +38,8 @@ export const SECTOR_MAPPING: Record<string, string> = sectorFullMapping as Recor
  * Được tối ưu để quét siêu tốc qua Entrade/DNSE mà không bị timeout hay nghẽn mạng.
  */
 export const SECTOR_LEADER_UNIVERSE: string[] = [
-  // 1. Ngân hàng (18 mã thanh khoản cao nhất)
-  'VCB', 'BID', 'CTG', 'TCB', 'MBB', 'ACB', 'VPB', 'HDB', 'STB', 'LPB', 'SHB', 'TPB', 'VIB', 'MSB', 'OCB', 'SSB', 'EIB', 'NAB',
+  // 1. Ngân hàng (21 mã thanh khoản cao nhất)
+  'VCB', 'BID', 'CTG', 'TCB', 'MBB', 'ACB', 'VPB', 'HDB', 'STB', 'LPB', 'SHB', 'TPB', 'VIB', 'MSB', 'OCB', 'SSB', 'EIB', 'NAB', 'ABB', 'BAB', 'BVB',
 
   // 2. Dịch vụ tài chính (14 mã chứng khoán tiêu biểu)
   'SSI', 'VND', 'VCI', 'HCM', 'SHS', 'MBS', 'FTS', 'BSI', 'CTS', 'VIX', 'AGR', 'ORS', 'TVS', 'PHS',
