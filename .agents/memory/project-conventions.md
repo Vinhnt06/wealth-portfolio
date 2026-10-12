@@ -19,3 +19,7 @@ updated: 2026-07-12
 - CẤM MOCK DATA tài chính (Macro, giá cổ phiếu, chỉ số kinh tế, tin tức).
 - Chỉ sử dụng dữ liệu thực tế từ API chuẩn xác (DNSE, Vnstock, API chính thống).
 - Nếu không có API thực hoặc dữ liệu chưa xác thực, không hiển thị dữ liệu giả định để lấp chỗ trống. Phải ẩn hoặc để trạng thái chờ dữ liệu thật.
+
+## Deployment Workflow
+- Luôn kiểm tra, phát triển và chạy thử nghiệm trên **Localhost** trước.
+- Tuyệt đối CHỈ đẩy mã nguồn / deploy lên Vercel khi người dùng đã kiểm tra xong, xác nhận 'OK' hoặc có yêu cầu trực tiếp.

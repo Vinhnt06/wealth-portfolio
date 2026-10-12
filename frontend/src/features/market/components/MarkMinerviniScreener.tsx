@@ -51,7 +51,7 @@ export const MarkMinerviniScreener: React.FC = () => {
   // Filter states
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSector, setSelectedSector] = useState<string>('all');
-  const [minRs, setMinRs] = useState<number>(0);
+  const [minRs, setMinRs] = useState<number>(70);
   const [onlyStage2, setOnlyStage2] = useState<boolean>(false);
 
   // Sorting state (Auto-sorts dynamically when clicked)
@@ -821,7 +821,7 @@ export const MarkMinerviniScreener: React.FC = () => {
                     <button
                       onClick={() => {
                         setSelectedSector(group.sector);
-                        setMinRs(0);
+                        setMinRs(70);
                         setOnlyStage2(false);
                         setSearchQuery('');
                         setMainViewMode('table');
@@ -992,11 +992,11 @@ export const MarkMinerviniScreener: React.FC = () => {
                   onChange={(e) => setMinRs(Number(e.target.value))}
                   className="bg-transparent text-amber-400 font-bold focus:outline-none cursor-pointer"
                 >
-                  <option value="0">Tất cả</option>
-                  <option value="50">50</option>
-                  <option value="70">70 (Chuẩn)</option>
+                  <option value="70">70 (Mặc định)</option>
                   <option value="80">80 (Mạnh)</option>
                   <option value="90">90 (Siêu sao)</option>
+                  <option value="50">50</option>
+                  <option value="0">Tất cả (&gt;= 0)</option>
                 </select>
               </div>
 
@@ -1298,17 +1298,17 @@ export const MarkMinerviniScreener: React.FC = () => {
                                 <span>Bấm vào đây để Quét & Xét chuẩn Minervini cho mã [{searchQuery.toUpperCase()}] ngay ⚡</span>
                               </button>
                             )}
-                            {(selectedSector !== 'all' || minRs > 0 || onlyStage2 || searchQuery) && (
+                            {(selectedSector !== 'all' || minRs !== 70 || onlyStage2 || searchQuery) && (
                               <button
                                 onClick={() => {
                                   setSelectedSector('all');
-                                  setMinRs(0);
+                                  setMinRs(70);
                                   setOnlyStage2(false);
                                   setSearchQuery('');
                                 }}
-                                className="px-3.5 py-1.5 rounded-xl bg-amber-400/10 border border-amber-400/30 text-amber-300 text-xs font-bold hover:bg-amber-400/20 transition-all inline-flex items-center gap-1.5"
+                                className="px-3.5 py-1.5 rounded-xl bg-amber-400/10 border border-amber-400/30 text-amber-300 text-xs font-bold hover:bg-amber-400/20 transition-all inline-flex items-center gap-1.5 cursor-pointer"
                               >
-                                <span>Đặt lại tất cả bộ lọc</span>
+                                <span>Đặt lại bộ lọc (RS &gt;= 70)</span>
                               </button>
                             )}
                           </div>

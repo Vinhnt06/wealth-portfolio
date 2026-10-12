@@ -6,4 +6,5 @@
 - [project] Component metadata uses SemVer while toolkit releases use CalVer → tech-decisions.md
 - [api] DNSE Market Data WebSocket spec & heartbeat guidelines → dnse-websocket.md
 - [data] STRICT BAN ON MOCK DATA: Cấm mock data tài chính; chỉ dùng API thật (DNSE, Vnstock) → project-conventions.md
+- [deploy] LOCALHOST FIRST: Luôn sửa và test trên Localhost trước; chỉ đẩy Vercel khi người dùng xác nhận OK → project-conventions.md
 
