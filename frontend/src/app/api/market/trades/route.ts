@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+export const preferredRegion = 'sin1';
+
 export interface RealTradeItem {
   id: string | number;
   time: string;

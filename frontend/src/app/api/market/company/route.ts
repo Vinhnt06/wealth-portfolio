@@ -3,6 +3,8 @@ import companyProfiles from '../../../../features/market/data/companyProfiles.js
 import stockDatabase from '../../../../features/market/data/stockDatabase.json';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+export const preferredRegion = 'sin1';
 
 interface CompanyInfo {
   business_model?: string;

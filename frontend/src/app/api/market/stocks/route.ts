@@ -3,6 +3,8 @@ import { supabase } from '../../../../lib/supabase';
 import stockDatabase from '../../../../features/market/data/stockDatabase.json';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+export const preferredRegion = 'sin1';
 
 /**
  * GET /api/market/stocks?query=hpg&exchange=HOSE&limit=20

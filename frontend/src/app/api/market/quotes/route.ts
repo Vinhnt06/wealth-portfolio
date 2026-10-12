@@ -3,6 +3,7 @@ import realTicks from '../../../../features/market/data/realTicks.json';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+export const preferredRegion = 'sin1';
 
 interface IndexMeta {
   symbol: string;

@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { API_URL } from '@/lib/api-config';
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+export const preferredRegion = 'sin1';
+
 export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const symbols = searchParams.get('symbols');

@@ -211,8 +211,7 @@ export const MarketIndexChart: React.FC = () => {
 
         const rawData = json.data;
         const candles = rawData.map((item: any) => {
-          const d = new Date(item.time * 1000);
-          const timeStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+          const timeStr = new Date(item.time * 1000).toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' });
           return {
             time: timeStr as Time,
             open: item.open,
@@ -223,8 +222,7 @@ export const MarketIndexChart: React.FC = () => {
         });
 
         const volumes = rawData.map((item: any) => {
-          const d = new Date(item.time * 1000);
-          const timeStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+          const timeStr = new Date(item.time * 1000).toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' });
           return {
             time: timeStr as Time,
             value: item.volume || 0,

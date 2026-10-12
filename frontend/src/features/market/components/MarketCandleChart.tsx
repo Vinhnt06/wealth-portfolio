@@ -581,6 +581,7 @@ export function MarketCandleChart() {
     bbUpper: LineData<Time>[];
     bbLower: LineData<Time>[];
     proData: TrendlineProResult | null;
+    timestamp: number;
   }>>(new Map());
 
   const { selectedSymbol, ticks } = useMarketStore();
@@ -2591,7 +2592,10 @@ export function MarketCandleChart() {
         };
       }
       requestAnimationFrame(() => redrawCanvasRef.current());
-      return;
+      // Return early only if cache is fresh (< 30 seconds)
+      if (cached.timestamp && Date.now() - cached.timestamp < 30000) {
+        return;
+      }
     }
 
     let isCancelled = false;
@@ -2691,6 +2695,7 @@ export function MarketCandleChart() {
           bbUpper: bbUpperData,
           bbLower: bbLowerData,
           proData,
+          timestamp: Date.now(),
         });
 
         if (uniqueCandles.length > 0) {
@@ -2775,6 +2780,30 @@ export function MarketCandleChart() {
         return;
       }
 
+      const isDaily = resolution === '1D' || resolution === '1W' || resolution === '1M' || resolution === '3M' || resolution === '6M';
+      const todayDateStr = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' });
+      const lastCandleTime = String(lastCandleRef.current.time);
+
+      if (isDaily && lastCandleTime !== todayDateStr) {
+        // We have a new day's tick! Add new candle for today instead of mutating past candle
+        const newCandle = {
+          time: todayDateStr as unknown as Time,
+          open: livePriceK,
+          high: livePriceK,
+          low: livePriceK,
+          close: livePriceK,
+        };
+        lastCandleRef.current = newCandle;
+        candleSeriesRef.current.update(newCandle);
+        volumeSeriesRef.current.update({
+          time: todayDateStr as unknown as Time,
+          value: tickVol,
+          color: 'rgba(16, 185, 129, 0.4)',
+        });
+        requestAnimationFrame(() => redrawCanvasRef.current());
+        return;
+      }
+
       const updatedHigh = Math.max(lastCandleRef.current.high, livePriceK);
       const updatedLow = Math.min(lastCandleRef.current.low, livePriceK);
       const updatedOpen = lastCandleRef.current.open;
@@ -2802,7 +2831,7 @@ export function MarketCandleChart() {
 
       requestAnimationFrame(() => redrawCanvasRef.current());
     }
-  }, [currentTick]);
+  }, [currentTick, resolution]);
 
   // ── 5. Sub-Chart Mount and Sync (RSI, MACD, MFI, OBV) ───────────────────
   useEffect(() => {
