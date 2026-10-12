@@ -122,3 +122,35 @@ export function getStockPriceColor(params: {
     label: 'TC',
   };
 }
+
+/**
+ * Tính giá Trần / Sàn chuẩn xác theo bước giá (tick size) của từng sàn GDCK:
+ * - HOSE:
+ *   + < 10,000 đ: bước giá 10 đ
+ *   + 10,000 - 49,950 đ: bước giá 50 đ
+ *   + >= 50,000 đ: bước giá 100 đ
+ *   Biên độ: ±7%
+ * - HNX: bước giá 100 đ, biên độ: ±10%
+ * - UPCOM: bước giá 100 đ, biên độ: ±15%
+ */
+export function calculateExchangeCeilFloor(refPrice: number, exchange: string = 'HOSE'): { ceilingPrice: number; floorPrice: number } {
+  if (!refPrice || refPrice <= 0) return { ceilingPrice: 0, floorPrice: 0 };
+  const ex = (exchange || 'HOSE').toUpperCase();
+  const rate = ex === 'UPCOM' ? 0.15 : ex === 'HNX' ? 0.10 : 0.07;
+
+  if (ex === 'HOSE') {
+    const rawCeil = refPrice * (1 + rate);
+    const rawFloor = refPrice * (1 - rate);
+    const getStep = (p: number) => (p < 10000 ? 10 : p < 50000 ? 50 : 100);
+    const ceilStep = getStep(rawCeil);
+    const floorStep = getStep(rawFloor);
+    return {
+      ceilingPrice: Math.floor(rawCeil / ceilStep) * ceilStep,
+      floorPrice: Math.ceil(rawFloor / floorStep) * floorStep,
+    };
+  }
+  return {
+    ceilingPrice: Math.floor((refPrice * (1 + rate)) / 100) * 100,
+    floorPrice: Math.ceil((refPrice * (1 - rate)) / 100) * 100,
+  };
+}

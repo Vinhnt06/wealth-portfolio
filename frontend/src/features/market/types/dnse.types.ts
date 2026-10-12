@@ -17,6 +17,7 @@ export interface TickData {
   floorPrice: number;
   timestamp: number;
   matchType?: 'B' | 'S' | 'U'; // Buy, Sell, Unknown
+  totalValue?: number;
 }
 
 export interface BidOffer {

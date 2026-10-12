@@ -28,7 +28,7 @@ import { InvestorFlowAnalysis } from './InvestorFlowAnalysis';
 import { MinerviniStrategyPanel } from './MinerviniStrategyPanel';
 import { MinerviniAnalysisResult } from '../types/minervini.types';
 import stockDatabase from '../data/stockDatabase.json';
-import { getStockPriceColor } from '../utils/priceColors';
+import { getStockPriceColor, calculateExchangeCeilFloor } from '../utils/priceColors';
 
 interface StockMetadata {
   symbol: string;
@@ -124,14 +124,20 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
     if (!selectedSymbol) return;
     setIsLoading(true);
 
-    fetch(`/api/market/quote?symbol=${selectedSymbol}`)
-      .then((res) => res.json())
-      .then((resData) => {
-        if (resData.success && resData.data) {
-          updateTick(resData.data);
-        }
-      })
-      .catch(() => {});
+    const fetchQuote = () => {
+      fetch(`/api/market/quote?symbol=${selectedSymbol}`)
+        .then((res) => res.json())
+        .then((resData) => {
+          if (resData.success && resData.data) {
+            updateTick(resData.data);
+          }
+        })
+        .catch(() => {});
+    };
+
+    fetchQuote();
+    // Continuous live quote polling (every 4s) during trading session
+    const quoteInterval = setInterval(fetchQuote, 4000);
 
     fetch(`/api/market/company?symbol=${selectedSymbol}`)
       .then((res) => res.json())
@@ -161,17 +167,20 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
         }
       })
       .catch(() => {});
+
+    return () => clearInterval(quoteInterval);
   }, [selectedSymbol, updateTick]);
 
   const price = tick?.price || (minerviniData?.price ? Math.round(minerviniData.price * 1000) : 0);
-  const change = tick?.change || (minerviniData?.change ? Math.round(minerviniData.change * 1000) : 0);
-  const changePercent = tick?.changePercent || minerviniData?.changePct || 0;
+  const change = tick?.change !== undefined ? tick.change : (minerviniData?.change ? Math.round(minerviniData.change * 1000) : 0);
+  const changePercent = tick?.changePercent !== undefined ? tick.changePercent : (minerviniData?.changePct || 0);
   const isUp = change > 0;
   const isDown = change < 0;
 
   const refPrice = tick?.referencePrice || (price > 0 ? Math.round(price - change) : 0);
-  const ceilPrice = tick?.ceilingPrice || (refPrice > 0 ? Math.round(refPrice * (meta.exchange === 'HNX' ? 1.10 : meta.exchange === 'UPCOM' ? 1.15 : 1.07)) : 0);
-  const floorPrice = tick?.floorPrice || (refPrice > 0 ? Math.round(refPrice * (meta.exchange === 'HNX' ? 0.90 : meta.exchange === 'UPCOM' ? 0.85 : 0.93)) : 0);
+  const calculatedCeilFloor = calculateExchangeCeilFloor(refPrice, meta.exchange);
+  const ceilPrice = tick?.ceilingPrice || calculatedCeilFloor.ceilingPrice;
+  const floorPrice = tick?.floorPrice || calculatedCeilFloor.floorPrice;
 
   const priceColor = getStockPriceColor({
     price,
@@ -193,7 +202,7 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
   const highPrice = rawHigh > 0 ? (rawHigh < 1000 ? Math.round(rawHigh * 1000) : rawHigh) : 0;
   const lowPrice = rawLow > 0 ? (rawLow < 1000 ? Math.round(rawLow * 1000) : rawLow) : 0;
   const openPrice = rawOpen > 0 ? (rawOpen < 1000 ? Math.round(rawOpen * 1000) : rawOpen) : 0;
-  const matchValueBillion = price > 0 && totalVol > 0 ? (price * totalVol) / 1_000_000_000 : 0;
+  const matchValueBillion = tick?.totalValue ? tick.totalValue / 1_000_000_000 : (price > 0 && totalVol > 0 ? (price * totalVol) / 1_000_000_000 : 0);
 
   const info = companyData?.info;
   const shareholders = companyData?.shareholders || [];
