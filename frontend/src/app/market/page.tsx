@@ -107,39 +107,26 @@ export default function MarketTerminalPage() {
           <div className="flex items-center gap-3">
             {/* Connection Status & Market Session Pill */}
             <div
-              title={
-                wsStatus === 'connected'
-                  ? 'WebSocket DNSE đang kết nối trực tiếp, độ trễ < 12ms'
-                  : sessionInfo.isOpen
-                  ? 'Hệ thống đang sẵn sàng nhận dữ liệu khớp lệnh trực tiếp'
-                  : `${sessionInfo.sessionName} • ${sessionInfo.nextSessionText}`
-              }
+              title={`${sessionInfo.sessionName} • ${sessionInfo.nextSessionText}`}
               className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl border text-xs font-mono font-semibold transition-all cursor-default ${
-                wsStatus === 'connected'
+                sessionInfo.isOpen
                   ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.15)]'
-                  : wsStatus === 'connecting'
-                  ? 'bg-amber-500/10 text-amber-400 border-amber-500/20 animate-pulse'
-                  : sessionInfo.isOpen
+                  : sessionInfo.isLunchBreak
                   ? 'bg-amber-500/10 text-amber-300 border-amber-500/20'
-                  : 'bg-zinc-800/80 text-zinc-300 border-zinc-700/60 shadow-inner'
+                  : 'bg-zinc-900/90 text-zinc-400 border-zinc-800/80'
               }`}
             >
-              {wsStatus === 'connected' ? (
+              {sessionInfo.isOpen ? (
                 <>
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                   <WifiHigh className="w-4 h-4 text-emerald-400" />
-                  <span className="hidden sm:inline">TRỰC TUYẾN (&lt; 12ms)</span>
+                  <span className="hidden sm:inline">TRỰC TUYẾN • {sessionInfo.sessionBadge}</span>
                 </>
-              ) : wsStatus === 'connecting' ? (
+              ) : sessionInfo.isLunchBreak ? (
                 <>
-                  <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-                  <span className="hidden sm:inline">ĐANG KẾT NỐI...</span>
-                </>
-              ) : sessionInfo.isOpen ? (
-                <>
-                  <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-                  <WifiHigh className="w-4 h-4 text-amber-400" />
-                  <span className="hidden sm:inline">CHỜ DỮ LIỆU PHIÊN</span>
+                  <span className="w-2 h-2 rounded-full bg-amber-400" />
+                  <Clock className="w-4 h-4 text-amber-400" />
+                  <span className="hidden sm:inline">NGHỈ TRƯA (11:30 - 13:00)</span>
                 </>
               ) : (
                 <>
