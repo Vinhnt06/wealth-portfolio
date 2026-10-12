@@ -762,9 +762,9 @@ export const MarketHeatmap: React.FC = () => {
               {sec.children.map((child) => {
                 const stock = child.data;
                 const colors = getColorClasses(stock);
-                const isSmall = child.w < 50 || child.h < 34;
-                const isTiny = child.w < 36 || child.h < 24;
-
+                const canShowSymbol = child.w >= 38 && child.h >= 26;
+                const canShowChange = child.w >= 54 && child.h >= 36;
+                const canShowPrice = child.w >= 75 && child.h >= 52;
                 const flash = flashMap[stock.symbol];
 
                 return (
@@ -772,13 +772,14 @@ export const MarketHeatmap: React.FC = () => {
                     key={stock.symbol}
                     onClick={() => handleTileClick(stock)}
                     onMouseMove={(e) => handleMouseMove(e, stock)}
+                    title={`${stock.symbol}: ${stock.changePercent > 0 ? '+' : ''}${stock.changePercent}%`}
                     className={`absolute flex flex-col items-center justify-center p-0.5 cursor-pointer border border-black/50 transition-all ${
                       flash === 'up'
                         ? 'ring-2 ring-emerald-400 z-30 brightness-125 scale-[1.01]'
                         : flash === 'down'
                         ? 'ring-2 ring-rose-400 z-30 brightness-125 scale-[1.01]'
                         : 'hover:opacity-90'
-                    } ${colors.bg} box-border`}
+                    } ${colors.bg} box-border overflow-hidden`}
                     style={{
                       left: `${child.x}px`,
                       top: `${child.y}px`,
@@ -786,31 +787,27 @@ export const MarketHeatmap: React.FC = () => {
                       height: `${child.h}px`,
                     }}
                   >
-                    {isTiny ? (
-                      <span className="font-black text-[9px] text-white leading-none">
-                        {stock.symbol}
-                      </span>
-                    ) : (
+                    {canShowSymbol && (
                       <>
                         <div className="flex items-center gap-1 leading-none">
-                          <span className="font-black text-xs sm:text-sm text-white drop-shadow-sm">
+                          <span className={`font-black text-white drop-shadow-sm ${canShowChange ? 'text-xs sm:text-sm' : 'text-[10px]'}`}>
                             {stock.symbol}
                           </span>
-                          {colors.label && (
+                          {colors.label && child.w >= 65 && (
                             <span className="px-1 py-0.2 rounded text-[8px] font-black bg-white/20 text-white">
                               {colors.label}
                             </span>
                           )}
                         </div>
 
-                        {!isSmall && (
-                          <span className="text-[10px] font-bold text-white/90 mt-0.5">
+                        {canShowChange && (
+                          <span className="text-[10px] font-bold text-white/90 mt-0.5 leading-none">
                             {stock.changePercent > 0 ? `+${stock.changePercent}%` : `${stock.changePercent}%`}
                           </span>
                         )}
 
-                        {child.w > 70 && child.h > 52 && (
-                          <span className="text-[9px] text-white/70 mt-0.5">
+                        {canShowPrice && (
+                          <span className="text-[9px] text-white/70 mt-0.5 leading-none">
                             {(stock.price / 1000).toFixed(2)}
                           </span>
                         )}
@@ -826,8 +823,9 @@ export const MarketHeatmap: React.FC = () => {
           layout.flat.map((item) => {
             const stock = item.data;
             const colors = getColorClasses(stock);
-            const isSmall = item.w < 50 || item.h < 34;
-            const isTiny = item.w < 36 || item.h < 24;
+            const canShowSymbol = item.w >= 38 && item.h >= 26;
+            const canShowChange = item.w >= 54 && item.h >= 36;
+            const canShowPrice = item.w >= 75 && item.h >= 52;
             const flash = flashMap[stock.symbol];
 
             return (
@@ -835,13 +833,14 @@ export const MarketHeatmap: React.FC = () => {
                 key={stock.symbol}
                 onClick={() => handleTileClick(stock)}
                 onMouseMove={(e) => handleMouseMove(e, stock)}
+                title={`${stock.symbol}: ${stock.changePercent > 0 ? '+' : ''}${stock.changePercent}%`}
                 className={`absolute flex flex-col items-center justify-center p-0.5 cursor-pointer border border-black/50 transition-all ${
                   flash === 'up'
                     ? 'ring-2 ring-emerald-400 z-30 brightness-125 scale-[1.01]'
                     : flash === 'down'
                     ? 'ring-2 ring-rose-400 z-30 brightness-125 scale-[1.01]'
                     : 'hover:opacity-90'
-                } ${colors.bg} box-border`}
+                } ${colors.bg} box-border overflow-hidden`}
                 style={{
                   left: `${item.x}px`,
                   top: `${item.y}px`,
@@ -849,31 +848,27 @@ export const MarketHeatmap: React.FC = () => {
                   height: `${item.h}px`,
                 }}
               >
-                {isTiny ? (
-                  <span className="font-black text-[9px] text-white leading-none">
-                    {stock.symbol}
-                  </span>
-                ) : (
+                {canShowSymbol && (
                   <>
                     <div className="flex items-center gap-1 leading-none">
-                      <span className="font-black text-xs sm:text-sm text-white drop-shadow-sm">
+                      <span className={`font-black text-white drop-shadow-sm ${canShowChange ? 'text-xs sm:text-sm' : 'text-[10px]'}`}>
                         {stock.symbol}
                       </span>
-                      {colors.label && (
+                      {colors.label && item.w >= 65 && (
                         <span className="px-1 py-0.2 rounded text-[8px] font-black bg-white/20 text-white">
                           {colors.label}
                         </span>
                       )}
                     </div>
 
-                    {!isSmall && (
-                      <span className="text-[10px] font-bold text-white/90 mt-0.5">
+                    {canShowChange && (
+                      <span className="text-[10px] font-bold text-white/90 mt-0.5 leading-none">
                         {stock.changePercent > 0 ? `+${stock.changePercent}%` : `${stock.changePercent}%`}
                       </span>
                     )}
 
-                    {item.w > 70 && item.h > 52 && (
-                      <span className="text-[9px] text-white/70 mt-0.5">
+                    {canShowPrice && (
+                      <span className="text-[9px] text-white/70 mt-0.5 leading-none">
                         {(stock.price / 1000).toFixed(2)}
                       </span>
                     )}
