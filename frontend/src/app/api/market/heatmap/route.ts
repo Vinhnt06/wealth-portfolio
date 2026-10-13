@@ -5,6 +5,7 @@ import lastMinerviniScanData from '../../../../features/market/data/lastMinervin
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 export const preferredRegion = 'sin1';
 
 interface StockMeta {
@@ -218,12 +219,19 @@ export async function GET() {
       data: processedStocks,
     };
 
-    return NextResponse.json({
-      success: true,
-      timestamp: now,
-      total: processedStocks.length,
-      data: processedStocks,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        timestamp: now,
+        total: processedStocks.length,
+        data: processedStocks,
+      },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        },
+      }
+    );
   } catch (err: any) {
     if (cachedData) {
       return NextResponse.json({

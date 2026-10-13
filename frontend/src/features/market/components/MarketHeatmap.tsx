@@ -231,7 +231,7 @@ export const MarketHeatmap: React.FC = () => {
   const fetchHeatmapData = useCallback(async (isManual = false) => {
     if (isManual) setIsRefreshing(true);
     try {
-      const res = await fetch('/api/market/heatmap');
+      const res = await fetch('/api/market/heatmap', { cache: 'no-store' });
       const resData = await res.json();
       if (resData.success && Array.isArray(resData.data)) {
         const newFlashes: Record<string, 'up' | 'down'> = {};
@@ -296,7 +296,8 @@ export const MarketHeatmap: React.FC = () => {
     if (!containerRef.current) return;
     const updateSize = () => {
       if (containerRef.current) {
-        const w = containerRef.current.clientWidth;
+        const clientW = containerRef.current.clientWidth;
+        const w = clientW > 0 ? clientW : (typeof window !== 'undefined' ? Math.min(1200, window.innerWidth - 64) : 1100);
         const h = Math.max(520, Math.min(800, Math.round(w * 0.52)));
         setDimensions({ width: w, height: h });
       }
