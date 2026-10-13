@@ -16,6 +16,9 @@ interface CommodityItem {
   isRealtime: boolean;
 }
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 // In-memory cache for 10 seconds
 let cacheData: { timestamp: number; data: CommodityItem[] } | null = null;
 const CACHE_TTL_MS = 10 * 1000;
@@ -23,13 +26,22 @@ const CACHE_TTL_MS = 10 * 1000;
 export async function GET() {
   const now = Date.now();
   if (cacheData && now - cacheData.timestamp < CACHE_TTL_MS) {
-    return NextResponse.json({
-      success: true,
-      cached: true,
-      data: cacheData.data,
-      timestamp: new Date(cacheData.timestamp).toISOString(),
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        cached: true,
+        data: cacheData.data,
+        timestamp: new Date(cacheData.timestamp).toISOString(),
+      },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        },
+      }
+    );
   }
+
+  const items: CommodityItem[] = [];
 
   const timeStr = new Date().toLocaleTimeString('vi-VN', {
     timeZone: 'Asia/Ho_Chi_Minh',
@@ -150,9 +162,16 @@ export async function GET() {
   // Update memory cache
   cacheData = { timestamp: now, data: items };
 
-  return NextResponse.json({
-    success: true,
-    data: items,
-    timestamp: new Date().toISOString(),
-  });
+  return NextResponse.json(
+    {
+      success: true,
+      data: items,
+      timestamp: new Date().toISOString(),
+    },
+    {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+      },
+    }
+  );
 }

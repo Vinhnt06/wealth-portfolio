@@ -64,8 +64,8 @@ export const CommoditiesAndGoldSection: React.FC = () => {
     setLoading(true);
     try {
       const [resComm, resBank] = await Promise.all([
-        fetch('/api/macro/commodities'),
-        fetch('/api/macro/bank-rates'),
+        fetch('/api/macro/commodities', { cache: 'no-store' }),
+        fetch('/api/macro/bank-rates', { cache: 'no-store' }),
       ]);
 
       if (resComm.ok) {
@@ -91,8 +91,8 @@ export const CommoditiesAndGoldSection: React.FC = () => {
   useEffect(() => {
     setMounted(true);
     fetchData();
-    // Auto-refresh commodities every 30s
-    const timer = setInterval(fetchData, 30000);
+    // Auto-refresh commodities every 15s for continuous realtime updates
+    const timer = setInterval(fetchData, 15000);
     return () => clearInterval(timer);
   }, []);
 
