@@ -251,26 +251,33 @@ export function calculateTrendlinePro(candles: CandlestickData<Time>[]): Trendli
   }
 
   // ── 1. Select Major Peaks for Upper Resistance (H1 -> H2) ──
-  // Find major global high in the lookback window
   const sortedHighs = [...swingHighs].sort((a, b) => b.price - a.price);
   const globalHigh = sortedHighs[0];
 
   let h1 = globalHigh;
   let h2 = swingHighs[swingHighs.length - 1];
 
-  // Look for a prominent subsequent peak after H1 separated by at least 6 bars
-  const highsAfterH1 = swingHighs.filter((sh) => sh.idx >= h1.idx + 6);
+  // Look for the most prominent subsequent peak after H1 separated by at least 15 bars
+  const highsAfterH1 = swingHighs.filter((sh) => sh.idx >= h1.idx + 15 && sh.price <= h1.price * 1.01);
   if (highsAfterH1.length > 0) {
-    // Pick highest peak after H1 that forms descending trend (or highest peak)
-    const descendingPeaks = highsAfterH1.filter((sh) => sh.price <= h1.price * 1.005);
-    if (descendingPeaks.length > 0) {
-      h2 = descendingPeaks.sort((a, b) => b.price - a.price)[0];
-    } else {
-      h2 = highsAfterH1[0];
-    }
+    const scoredHighs = highsAfterH1.map((sh) => {
+      const dx = sh.idx - h1.idx;
+      const slope = (sh.price - h1.price) / dx;
+      let breachPenalty = 0;
+      for (let i = h1.idx; i <= sh.idx; i++) {
+        const linePrice = h1.price + slope * (i - h1.idx);
+        if (candles[i].high > linePrice) {
+          breachPenalty += (candles[i].high - linePrice);
+        }
+      }
+      const isClean = breachPenalty < 0.001;
+      const score = (isClean ? 10000 : 0) + dx * 10 - breachPenalty * 10000;
+      return { sh, score, slope };
+    });
+    scoredHighs.sort((a, b) => b.score - a.score);
+    h2 = scoredHighs[0].sh;
   } else if (swingHighs.length >= 2) {
-    // If globalHigh is near the end, pick previous major high as h1, and globalHigh as h2
-    const highsBeforeH1 = swingHighs.filter((sh) => sh.idx <= globalHigh.idx - 6);
+    const highsBeforeH1 = swingHighs.filter((sh) => sh.idx <= globalHigh.idx - 15);
     if (highsBeforeH1.length > 0) {
       h1 = highsBeforeH1.sort((a, b) => b.price - a.price)[0];
       h2 = globalHigh;
@@ -284,25 +291,34 @@ export function calculateTrendlinePro(candles: CandlestickData<Time>[]): Trendli
   const resSlope = (h2.price - h1.price) / dxRes;
 
   // ── 2. Select Major Troughs for Lower Support (L1 -> L2) ──
-  // Find major global low in the lookback window
   const sortedLows = [...swingLows].sort((a, b) => a.price - b.price);
   const globalLow = sortedLows[0];
 
   let l1 = globalLow;
   let l2 = swingLows[swingLows.length - 1];
 
-  // Look for a prominent subsequent trough after L1 separated by at least 6 bars
-  const lowsAfterL1 = swingLows.filter((sl) => sl.idx >= l1.idx + 6);
+  // Look for the most prominent subsequent trough after L1 separated by at least 15 bars
+  // Connects directly through the major higher low (e.g. August trough in VN30F1M) with zero candle breach
+  const lowsAfterL1 = swingLows.filter((sl) => sl.idx >= l1.idx + 15 && sl.price >= l1.price * 0.99);
   if (lowsAfterL1.length > 0) {
-    // Pick trough after L1 that forms ascending support
-    const ascendingTroughs = lowsAfterL1.filter((sl) => sl.price >= l1.price * 0.995);
-    if (ascendingTroughs.length > 0) {
-      l2 = ascendingTroughs.sort((a, b) => a.price - b.price)[0];
-    } else {
-      l2 = lowsAfterL1[0];
-    }
+    const scoredLows = lowsAfterL1.map((sl) => {
+      const dx = sl.idx - l1.idx;
+      const slope = (sl.price - l1.price) / dx;
+      let breachPenalty = 0;
+      for (let i = l1.idx; i <= sl.idx; i++) {
+        const linePrice = l1.price + slope * (i - l1.idx);
+        if (candles[i].low < linePrice) {
+          breachPenalty += (linePrice - candles[i].low);
+        }
+      }
+      const isClean = breachPenalty < 0.001;
+      const score = (isClean ? 10000 : 0) + dx * 10 - breachPenalty * 10000;
+      return { sl, score, slope };
+    });
+    scoredLows.sort((a, b) => b.score - a.score);
+    l2 = scoredLows[0].sl;
   } else if (swingLows.length >= 2) {
-    const lowsBeforeL1 = swingLows.filter((sl) => sl.idx <= globalLow.idx - 6);
+    const lowsBeforeL1 = swingLows.filter((sl) => sl.idx <= globalLow.idx - 15);
     if (lowsBeforeL1.length > 0) {
       l1 = lowsBeforeL1.sort((a, b) => a.price - b.price)[0];
       l2 = globalLow;
@@ -326,10 +342,12 @@ export function calculateTrendlinePro(candles: CandlestickData<Time>[]): Trendli
   const currSup = l1.price + supSlope * (lastIdx - l1.idx);
   const lastClose = candles[lastIdx].close;
 
-  // Horizontal S/R and Fib display in legend (matching screenshot values)
-  // Kháng cự: giá đỉnh cao nhất H1
-  // Hỗ trợ: giá đường hỗ trợ hiện tại tại lastIdx
-  const resistance = Math.round(h1.price * 100) / 100;
+  // Channel delta: based on vertical distance between peak and trough
+  const supAtH1 = l1.price + supSlope * (h1.idx - l1.idx);
+  const channelDelta = Math.max(1.0, Math.abs(h1.price - supAtH1));
+
+  // Horizontal S/R and Fib display in legend
+  const resistance = Math.round(currRes * 100) / 100;
   const support = Math.round(currSup * 100) / 100;
   const delta = Math.max(0.5, resistance - support);
   const fib0618 = Math.round((support + delta * 0.618) * 100) / 100;
@@ -344,7 +362,6 @@ export function calculateTrendlinePro(candles: CandlestickData<Time>[]): Trendli
   else if (currRatio >= 0.85) recommendation = 'QUAN SÁT';
   else recommendation = 'GIỮ';
 
-  const channelDelta = delta;
   const slope = resSlope;
 
   return {
@@ -1911,30 +1928,26 @@ export function MarketCandleChart() {
       // Mathematical price functions for any logical bar index L:
       // R(L): Upper Resistance Line
       // S(L): Lower Support Line
-      // Wedge Price for any ratio r: S(L) + r * (R(L) - S(L))
       const getResPrice = (L: number) => resP1.price + resSlope * (L - resP1.idx);
       const getSupPrice = (L: number) => supP1.price + supSlope * (L - supP1.idx);
-      const getWedgePrice = (L: number, r: number) => {
-        const rPrice = getResPrice(L);
-        const sPrice = getSupPrice(L);
-        return sPrice + r * (rPrice - sPrice);
-      };
 
-      // Starting point for the filled wedge: where both lines exist
+      const resAtEnd = getResPrice(actualEndLogical);
+      const supAtEnd = getSupPrice(actualEndLogical);
+      const channelH = Math.max(1.0, resAtEnd - supAtEnd);
+
+      // Starting point for the filled wedge corridor: where both lines exist
       const startWedgeIdx = Math.max(resP1.idx, supP1.idx);
       const xStartWedge = timeScale.logicalToCoordinate(startWedgeIdx as any);
 
-      // ── 1. Shaded Wedge Corridor Background (Matching dark reddish transparent overlay in screenshot) ──
+      // ── 1. Shaded Channel Corridor Background (Dark reddish transparent overlay) ──
       if (xStartWedge !== null && rightEdge > xStartWedge) {
         const pResStart = getResPrice(startWedgeIdx);
         const pSupStart = getSupPrice(startWedgeIdx);
-        const pResEnd = getResPrice(actualEndLogical);
-        const pSupEnd = getSupPrice(actualEndLogical);
 
         const yResStart = series.priceToCoordinate(pResStart);
         const ySupStart = series.priceToCoordinate(pSupStart);
-        const yResEnd = series.priceToCoordinate(pResEnd);
-        const ySupEnd = series.priceToCoordinate(pSupEnd);
+        const yResEnd = series.priceToCoordinate(resAtEnd);
+        const ySupEnd = series.priceToCoordinate(supAtEnd);
 
         if (yResStart !== null && ySupStart !== null && yResEnd !== null && ySupEnd !== null) {
           ctx.beginPath();
@@ -1943,13 +1956,12 @@ export function MarketCandleChart() {
           ctx.lineTo(rightEdge, ySupEnd);
           ctx.lineTo(xStartWedge, ySupStart);
           ctx.closePath();
-          // Dark reddish transparent fill matching screenshot
           ctx.fillStyle = 'rgba(239, 68, 68, 0.085)';
           ctx.fill();
         }
       }
 
-      // ── 2. Vertical Projection Guideline (Matching white dashed vertical line in screenshot) ──
+      // ── 2. Vertical Projection Guideline (White dashed vertical line) ──
       ctx.beginPath();
       ctx.setLineDash([4, 4]);
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
@@ -1959,21 +1971,30 @@ export function MarketCandleChart() {
       ctx.stroke();
       ctx.setLineDash([]);
 
-      // ── 3. Draw All Fibonacci Wedge Rays and Trendlines ──
-      const allRatios = [...FIB_WEDGE_RATIOS];
+      // ── 3. Draw Parallel Fibonacci Channel Rays ──
+      const allRatios = [...FIB_CHANNEL_RATIOS];
       allRatios.sort((a, b) => a - b);
 
       allRatios.forEach((r) => {
-        // Line start index:
-        // For r = 1 (Resistance), start at resP1.idx
-        // For r = 0 (Support), start at supP1.idx
-        // For other Fib lines, start at startWedgeIdx
-        const startIdxForR = (r === 1.0) ? resP1.idx : (r === 0.0 ? supP1.idx : startWedgeIdx);
+        // Parallel Fibonacci Channel Geometry:
+        // For r >= 0: ray is parallel to the upper resistance line (resSlope)
+        // For r < 0: ray is parallel to the lower support line (supSlope)
+        let pStart: number;
+        let pEnd: number;
+        let startIdxForR: number;
+
+        if (r >= 0.0) {
+          startIdxForR = (r === 1.0) ? resP1.idx : startWedgeIdx;
+          pStart = (r === 1.0) ? resP1.price : (getResPrice(startIdxForR) - (1.0 - r) * channelH);
+          pEnd = resAtEnd - (1.0 - r) * channelH;
+        } else {
+          startIdxForR = startWedgeIdx;
+          pStart = getSupPrice(startIdxForR) + r * channelH;
+          pEnd = supAtEnd + r * channelH;
+        }
+
         const xStartR = timeScale.logicalToCoordinate(startIdxForR as any);
         if (xStartR === null) return;
-
-        const pStart = (r === 1.0) ? resP1.price : (r === 0.0 ? supP1.price : getWedgePrice(startIdxForR, r));
-        const pEnd = getWedgePrice(actualEndLogical, r);
 
         const yStart = series.priceToCoordinate(pStart);
         const yEnd = series.priceToCoordinate(pEnd);
@@ -1989,12 +2010,12 @@ export function MarketCandleChart() {
             ctx.lineWidth = 2.0;
             ctx.setLineDash([]);
           } else if (r === 0.0) {
-            // Lower Support Line - Solid Coral Red
-            ctx.strokeStyle = '#ef4444';
-            ctx.lineWidth = 2.0;
-            ctx.setLineDash([]);
+            // Level 0 base ray - Amber dashed
+            ctx.strokeStyle = 'rgba(234, 179, 8, 0.75)';
+            ctx.lineWidth = 1.0;
+            ctx.setLineDash([3, 4]);
           } else if (r > 0.0 && r < 1.0) {
-            // Inner Fib levels inside the wedge - Amber dashed
+            // Inner Fib levels inside the channel - Amber dashed
             ctx.strokeStyle = 'rgba(234, 179, 8, 0.75)';
             ctx.lineWidth = 1.0;
             ctx.setLineDash([3, 4]);
@@ -2029,7 +2050,45 @@ export function MarketCandleChart() {
         }
       });
 
-      // ── 4. Swing Pivot Triangles (▼ on Highs, ▲ on Lows) ──
+      // ── 4. Draw Lower Support Trendline (Solid Coral Red connecting L1 to L2 and extending forward) ──
+      const ySupStart = series.priceToCoordinate(supP1.price);
+      const ySupEnd = series.priceToCoordinate(supAtEnd);
+      if (xSupStart !== null && ySupStart !== null && ySupEnd !== null) {
+        ctx.beginPath();
+        ctx.moveTo(xSupStart, ySupStart);
+        ctx.lineTo(rightEdge, ySupEnd);
+        ctx.strokeStyle = '#ef4444';
+        ctx.lineWidth = 2.0;
+        ctx.setLineDash([]);
+        ctx.stroke();
+      }
+
+      // ── 5. Horizontal Reference Lines (Peak H1 and Trough L1) ──
+      const yH1 = series.priceToCoordinate(resP1.price);
+      if (yH1 !== null && xResStart !== null) {
+        ctx.beginPath();
+        ctx.setLineDash([4, 4]);
+        ctx.strokeStyle = 'rgba(132, 204, 22, 0.4)';
+        ctx.lineWidth = 1.0;
+        ctx.moveTo(xResStart, yH1);
+        ctx.lineTo(rightEdge, yH1);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      const yL1 = series.priceToCoordinate(supP1.price);
+      if (yL1 !== null && xSupStart !== null) {
+        ctx.beginPath();
+        ctx.setLineDash([4, 4]);
+        ctx.strokeStyle = 'rgba(239, 68, 68, 0.4)';
+        ctx.lineWidth = 1.0;
+        ctx.moveTo(xSupStart, yL1);
+        ctx.lineTo(rightEdge, yL1);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      // ── 6. Swing Pivot Triangles (▼ on Highs, ▲ on Lows) ──
       swingHighs.forEach((sh) => {
         const x = timeScale.logicalToCoordinate(sh.idx as any);
         const y = series.priceToCoordinate(sh.price);
@@ -2058,27 +2117,27 @@ export function MarketCandleChart() {
         }
       });
 
-      // ── 5. Horizontal Support & Resistance Lines & Badges ──
-      const resY    = series.priceToCoordinate(resistance);
-      const supY    = series.priceToCoordinate(support);
+      // ── 7. Price Badges on Right Axis (Clean without slicing across candles) ──
+      const resY = series.priceToCoordinate(resistance);
+      const supY = series.priceToCoordinate(support);
       const fib0618Y = series.priceToCoordinate(fib0618);
       const fib1618Y = series.priceToCoordinate(fib1618);
 
       const drawHzBadge = (
         y: number,
         label: string,
-        lineColor: string,
         textColor: string,
         borderColor: string,
       ) => {
-        ctx.strokeStyle = lineColor;
-        ctx.lineWidth = 1.2;
-        ctx.setLineDash([5, 4]);
         ctx.beginPath();
-        ctx.moveTo(0, y);
+        ctx.setLineDash([3, 3]);
+        ctx.strokeStyle = borderColor;
+        ctx.lineWidth = 1.0;
+        ctx.moveTo(rightEdge, y);
         ctx.lineTo(w - 78, y);
         ctx.stroke();
         ctx.setLineDash([]);
+
         ctx.fillStyle = 'rgba(15, 15, 20, 0.92)';
         ctx.fillRect(w - 77, y - 9, 70, 18);
         ctx.strokeStyle = borderColor;
@@ -2091,10 +2150,10 @@ export function MarketCandleChart() {
         ctx.fillText(label, w - 42, y);
       };
 
-      if (resY    !== null) drawHzBadge(resY,    'Kháng cự', 'rgba(132,204,22,0.7)', '#f8fafc', 'rgba(132,204,22,0.45)');
-      if (fib0618Y !== null) drawHzBadge(fib0618Y, 'Fib 0,618', 'rgba(234,179,8,0.65)', '#facc15', 'rgba(234,179,8,0.4)');
-      if (supY    !== null) drawHzBadge(supY,    'Hỗ trợ',   'rgba(239,68,68,0.7)', '#f8fafc', 'rgba(239,68,68,0.45)');
-      if (fib1618Y !== null && fib1618Y >= 15) drawHzBadge(fib1618Y, 'Fib 1,618', 'rgba(6,182,212,0.6)', '#38bdf8', 'rgba(6,182,212,0.4)');
+      if (resY !== null) drawHzBadge(resY, 'Kháng cự', '#f8fafc', 'rgba(132,204,22,0.45)');
+      if (fib0618Y !== null) drawHzBadge(fib0618Y, 'Fib 0,618', '#facc15', 'rgba(234,179,8,0.4)');
+      if (supY !== null) drawHzBadge(supY, 'Hỗ trợ', '#f8fafc', 'rgba(239,68,68,0.45)');
+      if (fib1618Y !== null && fib1618Y >= 15) drawHzBadge(fib1618Y, 'Fib 1,618', '#38bdf8', 'rgba(6,182,212,0.4)');
 
       ctx.restore();
     }
