@@ -2113,6 +2113,16 @@ export function MarketCandleChart() {
       // ── 6. Fibonacci Wedge Fan Rays Connecting Peak and Trough ──
       const allRatios = [...FIB_FAN_RATIOS];
 
+      interface FibFanLabelItem {
+        r: number;
+        text: string;
+        color: string;
+        rawY: number;
+        y: number;
+        x: number;
+      }
+      const fanLabels: FibFanLabelItem[] = [];
+
       allRatios.forEach((r) => {
         // Price at start and end
         const pStart = getFibRayPrice(resP1.idx, r);
@@ -2140,19 +2150,92 @@ export function MarketCandleChart() {
           ctx.stroke();
           ctx.setLineDash([]);
 
-          // ── Right-Aligned Fib Ratio Label at the Last Candle Column ──
+          // Collect Fib Ratio Label for smart anti-collision layout
           const pAtLast = getFibRayPrice(lastCandleIdx, r);
           const yLabel = series.priceToCoordinate(pAtLast);
 
-          if (yLabel !== null && yLabel >= 12 && yLabel <= h - 12) {
-            ctx.fillStyle = r < 0 ? '#f87171' : '#facc15';
-            ctx.font = 'bold 9px JetBrains Mono, monospace';
-            ctx.textAlign = 'left';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(r.toString(), xLastCandle + 4, yLabel);
+          if (yLabel !== null && yLabel >= 10 && yLabel <= h - 10) {
+            fanLabels.push({
+              r,
+              text: r.toString(),
+              color: r < 0 ? '#f87171' : '#facc15',
+              rawY: yLabel,
+              y: yLabel,
+              x: Math.min(xLastCandle + 8, w - 85),
+            });
           }
         }
       });
+
+      // ── Smart Anti-Collision Layout for Fib Fan Labels (Prevents any stacked overlapping numbers) ──
+      if (fanLabels.length > 0) {
+        // 1. Sort by raw Y position ascending (top to bottom)
+        fanLabels.sort((a, b) => a.rawY - b.rawY);
+
+        // 2. Multi-pass iterative relaxation enforcing minimum vertical spacing of 14px
+        const minSpacing = 14;
+        for (let pass = 0; pass < 12; pass++) {
+          for (let i = 0; i < fanLabels.length - 1; i++) {
+            const cur = fanLabels[i];
+            const next = fanLabels[i + 1];
+            const dist = next.y - cur.y;
+            if (dist < minSpacing) {
+              const overlap = (minSpacing - dist) / 2;
+              cur.y -= overlap;
+              next.y += overlap;
+            }
+          }
+        }
+
+        // 3. Keep within canvas viewport boundaries
+        for (let i = 0; i < fanLabels.length; i++) {
+          if (fanLabels[i].y < 14) {
+            fanLabels[i].y = 14;
+          }
+        }
+        for (let i = fanLabels.length - 1; i >= 0; i--) {
+          if (fanLabels[i].y > h - 14) {
+            fanLabels[i].y = h - 14;
+          }
+        }
+        for (let i = 0; i < fanLabels.length - 1; i++) {
+          if (fanLabels[i + 1].y - fanLabels[i].y < minSpacing) {
+            fanLabels[i + 1].y = fanLabels[i].y + minSpacing;
+          }
+        }
+
+        // 4. Render labels with high contrast backdrops & optional leader lines
+        ctx.save();
+        ctx.font = 'bold 9px JetBrains Mono, monospace';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+
+        fanLabels.forEach((lbl) => {
+          // If label was displaced by more than 3px due to ray convergence, draw a subtle connector line
+          if (Math.abs(lbl.y - lbl.rawY) > 3) {
+            ctx.beginPath();
+            ctx.strokeStyle = lbl.r < 0 ? 'rgba(248, 113, 113, 0.45)' : 'rgba(250, 204, 21, 0.45)';
+            ctx.lineWidth = 0.8;
+            ctx.setLineDash([2, 2]);
+            ctx.moveTo(xLastCandle + 2, lbl.rawY);
+            ctx.lineTo(lbl.x, lbl.y);
+            ctx.stroke();
+            ctx.setLineDash([]);
+          }
+
+          const metrics = ctx.measureText(lbl.text);
+          const tw = metrics.width;
+
+          // High contrast pill background to ensure zero clash with candles/grid
+          ctx.fillStyle = 'rgba(19, 23, 34, 0.9)';
+          ctx.fillRect(lbl.x - 2, lbl.y - 6, tw + 4, 12);
+
+          // Render ratio text
+          ctx.fillStyle = lbl.color;
+          ctx.fillText(lbl.text, lbl.x, lbl.y);
+        });
+        ctx.restore();
+      }
 
       // ── 7. Swing Pivot Triangles (▼ on Highs, ▲ on Lows) ──
       swingHighs.forEach((sh) => {
@@ -5021,7 +5104,7 @@ export function MarketCandleChart() {
             )}
 
             {/* ── TradingView In-Chart Legend (Top-Left Canvas Overlay - Screenshot 2 style) ────────── */}
-            <div className="absolute top-2 left-3 z-20 pointer-events-none flex flex-col gap-0.5 select-none font-mono text-[11px] leading-tight drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)]">
+            <div className="absolute top-2 left-3 z-20 pointer-events-none flex flex-col gap-1 select-none font-mono text-[11px] leading-tight drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)] max-w-[calc(100%-80px)]">
               {/* Row 1: Realtime OHLC */}
               <div className="flex items-center gap-1.5 flex-wrap text-zinc-300">
                 <span className="text-zinc-400 font-bold">{resolution}</span>
@@ -5058,7 +5141,7 @@ export function MarketCandleChart() {
 
               {/* Row 3: MA Ribbon (8, 21, 144, 233) */}
               {(showMA8 || showMA21 || showMA144 || showMA233) && (
-                <div className="flex items-center gap-2 flex-wrap text-[11px] font-mono">
+                <div className="flex items-center gap-x-2 gap-y-0.5 flex-wrap text-[11px] font-mono">
                   <span className="text-zinc-400 font-semibold">{maType} Ribbon:</span>
                   {showMA8 && activeMA8 !== undefined && (
                     <span className="text-[#38bdf8] font-bold">
@@ -5085,7 +5168,7 @@ export function MarketCandleChart() {
 
               {/* Row 4: Trendline Pro Support / Resistance & Fib Xiên (Matching TradingView master) */}
               {showTrendlinePro && trendlineProData && (
-                <div className="flex items-center gap-2 text-[10px] font-mono">
+                <div className="flex items-center gap-x-2 gap-y-0.5 flex-wrap text-[10px] font-mono">
                   <span className="text-amber-400 font-bold">Trendline Pro</span>
                   <span className="text-lime-400">Kháng cự: <strong>{trendlineProData.resistance.toFixed(2).replace('.', ',')}</strong></span>
                   <span className="text-rose-400">Hỗ trợ: <strong>{trendlineProData.support.toFixed(2).replace('.', ',')}</strong></span>
