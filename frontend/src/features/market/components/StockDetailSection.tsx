@@ -463,12 +463,12 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
           </div>
 
           {/* Row 2: Full-Width Realtime Pricing & Market Telemetry Bar */}
-          <div className="w-full grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3 sm:gap-4 bg-zinc-900/70 border border-zinc-800/80 p-4 rounded-2xl backdrop-blur-md shadow-xl items-center">
+          <div className="w-full flex flex-wrap xl:flex-nowrap items-center justify-between gap-y-3 gap-x-4 lg:gap-x-6 bg-zinc-900/70 border border-zinc-800/80 p-3.5 sm:p-4 rounded-2xl backdrop-blur-md shadow-xl">
             {/* 1. Giá khớp lệnh */}
-            <div className="col-span-2 sm:col-span-1 border-r border-zinc-800/80 pr-3">
-              <span className="text-[10px] uppercase font-mono tracking-wider text-zinc-500 block">GIÁ KHỚP LỆNH</span>
+            <div className="shrink-0 border-r border-zinc-800/80 pr-4 lg:pr-5">
+              <span className="text-[10px] uppercase font-mono tracking-wider text-zinc-500 block whitespace-nowrap">GIÁ KHỚP LỆNH</span>
               <div className="flex items-baseline gap-1 mt-0.5">
-                <span className={`text-2xl sm:text-3xl font-mono font-black tracking-tight ${colorClass}`}>
+                <span className={`text-2xl sm:text-3xl font-mono font-black tracking-tight whitespace-nowrap ${colorClass}`}>
                   {price > 0 ? price.toLocaleString('vi-VN') : '--'}
                 </span>
                 <span className="text-xs font-mono text-zinc-500 font-bold">đ</span>
@@ -476,10 +476,10 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
             </div>
 
             {/* 2. Biến động */}
-            <div className="border-r border-zinc-800/80 pr-3">
-              <span className="text-[10px] uppercase font-mono tracking-wider text-zinc-500 block">BIẾN ĐỘNG</span>
-              <div className={`inline-flex items-center gap-1 mt-1 text-xs sm:text-sm font-mono font-bold ${bgBadgeClass} px-2.5 py-0.5 rounded-xl border`}>
-                {isUp ? <TrendUp className="w-3.5 h-3.5" /> : isDown ? <TrendDown className="w-3.5 h-3.5" /> : null}
+            <div className="shrink-0 border-r border-zinc-800/80 pr-4 lg:pr-5">
+              <span className="text-[10px] uppercase font-mono tracking-wider text-zinc-500 block whitespace-nowrap">BIẾN ĐỘNG</span>
+              <div className={`inline-flex items-center gap-1 mt-1 text-xs sm:text-sm font-mono font-bold whitespace-nowrap ${bgBadgeClass} px-2.5 py-0.5 rounded-xl border`}>
+                {isUp ? <TrendUp className="w-3.5 h-3.5 shrink-0" /> : isDown ? <TrendDown className="w-3.5 h-3.5 shrink-0" /> : null}
                 <span>
                   {change > 0 ? `+${change}` : change} ({changePercent > 0 ? `+${changePercent.toFixed(2)}` : changePercent.toFixed(2)}%)
                 </span>
@@ -487,9 +487,9 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
             </div>
 
             {/* 3. Khung Trần / Sàn / TC */}
-            <div className="border-r border-zinc-800/80 pr-3">
-              <span className="text-[10px] uppercase font-mono tracking-wider text-zinc-500 block">TRẦN / SÀN / TC</span>
-              <div className="flex items-center gap-2 mt-1 text-xs font-mono font-bold">
+            <div className="shrink-0 border-r border-zinc-800/80 pr-4 lg:pr-5">
+              <span className="text-[10px] uppercase font-mono tracking-wider text-zinc-500 block whitespace-nowrap">TRẦN / SÀN / TC</span>
+              <div className="flex items-center gap-1.5 sm:gap-2 mt-1 text-xs font-mono font-bold whitespace-nowrap">
                 <span className="text-fuchsia-400" title="Giá Trần (CE)">{ceilPrice > 0 ? ceilPrice.toLocaleString('vi-VN') : '--'}</span>
                 <span className="text-zinc-600">/</span>
                 <span className="text-cyan-400" title="Giá Sàn (FL)">{floorPrice > 0 ? floorPrice.toLocaleString('vi-VN') : '--'}</span>
@@ -499,9 +499,9 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
             </div>
 
             {/* 4. Cao / Thấp trong phiên */}
-            <div className="border-r border-zinc-800/80 pr-3">
-              <span className="text-[10px] uppercase font-mono tracking-wider text-zinc-500 block">CAO / THẤP PHIÊN</span>
-              <div className="flex items-center gap-1.5 mt-1 text-xs font-mono font-bold">
+            <div className="shrink-0 border-r border-zinc-800/80 pr-4 lg:pr-5">
+              <span className="text-[10px] uppercase font-mono tracking-wider text-zinc-500 block whitespace-nowrap">CAO / THẤP PHIÊN</span>
+              <div className="flex items-center gap-1.5 mt-1 text-xs font-mono font-bold whitespace-nowrap">
                 <span className="text-emerald-400">{highPrice > 0 ? highPrice.toLocaleString('vi-VN') : '--'}</span>
                 <span className="text-zinc-600">/</span>
                 <span className="text-rose-400">{lowPrice > 0 ? lowPrice.toLocaleString('vi-VN') : '--'}</span>
@@ -509,25 +509,25 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
             </div>
 
             {/* 5. Mở cửa */}
-            <div className="border-r border-zinc-800/80 pr-3">
-              <span className="text-[10px] uppercase font-mono tracking-wider text-zinc-500 block">GIÁ MỞ CỬA</span>
-              <div className="mt-1 text-xs font-mono font-bold text-zinc-200">
+            <div className="shrink-0 border-r border-zinc-800/80 pr-4 lg:pr-5">
+              <span className="text-[10px] uppercase font-mono tracking-wider text-zinc-500 block whitespace-nowrap">GIÁ MỞ CỬA</span>
+              <div className="mt-1 text-xs font-mono font-bold text-zinc-200 whitespace-nowrap">
                 {openPrice > 0 ? openPrice.toLocaleString('vi-VN') : (refPrice > 0 ? refPrice.toLocaleString('vi-VN') : '--')}
               </div>
             </div>
 
             {/* 6. Tổng khối lượng */}
-            <div className="border-r border-zinc-800/80 pr-3">
-              <span className="text-[10px] uppercase font-mono tracking-wider text-zinc-500 block">TỔNG KHỐI LƯỢNG</span>
-              <div className="mt-1 text-xs font-mono font-bold text-cyan-400">
+            <div className="shrink-0 border-r border-zinc-800/80 pr-4 lg:pr-5">
+              <span className="text-[10px] uppercase font-mono tracking-wider text-zinc-500 block whitespace-nowrap">TỔNG KHỐI LƯỢNG</span>
+              <div className="mt-1 text-xs font-mono font-bold text-cyan-400 whitespace-nowrap">
                 {totalVol > 0 ? totalVol.toLocaleString('vi-VN') : '--'} <span className="text-[10px] text-zinc-500 font-normal">cp</span>
               </div>
             </div>
 
             {/* 7. Giá trị giao dịch */}
-            <div>
-              <span className="text-[10px] uppercase font-mono tracking-wider text-zinc-500 block">GIÁ TRỊ GD</span>
-              <div className="mt-1 text-xs font-mono font-bold text-amber-300">
+            <div className="shrink-0">
+              <span className="text-[10px] uppercase font-mono tracking-wider text-zinc-500 block whitespace-nowrap">GIÁ TRỊ GD</span>
+              <div className="mt-1 text-xs font-mono font-bold text-amber-300 whitespace-nowrap">
                 {matchValueBillion > 0 ? `${matchValueBillion.toFixed(2)} tỷ` : '--'}
               </div>
             </div>

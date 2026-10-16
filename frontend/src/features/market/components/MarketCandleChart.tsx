@@ -4158,12 +4158,12 @@ export function MarketCandleChart() {
               onClick={() => setShowIndicatorsModal(!showIndicatorsModal)}
               title="Danh mục các chỉ báo kỹ thuật (Indicators)"
               className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-mono font-semibold border rounded-lg whitespace-nowrap transition-all shadow-sm ${
-                activeSubIndicator !== 'none' || showMA8 || showMA21 || showMA144 || showMA233 || showBB
+                activeSubIndicator !== 'none' || showMA8 || showMA21 || showMA144 || showMA233 || showBB || showTrendlinePro || showVolumeProfile
                   ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300 ring-1 ring-emerald-500/20'
                   : 'bg-zinc-900/90 border-zinc-800 hover:border-zinc-700 text-zinc-200'
               }`}
             >
-              <FxIcon size={14} className={activeSubIndicator !== 'none' || showMA8 || showMA21 || showMA144 || showMA233 || showBB || fiboSettings.enabled ? 'text-emerald-400 shrink-0' : 'text-zinc-400 shrink-0'} />
+              <FxIcon size={14} className={activeSubIndicator !== 'none' || showMA8 || showMA21 || showMA144 || showMA233 || showBB || fiboSettings.enabled || showTrendlinePro || showVolumeProfile ? 'text-emerald-400 shrink-0' : 'text-zinc-400 shrink-0'} />
               <span>Chỉ báo</span>
               {activeSubIndicator !== 'none' ? (
                 <span className="text-[9px] uppercase font-bold bg-emerald-500/20 text-emerald-300 px-1.5 py-0.2 rounded border border-emerald-500/30">
@@ -4171,7 +4171,7 @@ export function MarketCandleChart() {
                 </span>
               ) : (
                 <span className="text-[10px] text-zinc-500 font-mono">
-                  ({(showMA8 ? 1 : 0) + (showMA21 ? 1 : 0) + (showMA144 ? 1 : 0) + (showMA233 ? 1 : 0) + (showBB ? 1 : 0) + (showVolume ? 1 : 0) + (fiboSettings.enabled ? 1 : 0)})
+                  ({(showMA8 ? 1 : 0) + (showMA21 ? 1 : 0) + (showMA144 ? 1 : 0) + (showMA233 ? 1 : 0) + (showBB ? 1 : 0) + (showVolume ? 1 : 0) + (fiboSettings.enabled ? 1 : 0) + (showTrendlinePro ? 1 : 0) + (showVolumeProfile ? 1 : 0)})
                 </span>
               )}
             </button>
@@ -4205,10 +4205,39 @@ export function MarketCandleChart() {
                     </button>
                   </div>
 
-                  {/* Section 1: Fibonacci MA Ribbon (8, 21, 144, 233) */}
-                  <div className="flex items-center justify-between mb-2 px-1">
+                  {/* Section 1: AI Smart Trend & Price Structure (Trendline Pro) */}
+                  <div className="flex items-center justify-between mb-1.5 px-1">
                     <span className="text-[10px] font-mono uppercase tracking-wider text-amber-400 font-bold">
-                      1. MA Ribbon (8, 21, 144, 233)
+                      1. Xu hướng & Cấu trúc (AI)
+                    </span>
+                    <span className="text-amber-400/80 text-[9px] font-bold font-mono">TRENDLINE PRO</span>
+                  </div>
+                  <div className="flex flex-col gap-1 mb-2.5">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowTrendlinePro(!showTrendlinePro);
+                      }}
+                      className="flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-mono text-zinc-200 hover:bg-zinc-800/70 transition-all border border-transparent hover:border-zinc-800 group"
+                    >
+                      <span className="flex items-center gap-2">
+                        <TrendUp size={15} className={showTrendlinePro ? 'text-amber-400 shrink-0' : 'text-zinc-500 shrink-0'} />
+                        <div className="text-left">
+                          <span className="font-semibold block text-zinc-100">Trendline Pro</span>
+                          <span className="text-[9.5px] text-zinc-500">Kháng cự, Hỗ trợ, Kênh Fib Xiên, Swing Pivots</span>
+                        </div>
+                      </span>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-md font-bold transition-colors ${showTrendlinePro ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-zinc-800/60 text-zinc-500'}`}>
+                        {showTrendlinePro ? 'BẬT' : 'TẮT'}
+                      </span>
+                    </button>
+                  </div>
+
+                  {/* Section 2: Fibonacci MA Ribbon (8, 21, 144, 233) */}
+                  <div className="flex items-center justify-between mb-2 px-1 pt-2 border-t border-zinc-800/80">
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-amber-400 font-bold">
+                      2. MA Ribbon (8, 21, 144, 233)
                     </span>
                     {/* EMA vs SMA Toggle + Master Ribbon Toggle */}
                     <div className="flex items-center gap-1.5">
@@ -4403,9 +4432,9 @@ export function MarketCandleChart() {
                     </button>
                   </div>
 
-                  {/* Section 2: Momentum & Oscillators */}
+                  {/* Section 3: Momentum & Oscillators */}
                   <div className="text-[10px] font-mono uppercase tracking-wider text-purple-400 mb-1.5 px-1 pt-2 border-t border-zinc-800/80 font-bold flex items-center justify-between">
-                    <span>2. Động lượng & Dao động</span>
+                    <span>3. Động lượng & Dao động</span>
                     <span className="text-zinc-500 text-[9px] font-normal">Khung phụ dưới</span>
                   </div>
                   <div className="flex flex-col gap-1 mb-2.5">
@@ -4450,9 +4479,9 @@ export function MarketCandleChart() {
                     </button>
                   </div>
 
-                  {/* Section 3: Smart Money Flow */}
+                  {/* Section 4: Smart Money Flow */}
                   <div className="text-[10px] font-mono uppercase tracking-wider text-emerald-400 mb-1.5 px-1 pt-2 border-t border-zinc-800/80 font-bold flex items-center justify-between">
-                    <span>3. Dòng tiền thông minh</span>
+                    <span>4. Dòng tiền thông minh</span>
                     <span className="text-zinc-500 text-[9px] font-normal">Cá mập gom/xả</span>
                   </div>
                   <div className="flex flex-col gap-1">
@@ -4497,75 +4526,48 @@ export function MarketCandleChart() {
                     </button>
                   </div>
 
-                  {/* Section 4: Volume Structure & Value Area */}
+                  {/* Section 5: Volume Structure & Value Area */}
                   <div className="text-[10px] font-mono uppercase tracking-wider text-cyan-400 mb-1.5 px-1 pt-2 border-t border-zinc-800/80 font-bold flex items-center justify-between">
-                    <span>4. Cấu trúc Khối lượng</span>
+                    <span>5. Cấu trúc Khối lượng</span>
                     <span className="text-zinc-500 text-[9px] font-normal">Vùng giá trị & POC</span>
                   </div>
                   <div className="flex flex-col gap-1">
                     {/* Volume Profile */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setShowVolumeProfile(!showVolumeProfile);
-                      }}
-                      className="flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-mono text-zinc-200 hover:bg-zinc-800/70 transition-all border border-transparent hover:border-zinc-800"
-                    >
+                    <div className="flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-mono text-zinc-200 hover:bg-zinc-800/70 transition-all border border-transparent hover:border-zinc-800">
                       <span className="flex items-center gap-2">
-                        <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 shrink-0" />
-                        <div>
-                          <span className="font-semibold block">Volume Profile (VRVP)</span>
+                        <ChartBarHorizontal size={15} className={showVolumeProfile ? 'text-cyan-400 shrink-0' : 'text-zinc-500 shrink-0'} />
+                        <div className="text-left">
+                          <span className="font-semibold block text-zinc-100">Volume Profile (VRVP)</span>
                           <span className="text-[9.5px] text-zinc-500">Mức giá trị POC, VAH, VAL & Tỷ lệ Mua/Bán</span>
                         </div>
                       </span>
-                      <span className={`text-[10px] px-2 py-0.5 rounded-md font-bold transition-colors ${showVolumeProfile ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30' : 'bg-zinc-800/60 text-zinc-500'}`}>
-                        {showVolumeProfile ? 'BẬT' : 'TẮT'}
-                      </span>
-                    </button>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowVolumeProfileModal(true);
+                          }}
+                          className="p-1 rounded-md text-zinc-400 hover:text-cyan-300 hover:bg-zinc-700/60 transition-colors"
+                          title="Cài đặt thông số Volume Profile"
+                        >
+                          <Gear size={13} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowVolumeProfile(!showVolumeProfile);
+                          }}
+                          className={`text-[10px] px-2 py-0.5 rounded-md font-bold transition-colors ${showVolumeProfile ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30' : 'bg-zinc-800/60 text-zinc-500'}`}
+                        >
+                          {showVolumeProfile ? 'BẬT' : 'TẮT'}
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </>
-            )}
-          </div>
-
-          {/* Unified Trendline Pro Toggle Button (Trendline, Fib Xiên, S/R, Pivots) */}
-          <button
-            onClick={() => setShowTrendlinePro(!showTrendlinePro)}
-            title="Bật/Tắt Trendline Pro (Chỉ báo duy nhất tự động phân tích Kháng cự, Hỗ trợ, Kênh Fib Xiên, Swing Pivots & Mức tỷ lệ Fibonacci)"
-            className={`flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-mono font-semibold rounded-lg whitespace-nowrap shrink-0 transition-all ${
-              showTrendlinePro
-                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'
-                : 'bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200'
-            }`}
-          >
-            <TrendUp size={13} className={showTrendlinePro ? 'text-amber-400 shrink-0' : 'text-zinc-500 shrink-0'} />
-            <span>Trendline Pro</span>
-            {showTrendlinePro && <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />}
-          </button>
-
-          {/* Volume Profile (VPVR) Toggle Button */}
-          <div className="flex items-center shrink-0">
-            <button
-              onClick={() => setShowVolumeProfile(!showVolumeProfile)}
-              title="Bật/Tắt Volume Profile (Chỉ báo phân bổ khối lượng theo mức giá: POC, VAH, VAL, Delta Mua/Bán)"
-              className={`flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-mono font-semibold whitespace-nowrap transition-all ${
-                showVolumeProfile
-                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 rounded-l-lg shadow-sm'
-                  : 'bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200 rounded-lg'
-              }`}
-            >
-              <ChartBarHorizontal size={13} className={showVolumeProfile ? 'text-cyan-400 shrink-0' : 'text-zinc-500 shrink-0'} />
-              <span>Volume Profile</span>
-              {showVolumeProfile && <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />}
-            </button>
-            {showVolumeProfile && (
-              <button
-                onClick={() => setShowVolumeProfileModal(true)}
-                title="Cài đặt thông số Volume Profile (Số dòng, Value Area %, Độ rộng)"
-                className="px-1.5 py-0.5 text-xs font-mono rounded-r-lg bg-cyan-500/20 text-cyan-300 border-y border-r border-cyan-500/40 hover:bg-cyan-500/30 transition-all flex items-center justify-center"
-              >
-                <Gear size={12} className="text-cyan-400" />
-              </button>
             )}
           </div>
         </div>
