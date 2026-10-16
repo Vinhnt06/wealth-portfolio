@@ -678,6 +678,54 @@ function resolvePointCoordinate(
   return { x, y };
 }
 
+// ── Moving Average Ribbon (EMA / SMA) Calculator ─────────────────────
+export function calculateMA(
+  candles: CandlestickData<Time>[],
+  period: number,
+  type: 'EMA' | 'SMA' = 'EMA'
+): LineData<Time>[] {
+  if (!candles || candles.length < period) return [];
+  const result: LineData<Time>[] = [];
+
+  if (type === 'EMA') {
+    const k = 2 / (period + 1);
+    let initialSum = 0;
+    for (let i = 0; i < period; i++) {
+      initialSum += candles[i].close;
+    }
+    let ema = initialSum / period;
+    result.push({
+      time: candles[period - 1].time,
+      value: Math.round(ema * 100) / 100,
+    });
+    for (let i = period; i < candles.length; i++) {
+      ema = candles[i].close * k + ema * (1 - k);
+      result.push({
+        time: candles[i].time,
+        value: Math.round(ema * 100) / 100,
+      });
+    }
+  } else {
+    let windowSum = 0;
+    for (let i = 0; i < period; i++) {
+      windowSum += candles[i].close;
+    }
+    result.push({
+      time: candles[period - 1].time,
+      value: Math.round((windowSum / period) * 100) / 100,
+    });
+    for (let i = period; i < candles.length; i++) {
+      windowSum += candles[i].close - candles[i - period].close;
+      result.push({
+        time: candles[i].time,
+        value: Math.round((windowSum / period) * 100) / 100,
+      });
+    }
+  }
+
+  return result;
+}
+
 // ── Native Stream MarketCandleChart Component ────────────────────────
 export function MarketCandleChart() {
   const fullWrapperRef = useRef<HTMLDivElement>(null);
@@ -686,10 +734,10 @@ export function MarketCandleChart() {
   const chartRef = useRef<IChartApi | null>(null);
   const candleSeriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
   const volumeSeriesRef = useRef<ISeriesApi<'Histogram'> | null>(null);
-  const ma20SeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
-  const ma50SeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
-  const ma150SeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
-  const ma200SeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
+  const ma8SeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
+  const ma21SeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
+  const ma144SeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
+  const ma233SeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
   const bbUpperSeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
   const bbLowerSeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
   const lastCandleRef = useRef<{ time: Time; open: number; high: number; low: number; close: number } | null>(null);
@@ -698,10 +746,10 @@ export function MarketCandleChart() {
   const candleCacheRef = useRef<Map<string, {
     candles: CandlestickData<Time>[];
     volumes: HistogramData<Time>[];
-    ma20: LineData<Time>[];
-    ma50: LineData<Time>[];
-    ma150: LineData<Time>[];
-    ma200: LineData<Time>[];
+    ma8: LineData<Time>[];
+    ma21: LineData<Time>[];
+    ma144: LineData<Time>[];
+    ma233: LineData<Time>[];
     bbUpper: LineData<Time>[];
     bbLower: LineData<Time>[];
     proData: TrendlineProResult | null;
@@ -721,12 +769,13 @@ export function MarketCandleChart() {
   const [currentTimeStr, setCurrentTimeStr] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // Indicators toggle
+  // Indicators toggle - Fibonacci MA Ribbon (8, 21, 144, 233)
   const [showIndicatorsModal, setShowIndicatorsModal] = useState(false);
-  const [showMA20, setShowMA20] = useState(false);
-  const [showMA50, setShowMA50] = useState(true);
-  const [showMA150, setShowMA150] = useState(true);
-  const [showMA200, setShowMA200] = useState(true);
+  const [maType, setMaType] = useState<'EMA' | 'SMA'>('EMA');
+  const [showMA8, setShowMA8] = useState(true);
+  const [showMA21, setShowMA21] = useState(true);
+  const [showMA144, setShowMA144] = useState(true);
+  const [showMA233, setShowMA233] = useState(true);
   const [showBB, setShowBB] = useState(false);
   const [showVolume, setShowVolume] = useState(true);
 
@@ -821,18 +870,18 @@ export function MarketCandleChart() {
     volume?: number;
     change?: number;
     changePct?: number;
-    ma20?: number;
-    ma50?: number;
-    ma150?: number;
-    ma200?: number;
+    ma8?: number;
+    ma21?: number;
+    ma144?: number;
+    ma233?: number;
   } | null>(null);
 
   // Latest calculated Moving Average values for indicator legend
   const [latestMA, setLatestMA] = useState<{
-    ma20?: number;
-    ma50?: number;
-    ma150?: number;
-    ma200?: number;
+    ma8?: number;
+    ma21?: number;
+    ma144?: number;
+    ma233?: number;
   }>({});
 
   const currentTick = ticks[selectedSymbol];
@@ -2708,49 +2757,49 @@ export function MarketCandleChart() {
     volumeSeries.priceScale().applyOptions({ scaleMargins: { top: 0.8, bottom: 0 } });
     volumeSeriesRef.current = volumeSeries;
 
-    const ma20Series = chart.addSeries(LineSeries, {
-      color: '#f59e0b',
+    const ma8Series = chart.addSeries(LineSeries, {
+      color: '#38bdf8',
       lineWidth: 1,
       priceFormat: { type: 'price', precision: 2, minMove: 0.05 },
-      title: 'MA20',
-      visible: showMA20,
+      title: 'MA8',
+      visible: showMA8,
       priceLineVisible: false,
       lastValueVisible: false,
     });
-    ma20SeriesRef.current = ma20Series;
+    ma8SeriesRef.current = ma8Series;
 
-    const ma50Series = chart.addSeries(LineSeries, {
-      color: '#06b6d4',
+    const ma21Series = chart.addSeries(LineSeries, {
+      color: '#facc15',
       lineWidth: 1,
       priceFormat: { type: 'price', precision: 2, minMove: 0.05 },
-      title: 'MA50',
-      visible: showMA50,
+      title: 'MA21',
+      visible: showMA21,
       priceLineVisible: false,
       lastValueVisible: false,
     });
-    ma50SeriesRef.current = ma50Series;
+    ma21SeriesRef.current = ma21Series;
 
-    const ma150Series = chart.addSeries(LineSeries, {
+    const ma144Series = chart.addSeries(LineSeries, {
       color: '#f97316',
-      lineWidth: 1,
-      priceFormat: { type: 'price', precision: 2, minMove: 0.05 },
-      title: 'MA150',
-      visible: showMA150,
-      priceLineVisible: false,
-      lastValueVisible: false,
-    });
-    ma150SeriesRef.current = ma150Series;
-
-    const ma200Series = chart.addSeries(LineSeries, {
-      color: '#f43f5e',
       lineWidth: 2,
       priceFormat: { type: 'price', precision: 2, minMove: 0.05 },
-      title: 'MA200',
-      visible: showMA200,
+      title: 'MA144',
+      visible: showMA144,
       priceLineVisible: false,
       lastValueVisible: false,
     });
-    ma200SeriesRef.current = ma200Series;
+    ma144SeriesRef.current = ma144Series;
+
+    const ma233Series = chart.addSeries(LineSeries, {
+      color: '#ef4444',
+      lineWidth: 2,
+      priceFormat: { type: 'price', precision: 2, minMove: 0.05 },
+      title: 'MA233',
+      visible: showMA233,
+      priceLineVisible: false,
+      lastValueVisible: false,
+    });
+    ma233SeriesRef.current = ma233Series;
 
     const bbUpperSeries = chart.addSeries(LineSeries, {
       color: 'rgba(168, 85, 247, 0.7)',
@@ -2788,10 +2837,10 @@ export function MarketCandleChart() {
       }
       const candle = param.seriesData.get(candlestickSeries) as any;
       const vol = param.seriesData.get(volumeSeries) as any;
-      const ma20 = ma20Series ? (param.seriesData.get(ma20Series) as any) : undefined;
-      const ma50 = ma50Series ? (param.seriesData.get(ma50Series) as any) : undefined;
-      const ma150 = ma150Series ? (param.seriesData.get(ma150Series) as any) : undefined;
-      const ma200 = ma200Series ? (param.seriesData.get(ma200Series) as any) : undefined;
+      const ma8 = ma8Series ? (param.seriesData.get(ma8Series) as any) : undefined;
+      const ma21 = ma21Series ? (param.seriesData.get(ma21Series) as any) : undefined;
+      const ma144 = ma144Series ? (param.seriesData.get(ma144Series) as any) : undefined;
+      const ma233 = ma233Series ? (param.seriesData.get(ma233Series) as any) : undefined;
       if (candle) {
         const change = candle.close - candle.open;
         const changePct = candle.open ? (change / candle.open) * 100 : 0;
@@ -2815,10 +2864,10 @@ export function MarketCandleChart() {
           volume: vol?.value,
           change,
           changePct,
-          ma20: ma20?.value,
-          ma50: ma50?.value,
-          ma150: ma150?.value,
-          ma200: ma200?.value,
+          ma8: ma8?.value,
+          ma21: ma21?.value,
+          ma144: ma144?.value,
+          ma233: ma233?.value,
         });
       }
     });
@@ -3163,10 +3212,10 @@ export function MarketCandleChart() {
       chartRef.current = null;
       candleSeriesRef.current = null;
       volumeSeriesRef.current = null;
-      ma20SeriesRef.current = null;
-      ma50SeriesRef.current = null;
-      ma150SeriesRef.current = null;
-      ma200SeriesRef.current = null;
+      ma8SeriesRef.current = null;
+      ma21SeriesRef.current = null;
+      ma144SeriesRef.current = null;
+      ma233SeriesRef.current = null;
       bbUpperSeriesRef.current = null;
       bbLowerSeriesRef.current = null;
     };
@@ -3174,20 +3223,42 @@ export function MarketCandleChart() {
 
   // ── 2. Toggle Indicators instantly without re-fetching data ──────────────
   useEffect(() => {
-    ma20SeriesRef.current?.applyOptions({ visible: showMA20 });
-  }, [showMA20]);
+    ma8SeriesRef.current?.applyOptions({ visible: showMA8 });
+  }, [showMA8]);
 
   useEffect(() => {
-    ma50SeriesRef.current?.applyOptions({ visible: showMA50 });
-  }, [showMA50]);
+    ma21SeriesRef.current?.applyOptions({ visible: showMA21 });
+  }, [showMA21]);
 
   useEffect(() => {
-    ma150SeriesRef.current?.applyOptions({ visible: showMA150 });
-  }, [showMA150]);
+    ma144SeriesRef.current?.applyOptions({ visible: showMA144 });
+  }, [showMA144]);
 
   useEffect(() => {
-    ma200SeriesRef.current?.applyOptions({ visible: showMA200 });
-  }, [showMA200]);
+    ma233SeriesRef.current?.applyOptions({ visible: showMA233 });
+  }, [showMA233]);
+
+  // Re-calculate MA Ribbon instantly when switching between EMA and SMA
+  useEffect(() => {
+    if (!loadedCandlesRef.current || loadedCandlesRef.current.length === 0) return;
+    const candles = loadedCandlesRef.current;
+    const ma8Data = calculateMA(candles, 8, maType);
+    const ma21Data = calculateMA(candles, 21, maType);
+    const ma144Data = calculateMA(candles, 144, maType);
+    const ma233Data = calculateMA(candles, 233, maType);
+
+    ma8SeriesRef.current?.setData(ma8Data);
+    ma21SeriesRef.current?.setData(ma21Data);
+    ma144SeriesRef.current?.setData(ma144Data);
+    ma233SeriesRef.current?.setData(ma233Data);
+
+    setLatestMA({
+      ma8: ma8Data.length > 0 ? ma8Data[ma8Data.length - 1]?.value : undefined,
+      ma21: ma21Data.length > 0 ? ma21Data[ma21Data.length - 1]?.value : undefined,
+      ma144: ma144Data.length > 0 ? ma144Data[ma144Data.length - 1]?.value : undefined,
+      ma233: ma233Data.length > 0 ? ma233Data[ma233Data.length - 1]?.value : undefined,
+    });
+  }, [maType]);
 
   useEffect(() => {
     bbUpperSeriesRef.current?.applyOptions({ visible: showBB });
@@ -3203,10 +3274,10 @@ export function MarketCandleChart() {
     const chart = chartRef.current;
     const candlestickSeries = candleSeriesRef.current;
     const volumeSeries = volumeSeriesRef.current;
-    const ma20Series = ma20SeriesRef.current;
-    const ma50Series = ma50SeriesRef.current;
-    const ma150Series = ma150SeriesRef.current;
-    const ma200Series = ma200SeriesRef.current;
+    const ma8Series = ma8SeriesRef.current;
+    const ma21Series = ma21SeriesRef.current;
+    const ma144Series = ma144SeriesRef.current;
+    const ma233Series = ma233SeriesRef.current;
     const bbUpperSeries = bbUpperSeriesRef.current;
     const bbLowerSeries = bbLowerSeriesRef.current;
 
@@ -3226,10 +3297,10 @@ export function MarketCandleChart() {
       // Instant render from memory (0ms lag, no flashing!)
       candlestickSeries.setData(cached.candles);
       volumeSeries.setData(cached.volumes);
-      ma20Series?.setData(cached.ma20);
-      ma50Series?.setData(cached.ma50);
-      ma150Series?.setData(cached.ma150);
-      ma200Series?.setData(cached.ma200);
+      ma8Series?.setData(cached.ma8);
+      ma21Series?.setData(cached.ma21);
+      ma144Series?.setData(cached.ma144);
+      ma233Series?.setData(cached.ma233);
       bbUpperSeries?.setData(cached.bbUpper);
       bbLowerSeries?.setData(cached.bbLower);
       loadedCandlesRef.current = cached.candles;
@@ -3237,10 +3308,10 @@ export function MarketCandleChart() {
       setDataVersion((v) => v + 1);
       setTrendlineProData(cached.proData);
       setLatestMA({
-        ma20: cached.ma20.length > 0 ? cached.ma20[cached.ma20.length - 1]?.value : undefined,
-        ma50: cached.ma50.length > 0 ? cached.ma50[cached.ma50.length - 1]?.value : undefined,
-        ma150: cached.ma150.length > 0 ? cached.ma150[cached.ma150.length - 1]?.value : undefined,
-        ma200: cached.ma200.length > 0 ? cached.ma200[cached.ma200.length - 1]?.value : undefined,
+        ma8: cached.ma8.length > 0 ? cached.ma8[cached.ma8.length - 1]?.value : undefined,
+        ma21: cached.ma21.length > 0 ? cached.ma21[cached.ma21.length - 1]?.value : undefined,
+        ma144: cached.ma144.length > 0 ? cached.ma144[cached.ma144.length - 1]?.value : undefined,
+        ma233: cached.ma233.length > 0 ? cached.ma233[cached.ma233.length - 1]?.value : undefined,
       });
 
       if (cached.candles.length > 150) {
@@ -3322,10 +3393,10 @@ export function MarketCandleChart() {
         const proData = calculateTrendlinePro(uniqueCandles);
         setTrendlineProData(proData);
 
-        const realMa20: LineData<Time>[] = [];
-        const realMa50: LineData<Time>[] = [];
-        const realMa150: LineData<Time>[] = [];
-        const realMa200: LineData<Time>[] = [];
+        const realMa8 = calculateMA(uniqueCandles, 8, maType);
+        const realMa21 = calculateMA(uniqueCandles, 21, maType);
+        const realMa144 = calculateMA(uniqueCandles, 144, maType);
+        const realMa233 = calculateMA(uniqueCandles, 233, maType);
         const bbUpperData: LineData<Time>[] = [];
         const bbLowerData: LineData<Time>[] = [];
 
@@ -3334,24 +3405,10 @@ export function MarketCandleChart() {
             const slice20 = uniqueCandles.slice(i - 19, i + 1);
             const sum20 = slice20.reduce((acc, x) => acc + x.close, 0);
             const mean20 = sum20 / 20;
-            realMa20.push({ time: uniqueCandles[i].time, value: Math.round(mean20 * 100) / 100 });
-
             const variance = slice20.reduce((acc, x) => acc + Math.pow(x.close - mean20, 2), 0) / 20;
             const std = Math.sqrt(variance);
             bbUpperData.push({ time: uniqueCandles[i].time, value: Math.round((mean20 + 2 * std) * 100) / 100 });
             bbLowerData.push({ time: uniqueCandles[i].time, value: Math.round((mean20 - 2 * std) * 100) / 100 });
-          }
-          if (i >= 49) {
-            const sum50 = uniqueCandles.slice(i - 49, i + 1).reduce((acc, x) => acc + x.close, 0);
-            realMa50.push({ time: uniqueCandles[i].time, value: Math.round((sum50 / 50) * 100) / 100 });
-          }
-          if (i >= 149) {
-            const sum150 = uniqueCandles.slice(i - 149, i + 1).reduce((acc, x) => acc + x.close, 0);
-            realMa150.push({ time: uniqueCandles[i].time, value: Math.round((sum150 / 150) * 100) / 100 });
-          }
-          if (i >= 199) {
-            const sum200 = uniqueCandles.slice(i - 199, i + 1).reduce((acc, x) => acc + x.close, 0);
-            realMa200.push({ time: uniqueCandles[i].time, value: Math.round((sum200 / 200) * 100) / 100 });
           }
         }
 
@@ -3359,10 +3416,10 @@ export function MarketCandleChart() {
         candleCacheRef.current.set(cacheKey, {
           candles: uniqueCandles,
           volumes: uniqueVolumes,
-          ma20: realMa20,
-          ma50: realMa50,
-          ma150: realMa150,
-          ma200: realMa200,
+          ma8: realMa8,
+          ma21: realMa21,
+          ma144: realMa144,
+          ma233: realMa233,
           bbUpper: bbUpperData,
           bbLower: bbLowerData,
           proData,
@@ -3372,17 +3429,17 @@ export function MarketCandleChart() {
         if (uniqueCandles.length > 0) {
           candlestickSeries.setData(uniqueCandles);
           volumeSeries.setData(uniqueVolumes);
-          ma20Series?.setData(realMa20);
-          ma50Series?.setData(realMa50);
-          ma150Series?.setData(realMa150);
-          ma200Series?.setData(realMa200);
+          ma8Series?.setData(realMa8);
+          ma21Series?.setData(realMa21);
+          ma144Series?.setData(realMa144);
+          ma233Series?.setData(realMa233);
           bbUpperSeries?.setData(bbUpperData);
           bbLowerSeries?.setData(bbLowerData);
           setLatestMA({
-            ma20: realMa20.length > 0 ? realMa20[realMa20.length - 1]?.value : undefined,
-            ma50: realMa50.length > 0 ? realMa50[realMa50.length - 1]?.value : undefined,
-            ma150: realMa150.length > 0 ? realMa150[realMa150.length - 1]?.value : undefined,
-            ma200: realMa200.length > 0 ? realMa200[realMa200.length - 1]?.value : undefined,
+            ma8: realMa8.length > 0 ? realMa8[realMa8.length - 1]?.value : undefined,
+            ma21: realMa21.length > 0 ? realMa21[realMa21.length - 1]?.value : undefined,
+            ma144: realMa144.length > 0 ? realMa144[realMa144.length - 1]?.value : undefined,
+            ma233: realMa233.length > 0 ? realMa233[realMa233.length - 1]?.value : undefined,
           });
 
           if (uniqueCandles.length > 150) {
@@ -4250,10 +4307,10 @@ export function MarketCandleChart() {
     exchange: stockInfo.exchange,
   });
 
-  const activeMA20 = hoveredData?.ma20 !== undefined ? hoveredData.ma20 : latestMA.ma20;
-  const activeMA50 = hoveredData?.ma50 !== undefined ? hoveredData.ma50 : latestMA.ma50;
-  const activeMA150 = hoveredData?.ma150 !== undefined ? hoveredData.ma150 : latestMA.ma150;
-  const activeMA200 = hoveredData?.ma200 !== undefined ? hoveredData.ma200 : latestMA.ma200;
+  const activeMA8 = hoveredData?.ma8 !== undefined ? hoveredData.ma8 : latestMA.ma8;
+  const activeMA21 = hoveredData?.ma21 !== undefined ? hoveredData.ma21 : latestMA.ma21;
+  const activeMA144 = hoveredData?.ma144 !== undefined ? hoveredData.ma144 : latestMA.ma144;
+  const activeMA233 = hoveredData?.ma233 !== undefined ? hoveredData.ma233 : latestMA.ma233;
 
   return (
     <div
@@ -4305,12 +4362,12 @@ export function MarketCandleChart() {
               onClick={() => setShowIndicatorsModal(!showIndicatorsModal)}
               title="Danh mục các chỉ báo kỹ thuật (Indicators)"
               className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-mono font-semibold border rounded-lg whitespace-nowrap transition-all shadow-sm ${
-                activeSubIndicator !== 'none' || showMA20 || showBB
+                activeSubIndicator !== 'none' || showMA8 || showMA21 || showMA144 || showMA233 || showBB
                   ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300 ring-1 ring-emerald-500/20'
                   : 'bg-zinc-900/90 border-zinc-800 hover:border-zinc-700 text-zinc-200'
               }`}
             >
-              <FxIcon size={14} className={activeSubIndicator !== 'none' || showMA20 || showBB || fiboSettings.enabled ? 'text-emerald-400 shrink-0' : 'text-zinc-400 shrink-0'} />
+              <FxIcon size={14} className={activeSubIndicator !== 'none' || showMA8 || showMA21 || showMA144 || showMA233 || showBB || fiboSettings.enabled ? 'text-emerald-400 shrink-0' : 'text-zinc-400 shrink-0'} />
               <span>Chỉ báo</span>
               {activeSubIndicator !== 'none' ? (
                 <span className="text-[9px] uppercase font-bold bg-emerald-500/20 text-emerald-300 px-1.5 py-0.2 rounded border border-emerald-500/30">
@@ -4318,7 +4375,7 @@ export function MarketCandleChart() {
                 </span>
               ) : (
                 <span className="text-[10px] text-zinc-500 font-mono">
-                  ({(showMA20 ? 1 : 0) + (showMA50 ? 1 : 0) + (showMA150 ? 1 : 0) + (showMA200 ? 1 : 0) + (showBB ? 1 : 0) + (showVolume ? 1 : 0) + (fiboSettings.enabled ? 1 : 0)})
+                  ({(showMA8 ? 1 : 0) + (showMA21 ? 1 : 0) + (showMA144 ? 1 : 0) + (showMA233 ? 1 : 0) + (showBB ? 1 : 0) + (showVolume ? 1 : 0) + (fiboSettings.enabled ? 1 : 0)})
                 </span>
               )}
             </button>
@@ -4352,81 +4409,130 @@ export function MarketCandleChart() {
                     </button>
                   </div>
 
-                  {/* Section 1: Trend & Price Base */}
-                  <div className="text-[10px] font-mono uppercase tracking-wider text-amber-400 mb-1.5 px-1 font-bold flex items-center justify-between">
-                    <span>1. Xu hướng & Nền giá</span>
-                    <span className="text-zinc-500 text-[9px] font-normal">Trực tiếp trên nến</span>
+                  {/* Section 1: Fibonacci MA Ribbon (8, 21, 144, 233) */}
+                  <div className="flex items-center justify-between mb-2 px-1">
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-amber-400 font-bold">
+                      1. MA Ribbon (8, 21, 144, 233)
+                    </span>
+                    {/* EMA vs SMA Toggle + Master Ribbon Toggle */}
+                    <div className="flex items-center gap-1.5">
+                      <div className="flex items-center bg-zinc-950 border border-zinc-800 rounded p-0.5">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setMaType('EMA');
+                          }}
+                          className={`px-1.5 py-0.2 text-[9px] font-mono font-bold rounded transition-all ${
+                            maType === 'EMA'
+                              ? 'bg-amber-500 text-zinc-950 shadow-sm'
+                              : 'text-zinc-400 hover:text-zinc-200'
+                          }`}
+                        >
+                          EMA
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setMaType('SMA');
+                          }}
+                          className={`px-1.5 py-0.2 text-[9px] font-mono font-bold rounded transition-all ${
+                            maType === 'SMA'
+                              ? 'bg-amber-500 text-zinc-950 shadow-sm'
+                              : 'text-zinc-400 hover:text-zinc-200'
+                          }`}
+                        >
+                          SMA
+                        </button>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const anyOn = showMA8 || showMA21 || showMA144 || showMA233;
+                          setShowMA8(!anyOn);
+                          setShowMA21(!anyOn);
+                          setShowMA144(!anyOn);
+                          setShowMA233(!anyOn);
+                        }}
+                        className="text-[9px] font-mono text-zinc-400 hover:text-amber-300 underline underline-offset-2 px-1"
+                      >
+                        {showMA8 || showMA21 || showMA144 || showMA233 ? 'Tắt hết' : 'Bật hết'}
+                      </button>
+                    </div>
                   </div>
+
                   <div className="flex flex-col gap-1 mb-2.5">
-                    {/* MA20 */}
+                    {/* MA 8 */}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        setShowMA20(!showMA20);
+                        setShowMA8(!showMA8);
                       }}
                       className="flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-mono text-zinc-200 hover:bg-zinc-800/70 transition-all border border-transparent hover:border-zinc-800"
                     >
                       <span className="flex items-center gap-2">
-                        <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0" />
-                        <span className="font-semibold">Đường MA20</span>
-                        <span className="text-[10px] text-zinc-500 hidden sm:inline">(Ngắn hạn)</span>
+                        <span className="w-2.5 h-2.5 rounded-full bg-[#38bdf8] shrink-0 shadow-[0_0_8px_rgba(56,189,248,0.5)]" />
+                        <span className="font-semibold">{maType} 8</span>
+                        <span className="text-[10px] text-zinc-500 hidden sm:inline">(Micro / Lướt sóng)</span>
                       </span>
-                      <span className={`text-[10px] px-2 py-0.5 rounded-md font-bold transition-colors ${showMA20 ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-zinc-800/60 text-zinc-500'}`}>
-                        {showMA20 ? 'BẬT' : 'TẮT'}
+                      <span className={`text-[10px] px-2 py-0.5 rounded-md font-bold transition-colors ${showMA8 ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-zinc-800/60 text-zinc-500'}`}>
+                        {showMA8 ? 'BẬT' : 'TẮT'}
                       </span>
                     </button>
 
-                    {/* MA50 */}
+                    {/* MA 21 */}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        setShowMA50(!showMA50);
+                        setShowMA21(!showMA21);
                       }}
                       className="flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-mono text-zinc-200 hover:bg-zinc-800/70 transition-all border border-transparent hover:border-zinc-800"
                     >
                       <span className="flex items-center gap-2">
-                        <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 shrink-0" />
-                        <span className="font-semibold">Đường MA50</span>
-                        <span className="text-[10px] text-cyan-400/80 font-bold hidden sm:inline">(Minervini)</span>
+                        <span className="w-2.5 h-2.5 rounded-full bg-[#facc15] shrink-0 shadow-[0_0_8px_rgba(250,204,21,0.5)]" />
+                        <span className="font-semibold">{maType} 21</span>
+                        <span className="text-[10px] text-zinc-500 hidden sm:inline">(Ngắn hạn / Kéo ngược)</span>
                       </span>
-                      <span className={`text-[10px] px-2 py-0.5 rounded-md font-bold transition-colors ${showMA50 ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-zinc-800/60 text-zinc-500'}`}>
-                        {showMA50 ? 'BẬT' : 'TẮT'}
+                      <span className={`text-[10px] px-2 py-0.5 rounded-md font-bold transition-colors ${showMA21 ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-zinc-800/60 text-zinc-500'}`}>
+                        {showMA21 ? 'BẬT' : 'TẮT'}
                       </span>
                     </button>
 
-                    {/* MA150 */}
+                    {/* MA 144 */}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        setShowMA150(!showMA150);
+                        setShowMA144(!showMA144);
                       }}
                       className="flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-mono text-zinc-200 hover:bg-zinc-800/70 transition-all border border-transparent hover:border-zinc-800"
                     >
                       <span className="flex items-center gap-2">
-                        <span className="w-2.5 h-2.5 rounded-full bg-orange-500 shrink-0" />
-                        <span className="font-semibold">Đường MA150</span>
-                        <span className="text-[10px] text-orange-400/80 font-bold hidden sm:inline">(Minervini)</span>
+                        <span className="w-2.5 h-2.5 rounded-full bg-[#f97316] shrink-0 shadow-[0_0_8px_rgba(249,115,22,0.5)]" />
+                        <span className="font-semibold">{maType} 144</span>
+                        <span className="text-[10px] text-orange-400/80 font-bold hidden sm:inline">(Vegas Tunnel 1)</span>
                       </span>
-                      <span className={`text-[10px] px-2 py-0.5 rounded-md font-bold transition-colors ${showMA150 ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-zinc-800/60 text-zinc-500'}`}>
-                        {showMA150 ? 'BẬT' : 'TẮT'}
+                      <span className={`text-[10px] px-2 py-0.5 rounded-md font-bold transition-colors ${showMA144 ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-zinc-800/60 text-zinc-500'}`}>
+                        {showMA144 ? 'BẬT' : 'TẮT'}
                       </span>
                     </button>
 
-                    {/* MA200 */}
+                    {/* MA 233 */}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        setShowMA200(!showMA200);
+                        setShowMA233(!showMA233);
                       }}
                       className="flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-mono text-zinc-200 hover:bg-zinc-800/70 transition-all border border-transparent hover:border-zinc-800"
                     >
                       <span className="flex items-center gap-2">
-                        <span className="w-2.5 h-2.5 rounded-full bg-rose-500 shrink-0" />
-                        <span className="font-semibold">Đường MA200</span>
-                        <span className="text-[10px] text-rose-400/80 font-bold hidden sm:inline">(Dài hạn)</span>
+                        <span className="w-2.5 h-2.5 rounded-full bg-[#ef4444] shrink-0 shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
+                        <span className="font-semibold">{maType} 233</span>
+                        <span className="text-[10px] text-rose-400/80 font-bold hidden sm:inline">(Vegas Tunnel 2)</span>
                       </span>
-                      <span className={`text-[10px] px-2 py-0.5 rounded-md font-bold transition-colors ${showMA200 ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-zinc-800/60 text-zinc-500'}`}>
-                        {showMA200 ? 'BẬT' : 'TẮT'}
+                      <span className={`text-[10px] px-2 py-0.5 rounded-md font-bold transition-colors ${showMA233 ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-zinc-800/60 text-zinc-500'}`}>
+                        {showMA233 ? 'BẬT' : 'TẮT'}
                       </span>
                     </button>
 
@@ -5152,21 +5258,29 @@ export function MarketCandleChart() {
                 </div>
               )}
 
-              {/* Row 3: SMA 20 50 150 200 (Matches Screenshot 2: SMA 20 50 150 200 ...) */}
-              {(showMA20 || showMA50 || showMA150 || showMA200) && (
-                <div className="flex items-center gap-2">
-                  <span className="text-zinc-400">SMA 20 50 150 200</span>
-                  {showMA20 && activeMA20 !== undefined && (
-                    <span className="text-[#f59e0b] font-bold">{activeMA20.toFixed(2)}</span>
+              {/* Row 3: MA Ribbon (8, 21, 144, 233) */}
+              {(showMA8 || showMA21 || showMA144 || showMA233) && (
+                <div className="flex items-center gap-2 flex-wrap text-[11px] font-mono">
+                  <span className="text-zinc-400 font-semibold">{maType} Ribbon:</span>
+                  {showMA8 && activeMA8 !== undefined && (
+                    <span className="text-[#38bdf8] font-bold">
+                      MA8: {activeMA8.toFixed(2).replace('.', ',')}
+                    </span>
                   )}
-                  {showMA50 && activeMA50 !== undefined && (
-                    <span className="text-[#06b6d4] font-bold">{activeMA50.toFixed(2)}</span>
+                  {showMA21 && activeMA21 !== undefined && (
+                    <span className="text-[#facc15] font-bold">
+                      MA21: {activeMA21.toFixed(2).replace('.', ',')}
+                    </span>
                   )}
-                  {showMA150 && activeMA150 !== undefined && (
-                    <span className="text-[#f97316] font-bold">{activeMA150.toFixed(2)}</span>
+                  {showMA144 && activeMA144 !== undefined && (
+                    <span className="text-[#f97316] font-bold">
+                      MA144: {activeMA144.toFixed(2).replace('.', ',')}
+                    </span>
                   )}
-                  {showMA200 && activeMA200 !== undefined && (
-                    <span className="text-[#f43f5e] font-bold">{activeMA200.toFixed(2)}</span>
+                  {showMA233 && activeMA233 !== undefined && (
+                    <span className="text-[#ef4444] font-bold">
+                      MA233: {activeMA233.toFixed(2).replace('.', ',')}
+                    </span>
                   )}
                 </div>
               )}
