@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useMarketStore } from '../store/marketStore';
+import { TickData } from '../types/dnse.types';
 import {
   Flame,
   SlidersHorizontal,
@@ -15,9 +16,14 @@ export interface HeatmapStock {
   sector: string;
   exchange: string;
   price: number;
+  refPrice?: number;
+  ceiling?: number;
+  floor?: number;
   change: number;
   changePercent: number;
   volume: number;
+  high?: number;
+  low?: number;
   mktCapT: number;
   rsRating?: number;
 }
@@ -187,6 +193,14 @@ function squarify<T extends { weight: number }>(
   return results;
 }
 
+// Nhãn nguồn dữ liệu hiển thị trên header để biết realtime hay dữ liệu cũ
+const SOURCE_LABELS: Record<string, string> = {
+  vietcap: 'Vietcap Live',
+  ssi_iboard: 'SSI iBoard',
+  stale: 'Cache cũ • đang thử lại',
+  snapshot: 'Ảnh chụp cuối phiên',
+};
+
 export const MarketHeatmap: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState<{ width: number; height: number }>({ width: 1100, height: 600 });
@@ -199,11 +213,15 @@ export const MarketHeatmap: React.FC = () => {
   const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [searchFilter, setSearchFilter] = useState('');
 
-  const { ticks, wsStatus, setSelectedSymbol, updateTick } = useMarketStore();
+  const { ticks, wsStatus, setSelectedSymbol, updateTicks } = useMarketStore();
   const [flashMap, setFlashMap] = useState<Record<string, 'up' | 'down'>>({});
   const [lastUpdated, setLastUpdated] = useState<string>('');
+  const [dataSource, setDataSource] = useState<string>('');
+  const [isStale, setIsStale] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const prevPricesRef = useRef<Record<string, number>>({});
+  // snapshot giá + khối lượng lần poll trước, chỉ push tick khi có gì đó đổi
+  const prevSnapshotRef = useRef<Record<string, { price: number; volume: number }>>({});
 
   // Realtime tick price change detector for visual flash
   useEffect(() => {
@@ -227,7 +245,7 @@ export const MarketHeatmap: React.FC = () => {
     }
   }, [ticks]);
 
-  // Load verified market universe (700+ equities from SSI iBoard Realtime)
+  // Load verified market universe (700+ equities from realtime market board)
   const fetchHeatmapData = useCallback(async (isManual = false) => {
     if (isManual) setIsRefreshing(true);
     try {
@@ -236,6 +254,7 @@ export const MarketHeatmap: React.FC = () => {
       if (resData.success && Array.isArray(resData.data)) {
         const newFlashes: Record<string, 'up' | 'down'> = {};
         let hasFlashes = false;
+        const changedTicks: TickData[] = [];
 
         resData.data.forEach((s: HeatmapStock) => {
           const prev = prevPricesRef.current[s.symbol];
@@ -245,26 +264,33 @@ export const MarketHeatmap: React.FC = () => {
           }
           prevPricesRef.current[s.symbol] = s.price;
 
+          const prevSnap = prevSnapshotRef.current[s.symbol];
+          if (prevSnap && prevSnap.price === s.price && prevSnap.volume === s.volume) return;
+          prevSnapshotRef.current[s.symbol] = { price: s.price, volume: s.volume };
+
           // Propagate live price to global store for active stocks
           if (s.volume > 0 || s.price > 0) {
-            updateTick({
+            changedTicks.push({
               symbol: s.symbol,
               price: s.price,
               change: s.change,
               changePercent: s.changePercent,
               volume: Math.floor(s.volume / 10),
               totalVolume: s.volume,
-              high: s.price,
-              low: s.price,
+              high: s.high || s.price,
+              low: s.low || s.price,
               open: s.price - s.change,
               referencePrice: s.price - s.change,
-              ceilingPrice: Math.round((s.price - s.change) * 1.07),
-              floorPrice: Math.round((s.price - s.change) * 0.93),
+              ceilingPrice: s.ceiling || Math.round((s.price - s.change) * 1.07),
+              floorPrice: s.floor || Math.round((s.price - s.change) * 0.93),
               timestamp: Date.now(),
               matchType: s.change >= 0 ? 'B' : 'S',
             });
           }
         });
+
+        // 1 lần set() cho toàn bộ thay đổi thay vì 700+ lần re-render
+        if (changedTicks.length > 0) updateTicks(changedTicks);
 
         if (hasFlashes) {
           setFlashMap((prev) => ({ ...prev, ...newFlashes }));
@@ -272,6 +298,8 @@ export const MarketHeatmap: React.FC = () => {
         }
 
         setRawStocks(resData.data);
+        setDataSource(resData.source || (resData.isFallback ? 'snapshot' : ''));
+        setIsStale(Boolean(resData.stale));
         setLastUpdated(new Date().toLocaleTimeString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh', hour12: false }));
       }
     } catch (err) {
@@ -280,15 +308,40 @@ export const MarketHeatmap: React.FC = () => {
       setIsLoading(false);
       if (isManual) setIsRefreshing(false);
     }
-  }, [updateTick]);
+  }, [updateTicks]);
 
   useEffect(() => {
     fetchHeatmapData();
-    // Auto-polling every 4 seconds during active trading session
-    const interval = setInterval(() => {
-      fetchHeatmapData();
-    }, 4000);
-    return () => clearInterval(interval);
+
+    // Auto-polling every 4 seconds, tạm dừng khi tab ẩn để không đốt quota serverless
+    let interval: ReturnType<typeof setInterval> | null = null;
+    const startPolling = () => {
+      if (interval) return;
+      interval = setInterval(() => {
+        if (!document.hidden) fetchHeatmapData();
+      }, 4000);
+    };
+    const stopPolling = () => {
+      if (interval) {
+        clearInterval(interval);
+        interval = null;
+      }
+    };
+    const handleVisibility = () => {
+      if (document.hidden) {
+        stopPolling();
+      } else {
+        startPolling();
+        fetchHeatmapData();
+      }
+    };
+
+    startPolling();
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      stopPolling();
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, [fetchHeatmapData]);
 
   // Responsive container observer
@@ -561,13 +614,25 @@ export const MarketHeatmap: React.FC = () => {
                 <h3 className="font-bold text-sm text-zinc-100 flex items-center gap-1.5 leading-none">
                   BẢN ĐỒ NHIỆT (HEATMAP)
                 </h3>
-                <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  <span>LIVE REALTIME</span>
+                <span
+                  className={`flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] border ${
+                    isStale
+                      ? 'bg-amber-500/10 text-amber-300 border-amber-500/30'
+                      : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                  }`}
+                >
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full ${
+                      isStale ? 'bg-amber-400' : 'bg-emerald-400 animate-pulse'
+                    }`}
+                  />
+                  <span>{isStale ? 'DỮ LIỆU CŨ' : 'LIVE REALTIME'}</span>
                 </span>
               </div>
               <div className="flex items-center gap-1.5 text-[10px] text-zinc-400 font-medium">
-                <span>SSI iBoard • {rawStocks.length} mã</span>
+                <span>
+                  {(dataSource && SOURCE_LABELS[dataSource]) || dataSource || 'Realtime'} • {rawStocks.length} mã
+                </span>
                 {lastUpdated && (
                   <span className="text-zinc-500">
                     • Cập nhật: <strong className="text-emerald-400 font-mono">{lastUpdated}</strong>

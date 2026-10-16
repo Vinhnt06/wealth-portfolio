@@ -303,106 +303,141 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
 
 
 
-  // Main Connection logic
+  // Seed 1 lần khi mount — không seed lại khi reconnect để không ghi đè dữ liệu live
+  useEffect(() => {
+    seedInitialState();
+  }, [seedInitialState]);
+
+  // Main Connection logic: tự nối lại với backoff nếu WS bị ngắt
   useEffect(() => {
     const apiKey = process.env.NEXT_PUBLIC_DNSE_API_KEY;
-    seedInitialState();
+    let stopped = false;
+    let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+    let openedAt = 0;
 
-    setWsStatus('connecting');
+    function scheduleReconnect() {
+      if (stopped || reconnectTimer) return;
+      const attempt = reconnectAttemptRef.current;
+      // 1s → 2s → 4s → 8s → 16s → 30s (capped)
+      const delay = Math.min(30000, 1000 * 2 ** Math.min(attempt, 5));
+      reconnectAttemptRef.current = attempt + 1;
+      reconnectTimer = setTimeout(() => {
+        reconnectTimer = null;
+        connect();
+      }, delay);
+    }
 
-    const targetUrl = apiKey ? `${WS_URL}?token=${encodeURIComponent(apiKey)}` : WS_URL;
+    function connect() {
+      if (stopped) return;
+      setWsStatus('connecting');
 
-    try {
-      const ws = new WebSocket(targetUrl);
-      wsRef.current = ws;
+      const targetUrl = apiKey ? `${WS_URL}?token=${encodeURIComponent(apiKey)}` : WS_URL;
 
-      ws.onopen = () => {
-        setWsStatus('connected');
-        reconnectAttemptRef.current = 0;
+      try {
+        const ws = new WebSocket(targetUrl);
+        wsRef.current = ws;
 
-        // 1. Trade & Trade Extra Channel (Lô chẵn G1)
-        const subTickMsg = {
-          action: 'subscribe',
-          channel: 'tick.G1.json',
-          symbols: symbols,
+        ws.onopen = () => {
+          setWsStatus('connected');
+          openedAt = Date.now();
+
+          // 1. Trade & Trade Extra Channel (Lô chẵn G1)
+          const subTickMsg = {
+            action: 'subscribe',
+            channel: 'tick.G1.json',
+            symbols: symbols,
+          };
+          const subTickExtraMsg = {
+            action: 'subscribe',
+            channel: 'tick_extra.G1.json',
+            symbols: symbols,
+          };
+
+          // 2. Market Depth Quotes (top_price.G1.json)
+          const subTopPriceMsg = {
+            action: 'subscribe',
+            channel: 'top_price.G1.json',
+            symbols: symbols,
+          };
+
+          // 3. Market Index Channels (VNINDEX, VN30, HNX, UPCOM)
+          const subVnIndexMsg = {
+            action: 'subscribe',
+            channel: 'market_index.VNINDEX.json',
+          };
+          const subVn30Msg = {
+            action: 'subscribe',
+            channel: 'market_index.VN30.json',
+          };
+          const subHnxMsg = {
+            action: 'subscribe',
+            channel: 'market_index.HNX.json',
+          };
+          const subUpcomMsg = {
+            action: 'subscribe',
+            channel: 'market_index.UPCOM.json',
+          };
+
+          // 4. Foreign Investor Flow (foreign.G1.json)
+          const subForeignMsg = {
+            action: 'subscribe',
+            channel: 'foreign.G1.json',
+            symbols: symbols,
+          };
+
+          // 5. Market Index Influence (Top cổ phiếu ảnh hưởng chỉ số)
+          const subInfluenceMsg = {
+            action: 'subscribe',
+            channel: 'market_index_influence.VNINDEX.1.json',
+          };
+
+          ws.send(JSON.stringify(subTickMsg));
+          ws.send(JSON.stringify(subTickExtraMsg));
+          ws.send(JSON.stringify(subTopPriceMsg));
+          ws.send(JSON.stringify(subVnIndexMsg));
+          ws.send(JSON.stringify(subVn30Msg));
+          ws.send(JSON.stringify(subHnxMsg));
+          ws.send(JSON.stringify(subUpcomMsg));
+          ws.send(JSON.stringify(subForeignMsg));
+          ws.send(JSON.stringify(subInfluenceMsg));
+
+          // Client-initiated keepalive: send PONG every 2 minutes (tối đa 3 phút theo tài liệu DNSE)
+          heartbeatTimerRef.current = setInterval(() => {
+            if (ws.readyState === WebSocket.OPEN) {
+              ws.send(JSON.stringify({ action: 'pong' }));
+            }
+          }, 120000);
         };
-        const subTickExtraMsg = {
-          action: 'subscribe',
-          channel: 'tick_extra.G1.json',
-          symbols: symbols,
-        };
-
-        // 2. Market Depth Quotes (top_price.G1.json)
-        const subTopPriceMsg = {
-          action: 'subscribe',
-          channel: 'top_price.G1.json',
-          symbols: symbols,
-        };
-
-        // 3. Market Index Channels (VNINDEX, VN30, HNX, UPCOM)
-        const subVnIndexMsg = {
-          action: 'subscribe',
-          channel: 'market_index.VNINDEX.json',
-        };
-        const subVn30Msg = {
-          action: 'subscribe',
-          channel: 'market_index.VN30.json',
-        };
-        const subHnxMsg = {
-          action: 'subscribe',
-          channel: 'market_index.HNX.json',
-        };
-        const subUpcomMsg = {
-          action: 'subscribe',
-          channel: 'market_index.UPCOM.json',
-        };
-
-        // 4. Foreign Investor Flow (foreign.G1.json)
-        const subForeignMsg = {
-          action: 'subscribe',
-          channel: 'foreign.G1.json',
-          symbols: symbols,
-        };
-
-        // 5. Market Index Influence (Top cổ phiếu ảnh hưởng chỉ số)
-        const subInfluenceMsg = {
-          action: 'subscribe',
-          channel: 'market_index_influence.VNINDEX.1.json',
-        };
-
-        ws.send(JSON.stringify(subTickMsg));
-        ws.send(JSON.stringify(subTickExtraMsg));
-        ws.send(JSON.stringify(subTopPriceMsg));
-        ws.send(JSON.stringify(subVnIndexMsg));
-        ws.send(JSON.stringify(subVn30Msg));
-        ws.send(JSON.stringify(subHnxMsg));
-        ws.send(JSON.stringify(subUpcomMsg));
-        ws.send(JSON.stringify(subForeignMsg));
-        ws.send(JSON.stringify(subInfluenceMsg));
-
-        // Client-initiated keepalive: send PONG every 2 minutes (tối đa 3 phút theo tài liệu DNSE)
-        heartbeatTimerRef.current = setInterval(() => {
-          if (ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify({ action: 'pong' }));
-          }
-        }, 120000);
-      };
 
       ws.onmessage = handleMessage;
 
       ws.onerror = () => {
-        setWsStatus('error');
+        if (!stopped) setWsStatus('error');
       };
 
       ws.onclose = () => {
-        setWsStatus('disconnected');
         if (heartbeatTimerRef.current) clearInterval(heartbeatTimerRef.current);
+        if (stopped) return;
+        setWsStatus('disconnected');
+        // Kết nối sống được >10s thì coi như ổn định, reset bộ đếm backoff
+        if (openedAt && Date.now() - openedAt > 10000) reconnectAttemptRef.current = 0;
+        scheduleReconnect();
       };
-    } catch {
-      setWsStatus('error');
+      } catch {
+        if (stopped) return;
+        setWsStatus('error');
+        scheduleReconnect();
+      }
     }
 
+    connect();
+
     return () => {
+      stopped = true;
+      if (reconnectTimer) {
+        clearTimeout(reconnectTimer);
+        reconnectTimer = null;
+      }
       if (wsRef.current) {
         wsRef.current.close();
       }
@@ -410,7 +445,7 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
         clearInterval(heartbeatTimerRef.current);
       }
     };
-  }, [symbols, handleMessage, seedInitialState, setWsStatus]);
+  }, [symbols, handleMessage, setWsStatus]);
 
   const { wsStatus } = useMarketStore();
   return { wsStatus, selectedSymbol };

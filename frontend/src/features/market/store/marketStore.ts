@@ -36,6 +36,7 @@ interface MarketState {
   setChartExpanded: (expanded: boolean) => void;
   toggleChartExpanded: () => void;
   updateTick: (tick: TickData) => void;
+  updateTicks: (ticks: TickData[]) => void;
   updateQuotes: (quotes: QuotesData) => void;
   appendOHLC: (symbol: string, resolution: string, candle: OHLCCandle) => void;
   setOHLCHistory: (symbol: string, resolution: string, candles: OHLCCandle[]) => void;
@@ -92,6 +93,17 @@ export const useMarketStore = create<MarketState>()(
         [tick.symbol]: tick,
       },
     })),
+
+  // Gộp nhiều tick trong 1 lần set() để heatmap poll 700+ mã không re-render từng mã
+  updateTicks: (ticks) =>
+    set((state) => {
+      if (ticks.length === 0) return state;
+      const next = { ...state.ticks };
+      for (const tick of ticks) {
+        next[tick.symbol] = tick;
+      }
+      return { ticks: next };
+    }),
 
   updateQuotes: (quotes) =>
     set((state) => ({
