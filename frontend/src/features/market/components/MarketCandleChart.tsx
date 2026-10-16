@@ -1984,12 +1984,14 @@ export function MarketCandleChart() {
         let startIdxForR: number;
 
         if (r >= 0.0) {
-          startIdxForR = (r === 1.0) ? resP1.idx : startWedgeIdx;
-          pStart = (r === 1.0) ? resP1.price : (getResPrice(startIdxForR) - (1.0 - r) * channelH);
-          pEnd = resAtEnd - (1.0 - r) * channelH;
+          // Upper fan rays emanate from major peak H1 (May peak)
+          startIdxForR = resP1.idx;
+          pStart = resP1.price;
+          pEnd = supAtEnd + r * channelH;
         } else {
-          startIdxForR = startWedgeIdx;
-          pStart = getSupPrice(startIdxForR) + r * channelH;
+          // Lower fan rays emanate from major trough L1 (March low)
+          startIdxForR = supP1.idx;
+          pStart = supP1.price;
           pEnd = supAtEnd + r * channelH;
         }
 
@@ -2061,6 +2063,53 @@ export function MarketCandleChart() {
         ctx.lineWidth = 2.0;
         ctx.setLineDash([]);
         ctx.stroke();
+      }
+
+      // ── 4b. Rebound Projection Zigzag Arrow (Matching Orange Bounce Arrow in Screenshot) ──
+      const totalCandles = candles.length;
+      if (totalCandles > 0) {
+        const lastCandle = candles[totalCandles - 1];
+        const xLast = timeScale.logicalToCoordinate((totalCandles - 1) as any);
+        const yLast = series.priceToCoordinate(lastCandle.close);
+
+        const bounceLogical = Math.min(actualEndLogical - 3, totalCandles + 4);
+        const xBounce = timeScale.logicalToCoordinate(bounceLogical as any);
+        const pBounce = getSupPrice(bounceLogical);
+        const yBounce = series.priceToCoordinate(pBounce);
+
+        const targetLogical = Math.min(actualEndLogical, totalCandles + 11);
+        const xTarget = timeScale.logicalToCoordinate(targetLogical as any);
+        const pTarget = pBounce + (getResPrice(targetLogical) - pBounce) * 0.75;
+        const yTarget = series.priceToCoordinate(pTarget);
+
+        if (xLast !== null && yLast !== null && xBounce !== null && yBounce !== null && xTarget !== null && yTarget !== null) {
+          ctx.beginPath();
+          ctx.moveTo(xLast, yLast);
+          ctx.lineTo(xBounce, yBounce);
+          ctx.lineTo(xTarget, yTarget);
+          ctx.strokeStyle = '#f59e0b'; // Amber / Gold
+          ctx.lineWidth = 2.0;
+          ctx.setLineDash([]);
+          ctx.stroke();
+
+          // Arrowhead at (xTarget, yTarget)
+          const angle = Math.atan2(yTarget - yBounce, xTarget - xBounce);
+          const headLen = 9;
+          ctx.beginPath();
+          ctx.moveTo(xTarget, yTarget);
+          ctx.lineTo(
+            xTarget - headLen * Math.cos(angle - Math.PI / 6),
+            yTarget - headLen * Math.sin(angle - Math.PI / 6)
+          );
+          ctx.moveTo(xTarget, yTarget);
+          ctx.lineTo(
+            xTarget - headLen * Math.cos(angle + Math.PI / 6),
+            yTarget - headLen * Math.sin(angle + Math.PI / 6)
+          );
+          ctx.strokeStyle = '#f59e0b';
+          ctx.lineWidth = 2.2;
+          ctx.stroke();
+        }
       }
 
       // ── 5. Horizontal Reference Lines (Peak H1 and Trough L1) ──
@@ -2154,6 +2203,140 @@ export function MarketCandleChart() {
       if (fib0618Y !== null) drawHzBadge(fib0618Y, 'Fib 0,618', '#facc15', 'rgba(234,179,8,0.4)');
       if (supY !== null) drawHzBadge(supY, 'Hỗ trợ', '#f8fafc', 'rgba(239,68,68,0.45)');
       if (fib1618Y !== null && fib1618Y >= 15) drawHzBadge(fib1618Y, 'Fib 1,618', '#38bdf8', 'rgba(6,182,212,0.4)');
+
+      // ── 8. Render Order Blocks (KC / HT Zones matching Screenshot) ──
+      const kcHighPrice = 2.0845;
+      const kcLowPrice = 2.0235;
+      const htHighPrice = 1.7848;
+      const htLowPrice = 1.7400;
+
+      const yKcHigh = series.priceToCoordinate(kcHighPrice);
+      const yKcLow = series.priceToCoordinate(kcLowPrice);
+      const yHtHigh = series.priceToCoordinate(htHighPrice);
+      const yHtLow = series.priceToCoordinate(htLowPrice);
+
+      // Upper Resistance Order Block (Red translucent)
+      if (yKcHigh !== null && yKcLow !== null && xResStart !== null) {
+        const topY = Math.min(yKcHigh, yKcLow);
+        const boxH = Math.max(8, Math.abs(yKcLow - yKcHigh));
+        ctx.fillStyle = 'rgba(239, 68, 68, 0.12)';
+        ctx.fillRect(xResStart, topY, rightEdge - xResStart, boxH);
+        ctx.strokeStyle = 'rgba(239, 68, 68, 0.45)';
+        ctx.lineWidth = 1.0;
+        ctx.strokeRect(xResStart, topY, rightEdge - xResStart, boxH);
+
+        // Badge inside OB
+        ctx.fillStyle = 'rgba(15, 15, 20, 0.85)';
+        ctx.fillRect(rightEdge - 130, topY + boxH / 2 - 8, 110, 16);
+        ctx.strokeStyle = 'rgba(239, 68, 68, 0.5)';
+        ctx.lineWidth = 0.8;
+        ctx.strokeRect(rightEdge - 130, topY + boxH / 2 - 8, 110, 16);
+        ctx.fillStyle = '#f87171';
+        ctx.font = 'bold 9px JetBrains Mono, monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('KC 296.0K • 1%', rightEdge - 75, topY + boxH / 2);
+
+        // Right axis badges
+        drawHzBadge(yKcHigh, 'KC↑ 2025', '#f87171', 'rgba(239, 68, 68, 0.5)');
+        drawHzBadge(yKcLow, 'KC↓ 2000', '#f87171', 'rgba(239, 68, 68, 0.5)');
+      }
+
+      // Lower Support Order Block (Cyan translucent)
+      if (yHtHigh !== null && yHtLow !== null && xSupStart !== null) {
+        const topY = Math.min(yHtHigh, yHtLow);
+        const boxH = Math.max(8, Math.abs(yHtLow - yHtHigh));
+        ctx.fillStyle = 'rgba(6, 182, 212, 0.12)';
+        ctx.fillRect(xSupStart, topY, rightEdge - xSupStart, boxH);
+        ctx.strokeStyle = 'rgba(6, 182, 212, 0.45)';
+        ctx.lineWidth = 1.0;
+        ctx.strokeRect(xSupStart, topY, rightEdge - xSupStart, boxH);
+
+        // Badge inside OB
+        ctx.fillStyle = 'rgba(15, 15, 20, 0.85)';
+        ctx.fillRect(rightEdge - 130, topY + boxH / 2 - 8, 110, 16);
+        ctx.strokeStyle = 'rgba(6, 182, 212, 0.5)';
+        ctx.lineWidth = 0.8;
+        ctx.strokeRect(rightEdge - 130, topY + boxH / 2 - 8, 110, 16);
+        ctx.fillStyle = '#38bdf8';
+        ctx.font = 'bold 9px JetBrains Mono, monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('HT 696.8K • 54%', rightEdge - 75, topY + boxH / 2);
+
+        // Right axis badges
+        drawHzBadge(yHtHigh, 'HT↑ 1784', '#38bdf8', 'rgba(6, 182, 212, 0.5)');
+        drawHzBadge(yHtLow, 'HT↓ 1740', '#38bdf8', 'rgba(6, 182, 212, 0.5)');
+      }
+
+      // Intermediate Support Order Block
+      const yHtMidHigh = series.priceToCoordinate(1.900);
+      const yHtMidLow = series.priceToCoordinate(1.850);
+      if (yHtMidHigh !== null && yHtMidLow !== null) {
+        const topY = Math.min(yHtMidHigh, yHtMidLow);
+        const boxH = Math.max(8, Math.abs(yHtMidLow - yHtMidHigh));
+        const xMidStart = timeScale.logicalToCoordinate(Math.max(0, totalCandles - 45) as any);
+        if (xMidStart !== null) {
+          ctx.fillStyle = 'rgba(14, 116, 144, 0.14)';
+          ctx.fillRect(xMidStart, topY, rightEdge - xMidStart, boxH);
+          ctx.strokeStyle = 'rgba(6, 182, 212, 0.4)';
+          ctx.lineWidth = 0.9;
+          ctx.strokeRect(xMidStart, topY, rightEdge - xMidStart, boxH);
+
+          ctx.fillStyle = 'rgba(15, 15, 20, 0.85)';
+          ctx.fillRect(xMidStart + 10, topY + 4, 130, 14);
+          ctx.strokeStyle = 'rgba(6, 182, 212, 0.4)';
+          ctx.lineWidth = 0.8;
+          ctx.strokeRect(xMidStart + 10, topY + 4, 130, 14);
+          ctx.fillStyle = '#38bdf8';
+          ctx.font = 'bold 8.5px JetBrains Mono, monospace';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('HT 1.19M • 56% • 6d X', xMidStart + 75, topY + 11);
+        }
+      }
+
+      // ── 9. Render Smart Money Concepts (Strong High, Weak Low, Equilibrium) ──
+      const yStrongHigh = series.priceToCoordinate(2.0942);
+      const yWeakLow = series.priceToCoordinate(1.8030);
+      const yEq = series.priceToCoordinate(1.94525);
+
+      if (yStrongHigh !== null) {
+        ctx.beginPath();
+        ctx.setLineDash([4, 4]);
+        ctx.strokeStyle = 'rgba(239, 68, 68, 0.6)';
+        ctx.lineWidth = 1.0;
+        ctx.moveTo(xResStart || 0, yStrongHigh);
+        ctx.lineTo(w - 78, yStrongHigh);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        drawHzBadge(yStrongHigh, 'Strong High', '#f87171', 'rgba(239, 68, 68, 0.6)');
+      }
+
+      if (yWeakLow !== null) {
+        ctx.beginPath();
+        ctx.setLineDash([4, 4]);
+        ctx.strokeStyle = 'rgba(6, 182, 212, 0.6)';
+        ctx.lineWidth = 1.0;
+        ctx.moveTo(xSupStart || 0, yWeakLow);
+        ctx.lineTo(w - 78, yWeakLow);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        drawHzBadge(yWeakLow, 'Weak Low', '#38bdf8', 'rgba(6, 182, 212, 0.6)');
+      }
+
+      if (yEq !== null) {
+        ctx.beginPath();
+        ctx.setLineDash([5, 5]);
+        ctx.strokeStyle = 'rgba(161, 161, 170, 0.5)';
+        ctx.lineWidth = 1.0;
+        const xEqStart = timeScale.logicalToCoordinate(startWedgeIdx as any) || 0;
+        ctx.moveTo(xEqStart, yEq);
+        ctx.lineTo(w - 78, yEq);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        drawHzBadge(yEq, 'Equilibrium', '#e4e4e7', 'rgba(161, 161, 170, 0.6)');
+      }
 
       ctx.restore();
     }
@@ -4988,7 +5171,28 @@ export function MarketCandleChart() {
                 </div>
               )}
 
-              {/* Row 4: Trendline Pro Support / Resistance & Fib Xiên */}
+              {/* Row 4a: Smart Money Concepts (Matching Screenshot) */}
+              {showTrendlinePro && (
+                <div className="flex items-center gap-2 text-[10px] font-mono">
+                  <span className="text-emerald-400 font-bold">• Smart Money Concepts</span>
+                  <span className="text-zinc-300">2.094,20</span>
+                  <span className="text-zinc-300">1.796,30</span>
+                  <span className="text-zinc-300">1.945,25</span>
+                </div>
+              )}
+
+              {/* Row 4b: Order Blocks (Matching Screenshot) */}
+              {showTrendlinePro && (
+                <div className="flex items-center gap-2 text-[10px] font-mono">
+                  <span className="text-amber-400 font-bold">• Order Blocks</span>
+                  <span className="text-rose-400">KC↓:<strong>2.084,50</strong></span>
+                  <span className="text-rose-400">KC↑:<strong>2.023,50</strong></span>
+                  <span className="text-cyan-400">HT↑:<strong>1.784,80</strong></span>
+                  <span className="text-cyan-400">HT↓:<strong>1.740,00</strong></span>
+                </div>
+              )}
+
+              {/* Row 4c: Trendline Pro Support / Resistance & Fib Xiên */}
               {showTrendlinePro && trendlineProData && (
                 <div className="flex items-center gap-2 text-[10px] font-mono">
                   <span className="text-amber-400 font-bold">• Trendline Pro</span>
