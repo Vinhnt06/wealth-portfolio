@@ -58,6 +58,7 @@ import {
   Sliders,
   Check,
   Gear,
+  ChartBarHorizontal,
 } from '@phosphor-icons/react';
 import {
   calculateFibonacciPivots,
@@ -67,6 +68,13 @@ import {
   formatPivotPrice,
 } from '../utils/fibonacciPivots';
 import { FiboPivotsModal } from './FiboPivotsModal';
+import {
+  calculateVolumeProfile,
+  DEFAULT_VOLUME_PROFILE_SETTINGS,
+  VolumeProfileResult,
+  VolumeProfileSettings,
+} from '../utils/volumeProfile';
+import { VolumeProfileModal } from './VolumeProfileModal';
 import stockDatabase from '../data/stockDatabase.json';
 import { getStockPriceColor } from '../utils/priceColors';
 
@@ -176,6 +184,8 @@ export interface TrendlineProResult {
   resP2: { time: Time; price: number; idx: number };
   supP1: { time: Time; price: number; idx: number };
   supP2: { time: Time; price: number; idx: number };
+  resSlope: number;
+  supSlope: number;
   swingHighs: { idx: number; time: Time; price: number }[];
   swingLows: { idx: number; time: Time; price: number }[];
   slope: number;
@@ -184,7 +194,10 @@ export interface TrendlineProResult {
   recommendation: 'GIỮ' | 'MUA' | 'BÁN' | 'QUAN SÁT';
 }
 
-export const FIB_CHANNEL_RATIOS = [0.236, 0.382, 0.5, 0.618, 0.786, 1.13, 1.272, 1.41, 1.618];
+export const FIB_WEDGE_RATIOS = [
+  -1.0, -0.618, 0.0, 0.236, 0.382, 0.5, 0.618, 0.786, 1.0, 1.13, 1.272, 1.41, 1.618, 1.786, 2.0,
+];
+export const FIB_CHANNEL_RATIOS = FIB_WEDGE_RATIOS;
 
 export function calculateTrendlinePro(candles: CandlestickData<Time>[]): TrendlineProResult | null {
   if (!candles || candles.length < 15) return null;
@@ -237,70 +250,102 @@ export function calculateTrendlinePro(candles: CandlestickData<Time>[]): Trendli
     swingLows.push({ idx: minIdx, time: candles[minIdx].time, price: minP });
   }
 
-  // ── Use Linear Regression on swing highs to find the best-fit resistance slope ──
-  // This is far more stable than picking just 2 points.
-  const linReg = (pts: { idx: number; price: number }[]) => {
-    const n = pts.length;
-    if (n === 1) return { slope: 0, intercept: pts[0].price, anchorIdx: pts[0].idx };
-    let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
-    for (const p of pts) { sumX += p.idx; sumY += p.price; sumXY += p.idx * p.price; sumXX += p.idx * p.idx; }
-    const denom = n * sumXX - sumX * sumX;
-    if (Math.abs(denom) < 1e-9) return { slope: 0, intercept: sumY / n, anchorIdx: pts[0].idx };
-    const s = (n * sumXY - sumX * sumY) / denom;
-    const b = (sumY - s * sumX) / n;
-    return { slope: s, intercept: b, anchorIdx: pts[0].idx };
-  };
+  // ── 1. Select Major Peaks for Upper Resistance (H1 -> H2) ──
+  // Find major global high in the lookback window
+  const sortedHighs = [...swingHighs].sort((a, b) => b.price - a.price);
+  const globalHigh = sortedHighs[0];
 
-  const resFit = linReg(swingHighs);
-  const slope = resFit.slope;
-  // Anchor: use the leftmost swing high as resP1
-  const anchorHigh = swingHighs.reduce((a, b) => a.idx < b.idx ? a : b);
-  const lastHigh = swingHighs.reduce((a, b) => a.idx > b.idx ? a : b);
-  const h1 = anchorHigh;
-  const h2 = lastHigh;
-  // Recompute h1.price to lie exactly ON the regression line so the channel is anchored correctly
-  const resLineAtH1 = resFit.intercept + slope * h1.idx;
-  const resLineAtH2 = resFit.intercept + slope * h2.idx;
+  let h1 = globalHigh;
+  let h2 = swingHighs[swingHighs.length - 1];
 
-  // ── Channel width: max distance from regression line to any swing low ──
-  let maxChannelDist = 0;
-  let primaryLow = swingLows[0];
-  swingLows.forEach((sl) => {
-    const resAtSl = resFit.intercept + slope * sl.idx;
-    const dist = resAtSl - sl.price;
-    if (dist > maxChannelDist) { maxChannelDist = dist; primaryLow = sl; }
-  });
-  if (maxChannelDist <= 0.1) {
-    const minLowPrice = Math.min(...candles.slice(startOffset).map((c) => c.low));
-    maxChannelDist = Math.max(0.5, resLineAtH1 - minLowPrice);
+  // Look for a prominent subsequent peak after H1 separated by at least 6 bars
+  const highsAfterH1 = swingHighs.filter((sh) => sh.idx >= h1.idx + 6);
+  if (highsAfterH1.length > 0) {
+    // Pick highest peak after H1 that forms descending trend (or highest peak)
+    const descendingPeaks = highsAfterH1.filter((sh) => sh.price <= h1.price * 1.005);
+    if (descendingPeaks.length > 0) {
+      h2 = descendingPeaks.sort((a, b) => b.price - a.price)[0];
+    } else {
+      h2 = highsAfterH1[0];
+    }
+  } else if (swingHighs.length >= 2) {
+    // If globalHigh is near the end, pick previous major high as h1, and globalHigh as h2
+    const highsBeforeH1 = swingHighs.filter((sh) => sh.idx <= globalHigh.idx - 6);
+    if (highsBeforeH1.length > 0) {
+      h1 = highsBeforeH1.sort((a, b) => b.price - a.price)[0];
+      h2 = globalHigh;
+    } else {
+      h1 = swingHighs[0];
+      h2 = swingHighs[swingHighs.length - 1];
+    }
   }
-  const channelDelta = maxChannelDist;
 
-  // Anchors on the regression line (not raw swing prices)
-  const resP1 = { idx: h1.idx, time: h1.time, price: resLineAtH1 };
-  const resP2 = { idx: h2.idx, time: h2.time, price: resLineAtH2 };
-  const supP1 = { idx: h1.idx, time: h1.time, price: Math.round((resLineAtH1 - channelDelta) * 100) / 100 };
-  const supP2 = { idx: h2.idx, time: h2.time, price: Math.round((resLineAtH2 - channelDelta) * 100) / 100 };
+  const dxRes = Math.max(1, h2.idx - h1.idx);
+  const resSlope = (h2.price - h1.price) / dxRes;
 
-  const resistance = Math.round(Math.max(resLineAtH1, resLineAtH2) * 100) / 100;
-  const support = Math.round(primaryLow.price * 100) / 100;
-  const delta = Math.max(0.1, resistance - support);
+  // ── 2. Select Major Troughs for Lower Support (L1 -> L2) ──
+  // Find major global low in the lookback window
+  const sortedLows = [...swingLows].sort((a, b) => a.price - b.price);
+  const globalLow = sortedLows[0];
+
+  let l1 = globalLow;
+  let l2 = swingLows[swingLows.length - 1];
+
+  // Look for a prominent subsequent trough after L1 separated by at least 6 bars
+  const lowsAfterL1 = swingLows.filter((sl) => sl.idx >= l1.idx + 6);
+  if (lowsAfterL1.length > 0) {
+    // Pick trough after L1 that forms ascending support
+    const ascendingTroughs = lowsAfterL1.filter((sl) => sl.price >= l1.price * 0.995);
+    if (ascendingTroughs.length > 0) {
+      l2 = ascendingTroughs.sort((a, b) => a.price - b.price)[0];
+    } else {
+      l2 = lowsAfterL1[0];
+    }
+  } else if (swingLows.length >= 2) {
+    const lowsBeforeL1 = swingLows.filter((sl) => sl.idx <= globalLow.idx - 6);
+    if (lowsBeforeL1.length > 0) {
+      l1 = lowsBeforeL1.sort((a, b) => a.price - b.price)[0];
+      l2 = globalLow;
+    } else {
+      l1 = swingLows[0];
+      l2 = swingLows[swingLows.length - 1];
+    }
+  }
+
+  const dxSup = Math.max(1, l2.idx - l1.idx);
+  const supSlope = (l2.price - l1.price) / dxSup;
+
+  const resP1 = { idx: h1.idx, time: h1.time, price: h1.price };
+  const resP2 = { idx: h2.idx, time: h2.time, price: h2.price };
+  const supP1 = { idx: l1.idx, time: l1.time, price: l1.price };
+  const supP2 = { idx: l2.idx, time: l2.time, price: l2.price };
+
+  // Current values at the latest candle
+  const lastIdx = total - 1;
+  const currRes = h1.price + resSlope * (lastIdx - h1.idx);
+  const currSup = l1.price + supSlope * (lastIdx - l1.idx);
+  const lastClose = candles[lastIdx].close;
+
+  // Horizontal S/R and Fib display in legend (matching screenshot values)
+  // Kháng cự: giá đỉnh cao nhất H1
+  // Hỗ trợ: giá đường hỗ trợ hiện tại tại lastIdx
+  const resistance = Math.round(h1.price * 100) / 100;
+  const support = Math.round(currSup * 100) / 100;
+  const delta = Math.max(0.5, resistance - support);
   const fib0618 = Math.round((support + delta * 0.618) * 100) / 100;
   const fib1618 = Math.round((support + delta * 1.618) * 100) / 100;
 
-  // Current price position relative to channel
-  const lastClose = candles[total - 1].close;
-  const currResAtLast = resFit.intercept + slope * (total - 1);
-  const currSup = currResAtLast - channelDelta;
-  const currRatio = channelDelta > 0 ? (lastClose - currSup) / channelDelta : 0.5;
+  // Relative ratio of current price inside the wedge corridor
+  const currWedgeHeight = Math.max(0.1, currRes - currSup);
+  const currRatio = (lastClose - currSup) / currWedgeHeight;
 
   let recommendation: 'GIỮ' | 'MUA' | 'BÁN' | 'QUAN SÁT' = 'GIỮ';
-  if (currRatio < 0.25) recommendation = 'MUA';
-  else if (currRatio > 0.85) recommendation = 'QUAN SÁT';
+  if (currRatio <= 0.25) recommendation = 'MUA';
+  else if (currRatio >= 0.85) recommendation = 'QUAN SÁT';
   else recommendation = 'GIỮ';
 
-  // Store regression fit params for rendering
-  (resP1 as any)._regIntercept = resFit.intercept;
+  const channelDelta = delta;
+  const slope = resSlope;
 
   return {
     resistance,
@@ -311,11 +356,13 @@ export function calculateTrendlinePro(candles: CandlestickData<Time>[]): Trendli
     resP2,
     supP1,
     supP2,
+    resSlope,
+    supSlope,
     swingHighs,
     swingLows,
     slope,
     channelDelta,
-    startIdx: h1.idx,
+    startIdx: Math.min(h1.idx, l1.idx),
     recommendation,
   };
 }
@@ -689,6 +736,12 @@ export function MarketCandleChart() {
   const [fiboSettings, setFiboSettings] = useState<FiboPivotsSettings>(DEFAULT_FIBO_SETTINGS);
   const [fiboPeriods, setFiboPeriods] = useState<FiboPivotPeriod[]>([]);
   const [showFiboSettingsModal, setShowFiboSettingsModal] = useState(false);
+
+  // Advanced Volume Profile State (Fixed/Session Range)
+  const [showVolumeProfile, setShowVolumeProfile] = useState<boolean>(false);
+  const [volumeProfileSettings, setVolumeProfileSettings] = useState<VolumeProfileSettings>(DEFAULT_VOLUME_PROFILE_SETTINGS);
+  const [volumeProfileData, setVolumeProfileData] = useState<VolumeProfileResult | null>(null);
+  const [showVolumeProfileModal, setShowVolumeProfileModal] = useState<boolean>(false);
 
   // Drawing Tools State (TradingView Style)
   const [activeTool, setActiveTool] = useState<DrawingTool>('cursor');
@@ -1820,17 +1873,17 @@ export function MarketCandleChart() {
       ctx.restore();
     }
 
-    // ── Render Trendline Pro Overlays (Automated S/R & Fibonacci Channels / Fib Xiên) ────
+    // ── Render Trendline Pro Overlays (Automated Converging Wedge S/R & Fibonacci Wedge Rays) ────
     if (showTrendlinePro && trendlineProData && chart && series) {
       ctx.save();
       const timeScale = chart.timeScale();
       const candles = loadedCandlesRef.current;
 
       const {
-        startIdx,
-        slope,
-        channelDelta,
         resP1,
+        resSlope,
+        supP1,
+        supSlope,
         resistance,
         support,
         fib0618,
@@ -1839,82 +1892,144 @@ export function MarketCandleChart() {
         swingLows,
       } = trendlineProData;
 
-      // ── Screen-space projection (the correct approach) ──
-      // Convert the two channel anchor points to screen coords, then
-      // compute screen-space slope. All fib rays use the SAME screen slope,
-      // just offset vertically. This avoids price-scale non-linearity bugs.
       const lastCandleIdx = Math.max(0, candles.length - 1);
-      const projEndLogical = lastCandleIdx + 25;   // project 25 bars into future
+      const projEndLogical = lastCandleIdx + 20;
 
-      // Anchor X coordinates
-      const x1 = timeScale.logicalToCoordinate(startIdx as any);
-      const x2 = timeScale.logicalToCoordinate(projEndLogical as any);
-      if (x1 === null || x2 === null) { ctx.restore(); return; }
+      // Coordinate anchors
+      const xResStart = timeScale.logicalToCoordinate(resP1.idx as any);
+      const xSupStart = timeScale.logicalToCoordinate(supP1.idx as any);
+      const xEnd = timeScale.logicalToCoordinate(projEndLogical as any);
 
-      // Right edge: never overlap price axis labels
-      const rightEdge = Math.min(w - 78, x2);
+      if (xResStart === null || xSupStart === null || xEnd === null) {
+        ctx.restore();
+        return;
+      }
 
-      // Anchor Y for resistance line at startIdx and at projEnd (price-space, then pixel)
-      const resAtStart = resP1.price;                                    // Y on resistance @ startIdx
-      const resAtEnd   = resP1.price + slope * (projEndLogical - startIdx); // Y on resistance @ projEnd
-      const y1Res = series.priceToCoordinate(resAtStart);
-      const y2Res = series.priceToCoordinate(resAtEnd);
-      if (y1Res === null || y2Res === null) { ctx.restore(); return; }
+      const rightEdge = Math.min(w - 78, xEnd);
+      const actualEndLogical = projEndLogical;
 
-      // Screen-space slope (pixels per logical bar)
-      const dxScreen = x2 - x1;   // total pixel width
-      const dyScreen = y2Res - y1Res;  // pixel drop/rise of the resistance line
-      // For any fib ratio r:  yScreen(x) = y1Res + dyScreen*(x - x1)/dxScreen - r*channelPxHeight
-      // channelPxHeight = pixel height of the full channel
-      const y1Sup = series.priceToCoordinate(resAtStart - channelDelta);
-      const channelPxHeight = y1Sup !== null ? (y1Sup - y1Res) : 60;   // positive = downward
+      // Mathematical price functions for any logical bar index L:
+      // R(L): Upper Resistance Line
+      // S(L): Lower Support Line
+      // Wedge Price for any ratio r: S(L) + r * (R(L) - S(L))
+      const getResPrice = (L: number) => resP1.price + resSlope * (L - resP1.idx);
+      const getSupPrice = (L: number) => supP1.price + supSlope * (L - supP1.idx);
+      const getWedgePrice = (L: number, r: number) => {
+        const rPrice = getResPrice(L);
+        const sPrice = getSupPrice(L);
+        return sPrice + r * (rPrice - sPrice);
+      };
 
-      const getScreenY = (x: number, r: number) =>
-        y1Res + (dyScreen * (x - x1)) / dxScreen + r * channelPxHeight;
+      // Starting point for the filled wedge: where both lines exist
+      const startWedgeIdx = Math.max(resP1.idx, supP1.idx);
+      const xStartWedge = timeScale.logicalToCoordinate(startWedgeIdx as any);
 
-      // 1. Draw Diagonal Fib Xiên (Fibonacci Channel Parallel Rays)
-      const allRatios = [0.0, ...FIB_CHANNEL_RATIOS, 1.0];
+      // ── 1. Shaded Wedge Corridor Background (Matching dark reddish transparent overlay in screenshot) ──
+      if (xStartWedge !== null && rightEdge > xStartWedge) {
+        const pResStart = getResPrice(startWedgeIdx);
+        const pSupStart = getSupPrice(startWedgeIdx);
+        const pResEnd = getResPrice(actualEndLogical);
+        const pSupEnd = getSupPrice(actualEndLogical);
+
+        const yResStart = series.priceToCoordinate(pResStart);
+        const ySupStart = series.priceToCoordinate(pSupStart);
+        const yResEnd = series.priceToCoordinate(pResEnd);
+        const ySupEnd = series.priceToCoordinate(pSupEnd);
+
+        if (yResStart !== null && ySupStart !== null && yResEnd !== null && ySupEnd !== null) {
+          ctx.beginPath();
+          ctx.moveTo(xStartWedge, yResStart);
+          ctx.lineTo(rightEdge, yResEnd);
+          ctx.lineTo(rightEdge, ySupEnd);
+          ctx.lineTo(xStartWedge, ySupStart);
+          ctx.closePath();
+          // Dark reddish transparent fill matching screenshot
+          ctx.fillStyle = 'rgba(239, 68, 68, 0.085)';
+          ctx.fill();
+        }
+      }
+
+      // ── 2. Vertical Projection Guideline (Matching white dashed vertical line in screenshot) ──
+      ctx.beginPath();
+      ctx.setLineDash([4, 4]);
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+      ctx.lineWidth = 1.0;
+      ctx.moveTo(rightEdge, 15);
+      ctx.lineTo(rightEdge, h - 20);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // ── 3. Draw All Fibonacci Wedge Rays and Trendlines ──
+      const allRatios = [...FIB_WEDGE_RATIOS];
       allRatios.sort((a, b) => a - b);
 
-      ctx.setLineDash([]);
       allRatios.forEach((r) => {
-        const sy1 = getScreenY(x1, r);
-        const sy2 = getScreenY(rightEdge, r);
+        // Line start index:
+        // For r = 1 (Resistance), start at resP1.idx
+        // For r = 0 (Support), start at supP1.idx
+        // For other Fib lines, start at startWedgeIdx
+        const startIdxForR = (r === 1.0) ? resP1.idx : (r === 0.0 ? supP1.idx : startWedgeIdx);
+        const xStartR = timeScale.logicalToCoordinate(startIdxForR as any);
+        if (xStartR === null) return;
 
-        ctx.beginPath();
-        ctx.moveTo(x1, sy1);
-        ctx.lineTo(rightEdge, sy2);
+        const pStart = (r === 1.0) ? resP1.price : (r === 0.0 ? supP1.price : getWedgePrice(startIdxForR, r));
+        const pEnd = getWedgePrice(actualEndLogical, r);
 
-        if (r === 1.0) {
-          // Lower Support Channel Line - Orange solid
-          ctx.strokeStyle = '#f97316';
-          ctx.lineWidth = 2.0;
+        const yStart = series.priceToCoordinate(pStart);
+        const yEnd = series.priceToCoordinate(pEnd);
+
+        if (yStart !== null && yEnd !== null) {
+          ctx.beginPath();
+          ctx.moveTo(xStartR, yStart);
+          ctx.lineTo(rightEdge, yEnd);
+
+          if (r === 1.0) {
+            // Upper Resistance Line - Solid Lime Green
+            ctx.strokeStyle = '#84cc16';
+            ctx.lineWidth = 2.0;
+            ctx.setLineDash([]);
+          } else if (r === 0.0) {
+            // Lower Support Line - Solid Coral Red
+            ctx.strokeStyle = '#ef4444';
+            ctx.lineWidth = 2.0;
+            ctx.setLineDash([]);
+          } else if (r > 0.0 && r < 1.0) {
+            // Inner Fib levels inside the wedge - Amber dashed
+            ctx.strokeStyle = 'rgba(234, 179, 8, 0.75)';
+            ctx.lineWidth = 1.0;
+            ctx.setLineDash([3, 4]);
+          } else if (r > 1.0) {
+            // Upper expansion Fib levels - Light Lime/Amber dashed
+            ctx.strokeStyle = 'rgba(163, 230, 53, 0.65)';
+            ctx.lineWidth = 0.9;
+            ctx.setLineDash([2, 3]);
+          } else {
+            // Lower expansion Fib levels (negative) - Red dashed
+            ctx.strokeStyle = 'rgba(248, 113, 113, 0.65)';
+            ctx.lineWidth = 0.9;
+            ctx.setLineDash([2, 3]);
+          }
+          ctx.stroke();
           ctx.setLineDash([]);
-        } else if (r === 0.0) {
-          // Upper Resistance Channel Line - Lime Green solid
-          ctx.strokeStyle = '#84cc16';
-          ctx.lineWidth = 2.0;
-          ctx.setLineDash([]);
-        } else {
-          // Inner Fib rays - Amber dashed
-          ctx.strokeStyle = 'rgba(234, 179, 8, 0.80)';
-          ctx.lineWidth = 1.0;
-          ctx.setLineDash([4, 5]);
-        }
-        ctx.stroke();
-        ctx.setLineDash([]);
 
-        // Ratio label at right edge
-        if (r !== 0.0 && r !== 1.0 && sy2 >= 12 && sy2 <= h - 12) {
-          ctx.fillStyle = '#facc15';
-          ctx.font = 'bold 9px JetBrains Mono, monospace';
-          ctx.textAlign = 'left';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(r.toString(), rightEdge + 4, sy2);
+          // ── Right-Aligned Fib Ratio Label at Vertical Guideline ──
+          if (yEnd >= 12 && yEnd <= h - 12) {
+            let labelColor = '#facc15';
+            if (r === 1.0) labelColor = '#84cc16';
+            else if (r === 0.0) labelColor = '#ef4444';
+            else if (r > 1.0) labelColor = '#a3e635';
+            else if (r < 0.0) labelColor = '#f87171';
+
+            ctx.fillStyle = labelColor;
+            ctx.font = 'bold 8.5px JetBrains Mono, monospace';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(r.toString(), rightEdge + 4, yEnd);
+          }
         }
       });
 
-      // 2. Swing Pivot Triangles (▼ on Highs, ▲ on Lows)
+      // ── 4. Swing Pivot Triangles (▼ on Highs, ▲ on Lows) ──
       swingHighs.forEach((sh) => {
         const x = timeScale.logicalToCoordinate(sh.idx as any);
         const y = series.priceToCoordinate(sh.price);
@@ -1933,7 +2048,7 @@ export function MarketCandleChart() {
         const x = timeScale.logicalToCoordinate(sl.idx as any);
         const y = series.priceToCoordinate(sl.price);
         if (x !== null && y !== null && x > 0 && x < w - 60) {
-          ctx.fillStyle = '#f97316';
+          ctx.fillStyle = '#ef4444';
           ctx.beginPath();
           ctx.moveTo(x - 4.5, y + 11);
           ctx.lineTo(x + 4.5, y + 11);
@@ -1943,7 +2058,7 @@ export function MarketCandleChart() {
         }
       });
 
-      // 3. Horizontal Support & Resistance Lines & Badges
+      // ── 5. Horizontal Support & Resistance Lines & Badges ──
       const resY    = series.priceToCoordinate(resistance);
       const supY    = series.priceToCoordinate(support);
       const fib0618Y = series.priceToCoordinate(fib0618);
@@ -1978,7 +2093,7 @@ export function MarketCandleChart() {
 
       if (resY    !== null) drawHzBadge(resY,    'Kháng cự', 'rgba(132,204,22,0.7)', '#f8fafc', 'rgba(132,204,22,0.45)');
       if (fib0618Y !== null) drawHzBadge(fib0618Y, 'Fib 0,618', 'rgba(234,179,8,0.65)', '#facc15', 'rgba(234,179,8,0.4)');
-      if (supY    !== null) drawHzBadge(supY,    'Hỗ trợ',   'rgba(249,115,22,0.7)', '#f8fafc', 'rgba(249,115,22,0.45)');
+      if (supY    !== null) drawHzBadge(supY,    'Hỗ trợ',   'rgba(239,68,68,0.7)', '#f8fafc', 'rgba(239,68,68,0.45)');
       if (fib1618Y !== null && fib1618Y >= 15) drawHzBadge(fib1618Y, 'Fib 1,618', 'rgba(6,182,212,0.6)', '#38bdf8', 'rgba(6,182,212,0.4)');
 
       ctx.restore();
@@ -2069,8 +2184,137 @@ export function MarketCandleChart() {
       ctx.restore();
     }
 
+    // ── 6. Render Advanced Volume Profile (Fixed/Session Range) ─────────────
+    if (showVolumeProfile && volumeProfileData && chart && series) {
+      ctx.save();
+      const rightX = w - 78;
+      const maxProfileW = Math.min(240, Math.max(100, (w - 78) * ((volumeProfileSettings.widthPercent || 28) / 100)));
+
+      // 1. Shaded background for Value Area (VA 70%)
+      const yVah = series.priceToCoordinate(volumeProfileData.vahPrice);
+      const yVal = series.priceToCoordinate(volumeProfileData.valPrice);
+      if (yVah !== null && yVal !== null) {
+        const topVA = Math.min(yVah, yVal);
+        const heightVA = Math.max(4, Math.abs(yVal - yVah));
+        ctx.fillStyle = 'rgba(6, 182, 212, 0.04)';
+        ctx.fillRect(rightX - maxProfileW - 8, topVA, maxProfileW + 8, heightVA);
+      }
+
+      // 2. Render Histogram Bins (Stacked Buy Vol + Sell Vol)
+      const maxVol = volumeProfileData.maxBinVolume || 1;
+      volumeProfileData.bins.forEach((bin) => {
+        if (bin.totalVolume <= 0) return;
+        const yTop = series.priceToCoordinate(bin.priceHigh);
+        const yBottom = series.priceToCoordinate(bin.priceLow);
+        if (yTop === null || yBottom === null) return;
+
+        const barY = Math.min(yTop, yBottom);
+        const barH = Math.max(1.5, Math.abs(yBottom - yTop) - 0.6);
+
+        const barTotalW = (bin.totalVolume / maxVol) * maxProfileW;
+        if (barTotalW <= 0.5) return;
+
+        const buyW = (bin.buyVolume / (bin.totalVolume || 1)) * barTotalW;
+        const sellW = barTotalW - buyW;
+
+        // Sell Volume (right-aligned, closest to price scale)
+        ctx.fillStyle = bin.isVA ? 'rgba(239, 68, 68, 0.72)' : 'rgba(239, 68, 68, 0.22)';
+        ctx.fillRect(rightX - sellW, barY, sellW, barH);
+
+        // Buy Volume (stacked to the left of Sell Volume)
+        ctx.fillStyle = bin.isVA ? 'rgba(16, 185, 129, 0.72)' : 'rgba(16, 185, 129, 0.22)';
+        ctx.fillRect(rightX - sellW - buyW, barY, buyW, barH);
+      });
+
+      // 3. Render VAH (Value Area High) Line & Badge
+      if (volumeProfileSettings.showVaLines && yVah !== null) {
+        ctx.strokeStyle = '#06b6d4';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(rightX - maxProfileW - 25, yVah);
+        ctx.lineTo(rightX, yVah);
+        ctx.stroke();
+
+        if (volumeProfileSettings.showLabels) {
+          ctx.setLineDash([]);
+          const badgeW = 64;
+          const badgeH = 16;
+          const badgeX = rightX - maxProfileW - badgeW - 6;
+          ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+          ctx.fillRect(badgeX, yVah - badgeH / 2, badgeW, badgeH);
+          ctx.strokeStyle = 'rgba(6, 182, 212, 0.6)';
+          ctx.lineWidth = 0.8;
+          ctx.strokeRect(badgeX, yVah - badgeH / 2, badgeW, badgeH);
+          ctx.fillStyle = '#38bdf8';
+          ctx.font = 'bold 9px JetBrains Mono, monospace';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(`VAH ${volumeProfileData.vahPrice.toFixed(2)}`, badgeX + badgeW / 2, yVah);
+        }
+      }
+
+      // 4. Render VAL (Value Area Low) Line & Badge
+      if (volumeProfileSettings.showVaLines && yVal !== null) {
+        ctx.strokeStyle = '#06b6d4';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(rightX - maxProfileW - 25, yVal);
+        ctx.lineTo(rightX, yVal);
+        ctx.stroke();
+
+        if (volumeProfileSettings.showLabels) {
+          ctx.setLineDash([]);
+          const badgeW = 64;
+          const badgeH = 16;
+          const badgeX = rightX - maxProfileW - badgeW - 6;
+          ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+          ctx.fillRect(badgeX, yVal - badgeH / 2, badgeW, badgeH);
+          ctx.strokeStyle = 'rgba(6, 182, 212, 0.6)';
+          ctx.lineWidth = 0.8;
+          ctx.strokeRect(badgeX, yVal - badgeH / 2, badgeW, badgeH);
+          ctx.fillStyle = '#38bdf8';
+          ctx.font = 'bold 9px JetBrains Mono, monospace';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(`VAL ${volumeProfileData.valPrice.toFixed(2)}`, badgeX + badgeW / 2, yVal);
+        }
+      }
+
+      // 5. Render POC (Point of Control) Line & Badge
+      const yPoc = series.priceToCoordinate(volumeProfileData.pocPrice);
+      if (volumeProfileSettings.showPocLine && yPoc !== null) {
+        ctx.strokeStyle = '#f97316';
+        ctx.lineWidth = 1.6;
+        ctx.setLineDash([]);
+        ctx.beginPath();
+        ctx.moveTo(rightX - maxProfileW - 35, yPoc);
+        ctx.lineTo(rightX, yPoc);
+        ctx.stroke();
+
+        if (volumeProfileSettings.showLabels) {
+          const badgeW = 64;
+          const badgeH = 18;
+          const badgeX = rightX - maxProfileW - badgeW - 6;
+          ctx.fillStyle = '#ea580c';
+          ctx.fillRect(badgeX, yPoc - badgeH / 2, badgeW, badgeH);
+          ctx.strokeStyle = '#fdba74';
+          ctx.lineWidth = 0.8;
+          ctx.strokeRect(badgeX, yPoc - badgeH / 2, badgeW, badgeH);
+          ctx.fillStyle = '#ffffff';
+          ctx.font = 'bold 9px JetBrains Mono, monospace';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(`POC ${volumeProfileData.pocPrice.toFixed(2)}`, badgeX + badgeW / 2, yPoc);
+        }
+      }
+
+      ctx.restore();
+    }
+
     ctx.restore();
-  }, [drawings, draftDrawing, showTrendlinePro, trendlineProData, hideDrawings, isMagnetMode, hoverSnapPoint, activeTool, selectedDrawingId, fiboSettings, fiboPeriods]);
+  }, [drawings, draftDrawing, showTrendlinePro, trendlineProData, hideDrawings, isMagnetMode, hoverSnapPoint, activeTool, selectedDrawingId, fiboSettings, fiboPeriods, showVolumeProfile, volumeProfileData, volumeProfileSettings]);
 
   // Keep decoupled ref for chart and window callbacks
   redrawCanvasRef.current = redrawCanvas;
@@ -2964,6 +3208,22 @@ export function MarketCandleChart() {
     setFiboPeriods(periods);
     requestAnimationFrame(() => redrawCanvasRef.current());
   }, [fiboSettings, dataVersion, resolution, selectedSymbol]);
+
+  // ── Calculate Advanced Volume Profile (Fixed/Full Loaded Range) ────────────
+  useEffect(() => {
+    if (!showVolumeProfile || loadedCandlesRef.current.length === 0) {
+      setVolumeProfileData(null);
+      requestAnimationFrame(() => redrawCanvasRef.current());
+      return;
+    }
+    const vp = calculateVolumeProfile(
+      loadedCandlesRef.current,
+      loadedVolumesRef.current,
+      volumeProfileSettings
+    );
+    setVolumeProfileData(vp);
+    requestAnimationFrame(() => redrawCanvasRef.current());
+  }, [showVolumeProfile, volumeProfileSettings, dataVersion, resolution, selectedSymbol]);
 
   // ── 4. 60fps Real-Time WebSocket Tick Update (Smooth & No Re-fetch) ────────
   useEffect(() => {
@@ -4092,6 +4352,33 @@ export function MarketCandleChart() {
                       </span>
                     </button>
                   </div>
+
+                  {/* Section 4: Volume Structure & Value Area */}
+                  <div className="text-[10px] font-mono uppercase tracking-wider text-cyan-400 mb-1.5 px-1 pt-2 border-t border-zinc-800/80 font-bold flex items-center justify-between">
+                    <span>4. Cấu trúc Khối lượng</span>
+                    <span className="text-zinc-500 text-[9px] font-normal">Vùng giá trị & POC</span>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    {/* Volume Profile */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowVolumeProfile(!showVolumeProfile);
+                      }}
+                      className="flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-mono text-zinc-200 hover:bg-zinc-800/70 transition-all border border-transparent hover:border-zinc-800"
+                    >
+                      <span className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 shrink-0" />
+                        <div>
+                          <span className="font-semibold block">Volume Profile (VRVP)</span>
+                          <span className="text-[9.5px] text-zinc-500">Mức giá trị POC, VAH, VAL & Tỷ lệ Mua/Bán</span>
+                        </div>
+                      </span>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-md font-bold transition-colors ${showVolumeProfile ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30' : 'bg-zinc-800/60 text-zinc-500'}`}>
+                        {showVolumeProfile ? 'BẬT' : 'TẮT'}
+                      </span>
+                    </button>
+                  </div>
                 </div>
               </>
             )}
@@ -4111,6 +4398,32 @@ export function MarketCandleChart() {
             <span>Trendline Pro</span>
             {showTrendlinePro && <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />}
           </button>
+
+          {/* Volume Profile (VPVR) Toggle Button */}
+          <div className="flex items-center shrink-0">
+            <button
+              onClick={() => setShowVolumeProfile(!showVolumeProfile)}
+              title="Bật/Tắt Volume Profile (Chỉ báo phân bổ khối lượng theo mức giá: POC, VAH, VAL, Delta Mua/Bán)"
+              className={`flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-mono font-semibold whitespace-nowrap transition-all ${
+                showVolumeProfile
+                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 rounded-l-lg shadow-sm'
+                  : 'bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200 rounded-lg'
+              }`}
+            >
+              <ChartBarHorizontal size={13} className={showVolumeProfile ? 'text-cyan-400 shrink-0' : 'text-zinc-500 shrink-0'} />
+              <span>Volume Profile</span>
+              {showVolumeProfile && <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />}
+            </button>
+            {showVolumeProfile && (
+              <button
+                onClick={() => setShowVolumeProfileModal(true)}
+                title="Cài đặt thông số Volume Profile (Số dòng, Value Area %, Độ rộng)"
+                className="px-1.5 py-0.5 text-xs font-mono rounded-r-lg bg-cyan-500/20 text-cyan-300 border-y border-r border-cyan-500/40 hover:bg-cyan-500/30 transition-all flex items-center justify-center"
+              >
+                <Gear size={12} className="text-cyan-400" />
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Right: Minervini RS Rating & Stage 2 Criteria, Fit & Fullscreen */}
@@ -4652,6 +4965,38 @@ export function MarketCandleChart() {
                   </button>
                 </div>
               )}
+
+              {/* Row 6: Volume Profile (VRVP) Legend */}
+              {showVolumeProfile && volumeProfileData && (
+                <div className="flex items-center gap-2 text-[10px] font-mono">
+                  <span className="text-cyan-400 font-bold flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                    VP (VA {volumeProfileSettings.valueAreaPercent}%)
+                  </span>
+                  <span className="text-orange-400 font-semibold">
+                    POC: <strong className="text-orange-300 font-bold">{volumeProfileData.pocPrice.toFixed(2)}</strong>
+                  </span>
+                  <span className="text-cyan-300 font-semibold">
+                    VAH: <strong className="text-white font-bold">{volumeProfileData.vahPrice.toFixed(2)}</strong>
+                  </span>
+                  <span className="text-cyan-300 font-semibold">
+                    VAL: <strong className="text-white font-bold">{volumeProfileData.valPrice.toFixed(2)}</strong>
+                  </span>
+                  <span className="text-emerald-400 font-semibold">
+                    Mua: <strong>{((volumeProfileData.totalBuyVolume / (volumeProfileData.totalVolume || 1)) * 100).toFixed(0)}%</strong>
+                  </span>
+                  <span className="text-rose-400 font-semibold">
+                    Bán: <strong>{((volumeProfileData.totalSellVolume / (volumeProfileData.totalVolume || 1)) * 100).toFixed(0)}%</strong>
+                  </span>
+                  <button
+                    onClick={() => setShowVolumeProfileModal(true)}
+                    className="p-0.5 rounded text-zinc-400 hover:text-cyan-300 hover:bg-zinc-800 transition-colors ml-0.5"
+                    title="Cài đặt Volume Profile"
+                  >
+                    <Gear size={12} />
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Active Tool Floating Banner (Only for actual drawing tools, never for cursor tools) */}
@@ -4818,6 +5163,14 @@ export function MarketCandleChart() {
         onClose={() => setShowFiboSettingsModal(false)}
         settings={fiboSettings}
         onUpdateSettings={(newSettings) => setFiboSettings(newSettings)}
+      />
+
+      {/* ── Volume Profile Modal ───────────────────────────────────── */}
+      <VolumeProfileModal
+        isOpen={showVolumeProfileModal}
+        onClose={() => setShowVolumeProfileModal(false)}
+        settings={volumeProfileSettings}
+        onUpdateSettings={(newSettings) => setVolumeProfileSettings(newSettings)}
       />
     </div>
   );
