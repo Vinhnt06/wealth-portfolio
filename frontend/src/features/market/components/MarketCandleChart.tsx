@@ -1995,30 +1995,37 @@ export function MarketCandleChart() {
       } = trendlineProData;
 
       const lastCandleIdx = Math.max(0, candles.length - 1);
-      const projEndLogical = lastCandleIdx + 20;
+      const pBase = baseTrough.price;
+
+      // Mathematical price functions for upper resistance (Green) and lower support (Red)
+      const getResPrice = (L: number) => resP1.price + resSlope * (L - resP1.idx);
+      const getSupPrice = (L: number) => supP1.price + supSlope * (L - supP1.idx);
+
+      // Fibonacci converging ray price function at index L with ratio r:
+      // P(L, r) = pBase + r * (getResPrice(L) - pBase)
+      const getFibRayPrice = (L: number, r: number) => pBase + r * (getResPrice(L) - pBase);
+
+      // Apex where the resistance trendline intersects the horizontal base support line
+      const rawApexLogical = Math.abs(resSlope) > 1e-6 
+        ? resP1.idx + (pBase - resP1.price) / resSlope 
+        : lastCandleIdx + 20;
+      const projEndLogical = Math.min(lastCandleIdx + 35, Math.max(lastCandleIdx + 12, Math.round(rawApexLogical)));
+      const startFanLogical = Math.max(0, resP1.idx - 32);
 
       // Coordinate anchors
       const xResStart = timeScale.logicalToCoordinate(resP1.idx as any);
       const xSupStart = timeScale.logicalToCoordinate(supP1.idx as any);
       const xLastCandle = timeScale.logicalToCoordinate(lastCandleIdx as any);
+      const xStartFan = timeScale.logicalToCoordinate(startFanLogical as any);
       const xEnd = timeScale.logicalToCoordinate(projEndLogical as any);
 
-      if (xResStart === null || xSupStart === null || xEnd === null || xLastCandle === null) {
+      if (xResStart === null || xSupStart === null || xLastCandle === null) {
         ctx.restore();
         return;
       }
 
-      const rightEdge = Math.min(w - 65, xEnd);
-
-      // Price functions for upper resistance (Green) and lower support (Red)
-      const getResPrice = (L: number) => resP1.price + resSlope * (L - resP1.idx);
-      const getSupPrice = (L: number) => supP1.price + supSlope * (L - supP1.idx);
-
-      const pBase = baseTrough.price;
-
-      // Fibonacci converging ray price function at index L with ratio r:
-      // P(L, r) = pBase + r * (getResPrice(L) - pBase)
-      const getFibRayPrice = (L: number, r: number) => pBase + r * (getResPrice(L) - pBase);
+      const rayStartX = xStartFan !== null ? Math.max(10, xStartFan) : xResStart;
+      const rightEdge = Math.min(w - 30, xEnd !== null ? xEnd : (xLastCandle + 80));
 
       // ── 1. Shaded Wedge Corridor Background (Subtle dark reddish overlay matching screenshot) ──
       // Bounded by upper resistance line getResPrice(L) and horizontal baseline pBase
@@ -2115,7 +2122,7 @@ export function MarketCandleChart() {
 
       allRatios.forEach((r) => {
         // Price at start and end
-        const pStart = getFibRayPrice(resP1.idx, r);
+        const pStart = getFibRayPrice(startFanLogical, r);
         const pEnd = getFibRayPrice(projEndLogical, r);
 
         const yStart = series.priceToCoordinate(pStart);
@@ -2123,7 +2130,7 @@ export function MarketCandleChart() {
 
         if (yStart !== null && yEnd !== null) {
           ctx.beginPath();
-          ctx.moveTo(xResStart, yStart);
+          ctx.moveTo(rayStartX, yStart);
           ctx.lineTo(rightEdge, yEnd);
 
           if (r < 0) {
