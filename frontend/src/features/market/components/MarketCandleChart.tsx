@@ -194,6 +194,8 @@ export interface TrendlineProResult {
   startIdx: number;
   recommendation: 'GIỮ' | 'MUA' | 'BÁN' | 'QUAN SÁT';
   xInt?: number;
+  displayedHighMarkers?: { idx: number; time: Time; price: number }[];
+  displayedLowMarkers?: { idx: number; time: Time; price: number }[];
 }
 
 export const FIB_FAN_RATIOS = [
@@ -243,28 +245,43 @@ export function calculateTrendlinePro(candles: CandlestickData<Time>[]): Trendli
     const swingHighs: { idx: number; time: Time; price: number }[] = [];
     const swingLows: { idx: number; time: Time; price: number }[] = [];
 
-    // Pivot detection with confirmation
-    for (let i = startOffset + 2; i < total - 2; i++) {
+    // Pivot detection with confirmation: radius of 3 bars to eliminate micro-fluctuations
+    const pivotRadius = 3;
+    for (let i = startOffset + pivotRadius; i < total - pivotRadius; i++) {
       const c = candles[i];
-      const isHigh =
-        c.high >= candles[i - 1].high &&
-        c.high >= candles[i - 2].high &&
-        c.high >= candles[i + 1].high &&
-        c.high >= candles[i + 2].high;
+      let isHigh = true;
+      for (let k = 1; k <= pivotRadius; k++) {
+        if (candles[i - k].high > c.high || candles[i + k].high > c.high) {
+          isHigh = false;
+          break;
+        }
+      }
 
-      const isLow =
-        c.low <= candles[i - 1].low &&
-        c.low <= candles[i - 2].low &&
-        c.low <= candles[i + 1].low &&
-        c.low <= candles[i + 2].low;
+      let isLow = true;
+      for (let k = 1; k <= pivotRadius; k++) {
+        if (candles[i - k].low < c.low || candles[i + k].low < c.low) {
+          isLow = false;
+          break;
+        }
+      }
 
-      if (isHigh) swingHighs.push({ idx: i, time: c.time, price: c.high });
-      if (isLow) swingLows.push({ idx: i, time: c.time, price: c.low });
+      if (isHigh) {
+        // Wick filtering for bearish rejection candles (nến đỏ rút râu):
+        // In professional Technical Analysis, confirmed buying peaks are marked by bullish candles.
+        // If a candle is bearish (close < open), its upper wick is often a rejection spike/fakeout.
+        // We use effective buying peak so resistance anchors directly to the true rally peak.
+        const isGreen = c.close >= c.open;
+        const price = isGreen ? c.high : Math.max(c.open, c.close + (c.high - c.close) * 0.35);
+        swingHighs.push({ idx: i, time: c.time, price });
+      }
+      if (isLow) {
+        swingLows.push({ idx: i, time: c.time, price: c.low });
+      }
     }
 
     if (swingHighs.length < 2 || swingLows.length < 2) continue;
 
-    // 1. Candidate Resistance Highs (supports both Ascending and Descending/Symmetrical patterns)
+    // 1. Candidate Resistance Highs (Upper Convex Tangent - Strict Non-penetration)
     const maxHighInWindow = Math.max(...swingHighs.map((h) => h.price));
     const resCandidates: {
       h1: { idx: number; time: Time; price: number };
@@ -292,14 +309,15 @@ export function calculateTrendlinePro(candles: CandlestickData<Time>[]): Trendli
         const currRes = p1.price + slope * (lastIdx - p1.idx);
         if (currRes >= lastClose * 0.985) {
           const isClean = breachPenalty < 0.05;
-          const anchorsPeak = p1.price === maxHighInWindow || p2.price === maxHighInWindow ? 3000 : 0;
+          const anchorsPeak = p1.price === maxHighInWindow || p2.price === maxHighInWindow ? 5000 : 0;
           resCandidates.push({
             h1: p1,
             h2: p2,
             slope,
             currRes,
             breachPenalty,
-            score: (isClean ? 10000 : 0) + anchorsPeak + dx * 15 - breachPenalty * 5000,
+            // Clean non-penetration gets massive priority to guarantee resistance remains completely above candles
+            score: (isClean ? 50000 : -breachPenalty * 500000) + anchorsPeak + dx * 10,
           });
         }
       }
@@ -308,7 +326,7 @@ export function calculateTrendlinePro(candles: CandlestickData<Time>[]): Trendli
     if (resCandidates.length === 0) continue;
     const bestRes = resCandidates[0];
 
-    // 2. Candidate Support Lows (supports both Ascending and Descending/Symmetrical patterns)
+    // 2. Candidate Support Lows (Lower Convex Tangent - Strict Non-penetration)
     const minLowInWindow = Math.min(...swingLows.map((l) => l.price));
     const supCandidates: {
       l1: { idx: number; time: Time; price: number };
@@ -336,14 +354,15 @@ export function calculateTrendlinePro(candles: CandlestickData<Time>[]): Trendli
         const currSup = p1.price + slope * (lastIdx - p1.idx);
         if (currSup <= lastClose * 1.015) {
           const isClean = breachPenalty < 0.05;
-          const anchorsTrough = p1.price === minLowInWindow || p2.price === minLowInWindow ? 3000 : 0;
+          const anchorsTrough = p1.price === minLowInWindow || p2.price === minLowInWindow ? 5000 : 0;
           supCandidates.push({
             l1: p1,
             l2: p2,
             slope,
             currSup,
             breachPenalty,
-            score: (isClean ? 10000 : 0) + anchorsTrough + dx * 15 - breachPenalty * 5000,
+            // Clean non-penetration gets massive priority
+            score: (isClean ? 50000 : -breachPenalty * 500000) + anchorsTrough + dx * 10,
           });
         }
       }
@@ -435,7 +454,40 @@ export function calculateTrendlinePro(candles: CandlestickData<Time>[]): Trendli
   else if (currRatio >= 0.85) recommendation = 'QUAN SÁT';
   else recommendation = 'GIỮ';
 
-  const slope = resSlope;
+  // 4. Extract Key Anchor & Touch Markers (Matches Reference Image exactly: 2 Highs, 2-3 Lows)
+  const displayedHighMarkers: { idx: number; time: Time; price: number }[] = [
+    { idx: h1.idx, time: h1.time, price: candles[h1.idx].high },
+  ];
+  if (h2.idx !== h1.idx) {
+    displayedHighMarkers.push({ idx: h2.idx, time: h2.time, price: candles[h2.idx].high });
+  }
+
+  const displayedLowMarkers: { idx: number; time: Time; price: number }[] = [
+    { idx: l1.idx, time: l1.time, price: candles[l1.idx].low },
+  ];
+  if (l2.idx !== l1.idx) {
+    displayedLowMarkers.push({ idx: l2.idx, time: l2.time, price: candles[l2.idx].low });
+  }
+  // Include intermediate baseTrough if it is a notable distinct swing low
+  if (baseTrough.idx !== l1.idx && baseTrough.idx !== l2.idx && baseTrough.idx > l1.idx && baseTrough.idx < lastIdx - 2) {
+    displayedLowMarkers.push({ idx: baseTrough.idx, time: baseTrough.time, price: baseTrough.price });
+  }
+
+  // Detect genuine touch points on the trendlines (within 0.25% margin)
+  for (let k = Math.min(h1.idx, l1.idx); k <= lastIdx - 2; k++) {
+    if (k !== h1.idx && k !== h2.idx) {
+      const lineResP = h1.price + resSlope * (k - h1.idx);
+      if (Math.abs(candles[k].high - lineResP) <= 0.0025 * lineResP) {
+        displayedHighMarkers.push({ idx: k, time: candles[k].time, price: candles[k].high });
+      }
+    }
+    if (k !== l1.idx && k !== l2.idx && k !== baseTrough.idx) {
+      const lineSupP = l1.price + supSlope * (k - l1.idx);
+      if (Math.abs(candles[k].low - lineSupP) <= 0.0025 * lineSupP) {
+        displayedLowMarkers.push({ idx: k, time: candles[k].time, price: candles[k].low });
+      }
+    }
+  }
 
   return {
     resistance,
@@ -456,6 +508,8 @@ export function calculateTrendlinePro(candles: CandlestickData<Time>[]): Trendli
     startIdx: Math.min(h1.idx, l1.idx),
     recommendation,
     xInt: Number.isFinite(xInt) ? xInt : undefined,
+    displayedHighMarkers,
+    displayedLowMarkers,
   };
 }
 
@@ -2057,6 +2111,8 @@ export function MarketCandleChart() {
         baseTrough,
         swingHighs,
         swingLows,
+        displayedHighMarkers,
+        displayedLowMarkers,
       } = trendlineProData;
 
       const lastCandleIdx = Math.max(0, candles.length - 1);
@@ -2344,7 +2400,12 @@ export function MarketCandleChart() {
       }
 
       // ── 7. Swing Pivot Triangles (▼ on Highs, ▲ on Lows) ──
-      swingHighs.forEach((sh) => {
+      // Chỉ vẽ các điểm Pivot then chốt (H1, H2, L1, L2, baseTrough) y như mẫu chuẩn TradingView
+      const highMarkers = displayedHighMarkers || [resP1, trendlineProData.resP2];
+      const lowMarkers = displayedLowMarkers || [supP1, trendlineProData.supP2, baseTrough];
+
+      highMarkers.forEach((sh) => {
+        if (!sh) return;
         const x = timeScale.logicalToCoordinate(sh.idx as any);
         const y = series.priceToCoordinate(sh.price);
         if (x !== null && y !== null && x > 0 && x < w - 60) {
@@ -2358,7 +2419,8 @@ export function MarketCandleChart() {
         }
       });
 
-      swingLows.forEach((sl) => {
+      lowMarkers.forEach((sl) => {
+        if (!sl) return;
         const x = timeScale.logicalToCoordinate(sl.idx as any);
         const y = series.priceToCoordinate(sl.price);
         if (x !== null && y !== null && x > 0 && x < w - 60) {
