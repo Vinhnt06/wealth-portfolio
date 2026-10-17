@@ -278,7 +278,8 @@ export function calculateTrendlinePro(candles: CandlestickData<Time>[]): Trendli
           const linePrice = h1.price + slope * (i - h1.idx);
           if (candles[i].high > linePrice) breachPenalty += candles[i].high - linePrice;
         }
-        return { sh, score: dx * 10 - breachPenalty * 80, slope };
+        const isClean = breachPenalty < 0.001;
+        return { sh, score: (isClean ? 10000 : 0) + dx * 10 - breachPenalty * 5000, slope };
       });
       scoredHighs.sort((a, b) => b.score - a.score);
       h2 = scoredHighs[0].sh;
@@ -299,7 +300,8 @@ export function calculateTrendlinePro(candles: CandlestickData<Time>[]): Trendli
           const linePrice = l1.price + slope * (i - l1.idx);
           if (candles[i].low < linePrice) breachPenalty += linePrice - candles[i].low;
         }
-        return { sl, score: dx * 10 - breachPenalty * 80, slope };
+        const isClean = breachPenalty < 0.001;
+        return { sl, score: (isClean ? 10000 : 0) + dx * 10 - breachPenalty * 5000, slope };
       });
       scoredLows.sort((a, b) => b.score - a.score);
       l2 = scoredLows[0].sl;
@@ -315,9 +317,9 @@ export function calculateTrendlinePro(candles: CandlestickData<Time>[]): Trendli
     }
 
     // A valid active pattern requires:
-    // 1) Resistance is strictly above Support by at least 1.2% of price at current candle
+    // 1) Resistance is strictly above Support by at least 1.5% of price at current candle
     // 2) The lines do not intersect right at or right after the current candle (diff > 12 bars or in past)
-    if (currRes > currSup + 0.012 * lastClose && (xInt < lastIdx - 5 || xInt > lastIdx + 12 || xInt === Infinity)) {
+    if (currRes > currSup + 0.015 * lastClose && (xInt < lastIdx - 5 || xInt > lastIdx + 12 || xInt === Infinity)) {
       bestCandidate = { h1, h2, l1, l2, resSlope, supSlope, currRes, currSup, xInt, swingHighs, swingLows };
       break;
     }
@@ -2073,33 +2075,59 @@ export function MarketCandleChart() {
         ctx.fillText(dateLabel, xBaseTrough, h - 16);
       }
 
+      // Target horizontal anchor for labels in clear margin beside current candle
+      const targetLabelX = Math.min(xLastCandle + 24, w - 65);
+
+      // Current price levels at the latest candle (100% matched with legend)
+      const currSpread = trendlineProData.resistance - trendlineProData.support;
+
       // ── 4. Upper Resistance Trendline (Solid Lime Green connecting Highs, extends forward) ──
       const yResStart = series.priceToCoordinate(resP1.price);
-      const yResEnd = series.priceToCoordinate(getResPrice(effectiveProjEndLogical));
+      const yResEnd = series.priceToCoordinate(trendlineProData.resistance);
       if (yResStart !== null && yResEnd !== null) {
         ctx.beginPath();
         ctx.moveTo(xResStart, yResStart);
-        ctx.lineTo(rayRightEdge, yResEnd);
+        ctx.lineTo(targetLabelX, yResEnd);
         ctx.strokeStyle = '#84cc16';
         ctx.lineWidth = 2.0;
         ctx.setLineDash([]);
         ctx.stroke();
+
+        // Forward guideline
+        ctx.beginPath();
+        ctx.setLineDash([3, 3]);
+        ctx.moveTo(targetLabelX, yResEnd);
+        ctx.lineTo(Math.min(w - 15, rightEdge + 35), yResEnd);
+        ctx.strokeStyle = 'rgba(132, 204, 22, 0.5)';
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+        ctx.setLineDash([]);
       }
 
       // ── 5. Lower Support Trendline (Solid Coral Red connecting Lows, extends forward) ──
       const ySupStart = series.priceToCoordinate(supP1.price);
-      const ySupEnd = series.priceToCoordinate(getSupPrice(effectiveProjEndLogical));
+      const ySupEnd = series.priceToCoordinate(trendlineProData.support);
       if (ySupStart !== null && ySupEnd !== null) {
         ctx.beginPath();
         ctx.moveTo(xSupStart, ySupStart);
-        ctx.lineTo(rayRightEdge, ySupEnd);
+        ctx.lineTo(targetLabelX, ySupEnd);
         ctx.strokeStyle = '#ef4444';
         ctx.lineWidth = 2.0;
         ctx.setLineDash([]);
         ctx.stroke();
+
+        // Forward guideline
+        ctx.beginPath();
+        ctx.setLineDash([3, 3]);
+        ctx.moveTo(targetLabelX, ySupEnd);
+        ctx.lineTo(Math.min(w - 15, rightEdge + 35), ySupEnd);
+        ctx.strokeStyle = 'rgba(239, 68, 68, 0.5)';
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+        ctx.setLineDash([]);
       }
 
-      // ── 6. Fibonacci Wedge Fan Rays Connecting Peak and Trough ──
+      // ── 6. Fibonacci Channel & Fan Rays (Connecting Origin Pivots to Current Active S/R Fib Levels) ──
       const allRatios = [...FIB_FAN_RATIOS];
 
       interface FibFanLabelItem {
@@ -2109,55 +2137,57 @@ export function MarketCandleChart() {
         rawY: number;
         y: number;
         x: number;
+        price: number;
       }
       const fanLabels: FibFanLabelItem[] = [];
 
-      const minLabelX = xLastCandle + 28;
-      const maxAllowedLabelX = hasApex
-        ? (timeScale.logicalToCoordinate(Math.max(lastCandleIdx + 2, Math.floor(trendlineProData.xInt!) - 2) as any) ?? rayRightEdge)
-        : rayRightEdge;
-      const targetLabelX = Math.min(Math.max(minLabelX, rayRightEdge - 12), maxAllowedLabelX, w - 75);
-      const sampleLogical = Math.min(
-        timeScale.coordinateToLogical(targetLabelX as any) ?? lastCandleIdx,
-        hasApex ? Math.max(lastCandleIdx, trendlineProData.xInt! - 1) : projEndLogical
-      );
-
       allRatios.forEach((r) => {
+        // Price at current candle - strictly separated across the full channel spread
+        const pCurrent = trendlineProData.support + r * currSpread;
+        // Price at start anchor
         const pStart = getFibRayPrice(resP1.idx, r);
-        const pEnd = getFibRayPrice(effectiveProjEndLogical, r);
 
         const yStart = series.priceToCoordinate(pStart);
-        const yEnd = series.priceToCoordinate(pEnd);
+        const yTarget = series.priceToCoordinate(pCurrent);
 
-        if (yStart !== null && yEnd !== null) {
+        if (yStart !== null && yTarget !== null) {
           ctx.beginPath();
           ctx.moveTo(xResStart, yStart);
-          ctx.lineTo(rayRightEdge, yEnd);
+          ctx.lineTo(targetLabelX, yTarget);
 
           if (r < 0) {
-            ctx.strokeStyle = 'rgba(248, 113, 113, 0.8)';
+            ctx.strokeStyle = 'rgba(248, 113, 113, 0.75)';
             ctx.lineWidth = 1.0;
             ctx.setLineDash([2, 3]);
           } else {
-            ctx.strokeStyle = 'rgba(250, 204, 21, 0.8)';
+            ctx.strokeStyle = 'rgba(250, 204, 21, 0.75)';
             ctx.lineWidth = 1.0;
             ctx.setLineDash([2, 3]);
           }
           ctx.stroke();
           ctx.setLineDash([]);
 
-          // Compute price of this ray at sampleLogical where Res > Sup is guaranteed
-          const pAtTarget = getFibRayPrice(sampleLogical, r);
-          const yLabel = series.priceToCoordinate(pAtTarget);
+          // Horizontal guideline from label to right edge for key levels (Fib 1.618, 0.618)
+          if (r === 0.618 || r === 1.618) {
+            ctx.beginPath();
+            ctx.setLineDash([3, 3]);
+            ctx.strokeStyle = r === 1.618 ? 'rgba(56, 189, 248, 0.5)' : 'rgba(250, 204, 21, 0.5)';
+            ctx.lineWidth = 1.0;
+            ctx.moveTo(targetLabelX, yTarget);
+            ctx.lineTo(Math.min(w - 15, rightEdge + 35), yTarget);
+            ctx.stroke();
+            ctx.setLineDash([]);
+          }
 
-          if (yLabel !== null && yLabel >= 10 && yLabel <= h - 10) {
+          if (yTarget >= 10 && yTarget <= h - 10) {
             fanLabels.push({
               r,
               text: r.toString(),
               color: r < 0 ? '#f87171' : '#facc15',
-              rawY: yLabel,
-              y: yLabel,
+              rawY: yTarget,
+              y: yTarget,
               x: targetLabelX,
+              price: pCurrent,
             });
           }
         }
