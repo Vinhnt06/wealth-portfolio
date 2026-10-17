@@ -213,7 +213,7 @@ export const MarketHeatmap: React.FC = () => {
   const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [searchFilter, setSearchFilter] = useState('');
 
-  const { ticks, wsStatus, setSelectedSymbol, updateTicks } = useMarketStore();
+  const { ticks, wsStatus, setSelectedSymbol, updateTicks, setViewMode } = useMarketStore();
   const [flashMap, setFlashMap] = useState<Record<string, 'up' | 'down'>>({});
   const [lastUpdated, setLastUpdated] = useState<string>('');
   const [dataSource, setDataSource] = useState<string>('');
@@ -582,6 +582,7 @@ export const MarketHeatmap: React.FC = () => {
 
   const handleTileClick = (stock: HeatmapStock) => {
     setSelectedSymbol(stock.symbol);
+    setViewMode('detail');
   };
 
   const handleMouseMove = (e: React.MouseEvent, stock: HeatmapStock) => {

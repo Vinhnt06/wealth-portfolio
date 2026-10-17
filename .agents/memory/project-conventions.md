@@ -22,4 +22,4 @@ updated: 2026-07-12
 
 ## Deployment Workflow
 - Luôn kiểm tra, phát triển và chạy thử nghiệm trên **Localhost** trước.
-- Tuyệt đối CHỈ đẩy mã nguồn / deploy lên Vercel khi người dùng đã kiểm tra xong, xác nhận 'OK' hoặc có yêu cầu trực tiếp.
+- **TUYỆT ĐỐI KHÔNG TỰ ĐỘNG DEPLOY VERCEL**: Chỉ khi người dùng có yêu cầu rõ ràng ("đẩy lên vercel", "deploy vercel",...) thì mới được phép chạy lệnh deploy lên Vercel. Sau mỗi lần sửa code, chỉ kiểm tra và chạy local.

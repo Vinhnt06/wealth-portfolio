@@ -19,7 +19,7 @@ const STOCK_LOOKUP = new Map<string, StockMetadata>();
 });
 
 export const MarketSummaryBar: React.FC = () => {
-  const { ticks, setSelectedSymbol, selectedSymbol } = useMarketStore();
+  const { ticks, setSelectedSymbol, selectedSymbol, setViewMode } = useMarketStore();
   const [activeTab, setActiveTab] = useState<'gainers' | 'losers' | 'volume' | 'foreign'>('gainers');
 
   // Compute all stocks dynamically
@@ -160,7 +160,10 @@ export const MarketSummaryBar: React.FC = () => {
               return (
                 <div
                   key={item.symbol}
-                  onClick={() => setSelectedSymbol(item.symbol)}
+                  onClick={() => {
+                    setSelectedSymbol(item.symbol);
+                    setViewMode('detail');
+                  }}
                   className={`flex items-center justify-between p-2.5 rounded-xl cursor-pointer transition-all border ${
                     isSelected
                       ? 'bg-emerald-500/10 border-emerald-500/40 shadow-sm'
@@ -215,7 +218,10 @@ export const MarketSummaryBar: React.FC = () => {
               return (
                 <div
                   key={item.symbol}
-                  onClick={() => setSelectedSymbol(item.symbol)}
+                  onClick={() => {
+                    setSelectedSymbol(item.symbol);
+                    setViewMode('detail');
+                  }}
                   className={`flex items-center justify-between p-2.5 rounded-xl cursor-pointer transition-all border ${
                     isSelected
                       ? 'bg-rose-500/10 border-rose-500/40 shadow-sm'
@@ -271,7 +277,10 @@ export const MarketSummaryBar: React.FC = () => {
               return (
                 <div
                   key={item.symbol}
-                  onClick={() => setSelectedSymbol(item.symbol)}
+                  onClick={() => {
+                    setSelectedSymbol(item.symbol);
+                    setViewMode('detail');
+                  }}
                   className={`flex items-center justify-between p-2.5 rounded-xl cursor-pointer transition-all border ${
                     isSelected
                       ? 'bg-cyan-500/10 border-cyan-500/40 shadow-sm'
@@ -335,7 +344,10 @@ export const MarketSummaryBar: React.FC = () => {
               return (
                 <div
                   key={item.symbol}
-                  onClick={() => setSelectedSymbol(item.symbol)}
+                  onClick={() => {
+                    setSelectedSymbol(item.symbol);
+                    setViewMode('detail');
+                  }}
                   className={`flex items-center justify-between p-2.5 rounded-xl cursor-pointer transition-all border ${
                     isSelected
                       ? 'bg-amber-500/10 border-amber-400/40 shadow-sm'

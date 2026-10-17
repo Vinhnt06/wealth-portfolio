@@ -277,7 +277,7 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
   return (
     <div className="space-y-6">
       {/* Top Navigation & Stock Header Bar */}
-      <div className="bg-zinc-950/90 border border-zinc-800/80 rounded-2xl p-5 shadow-2xl backdrop-blur-xl">
+      <div className="bg-zinc-950 border border-zinc-800/80 rounded-2xl p-5 shadow-2xl">
         <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-zinc-800/80">
           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <button

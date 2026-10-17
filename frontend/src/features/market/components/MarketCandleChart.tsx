@@ -21,7 +21,6 @@ import {
   TrendUp,
   TrendDown,
   Clock,
-  ArrowsOutSimple,
   ChartLine,
   Cursor,
   Minus,
@@ -242,11 +241,14 @@ export function calculateTrendlinePro(candles: CandlestickData<Time>[]): Trendli
     const lookback = Math.min(total, lb);
     const startOffset = total - lookback;
 
-    const swingHighs: { idx: number; time: Time; price: number }[] = [];
-    const swingLows: { idx: number; time: Time; price: number }[] = [];
+    const swingHighs: { idx: number; time: Time; price: number; calcPrice: number }[] = [];
+    const swingLows: { idx: number; time: Time; price: number; calcPrice: number }[] = [];
 
     // Pivot detection with confirmation: radius of 3 bars to eliminate micro-fluctuations
     const pivotRadius = 3;
+    let lastHighIdx = -999;
+    let lastLowIdx = -999;
+
     for (let i = startOffset + pivotRadius; i < total - pivotRadius; i++) {
       const c = candles[i];
       let isHigh = true;
@@ -265,27 +267,33 @@ export function calculateTrendlinePro(candles: CandlestickData<Time>[]): Trendli
         }
       }
 
-      if (isHigh) {
-        // Wick filtering for bearish rejection candles (nến đỏ rút râu):
-        // In professional Technical Analysis, confirmed buying peaks are marked by bullish candles.
-        // If a candle is bearish (close < open), its upper wick is often a rejection spike/fakeout.
-        // We use effective buying peak so resistance anchors directly to the true rally peak.
+      if (isHigh && i - lastHighIdx >= 3) {
+        lastHighIdx = i;
+        // Wick filtering for bearish rejection candles (nến đỏ rút râu / Bull Trap):
+        // Giá tính toán (calcPrice) loại bỏ bẫy quét thanh khoản râu nến đỏ,
+        // trong khi giá hiển thị (price) luôn đặt chính xác trên chóp râu nến c.high.
         const isGreen = c.close >= c.open;
-        const price = isGreen ? c.high : Math.max(c.open, c.close + (c.high - c.close) * 0.35);
-        swingHighs.push({ idx: i, time: c.time, price });
+        const calcPrice = isGreen ? c.high : Math.max(c.open, c.close + (c.high - c.close) * 0.35);
+        swingHighs.push({ idx: i, time: c.time, price: c.high, calcPrice });
       }
-      if (isLow) {
-        swingLows.push({ idx: i, time: c.time, price: c.low });
+      if (isLow && i - lastLowIdx >= 3) {
+        lastLowIdx = i;
+        // Wick filtering for hammer/bear trap wicks:
+        const isRed = c.close <= c.open;
+        const calcPrice = isRed ? c.low : Math.min(c.open, c.close - (c.close - c.low) * 0.35);
+        swingLows.push({ idx: i, time: c.time, price: c.low, calcPrice });
       }
     }
 
     if (swingHighs.length < 2 || swingLows.length < 2) continue;
 
-    // 1. Candidate Resistance Highs (Upper Convex Tangent - Strict Non-penetration)
-    const maxHighInWindow = Math.max(...swingHighs.map((h) => h.price));
+    // 1. Candidate Resistance Highs (Upper Tangent - Realistic Slope & Boundaries)
+    const maxHighInWindow = Math.max(...swingHighs.map((h) => h.calcPrice));
+    const maxResSlope = (lastClose * 0.0025); // tối đa dốc lên 0.25%/bar, chống bắn dựng đứng lên trời
+    const minResSlope = -(lastClose * 0.004); // không dốc chúc xuống quá 0.4%/bar
     const resCandidates: {
-      h1: { idx: number; time: Time; price: number };
-      h2: { idx: number; time: Time; price: number };
+      h1: { idx: number; time: Time; price: number; calcPrice: number };
+      h2: { idx: number; time: Time; price: number; calcPrice: number };
       slope: number;
       currRes: number;
       breachPenalty: number;
@@ -298,39 +306,50 @@ export function calculateTrendlinePro(candles: CandlestickData<Time>[]): Trendli
         const p2 = swingHighs[j];
         const dx = p2.idx - p1.idx;
         if (dx < 8) continue;
-        const slope = (p2.price - p1.price) / dx;
+        const slope = (p2.calcPrice - p1.calcPrice) / dx;
+        if (slope > maxResSlope || slope < minResSlope) continue;
+
+        const currRes = p1.calcPrice + slope * (lastIdx - p1.idx);
+        // Kháng cự tại nến hiện tại phải nằm hợp lý ngay phía trên giá hiện tại (+0.1% đến +22%)
+        if (currRes < lastClose * 1.001 || currRes > lastClose * 1.22) continue;
+
         let breachPenalty = 0;
+        let touches = 0;
         for (let k = p1.idx; k <= lastIdx; k++) {
-          const lineP = p1.price + slope * (k - p1.idx);
-          if (candles[k].high > lineP + 0.05) {
-            breachPenalty += candles[k].high - lineP;
+          const lineP = p1.calcPrice + slope * (k - p1.idx);
+          const diff = candles[k].high - lineP;
+          if (diff > lineP * 0.0015) {
+            breachPenalty += diff;
+          } else if (Math.abs(diff) <= lineP * 0.004) {
+            touches++;
           }
         }
-        const currRes = p1.price + slope * (lastIdx - p1.idx);
-        if (currRes >= lastClose * 0.985) {
-          const isClean = breachPenalty < 0.05;
-          const anchorsPeak = p1.price === maxHighInWindow || p2.price === maxHighInWindow ? 5000 : 0;
-          resCandidates.push({
-            h1: p1,
-            h2: p2,
-            slope,
-            currRes,
-            breachPenalty,
-            // Clean non-penetration gets massive priority to guarantee resistance remains completely above candles
-            score: (isClean ? 50000 : -breachPenalty * 500000) + anchorsPeak + dx * 10,
-          });
-        }
+
+        const isClean = breachPenalty < 0.05;
+        const anchorsPeak = p1.calcPrice === maxHighInWindow || p2.calcPrice === maxHighInWindow ? 5000 : 0;
+        const proximityScore = Math.max(0, 1 - (currRes - lastClose) / (lastClose * 0.22)) * 3000;
+
+        resCandidates.push({
+          h1: p1,
+          h2: p2,
+          slope,
+          currRes,
+          breachPenalty,
+          score: (isClean ? 30000 : 0) - breachPenalty * 40000 + touches * 3000 + anchorsPeak + proximityScore + dx * 5,
+        });
       }
     }
     resCandidates.sort((a, b) => b.score - a.score);
     if (resCandidates.length === 0) continue;
     const bestRes = resCandidates[0];
 
-    // 2. Candidate Support Lows (Lower Convex Tangent - Strict Non-penetration)
-    const minLowInWindow = Math.min(...swingLows.map((l) => l.price));
+    // 2. Candidate Support Lows (Lower Tangent - Realistic Slope & Boundaries)
+    const minLowInWindow = Math.min(...swingLows.map((l) => l.calcPrice));
+    const minSupSlope = -(lastClose * 0.0025); // không dốc chúc xuống quá 0.25%/bar, chống đâm âm
+    const maxSupSlope = (lastClose * 0.004);   // không dốc lên quá 0.4%/bar
     const supCandidates: {
-      l1: { idx: number; time: Time; price: number };
-      l2: { idx: number; time: Time; price: number };
+      l1: { idx: number; time: Time; price: number; calcPrice: number };
+      l2: { idx: number; time: Time; price: number; calcPrice: number };
       slope: number;
       currSup: number;
       breachPenalty: number;
@@ -343,28 +362,37 @@ export function calculateTrendlinePro(candles: CandlestickData<Time>[]): Trendli
         const p2 = swingLows[j];
         const dx = p2.idx - p1.idx;
         if (dx < 8) continue;
-        const slope = (p2.price - p1.price) / dx;
+        const slope = (p2.calcPrice - p1.calcPrice) / dx;
+        if (slope < minSupSlope || slope > maxSupSlope) continue;
+
+        const currSup = p1.calcPrice + slope * (lastIdx - p1.idx);
+        // Hỗ trợ tại nến hiện tại phải nằm hợp lý ngay phía dưới giá hiện tại (-22% đến -0.1%) và luôn > 0
+        if (currSup < lastClose * 0.78 || currSup > lastClose * 0.999 || currSup <= 0) continue;
+
         let breachPenalty = 0;
+        let touches = 0;
         for (let k = p1.idx; k <= lastIdx; k++) {
-          const lineP = p1.price + slope * (k - p1.idx);
-          if (candles[k].low < lineP - 0.05) {
-            breachPenalty += lineP - candles[k].low;
+          const lineP = p1.calcPrice + slope * (k - p1.idx);
+          const diff = lineP - candles[k].low;
+          if (diff > lineP * 0.0015) {
+            breachPenalty += diff;
+          } else if (Math.abs(diff) <= lineP * 0.004) {
+            touches++;
           }
         }
-        const currSup = p1.price + slope * (lastIdx - p1.idx);
-        if (currSup <= lastClose * 1.015) {
-          const isClean = breachPenalty < 0.05;
-          const anchorsTrough = p1.price === minLowInWindow || p2.price === minLowInWindow ? 5000 : 0;
-          supCandidates.push({
-            l1: p1,
-            l2: p2,
-            slope,
-            currSup,
-            breachPenalty,
-            // Clean non-penetration gets massive priority
-            score: (isClean ? 50000 : -breachPenalty * 500000) + anchorsTrough + dx * 10,
-          });
-        }
+
+        const isClean = breachPenalty < 0.05;
+        const anchorsTrough = p1.calcPrice === minLowInWindow || p2.calcPrice === minLowInWindow ? 5000 : 0;
+        const proximityScore = Math.max(0, 1 - (lastClose - currSup) / (lastClose * 0.22)) * 3000;
+
+        supCandidates.push({
+          l1: p1,
+          l2: p2,
+          slope,
+          currSup,
+          breachPenalty,
+          score: (isClean ? 30000 : 0) - breachPenalty * 40000 + touches * 3000 + anchorsTrough + proximityScore + dx * 5,
+        });
       }
     }
     supCandidates.sort((a, b) => b.score - a.score);
@@ -374,22 +402,21 @@ export function calculateTrendlinePro(candles: CandlestickData<Time>[]): Trendli
     const h1 = bestRes.h1;
     const h2 = bestRes.h2;
     const resSlope = bestRes.slope;
-    const currRes = bestRes.currRes;
+    let currRes = bestRes.currRes;
 
     const l1 = bestSup.l1;
     const l2 = bestSup.l2;
     const supSlope = bestSup.slope;
-    const currSup = bestSup.currSup;
+    let currSup = bestSup.currSup;
 
     let xInt = Infinity;
     if (Math.abs(resSlope - supSlope) > 1e-5) {
-      xInt = (l1.price - supSlope * l1.idx - (h1.price - resSlope * h1.idx)) / (resSlope - supSlope);
+      xInt = (l1.calcPrice - supSlope * l1.idx - (h1.calcPrice - resSlope * h1.idx)) / (resSlope - supSlope);
     }
 
-    // A valid active pattern requires:
-    // 1) Resistance is strictly above Support by at least 1.5% of price at current candle
-    // 2) The lines do not intersect right at or right after the current candle (diff > 12 bars or in past)
-    if (currRes > currSup + 0.015 * lastClose && (xInt < lastIdx - 5 || xInt > lastIdx + 12 || xInt === Infinity)) {
+    const spread = currRes - currSup;
+    // Kênh nêm co hẹp phải có biên độ thực tế từ 2% đến 25% giá hiện tại
+    if (spread >= 0.02 * lastClose && spread <= 0.28 * lastClose && (xInt < lastIdx - 5 || xInt > lastIdx + 12 || xInt === Infinity)) {
       bestCandidate = { h1, h2, l1, l2, resSlope, supSlope, currRes, currSup, xInt, swingHighs, swingLows };
       break;
     }
@@ -397,7 +424,7 @@ export function calculateTrendlinePro(candles: CandlestickData<Time>[]): Trendli
 
   // Fallback if no window met clean wedge criteria
   if (!bestCandidate) {
-    const lookback = Math.min(total, 60);
+    const lookback = Math.min(total, 80);
     const startOffset = total - lookback;
     let maxP = -Infinity;
     let maxIdx = startOffset;
@@ -407,38 +434,50 @@ export function calculateTrendlinePro(candles: CandlestickData<Time>[]): Trendli
       if (candles[i].high > maxP) { maxP = candles[i].high; maxIdx = i; }
       if (candles[i].low < minP) { minP = candles[i].low; minIdx = i; }
     }
-    const h1 = { idx: maxIdx, time: candles[maxIdx].time, price: maxP };
-    const h2 = { idx: lastIdx, time: candles[lastIdx].time, price: maxP };
-    const l1 = { idx: minIdx, time: candles[minIdx].time, price: minP };
-    const l2 = { idx: lastIdx, time: candles[lastIdx].time, price: minP };
+    const safeRes = Math.max(maxP, lastClose * 1.06);
+    const safeSup = Math.min(minP, lastClose * 0.94);
+    const h1 = { idx: maxIdx, time: candles[maxIdx].time, price: maxP, calcPrice: maxP };
+    const h2 = { idx: lastIdx, time: candles[lastIdx].time, price: safeRes, calcPrice: safeRes };
+    const l1 = { idx: minIdx, time: candles[minIdx].time, price: minP, calcPrice: minP };
+    const l2 = { idx: lastIdx, time: candles[lastIdx].time, price: safeSup, calcPrice: safeSup };
     bestCandidate = {
       h1,
       h2,
       l1,
       l2,
-      resSlope: 0,
-      supSlope: 0,
-      currRes: maxP,
-      currSup: minP,
+      resSlope: (safeRes - maxP) / Math.max(1, lastIdx - maxIdx),
+      supSlope: (safeSup - minP) / Math.max(1, lastIdx - minIdx),
+      currRes: safeRes,
+      currSup: safeSup,
       xInt: Infinity,
       swingHighs: [h1],
       swingLows: [l1],
     };
   }
 
-  const { h1, h2, l1, l2, resSlope, supSlope, currRes, currSup, xInt, swingHighs, swingLows } = bestCandidate;
+  let { h1, h2, l1, l2, resSlope, supSlope, currRes, currSup, xInt, swingHighs, swingLows } = bestCandidate;
+
+  // Failsafe Sanity Clamping: Đảm bảo 100% Kháng cự và Hỗ trợ luôn nằm trong phạm vi thực tế
+  if (currRes > lastClose * 1.25 || currRes < lastClose * 1.001) {
+    currRes = Math.min(Math.max(...candles.slice(-80).map((c) => c.high)), lastClose * 1.15);
+    if (currRes <= lastClose) currRes = Math.round(lastClose * 1.06 * 100) / 100;
+  }
+  if (currSup < lastClose * 0.75 || currSup > lastClose * 0.999 || currSup <= 0) {
+    currSup = Math.max(Math.min(...candles.slice(-80).map((c) => c.low)), lastClose * 0.88);
+    if (currSup >= lastClose || currSup <= 0) currSup = Math.round(lastClose * 0.94 * 100) / 100;
+  }
 
   // 3. Base Trough for Horizontal Level & Fibonacci Converging Fan
-  let baseTrough: { idx: number; time: Time; price: number } = { idx: l1.idx, time: l1.time, price: l1.price };
+  let baseTrough: { idx: number; time: Time; price: number } = { idx: l1.idx, time: l1.time, price: (l1 as any).calcPrice ?? l1.price };
   const lowsInWindow = swingLows.filter((sl) => sl.idx >= Math.min(h1.idx, l1.idx));
   if (lowsInWindow.length > 0) {
     baseTrough = [...lowsInWindow].sort((a, b) => a.price - b.price)[0];
   }
 
-  const resP1 = { idx: h1.idx, time: h1.time, price: h1.price };
-  const resP2 = { idx: h2.idx, time: h2.time, price: h2.price };
-  const supP1 = { idx: l1.idx, time: l1.time, price: l1.price };
-  const supP2 = { idx: l2.idx, time: l2.time, price: l2.price };
+  const resP1 = { idx: h1.idx, time: h1.time, price: (h1 as any).calcPrice ?? h1.price };
+  const resP2 = { idx: h2.idx, time: h2.time, price: (h2 as any).calcPrice ?? h2.price };
+  const supP1 = { idx: l1.idx, time: l1.time, price: (l1 as any).calcPrice ?? l1.price };
+  const supP2 = { idx: l2.idx, time: l2.time, price: (l2 as any).calcPrice ?? l2.price };
 
   const lastCloseVal = candles[lastIdx].close;
   const channelDelta = Math.max(0.5, currRes - currSup);
@@ -455,36 +494,41 @@ export function calculateTrendlinePro(candles: CandlestickData<Time>[]): Trendli
   else recommendation = 'GIỮ';
 
   // 4. Extract Key Anchor & Touch Markers (Matches Reference Image exactly: 2 Highs, 2-3 Lows)
-  const displayedHighMarkers: { idx: number; time: Time; price: number }[] = [
-    { idx: h1.idx, time: h1.time, price: candles[h1.idx].high },
-  ];
-  if (h2.idx !== h1.idx) {
+  const displayedHighMarkers: { idx: number; time: Time; price: number }[] = [];
+  if (candles[h1.idx]) {
+    displayedHighMarkers.push({ idx: h1.idx, time: h1.time, price: candles[h1.idx].high });
+  }
+  if (h2.idx !== h1.idx && candles[h2.idx]) {
     displayedHighMarkers.push({ idx: h2.idx, time: h2.time, price: candles[h2.idx].high });
   }
 
-  const displayedLowMarkers: { idx: number; time: Time; price: number }[] = [
-    { idx: l1.idx, time: l1.time, price: candles[l1.idx].low },
-  ];
-  if (l2.idx !== l1.idx) {
+  const displayedLowMarkers: { idx: number; time: Time; price: number }[] = [];
+  if (candles[l1.idx]) {
+    displayedLowMarkers.push({ idx: l1.idx, time: l1.time, price: candles[l1.idx].low });
+  }
+  if (l2.idx !== l1.idx && candles[l2.idx]) {
     displayedLowMarkers.push({ idx: l2.idx, time: l2.time, price: candles[l2.idx].low });
   }
   // Include intermediate baseTrough if it is a notable distinct swing low
-  if (baseTrough.idx !== l1.idx && baseTrough.idx !== l2.idx && baseTrough.idx > l1.idx && baseTrough.idx < lastIdx - 2) {
+  if (baseTrough && baseTrough.idx !== l1.idx && baseTrough.idx !== l2.idx && baseTrough.idx > l1.idx && baseTrough.idx < lastIdx - 2) {
     displayedLowMarkers.push({ idx: baseTrough.idx, time: baseTrough.time, price: baseTrough.price });
   }
 
   // Detect genuine touch points on the trendlines (within 0.25% margin)
-  for (let k = Math.min(h1.idx, l1.idx); k <= lastIdx - 2; k++) {
+  const startTouchIdx = Math.max(0, Math.min(h1.idx, l1.idx));
+  for (let k = startTouchIdx; k <= lastIdx - 2 && k < candles.length; k++) {
+    const cK = candles[k];
+    if (!cK) continue;
     if (k !== h1.idx && k !== h2.idx) {
       const lineResP = h1.price + resSlope * (k - h1.idx);
-      if (Math.abs(candles[k].high - lineResP) <= 0.0025 * lineResP) {
-        displayedHighMarkers.push({ idx: k, time: candles[k].time, price: candles[k].high });
+      if (Math.abs(cK.high - lineResP) <= 0.0025 * lineResP) {
+        displayedHighMarkers.push({ idx: k, time: cK.time, price: cK.high });
       }
     }
-    if (k !== l1.idx && k !== l2.idx && k !== baseTrough.idx) {
+    if (k !== l1.idx && k !== l2.idx && (!baseTrough || k !== baseTrough.idx)) {
       const lineSupP = l1.price + supSlope * (k - l1.idx);
-      if (Math.abs(candles[k].low - lineSupP) <= 0.0025 * lineSupP) {
-        displayedLowMarkers.push({ idx: k, time: candles[k].time, price: candles[k].low });
+      if (Math.abs(cK.low - lineSupP) <= 0.0025 * lineSupP) {
+        displayedLowMarkers.push({ idx: k, time: cK.time, price: cK.low });
       }
     }
   }
@@ -503,9 +547,9 @@ export function calculateTrendlinePro(candles: CandlestickData<Time>[]): Trendli
     supSlope,
     swingHighs,
     swingLows,
-    slope,
+    slope: resSlope,
     channelDelta,
-    startIdx: Math.min(h1.idx, l1.idx),
+    startIdx: Math.max(0, Math.min(h1.idx, l1.idx)),
     recommendation,
     xInt: Number.isFinite(xInt) ? xInt : undefined,
     displayedHighMarkers,
@@ -2400,11 +2444,8 @@ export function MarketCandleChart() {
       }
 
       // ── 7. Swing Pivot Triangles (▼ on Highs, ▲ on Lows) ──
-      // Chỉ vẽ các điểm Pivot then chốt (H1, H2, L1, L2, baseTrough) y như mẫu chuẩn TradingView
-      const highMarkers = displayedHighMarkers || [resP1, trendlineProData.resP2];
-      const lowMarkers = displayedLowMarkers || [supP1, trendlineProData.supP2, baseTrough];
-
-      highMarkers.forEach((sh) => {
+      // Hiển thị các điểm Swing Pivot chuẩn xác trên toàn bộ đỉnh sóng và đáy sóng
+      swingHighs.forEach((sh) => {
         if (!sh) return;
         const x = timeScale.logicalToCoordinate(sh.idx as any);
         const y = series.priceToCoordinate(sh.price);
@@ -2419,7 +2460,7 @@ export function MarketCandleChart() {
         }
       });
 
-      lowMarkers.forEach((sl) => {
+      swingLows.forEach((sl) => {
         if (!sl) return;
         const x = timeScale.logicalToCoordinate(sl.idx as any);
         const y = series.priceToCoordinate(sl.price);
@@ -2433,6 +2474,81 @@ export function MarketCandleChart() {
           ctx.fill();
         }
       });
+
+      // ── 8. Right Margin Badges (Kháng cự, Hỗ trợ, Fib 0,618, Fib 1,618) as in Reference Image 2 ──
+      const rightBadgeX = w - 75;
+      const badgeW = 68;
+      const badgeH = 18;
+
+      // 8a. Kháng cự Pill (Dark Charcoal Pill with White text & subtle border)
+      if (yResEnd !== null && yResEnd >= 15 && yResEnd <= h - 15) {
+        ctx.fillStyle = 'rgba(19, 23, 34, 0.95)';
+        ctx.strokeStyle = 'rgba(132, 204, 22, 0.6)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.roundRect(rightBadgeX, yResEnd - badgeH / 2, badgeW, badgeH, 4);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.font = 'bold 9px JetBrains Mono, monospace';
+        ctx.fillStyle = '#f4f4f5';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('Kháng cự', rightBadgeX + badgeW / 2, yResEnd);
+      }
+
+      // 8b. Hỗ trợ Pill (Vibrant Red Pill with White Bold text)
+      if (ySupEnd !== null && ySupEnd >= 15 && ySupEnd <= h - 15) {
+        ctx.fillStyle = '#ef4444';
+        ctx.strokeStyle = '#f87171';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.roundRect(rightBadgeX, ySupEnd - badgeH / 2, badgeW, badgeH, 4);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.font = 'bold 9px JetBrains Mono, monospace';
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('Hỗ trợ', rightBadgeX + badgeW / 2, ySupEnd);
+      }
+
+      // 8c. Fib 0,618 Pill
+      const yFib0618 = series.priceToCoordinate(trendlineProData.fib0618);
+      if (yFib0618 !== null && yFib0618 >= 15 && yFib0618 <= h - 15) {
+        ctx.fillStyle = 'rgba(19, 23, 34, 0.95)';
+        ctx.strokeStyle = 'rgba(250, 204, 21, 0.6)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.roundRect(rightBadgeX, yFib0618 - badgeH / 2, badgeW, badgeH, 4);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.font = 'bold 9px JetBrains Mono, monospace';
+        ctx.fillStyle = '#f4f4f5';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('Fib 0,618', rightBadgeX + badgeW / 2, yFib0618);
+      }
+
+      // 8d. Fib 1,618 Pill
+      const yFib1618 = series.priceToCoordinate(trendlineProData.fib1618);
+      if (yFib1618 !== null && yFib1618 >= 15 && yFib1618 <= h - 15) {
+        ctx.fillStyle = 'rgba(19, 23, 34, 0.95)';
+        ctx.strokeStyle = 'rgba(56, 189, 248, 0.6)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.roundRect(rightBadgeX, yFib1618 - badgeH / 2, badgeW, badgeH, 4);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.font = 'bold 9px JetBrains Mono, monospace';
+        ctx.fillStyle = '#f4f4f5';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('Fib 1,618', rightBadgeX + badgeW / 2, yFib1618);
+      }
 
       ctx.restore();
     }
@@ -3456,7 +3572,12 @@ export function MarketCandleChart() {
         loadedCandlesRef.current = uniqueCandles;
         loadedVolumesRef.current = uniqueVolumes;
         setDataVersion((v) => v + 1);
-        const proData = calculateTrendlinePro(uniqueCandles);
+        let proData: TrendlineProResult | null = null;
+        try {
+          proData = calculateTrendlinePro(uniqueCandles);
+        } catch (err) {
+          console.error('[TrendlinePro] Calculation safe fallback:', err);
+        }
         setTrendlineProData(proData);
 
         const realMa8 = calculateMA(uniqueCandles, 8, maType);
@@ -4032,38 +4153,48 @@ export function MarketCandleChart() {
     const el = fullWrapperRef.current;
     if (!el) return;
 
-    try {
-      if (!document.fullscreenElement) {
-        if (el.requestFullscreen) {
-          await el.requestFullscreen();
-        } else if ((el as any).webkitRequestFullscreen) {
-          await (el as any).webkitRequestFullscreen();
+    if (!isExpanded) {
+      setIsExpanded(true);
+      try {
+        if (!document.fullscreenElement) {
+          if (el.requestFullscreen) {
+            await el.requestFullscreen();
+          } else if ((el as any).webkitRequestFullscreen) {
+            await (el as any).webkitRequestFullscreen();
+          }
         }
-      } else {
-        if (document.exitFullscreen) {
-          await document.exitFullscreen();
-        } else if ((document as any).webkitExitFullscreen) {
-          await (document as any).webkitExitFullscreen();
-        }
+      } catch {
+        // Fallback to pure CSS viewport fullscreen handled by isExpanded
       }
-    } catch {
-      // Fallback to pure CSS viewport fullscreen
+    } else {
+      setIsExpanded(false);
+      try {
+        if (document.fullscreenElement) {
+          if (document.exitFullscreen) {
+            await document.exitFullscreen();
+          } else if ((document as any).webkitExitFullscreen) {
+            await (document as any).webkitExitFullscreen();
+          }
+        }
+      } catch {
+        // ignore
+      }
     }
 
-    setIsExpanded((prev) => {
-      const next = !prev;
-      setTimeout(() => {
-        if (chartRef.current && chartContainerRef.current) {
-          chartRef.current.applyOptions({
-            width: chartContainerRef.current.clientWidth,
-            height: chartContainerRef.current.clientHeight,
-          });
+    const resizeFn = () => {
+      if (chartRef.current && chartContainerRef.current) {
+        const w = chartContainerRef.current.clientWidth;
+        const h = chartContainerRef.current.clientHeight;
+        if (w > 0 && h > 0) {
+          chartRef.current.applyOptions({ width: w, height: h });
           chartRef.current.timeScale().fitContent();
           updateCanvasSize();
         }
-      }, 100);
-      return next;
-    });
+      }
+    };
+    setTimeout(resizeFn, 50);
+    setTimeout(resizeFn, 150);
+    setTimeout(resizeFn, 300);
   };
 
   // Interactive Drawing Handlers
@@ -4404,7 +4535,7 @@ export function MarketCandleChart() {
       ref={fullWrapperRef}
       className={`border border-zinc-800/80 flex flex-col relative select-none transition-all duration-200 ${
         isExpanded
-          ? 'fixed inset-0 z-[99999] w-screen h-screen rounded-none p-2 sm:p-3 shadow-2xl !bg-zinc-950'
+          ? 'fixed inset-0 z-[999999] w-screen h-screen rounded-none p-2 sm:p-3 shadow-2xl !bg-[#0c0d14]'
           : 'bg-zinc-950 w-full h-[550px] lg:h-[580px] rounded-2xl shadow-xl overflow-hidden'
       }`}
     >
@@ -4897,21 +5028,14 @@ export function MarketCandleChart() {
 
           <div className="w-px h-3.5 bg-zinc-800 shrink-0 mx-0.5" />
 
-          <button
-            onClick={() => chartRef.current?.timeScale().fitContent()}
-            title="Căn chỉnh dữ liệu nến vừa khung (Fit Content)"
-            className="p-1 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded-lg shrink-0"
-          >
-            <ArrowsOutSimple size={13} />
-          </button>
-
+          {/* Nút Phóng to / Thu nhỏ toàn màn hình duy nhất */}
           <button
             onClick={toggleFullscreen}
             title={isExpanded ? 'Thu nhỏ biểu đồ (Esc)' : 'Toàn màn hình (Fullscreen)'}
-            className={`p-1 rounded-lg shrink-0 transition-all ${
+            className={`p-1.5 rounded-lg shrink-0 transition-all flex items-center justify-center ${
               isExpanded
-                ? 'bg-emerald-500 text-zinc-950 font-bold'
-                : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 border border-zinc-800'
+                ? 'bg-emerald-500 text-zinc-950 font-bold shadow-md shadow-emerald-500/20'
+                : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 border border-zinc-800/80'
             }`}
           >
             {isExpanded ? <ArrowsIn size={14} weight="bold" /> : <ArrowsOut size={14} weight="bold" />}
@@ -4921,7 +5045,7 @@ export function MarketCandleChart() {
 
       {/* ── Main Chart Body with Left Drawing Toolbar ─────────────── */}
       <div className={`w-full flex-1 flex relative bg-zinc-950 overflow-hidden ${
-        isExpanded ? 'h-[calc(100vh-100px)] min-h-0' : 'h-[480px] lg:h-[510px] min-h-[400px]'
+        isExpanded ? 'h-[calc(100vh-75px)] min-h-0' : 'h-[480px] lg:h-[510px] min-h-[400px]'
       }`}>
         {/* Left Vertical Drawing Toolbar (Complete TradingView Style) */}
         <div className="flex flex-col items-center gap-0.5 sm:gap-1 py-1.5 px-1 bg-[#131722]/95 border-r border-zinc-800/80 z-30 shrink-0 w-10 sm:w-11 select-none overflow-visible relative h-full">

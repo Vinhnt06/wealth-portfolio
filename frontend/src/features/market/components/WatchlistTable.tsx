@@ -46,7 +46,7 @@ type SortField = 'symbol' | 'matchPrice' | 'changePct' | 'volume';
 type SortDir = 'asc' | 'desc';
 
 export const WatchlistTable: React.FC = () => {
-  const { selectedSymbol, setSelectedSymbol, ticks, watchlistSymbols, toggleWatchlistSymbol, openQuickView } = useMarketStore();
+  const { selectedSymbol, setSelectedSymbol, ticks, watchlistSymbols, toggleWatchlistSymbol, openQuickView, setViewMode } = useMarketStore();
   const [filterText, setFilterText] = useState('');
   const [sortField, setSortField] = useState<SortField>('changePct');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
@@ -191,7 +191,10 @@ export const WatchlistTable: React.FC = () => {
               return (
                 <tr
                   key={stock.symbol}
-                  onClick={() => setSelectedSymbol(stock.symbol)}
+                  onClick={() => {
+                    setSelectedSymbol(stock.symbol);
+                    setViewMode('detail');
+                  }}
                   className={`cursor-pointer transition-colors duration-150 group ${
                     isSelected ? 'bg-emerald-950/30 font-semibold' : 'hover:bg-zinc-800/40'
                   }`}
