@@ -4962,7 +4962,7 @@ export function MarketCandleChart() {
                   }}
                 />
                 <div 
-                  className="absolute left-0 top-full mt-2 w-76 sm:w-80 bg-zinc-900/98 border border-zinc-700/80 rounded-2xl p-3.5 shadow-[0_20px_50px_rgba(0,0,0,0.85)] z-50 backdrop-blur-2xl max-h-[80vh] overflow-y-auto animate-in fade-in"
+                  className="absolute left-0 top-full mt-2 w-80 sm:w-88 bg-zinc-900/98 border border-zinc-700/80 rounded-2xl p-3.5 shadow-[0_20px_50px_rgba(0,0,0,0.85)] z-50 backdrop-blur-2xl max-h-[85vh] overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-700 scrollbar-track-zinc-900/40 animate-in fade-in"
                   onClick={(e) => e.stopPropagation()}
                 >
                   {/* Popover Header */}
@@ -4980,13 +4980,13 @@ export function MarketCandleChart() {
                     </button>
                   </div>
 
-                  {/* Section 1: Chiến Lược Giao Dịch & Cấu Trúc (AI) */}
+                  {/* Section 1: Chiến Lược Giao Dịch, Xu Hướng & Cấu Trúc Khối Lượng */}
                   <div className="flex items-center justify-between mb-1.5 px-1">
                     <span className="text-[10px] font-mono uppercase tracking-wider text-emerald-400 font-bold flex items-center gap-1">
                       <Sparkle size={12} weight="fill" className="text-emerald-400" />
-                      1. Chiến Lược & Cấu Trúc Xu Hướng
+                      1. Xu Hướng, Chiến Lược & Volume Profile
                     </span>
-                    <span className="text-zinc-500 text-[9px] font-mono font-semibold">CHIẾN LƯỢC</span>
+                    <span className="text-zinc-500 text-[9px] font-mono font-semibold">NỔI BẬT</span>
                   </div>
                   <div className="flex flex-col gap-1 mb-2.5">
                     {/* SuperTrend Pro */}
@@ -5037,6 +5037,58 @@ export function MarketCandleChart() {
                           }`}
                         >
                           {showSuperTrend ? 'BẬT' : 'TẮT'}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Volume Profile (VRVP) */}
+                    <div className="flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-mono text-zinc-200 hover:bg-zinc-800/70 transition-all border border-transparent hover:border-zinc-800 group">
+                      <span
+                        className="flex items-center gap-2 cursor-pointer flex-1 min-w-0"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowVolumeProfile(!showVolumeProfile);
+                        }}
+                      >
+                        <ChartBarHorizontal size={15} className={showVolumeProfile ? 'text-cyan-400 shrink-0' : 'text-zinc-500 shrink-0'} />
+                        <div className="text-left min-w-0">
+                          <span className="font-semibold block text-zinc-100 flex items-center gap-1.5">
+                            Volume Profile (VRVP)
+                            <span className="text-[9px] font-bold text-cyan-400 bg-cyan-500/15 px-1.5 py-0.2 rounded border border-cyan-500/30">
+                              POC & VAH/VAL
+                            </span>
+                          </span>
+                          <span className="text-[9.5px] text-zinc-500 truncate block">
+                            Vùng giá trị 70% & Khối lượng Mua/Bán
+                          </span>
+                        </div>
+                      </span>
+                      <div className="flex items-center gap-1 shrink-0 ml-1">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowVolumeProfileModal(true);
+                            setShowIndicatorsModal(false);
+                          }}
+                          className="p-1 rounded text-zinc-400 hover:text-cyan-300 hover:bg-zinc-800 transition-colors"
+                          title="Cài đặt thông số Volume Profile"
+                        >
+                          <Gear size={13} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowVolumeProfile(!showVolumeProfile);
+                          }}
+                          className={`text-[10px] px-2 py-0.5 rounded-md font-bold transition-colors cursor-pointer ${
+                            showVolumeProfile
+                              ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
+                              : 'bg-zinc-800/60 text-zinc-500'
+                          }`}
+                        >
+                          {showVolumeProfile ? 'BẬT' : 'TẮT'}
                         </button>
                       </div>
                     </div>
@@ -5358,47 +5410,6 @@ export function MarketCandleChart() {
                         {activeSubIndicator === 'obv' ? 'BẬT' : 'TẮT'}
                       </span>
                     </button>
-                  </div>
-
-                  {/* Section 5: Volume Structure & Value Area */}
-                  <div className="text-[10px] font-mono uppercase tracking-wider text-cyan-400 mb-1.5 px-1 pt-2 border-t border-zinc-800/80 font-bold flex items-center justify-between">
-                    <span>5. Cấu trúc Khối lượng</span>
-                    <span className="text-zinc-500 text-[9px] font-normal">Vùng giá trị & POC</span>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    {/* Volume Profile */}
-                    <div className="flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-mono text-zinc-200 hover:bg-zinc-800/70 transition-all border border-transparent hover:border-zinc-800">
-                      <span className="flex items-center gap-2">
-                        <ChartBarHorizontal size={15} className={showVolumeProfile ? 'text-cyan-400 shrink-0' : 'text-zinc-500 shrink-0'} />
-                        <div className="text-left">
-                          <span className="font-semibold block text-zinc-100">Volume Profile (VRVP)</span>
-                          <span className="text-[9.5px] text-zinc-500">Mức giá trị POC, VAH, VAL & Tỷ lệ Mua/Bán</span>
-                        </div>
-                      </span>
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setShowVolumeProfileModal(true);
-                          }}
-                          className="p-1 rounded-md text-zinc-400 hover:text-cyan-300 hover:bg-zinc-700/60 transition-colors"
-                          title="Cài đặt thông số Volume Profile"
-                        >
-                          <Gear size={13} />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setShowVolumeProfile(!showVolumeProfile);
-                          }}
-                          className={`text-[10px] px-2 py-0.5 rounded-md font-bold transition-colors ${showVolumeProfile ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30' : 'bg-zinc-800/60 text-zinc-500'}`}
-                        >
-                          {showVolumeProfile ? 'BẬT' : 'TẮT'}
-                        </button>
-                      </div>
-                    </div>
                   </div>
                 </div>
               </>
