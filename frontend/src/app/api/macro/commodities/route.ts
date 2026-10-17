@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 interface CommodityItem {
   id: string;
   name: string;
-  category: 'oil' | 'gold_world' | 'gold_vn' | 'metal';
+  category: 'oil' | 'gold_world' | 'gold_vn' | 'metal' | 'currency';
   price: number | string;
   unit: string;
   change: number;
@@ -48,15 +48,16 @@ export async function GET() {
     hour12: false,
   });
 
-  // 1. Fetch Realtime Global Commodities from Yahoo Finance
+  // 1. Fetch Realtime Global Commodities from Yahoo Finance (including DXY)
   const symbols = [
-    { id: 'brent', sym: 'BZ=F', name: 'Dầu Brent (Thế giới)', cat: 'oil' as const, unit: 'USD/thùng' },
-    { id: 'wti', sym: 'CL=F', name: 'Dầu WTI (Mỹ)', cat: 'oil' as const, unit: 'USD/thùng' },
     { id: 'gold_world', sym: 'GC=F', name: 'Vàng Thế Giới (XAU)', cat: 'gold_world' as const, unit: 'USD/oz' },
+    { id: 'brent', sym: 'BZ=F', name: 'Dầu Brent (Thế giới)', cat: 'oil' as const, unit: 'USD/thùng' },
     { id: 'silver', sym: 'SI=F', name: 'Bạc Thế Giới (XAG)', cat: 'metal' as const, unit: 'USD/oz' },
+    { id: 'wti', sym: 'CL=F', name: 'Dầu WTI (Mỹ)', cat: 'oil' as const, unit: 'USD/thùng' },
+    { id: 'dxy', sym: 'DX-Y.NYB', name: 'Chỉ Số DXY (USD Index)', cat: 'currency' as const, unit: 'điểm' },
   ];
 
-  await Promise.all(
+  const fetchedResults = await Promise.all(
     symbols.map(async (s) => {
       try {
         const res = await fetch(
@@ -74,7 +75,7 @@ export async function GET() {
             const change = meta.fulldayChange ?? 0;
             const changePercent = meta.regularMarketChangePercent ?? 0;
 
-            items.push({
+            return {
               id: s.id,
               name: s.name,
               category: s.cat,
@@ -84,14 +85,19 @@ export async function GET() {
               changePercent: Number(changePercent.toFixed(2)),
               updatedAt: timeStr,
               isRealtime: true,
-            });
+            };
           }
         }
       } catch (e) {
         console.error(`Lỗi fetch ${s.sym}:`, e);
       }
+      return null;
     })
   );
+
+  fetchedResults.forEach((it) => {
+    if (it) items.push(it);
+  });
 
   // 2. Fetch Vietnam Domestic Gold Prices from 24HMoney
   try {

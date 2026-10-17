@@ -61,10 +61,11 @@ async function fetchCommodities() {
 
   // A. Yahoo Finance - Năng lượng & Kim loại quốc tế
   const symbols = [
-    { id: 'brent', sym: 'BZ=F', name: 'Dầu Brent (Thế giới)', cat: 'oil', unit: 'USD/thùng' },
-    { id: 'wti', sym: 'CL=F', name: 'Dầu WTI (Mỹ)', cat: 'oil', unit: 'USD/thùng' },
     { id: 'gold_world', sym: 'GC=F', name: 'Vàng Thế Giới (XAU)', cat: 'gold_world', unit: 'USD/oz' },
+    { id: 'brent', sym: 'BZ=F', name: 'Dầu Brent (Thế giới)', cat: 'oil', unit: 'USD/thùng' },
     { id: 'silver', sym: 'SI=F', name: 'Bạc Thế Giới (XAG)', cat: 'metal', unit: 'USD/oz' },
+    { id: 'wti', sym: 'CL=F', name: 'Dầu WTI (Mỹ)', cat: 'oil', unit: 'USD/thùng' },
+    { id: 'dxy', sym: 'DX-Y.NYB', name: 'Chỉ Số DXY (USD Index)', cat: 'currency', unit: 'điểm' },
   ];
 
   for (const s of symbols) {

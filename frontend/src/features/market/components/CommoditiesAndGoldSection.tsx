@@ -19,7 +19,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 interface CommodityItem {
   id: string;
   name: string;
-  category: 'oil' | 'gold_world' | 'gold_vn' | 'metal';
+  category: 'oil' | 'gold_world' | 'gold_vn' | 'metal' | 'currency';
   price: number | string;
   unit: string;
   change: number;
@@ -201,12 +201,12 @@ export const CommoditiesAndGoldSection: React.FC = () => {
           <div className="flex items-center justify-between text-xs font-mono text-zinc-400">
             <span className="flex items-center gap-1.5 text-emerald-400 font-bold">
               <Lightning size={14} weight="fill" />
-              Dữ liệu trực tuyến từ sàn NYMEX / COMEX (Cập nhật realtime mỗi 30s)
+              Dữ liệu trực tuyến từ sàn NYMEX / COMEX / ICE (Cập nhật realtime mỗi 30s)
             </span>
             {lastRefreshed && <span>Cập nhật lúc: {lastRefreshed}</span>}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
             {globalItems.map((item) => {
               const isUp = item.change >= 0;
               return (
@@ -242,7 +242,7 @@ export const CommoditiesAndGoldSection: React.FC = () => {
                   </div>
 
                   <div className="pt-2 border-t border-zinc-800/60 flex items-center justify-between text-[11px] font-mono text-zinc-500">
-                    <span>Hợp đồng tương lai</span>
+                    <span>{item.category === 'currency' ? 'Chỉ số tiền tệ (ICE)' : 'Hợp đồng tương lai'}</span>
                     <span className="text-zinc-400 font-semibold">{item.updatedAt}</span>
                   </div>
                 </motion.div>
