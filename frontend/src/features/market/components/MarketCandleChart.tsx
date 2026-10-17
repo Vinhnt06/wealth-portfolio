@@ -801,6 +801,31 @@ export function calculateMA(
   return result;
 }
 
+// ── Volume Moving Average (SMA 20) Calculator ────────────────────────
+export function calculateVolumeMA(
+  volumes: { time: Time; value: number }[],
+  period = 20
+): LineData<Time>[] {
+  if (!volumes || volumes.length < period) return [];
+  const result: LineData<Time>[] = [];
+  let windowSum = 0;
+  for (let i = 0; i < period; i++) {
+    windowSum += volumes[i].value;
+  }
+  result.push({
+    time: volumes[period - 1].time,
+    value: Math.round(windowSum / period),
+  });
+  for (let i = period; i < volumes.length; i++) {
+    windowSum += volumes[i].value - volumes[i - period].value;
+    result.push({
+      time: volumes[i].time,
+      value: Math.round(windowSum / period),
+    });
+  }
+  return result;
+}
+
 // ── Native Stream MarketCandleChart Component ────────────────────────
 export function MarketCandleChart() {
   const fullWrapperRef = useRef<HTMLDivElement>(null);
@@ -809,6 +834,7 @@ export function MarketCandleChart() {
   const chartRef = useRef<IChartApi | null>(null);
   const candleSeriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
   const volumeSeriesRef = useRef<ISeriesApi<'Histogram'> | null>(null);
+  const volumeMaSeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
   const ma8SeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
   const ma21SeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
   const ma144SeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
@@ -821,6 +847,7 @@ export function MarketCandleChart() {
   const candleCacheRef = useRef<Map<string, {
     candles: CandlestickData<Time>[];
     volumes: HistogramData<Time>[];
+    volMa20: LineData<Time>[];
     ma8: LineData<Time>[];
     ma21: LineData<Time>[];
     ma144: LineData<Time>[];
@@ -943,6 +970,7 @@ export function MarketCandleChart() {
     low?: number;
     close?: number;
     volume?: number;
+    volMa20?: number;
     change?: number;
     changePct?: number;
     ma8?: number;
@@ -957,6 +985,7 @@ export function MarketCandleChart() {
     ma21?: number;
     ma144?: number;
     ma233?: number;
+    volMa20?: number;
   }>({});
 
   const currentTick = ticks[selectedSymbol];
@@ -2708,10 +2737,22 @@ export function MarketCandleChart() {
 
     const volumeSeries = chart.addSeries(HistogramSeries, {
       priceFormat: { type: 'volume' },
-      priceScaleId: '',
+      priceScaleId: 'volume',
     });
     volumeSeries.priceScale().applyOptions({ scaleMargins: { top: 0.8, bottom: 0 } });
     volumeSeriesRef.current = volumeSeries;
+
+    const volumeMaSeries = chart.addSeries(LineSeries, {
+      color: '#38bdf8',
+      lineWidth: 1.5,
+      priceFormat: { type: 'volume' },
+      priceScaleId: 'volume',
+      title: 'Vol MA 20',
+      visible: showVolume,
+      priceLineVisible: false,
+      lastValueVisible: false,
+    });
+    volumeMaSeriesRef.current = volumeMaSeries;
 
     const ma8Series = chart.addSeries(LineSeries, {
       color: '#38bdf8',
@@ -2793,6 +2834,7 @@ export function MarketCandleChart() {
       }
       const candle = param.seriesData.get(candlestickSeries) as any;
       const vol = param.seriesData.get(volumeSeries) as any;
+      const volMa20 = volumeMaSeries ? (param.seriesData.get(volumeMaSeries) as any) : undefined;
       const ma8 = ma8Series ? (param.seriesData.get(ma8Series) as any) : undefined;
       const ma21 = ma21Series ? (param.seriesData.get(ma21Series) as any) : undefined;
       const ma144 = ma144Series ? (param.seriesData.get(ma144Series) as any) : undefined;
@@ -2818,6 +2860,7 @@ export function MarketCandleChart() {
           low: candle.low,
           close: candle.close,
           volume: vol?.value,
+          volMa20: volMa20?.value,
           change,
           changePct,
           ma8: ma8?.value,
@@ -3168,6 +3211,7 @@ export function MarketCandleChart() {
       chartRef.current = null;
       candleSeriesRef.current = null;
       volumeSeriesRef.current = null;
+      volumeMaSeriesRef.current = null;
       ma8SeriesRef.current = null;
       ma21SeriesRef.current = null;
       ma144SeriesRef.current = null;
@@ -3223,6 +3267,7 @@ export function MarketCandleChart() {
 
   useEffect(() => {
     volumeSeriesRef.current?.applyOptions({ visible: showVolume });
+    volumeMaSeriesRef.current?.applyOptions({ visible: showVolume });
   }, [showVolume]);
 
   // ── 3. Fetch DNSE History ONLY when symbol or resolution changes ──────────
@@ -3230,6 +3275,7 @@ export function MarketCandleChart() {
     const chart = chartRef.current;
     const candlestickSeries = candleSeriesRef.current;
     const volumeSeries = volumeSeriesRef.current;
+    const volumeMaSeries = volumeMaSeriesRef.current;
     const ma8Series = ma8SeriesRef.current;
     const ma21Series = ma21SeriesRef.current;
     const ma144Series = ma144SeriesRef.current;
@@ -3253,6 +3299,7 @@ export function MarketCandleChart() {
       // Instant render from memory (0ms lag, no flashing!)
       candlestickSeries.setData(cached.candles);
       volumeSeries.setData(cached.volumes);
+      volumeMaSeries?.setData(cached.volMa20 || []);
       ma8Series?.setData(cached.ma8);
       ma21Series?.setData(cached.ma21);
       ma144Series?.setData(cached.ma144);
@@ -3268,6 +3315,7 @@ export function MarketCandleChart() {
         ma21: cached.ma21.length > 0 ? cached.ma21[cached.ma21.length - 1]?.value : undefined,
         ma144: cached.ma144.length > 0 ? cached.ma144[cached.ma144.length - 1]?.value : undefined,
         ma233: cached.ma233.length > 0 ? cached.ma233[cached.ma233.length - 1]?.value : undefined,
+        volMa20: cached.volMa20 && cached.volMa20.length > 0 ? cached.volMa20[cached.volMa20.length - 1]?.value : undefined,
       });
 
       if (cached.candles.length > 150) {
@@ -3353,6 +3401,7 @@ export function MarketCandleChart() {
         const realMa21 = calculateMA(uniqueCandles, 21, maType);
         const realMa144 = calculateMA(uniqueCandles, 144, maType);
         const realMa233 = calculateMA(uniqueCandles, 233, maType);
+        const realVolMa20 = calculateVolumeMA(uniqueVolumes, 20);
         const bbUpperData: LineData<Time>[] = [];
         const bbLowerData: LineData<Time>[] = [];
 
@@ -3372,6 +3421,7 @@ export function MarketCandleChart() {
         candleCacheRef.current.set(cacheKey, {
           candles: uniqueCandles,
           volumes: uniqueVolumes,
+          volMa20: realVolMa20,
           ma8: realMa8,
           ma21: realMa21,
           ma144: realMa144,
@@ -3385,6 +3435,7 @@ export function MarketCandleChart() {
         if (uniqueCandles.length > 0) {
           candlestickSeries.setData(uniqueCandles);
           volumeSeries.setData(uniqueVolumes);
+          volumeMaSeries?.setData(realVolMa20);
           ma8Series?.setData(realMa8);
           ma21Series?.setData(realMa21);
           ma144Series?.setData(realMa144);
@@ -3396,6 +3447,7 @@ export function MarketCandleChart() {
             ma21: realMa21.length > 0 ? realMa21[realMa21.length - 1]?.value : undefined,
             ma144: realMa144.length > 0 ? realMa144[realMa144.length - 1]?.value : undefined,
             ma233: realMa233.length > 0 ? realMa233[realMa233.length - 1]?.value : undefined,
+            volMa20: realVolMa20.length > 0 ? realVolMa20[realVolMa20.length - 1]?.value : undefined,
           });
 
           if (uniqueCandles.length > 150) {
@@ -3512,6 +3564,14 @@ export function MarketCandleChart() {
           value: tickVol,
           color: 'rgba(16, 185, 129, 0.4)',
         });
+        if (volumeMaSeriesRef.current && loadedVolumesRef.current.length >= 20) {
+          const last19 = loadedVolumesRef.current.slice(-19);
+          const sum20 = last19.reduce((acc, v) => acc + v.value, 0) + tickVol;
+          volumeMaSeriesRef.current.update({
+            time: todayDateStr as unknown as Time,
+            value: Math.round(sum20 / 20),
+          });
+        }
         requestAnimationFrame(() => redrawCanvasRef.current?.());
         return;
       }
@@ -3540,6 +3600,14 @@ export function MarketCandleChart() {
         value: tickVol,
         color: livePriceK >= updatedOpen ? 'rgba(16, 185, 129, 0.4)' : 'rgba(244, 63, 94, 0.4)',
       });
+      if (volumeMaSeriesRef.current && loadedVolumesRef.current.length >= 20) {
+        const last19 = loadedVolumesRef.current.slice(-20, -1);
+        const sum20 = last19.reduce((acc, v) => acc + v.value, 0) + tickVol;
+        volumeMaSeriesRef.current.update({
+          time: lastCandleRef.current.time,
+          value: Math.round(sum20 / 20),
+        });
+      }
 
       requestAnimationFrame(() => redrawCanvasRef.current?.());
     } catch (err) {
@@ -4267,6 +4335,7 @@ export function MarketCandleChart() {
   const activeMA21 = hoveredData?.ma21 !== undefined ? hoveredData.ma21 : latestMA.ma21;
   const activeMA144 = hoveredData?.ma144 !== undefined ? hoveredData.ma144 : latestMA.ma144;
   const activeMA233 = hoveredData?.ma233 !== undefined ? hoveredData.ma233 : latestMA.ma233;
+  const activeVolMa20 = hoveredData?.volMa20 !== undefined ? hoveredData.volMa20 : latestMA.volMa20;
 
   return (
     <div
@@ -4584,7 +4653,7 @@ export function MarketCandleChart() {
                     >
                       <span className="flex items-center gap-2">
                         <ChartBar size={14} className="text-emerald-400 shrink-0" />
-                        <span className="font-semibold">Khối lượng (Volume)</span>
+                        <span className="font-semibold">Khối lượng (Volume & Vol MA 20)</span>
                       </span>
                       <span className={`text-[10px] px-2 py-0.5 rounded-md font-bold transition-colors ${showVolume ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-zinc-800/60 text-zinc-500'}`}>
                         {showVolume ? 'BẬT' : 'TẮT'}
@@ -5206,13 +5275,23 @@ export function MarketCandleChart() {
                 </span>
               </div>
 
-              {/* Row 2: Volume 20 (Screenshot 2: Vol 20 3.38M) */}
+              {/* Row 2: Volume & Volume MA 20 */}
               {showVolume && (
-                <div className="flex items-center gap-2 text-zinc-400">
-                  <span>Vol 20</span>
-                  <span className="text-emerald-400 font-bold">
-                    {(hoveredData?.volume || (loadedCandlesRef.current.length > 0 ? (currentTick?.totalVolume || 0) : 0)).toLocaleString()}
-                  </span>
+                <div className="flex items-center gap-x-3 gap-y-0.5 flex-wrap text-zinc-400 text-xs">
+                  <div className="flex items-center gap-1.5">
+                    <span>Vol:</span>
+                    <span className="text-emerald-400 font-bold">
+                      {(hoveredData?.volume || (loadedCandlesRef.current.length > 0 ? (currentTick?.totalVolume || 0) : 0)).toLocaleString()}
+                    </span>
+                  </div>
+                  {activeVolMa20 !== undefined && (
+                    <div className="flex items-center gap-1.5 font-mono text-[11px]">
+                      <span className="text-[#38bdf8] font-semibold">Vol MA 20:</span>
+                      <span className="text-[#38bdf8] font-bold">
+                        {Math.round(activeVolMa20).toLocaleString()}
+                      </span>
+                    </div>
+                  )}
                 </div>
               )}
 
