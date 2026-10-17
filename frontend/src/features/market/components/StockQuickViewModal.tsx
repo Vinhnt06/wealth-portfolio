@@ -163,30 +163,25 @@ export const StockQuickViewModal: React.FC = () => {
 
           {/* Modal Header */}
           <div className="flex items-start justify-between gap-4 border-b border-zinc-800/80 pb-5">
-            <div className="flex items-start gap-3.5">
-              <div className="w-12 h-12 rounded-2xl bg-zinc-900 border border-zinc-700/80 flex items-center justify-center text-emerald-400 font-mono font-black text-xl shadow-inner shrink-0">
-                {selectedSymbol.slice(0, 1)}
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-2xl font-mono font-black text-zinc-100 tracking-tight">
+                  {selectedSymbol}
+                </h2>
+                <span className="px-2 py-0.5 text-[11px] font-mono font-bold rounded-lg bg-zinc-800 text-zinc-300 border border-zinc-700/80">
+                  {meta.exchange}
+                </span>
+                <span className="px-2 py-0.5 text-[11px] font-mono rounded-lg bg-emerald-950/50 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                  <Database className="w-3 h-3" />
+                  DNSE Realtime
+                </span>
               </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h2 className="text-2xl font-mono font-black text-zinc-100 tracking-tight">
-                    {selectedSymbol}
-                  </h2>
-                  <span className="px-2 py-0.5 text-[11px] font-mono font-bold rounded-lg bg-zinc-800 text-zinc-300 border border-zinc-700/80">
-                    {meta.exchange}
-                  </span>
-                  <span className="px-2 py-0.5 text-[11px] font-mono rounded-lg bg-emerald-950/50 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
-                    <Database className="w-3 h-3" />
-                    DNSE Realtime
-                  </span>
-                </div>
-                <p className="text-sm text-zinc-300 font-medium mt-1 leading-snug">
-                  {meta.name}
-                </p>
-                <div className="flex items-center gap-2 text-xs text-zinc-500 mt-1">
-                  <Buildings className="w-3.5 h-3.5 text-zinc-400" />
-                  <span>{meta.sector}</span>
-                </div>
+              <p className="text-sm text-zinc-300 font-medium mt-1 leading-snug">
+                {meta.name}
+              </p>
+              <div className="flex items-center gap-2 text-xs text-zinc-500 mt-1">
+                <Buildings className="w-3.5 h-3.5 text-zinc-400" />
+                <span>{meta.sector}</span>
               </div>
             </div>
 

@@ -395,26 +395,21 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
         <div className="space-y-4 pt-4">
           {/* Row 1: Stock Identity & Minervini Telemetry */}
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center gap-3.5">
-              <div className="w-11 h-11 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-emerald-400 font-bold text-lg shrink-0">
-                {selectedSymbol.slice(0, 1)}
+            <div>
+              <div className="flex items-center flex-wrap gap-x-2.5 gap-y-1">
+                <h1 className="text-2xl font-bold text-zinc-100 tracking-tight">
+                  {selectedSymbol}
+                </h1>
+                <span className="text-zinc-600 font-light select-none">|</span>
+                <span className="text-xs font-mono text-zinc-400">
+                  {meta.exchange}
+                </span>
+                <span className="text-zinc-600 font-light select-none">|</span>
+                <span className="text-xs text-zinc-400">
+                  {meta.sector}
+                </span>
               </div>
-              <div>
-                <div className="flex items-center flex-wrap gap-x-2.5 gap-y-1">
-                  <h1 className="text-2xl font-bold text-zinc-100 tracking-tight">
-                    {selectedSymbol}
-                  </h1>
-                  <span className="text-zinc-600 font-light select-none">|</span>
-                  <span className="text-xs font-mono text-zinc-400">
-                    {meta.exchange}
-                  </span>
-                  <span className="text-zinc-600 font-light select-none">|</span>
-                  <span className="text-xs text-zinc-400">
-                    {meta.sector}
-                  </span>
-                </div>
-                <p className="text-xs text-zinc-400 mt-0.5">{meta.name}</p>
-              </div>
+              <p className="text-xs text-zinc-400 mt-0.5">{meta.name}</p>
             </div>
 
             {/* Minervini Live RS Rating & Stage 2 Status */}
