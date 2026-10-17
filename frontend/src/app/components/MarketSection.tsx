@@ -100,32 +100,30 @@ export function MarketSection() {
 
     const fetchMarketData = useCallback(async () => {
         try {
-            // Fetch crypto 24h tickers (BTC, ETH) - these return changePercent
-            const [btcRes, ethRes] = await Promise.all([
+            // Fetch crypto 24h tickers (BTC, ETH) and commodities (Gold, Silver, WTI Oil) from verified endpoints
+            const [btcRes, ethRes, commoditiesRes] = await Promise.all([
                 fetch('/api/market/crypto?symbols=BTCUSDT'),
                 fetch('/api/market/crypto?symbols=ETHUSDT'),
+                fetch('/api/macro/commodities'),
             ]);
-            const btcData = await btcRes.json();
-            const ethData = await ethRes.json();
+            const btcData = await btcRes.json().catch(() => null);
+            const ethData = await ethRes.json().catch(() => null);
+            const commoditiesData = await commoditiesRes.json().catch(() => null);
 
-            // Fetch commodities (Gold, Silver, Crude Oil) - these return changePercent
-            const [goldRes, silverRes, oilRes] = await Promise.all([
-                fetch('/api/market/stocks?gold=true'),
-                fetch('/api/market/stocks?silver=true'),
-                fetch('/api/market/stocks?symbols=CL=F'),
-            ]);
-            const goldData = await goldRes.json();
-            const silverData = await silverRes.json();
-            const oilData = await oilRes.json();
+            // Extract real commodities items from /api/macro/commodities
+            const commList = Array.isArray(commoditiesData?.data) ? commoditiesData.data : [];
+            const goldItem = commList.find((c: any) => c.id === 'gold_world');
+            const silverItem = commList.find((c: any) => c.id === 'silver');
+            const wtiItem = commList.find((c: any) => c.id === 'wti' || c.id === 'brent');
 
             const updatedAssets: MarketAsset[] = [
                 {
                     symbol: 'XAU',
                     ticker: 'Gold',
                     name: 'Gold Futures',
-                    price: goldData.success ? goldData.data.price : FALLBACK_ASSETS[0].price,
-                    change24h: goldData.success ? goldData.data.change : FALLBACK_ASSETS[0].change24h,
-                    changePercent: goldData.success ? goldData.data.changePercent : FALLBACK_ASSETS[0].changePercent,
+                    price: typeof goldItem?.price === 'number' ? goldItem.price : (Number(goldItem?.price) || FALLBACK_ASSETS[0].price),
+                    change24h: typeof goldItem?.change === 'number' ? goldItem.change : FALLBACK_ASSETS[0].change24h,
+                    changePercent: typeof goldItem?.changePercent === 'number' ? goldItem.changePercent : FALLBACK_ASSETS[0].changePercent,
                     marketCap: '$14.2T',
                     icon: CurrencyCircleDollar,
                     iconColor: 'text-yellow-500',
@@ -134,9 +132,9 @@ export function MarketSection() {
                     symbol: 'BTC',
                     ticker: 'Bitcoin',
                     name: 'Bitcoin',
-                    price: btcData.success ? btcData.data.price : FALLBACK_ASSETS[1].price,
-                    change24h: btcData.success ? btcData.data.change24h : FALLBACK_ASSETS[1].change24h,
-                    changePercent: btcData.success ? btcData.data.changePercent : FALLBACK_ASSETS[1].changePercent,
+                    price: btcData?.success && typeof btcData?.data?.price === 'number' ? btcData.data.price : FALLBACK_ASSETS[1].price,
+                    change24h: btcData?.success && typeof btcData?.data?.change24h === 'number' ? btcData.data.change24h : FALLBACK_ASSETS[1].change24h,
+                    changePercent: btcData?.success && typeof btcData?.data?.changePercent === 'number' ? btcData.data.changePercent : FALLBACK_ASSETS[1].changePercent,
                     marketCap: '$1.26T',
                     icon: CurrencyBtc,
                     iconColor: 'text-amber-500',
@@ -145,9 +143,9 @@ export function MarketSection() {
                     symbol: 'WTI',
                     ticker: 'Crude Oil',
                     name: 'Crude Oil',
-                    price: oilData.success ? oilData.data.regularMarketPrice : FALLBACK_ASSETS[2].price,
-                    change24h: oilData.success ? oilData.data.regularMarketChange : FALLBACK_ASSETS[2].change24h,
-                    changePercent: oilData.success ? oilData.data.regularMarketChangePercent : FALLBACK_ASSETS[2].changePercent,
+                    price: typeof wtiItem?.price === 'number' ? wtiItem.price : (Number(wtiItem?.price) || FALLBACK_ASSETS[2].price),
+                    change24h: typeof wtiItem?.change === 'number' ? wtiItem.change : FALLBACK_ASSETS[2].change24h,
+                    changePercent: typeof wtiItem?.changePercent === 'number' ? wtiItem.changePercent : FALLBACK_ASSETS[2].changePercent,
                     marketCap: '$2.4B Vol',
                     icon: Drop,
                     iconColor: 'text-zinc-400',
@@ -156,9 +154,9 @@ export function MarketSection() {
                     symbol: 'ETH',
                     ticker: 'Ethereum',
                     name: 'Ethereum',
-                    price: ethData.success ? ethData.data.price : FALLBACK_ASSETS[3].price,
-                    change24h: ethData.success ? ethData.data.change24h : FALLBACK_ASSETS[3].change24h,
-                    changePercent: ethData.success ? ethData.data.changePercent : FALLBACK_ASSETS[3].changePercent,
+                    price: ethData?.success && typeof ethData?.data?.price === 'number' ? ethData.data.price : FALLBACK_ASSETS[3].price,
+                    change24h: ethData?.success && typeof ethData?.data?.change24h === 'number' ? ethData.data.change24h : FALLBACK_ASSETS[3].change24h,
+                    changePercent: ethData?.success && typeof ethData?.data?.changePercent === 'number' ? ethData.data.changePercent : FALLBACK_ASSETS[3].changePercent,
                     marketCap: '$418.4B',
                     icon: CurrencyEth,
                     iconColor: 'text-blue-400',
@@ -167,9 +165,9 @@ export function MarketSection() {
                     symbol: 'XAG',
                     ticker: 'Silver',
                     name: 'Silver Futures',
-                    price: silverData.success ? silverData.data.price : FALLBACK_ASSETS[4].price,
-                    change24h: silverData.success ? silverData.data.change : FALLBACK_ASSETS[4].change24h,
-                    changePercent: silverData.success ? silverData.data.changePercent : FALLBACK_ASSETS[4].changePercent,
+                    price: typeof silverItem?.price === 'number' ? silverItem.price : (Number(silverItem?.price) || FALLBACK_ASSETS[4].price),
+                    change24h: typeof silverItem?.change === 'number' ? silverItem.change : FALLBACK_ASSETS[4].change24h,
+                    changePercent: typeof silverItem?.changePercent === 'number' ? silverItem.changePercent : FALLBACK_ASSETS[4].changePercent,
                     marketCap: '$1.5T',
                     icon: Coin,
                     iconColor: 'text-slate-400',
@@ -177,9 +175,9 @@ export function MarketSection() {
             ];
 
             console.log('Market data updated:', {
-                btc: btcData.success ? `$${btcData.data.price.toLocaleString()}` : 'fallback',
-                eth: ethData.success ? `$${ethData.data.price.toLocaleString()}` : 'fallback',
-                gold: goldData.success ? `$${goldData.data.price.toLocaleString()}` : 'fallback',
+                btc: btcData?.success && btcData?.data?.price ? `$${btcData.data.price.toLocaleString()}` : 'fallback',
+                eth: ethData?.success && ethData?.data?.price ? `$${ethData.data.price.toLocaleString()}` : 'fallback',
+                gold: goldItem?.price ? `$${Number(goldItem.price).toLocaleString()}` : 'fallback',
                 timestamp: new Date().toLocaleTimeString()
             });
 
