@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import macroDatabase from '@/features/market/data/macroDatabase.json';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,6 +16,7 @@ export async function GET(request: NextRequest) {
   const results = {
     commoditiesCount: 0,
     bankRatesCount: 0,
+    macroIndicatorsUpdated: false,
   };
 
   try {
@@ -200,10 +202,28 @@ export async function GET(request: NextRequest) {
       results.bankRatesCount = bankRates.length;
     }
 
+    // 3. Sync Macro Indicators (GDP, CPI, Interest Rates)
+    try {
+      const nowStr = new Date().toLocaleDateString('vi-VN', {
+        timeZone: 'Asia/Ho_Chi_Minh',
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      });
+      await supabase.from('macro_indicators').upsert([
+        { id: 'gdp', type: 'gdp', data: macroDatabase.gdp, cycle_assessment: 'Mở Rộng Kinh Tế Mạnh', updated_at: `Kỳ ${macroDatabase.gdp[0]?.period} (GSO & SBV)` },
+        { id: 'cpi', type: 'cpi', data: macroDatabase.cpi, updated_at: `Kỳ ${macroDatabase.cpi[0]?.period} (GSO)` },
+        { id: 'interest_rate', type: 'interest_rate', data: macroDatabase.interestRate, updated_at: nowStr },
+      ], { onConflict: 'id' });
+      results.macroIndicatorsUpdated = true;
+    } catch (e) {
+      console.error('Lỗi sync macro indicators:', e);
+    }
+
     const duration = ((Date.now() - startTime) / 1000).toFixed(2);
     return NextResponse.json({
       success: true,
-      message: `Cập nhật thành công ${results.commoditiesCount} mặt hàng và ${results.bankRatesCount} biểu lãi suất ngân hàng!`,
+      message: `Cập nhật thành công ${results.commoditiesCount} mặt hàng, ${results.bankRatesCount} biểu lãi suất và chỉ số vĩ mô GDP/CPI!`,
       duration: `${duration}s`,
       timestamp: new Date().toISOString(),
       results,

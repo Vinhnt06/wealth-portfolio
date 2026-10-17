@@ -258,6 +258,36 @@ async function fetchBankRates() {
   return rates.length;
 }
 
+async function syncMacroIndicators() {
+  console.log(`\n[3/3] Đang đồng bộ chỉ số vĩ mô (GDP, CPI, Lãi suất điều hành)...`);
+  try {
+    const macroJsonPath = path.resolve(__dirname, '../frontend/src/features/market/data/macroDatabase.json');
+    if (fs.existsSync(macroJsonPath)) {
+      const macroData = JSON.parse(fs.readFileSync(macroJsonPath, 'utf8'));
+      const nowStr = new Date().toLocaleDateString('vi-VN', {
+        timeZone: 'Asia/Ho_Chi_Minh',
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      });
+
+      const { error } = await supabase.from('macro_indicators').upsert([
+        { id: 'gdp', type: 'gdp', data: macroData.gdp, cycle_assessment: 'Mở Rộng Kinh Tế Mạnh', updated_at: `Kỳ ${macroData.gdp[0]?.period} (GSO & SBV)` },
+        { id: 'cpi', type: 'cpi', data: macroData.cpi, updated_at: `Kỳ ${macroData.cpi[0]?.period} (GSO)` },
+        { id: 'interest_rate', type: 'interest_rate', data: macroData.interestRate, updated_at: nowStr },
+      ], { onConflict: 'id' });
+
+      if (error) {
+        console.error('  [ERROR] Lỗi lưu macro_indicators vào Supabase:', error.message);
+      } else {
+        console.log(`  ✓ Đã đồng bộ thành công chỉ số GDP, CPI và Lãi suất điều hành vào Supabase!`);
+      }
+    }
+  } catch (e) {
+    console.error('  [ERROR] Lỗi đồng bộ macro_indicators:', e.message);
+  }
+}
+
 async function run() {
   console.log(`\n=============================================================`);
   console.log(`🚀 [CRONJOB] BẮT ĐẦU CẬP NHẬT DỮ LIỆU VĨ MÔ (${new Date().toLocaleString('vi-VN')})`);
@@ -266,6 +296,7 @@ async function run() {
   const startTime = Date.now();
   await fetchCommodities();
   await fetchBankRates();
+  await syncMacroIndicators();
 
   const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
   console.log(`=============================================================`);

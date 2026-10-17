@@ -9,45 +9,77 @@ import {
   Globe, 
   CurrencyCircleDollar,
   Info,
-  Scales
+  Scales,
+  ArrowsClockwise
 } from '@phosphor-icons/react';
 import { motion } from 'framer-motion';
 import macroDatabase from '../data/macroDatabase.json';
 
 export const MacroDataSection: React.FC = () => {
-  const { gdp, cpi, exchangeRate, interestRate } = macroDatabase;
   const [mounted, setMounted] = useState(false);
-  const [liveExchangeRates, setLiveExchangeRates] = useState<any[]>(exchangeRate);
+  const [macroData, setMacroData] = useState<{
+    gdp: any[];
+    cpi: any[];
+    interestRate: any[];
+    cycleAssessment: string;
+    updatedAt: string;
+    source: string;
+  }>({
+    gdp: macroDatabase.gdp,
+    cpi: macroDatabase.cpi,
+    interestRate: macroDatabase.interestRate,
+    cycleAssessment: 'Mở Rộng Kinh Tế Mạnh',
+    updatedAt: 'Kỳ Q3/2026 (GDP 9.95%)',
+    source: 'GSO & SBV',
+  });
+
+  const [liveExchangeRates, setLiveExchangeRates] = useState<any[]>(macroDatabase.exchangeRate);
   const [exchangeUpdateTime, setExchangeUpdateTime] = useState<string>('Live');
   const [isLiveRates, setIsLiveRates] = useState<boolean>(false);
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+
+  const fetchMacroIndicators = async () => {
+    setIsRefreshing(true);
+    try {
+      const [resInd, resRates] = await Promise.all([
+        fetch('/api/macro/indicators', { cache: 'no-store' }),
+        fetch('/api/macro/exchange-rate', { cache: 'no-store' }),
+      ]);
+
+      if (resInd.ok) {
+        const indJson = await resInd.json();
+        if (indJson.success && indJson.data) {
+          setMacroData(indJson.data);
+        }
+      }
+
+      if (resRates.ok) {
+        const rateJson = await resRates.json();
+        if (rateJson.success && Array.isArray(rateJson.data) && rateJson.data.length > 0) {
+          setLiveExchangeRates(rateJson.data);
+          setExchangeUpdateTime(rateJson.updateTime || 'Hôm nay');
+          setIsLiveRates(true);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching macro indicators:', err);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   useEffect(() => {
     setMounted(true);
-
-    const fetchRates = async () => {
-      try {
-        const res = await fetch('/api/macro/exchange-rate');
-        const json = await res.json();
-        if (json.success && Array.isArray(json.data) && json.data.length > 0) {
-          setLiveExchangeRates(json.data);
-          setExchangeUpdateTime(json.updateTime || 'Hôm nay');
-          setIsLiveRates(true);
-        }
-      } catch (err) {
-        console.error('Error fetching live exchange rates:', err);
-      }
-    };
-
-    fetchRates();
-    const interval = setInterval(fetchRates, 60000);
+    fetchMacroIndicators();
+    const interval = setInterval(fetchMacroIndicators, 60000);
     return () => clearInterval(interval);
   }, []);
 
-  const currentGdp = gdp[0];
-  const currentCpi = cpi[0];
-  const currentUsd = liveExchangeRates[0] || exchangeRate[0];
-  const overnightRate = interestRate[0];
-  const refRate = interestRate[1];
+  const currentGdp = macroData.gdp?.[0] || macroDatabase.gdp[0];
+  const currentCpi = macroData.cpi?.[0] || macroDatabase.cpi[0];
+  const currentUsd = liveExchangeRates[0] || macroDatabase.exchangeRate[0];
+  const overnightRate = macroData.interestRate?.[0] || macroDatabase.interestRate[0];
+  const refRate = macroData.interestRate?.[1] || macroDatabase.interestRate[1];
 
   return (
     <div suppressHydrationWarning className="relative overflow-hidden p-6 md:p-8 bg-zinc-950/90 border border-zinc-800/80 rounded-3xl backdrop-blur-2xl space-y-6 shadow-2xl">
@@ -66,6 +98,9 @@ export const MacroDataSection: React.FC = () => {
               <h2 className="text-lg font-bold text-zinc-100 tracking-tight">
                 Vĩ Mô & Thị Trường Tiền Tệ
               </h2>
+              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
+                CRON AUTO-SYNC
+              </span>
             </div>
             <p className="text-xs text-zinc-400 font-sans">
               Dữ liệu chu kỳ kinh tế vĩ mô, lạm phát mục tiêu, tỷ giá & lãi suất liên ngân hàng
@@ -78,8 +113,17 @@ export const MacroDataSection: React.FC = () => {
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
             <span>Kỳ {currentGdp.period} (GDP {currentGdp.growthRate}%)</span>
             <span className="text-zinc-600 font-light select-none">|</span>
-            <span className="text-zinc-400">GSO & SBV</span>
+            <span className="text-zinc-400">{macroData.source || 'GSO & SBV'}</span>
           </span>
+
+          <button
+            onClick={fetchMacroIndicators}
+            disabled={isRefreshing}
+            title="Làm mới chỉ số vĩ mô & tỷ giá"
+            className="p-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 hover:text-emerald-400 transition-colors disabled:opacity-50"
+          >
+            <ArrowsClockwise size={15} className={isRefreshing ? 'animate-spin text-emerald-400' : ''} />
+          </button>
         </div>
       </div>
 
@@ -124,7 +168,7 @@ export const MacroDataSection: React.FC = () => {
                 <span className="text-zinc-300 font-bold">Quy mô: {currentGdp.value}</span>
               </div>
               <div className="grid grid-cols-4 gap-1.5 pt-1">
-                {gdp.map((item, idx) => (
+                {(macroData.gdp || macroDatabase.gdp).slice(0, 4).map((item: any, idx: number) => (
                   <div key={idx} className="bg-zinc-950/80 border border-zinc-800/80 rounded-lg p-2 text-center">
                     <span className="text-[10px] text-zinc-500 block font-mono">{item.period}</span>
                     <span className={`text-xs font-mono font-bold ${idx === 0 ? 'text-emerald-400' : 'text-zinc-300'}`}>
@@ -139,7 +183,7 @@ export const MacroDataSection: React.FC = () => {
           <div className="mt-5 pt-3 border-t border-zinc-800/60 flex items-center justify-between text-xs font-mono text-zinc-400">
             <span>Đánh giá chu kỳ:</span>
             <span className="text-emerald-400 font-bold px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">
-              Mở Rộng Kinh Tế Mạnh
+              {macroData.cycleAssessment || 'Mở Rộng Kinh Tế Mạnh'}
             </span>
           </div>
         </motion.div>
