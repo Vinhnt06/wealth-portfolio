@@ -549,7 +549,7 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
             <span className="text-[10px] text-zinc-500 font-semibold uppercase">Trend Template</span>
           </div>
 
-          <div className="flex-1 overflow-y-auto scrollbar-none">
+          <div className="flex-1 min-h-0 overflow-hidden">
             <MinerviniStrategyPanel symbol={selectedSymbol} />
           </div>
         </div>

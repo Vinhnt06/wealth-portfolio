@@ -138,20 +138,32 @@ export const MinerviniStrategyPanel: React.FC<MinerviniStrategyPanelProps> = ({ 
               {/* Header */}
               <div
                 onClick={() => setOpenMinervini((prev) => !prev)}
-                className="p-3 bg-[#0d1622]/90 border-b border-zinc-800/60 cursor-pointer flex items-center justify-between"
+                className="p-3 bg-[#0d1622]/90 border-b border-zinc-800/60 cursor-pointer flex flex-col gap-1.5"
               >
-                <div>
+                <div className="flex items-center justify-between">
                   <div className="text-[11px] text-amber-400 font-extrabold flex items-center gap-1.5 uppercase tracking-wide">
                     {openMinervini ? <CaretDown size={13} weight="bold" /> : <CaretRight size={13} weight="bold" />}
                     <span>TREND TEMPLATE (MARK MINERVINI)</span>
                   </div>
-                  <div className="text-xs font-bold text-emerald-400 mt-1 pl-4 flex items-center gap-1.5">
-                    <span className="text-sm font-black">{passedCount}/8</span>
-                    <span className="text-zinc-300 font-medium">tiêu chí đạt ·</span>
-                    <span className={isStage2 ? 'text-emerald-400 font-bold' : 'text-amber-400 font-semibold'}>
-                      {isStage2 ? 'Stage 2 – đủ điều kiện xét mua' : (data?.stageName || 'Stage 1 – theo dõi tích lũy')}
-                    </span>
-                  </div>
+                  <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border ${
+                    passedCount >= 6 ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' :
+                    passedCount >= 4 ? 'bg-amber-500/15 text-amber-400 border-amber-500/30' :
+                    'bg-rose-500/15 text-rose-400 border-rose-500/30'
+                  }`}>
+                    {passedCount}/8 đạt
+                  </span>
+                </div>
+
+                <div className="pl-4 flex items-center gap-2 text-xs">
+                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded border inline-block ${
+                    isStage2
+                      ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+                      : data?.stageName?.includes('Stage 4')
+                      ? 'bg-rose-500/15 text-rose-300 border-rose-500/30'
+                      : 'bg-amber-500/15 text-amber-300 border-amber-500/30'
+                  }`}>
+                    {isStage2 ? 'Stage 2 – Đủ điều kiện xét mua' : (data?.stageName || 'Stage 1 – Tích lũy')}
+                  </span>
                 </div>
               </div>
 

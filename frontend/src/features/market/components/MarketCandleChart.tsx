@@ -2054,19 +2054,19 @@ export function MarketCandleChart() {
         ctx.setLineDash([]);
       }
 
-      // ── 3. Vertical Guideline at baseTrough (17/08/2026) ──
+      // ── 3. Vertical Guideline at baseTrough (historical pivot only, not current candle) ──
       const xBaseTrough = timeScale.logicalToCoordinate(baseTrough.idx as any);
-      if (xBaseTrough !== null && xBaseTrough > 0 && xBaseTrough < w - 60) {
+      if (xBaseTrough !== null && xBaseTrough > 0 && xBaseTrough < w - 60 && baseTrough.idx < lastCandleIdx - 5) {
         ctx.beginPath();
         ctx.setLineDash([3, 3]);
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
         ctx.lineWidth = 1.0;
         ctx.moveTo(xBaseTrough, 18);
-        ctx.lineTo(xBaseTrough, h - 22);
+        ctx.lineTo(xBaseTrough, h - 26);
         ctx.stroke();
         ctx.setLineDash([]);
 
-        // Date label at bottom
+        // Date label at bottom with pill backdrop so it doesn't collide with timeline
         let dateLabel = '17/08/2026';
         if (baseTrough.time) {
           if (typeof baseTrough.time === 'string') {
@@ -2077,11 +2077,14 @@ export function MarketCandleChart() {
             dateLabel = `${String(t.day).padStart(2, '0')}/${String(t.month).padStart(2, '0')}/${t.year}`;
           }
         }
-        ctx.fillStyle = 'rgba(212, 212, 216, 0.85)';
         ctx.font = 'bold 9px JetBrains Mono, monospace';
+        const dtw = ctx.measureText(dateLabel).width;
+        ctx.fillStyle = 'rgba(19, 23, 34, 0.9)';
+        ctx.fillRect(xBaseTrough - dtw / 2 - 4, h - 24, dtw + 8, 14);
+        ctx.fillStyle = 'rgba(212, 212, 216, 0.9)';
         ctx.textAlign = 'center';
-        ctx.textBaseline = 'bottom';
-        ctx.fillText(dateLabel, xBaseTrough, h - 8);
+        ctx.textBaseline = 'middle';
+        ctx.fillText(dateLabel, xBaseTrough, h - 16);
       }
 
       // ── 4. Upper Resistance Trendline (Solid Lime Green connecting Highs, extends forward) ──
@@ -2123,6 +2126,12 @@ export function MarketCandleChart() {
       }
       const fanLabels: FibFanLabelItem[] = [];
 
+      // Position labels cleanly to the right of the last candle in the empty projection margin,
+      // never covering candlesticks or price action, matching TradingView master layout
+      const minLabelX = xLastCandle + 28;
+      const targetLabelX = Math.min(Math.max(minLabelX, rightEdge - 12), w - 75);
+      const targetLogical = timeScale.coordinateToLogical(targetLabelX as any) ?? projEndLogical;
+
       allRatios.forEach((r) => {
         // Price at start and end
         const pStart = getFibRayPrice(resP1.idx, r);
@@ -2150,9 +2159,9 @@ export function MarketCandleChart() {
           ctx.stroke();
           ctx.setLineDash([]);
 
-          // Collect Fib Ratio Label for smart anti-collision layout
-          const pAtLast = getFibRayPrice(lastCandleIdx, r);
-          const yLabel = series.priceToCoordinate(pAtLast);
+          // Compute price of this ray at targetLabelX in the clean margin
+          const pAtTarget = getFibRayPrice(targetLogical, r);
+          const yLabel = series.priceToCoordinate(pAtTarget);
 
           if (yLabel !== null && yLabel >= 10 && yLabel <= h - 10) {
             fanLabels.push({
@@ -2161,7 +2170,7 @@ export function MarketCandleChart() {
               color: r < 0 ? '#f87171' : '#facc15',
               rawY: yLabel,
               y: yLabel,
-              x: Math.min(xLastCandle + 8, w - 85),
+              x: targetLabelX,
             });
           }
         }
@@ -2204,7 +2213,7 @@ export function MarketCandleChart() {
           }
         }
 
-        // 4. Render labels with high contrast backdrops & optional leader lines
+        // 4. Render labels with high contrast backdrops & optional leader lines in clean margin
         ctx.save();
         ctx.font = 'bold 9px JetBrains Mono, monospace';
         ctx.textAlign = 'left';
@@ -2217,7 +2226,7 @@ export function MarketCandleChart() {
             ctx.strokeStyle = lbl.r < 0 ? 'rgba(248, 113, 113, 0.45)' : 'rgba(250, 204, 21, 0.45)';
             ctx.lineWidth = 0.8;
             ctx.setLineDash([2, 2]);
-            ctx.moveTo(xLastCandle + 2, lbl.rawY);
+            ctx.moveTo(lbl.x - 8, lbl.rawY);
             ctx.lineTo(lbl.x, lbl.y);
             ctx.stroke();
             ctx.setLineDash([]);
