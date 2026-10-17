@@ -58,6 +58,8 @@ import {
   Check,
   Gear,
   ChartBarHorizontal,
+  CaretUp,
+  CaretDown,
 } from '@phosphor-icons/react';
 import {
   calculateFibonacciPivots,
@@ -1008,6 +1010,25 @@ export function MarketCandleChart() {
   const [volumeProfileSettings, setVolumeProfileSettings] = useState<VolumeProfileSettings>(DEFAULT_VOLUME_PROFILE_SETTINGS);
   const [volumeProfileData, setVolumeProfileData] = useState<VolumeProfileResult | null>(null);
   const [showVolumeProfileModal, setShowVolumeProfileModal] = useState<boolean>(false);
+
+  // In-Chart Legend Collapse/Expand State (TradingView Style Arrow Toggle)
+  const [isLegendCollapsed, setIsLegendCollapsed] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('tv_chart_legend_collapsed') === 'true';
+    }
+    return false;
+  });
+
+  const toggleLegendCollapsed = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsLegendCollapsed((prev) => {
+      const next = !prev;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('tv_chart_legend_collapsed', String(next));
+      }
+      return next;
+    });
+  };
 
   // Drawing Tools State (TradingView Style)
   const [activeTool, setActiveTool] = useState<DrawingTool>('cursor');
@@ -5437,8 +5458,22 @@ export function MarketCandleChart() {
 
             {/* ── TradingView In-Chart Legend (Top-Left Canvas Overlay - Screenshot 2 style) ────────── */}
             <div className="absolute top-2 left-3 z-20 pointer-events-none flex flex-col gap-1 select-none font-mono text-[11px] leading-tight drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)] max-w-[calc(100%-80px)]">
-              {/* Row 1: Realtime OHLC */}
-              <div className="flex items-center gap-1.5 flex-wrap text-zinc-300">
+              {/* Row 1: Realtime OHLC + Legend Toggle Arrow Button */}
+              <div className="flex items-center gap-1.5 flex-wrap text-zinc-300 pointer-events-auto">
+                {/* Arrow Toggle Button (TradingView Style) */}
+                <button
+                  type="button"
+                  onClick={toggleLegendCollapsed}
+                  title={isLegendCollapsed ? 'Mở rộng hiển thị chỉ số (Expand)' : 'Thu gọn ẩn bớt chỉ số (Collapse)'}
+                  className="p-1 -ml-1 text-zinc-400 hover:text-white bg-zinc-900/80 hover:bg-zinc-800 border border-zinc-700/60 rounded transition-all flex items-center justify-center cursor-pointer shadow-sm group"
+                >
+                  {isLegendCollapsed ? (
+                    <CaretDown size={12} weight="bold" className="text-emerald-400 group-hover:scale-110 transition-transform" />
+                  ) : (
+                    <CaretUp size={12} weight="bold" className="group-hover:scale-110 transition-transform" />
+                  )}
+                </button>
+
                 <span className="text-zinc-400 font-bold">{resolution}</span>
                 {hoveredData?.timeStr && (
                   <span className="text-emerald-400 font-mono text-[10px] px-1.5 py-0.2 rounded bg-emerald-500/10 border border-emerald-500/20 font-bold">
@@ -5459,122 +5494,136 @@ export function MarketCandleChart() {
                     `${isPositive ? '+' : ''}${changeK} (${isPositive ? '+' : ''}${changePct}%)`
                   )}
                 </span>
+                {isLegendCollapsed && (
+                  <button
+                    type="button"
+                    onClick={toggleLegendCollapsed}
+                    className="text-[10px] text-zinc-500 hover:text-emerald-400 font-sans px-1.5 py-0.5 rounded bg-zinc-900/60 border border-zinc-800 transition-colors ml-1 cursor-pointer"
+                  >
+                    (Đã ẩn chỉ báo)
+                  </button>
+                )}
               </div>
 
-              {/* Row 2: Volume & Volume MA 20 */}
-              {showVolume && (
-                <div className="flex items-center gap-x-3 gap-y-0.5 flex-wrap text-zinc-400 text-xs">
-                  <div className="flex items-center gap-1.5">
-                    <span>Vol:</span>
-                    <span className="text-emerald-400 font-bold">
-                      {(hoveredData?.volume || (loadedCandlesRef.current.length > 0 ? (currentTick?.totalVolume || 0) : 0)).toLocaleString()}
-                    </span>
-                  </div>
-                  {activeVolMa20 !== undefined && (
-                    <div className="flex items-center gap-1.5 font-mono text-[11px]">
-                      <span className="text-[#38bdf8] font-semibold">Vol MA 20:</span>
-                      <span className="text-[#38bdf8] font-bold">
-                        {Math.round(activeVolMa20).toLocaleString()}
+              {/* Detail Indicators Rows - Collapsible via Arrow Button */}
+              {!isLegendCollapsed && (
+                <>
+                  {/* Row 2: Volume & Volume MA 20 */}
+                  {showVolume && (
+                    <div className="flex items-center gap-x-3 gap-y-0.5 flex-wrap text-zinc-400 text-xs">
+                      <div className="flex items-center gap-1.5">
+                        <span>Vol:</span>
+                        <span className="text-emerald-400 font-bold">
+                          {(hoveredData?.volume || (loadedCandlesRef.current.length > 0 ? (currentTick?.totalVolume || 0) : 0)).toLocaleString()}
+                        </span>
+                      </div>
+                      {activeVolMa20 !== undefined && (
+                        <div className="flex items-center gap-1.5 font-mono text-[11px]">
+                          <span className="text-[#38bdf8] font-semibold">Vol MA 20:</span>
+                          <span className="text-[#38bdf8] font-bold">
+                            {Math.round(activeVolMa20).toLocaleString()}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Row 3: MA Ribbon (8, 21, 144, 233) */}
+                  {(showMA8 || showMA21 || showMA144 || showMA233) && (
+                    <div className="flex items-center gap-x-2 gap-y-0.5 flex-wrap text-[11px] font-mono">
+                      <span className="text-zinc-400 font-semibold">{maType} Ribbon:</span>
+                      {showMA8 && activeMA8 !== undefined && (
+                        <span className="text-[#38bdf8] font-bold">
+                          MA8: {activeMA8.toFixed(2).replace('.', ',')}
+                        </span>
+                      )}
+                      {showMA21 && activeMA21 !== undefined && (
+                        <span className="text-[#facc15] font-bold">
+                          MA21: {activeMA21.toFixed(2).replace('.', ',')}
+                        </span>
+                      )}
+                      {showMA144 && activeMA144 !== undefined && (
+                        <span className="text-[#f97316] font-bold">
+                          MA144: {activeMA144.toFixed(2).replace('.', ',')}
+                        </span>
+                      )}
+                      {showMA233 && activeMA233 !== undefined && (
+                        <span className="text-[#ef4444] font-bold">
+                          MA233: {activeMA233.toFixed(2).replace('.', ',')}
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Row 4: Trendline Pro Support / Resistance & Fib Xiên (Matching TradingView master) */}
+                  {showTrendlinePro && trendlineProData && (
+                    <div className="flex items-center gap-x-2 gap-y-0.5 flex-wrap text-[10px] font-mono">
+                      <span className="text-amber-400 font-bold">Trendline Pro</span>
+                      <span className="text-lime-400">Kháng cự: <strong>{trendlineProData.resistance.toFixed(2).replace('.', ',')}</strong></span>
+                      <span className="text-rose-400">Hỗ trợ: <strong>{trendlineProData.support.toFixed(2).replace('.', ',')}</strong></span>
+                      <span className="text-amber-300">Fib 0,618: <strong>{trendlineProData.fib0618.toFixed(2).replace('.', ',')}</strong></span>
+                      <span className="text-cyan-400">Fib 1,618: <strong>{trendlineProData.fib1618.toFixed(2).replace('.', ',')}</strong></span>
+                      <span className="px-1.5 py-0.2 rounded bg-zinc-800/90 text-emerald-400 font-bold border border-emerald-500/30">
+                        {trendlineProData.recommendation}
                       </span>
                     </div>
                   )}
-                </div>
-              )}
 
-              {/* Row 3: MA Ribbon (8, 21, 144, 233) */}
-              {(showMA8 || showMA21 || showMA144 || showMA233) && (
-                <div className="flex items-center gap-x-2 gap-y-0.5 flex-wrap text-[11px] font-mono">
-                  <span className="text-zinc-400 font-semibold">{maType} Ribbon:</span>
-                  {showMA8 && activeMA8 !== undefined && (
-                    <span className="text-[#38bdf8] font-bold">
-                      MA8: {activeMA8.toFixed(2).replace('.', ',')}
-                    </span>
+                  {/* Row 5: Fibonacci Pivot Points Legend */}
+                  {fiboSettings.enabled && fiboPeriods.length > 0 && (
+                    <div className="flex items-center gap-2 text-[10px]">
+                      <span className="text-teal-400 font-bold flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" />
+                        Fibo Pivots ({fiboSettings.timeframe})
+                      </span>
+                      {fiboPeriods[fiboPeriods.length - 1] && (
+                        <>
+                          <span className="text-zinc-300">PP: <strong>{formatPivotPrice(fiboPeriods[fiboPeriods.length - 1].pp)}</strong></span>
+                          <span className="text-teal-300">Range: <strong>{formatPivotPrice(fiboPeriods[fiboPeriods.length - 1].range)}</strong></span>
+                        </>
+                      )}
+                      <button
+                        onClick={() => setShowFiboSettingsModal(true)}
+                        className="p-0.5 rounded text-zinc-400 hover:text-teal-300 hover:bg-zinc-800 transition-colors ml-0.5"
+                        title="Cài đặt Fibonacci Pivots"
+                      >
+                        <Gear size={12} />
+                      </button>
+                    </div>
                   )}
-                  {showMA21 && activeMA21 !== undefined && (
-                    <span className="text-[#facc15] font-bold">
-                      MA21: {activeMA21.toFixed(2).replace('.', ',')}
-                    </span>
-                  )}
-                  {showMA144 && activeMA144 !== undefined && (
-                    <span className="text-[#f97316] font-bold">
-                      MA144: {activeMA144.toFixed(2).replace('.', ',')}
-                    </span>
-                  )}
-                  {showMA233 && activeMA233 !== undefined && (
-                    <span className="text-[#ef4444] font-bold">
-                      MA233: {activeMA233.toFixed(2).replace('.', ',')}
-                    </span>
-                  )}
-                </div>
-              )}
 
-              {/* Row 4: Trendline Pro Support / Resistance & Fib Xiên (Matching TradingView master) */}
-              {showTrendlinePro && trendlineProData && (
-                <div className="flex items-center gap-x-2 gap-y-0.5 flex-wrap text-[10px] font-mono">
-                  <span className="text-amber-400 font-bold">Trendline Pro</span>
-                  <span className="text-lime-400">Kháng cự: <strong>{trendlineProData.resistance.toFixed(2).replace('.', ',')}</strong></span>
-                  <span className="text-rose-400">Hỗ trợ: <strong>{trendlineProData.support.toFixed(2).replace('.', ',')}</strong></span>
-                  <span className="text-amber-300">Fib 0,618: <strong>{trendlineProData.fib0618.toFixed(2).replace('.', ',')}</strong></span>
-                  <span className="text-cyan-400">Fib 1,618: <strong>{trendlineProData.fib1618.toFixed(2).replace('.', ',')}</strong></span>
-                  <span className="px-1.5 py-0.2 rounded bg-zinc-800/90 text-emerald-400 font-bold border border-emerald-500/30">
-                    {trendlineProData.recommendation}
-                  </span>
-                </div>
-              )}
-
-              {/* Row 5: Fibonacci Pivot Points Legend */}
-              {fiboSettings.enabled && fiboPeriods.length > 0 && (
-                <div className="flex items-center gap-2 text-[10px]">
-                  <span className="text-teal-400 font-bold flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" />
-                    Fibo Pivots ({fiboSettings.timeframe})
-                  </span>
-                  {fiboPeriods[fiboPeriods.length - 1] && (
-                    <>
-                      <span className="text-zinc-300">PP: <strong>{formatPivotPrice(fiboPeriods[fiboPeriods.length - 1].pp)}</strong></span>
-                      <span className="text-teal-300">Range: <strong>{formatPivotPrice(fiboPeriods[fiboPeriods.length - 1].range)}</strong></span>
-                    </>
+                  {/* Row 6: Volume Profile (VRVP) Legend */}
+                  {showVolumeProfile && volumeProfileData && (
+                    <div className="flex items-center gap-2 text-[10px] font-mono">
+                      <span className="text-cyan-400 font-bold flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                        VP (VA {volumeProfileSettings.valueAreaPercent}%)
+                      </span>
+                      <span className="text-orange-400 font-semibold">
+                        POC: <strong className="text-orange-300 font-bold">{volumeProfileData.pocPrice.toFixed(2)}</strong>
+                      </span>
+                      <span className="text-cyan-300 font-semibold">
+                        VAH: <strong className="text-white font-bold">{volumeProfileData.vahPrice.toFixed(2)}</strong>
+                      </span>
+                      <span className="text-cyan-300 font-semibold">
+                        VAL: <strong className="text-white font-bold">{volumeProfileData.valPrice.toFixed(2)}</strong>
+                      </span>
+                      <span className="text-emerald-400 font-semibold">
+                        Mua: <strong>{((volumeProfileData.totalBuyVolume / (volumeProfileData.totalVolume || 1)) * 100).toFixed(0)}%</strong>
+                      </span>
+                      <span className="text-rose-400 font-semibold">
+                        Bán: <strong>{((volumeProfileData.totalSellVolume / (volumeProfileData.totalVolume || 1)) * 100).toFixed(0)}%</strong>
+                      </span>
+                      <button
+                        onClick={() => setShowVolumeProfileModal(true)}
+                        className="p-0.5 rounded text-zinc-400 hover:text-cyan-300 hover:bg-zinc-800 transition-colors ml-0.5"
+                        title="Cài đặt Volume Profile"
+                      >
+                        <Gear size={12} />
+                      </button>
+                    </div>
                   )}
-                  <button
-                    onClick={() => setShowFiboSettingsModal(true)}
-                    className="p-0.5 rounded text-zinc-400 hover:text-teal-300 hover:bg-zinc-800 transition-colors ml-0.5"
-                    title="Cài đặt Fibonacci Pivots"
-                  >
-                    <Gear size={12} />
-                  </button>
-                </div>
-              )}
-
-              {/* Row 6: Volume Profile (VRVP) Legend */}
-              {showVolumeProfile && volumeProfileData && (
-                <div className="flex items-center gap-2 text-[10px] font-mono">
-                  <span className="text-cyan-400 font-bold flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-                    VP (VA {volumeProfileSettings.valueAreaPercent}%)
-                  </span>
-                  <span className="text-orange-400 font-semibold">
-                    POC: <strong className="text-orange-300 font-bold">{volumeProfileData.pocPrice.toFixed(2)}</strong>
-                  </span>
-                  <span className="text-cyan-300 font-semibold">
-                    VAH: <strong className="text-white font-bold">{volumeProfileData.vahPrice.toFixed(2)}</strong>
-                  </span>
-                  <span className="text-cyan-300 font-semibold">
-                    VAL: <strong className="text-white font-bold">{volumeProfileData.valPrice.toFixed(2)}</strong>
-                  </span>
-                  <span className="text-emerald-400 font-semibold">
-                    Mua: <strong>{((volumeProfileData.totalBuyVolume / (volumeProfileData.totalVolume || 1)) * 100).toFixed(0)}%</strong>
-                  </span>
-                  <span className="text-rose-400 font-semibold">
-                    Bán: <strong>{((volumeProfileData.totalSellVolume / (volumeProfileData.totalVolume || 1)) * 100).toFixed(0)}%</strong>
-                  </span>
-                  <button
-                    onClick={() => setShowVolumeProfileModal(true)}
-                    className="p-0.5 rounded text-zinc-400 hover:text-cyan-300 hover:bg-zinc-800 transition-colors ml-0.5"
-                    title="Cài đặt Volume Profile"
-                  >
-                    <Gear size={12} />
-                  </button>
-                </div>
+                </>
               )}
             </div>
 
