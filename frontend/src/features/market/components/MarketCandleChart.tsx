@@ -264,52 +264,103 @@ export function calculateTrendlinePro(candles: CandlestickData<Time>[]): Trendli
 
     if (swingHighs.length < 2 || swingLows.length < 2) continue;
 
-    // 1. Candidate Highs (H1 -> H2)
-    const sortedHighs = [...swingHighs].sort((a, b) => b.price - a.price);
-    let h1 = sortedHighs[0];
-    let h2 = swingHighs[swingHighs.length - 1];
-    const highsAfterH1 = swingHighs.filter((sh) => sh.idx >= h1.idx + 8);
-    if (highsAfterH1.length > 0) {
-      const scoredHighs = highsAfterH1.map((sh) => {
-        const dx = sh.idx - h1.idx;
-        const slope = (sh.price - h1.price) / dx;
-        let breachPenalty = 0;
-        for (let i = h1.idx; i <= lastIdx; i++) {
-          const linePrice = h1.price + slope * (i - h1.idx);
-          if (candles[i].high > linePrice) breachPenalty += candles[i].high - linePrice;
-        }
-        const isClean = breachPenalty < 0.001;
-        return { sh, score: (isClean ? 10000 : 0) + dx * 10 - breachPenalty * 5000, slope };
-      });
-      scoredHighs.sort((a, b) => b.score - a.score);
-      h2 = scoredHighs[0].sh;
-    }
-    const resSlope = (h2.price - h1.price) / Math.max(1, h2.idx - h1.idx);
+    // 1. Candidate Resistance Highs (supports both Ascending and Descending/Symmetrical patterns)
+    const maxHighInWindow = Math.max(...swingHighs.map((h) => h.price));
+    const resCandidates: {
+      h1: { idx: number; time: Time; price: number };
+      h2: { idx: number; time: Time; price: number };
+      slope: number;
+      currRes: number;
+      breachPenalty: number;
+      score: number;
+    }[] = [];
 
-    // 2. Candidate Lows (L1 -> L2)
-    const sortedLows = [...swingLows].sort((a, b) => a.price - b.price);
-    let l1 = sortedLows[0];
-    let l2 = swingLows[swingLows.length - 1];
-    const lowsAfterL1 = swingLows.filter((sl) => sl.idx >= l1.idx + 8);
-    if (lowsAfterL1.length > 0) {
-      const scoredLows = lowsAfterL1.map((sl) => {
-        const dx = sl.idx - l1.idx;
-        const slope = (sl.price - l1.price) / dx;
+    for (let i = 0; i < swingHighs.length; i++) {
+      for (let j = i + 1; j < swingHighs.length; j++) {
+        const p1 = swingHighs[i];
+        const p2 = swingHighs[j];
+        const dx = p2.idx - p1.idx;
+        if (dx < 8) continue;
+        const slope = (p2.price - p1.price) / dx;
         let breachPenalty = 0;
-        for (let i = l1.idx; i <= lastIdx; i++) {
-          const linePrice = l1.price + slope * (i - l1.idx);
-          if (candles[i].low < linePrice) breachPenalty += linePrice - candles[i].low;
+        for (let k = p1.idx; k <= lastIdx; k++) {
+          const lineP = p1.price + slope * (k - p1.idx);
+          if (candles[k].high > lineP + 0.05) {
+            breachPenalty += candles[k].high - lineP;
+          }
         }
-        const isClean = breachPenalty < 0.001;
-        return { sl, score: (isClean ? 10000 : 0) + dx * 10 - breachPenalty * 5000, slope };
-      });
-      scoredLows.sort((a, b) => b.score - a.score);
-      l2 = scoredLows[0].sl;
+        const currRes = p1.price + slope * (lastIdx - p1.idx);
+        if (currRes >= lastClose * 0.985) {
+          const isClean = breachPenalty < 0.05;
+          const anchorsPeak = p1.price === maxHighInWindow || p2.price === maxHighInWindow ? 3000 : 0;
+          resCandidates.push({
+            h1: p1,
+            h2: p2,
+            slope,
+            currRes,
+            breachPenalty,
+            score: (isClean ? 10000 : 0) + anchorsPeak + dx * 15 - breachPenalty * 5000,
+          });
+        }
+      }
     }
-    const supSlope = (l2.price - l1.price) / Math.max(1, l2.idx - l1.idx);
+    resCandidates.sort((a, b) => b.score - a.score);
+    if (resCandidates.length === 0) continue;
+    const bestRes = resCandidates[0];
 
-    const currRes = h1.price + resSlope * (lastIdx - h1.idx);
-    const currSup = l1.price + supSlope * (lastIdx - l1.idx);
+    // 2. Candidate Support Lows (supports both Ascending and Descending/Symmetrical patterns)
+    const minLowInWindow = Math.min(...swingLows.map((l) => l.price));
+    const supCandidates: {
+      l1: { idx: number; time: Time; price: number };
+      l2: { idx: number; time: Time; price: number };
+      slope: number;
+      currSup: number;
+      breachPenalty: number;
+      score: number;
+    }[] = [];
+
+    for (let i = 0; i < swingLows.length; i++) {
+      for (let j = i + 1; j < swingLows.length; j++) {
+        const p1 = swingLows[i];
+        const p2 = swingLows[j];
+        const dx = p2.idx - p1.idx;
+        if (dx < 8) continue;
+        const slope = (p2.price - p1.price) / dx;
+        let breachPenalty = 0;
+        for (let k = p1.idx; k <= lastIdx; k++) {
+          const lineP = p1.price + slope * (k - p1.idx);
+          if (candles[k].low < lineP - 0.05) {
+            breachPenalty += lineP - candles[k].low;
+          }
+        }
+        const currSup = p1.price + slope * (lastIdx - p1.idx);
+        if (currSup <= lastClose * 1.015) {
+          const isClean = breachPenalty < 0.05;
+          const anchorsTrough = p1.price === minLowInWindow || p2.price === minLowInWindow ? 3000 : 0;
+          supCandidates.push({
+            l1: p1,
+            l2: p2,
+            slope,
+            currSup,
+            breachPenalty,
+            score: (isClean ? 10000 : 0) + anchorsTrough + dx * 15 - breachPenalty * 5000,
+          });
+        }
+      }
+    }
+    supCandidates.sort((a, b) => b.score - a.score);
+    if (supCandidates.length === 0) continue;
+    const bestSup = supCandidates[0];
+
+    const h1 = bestRes.h1;
+    const h2 = bestRes.h2;
+    const resSlope = bestRes.slope;
+    const currRes = bestRes.currRes;
+
+    const l1 = bestSup.l1;
+    const l2 = bestSup.l2;
+    const supSlope = bestSup.slope;
+    const currSup = bestSup.currSup;
 
     let xInt = Infinity;
     if (Math.abs(resSlope - supSlope) > 1e-5) {
