@@ -1,0 +1,98 @@
+{
+  "success": true,
+  "timestamp": "2026-10-17T15:02:37.008Z",
+  "updateTime": "22:02:36",
+  "indices": [
+    {
+      "symbol": "^GSPC",
+      "name": "S&P 500",
+      "category": "equity",
+      "price": 7659.44,
+      "change": -84.62,
+      "changePercent": -1.09,
+      "unit": "pts",
+      "note": "Phong vũ biểu CK Mỹ (Top 500 CP)"
+    },
+    {
+      "symbol": "^IXIC",
+      "name": "Nasdaq Comp",
+      "category": "equity",
+      "price": 26140.03,
+      "change": -572.99,
+      "changePercent": -2.15,
+      "unit": "pts",
+      "note": "Chỉ số nhóm cổ phiếu công nghệ Mỹ"
+    },
+    {
+      "symbol": "^DJI",
+      "name": "Dow Jones",
+      "category": "equity",
+      "price": 52002.41,
+      "change": -175.28,
+      "changePercent": -0.34,
+      "unit": "pts",
+      "note": "30 Bluechip lớn nhất sàn New York"
+    },
+    {
+      "symbol": "^TNX",
+      "name": "US 10Y Yield",
+      "category": "yield",
+      "price": 5.1,
+      "change": 0.01,
+      "changePercent": 0.18,
+      "unit": "%",
+      "note": "Lợi suất Trái phiếu Chính phủ Mỹ 10 năm"
+    },
+    {
+      "symbol": "DX-Y.NYB",
+      "name": "DXY Index",
+      "category": "currency",
+      "price": 101.78,
+      "change": -0.06,
+      "changePercent": -0.06,
+      "unit": "pts",
+      "note": "Chỉ số đo lường sức mạnh đồng USD"
+    },
+    {
+      "symbol": "^VIX",
+      "name": "CBOE VIX",
+      "category": "volatility",
+      "price": 19.99,
+      "change": 3.53,
+      "changePercent": 21.45,
+      "unit": "pts",
+      "note": "Thước đo mức độ biến động & sợ hãi toàn cầu"
+    }
+  ],
+  "usInflation": {
+    "period": "T9/2026",
+    "cpiYoY": 2.4,
+    "cpiMoM": 0.2,
+    "coreCpiYoY": 3.3,
+    "fedTarget": 2,
+    "nextReleaseDate": "13/11/2026"
+  },
+  "vietnamImpact": [
+    {
+      "pillar": "Áp Lực Tỷ Giá USD/VND",
+      "status": "Tích Cực",
+      "statusColor": "emerald",
+      "headline": "DXY biến động quanh mức 101.78 điểm",
+      "detail": "Chỉ số DXY hạ nhiệt quanh 101.78 giúp thu hẹp chênh lệch USD-VND, giảm áp lực bán can thiệp ngoại tệ của NHNN và hạn chế rủi ro tỷ giá nhập khẩu."
+    },
+    {
+      "pillar": "Không Gian Lãi Suất NHNN",
+      "status": "Tích Cực",
+      "statusColor": "emerald",
+      "headline": "Dư địa duy trì chính sách tiền tệ nới lỏng",
+      "detail": "Lợi suất TPCP Mỹ 10 năm ở mức 5.10% giúp Ngân hàng Nhà nước có thêm điều kiện duy trì mặt bằng lãi suất điều hành thấp (4.5%) nhằm kích cầu tín dụng hỗ trợ tăng trưởng kinh tế."
+    },
+    {
+      "pillar": "Dòng Vốn Khối Ngoại (FII)",
+      "status": "Trung Lập",
+      "statusColor": "amber",
+      "headline": "Xu hướng dòng vốn ngoại trên TTCK",
+      "detail": "Lợi suất trái phiếu chính phủ Mỹ 10 năm (5.10%) và chỉ số VIX (19.99 điểm) phản ánh khẩu vị rủi ro toàn cầu đang trong tầm kiểm soát (Tâm lý ổn định), tạo điều kiện cân bằng dòng vốn ngoại trên HOSE/HNX."
+    }
+  ]
+}

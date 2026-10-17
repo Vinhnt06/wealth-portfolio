@@ -23,8 +23,10 @@ export default function MarketTerminalPage() {
   // Connect to Realtime WebSocket Data Stream
   const { wsStatus } = useDnseWebSocket();
 
-  // Mode and active stock selection from unified store
-  const { viewMode, setViewMode, selectedSymbol } = useMarketStore();
+  // Mode and active stock selection from unified store with fine-grained selectors
+  const viewMode = useMarketStore((s) => s.viewMode);
+  const setViewMode = useMarketStore((s) => s.setViewMode);
+  const selectedSymbol = useMarketStore((s) => s.selectedSymbol);
 
   // Mount state & market session state (HOSE/HNX trading schedule)
   const [mounted, setMounted] = React.useState(false);

@@ -15,6 +15,10 @@ import {
   Time,
   CrosshairMode,
   TickMarkType,
+  LineStyle,
+  createSeriesMarkers,
+  ISeriesMarkersPluginApi,
+  IPriceLine,
 } from 'lightweight-charts';
 import { useMarketStore } from '../store/marketStore';
 import {
@@ -76,6 +80,13 @@ import {
   VolumeProfileSettings,
 } from '../utils/volumeProfile';
 import { VolumeProfileModal } from './VolumeProfileModal';
+import {
+  calculateSuperTrend,
+  DEFAULT_SUPERTREND_SETTINGS,
+  SuperTrendResult,
+  SuperTrendSettings,
+} from '../utils/superTrend';
+import { SuperTrendStrategyModal } from './SuperTrendStrategyModal';
 import stockDatabase from '../data/stockDatabase.json';
 import { getStockPriceColor } from '../utils/priceColors';
 
@@ -941,6 +952,11 @@ export function MarketCandleChart() {
   const ma233SeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
   const bbUpperSeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
   const bbLowerSeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
+  const stUpSeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
+  const stDownSeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
+  const kamaSeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
+  const stMarkersPluginRef = useRef<ISeriesMarkersPluginApi<Time> | null>(null);
+  const stPriceLinesRef = useRef<IPriceLine[]>([]);
   const lastCandleRef = useRef<{ time: Time; open: number; high: number; low: number; close: number } | null>(null);
   const loadedCandlesRef = useRef<CandlestickData<Time>[]>([]);
   const redrawCanvasRef = useRef<() => void>(() => {});
@@ -1010,6 +1026,26 @@ export function MarketCandleChart() {
   const [volumeProfileSettings, setVolumeProfileSettings] = useState<VolumeProfileSettings>(DEFAULT_VOLUME_PROFILE_SETTINGS);
   const [volumeProfileData, setVolumeProfileData] = useState<VolumeProfileResult | null>(null);
   const [showVolumeProfileModal, setShowVolumeProfileModal] = useState<boolean>(false);
+
+  // SuperTrend Pro Strategy State
+  const [showSuperTrend, setShowSuperTrend] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('tv_chart_supertrend');
+      return saved !== null ? saved === 'true' : true;
+    }
+    return true;
+  });
+  const [superTrendSettings, setSuperTrendSettings] = useState<SuperTrendSettings>(DEFAULT_SUPERTREND_SETTINGS);
+  const [superTrendResult, setSuperTrendResult] = useState<SuperTrendResult | null>(null);
+  const [showSuperTrendModal, setShowSuperTrendModal] = useState<boolean>(false);
+
+  const toggleSuperTrend = (val: boolean) => {
+    setShowSuperTrend(val);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('tv_chart_supertrend', String(val));
+    }
+    setTimeout(() => redrawCanvasRef.current(), 10);
+  };
 
   // In-Chart Legend Collapse/Expand State (TradingView Style Arrow Toggle)
   const [isLegendCollapsed, setIsLegendCollapsed] = useState<boolean>(() => {
@@ -1575,6 +1611,116 @@ export function MarketCandleChart() {
       }
       return resolvePointCoordinate(chart, series, p, loadedCandlesRef.current);
     };
+
+    // ── 0. Render SuperTrend Pro Cloud Ribbon & Dots (Dải mây xu hướng) ────
+    if (showSuperTrend && superTrendResult && superTrendResult.bands.length > 0 && chart && series) {
+      ctx.save();
+      const timeScale = chart.timeScale();
+      const bands = superTrendResult.bands;
+
+      // Chia bands thành các continuous segments cùng trend
+      const segments: (typeof bands)[] = [];
+      let currentSeg: typeof bands = [];
+
+      for (let i = 0; i < bands.length; i++) {
+        if (currentSeg.length === 0 || currentSeg[currentSeg.length - 1].trend === bands[i].trend) {
+          currentSeg.push(bands[i]);
+        } else {
+          segments.push(currentSeg);
+          currentSeg = [bands[i]];
+        }
+      }
+      if (currentSeg.length > 0) {
+        segments.push(currentSeg);
+      }
+
+      // a. Vẽ dải mây tô màu & viền SuperTrend & Reversal Dot cho từng segment
+      segments.forEach((seg) => {
+        if (seg.length === 0) return;
+        const trendType = seg[0].trend; // 1 = Uptrend, -1 = Downtrend
+
+        const pts: Array<{ x: number; yST: number; yKama: number }> = [];
+
+        seg.forEach((pt) => {
+          const x = timeScale.logicalToCoordinate(pt.candleIndex as any);
+          const yST = series.priceToCoordinate(pt.stValue);
+          const yKama = series.priceToCoordinate(pt.kamaValue);
+
+          if (x !== null && yST !== null && yKama !== null) {
+            pts.push({ x, yST, yKama });
+          }
+        });
+
+        if (pts.length < 2) return;
+
+        // 1. Tô dải mây (Cloud Ribbon fill)
+        ctx.beginPath();
+        // Đi xuôi theo đường ST
+        ctx.moveTo(pts[0].x, pts[0].yST);
+        for (let i = 1; i < pts.length; i++) {
+          ctx.lineTo(pts[i].x, pts[i].yST);
+        }
+        // Đi ngược lại theo đường KAMA
+        for (let i = pts.length - 1; i >= 0; i--) {
+          ctx.lineTo(pts[i].x, pts[i].yKama);
+        }
+        ctx.closePath();
+
+        if (trendType === 1) {
+          // Uptrend: Dải mây xanh ngọc trong suốt
+          ctx.fillStyle = 'rgba(16, 185, 129, 0.18)';
+        } else {
+          // Downtrend: Dải mây đỏ trong suốt
+          ctx.fillStyle = 'rgba(239, 68, 68, 0.20)';
+        }
+        ctx.fill();
+
+        // 2. Đường viền SuperTrend sắc nét
+        ctx.beginPath();
+        ctx.moveTo(pts[0].x, pts[0].yST);
+        for (let i = 1; i < pts.length; i++) {
+          ctx.lineTo(pts[i].x, pts[i].yST);
+        }
+        ctx.strokeStyle = trendType === 1 ? '#00e5ff' : '#ef4444';
+        ctx.lineWidth = 2.0;
+        ctx.setLineDash([]);
+        ctx.stroke();
+
+        // 3. Chấm tròn khởi đầu dải (Reversal Dot Marker)
+        const firstPt = pts[0];
+        ctx.beginPath();
+        ctx.arc(firstPt.x, firstPt.yST, 3.5, 0, Math.PI * 2);
+        ctx.fillStyle = trendType === 1 ? '#00e5ff' : '#ef4444';
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+      });
+
+      // b. Vẽ đường KAMA vàng uốn lượn liên tục qua các nến
+      ctx.beginPath();
+      let started = false;
+      for (let i = 0; i < bands.length; i++) {
+        const x = timeScale.logicalToCoordinate(bands[i].candleIndex as any);
+        const yKama = series.priceToCoordinate(bands[i].kamaValue);
+        if (x !== null && yKama !== null) {
+          if (!started) {
+            ctx.moveTo(x, yKama);
+            started = true;
+          } else {
+            ctx.lineTo(x, yKama);
+          }
+        }
+      }
+      if (started) {
+        ctx.strokeStyle = '#facc15';
+        ctx.lineWidth = 1.6;
+        ctx.setLineDash([]);
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    }
 
     // ── Render User Drawings (Respect Hide Drawings Toggle) ──
     if (!hideDrawings) {
@@ -2789,7 +2935,7 @@ export function MarketCandleChart() {
     }
 
     ctx.restore();
-  }, [drawings, draftDrawing, showTrendlinePro, trendlineProData, hideDrawings, isMagnetMode, hoverSnapPoint, activeTool, selectedDrawingId, fiboSettings, fiboPeriods, showVolumeProfile, volumeProfileData, volumeProfileSettings]);
+  }, [drawings, draftDrawing, showTrendlinePro, trendlineProData, hideDrawings, isMagnetMode, hoverSnapPoint, activeTool, selectedDrawingId, fiboSettings, fiboPeriods, showVolumeProfile, volumeProfileData, volumeProfileSettings, showSuperTrend, superTrendResult]);
 
   // Keep decoupled ref for chart and window callbacks
   redrawCanvasRef.current = redrawCanvas;
@@ -3018,6 +3164,47 @@ export function MarketCandleChart() {
       lastValueVisible: false,
     });
     bbLowerSeriesRef.current = bbLowerSeries;
+
+    // SuperTrend Pro Line Series & Markers
+    const stUpSeries = chart.addSeries(LineSeries, {
+      color: '#10b981',
+      lineWidth: 2,
+      priceFormat: { type: 'price', precision: 2, minMove: 0.05 },
+      title: 'ST Up',
+      visible: showSuperTrend,
+      priceLineVisible: false,
+      lastValueVisible: false,
+    });
+    stUpSeriesRef.current = stUpSeries;
+
+    const stDownSeries = chart.addSeries(LineSeries, {
+      color: '#f43f5e',
+      lineWidth: 2,
+      priceFormat: { type: 'price', precision: 2, minMove: 0.05 },
+      title: 'ST Down',
+      visible: showSuperTrend,
+      priceLineVisible: false,
+      lastValueVisible: false,
+    });
+    stDownSeriesRef.current = stDownSeries;
+
+    const kamaSeries = chart.addSeries(LineSeries, {
+      color: '#eab308',
+      lineWidth: 1,
+      priceFormat: { type: 'price', precision: 2, minMove: 0.05 },
+      title: 'KAMA',
+      visible: showSuperTrend,
+      priceLineVisible: false,
+      lastValueVisible: false,
+    });
+    kamaSeriesRef.current = kamaSeries;
+
+    try {
+      const markersPlugin = createSeriesMarkers(candlestickSeries, []);
+      stMarkersPluginRef.current = markersPlugin;
+    } catch (e) {
+      console.warn('Could not initialize series markers plugin:', e);
+    }
 
     chart.timeScale().subscribeVisibleLogicalRangeChange(() => {
       requestAnimationFrame(() => redrawCanvasRef.current());
@@ -3417,6 +3604,11 @@ export function MarketCandleChart() {
       ma233SeriesRef.current = null;
       bbUpperSeriesRef.current = null;
       bbLowerSeriesRef.current = null;
+      stUpSeriesRef.current = null;
+      stDownSeriesRef.current = null;
+      kamaSeriesRef.current = null;
+      stMarkersPluginRef.current = null;
+      stPriceLinesRef.current = [];
     };
   }, [updateCanvasSize]);
 
@@ -3436,6 +3628,24 @@ export function MarketCandleChart() {
   useEffect(() => {
     ma233SeriesRef.current?.applyOptions({ visible: showMA233 });
   }, [showMA233]);
+
+  // Toggle SuperTrend Pro
+  useEffect(() => {
+    stUpSeriesRef.current?.applyOptions({ visible: showSuperTrend });
+    stDownSeriesRef.current?.applyOptions({ visible: showSuperTrend });
+    kamaSeriesRef.current?.applyOptions({ visible: showSuperTrend });
+
+    const candlestickSeries = candleSeriesRef.current;
+    if (!candlestickSeries) return;
+
+    if (!showSuperTrend) {
+      stPriceLinesRef.current.forEach((pl) => {
+        try { candlestickSeries.removePriceLine(pl); } catch {}
+      });
+      stPriceLinesRef.current = [];
+      stMarkersPluginRef.current?.setMarkers([]);
+    }
+  }, [showSuperTrend]);
 
   // Re-calculate MA Ribbon instantly when switching between EMA and SMA
   useEffect(() => {
@@ -3735,6 +3945,128 @@ export function MarketCandleChart() {
     setVolumeProfileData(vp);
     requestAnimationFrame(() => redrawCanvasRef.current());
   }, [showVolumeProfile, volumeProfileSettings, dataVersion, resolution, selectedSymbol]);
+
+  // ── Calculate SuperTrend Pro & Trading Strategy ───────────────────────────
+  useEffect(() => {
+    const candlestickSeries = candleSeriesRef.current;
+    if (!candlestickSeries || loadedCandlesRef.current.length === 0) {
+      setSuperTrendResult(null);
+      stUpSeriesRef.current?.setData([]);
+      stDownSeriesRef.current?.setData([]);
+      kamaSeriesRef.current?.setData([]);
+      stMarkersPluginRef.current?.setMarkers([]);
+      stPriceLinesRef.current.forEach((pl) => {
+        try { candlestickSeries?.removePriceLine(pl); } catch {}
+      });
+      stPriceLinesRef.current = [];
+      return;
+    }
+
+    if (!showSuperTrend) {
+      stUpSeriesRef.current?.applyOptions({ visible: false });
+      stDownSeriesRef.current?.applyOptions({ visible: false });
+      kamaSeriesRef.current?.applyOptions({ visible: false });
+      stMarkersPluginRef.current?.setMarkers([]);
+      stPriceLinesRef.current.forEach((pl) => {
+        try { candlestickSeries.removePriceLine(pl); } catch {}
+      });
+      stPriceLinesRef.current = [];
+      setTimeout(() => redrawCanvasRef.current(), 10);
+      return;
+    }
+
+    stUpSeriesRef.current?.applyOptions({ visible: true });
+    stDownSeriesRef.current?.applyOptions({ visible: true });
+    kamaSeriesRef.current?.applyOptions({ visible: true });
+
+    const result = calculateSuperTrend(loadedCandlesRef.current, superTrendSettings);
+    setSuperTrendResult(result);
+
+    stUpSeriesRef.current?.setData(result.stUpLine);
+    stDownSeriesRef.current?.setData(result.stDownLine);
+    kamaSeriesRef.current?.setData(result.kamaLine);
+
+    // Cập nhật Markers MUA / BÁN trên nến
+    const markers: any[] = [];
+    result.allSignals.forEach((sig) => {
+      if (sig.type === 'BUY') {
+        markers.push({
+          time: sig.time,
+          position: 'belowBar',
+          color: '#10b981',
+          shape: 'arrowUp',
+          text: 'MUA ★',
+        });
+      } else {
+        markers.push({
+          time: sig.time,
+          position: 'aboveBar',
+          color: '#f43f5e',
+          shape: 'arrowDown',
+          text: 'BÁN ★',
+        });
+      }
+    });
+
+    try {
+      stMarkersPluginRef.current?.setMarkers(markers);
+    } catch (e) {
+      console.warn('SuperTrend markers update error:', e);
+    }
+
+    // Xóa PriceLines cũ trước khi vẽ lại
+    stPriceLinesRef.current.forEach((pl) => {
+      try { candlestickSeries.removePriceLine(pl); } catch {}
+    });
+    stPriceLinesRef.current = [];
+
+    // Vẽ 4 PriceLines cho chiến lược R:R nếu có tín hiệu gần nhất
+    if (result.latestSignal) {
+      const sig = result.latestSignal;
+      try {
+        const plEntry = candlestickSeries.createPriceLine({
+          price: sig.entryPrice,
+          color: '#94a3b8',
+          lineWidth: 1,
+          lineStyle: LineStyle.Dashed,
+          axisLabelVisible: true,
+          title: `Vào: ${sig.entryPrice.toFixed(2)}`,
+        });
+
+        const plStop = candlestickSeries.createPriceLine({
+          price: sig.stopLossPrice,
+          color: '#f43f5e',
+          lineWidth: 1,
+          lineStyle: LineStyle.Dashed,
+          axisLabelVisible: true,
+          title: `ST↑ dừng ${sig.riskPercent}%: ${sig.stopLossPrice.toFixed(2)}`,
+        });
+
+        const plTarget15 = candlestickSeries.createPriceLine({
+          price: sig.target1_5R,
+          color: '#06b6d4',
+          lineWidth: 1,
+          lineStyle: LineStyle.Dashed,
+          axisLabelVisible: true,
+          title: `Chốt 1.5R: ${sig.target1_5R.toFixed(2)}`,
+        });
+
+        const plTarget3 = candlestickSeries.createPriceLine({
+          price: sig.target3R,
+          color: '#10b981',
+          lineWidth: 1,
+          lineStyle: LineStyle.Dashed,
+          axisLabelVisible: true,
+          title: `Chốt 3R: ${sig.target3R.toFixed(2)}`,
+        });
+
+        stPriceLinesRef.current = [plEntry, plStop, plTarget15, plTarget3];
+      } catch (err) {
+        console.warn('SuperTrend PriceLines creation safe error:', err);
+      }
+      setTimeout(() => redrawCanvasRef.current(), 10);
+    }
+  }, [showSuperTrend, superTrendSettings, dataVersion, resolution, selectedSymbol]);
 
   // ── 4. 60fps Real-Time WebSocket Tick Update (Smooth & No Re-fetch) ────────
   useEffect(() => {
@@ -4606,7 +4938,7 @@ export function MarketCandleChart() {
                   : 'bg-zinc-900/90 border-zinc-800 hover:border-zinc-700 text-zinc-200'
               }`}
             >
-              <FxIcon size={14} className={activeSubIndicator !== 'none' || showMA8 || showMA21 || showMA144 || showMA233 || showBB || fiboSettings.enabled || showTrendlinePro || showVolumeProfile ? 'text-emerald-400 shrink-0' : 'text-zinc-400 shrink-0'} />
+              <FxIcon size={14} className={activeSubIndicator !== 'none' || showSuperTrend || showMA8 || showMA21 || showMA144 || showMA233 || showBB || fiboSettings.enabled || showTrendlinePro || showVolumeProfile ? 'text-emerald-400 shrink-0' : 'text-zinc-400 shrink-0'} />
               <span>Chỉ báo</span>
               {activeSubIndicator !== 'none' ? (
                 <span className="text-[9px] uppercase font-bold bg-emerald-500/20 text-emerald-300 px-1.5 py-0.2 rounded border border-emerald-500/30">
@@ -4614,7 +4946,7 @@ export function MarketCandleChart() {
                 </span>
               ) : (
                 <span className="text-[10px] text-zinc-500 font-mono">
-                  ({(showMA8 ? 1 : 0) + (showMA21 ? 1 : 0) + (showMA144 ? 1 : 0) + (showMA233 ? 1 : 0) + (showBB ? 1 : 0) + (showVolume ? 1 : 0) + (fiboSettings.enabled ? 1 : 0) + (showTrendlinePro ? 1 : 0) + (showVolumeProfile ? 1 : 0)})
+                  ({(showSuperTrend ? 1 : 0) + (showMA8 ? 1 : 0) + (showMA21 ? 1 : 0) + (showMA144 ? 1 : 0) + (showMA233 ? 1 : 0) + (showBB ? 1 : 0) + (showVolume ? 1 : 0) + (fiboSettings.enabled ? 1 : 0) + (showTrendlinePro ? 1 : 0) + (showVolumeProfile ? 1 : 0)})
                 </span>
               )}
             </button>
@@ -4648,14 +4980,68 @@ export function MarketCandleChart() {
                     </button>
                   </div>
 
-                  {/* Section 1: AI Smart Trend & Price Structure (Trendline Pro) */}
+                  {/* Section 1: Chiến Lược Giao Dịch & Cấu Trúc (AI) */}
                   <div className="flex items-center justify-between mb-1.5 px-1">
-                    <span className="text-[10px] font-mono uppercase tracking-wider text-amber-400 font-bold">
-                      1. Xu hướng & Cấu trúc (AI)
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-emerald-400 font-bold flex items-center gap-1">
+                      <Sparkle size={12} weight="fill" className="text-emerald-400" />
+                      1. Chiến Lược & Cấu Trúc Xu Hướng
                     </span>
-                    <span className="text-amber-400/80 text-[9px] font-bold font-mono">TRENDLINE PRO</span>
+                    <span className="text-zinc-500 text-[9px] font-mono font-semibold">CHIẾN LƯỢC</span>
                   </div>
                   <div className="flex flex-col gap-1 mb-2.5">
+                    {/* SuperTrend Pro */}
+                    <div className="flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-mono text-zinc-200 hover:bg-zinc-800/70 transition-all border border-transparent hover:border-zinc-800 group">
+                      <span
+                        className="flex items-center gap-2 cursor-pointer flex-1 min-w-0"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleSuperTrend(!showSuperTrend);
+                        }}
+                      >
+                        <ChartLine size={15} className={showSuperTrend ? 'text-emerald-400 shrink-0' : 'text-zinc-500 shrink-0'} />
+                        <div className="text-left min-w-0">
+                          <span className="font-semibold block text-zinc-100 flex items-center gap-1.5">
+                            SuperTrend Pro
+                            <span className="text-[9px] font-bold text-emerald-400 bg-emerald-500/15 px-1.5 py-0.2 rounded border border-emerald-500/30">
+                              1.5R - 3R
+                            </span>
+                          </span>
+                          <span className="text-[9.5px] text-zinc-500 truncate block">
+                            ATR ({superTrendSettings.period}, x{superTrendSettings.multiplier}) + KAMA + Dừng/Chốt R:R
+                          </span>
+                        </div>
+                      </span>
+                      <div className="flex items-center gap-1 shrink-0 ml-1">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowSuperTrendModal(true);
+                            setShowIndicatorsModal(false);
+                          }}
+                          className="p-1 rounded text-zinc-400 hover:text-emerald-300 hover:bg-zinc-800 transition-colors"
+                          title="Cài đặt & Báo cáo hiệu lực SuperTrend"
+                        >
+                          <Gear size={13} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleSuperTrend(!showSuperTrend);
+                          }}
+                          className={`text-[10px] px-2 py-0.5 rounded-md font-bold transition-colors cursor-pointer ${
+                            showSuperTrend
+                              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                              : 'bg-zinc-800/60 text-zinc-500'
+                          }`}
+                        >
+                          {showSuperTrend ? 'BẬT' : 'TẮT'}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Trendline Pro */}
                     <button
                       type="button"
                       onClick={(e) => {
@@ -4667,7 +5053,12 @@ export function MarketCandleChart() {
                       <span className="flex items-center gap-2">
                         <TrendUp size={15} className={showTrendlinePro ? 'text-amber-400 shrink-0' : 'text-zinc-500 shrink-0'} />
                         <div className="text-left">
-                          <span className="font-semibold block text-zinc-100">Trendline Pro</span>
+                          <span className="font-semibold block text-zinc-100 flex items-center gap-1.5">
+                            Trendline Pro
+                            <span className="text-[9px] font-bold text-amber-400 bg-amber-500/15 px-1.5 py-0.2 rounded border border-amber-500/30">
+                              AI FIB
+                            </span>
+                          </span>
                           <span className="text-[9.5px] text-zinc-500">Kháng cự, Hỗ trợ, Kênh Fib Xiên, Swing Pivots</span>
                         </div>
                       </span>
@@ -5555,6 +5946,69 @@ export function MarketCandleChart() {
                     </div>
                   )}
 
+                  {/* Row 3.5: SuperTrend Pro Legend HUD (Tối giản hóa hình học - Giảm bớt text rườm rà) */}
+                  {showSuperTrend && superTrendResult && (
+                    <div className="flex items-center gap-1.5 flex-wrap text-[10px] font-mono pointer-events-auto select-none py-0.5">
+                      {/* Trend Status Pill */}
+                      <span className={`px-1.5 py-0.2 rounded-md font-bold flex items-center gap-1 border shadow-sm ${
+                        superTrendResult.currentTrend === 1
+                          ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40 shadow-[0_0_8px_rgba(16,185,129,0.2)]'
+                          : 'bg-rose-500/15 text-rose-300 border-rose-500/40 shadow-[0_0_8px_rgba(244,63,94,0.2)]'
+                      }`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${superTrendResult.currentTrend === 1 ? 'bg-emerald-400' : 'bg-rose-400'} animate-pulse`} />
+                        {superTrendResult.currentTrend === 1 ? 'ST↑' : 'ST↓'} {superTrendResult.currentValue.toFixed(2)}
+                      </span>
+
+                      {superTrendResult.latestSignal && (
+                        <>
+                          {/* Entry Pill */}
+                          <span className="px-1.5 py-0.2 rounded-md bg-zinc-800/80 text-zinc-200 border border-zinc-700/80 font-bold flex items-center gap-1">
+                            <span className="text-zinc-500 text-[9px]">VÀO</span>
+                            {superTrendResult.latestSignal.entryPrice.toFixed(2)}
+                          </span>
+
+                          {/* Stop Loss Pill */}
+                          <span className="px-1.5 py-0.2 rounded-md bg-rose-500/10 text-rose-300 border border-rose-500/30 font-bold flex items-center gap-1">
+                            <span className="text-rose-400/80 text-[9px]">SL</span>
+                            {superTrendResult.latestSignal.stopLossPrice.toFixed(2)}
+                            <span className="text-rose-400/70 text-[9px]">({superTrendResult.latestSignal.riskPercent}%)</span>
+                          </span>
+
+                          {/* 1.5R Target Pill */}
+                          <span className="px-1.5 py-0.2 rounded-md bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 font-bold flex items-center gap-1">
+                            <span className="text-cyan-400/80 text-[9px]">1.5R</span>
+                            {superTrendResult.latestSignal.target1_5R.toFixed(2)}
+                          </span>
+
+                          {/* 3.0R Target Pill */}
+                          <span className="px-1.5 py-0.2 rounded-md bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 font-bold flex items-center gap-1">
+                            <span className="text-emerald-400/80 text-[9px]">3R</span>
+                            {superTrendResult.latestSignal.target3R.toFixed(2)}
+                          </span>
+                        </>
+                      )}
+
+                      {/* KAMA Pill */}
+                      {superTrendResult.currentKama !== undefined && (
+                        <span className="px-1.5 py-0.2 rounded-md bg-amber-500/10 text-amber-300 border border-amber-500/30 font-bold flex items-center gap-1">
+                          <span className="text-amber-400/80 text-[9px]">KAMA</span>
+                          {superTrendResult.currentKama.toFixed(2)}
+                        </span>
+                      )}
+
+                      {/* Performance Mini Pill Button */}
+                      <button
+                        type="button"
+                        onClick={() => setShowSuperTrendModal(true)}
+                        className="px-2 py-0.2 rounded-md bg-zinc-800/90 hover:bg-emerald-500/20 text-emerald-400 hover:text-emerald-300 border border-emerald-500/30 transition-all font-bold cursor-pointer flex items-center gap-1 shadow-sm ml-0.5"
+                        title="Bấm để xem Thước đo R:R & Đánh giá Sức mạnh Chiến lược"
+                      >
+                        <Sparkle size={10} weight="fill" className="text-amber-400" />
+                        {superTrendResult.backtest.winRate}% Win ⚡
+                      </button>
+                    </div>
+                  )}
+
                   {/* Row 4: Trendline Pro Support / Resistance & Fib Xiên (Matching TradingView master) */}
                   {showTrendlinePro && trendlineProData && (
                     <div className="flex items-center gap-x-2 gap-y-0.5 flex-wrap text-[10px] font-mono">
@@ -5799,6 +6253,16 @@ export function MarketCandleChart() {
         onClose={() => setShowVolumeProfileModal(false)}
         settings={volumeProfileSettings}
         onUpdateSettings={(newSettings) => setVolumeProfileSettings(newSettings)}
+      />
+
+      {/* ── SuperTrend Pro Strategy & Performance Modal ────────────── */}
+      <SuperTrendStrategyModal
+        isOpen={showSuperTrendModal}
+        onClose={() => setShowSuperTrendModal(false)}
+        settings={superTrendSettings}
+        onUpdateSettings={(newSettings) => setSuperTrendSettings(newSettings)}
+        result={superTrendResult}
+        symbol={selectedSymbol}
       />
     </div>
   );

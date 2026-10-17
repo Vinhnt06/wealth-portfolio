@@ -122,36 +122,36 @@ export const CommoditiesAndGoldSection: React.FC = () => {
       <div className="absolute top-0 right-0 w-80 h-80 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
 
       {/* Header Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-800/80 pb-5">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-zinc-800/80 pb-5">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
             <Coins className="w-5 h-5" weight="duotone" />
           </div>
-          <div>
-            <div className="flex flex-wrap items-center gap-2.5">
-              <h2 className="font-mono font-black text-lg text-zinc-100 tracking-tight">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="font-mono font-black text-base sm:text-lg text-zinc-100 tracking-tight whitespace-nowrap">
                 GIÁ DẦU, GIÁ VÀNG & LÃI SUẤT TIẾT KIỆM
               </h2>
-              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
+              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 shrink-0">
                 REAL DATA 100%
               </span>
-              <span suppressHydrationWarning className="text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300 flex items-center gap-1.5 shadow-inner">
+              <span suppressHydrationWarning className="text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300 flex items-center gap-1.5 shadow-inner shrink-0 whitespace-nowrap">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                 Cập nhật {mounted && (lastDate || lastRefreshed) ? `${lastDate ? `ngày ${lastDate}` : ''} ${lastRefreshed ? `lúc ${lastRefreshed}` : ''}`.trim() : 'theo thời gian thực'}
               </span>
             </div>
-            <p className="text-xs text-zinc-400 mt-1">
+            <p className="text-xs text-zinc-400 mt-1 truncate">
               Dữ liệu năng lượng quốc tế theo thời gian thực & biểu giá vàng, lãi suất ngân hàng 24HMoney
             </p>
           </div>
         </div>
 
-        {/* Right Action Tools: Tabs & Refresh */}
-        <div className="flex flex-wrap items-center gap-2.5">
-          <div className="flex p-1 bg-zinc-900 border border-zinc-800 rounded-xl">
+        {/* Right Action Tools: Tabs & Refresh (Always in one line, perfectly aligned) */}
+        <div className="flex items-center gap-2 shrink-0 self-start lg:self-auto overflow-x-auto max-w-full pb-1 lg:pb-0 scrollbar-none">
+          <div className="flex items-center p-1 bg-zinc-900 border border-zinc-800 rounded-xl shrink-0 whitespace-nowrap select-none">
             <button
               onClick={() => setActiveTab('commodities')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1.5 whitespace-nowrap ${
                 activeTab === 'commodities'
                   ? 'bg-zinc-800 text-amber-400 shadow'
                   : 'text-zinc-400 hover:text-zinc-200'
@@ -162,18 +162,19 @@ export const CommoditiesAndGoldSection: React.FC = () => {
             </button>
             <button
               onClick={() => setActiveTab('gold_vn')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1.5 whitespace-nowrap ${
                 activeTab === 'gold_vn'
                   ? 'bg-zinc-800 text-yellow-400 shadow'
                   : 'text-zinc-400 hover:text-zinc-200'
               }`}
             >
               <Coins size={14} weight="fill" className={activeTab === 'gold_vn' ? 'text-yellow-400' : ''} />
-              Vàng Trong Nước (SJC/DOJI)
+              <span>Vàng Trong Nước</span>
+              <span className="hidden xl:inline text-[10px] text-zinc-500 font-normal">(SJC/DOJI)</span>
             </button>
             <button
               onClick={() => setActiveTab('bank_rates')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1.5 whitespace-nowrap ${
                 activeTab === 'bank_rates'
                   ? 'bg-zinc-800 text-emerald-400 shadow'
                   : 'text-zinc-400 hover:text-zinc-200'
@@ -188,7 +189,7 @@ export const CommoditiesAndGoldSection: React.FC = () => {
             onClick={fetchData}
             disabled={loading}
             title="Làm mới dữ liệu thật"
-            className="p-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 hover:text-emerald-400 transition-colors disabled:opacity-50"
+            className="p-2 h-9 w-9 flex items-center justify-center shrink-0 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 hover:text-emerald-400 transition-colors disabled:opacity-50 shadow-sm"
           >
             <ArrowsClockwise size={16} className={loading ? 'animate-spin text-emerald-400' : ''} />
           </button>

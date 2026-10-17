@@ -29,6 +29,10 @@ const CommoditiesAndGoldSection = dynamic(
   () => import('../../features/market/components/CommoditiesAndGoldSection').then((m) => m.CommoditiesAndGoldSection),
   { ssr: false }
 );
+const USGlobalMacroSection = dynamic(
+  () => import('../../features/market/components/USGlobalMacroSection').then((m) => m.USGlobalMacroSection),
+  { ssr: false }
+);
 
 const realChartData = (vnindexCandles as unknown as CandlestickData[]).slice(-120);
 
@@ -117,8 +121,9 @@ export default function DashboardPage() {
           <IndexBanner />
         </section>
 
-        {/* ── 3. Chỉ Số Kinh Tế Vĩ Mô, Hàng Hóa & Lãi Suất Ngân Hàng ── */}
+        {/* ── 3. Thị Trường Mỹ, Lãi Suất Fed & Kinh Tế Vĩ Mô Toàn Cầu ── */}
         <section className="space-y-8">
+          <USGlobalMacroSection />
           <MacroDataSection />
           <CommoditiesAndGoldSection />
           <EconomicCycleWheel />

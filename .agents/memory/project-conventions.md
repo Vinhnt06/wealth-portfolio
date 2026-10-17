@@ -23,3 +23,8 @@ updated: 2026-07-12
 ## Deployment Workflow
 - Luôn kiểm tra, phát triển và chạy thử nghiệm trên **Localhost** trước.
 - **TUYỆT ĐỐI KHÔNG TỰ ĐỘNG DEPLOY VERCEL**: Chỉ khi người dùng có yêu cầu rõ ràng ("đẩy lên vercel", "deploy vercel",...) thì mới được phép chạy lệnh deploy lên Vercel. Sau mỗi lần sửa code, chỉ kiểm tra và chạy local.
+
+## US & Global Macro Section Standards
+- Toàn bộ chỉ số thị trường Mỹ (S&P 500, Nasdaq, Dow Jones, US 10Y Yield, VIX, DXY), xác suất FedWatch và CPI lấy từ API backend `/api/macro/us-global`.
+- Thiết kế Bento 2.0 theo `design-taste-frontend`, giao diện tối giản chuẩn Dark mode zinc-950, typography font-mono sắc nét, tuyệt đối không màu tím (Purple Ban).
+- Hỗ trợ nút mũi tên thu gọn / mở rộng (Caret) linh hoạt, hiển thị thanh tóm tắt khi thu gọn.

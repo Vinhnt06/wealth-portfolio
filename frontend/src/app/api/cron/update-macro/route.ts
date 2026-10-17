@@ -220,6 +220,23 @@ export async function GET(request: NextRequest) {
       console.error('Lỗi sync macro indicators:', e);
     }
 
+    // 4. Sync US Global Macro & CME FedWatch Tool Data
+    try {
+      const baseUrl = request.nextUrl?.origin || 'http://localhost:3000';
+      const usRes = await fetch(`${baseUrl}/api/macro/us-global`, { cache: 'no-store' });
+      if (usRes.ok) {
+        const usJson = await usRes.json();
+        if (usJson.success) {
+          await supabase.from('macro_indicators').upsert([
+            { id: 'us_global_fedwatch', type: 'us_global', data: usJson, updated_at: usJson.updateTime }
+          ], { onConflict: 'id' });
+          (results as any).usGlobalMacroUpdated = true;
+        }
+      }
+    } catch (e) {
+      console.error('Lỗi sync US global macro trong cron:', e);
+    }
+
     const duration = ((Date.now() - startTime) / 1000).toFixed(2);
     return NextResponse.json({
       success: true,

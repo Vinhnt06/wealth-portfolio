@@ -19,13 +19,14 @@ import {
   Compass
 } from '@phosphor-icons/react';
 import { EconomicCycleWheel } from './EconomicCycleWheel';
+import { USGlobalMacroSection } from './USGlobalMacroSection';
 
 interface MarketOverviewSectionProps {
   onSelectSector?: (sectorName: string) => void;
   defaultTab?: 'heatmap' | 'chart';
 }
 
-export const MarketOverviewSection: React.FC<MarketOverviewSectionProps> = ({
+export const MarketOverviewSection: React.FC<MarketOverviewSectionProps> = React.memo(({
   onSelectSector,
   defaultTab = 'heatmap'
 }) => {
@@ -159,6 +160,10 @@ export const MarketOverviewSection: React.FC<MarketOverviewSectionProps> = ({
           <MarketSummaryBar />
         </div>
       </div>
+
+      {/* 4. US Market, FedWatch & Global Macro Impact Barometer */}
+      <USGlobalMacroSection />
     </div>
   );
-};
+});
+MarketOverviewSection.displayName = 'MarketOverviewSection';

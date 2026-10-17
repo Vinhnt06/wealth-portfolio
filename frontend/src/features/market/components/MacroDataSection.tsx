@@ -108,8 +108,8 @@ export const MacroDataSection: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 text-xs">
-          <span className="px-3 py-1.5 rounded-xl bg-zinc-900/80 border border-zinc-800 text-zinc-300 flex items-center gap-2">
+        <div className="flex items-center gap-2 text-xs shrink-0 self-start md:self-auto">
+          <span className="px-3 py-1.5 rounded-xl bg-zinc-900/80 border border-zinc-800 text-zinc-300 flex items-center gap-2 shrink-0 whitespace-nowrap">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
             <span>Kỳ {currentGdp.period} (GDP {currentGdp.growthRate}%)</span>
             <span className="text-zinc-600 font-light select-none">|</span>
@@ -120,7 +120,7 @@ export const MacroDataSection: React.FC = () => {
             onClick={fetchMacroIndicators}
             disabled={isRefreshing}
             title="Làm mới chỉ số vĩ mô & tỷ giá"
-            className="p-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 hover:text-emerald-400 transition-colors disabled:opacity-50"
+            className="p-2 h-9 w-9 flex items-center justify-center shrink-0 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 hover:text-emerald-400 transition-colors disabled:opacity-50 shadow-sm"
           >
             <ArrowsClockwise size={15} className={isRefreshing ? 'animate-spin text-emerald-400' : ''} />
           </button>

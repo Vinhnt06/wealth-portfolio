@@ -48,3 +48,5 @@ next-env.d.ts
 *.backup
 /src/generated/prisma
 supabase/.temp/
+*.log
+*.pid
