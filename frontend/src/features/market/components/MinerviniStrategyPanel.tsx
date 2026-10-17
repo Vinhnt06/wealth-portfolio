@@ -14,6 +14,7 @@ import {
   Brain,
   Crown,
   Info,
+  Sparkle,
 } from '@phosphor-icons/react';
 import { MinerviniAnalysisResult } from '../types/minervini.types';
 
@@ -64,61 +65,90 @@ export const MinerviniStrategyPanel: React.FC<MinerviniStrategyPanelProps> = ({ 
   const wyckoff = data?.wyckoff;
 
   return (
-    <div className="bg-[#090d14]/95 border border-zinc-800/80 rounded-2xl flex flex-col h-full overflow-hidden shadow-2xl relative text-zinc-300 font-mono select-none">
-      {/* ── Top Navigation Tabs ─────────────────────────────────── */}
-      <div className="flex items-center justify-between border-b border-zinc-800/70 px-3 py-2 bg-[#0d131f]/90 shrink-0 text-xs overflow-x-auto scrollbar-none gap-1">
-        <div className="flex items-center gap-1">
+    <div className="bg-[#090d14]/95 flex flex-col h-full overflow-hidden text-zinc-300 font-mono select-none">
+      {/* ── Top Header: Title & Minimalist Scan Button ────────────── */}
+      <div className="flex items-center justify-between px-3.5 py-2.5 bg-zinc-900/60 border-b border-zinc-800/80 shrink-0">
+        <div className="flex items-center gap-2 min-w-0">
+          <Sparkle className="w-3.5 h-3.5 text-amber-400 shrink-0" weight="fill" />
+          <span className="text-xs font-mono font-bold text-zinc-100 tracking-tight truncate">
+            Chiến Lược Minervini
+          </span>
+          <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-zinc-800/80 border border-zinc-700/60 text-zinc-400 font-semibold uppercase tracking-wider hidden sm:inline shrink-0">
+            Trend Template
+          </span>
+        </div>
+
+        {/* Minimalist Scan Button */}
+        <button
+          onClick={handleScan}
+          disabled={isScanning || isLoading}
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 active:bg-zinc-700/80 text-zinc-300 hover:text-zinc-100 border border-zinc-700/80 hover:border-zinc-500 text-[11px] font-mono font-medium transition-all duration-150 active:scale-95 cursor-pointer disabled:opacity-50 shrink-0 group shadow-sm"
+          title="Bấm để tính toán và quét lại 8 tiêu chí Trend Template & RS Rating"
+        >
+          <ArrowsClockwise
+            size={12}
+            className={`text-amber-400/90 group-hover:text-amber-300 transition-transform ${
+              isScanning || isLoading ? 'animate-spin' : 'group-hover:rotate-180 duration-300'
+            }`}
+          />
+          <span className="text-[11px]">{isScanning || isLoading ? 'Đang quét...' : 'Quét lại'}</span>
+        </button>
+      </div>
+
+      {/* ── Segmented Navigation Tabs Bar ───────────────────────── */}
+      <div className="px-3 pt-2 pb-2 bg-zinc-950/80 shrink-0 border-b border-zinc-800/60">
+        <div className="bg-zinc-900/80 p-0.5 rounded-xl border border-zinc-800/90 flex items-center gap-1 overflow-x-auto scrollbar-none">
           <button
             onClick={() => setActiveTab('strategies')}
-            className={`px-2.5 py-1 rounded text-[11px] font-bold transition-colors ${
-              activeTab === 'strategies' ? 'text-amber-400 bg-amber-400/10 border border-amber-400/30' : 'text-zinc-400 hover:text-zinc-200'
+            className={`flex-1 whitespace-nowrap text-center py-1.5 px-2 rounded-lg text-[11px] font-medium transition-all ${
+              activeTab === 'strategies'
+                ? 'bg-zinc-800 text-amber-400 font-bold shadow-sm border border-zinc-700/70'
+                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40 border border-transparent'
             }`}
           >
             Chiến lược
           </button>
           <button
             onClick={() => setActiveTab('indicators')}
-            className={`px-2.5 py-1 rounded text-[11px] font-bold transition-colors ${
-              activeTab === 'indicators' ? 'text-amber-400 bg-zinc-900 border border-zinc-800' : 'text-zinc-400 hover:text-zinc-200'
+            className={`flex-1 whitespace-nowrap text-center py-1.5 px-2 rounded-lg text-[11px] font-medium transition-all ${
+              activeTab === 'indicators'
+                ? 'bg-zinc-800 text-zinc-100 font-bold shadow-sm border border-zinc-700/70'
+                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40 border border-transparent'
             }`}
           >
             Chỉ báo
           </button>
           <button
             onClick={() => setActiveTab('screener')}
-            className={`px-2.5 py-1 rounded text-[11px] font-bold transition-colors ${
-              activeTab === 'screener' ? 'text-amber-400 bg-zinc-900 border border-zinc-800' : 'text-zinc-400 hover:text-zinc-200'
+            className={`flex-1 whitespace-nowrap text-center py-1.5 px-2 rounded-lg text-[11px] font-medium transition-all ${
+              activeTab === 'screener'
+                ? 'bg-zinc-800 text-zinc-100 font-bold shadow-sm border border-zinc-700/70'
+                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40 border border-transparent'
             }`}
           >
             Sàng lọc
           </button>
           <button
             onClick={() => setActiveTab('leaderboard')}
-            className={`px-2.5 py-1 rounded text-[11px] font-bold transition-colors ${
-              activeTab === 'leaderboard' ? 'text-amber-400 bg-zinc-900 border border-zinc-800' : 'text-zinc-400 hover:text-zinc-200'
+            className={`flex-1 whitespace-nowrap text-center py-1.5 px-2 rounded-lg text-[11px] font-medium transition-all ${
+              activeTab === 'leaderboard'
+                ? 'bg-zinc-800 text-amber-300 font-bold shadow-sm border border-zinc-700/70'
+                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40 border border-transparent'
             }`}
           >
             Bảng Vàng
           </button>
           <button
             onClick={() => setActiveTab('ai')}
-            className={`px-2.5 py-1 rounded text-[11px] font-bold transition-colors ${
-              activeTab === 'ai' ? 'text-cyan-400 bg-cyan-400/10 border border-cyan-400/30' : 'text-zinc-400 hover:text-zinc-200'
+            className={`flex-1 whitespace-nowrap text-center py-1.5 px-2 rounded-lg text-[11px] font-medium transition-all ${
+              activeTab === 'ai'
+                ? 'bg-cyan-500/15 text-cyan-300 font-bold shadow-sm border border-cyan-500/30'
+                : 'text-zinc-400 hover:text-cyan-300 hover:bg-zinc-800/40 border border-transparent'
             }`}
           >
             AI
           </button>
         </div>
-
-        <button
-          onClick={handleScan}
-          disabled={isScanning || isLoading}
-          className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-400 hover:bg-amber-300 text-zinc-950 text-[11px] font-mono font-bold transition-all shadow-sm active:scale-95 cursor-pointer disabled:opacity-50 shrink-0"
-          title="Bấm để tính toán và quét lại 8 tiêu chí Trend Template & RS Rating"
-        >
-          <ArrowsClockwise size={13} className={isScanning ? 'animate-spin' : ''} />
-          <span>{isScanning ? 'Đang Quét...' : '⚡ Quét Lại'}</span>
-        </button>
       </div>
 
       {/* ── Main Content Scroll Area ────────────────────────────── */}

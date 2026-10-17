@@ -535,18 +535,8 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
         <div className="lg:col-span-8 2xl:col-span-9">
           <MarketCandleChart />
         </div>
-        <div className="lg:col-span-4 2xl:col-span-3 h-[550px] lg:h-[580px] flex flex-col overflow-hidden bg-zinc-950/80 border border-zinc-800/80 rounded-2xl p-2.5 shadow-xl">
-          <div className="flex items-center justify-between pb-2 mb-2 border-b border-zinc-800/80 text-xs font-mono font-bold text-amber-400 shrink-0">
-            <div className="flex items-center gap-1.5">
-              <Sparkle className="w-3.5 h-3.5" weight="fill" />
-              <span>Chiến Lược Minervini</span>
-            </div>
-            <span className="text-[10px] text-zinc-500 font-semibold uppercase">Trend Template</span>
-          </div>
-
-          <div className="flex-1 min-h-0 overflow-hidden">
-            <MinerviniStrategyPanel symbol={selectedSymbol} />
-          </div>
+        <div className="lg:col-span-4 2xl:col-span-3 h-[550px] lg:h-[580px] flex flex-col overflow-hidden bg-zinc-950/95 border border-zinc-800/80 rounded-2xl shadow-xl">
+          <MinerviniStrategyPanel symbol={selectedSymbol} />
         </div>
       </div>
 
