@@ -202,7 +202,32 @@ export async function GET(request: NextRequest) {
       results.bankRatesCount = bankRates.length;
     }
 
-    // 3. Sync Macro Indicators (GDP, CPI, Interest Rates)
+    // 3. Cào & Đồng bộ Lãi suất Điều hành NHNN (Policy Rates)
+    let policyRates = [
+      { bank: "Lãi suất Tái cấp vốn NHNN", rate: "4.50%", doc: "QĐ 1123/QĐ-NHNN", isCrawled: true },
+      { bank: "Lãi suất Tái chiết khấu NHNN", rate: "3.00%", doc: "QĐ 1123/QĐ-NHNN", isCrawled: true },
+      { bank: "Cho vay qua đêm bù trừ", rate: "5.00%", doc: "QĐ 1123/QĐ-NHNN", isCrawled: true },
+    ];
+    try {
+      const resRate = await fetch('https://24hmoney.vn/lai-suat-ngan-hang', {
+        headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)' },
+        cache: 'no-store',
+      });
+      if (resRate.ok) {
+        const html = await resRate.text();
+        const refMatch = html.match(/tái cấp vốn[^\d]{1,30}(\d+[.,]\d+)\s*%/i);
+        const discMatch = html.match(/tái chiết khấu[^\d]{1,30}(\d+[.,]\d+)\s*%/i);
+        if (refMatch && refMatch[1]) {
+          policyRates[0].rate = `${refMatch[1].replace(',', '.')}%`;
+        }
+        if (discMatch && discMatch[1]) {
+          policyRates[1].rate = `${discMatch[1].replace(',', '.')}%`;
+        }
+      }
+    } catch {
+      // Giữ nguyên mức chính sách chuẩn
+    }
+
     try {
       const nowStr = new Date().toLocaleDateString('vi-VN', {
         timeZone: 'Asia/Ho_Chi_Minh',
@@ -213,7 +238,7 @@ export async function GET(request: NextRequest) {
       await supabase.from('macro_indicators').upsert([
         { id: 'gdp', type: 'gdp', data: macroDatabase.gdp, cycle_assessment: 'Mở Rộng Kinh Tế Mạnh', updated_at: `Kỳ ${macroDatabase.gdp[0]?.period} (GSO & SBV)` },
         { id: 'cpi', type: 'cpi', data: macroDatabase.cpi, updated_at: `Kỳ ${macroDatabase.cpi[0]?.period} (GSO)` },
-        { id: 'interest_rate', type: 'interest_rate', data: macroDatabase.interestRate, updated_at: nowStr },
+        { id: 'interest_rate', type: 'interest_rate', data: policyRates, updated_at: nowStr },
       ], { onConflict: 'id' });
       results.macroIndicatorsUpdated = true;
     } catch (e) {

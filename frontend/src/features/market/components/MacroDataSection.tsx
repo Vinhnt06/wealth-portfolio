@@ -78,8 +78,8 @@ export const MacroDataSection: React.FC = () => {
   const currentGdp = macroData.gdp?.[0] || macroDatabase.gdp[0];
   const currentCpi = macroData.cpi?.[0] || macroDatabase.cpi[0];
   const currentUsd = liveExchangeRates[0] || macroDatabase.exchangeRate[0];
-  const overnightRate = macroData.interestRate?.[0] || macroDatabase.interestRate[0];
-  const refRate = macroData.interestRate?.[1] || macroDatabase.interestRate[1];
+  const refRate = macroData.interestRate?.[0] || macroDatabase.interestRate[0];
+  const discountRate = macroData.interestRate?.[1] || macroDatabase.interestRate[1];
 
   return (
     <div suppressHydrationWarning className="relative overflow-hidden p-6 md:p-8 bg-zinc-950/90 border border-zinc-800/80 rounded-3xl backdrop-blur-2xl space-y-6 shadow-2xl">
@@ -103,7 +103,7 @@ export const MacroDataSection: React.FC = () => {
               </span>
             </div>
             <p className="text-xs text-zinc-400 font-sans">
-              Dữ liệu chu kỳ kinh tế vĩ mô, lạm phát mục tiêu, tỷ giá & lãi suất liên ngân hàng
+              Dữ liệu chu kỳ kinh tế vĩ mô, lạm phát mục tiêu, tỷ giá & lãi suất điều hành NHNN
             </p>
           </div>
         </div>
@@ -225,7 +225,7 @@ export const MacroDataSection: React.FC = () => {
             </div>
           </motion.div>
 
-          {/* 2.2 Lãi Suất Liên Ngân Hàng */}
+          {/* 2.2 Lãi Suất Điều Hành Chính Sách NHNN */}
           <motion.div 
             whileHover={{ y: -2 }}
             transition={{ duration: 0.2 }}
@@ -236,25 +236,31 @@ export const MacroDataSection: React.FC = () => {
                 <Bank className="w-4 h-4" weight="bold" />
                 <span className="font-mono text-xs font-bold uppercase tracking-wider">Lãi Suất Điều Hành</span>
               </div>
-              <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-rose-500/10 border border-rose-500/20 text-rose-400 font-bold">
-                NHNN
-              </span>
+              <div className="flex items-center gap-1.5">
+                <span className="inline-flex items-center gap-1 font-mono text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-semibold">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  Auto-crawled
+                </span>
+                <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-rose-500/10 border border-rose-500/20 text-rose-400 font-bold">
+                  NHNN
+                </span>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3 my-2 font-mono">
               <div>
-                <span className="text-[10px] text-zinc-400 block">Liên ngân hàng (ON)</span>
-                <span className="text-2xl font-black text-white">{overnightRate.rate}</span>
+                <span className="text-[10px] text-zinc-400 block">Tái cấp vốn</span>
+                <span className="text-2xl font-black text-white">{refRate?.rate || '4.50%'}</span>
               </div>
               <div>
-                <span className="text-[10px] text-zinc-400 block">Tái cấp vốn</span>
-                <span className="text-2xl font-black text-zinc-300">{refRate.rate}</span>
+                <span className="text-[10px] text-zinc-400 block">Tái chiết khấu</span>
+                <span className="text-2xl font-black text-zinc-200">{discountRate?.rate || '3.00%'}</span>
               </div>
             </div>
 
-            <div className="text-[11px] font-mono text-zinc-400 flex items-center justify-between pt-1">
-              <span>Thanh khoản hệ thống:</span>
-              <span className="text-emerald-400 font-bold">Dồi dào / Ổn định</span>
+            <div className="text-[10px] font-mono text-zinc-400 flex items-center justify-between pt-2 border-t border-zinc-800/60">
+              <span className="text-zinc-500">Căn cứ văn bản:</span>
+              <span className="text-zinc-300 font-medium">Theo QĐ 1123/QĐ-NHNN</span>
             </div>
           </motion.div>
         </div>

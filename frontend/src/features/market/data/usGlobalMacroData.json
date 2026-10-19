@@ -1,7 +1,7 @@
 {
   "success": true,
-  "timestamp": "2026-10-17T16:05:02.831Z",
-  "updateTime": "23:05:02",
+  "timestamp": "2026-10-19T02:50:53.976Z",
+  "updateTime": "09:50:53",
   "indices": [
     {
       "symbol": "^GSPC",
@@ -18,7 +18,7 @@
       "name": "Nasdaq Comp",
       "category": "equity",
       "price": 26140.03,
-      "change": -572.99,
+      "change": -572.97,
       "changePercent": -2.15,
       "unit": "pts",
       "note": "Chỉ số nhóm cổ phiếu công nghệ Mỹ"
@@ -28,7 +28,7 @@
       "name": "Dow Jones",
       "category": "equity",
       "price": 52002.41,
-      "change": -175.28,
+      "change": -175.29,
       "changePercent": -0.34,
       "unit": "pts",
       "note": "30 Bluechip lớn nhất sàn New York"
@@ -47,9 +47,9 @@
       "symbol": "DX-Y.NYB",
       "name": "DXY Index",
       "category": "currency",
-      "price": 101.78,
-      "change": -0.06,
-      "changePercent": -0.06,
+      "price": 101.81,
+      "change": -0.02,
+      "changePercent": -0.02,
       "unit": "pts",
       "note": "Chỉ số đo lường sức mạnh đồng USD"
     },
@@ -77,8 +77,8 @@
       "pillar": "Áp Lực Tỷ Giá USD/VND",
       "status": "Tích Cực",
       "statusColor": "emerald",
-      "headline": "DXY biến động quanh mức 101.78 điểm",
-      "detail": "Chỉ số DXY hạ nhiệt quanh 101.78 giúp thu hẹp chênh lệch USD-VND, giảm áp lực bán can thiệp ngoại tệ của NHNN và hạn chế rủi ro tỷ giá nhập khẩu."
+      "headline": "DXY biến động quanh mức 101.81 điểm",
+      "detail": "Chỉ số DXY hạ nhiệt quanh 101.81 giúp thu hẹp chênh lệch USD-VND, giảm áp lực bán can thiệp ngoại tệ của NHNN và hạn chế rủi ro tỷ giá nhập khẩu."
     },
     {
       "pillar": "Không Gian Lãi Suất NHNN",

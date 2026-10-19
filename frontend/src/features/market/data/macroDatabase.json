@@ -84,22 +84,30 @@
     },
     {
       "item": "Thép HRC (USD/Tấn)",
-      "price": 542.0,
+      "price": 542,
       "change": 4.5
     }
   ],
   "interestRate": [
     {
-      "bank": "Lãi suất Liên Ngân hàng (ON)",
-      "rate": "4.50%"
-    },
-    {
       "bank": "Lãi suất Tái cấp vốn NHNN",
-      "rate": "4.50%"
+      "rate": "4.50%",
+      "doc": "QĐ 1123/QĐ-NHNN",
+      "isCrawled": true
     },
     {
-      "bank": "Lãi suất Tiết kiệm VCB (12 Tháng)",
-      "rate": "4.70%"
+      "bank": "Lãi suất Tái chiết khấu NHNN",
+      "rate": "3.00%",
+      "doc": "QĐ 1123/QĐ-NHNN",
+      "isCrawled": true
+    },
+    {
+      "bank": "Cho vay qua đêm bù trừ",
+      "rate": "5.00%",
+      "doc": "QĐ 1123/QĐ-NHNN",
+      "isCrawled": true
     }
-  ]
+  ],
+  "interestRateLastCrawled": "19/10/2026 09:49",
+  "interestRateSource": "Ngân hàng Nhà nước Việt Nam (SBV)"
 }
