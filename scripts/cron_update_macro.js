@@ -264,20 +264,20 @@ async function crawlSbvInterestRates() {
   
   let rates = [
     {
+      bank: "Huy động 12T (Bình quân)",
+      rate: "4.85%",
+      term: "12M",
+      type: "deposit",
+      isCrawled: true,
+      source: "Biểu lãi suất bình quân hệ thống ngân hàng"
+    },
+    {
       bank: "Liên ngân hàng (ON - Qua đêm)",
       rate: "3.50%",
       term: "ON",
       type: "interbank",
       isCrawled: true,
       source: "Thị trường liên ngân hàng 2"
-    },
-    {
-      bank: "Lãi suất Liên ngân hàng (VNIBOR)",
-      rate: "6.82%",
-      term: "3M",
-      type: "interbank",
-      isCrawled: true,
-      source: "Simplize Macro / TradingEconomics"
     },
     {
       bank: "Lãi suất Tái cấp vốn NHNN",
@@ -292,6 +292,14 @@ async function crawlSbvInterestRates() {
       term: "Chính sách",
       doc: "QĐ 1123/QĐ-NHNN",
       isCrawled: true
+    },
+    {
+      bank: "Lãi suất Liên ngân hàng (VNIBOR)",
+      rate: "4.95%",
+      term: "3M",
+      type: "interbank",
+      isCrawled: true,
+      source: "Thị trường tiền tệ liên ngân hàng"
     }
   ];
 
@@ -306,8 +314,9 @@ async function crawlSbvInterestRates() {
       if (match) {
         const json = JSON.parse(match[1]);
         const interbankData = json?.props?.pageProps?.data;
-        if (interbankData && interbankData.current) {
-          rates[1].rate = `${interbankData.current}%`;
+        const vniborItem = rates.find((r) => r.bank.includes('VNIBOR'));
+        if (vniborItem && interbankData && interbankData.current) {
+          vniborItem.rate = `${interbankData.current}%`;
           console.log(`  ✓ Đã cào Lãi suất Liên ngân hàng (VNIBOR) từ Simplize: ${interbankData.current}%`);
         }
       }
@@ -326,11 +335,14 @@ async function crawlSbvInterestRates() {
       const refMatch = html.match(/tái cấp vốn[^\d]{1,30}(\d+[.,]\d+)\s*%/i);
       const discMatch = html.match(/tái chiết khấu[^\d]{1,30}(\d+[.,]\d+)\s*%/i);
 
-      if (refMatch && refMatch[1]) {
-        rates[2].rate = `${refMatch[1].replace(',', '.')}%`;
+      const refItem = rates.find((r) => r.bank.includes('Tái cấp vốn'));
+      const discItem = rates.find((r) => r.bank.includes('Tái chiết khấu'));
+
+      if (refItem && refMatch && refMatch[1]) {
+        refItem.rate = `${refMatch[1].replace(',', '.')}%`;
       }
-      if (discMatch && discMatch[1]) {
-        rates[3].rate = `${discMatch[1].replace(',', '.')}%`;
+      if (discItem && discMatch && discMatch[1]) {
+        discItem.rate = `${discMatch[1].replace(',', '.')}%`;
       }
     }
   } catch (e) {

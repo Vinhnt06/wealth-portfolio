@@ -90,20 +90,20 @@
   ],
   "interestRate": [
     {
+      "bank": "Huy động 12T (Bình quân)",
+      "rate": "4.85%",
+      "term": "12M",
+      "type": "deposit",
+      "isCrawled": true,
+      "source": "Biểu lãi suất bình quân hệ thống ngân hàng"
+    },
+    {
       "bank": "Liên ngân hàng (ON - Qua đêm)",
       "rate": "3.50%",
       "term": "ON",
       "type": "interbank",
       "isCrawled": true,
       "source": "Thị trường liên ngân hàng 2"
-    },
-    {
-      "bank": "Lãi suất Liên ngân hàng (VNIBOR)",
-      "rate": "6.82%",
-      "term": "3M",
-      "type": "interbank",
-      "isCrawled": true,
-      "source": "Simplize Macro / TradingEconomics"
     },
     {
       "bank": "Lãi suất Tái cấp vốn NHNN",
@@ -118,8 +118,16 @@
       "term": "Chính sách",
       "doc": "QĐ 1123/QĐ-NHNN",
       "isCrawled": true
+    },
+    {
+      "bank": "Lãi suất Liên ngân hàng (VNIBOR)",
+      "rate": "6.82%",
+      "term": "3M",
+      "type": "interbank",
+      "isCrawled": true,
+      "source": "Thị trường tiền tệ liên ngân hàng"
     }
   ],
-  "interestRateLastCrawled": "19/10/2026 10:14",
+  "interestRateLastCrawled": "19/10/2026 22:29",
   "interestRateSource": "Ngân hàng Nhà nước & Thị trường liên ngân hàng"
 }

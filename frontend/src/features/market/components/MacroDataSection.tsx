@@ -78,10 +78,11 @@ export const MacroDataSection: React.FC = () => {
   const currentGdp = macroData.gdp?.[0] || macroDatabase.gdp[0];
   const currentCpi = macroData.cpi?.[0] || macroDatabase.cpi[0];
   const currentUsd = liveExchangeRates[0] || macroDatabase.exchangeRate[0];
-  const onRate = macroData.interestRate?.find((r: any) => r.term === 'ON' || r.bank?.includes('Qua đêm')) || macroDatabase.interestRate[0];
-  const vniborRate = macroData.interestRate?.find((r: any) => r.term === '3M' || r.bank?.includes('VNIBOR')) || macroDatabase.interestRate[1];
-  const refRate = macroData.interestRate?.find((r: any) => (r.term === 'Chính sách' || !r.term) && r.bank?.includes('Tái cấp vốn')) || macroDatabase.interestRate[2] || { rate: '4.50%' };
-  const discountRate = macroData.interestRate?.find((r: any) => (r.term === 'Chính sách' || !r.term) && r.bank?.includes('Tái chiết khấu')) || macroDatabase.interestRate[3] || { rate: '3.00%' };
+  const depositRate = macroData.interestRate?.find((r: any) => r.type === 'deposit' || r.bank?.includes('Huy động')) || { rate: '4.85%' };
+  const onRate = macroData.interestRate?.find((r: any) => r.term === 'ON' || r.bank?.includes('Qua đêm')) || { rate: '3.50%' };
+  const refRate = macroData.interestRate?.find((r: any) => (r.term === 'Chính sách' || !r.term) && r.bank?.includes('Tái cấp vốn')) || { rate: '4.50%' };
+  const discountRate = macroData.interestRate?.find((r: any) => (r.term === 'Chính sách' || !r.term) && r.bank?.includes('Tái chiết khấu')) || { rate: '3.00%' };
+  const vniborRate = macroData.interestRate?.find((r: any) => r.term === '3M' || r.bank?.includes('VNIBOR')) || { rate: '4.95%' };
 
   return (
     <div suppressHydrationWarning className="relative overflow-hidden p-6 md:p-8 bg-zinc-950/90 border border-zinc-800/80 rounded-3xl backdrop-blur-2xl space-y-6 shadow-2xl">
@@ -249,41 +250,45 @@ export const MacroDataSection: React.FC = () => {
               </div>
             </div>
 
-            {/* Chỉ số chính: Liên Ngân Hàng (ON) & Tái Cấp Vốn */}
+            {/* Chỉ số chính: Huy Động 12T (Bình quân) & Liên Ngân Hàng (ON) */}
             <div className="grid grid-cols-2 gap-3 my-2 font-mono">
+              <div className="p-2.5 rounded-xl bg-zinc-950/70 border border-emerald-500/30">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-zinc-300 block font-bold">Huy động 12T</span>
+                  <span className="text-[9px] text-emerald-400 font-bold px-1 rounded bg-emerald-500/10">Bình quân</span>
+                </div>
+                <span className="text-2xl font-black text-emerald-400">{depositRate?.rate || '4.85%'}</span>
+                <span className="text-[9px] text-zinc-500 block truncate">Thị trường 1 (Dân cư)</span>
+              </div>
               <div className="p-2.5 rounded-xl bg-zinc-950/70 border border-zinc-800/60">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] text-zinc-400 block">Liên ngân hàng (ON)</span>
-                  <span className="text-[9px] text-emerald-400 font-semibold">Qua đêm</span>
+                  <span className="text-[9px] text-sky-400 font-semibold">Qua đêm</span>
                 </div>
                 <span className="text-2xl font-black text-white">{onRate?.rate || '3.50%'}</span>
                 <span className="text-[9px] text-zinc-500 block truncate">Thị trường 2 (Daily)</span>
               </div>
-              <div className="p-2.5 rounded-xl bg-zinc-950/70 border border-zinc-800/60">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] text-zinc-400 block">Tái cấp vốn</span>
-                  <span className="text-[9px] text-rose-400 font-semibold">Chính sách</span>
-                </div>
-                <span className="text-2xl font-black text-zinc-100">{refRate?.rate || '4.50%'}</span>
-                <span className="text-[9.5px] text-zinc-500 block truncate">NHNN quy định</span>
-              </div>
             </div>
 
-            {/* Chỉ số bổ sung: VNIBOR 3M & Tái Chiết Khấu */}
-            <div className="grid grid-cols-2 gap-2 font-mono text-[11px] px-1 py-1.5 text-zinc-400 border-t border-zinc-800/60">
-              <div className="flex items-center justify-between pr-2 border-r border-zinc-800/60">
-                <span className="text-zinc-500">VNIBOR (3M):</span>
-                <span className="font-bold text-amber-300">{vniborRate?.rate || '6.82%'}</span>
+            {/* Chỉ số điều hành NHNN & VNIBOR */}
+            <div className="grid grid-cols-3 gap-1.5 font-mono text-[10px] px-1 py-1.5 text-zinc-400 border-t border-zinc-800/60">
+              <div className="flex flex-col pr-1 border-r border-zinc-800/60">
+                <span className="text-zinc-500 text-[9px]">Tái cấp vốn:</span>
+                <span className="font-bold text-zinc-200">{refRate?.rate || '4.50%'}</span>
               </div>
-              <div className="flex items-center justify-between pl-2">
-                <span className="text-zinc-500">Tái chiết khấu:</span>
+              <div className="flex flex-col px-1 border-r border-zinc-800/60">
+                <span className="text-zinc-500 text-[9px]">Tái chiết khấu:</span>
                 <span className="font-bold text-zinc-200">{discountRate?.rate || '3.00%'}</span>
+              </div>
+              <div className="flex flex-col pl-1">
+                <span className="text-zinc-500 text-[9px]">VNIBOR (3M):</span>
+                <span className="font-bold text-amber-300">{vniborRate?.rate || '4.95%'}</span>
               </div>
             </div>
 
             <div className="text-[10px] font-mono text-zinc-400 flex items-center justify-between pt-2 border-t border-zinc-800/60">
               <span className="text-zinc-500">Căn cứ & Nguồn:</span>
-              <span className="text-zinc-300 font-medium">QĐ 1123/QĐ-NHNN & Simplize VNIBOR</span>
+              <span className="text-zinc-300 font-medium">QĐ 1123/QĐ-NHNN & TT Tiền tệ</span>
             </div>
           </motion.div>
         </div>

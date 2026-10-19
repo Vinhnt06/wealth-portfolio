@@ -20,17 +20,18 @@ import {
 } from '@phosphor-icons/react';
 import { EconomicCycleWheel } from './EconomicCycleWheel';
 import { USGlobalMacroSection } from './USGlobalMacroSection';
+import { RelativeRotationGraphCard } from './RelativeRotationGraph';
 
 interface MarketOverviewSectionProps {
   onSelectSector?: (sectorName: string) => void;
-  defaultTab?: 'heatmap' | 'chart';
+  defaultTab?: 'heatmap' | 'chart' | 'rrg';
 }
 
 export const MarketOverviewSection: React.FC<MarketOverviewSectionProps> = React.memo(({
   onSelectSector,
   defaultTab = 'heatmap'
 }) => {
-  const [overviewTab, setOverviewTab] = useState<'heatmap' | 'chart'>(defaultTab);
+  const [overviewTab, setOverviewTab] = useState<'heatmap' | 'chart' | 'rrg'>(defaultTab);
 
   return (
     <div className="space-y-6">
@@ -63,12 +64,26 @@ export const MarketOverviewSection: React.FC<MarketOverviewSectionProps> = React
             <ChartLineUp className="w-4 h-4" />
             <span>Biểu Đồ Chỉ Số & Độ Rộng</span>
           </button>
+
+          <button
+            onClick={() => setOverviewTab('rrg')}
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold transition-all ${
+              overviewTab === 'rrg'
+                ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20'
+                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
+            }`}
+          >
+            <Compass className="w-4 h-4" />
+            <span>Luân Chuyển Dòng Tiền (RRG)</span>
+          </button>
         </div>
       </div>
 
-      {/* 2. Main Terminal Hub: Heatmap or Index Chart */}
+      {/* 2. Main Terminal Hub: Heatmap, Index Chart, or RRG */}
       {overviewTab === 'heatmap' ? (
         <MarketHeatmap />
+      ) : overviewTab === 'rrg' ? (
+        <RelativeRotationGraphCard defaultHeight={620} />
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Market Overview Chart - Fixed Full-Height, Never Collapsed */}

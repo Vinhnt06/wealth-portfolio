@@ -7,6 +7,7 @@ import { useMarketStore } from '../../features/market/store/marketStore';
 import { MarketOverviewSection } from '../../features/market/components/MarketOverviewSection';
 import { StockDetailSection } from '../../features/market/components/StockDetailSection';
 import { MarkMinerviniScreener } from '../../features/market/components/MarkMinerviniScreener';
+import { RelativeRotationGraphCard } from '../../features/market/components/RelativeRotationGraph';
 import {
   ChartPieSlice,
   Buildings,
@@ -16,6 +17,7 @@ import {
   TrendUp,
   Funnel,
   Clock,
+  Compass,
 } from '@phosphor-icons/react';
 import { getMarketSessionInfo } from '../../features/market/utils/marketHours';
 
@@ -88,6 +90,18 @@ export default function MarketTerminalPage() {
             </button>
 
             <button
+              onClick={() => setViewMode('rrg')}
+              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                viewMode === 'rrg'
+                  ? 'bg-zinc-800 text-emerald-400 shadow-sm'
+                  : 'text-zinc-400 hover:text-zinc-200'
+              }`}
+            >
+              <Compass className="w-3.5 h-3.5" />
+              <span>Luân chuyển RRG</span>
+            </button>
+
+            <button
               onClick={() => setViewMode('detail')}
               className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
                 viewMode === 'detail'
@@ -147,11 +161,15 @@ export default function MarketTerminalPage() {
           </div>
         </div>
 
-        {/* Dynamic Context View: Macro Overview vs Minervini Screener vs Stock Deep-Dive */}
+        {/* Dynamic Context View: Macro Overview vs Minervini Screener vs RRG vs Stock Deep-Dive */}
         {viewMode === 'overview' ? (
           <MarketOverviewSection onSelectSector={() => setViewMode('screener')} />
         ) : viewMode === 'screener' ? (
           <MarkMinerviniScreener />
+        ) : viewMode === 'rrg' ? (
+          <div className="space-y-6">
+            <RelativeRotationGraphCard defaultHeight={700} />
+          </div>
         ) : (
           <StockDetailSection onBackToOverview={() => setViewMode('overview')} />
         )}

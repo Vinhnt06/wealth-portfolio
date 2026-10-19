@@ -3089,7 +3089,7 @@ export function MarketCandleChart() {
 
     const volumeMaSeries = chart.addSeries(LineSeries, {
       color: '#38bdf8',
-      lineWidth: 1.5,
+      lineWidth: 1,
       priceFormat: { type: 'volume' },
       priceScaleId: 'volume',
       title: 'Vol MA 20',
