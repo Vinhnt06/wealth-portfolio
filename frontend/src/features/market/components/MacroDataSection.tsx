@@ -78,8 +78,10 @@ export const MacroDataSection: React.FC = () => {
   const currentGdp = macroData.gdp?.[0] || macroDatabase.gdp[0];
   const currentCpi = macroData.cpi?.[0] || macroDatabase.cpi[0];
   const currentUsd = liveExchangeRates[0] || macroDatabase.exchangeRate[0];
-  const refRate = macroData.interestRate?.[0] || macroDatabase.interestRate[0];
-  const discountRate = macroData.interestRate?.[1] || macroDatabase.interestRate[1];
+  const onRate = macroData.interestRate?.find((r: any) => r.term === 'ON' || r.bank?.includes('Qua đêm')) || macroDatabase.interestRate[0];
+  const vniborRate = macroData.interestRate?.find((r: any) => r.term === '3M' || r.bank?.includes('VNIBOR')) || macroDatabase.interestRate[1];
+  const refRate = macroData.interestRate?.find((r: any) => (r.term === 'Chính sách' || !r.term) && r.bank?.includes('Tái cấp vốn')) || macroDatabase.interestRate[2] || { rate: '4.50%' };
+  const discountRate = macroData.interestRate?.find((r: any) => (r.term === 'Chính sách' || !r.term) && r.bank?.includes('Tái chiết khấu')) || macroDatabase.interestRate[3] || { rate: '3.00%' };
 
   return (
     <div suppressHydrationWarning className="relative overflow-hidden p-6 md:p-8 bg-zinc-950/90 border border-zinc-800/80 rounded-3xl backdrop-blur-2xl space-y-6 shadow-2xl">
@@ -225,7 +227,7 @@ export const MacroDataSection: React.FC = () => {
             </div>
           </motion.div>
 
-          {/* 2.2 Lãi Suất Điều Hành Chính Sách NHNN */}
+          {/* 2.2 Lãi Suất Liên Ngân Hàng & Điều Hành NHNN */}
           <motion.div 
             whileHover={{ y: -2 }}
             transition={{ duration: 0.2 }}
@@ -234,7 +236,7 @@ export const MacroDataSection: React.FC = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-rose-400">
                 <Bank className="w-4 h-4" weight="bold" />
-                <span className="font-mono text-xs font-bold uppercase tracking-wider">Lãi Suất Điều Hành</span>
+                <span className="font-mono text-xs font-bold uppercase tracking-wider">Lãi Suất & Thị Trường Tiền Tệ</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <span className="inline-flex items-center gap-1 font-mono text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-semibold">
@@ -242,25 +244,46 @@ export const MacroDataSection: React.FC = () => {
                   Auto-crawled
                 </span>
                 <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-rose-500/10 border border-rose-500/20 text-rose-400 font-bold">
-                  NHNN
+                  NHNN / TT2
                 </span>
               </div>
             </div>
 
+            {/* Chỉ số chính: Liên Ngân Hàng (ON) & Tái Cấp Vốn */}
             <div className="grid grid-cols-2 gap-3 my-2 font-mono">
-              <div>
-                <span className="text-[10px] text-zinc-400 block">Tái cấp vốn</span>
-                <span className="text-2xl font-black text-white">{refRate?.rate || '4.50%'}</span>
+              <div className="p-2.5 rounded-xl bg-zinc-950/70 border border-zinc-800/60">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-zinc-400 block">Liên ngân hàng (ON)</span>
+                  <span className="text-[9px] text-emerald-400 font-semibold">Qua đêm</span>
+                </div>
+                <span className="text-2xl font-black text-white">{onRate?.rate || '3.50%'}</span>
+                <span className="text-[9px] text-zinc-500 block truncate">Thị trường 2 (Daily)</span>
               </div>
-              <div>
-                <span className="text-[10px] text-zinc-400 block">Tái chiết khấu</span>
-                <span className="text-2xl font-black text-zinc-200">{discountRate?.rate || '3.00%'}</span>
+              <div className="p-2.5 rounded-xl bg-zinc-950/70 border border-zinc-800/60">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-zinc-400 block">Tái cấp vốn</span>
+                  <span className="text-[9px] text-rose-400 font-semibold">Chính sách</span>
+                </div>
+                <span className="text-2xl font-black text-zinc-100">{refRate?.rate || '4.50%'}</span>
+                <span className="text-[9.5px] text-zinc-500 block truncate">NHNN quy định</span>
+              </div>
+            </div>
+
+            {/* Chỉ số bổ sung: VNIBOR 3M & Tái Chiết Khấu */}
+            <div className="grid grid-cols-2 gap-2 font-mono text-[11px] px-1 py-1.5 text-zinc-400 border-t border-zinc-800/60">
+              <div className="flex items-center justify-between pr-2 border-r border-zinc-800/60">
+                <span className="text-zinc-500">VNIBOR (3M):</span>
+                <span className="font-bold text-amber-300">{vniborRate?.rate || '6.82%'}</span>
+              </div>
+              <div className="flex items-center justify-between pl-2">
+                <span className="text-zinc-500">Tái chiết khấu:</span>
+                <span className="font-bold text-zinc-200">{discountRate?.rate || '3.00%'}</span>
               </div>
             </div>
 
             <div className="text-[10px] font-mono text-zinc-400 flex items-center justify-between pt-2 border-t border-zinc-800/60">
-              <span className="text-zinc-500">Căn cứ văn bản:</span>
-              <span className="text-zinc-300 font-medium">Theo QĐ 1123/QĐ-NHNN</span>
+              <span className="text-zinc-500">Căn cứ & Nguồn:</span>
+              <span className="text-zinc-300 font-medium">QĐ 1123/QĐ-NHNN & Simplize VNIBOR</span>
             </div>
           </motion.div>
         </div>

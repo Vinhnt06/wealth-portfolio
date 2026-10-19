@@ -202,12 +202,62 @@ export async function GET(request: NextRequest) {
       results.bankRatesCount = bankRates.length;
     }
 
-    // 3. Cào & Đồng bộ Lãi suất Điều hành NHNN (Policy Rates)
+    // 3. Cào & Đồng bộ Lãi suất Liên ngân hàng & Điều hành NHNN
     let policyRates = [
-      { bank: "Lãi suất Tái cấp vốn NHNN", rate: "4.50%", doc: "QĐ 1123/QĐ-NHNN", isCrawled: true },
-      { bank: "Lãi suất Tái chiết khấu NHNN", rate: "3.00%", doc: "QĐ 1123/QĐ-NHNN", isCrawled: true },
-      { bank: "Cho vay qua đêm bù trừ", rate: "5.00%", doc: "QĐ 1123/QĐ-NHNN", isCrawled: true },
+      {
+        bank: "Liên ngân hàng (ON - Qua đêm)",
+        rate: "3.50%",
+        term: "ON",
+        type: "interbank",
+        isCrawled: true,
+        source: "Thị trường liên ngân hàng 2",
+      },
+      {
+        bank: "Lãi suất Liên ngân hàng (VNIBOR)",
+        rate: "6.82%",
+        term: "3M",
+        type: "interbank",
+        isCrawled: true,
+        source: "Simplize Macro / TradingEconomics",
+      },
+      {
+        bank: "Lãi suất Tái cấp vốn NHNN",
+        rate: "4.50%",
+        term: "Chính sách",
+        doc: "QĐ 1123/QĐ-NHNN",
+        isCrawled: true,
+      },
+      {
+        bank: "Lãi suất Tái chiết khấu NHNN",
+        rate: "3.00%",
+        term: "Chính sách",
+        doc: "QĐ 1123/QĐ-NHNN",
+        isCrawled: true,
+      },
     ];
+
+    // Cào Lãi suất liên ngân hàng VNIBOR từ Simplize Macro
+    try {
+      const resSim = await fetch('https://simplize.vn/vi-mo/lai-suat-lien-ngan-hang', {
+        headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)' },
+        cache: 'no-store',
+      });
+      if (resSim.ok) {
+        const html = await resSim.text();
+        const match = html.match(/<script id=\"__NEXT_DATA__\"[^>]*>([\s\S]*?)<\/script>/);
+        if (match) {
+          const json = JSON.parse(match[1]);
+          const interbankData = json?.props?.pageProps?.data;
+          if (interbankData && interbankData.current) {
+            policyRates[1].rate = `${interbankData.current}%`;
+          }
+        }
+      }
+    } catch {
+      // Giữ fallback
+    }
+
+    // Cào Lãi suất điều hành
     try {
       const resRate = await fetch('https://24hmoney.vn/lai-suat-ngan-hang', {
         headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)' },
@@ -218,10 +268,10 @@ export async function GET(request: NextRequest) {
         const refMatch = html.match(/tái cấp vốn[^\d]{1,30}(\d+[.,]\d+)\s*%/i);
         const discMatch = html.match(/tái chiết khấu[^\d]{1,30}(\d+[.,]\d+)\s*%/i);
         if (refMatch && refMatch[1]) {
-          policyRates[0].rate = `${refMatch[1].replace(',', '.')}%`;
+          policyRates[2].rate = `${refMatch[1].replace(',', '.')}%`;
         }
         if (discMatch && discMatch[1]) {
-          policyRates[1].rate = `${discMatch[1].replace(',', '.')}%`;
+          policyRates[3].rate = `${discMatch[1].replace(',', '.')}%`;
         }
       }
     } catch {

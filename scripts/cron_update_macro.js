@@ -259,35 +259,82 @@ async function fetchBankRates() {
 }
 
 async function crawlSbvInterestRates() {
-  console.log(`\n[3/4] Đang cào dữ liệu Lãi Suất Điều Hành NHNN...`);
+  console.log(`\n[3/4] Đang cào dữ liệu Lãi Suất Liên Ngân Hàng & Điều Hành NHNN...`);
   const macroJsonPath = path.resolve(__dirname, '../frontend/src/features/market/data/macroDatabase.json');
   
   let rates = [
-    { bank: "Lãi suất Tái cấp vốn NHNN", rate: "4.50%", doc: "QĐ 1123/QĐ-NHNN", isCrawled: true },
-    { bank: "Lãi suất Tái chiết khấu NHNN", rate: "3.00%", doc: "QĐ 1123/QĐ-NHNN", isCrawled: true },
-    { bank: "Cho vay qua đêm bù trừ", rate: "5.00%", doc: "QĐ 1123/QĐ-NHNN", isCrawled: true },
+    {
+      bank: "Liên ngân hàng (ON - Qua đêm)",
+      rate: "3.50%",
+      term: "ON",
+      type: "interbank",
+      isCrawled: true,
+      source: "Thị trường liên ngân hàng 2"
+    },
+    {
+      bank: "Lãi suất Liên ngân hàng (VNIBOR)",
+      rate: "6.82%",
+      term: "3M",
+      type: "interbank",
+      isCrawled: true,
+      source: "Simplize Macro / TradingEconomics"
+    },
+    {
+      bank: "Lãi suất Tái cấp vốn NHNN",
+      rate: "4.50%",
+      term: "Chính sách",
+      doc: "QĐ 1123/QĐ-NHNN",
+      isCrawled: true
+    },
+    {
+      bank: "Lãi suất Tái chiết khấu NHNN",
+      rate: "3.00%",
+      term: "Chính sách",
+      doc: "QĐ 1123/QĐ-NHNN",
+      isCrawled: true
+    }
   ];
 
+  // 1. Cào Lãi suất liên ngân hàng VNIBOR từ Simplize Macro (__NEXT_DATA__)
   try {
-    // Thử truy vấn cổng tin tức chính sách tiền tệ để kiểm tra quyết định lãi suất mới nhất
+    const res = await fetch('https://simplize.vn/vi-mo/lai-suat-lien-ngan-hang', {
+      headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)' },
+    });
+    if (res.ok) {
+      const html = await res.text();
+      const match = html.match(/<script id=\"__NEXT_DATA__\"[^>]*>([\s\S]*?)<\/script>/);
+      if (match) {
+        const json = JSON.parse(match[1]);
+        const interbankData = json?.props?.pageProps?.data;
+        if (interbankData && interbankData.current) {
+          rates[1].rate = `${interbankData.current}%`;
+          console.log(`  ✓ Đã cào Lãi suất Liên ngân hàng (VNIBOR) từ Simplize: ${interbankData.current}%`);
+        }
+      }
+    }
+  } catch (e) {
+    console.log('  - Lỗi cào liên ngân hàng Simplize:', e.message);
+  }
+
+  // 2. Cào Lãi suất Điều hành NHNN (Tái cấp vốn / Tái chiết khấu)
+  try {
     const res = await fetch('https://24hmoney.vn/lai-suat-ngan-hang', {
       headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)' },
     });
     if (res.ok) {
       const html = await res.text();
-      // Bóc tách nếu có văn bản điều chỉnh mới
       const refMatch = html.match(/tái cấp vốn[^\d]{1,30}(\d+[.,]\d+)\s*%/i);
       const discMatch = html.match(/tái chiết khấu[^\d]{1,30}(\d+[.,]\d+)\s*%/i);
 
       if (refMatch && refMatch[1]) {
-        rates[0].rate = `${refMatch[1].replace(',', '.')}%`;
+        rates[2].rate = `${refMatch[1].replace(',', '.')}%`;
       }
       if (discMatch && discMatch[1]) {
-        rates[1].rate = `${discMatch[1].replace(',', '.')}%`;
+        rates[3].rate = `${discMatch[1].replace(',', '.')}%`;
       }
     }
   } catch (e) {
-    console.log('  - Dùng chính sách quy định chuẩn NHNN (Fallback):', e.message);
+    console.log('  - Giữ nguyên lãi suất điều hành NHNN (Fallback):', e.message);
   }
 
   const nowTimeStr = new Date().toLocaleDateString('vi-VN', {
@@ -306,9 +353,9 @@ async function crawlSbvInterestRates() {
       const macroData = JSON.parse(fs.readFileSync(macroJsonPath, 'utf8'));
       macroData.interestRate = rates;
       macroData.interestRateLastCrawled = nowTimeStr;
-      macroData.interestRateSource = 'Ngân hàng Nhà nước Việt Nam (SBV)';
+      macroData.interestRateSource = 'Ngân hàng Nhà nước & Thị trường liên ngân hàng';
       fs.writeFileSync(macroJsonPath, JSON.stringify(macroData, null, 2), 'utf8');
-      console.log(`  ✓ Đã cào & cập nhật Lãi suất điều hành vào macroDatabase.json (${nowTimeStr})!`);
+      console.log(`  ✓ Đã cào & cập nhật Lãi suất liên ngân hàng & điều hành vào macroDatabase.json (${nowTimeStr})!`);
     } catch (err) {
       console.error('  [ERROR] Lỗi ghi macroDatabase.json:', err.message);
     }

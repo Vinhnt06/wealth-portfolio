@@ -1,7 +1,7 @@
 {
   "success": true,
-  "timestamp": "2026-10-19T02:50:53.976Z",
-  "updateTime": "09:50:53",
+  "timestamp": "2026-10-19T03:51:02.657Z",
+  "updateTime": "10:51:02",
   "indices": [
     {
       "symbol": "^GSPC",
@@ -47,9 +47,9 @@
       "symbol": "DX-Y.NYB",
       "name": "DXY Index",
       "category": "currency",
-      "price": 101.81,
-      "change": -0.02,
-      "changePercent": -0.02,
+      "price": 101.83,
+      "change": -0.01,
+      "changePercent": -0.01,
       "unit": "pts",
       "note": "Chỉ số đo lường sức mạnh đồng USD"
     },
@@ -77,8 +77,8 @@
       "pillar": "Áp Lực Tỷ Giá USD/VND",
       "status": "Tích Cực",
       "statusColor": "emerald",
-      "headline": "DXY biến động quanh mức 101.81 điểm",
-      "detail": "Chỉ số DXY hạ nhiệt quanh 101.81 giúp thu hẹp chênh lệch USD-VND, giảm áp lực bán can thiệp ngoại tệ của NHNN và hạn chế rủi ro tỷ giá nhập khẩu."
+      "headline": "DXY biến động quanh mức 101.83 điểm",
+      "detail": "Chỉ số DXY hạ nhiệt quanh 101.83 giúp thu hẹp chênh lệch USD-VND, giảm áp lực bán can thiệp ngoại tệ của NHNN và hạn chế rủi ro tỷ giá nhập khẩu."
     },
     {
       "pillar": "Không Gian Lãi Suất NHNN",
