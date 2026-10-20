@@ -35,7 +35,7 @@ async function fetchOHLC(
 
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 3500);
+    const timeout = setTimeout(() => controller.abort(), 4000);
 
     const res = await fetch(url, {
       headers: {
@@ -77,15 +77,14 @@ export async function GET(request: NextRequest) {
   }
 
   const nowSec = Math.floor(Date.now() / 1000);
-  // Fetch at least 150 days for daily (to cover 80+ trading bars for SMA14 and SMA10), or 400 days for weekly
-  const daysBack = timeframe === '1W' ? 450 : 150;
+  // Fetch 160 days for daily, 450 days for weekly to cover lookback window
+  const daysBack = timeframe === '1W' ? 450 : 160;
   const fromSec = nowSec - daysBack * 86400;
 
-  // Extract all unique symbols
+  // Extract all unique symbols from 16 sectors (take up to top 6 representative tickers per sector)
   const allSymbols = new Set<string>();
   RRG_SECTOR_CONFIGS.forEach((sector) => {
-    // Take top 5 symbols per sector to optimize speed and balance
-    sector.symbols.slice(0, 5).forEach((sym) => allSymbols.add(sym));
+    sector.symbols.slice(0, 6).forEach((sym) => allSymbols.add(sym));
   });
 
   const symbolList = Array.from(allSymbols);
@@ -105,7 +104,7 @@ export async function GET(request: NextRequest) {
     .map(Number)
     .sort((a, b) => a - b);
 
-  if (benchTimestamps.length < 30) {
+  if (benchTimestamps.length < 25) {
     return NextResponse.json(
       { error: 'Insufficient benchmark data from exchange' },
       { status: 502 }
@@ -116,6 +115,10 @@ export async function GET(request: NextRequest) {
     const d = new Date(ts * 1000);
     return d.toISOString().split('T')[0];
   };
+
+  const baseTs = benchTimestamps[0];
+  const benchPriceMap = new Map<number, number>();
+  benchTimestamps.forEach((ts) => benchPriceMap.set(ts, benchCandles[ts]));
 
   const benchmarkPrices = benchTimestamps.map((ts) => ({
     date: formatDate(ts),
@@ -132,54 +135,58 @@ export async function GET(request: NextRequest) {
   };
 
   for (const config of RRG_SECTOR_CONFIGS) {
-    const targetSymbols = config.symbols.slice(0, 5);
+    const targetSymbols = config.symbols.slice(0, 6);
     const validSymbols = targetSymbols.filter((sym) => {
       const cMap = stockMap.get(sym);
-      return cMap && Object.keys(cMap).length > 20;
+      return cMap && Object.keys(cMap).length > 15;
     });
 
     if (validSymbols.length === 0) continue;
 
-    // Xây dựng chỉ số ngành theo phương pháp Lợi suất ghép hàng ngày (Daily Compound Returns) chuẩn quốc tế
-    let currentIdxVal = 100.0;
-    const sectorPrices: { date: string; close: number }[] = [
-      {
-        date: formatDate(benchTimestamps[0]),
-        close: currentIdxVal,
-      },
-    ];
+    // Chuẩn hóa Sector Price Index (Equal-Weighted Price Index chuẩn hóa về 100 tại ngày gốc)
+    // Phương pháp này loại bỏ hoàn toàn sai số trôi dạt (compounding drift) và miễn nhiễm với nến thiếu
+    const symbolBasePrices = validSymbols.map((sym) => {
+      const cMap = stockMap.get(sym)!;
+      // Tìm giá tại baseTs hoặc giá sớm nhất khả dụng
+      if (cMap[baseTs] && cMap[baseTs] > 0) return cMap[baseTs];
+      const sortedKeys = Object.keys(cMap).map(Number).sort((a, b) => a - b);
+      return sortedKeys.length > 0 ? cMap[sortedKeys[0]] : 1;
+    });
 
-    for (let i = 1; i < benchTimestamps.length; i++) {
-      const prevTs = benchTimestamps[i - 1];
-      const currTs = benchTimestamps[i];
+    const sectorPrices: { date: string; close: number }[] = [];
 
-      const returns: number[] = [];
-      for (const sym of validSymbols) {
+    for (const ts of benchTimestamps) {
+      let sumNorm = 0;
+      let validCount = 0;
+
+      validSymbols.forEach((sym, sIdx) => {
         const cMap = stockMap.get(sym);
         if (cMap) {
-          const pPrev = cMap[prevTs];
-          const pCurr = cMap[currTs];
-          if (pPrev && pCurr && pPrev > 0) {
-            returns.push((pCurr - pPrev) / pPrev);
+          const p = cMap[ts];
+          const p0 = symbolBasePrices[sIdx];
+          if (p && p > 0 && p0 && p0 > 0) {
+            sumNorm += (p / p0) * 100;
+            validCount++;
           }
         }
-      }
-
-      const avgRet = returns.length > 0 ? returns.reduce((a, b) => a + b, 0) / returns.length : 0;
-      currentIdxVal *= (1.0 + avgRet);
-
-      sectorPrices.push({
-        date: formatDate(currTs),
-        close: currentIdxVal,
       });
+
+      if (validCount > 0) {
+        sectorPrices.push({
+          date: formatDate(ts),
+          close: Number((sumNorm / validCount).toFixed(4)),
+        });
+      }
     }
 
-    // Tính toán RRG theo thuật toán chuẩn Julius de Kempenaer (WMA Double-Smoothing)
+    if (sectorPrices.length < 20) continue;
+
+    // Tính toán RRG theo thuật toán chuẩn Julius de Kempenaer (Rolling Z-Score 14 kỳ)
     const points = calculateRRGSeries(
       sectorPrices,
       benchmarkPrices,
-      10,
-      4,
+      14,
+      1.8,
       tailLength
     );
 
@@ -206,7 +213,7 @@ export async function GET(request: NextRequest) {
       velocity = Number(Math.sqrt(pdx * pdx + pdy * pdy).toFixed(2));
     }
 
-    // Recent change %
+    // Recent change % (1 phiên gần nhất)
     let changePercent = 0;
     if (sectorPrices.length >= 2) {
       const lastP = sectorPrices[sectorPrices.length - 1].close;
@@ -219,7 +226,7 @@ export async function GET(request: NextRequest) {
       name: config.name,
       shortName: config.shortName,
       color: config.color,
-      symbols: validSymbols,
+      symbols: config.symbols,
       points,
       currentPoint,
       quadrant,
@@ -230,15 +237,21 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  const startDate = benchmarkPrices[0]?.date || '';
-  const endDate = benchmarkPrices[benchmarkPrices.length - 1]?.date || '';
+  // Sắp xếp các ngành: Dẫn dắt đứng đầu, sau đó đến Suy yếu, Cải thiện, Tụt hậu
+  const quadrantOrder = { leading: 1, weakening: 2, improving: 3, lagging: 4 };
+  sectors.sort((a, b) => {
+    if (quadrantOrder[a.quadrant] !== quadrantOrder[b.quadrant]) {
+      return quadrantOrder[a.quadrant] - quadrantOrder[b.quadrant];
+    }
+    return b.currentPoint.rsRatio - a.currentPoint.rsRatio;
+  });
 
   const dataset: RRGDataset = {
     sectors,
     benchmark,
     dateRange: {
-      start: startDate,
-      end: endDate,
+      start: formatDate(benchTimestamps[0]),
+      end: formatDate(benchTimestamps[benchTimestamps.length - 1]),
     },
     summary,
   };

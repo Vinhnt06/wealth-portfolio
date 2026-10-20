@@ -1,8 +1,9 @@
 /**
  * RRG (Relative Rotation Graph) Calculation Engine
- * Chuẩn thuật toán Julius de Kempenaer (Bloomberg / StockCharts)
+ * Chuẩn thuật toán Julius de Kempenaer (Bloomberg / StockCharts / RRGPy)
  * 
- * Tính toán RS-Ratio (X) và RS-Momentum (Y) của 16 Nhóm Ngành so với VN-INDEX
+ * Tính toán JdK RS-Ratio (Trục X) và JdK RS-Momentum (Trục Y) 
+ * cho 16 Nhóm Ngành của TTCK Việt Nam so với VN-INDEX
  */
 
 export type RRGQuadrant = 'leading' | 'weakening' | 'lagging' | 'improving';
@@ -28,12 +29,12 @@ export interface RRGSectorData {
   shortName: string;
   color: string;
   symbols: string[];
-  points: RRGPoint[];      // Đuôi lịch sử (Tail)
-  currentPoint: RRGPoint;  // Tọa độ hiện tại
+  points: RRGPoint[];          // Đuôi lịch sử (Tail)
+  currentPoint: RRGPoint;      // Tọa độ hiện tại
   quadrant: RRGQuadrant;
-  distanceFromCenter: number; // Khoảng cách từ (100, 100)
+  distanceFromCenter: number; // Khoảng cách từ tâm (100, 100)
   angle: number;              // Góc quay theo độ (0 - 360)
-  velocity: number;           // Vận tốc xoay
+  velocity: number;           // Vận tốc luân chuyển
   changePercent: number;      // % thay đổi phiên gần nhất
 }
 
@@ -53,119 +54,119 @@ export interface RRGDataset {
   };
 }
 
-// Danh sách 16 nhóm ngành chuẩn của thị trường chứng khoán Việt Nam
+// 16 Nhóm Ngành chuẩn mực của Thị Trường Chứng Khoán Việt Nam
 export const RRG_SECTOR_CONFIGS: RRGSectorConfig[] = [
   {
     id: 'banking',
     name: 'Ngân hàng',
     shortName: 'Ngân hàng',
-    color: '#34d399', // Emerald
-    symbols: ['VCB', 'BID', 'CTG', 'TCB', 'MBB', 'ACB', 'VPB', 'HDB', 'STB', 'LPB'],
+    color: '#10b981', // Emerald
+    symbols: ['VCB', 'BID', 'CTG', 'TCB', 'MBB', 'ACB', 'VPB', 'HDB', 'STB'],
   },
   {
     id: 'securities',
-    name: 'Chứng khoán & Bảo hiểm',
+    name: 'Chứng khoán',
     shortName: 'Chứng khoán',
     color: '#38bdf8', // Sky
-    symbols: ['SSI', 'VND', 'VCI', 'HCM', 'SHS', 'MBS', 'FTS', 'BSI', 'BVH', 'MIG'],
+    symbols: ['SSI', 'VND', 'VCI', 'HCM', 'MBS', 'SHS', 'FTS', 'BSI'],
   },
   {
     id: 'real_estate',
     name: 'Bất động sản',
     shortName: 'BĐS',
     color: '#60a5fa', // Blue
-    symbols: ['VHM', 'VIC', 'VRE', 'KDH', 'NLG', 'PDR', 'DIG', 'DXG', 'CEO', 'NVL'],
+    symbols: ['VHM', 'VIC', 'VRE', 'KDH', 'NLG', 'PDR', 'DXG', 'DIG', 'NVL'],
   },
   {
     id: 'industrial_park',
     name: 'Khu công nghiệp',
     shortName: 'KCN',
     color: '#2dd4bf', // Teal
-    symbols: ['KBC', 'GVR', 'BCM', 'IDC', 'SZC', 'VGC', 'LHG', 'SIP', 'D2D'],
+    symbols: ['BCM', 'KBC', 'IDC', 'SZC', 'VGC', 'SIP', 'LHG'],
   },
   {
     id: 'steel',
     name: 'Thép & Kim loại',
     shortName: 'Thép',
     color: '#f97316', // Orange
-    symbols: ['HPG', 'HSG', 'NKG', 'VGS', 'SMC', 'TLH'],
+    symbols: ['HPG', 'HSG', 'NKG', 'VGS', 'TLH'],
   },
   {
     id: 'oil_gas',
     name: 'Dầu khí',
     shortName: 'Dầu khí',
     color: '#fbbf24', // Amber
-    symbols: ['GAS', 'PVD', 'PVS', 'BSR', 'PLX', 'PVT', 'PVP', 'PVC'],
+    symbols: ['GAS', 'PVD', 'PVS', 'BSR', 'PLX', 'PVT'],
   },
   {
     id: 'retail',
-    name: 'Bán lẻ & Tiêu dùng',
+    name: 'Bán lẻ',
     shortName: 'Bán lẻ',
     color: '#4ade80', // Green
-    symbols: ['MWG', 'PNJ', 'FRT', 'DGW', 'MSN', 'VNM', 'SAB', 'KDC'],
+    symbols: ['MWG', 'PNJ', 'FRT', 'DGW', 'PET'],
   },
   {
-    id: 'tech_telecom',
-    name: 'Công nghệ & Viễn thông',
+    id: 'food_beverage',
+    name: 'Thực phẩm & Đồ uống',
+    shortName: 'Thực phẩm',
+    color: '#a3e635', // Lime
+    symbols: ['MSN', 'VNM', 'SAB', 'KDC', 'MCH'],
+  },
+  {
+    id: 'tech',
+    name: 'Công nghệ thông tin',
     shortName: 'Công nghệ',
-    color: '#f43f5e', // Rose
-    symbols: ['FPT', 'CMG', 'CTR', 'VGI', 'ELC', 'FOX'],
+    color: '#ec4899', // Pink / Rose
+    symbols: ['FPT', 'CMG', 'CTR', 'ELC', 'VGI'],
   },
   {
     id: 'construction',
     name: 'Xây dựng & Hạ tầng',
     shortName: 'Xây dựng',
     color: '#22d3ee', // Cyan
-    symbols: ['VCG', 'HHV', 'C4G', 'CII', 'FCN', 'LCG', 'PC1', 'CTD'],
+    symbols: ['VCG', 'HHV', 'CII', 'FCN', 'CTD', 'LCG'],
+  },
+  {
+    id: 'seafood',
+    name: 'Thủy sản',
+    shortName: 'Thủy sản',
+    color: '#06b6d4', // Cyan dark
+    symbols: ['VHC', 'ANV', 'IDI', 'FMC'],
   },
   {
     id: 'agriculture',
-    name: 'Thủy sản & Nông nghiệp',
-    shortName: 'Thủy sản',
-    color: '#10b981', // Emerald
-    symbols: ['VHC', 'ANV', 'IDI', 'BAF', 'DBC', 'HAG', 'PAN'],
+    name: 'Nông nghiệp & Chăn nuôi',
+    shortName: 'Nông nghiệp',
+    color: '#84cc16', // Light Green
+    symbols: ['DBC', 'BAF', 'HAG', 'PAN'],
   },
   {
     id: 'energy',
-    name: 'Điện & Năng lượng',
+    name: 'Năng lượng & Điện',
     shortName: 'Năng lượng',
-    color: '#14b8a6', // Teal
-    symbols: ['POW', 'REE', 'GEG', 'HDG', 'NT2', 'VSH'],
+    color: '#14b8a6', // Teal light
+    symbols: ['POW', 'REE', 'PC1', 'GEG', 'HDG', 'NT2'],
   },
   {
     id: 'chemicals',
     name: 'Hóa chất & Phân bón',
     shortName: 'Phân bón',
-    color: '#fb923c', // Orange
-    symbols: ['DGC', 'DPM', 'DCM', 'BFC', 'CSV', 'LAS'],
+    color: '#f59e0b', // Amber dark
+    symbols: ['DGC', 'DPM', 'DCM', 'BFC', 'CSV'],
   },
   {
-    id: 'transport',
-    name: 'Vận tải & Cảng biển',
+    id: 'logistics',
+    name: 'Cảng biển & Logistics',
     shortName: 'Cảng biển',
-    color: '#06b6d4', // Cyan
-    symbols: ['GMD', 'HAH', 'VSC', 'PVT', 'VOS', 'VJC', 'HVN'],
+    color: '#0284c7', // Sky dark
+    symbols: ['GMD', 'HAH', 'VSC', 'PVT', 'VOS'],
   },
   {
-    id: 'rubber',
-    name: 'Cao su & Săm lốp',
+    id: 'rubber_plastic',
+    name: 'Cao su & Nhựa',
     shortName: 'Cao su',
     color: '#eab308', // Yellow
-    symbols: ['DRC', 'CSM', 'BRC', 'GVR', 'PHR', 'DPR'],
-  },
-  {
-    id: 'pharma',
-    name: 'Dược phẩm & Y tế',
-    shortName: 'Dược phẩm',
-    color: '#a3e635', // Lime
-    symbols: ['DHG', 'TRA', 'IMP', 'DBD', 'DMC'],
-  },
-  {
-    id: 'other',
-    name: 'Khác & Tiện ích',
-    shortName: 'Khác',
-    color: '#5eead4', // Light Teal
-    symbols: ['TDM', 'BWE', 'SCS', 'VCS'],
+    symbols: ['GVR', 'DRC', 'DPR', 'PHR', 'BMP'],
   },
 ];
 
@@ -198,7 +199,7 @@ export function getQuadrantInfo(quadrant: RRGQuadrant): {
         color: '#10b981',
         bgColor: 'rgba(16, 185, 129, 0.08)',
         borderColor: 'rgba(16, 185, 129, 0.25)',
-        description: 'Mạnh hơn VN-INDEX & Xung lực tiếp tục gia tăng (Outperforming & Gaining Momentum)',
+        description: 'Mạnh hơn VN-INDEX & Xung lực tiếp tục gia tăng (Outperforming & Accelerating)',
       };
     case 'weakening':
       return {
@@ -207,72 +208,47 @@ export function getQuadrantInfo(quadrant: RRGQuadrant): {
         color: '#f59e0b',
         bgColor: 'rgba(245, 158, 11, 0.08)',
         borderColor: 'rgba(245, 158, 11, 0.25)',
-        description: 'Vẫn mạnh hơn VN-INDEX nhưng xung lực đang giảm dần (Outperforming but Losing Momentum)',
+        description: 'Vẫn mạnh hơn VN-INDEX nhưng đà tăng đang giảm tốc (Outperforming but Decelerating)',
       };
     case 'lagging':
       return {
         name: 'TỤT HẬU',
         enName: 'Lagging',
-        color: '#ef4444',
-        bgColor: 'rgba(239, 68, 68, 0.08)',
-        borderColor: 'rgba(239, 68, 68, 0.25)',
-        description: 'Yếu hơn VN-INDEX & Xung lực suy giảm (Underperforming & Losing Momentum)',
+        color: '#f43f5e',
+        bgColor: 'rgba(244, 63, 94, 0.08)',
+        borderColor: 'rgba(244, 63, 94, 0.25)',
+        description: 'Yếu hơn VN-INDEX & Xung lực suy giảm (Underperforming & Decelerating)',
       };
     case 'improving':
       return {
         name: 'CẢI THIỆN',
         enName: 'Improving',
-        color: '#3b82f6',
-        bgColor: 'rgba(59, 130, 246, 0.08)',
-        borderColor: 'rgba(59, 130, 246, 0.25)',
-        description: 'Yếu hơn VN-INDEX nhưng xung lực đang phục hồi mạnh (Underperforming but Gaining Momentum)',
+        color: '#38bdf8',
+        bgColor: 'rgba(56, 189, 248, 0.08)',
+        borderColor: 'rgba(56, 189, 248, 0.25)',
+        description: 'Yếu hơn VN-INDEX nhưng xung lực đang phục hồi mạnh (Underperforming but Accelerating)',
       };
   }
 }
 
 /**
- * Weighted Moving Average (WMA)
- */
-function calculateWMA(series: number[], period: number): number[] {
-  const weights = Array.from({ length: period }, (_, i) => i + 1);
-  const wSum = (period * (period + 1)) / 2;
-  const result: number[] = [];
-
-  for (let i = 0; i < series.length; i++) {
-    if (i < period - 1) {
-      // Khởi tạo cho các phiên đầu chưa đủ period
-      const count = i + 1;
-      const subWeights = weights.slice(period - count);
-      const subSum = subWeights.reduce((a, b) => a + b, 0);
-      let acc = 0;
-      for (let j = 0; j < count; j++) {
-        acc += series[j] * subWeights[j];
-      }
-      result.push(acc / subSum);
-    } else {
-      let acc = 0;
-      for (let j = 0; j < period; j++) {
-        acc += series[i - period + 1 + j] * weights[j];
-      }
-      result.push(acc / wSum);
-    }
-  }
-  return result;
-}
-
-/**
- * Tính toán RS-Ratio và RS-Momentum theo thuật toán chuẩn Julius de Kempenaer (Bloomberg / StockCharts)
- * 1. RS = (Price / Benchmark) * 100
- * 2. RS1 = WMA(RS, period)
- * 3. RS2 = WMA(RS1, period)
- * 4. RS-Ratio = (RS1 / RS2) * 100
- * 5. RS-Momentum = (RS-Ratio / WMA(RS-Ratio, momentumPeriod)) * 100
+ * Tính toán JdK RS-Ratio và JdK RS-Momentum theo thuật toán chuẩn Julius de Kempenaer:
+ * 
+ * 1. Relative Strength (RS):
+ *    RS(t) = [Price_Sector(t) / Price_Benchmark(t)] * 100
+ * 
+ * 2. JdK RS-Ratio (Rolling Z-score normalization):
+ *    RS-Ratio(t) = 100 + [(RS(t) - SMA(RS, window)) / StdDev(RS, window)] * scaleFactor
+ * 
+ * 3. JdK RS-Momentum (Rate of change of RS-Ratio normalized):
+ *    ROC(t) = [(RS-Ratio(t) / RS-Ratio(t-1)) - 1] * 100
+ *    RS-Momentum(t) = 100 + [(ROC(t) - SMA(ROC, window)) / StdDev(ROC, window)] * scaleFactor
  */
 export function calculateRRGSeries(
   sectorPrices: { date: string; close: number }[],
   benchmarkPrices: { date: string; close: number }[],
-  period: number = 10,
-  momentumPeriod: number = 4,
+  window: number = 14,
+  scaleFactor: number = 1.8,
   tailLength: number = 4
 ): RRGPoint[] {
   // Đồng bộ ngày giữa sector và benchmark
@@ -287,35 +263,52 @@ export function calculateRRGSeries(
     }
   });
 
-  if (validPairs.length < period * 2 + momentumPeriod) {
+  if (validPairs.length < window * 2) {
     return [];
   }
 
   // 1. Tính Relative Strength (RS)
   const rawRs = validPairs.map((p) => (p.sectorClose / p.benchClose) * 100);
 
-  // 2. Double-Smoothing WMA để tính JdK RS-Ratio (chuẩn hóa dao động quanh 100)
-  const rsSmooth1 = calculateWMA(rawRs, period);
-  const rsSmooth2 = calculateWMA(rsSmooth1, period);
-
+  // 2. Rolling Z-Score để tính JdK RS-Ratio chuẩn hóa quanh 100
   const rsRatio: number[] = [];
   for (let i = 0; i < rawRs.length; i++) {
-    const s2 = rsSmooth2[i] || 0.0001;
-    rsRatio.push((rsSmooth1[i] / s2) * 100);
+    const start = Math.max(0, i - window + 1);
+    const slice = rawRs.slice(start, i + 1);
+    const mean = slice.reduce((a, b) => a + b, 0) / slice.length;
+    const variance = slice.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / slice.length;
+    const std = Math.sqrt(variance) || 1e-4;
+
+    const zScore = (rawRs[i] - mean) / std;
+    rsRatio.push(100 + zScore * scaleFactor);
   }
 
-  // 3. JdK RS-Momentum = (RS-Ratio / WMA(RS-Ratio, momentumPeriod)) * 100
-  const rsRatioWMA = calculateWMA(rsRatio, momentumPeriod);
+  // 3. Rate of Change (ROC) của RS-Ratio
+  const roc: number[] = [0];
+  for (let i = 1; i < rsRatio.length; i++) {
+    const prev = rsRatio[i - 1] || 100;
+    roc.push(((rsRatio[i] / prev) - 1) * 100);
+  }
+
+  // 4. JdK RS-Momentum = Normalized ROC quanh 100
+  const rsMomentum: number[] = [];
+  for (let i = 0; i < roc.length; i++) {
+    const start = Math.max(0, i - window + 1);
+    const slice = roc.slice(start, i + 1);
+    const mean = slice.reduce((a, b) => a + b, 0) / slice.length;
+    const variance = slice.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / slice.length;
+    const std = Math.sqrt(variance) || 1e-4;
+
+    const zScore = (roc[i] - mean) / std;
+    rsMomentum.push(100 + zScore * scaleFactor);
+  }
+
   const fullRRGPoints: RRGPoint[] = [];
-
-  for (let i = 0; i < rawRs.length; i++) {
-    const rw = rsRatioWMA[i] || 0.0001;
-    const mom = (rsRatio[i] / rw) * 100;
-
+  for (let i = 0; i < validPairs.length; i++) {
     fullRRGPoints.push({
       date: validPairs[i].date,
       rsRatio: Number(rsRatio[i].toFixed(2)),
-      rsMomentum: Number(mom.toFixed(2)),
+      rsMomentum: Number(rsMomentum[i].toFixed(2)),
       rawRs: Number(rawRs[i].toFixed(4)),
     });
   }
