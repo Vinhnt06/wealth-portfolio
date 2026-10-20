@@ -284,7 +284,7 @@ export const MarkMinerviniScreener: React.FC = () => {
         return false;
       }
 
-      if (onlyStage2 && !item.isStage2Eligible) {
+      if (onlyStage2 && item.criteriaPassed !== 8) {
         return false;
       }
 
@@ -345,7 +345,7 @@ export const MarkMinerviniScreener: React.FC = () => {
         const totalChg = g.items.reduce((acc, x) => acc + x.changePct, 0);
         g.avgRs = Math.round(totalRs / (g.items.length || 1));
         g.avgChange = Math.round((totalChg / (g.items.length || 1)) * 100) / 100;
-        g.stage2Count = g.items.filter((x) => x.isStage2Eligible).length;
+        g.stage2Count = g.items.filter((x) => x.criteriaPassed === 8).length;
         return g;
       })
       .sort((a, b) => {
@@ -357,7 +357,7 @@ export const MarkMinerviniScreener: React.FC = () => {
   }, [items, sectorSortBy]);
 
   // Summary counts
-  const stage2Count = useMemo(() => items.filter((x) => x.isStage2Eligible).length, [items]);
+  const stage2Count = useMemo(() => items.filter((x) => x.criteriaPassed === 8).length, [items]);
   const leadersCount = useMemo(() => items.filter((x) => x.rsRating >= 90).length, [items]);
   const topSectors = useMemo(() => {
     return sectorGroups.slice(0, 3).map((g) => g.sector);
@@ -778,11 +778,15 @@ export const MarkMinerviniScreener: React.FC = () => {
                                   <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-zinc-800 text-zinc-400">
                                     {stock.exchange}
                                   </span>
-                                  {stock.isStage2Eligible && (
-                                    <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                                      8/8
-                                    </span>
-                                  )}
+                                  <span className={`text-[9px] font-mono font-bold px-1.5 py-0.2 rounded border ${
+                                    stock.criteriaPassed === 8
+                                      ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+                                      : stock.criteriaPassed === 7
+                                      ? 'bg-amber-500/15 text-amber-400 border-amber-500/30'
+                                      : 'bg-zinc-800 text-zinc-400 border-zinc-700'
+                                  }`}>
+                                    {stock.criteriaPassed}/8
+                                  </span>
                                 </div>
                                 <p className="text-[10px] text-zinc-400 truncate max-w-[130px] font-sans">
                                   {stock.name}
@@ -1495,13 +1499,17 @@ export const MarkMinerviniScreener: React.FC = () => {
 
                           {/* Stage 2 Pass / Fail */}
                           <td className="py-3 px-3 text-center">
-                            {item.isStage2Eligible ? (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold">
+                            {item.criteriaPassed === 8 ? (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold shadow-sm">
                                 <CheckCircle className="w-3.5 h-3.5" weight="fill" />
                                 <span>8/8 ĐẠT</span>
                               </span>
+                            ) : item.criteriaPassed === 7 ? (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30 text-[10px] font-bold">
+                                <span>7/8 GẦN ĐẠT</span>
+                              </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-500 border border-zinc-700 text-[10px]">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400 border border-zinc-700 text-[10px] font-mono">
                                 <span>{item.criteriaPassed}/8</span>
                               </span>
                             )}

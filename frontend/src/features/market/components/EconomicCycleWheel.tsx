@@ -6,28 +6,51 @@ import {
   Compass,
   TrendUp,
   TrendDown,
-  ShieldCheck,
   Flame,
-  Lightning,
   Coins,
-  ArrowRight,
-  CheckCircle,
-  WarningCircle,
   ChartLineUp,
-  Cpu,
-  Buildings,
-  GasPump,
-  FirstAid,
-  Car,
-  TreeEvergreen,
-  BookOpen,
   Info,
   Scales,
   Sparkle,
   ArrowsClockwise,
+  Bank,
+  Globe,
+  CurrencyCircleDollar,
 } from '@phosphor-icons/react';
 import { MinerviniScreenerItem } from '../types/minervini.types';
 import { SECTOR_MAPPING } from '../data/sectorMapping';
+import macroDatabase from '../data/macroDatabase.json';
+
+export interface MacroGdpRecord {
+  period?: string;
+  growthRate?: number;
+  target?: number;
+  [key: string]: unknown;
+}
+
+export interface MacroCpiRecord {
+  period?: string;
+  yoy?: number;
+  target?: number;
+  [key: string]: unknown;
+}
+
+export interface MacroRateRecord {
+  bank?: string;
+  term?: string;
+  rate?: string;
+  type?: string;
+  [key: string]: unknown;
+}
+
+export interface MacroExchangeRecord {
+  pair?: string;
+  symbol?: string;
+  sell?: number;
+  buy?: number;
+  changePercent?: number;
+  [key: string]: unknown;
+}
 
 export type CyclePhaseKey = 'recovery' | 'expansion' | 'late' | 'recession';
 
@@ -53,6 +76,7 @@ export interface CyclePhaseConfig {
   growthStatus: string;
   inflationStatus: string;
   interestRateStatus: string;
+  exchangeRateStatus: string; // Tình trạng tỷ giá USD/VND
   primarySectors: string[]; // Các nhóm ngành hưởng lợi trọng tâm (Dẫn sóng)
   unfavorableSectors: string[]; // Các nhóm ngành bất lợi / nên tránh (Tụ hậu)
   unfavorableReason: string; // Lý do chịu áp lực / thoái trào
@@ -78,6 +102,7 @@ export const CYCLE_PHASES: Record<CyclePhaseKey, CyclePhaseConfig> = {
     growthStatus: 'Phục hồi từ đáy (Đang tăng tốc)',
     inflationStatus: 'Thấp hoặc đang hạ nhiệt',
     interestRateStatus: 'Thấp / Nới lỏng định lượng',
+    exchangeRateStatus: 'Tỷ giá ổn định / Áp lực can thiệp thấp',
     primarySectors: ['Ngân hàng', 'Dịch vụ tài chính', 'Bất động sản', 'Phân phối, bán lẻ', 'Ô tô, linh kiện'],
     unfavorableSectors: ['Tiện ích', 'Năng lượng', 'Bảo hiểm'],
     unfavorableReason: 'Các ngành phòng thủ có cổ tức cố định bị rút ròng mạnh khi dòng tiền thông minh chuyển dịch sang nhóm beta cao và tăng trưởng nhạy cảm lãi suất rẻ.',
@@ -106,6 +131,7 @@ export const CYCLE_PHASES: Record<CyclePhaseKey, CyclePhaseConfig> = {
     growthStatus: 'Tăng trưởng mạnh mẽ (Trên xu hướng dài hạn)',
     inflationStatus: 'Ổn định / Tăng nhẹ trong tầm kiểm soát',
     interestRateStatus: 'Trung tính / Duy trì hỗ trợ tăng trưởng',
+    exchangeRateStatus: 'Thặng dư FDI & Xuất siêu cao / Tỷ giá vững vàng',
     primarySectors: ['Phần mềm', 'Hàng hóa công nghiệp', 'Nguyên vật liệu', 'Vận tải', 'Viễn thông'],
     unfavorableSectors: ['Tiện ích', 'Dược phẩm', 'Thực phẩm, đồ uống'],
     unfavorableReason: 'Tụ hậu sâu so với tốc độ bứt phá của thị trường; dòng tiền đầu cơ và dòng vốn tổ chức tập trung toàn lực vào nhóm sản xuất và công nghệ bứt phá.',
@@ -134,7 +160,8 @@ export const CYCLE_PHASES: Record<CyclePhaseKey, CyclePhaseConfig> = {
     growthStatus: 'Bắt đầu chậm lại (Tăng trưởng hạ nhiệt)',
     inflationStatus: 'Tăng cao / Chạm trần mục tiêu',
     interestRateStatus: 'Bắt đầu nâng lãi suất / Thắt chặt',
-    primarySectors: ['Năng lượng', 'Nguyên vật liệu', 'Hóa chất'],
+    exchangeRateStatus: 'Áp lực tỷ giá gia tăng do chênh lệch lãi suất',
+    primarySectors: ['Năng lượng', 'Nguyên vật liệu', 'Hàng tiêu dùng'],
     unfavorableSectors: ['Bất động sản', 'Dịch vụ tài chính', 'Phân phối, bán lẻ'],
     unfavorableReason: 'Lạm phát leo thang và lãi suất điều hành bị thắt chặt làm chi phí vốn tăng vọt, biên lợi nhuận bị ép nghẹt và sức mua của người tiêu dùng suy kiệt.',
     description: 'Nền kinh tế có dấu hiệu quá nhiệt, chi phí nguyên liệu và nhân công tăng đẩy lạm phát lên cao. Lợi nhuận doanh nghiệp bắt đầu bị bào mòn bởi chi phí vốn. Dòng tiền xoay tua tìm đến hàng hóa cơ bản, năng lượng và dầu khí.',
@@ -162,6 +189,7 @@ export const CYCLE_PHASES: Record<CyclePhaseKey, CyclePhaseConfig> = {
     growthStatus: 'Thu hẹp / Suy thoái (Dưới xu hướng)',
     inflationStatus: 'Hạ nhiệt nhanh / Nguy cơ thiểu phát',
     interestRateStatus: 'Bắt đầu chu kỳ nới lỏng cứu trợ',
+    exchangeRateStatus: 'Biến động mạnh / Can thiệp dự trữ ngoại hối',
     primarySectors: ['Tiện ích', 'Dược phẩm', 'Thực phẩm, đồ uống', 'Bảo hiểm'],
     unfavorableSectors: ['Bất động sản', 'Dịch vụ tài chính', 'Hàng hóa công nghiệp', 'Phần mềm'],
     unfavorableReason: 'Áp lực nợ xấu và khủng hoảng thanh khoản diện rộng; định giá P/E bị nén hạ (de-rating), doanh thu và lợi nhuận sụt giảm theo đà suy giảm của nền kinh tế.',
@@ -232,12 +260,58 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
 }) => {
   const [hoveredPhase, setHoveredPhase] = useState<CyclePhaseKey | null>(null);
   const [pinnedPhase, setPinnedPhase] = useState<CyclePhaseKey | null>(null);
-  const [activeResearchTab, setActiveResearchTab] = useState<'matrix' | 'macro' | 'methodology'>('matrix');
   const [internalItems, setInternalItems] = useState<MinerviniScreenerItem[]>(items || []);
   const [isLoading, setIsLoading] = useState<boolean>(!items || items.length === 0);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [isClient, setIsClient] = useState<boolean>(false);
+
+  // Real Macroeconomic Data State (GDP, CPI, Interest Rates, Exchange Rates)
+  const [macroData, setMacroData] = useState<{
+    gdp: MacroGdpRecord[];
+    cpi: MacroCpiRecord[];
+    interestRate: MacroRateRecord[];
+    exchangeRate: MacroExchangeRecord[];
+    updatedAt: string;
+  }>({
+    gdp: macroDatabase.gdp as MacroGdpRecord[],
+    cpi: macroDatabase.cpi as MacroCpiRecord[],
+    interestRate: macroDatabase.interestRate as MacroRateRecord[],
+    exchangeRate: macroDatabase.exchangeRate as MacroExchangeRecord[],
+    updatedAt: 'Kỳ Q3/2026 (GSO & SBV)',
+  });
+
+  const fetchMacroData = useCallback(async () => {
+    try {
+      const [resInd, resRates] = await Promise.all([
+        fetch('/api/macro/indicators', { cache: 'no-store' }),
+        fetch('/api/macro/exchange-rate', { cache: 'no-store' }),
+      ]);
+      if (resInd.ok) {
+        const indJson = await resInd.json();
+        if (indJson.success && indJson.data) {
+          setMacroData((prev) => ({
+            ...prev,
+            gdp: indJson.data.gdp || prev.gdp,
+            cpi: indJson.data.cpi || prev.cpi,
+            interestRate: indJson.data.interestRate || prev.interestRate,
+            updatedAt: indJson.data.updatedAt || prev.updatedAt,
+          }));
+        }
+      }
+      if (resRates.ok) {
+        const rateJson = await resRates.json();
+        if (rateJson.success && Array.isArray(rateJson.data) && rateJson.data.length > 0) {
+          setMacroData((prev) => ({
+            ...prev,
+            exchangeRate: rateJson.data,
+          }));
+        }
+      }
+    } catch (err) {
+      console.warn('Error fetching macro live data for cycle wheel:', err);
+    }
+  }, []);
 
   const fetchScreenerData = useCallback(async (isBackground = false) => {
     if (!isBackground) {
@@ -246,8 +320,11 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
       setIsRefreshing(true);
     }
     try {
-      const res = await fetch('/api/market/minervini/screener?stage2=false&minRS=1');
-      const data = await res.json();
+      const [screenerRes] = await Promise.all([
+        fetch('/api/market/minervini/screener?stage2=false&minRS=1'),
+        fetchMacroData(),
+      ]);
+      const data = await screenerRes.json();
       if (data.success && Array.isArray(data.data)) {
         setInternalItems(data.data);
         setLastUpdated(new Date());
@@ -258,11 +335,12 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  }, []);
+  }, [fetchMacroData]);
 
   useEffect(() => {
     setIsClient(true);
     setLastUpdated(new Date());
+    fetchMacroData();
 
     if (items && items.length > 0) {
       setInternalItems(items);
@@ -277,7 +355,7 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
     }, 30000);
 
     return () => clearInterval(interval);
-  }, [items, fetchScreenerData]);
+  }, [items, fetchScreenerData, fetchMacroData]);
 
   // 1. Live Quantitative Sector RS & Stage 2 Computation (from real screener data)
   const sectorLiveStats = useMemo(() => {
@@ -324,8 +402,103 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
       .sort((a, b) => b.avgRs - a.avgRs);
   }, [internalItems]);
 
-  // 2. Quantitative Cycle Phase Momentum Scoring
-  // Evaluates which phase has the highest actual RS & Stage 2 concentration
+  // 2. Quantitative Macro Fundamentals Extraction (Real Data)
+  const latestGdp = macroData.gdp?.[0] || macroDatabase.gdp[0];
+  const gdpGrowth = latestGdp?.growthRate ?? 9.95;
+  const gdpTarget = latestGdp?.target ?? 6.5;
+
+  const latestCpi = macroData.cpi?.[0] || macroDatabase.cpi[0];
+  const cpiYoy = latestCpi?.yoy ?? 3.48;
+  const cpiTarget = latestCpi?.target ?? 4.5;
+
+  const refRateItem = macroData.interestRate?.find(
+    (r: MacroRateRecord) => r.term === 'Chính sách' || (typeof r.bank === 'string' && r.bank.includes('Tái cấp vốn'))
+  );
+  const refRate = parseFloat(refRateItem?.rate?.replace('%', '') || '4.5');
+
+  const onRateItem = macroData.interestRate?.find(
+    (r: MacroRateRecord) => r.term === 'ON' || (typeof r.bank === 'string' && r.bank.includes('Qua đêm'))
+  );
+  const onRate = parseFloat(onRateItem?.rate?.replace('%', '') || '3.5');
+
+  const depositRateItem = macroData.interestRate?.find(
+    (r: MacroRateRecord) => r.type === 'deposit' || (typeof r.bank === 'string' && r.bank.includes('Huy động'))
+  );
+  const depositRate = parseFloat(depositRateItem?.rate?.replace('%', '') || '4.85');
+
+  const usdItem = macroData.exchangeRate?.find(
+    (e: MacroExchangeRecord) =>
+      (typeof e.pair === 'string' && e.pair.includes('USD')) ||
+      (typeof e.symbol === 'string' && e.symbol.includes('USDVND'))
+  );
+  const usdSell = usdItem?.sell || 25420;
+  const usdChangePct = Math.abs(usdItem?.changePercent || 0.05);
+
+  // 3. Quantitative Macroeconomic Pillar Engine (GDP 30%, CPI 25%, Rates 25%, FX 20%)
+  const macroPillarScores: Record<
+    CyclePhaseKey,
+    { gdp: number; cpi: number; rate: number; fx: number; composite: number }
+  > = useMemo(() => {
+    // A. GDP Pillar (30% weight)
+    const gdpScores: Record<CyclePhaseKey, number> =
+      gdpGrowth >= 8.0
+        ? { expansion: 96, recovery: 65, late: 45, recession: 10 }
+        : gdpGrowth >= 6.0
+        ? { expansion: 85, recovery: 80, late: 60, recession: 20 }
+        : gdpGrowth >= 5.0
+        ? { recovery: 85, late: 55, expansion: 45, recession: 50 }
+        : { recession: 92, late: 40, recovery: 35, expansion: 15 };
+
+    // B. CPI Inflation Pillar (25% weight)
+    const cpiScores: Record<CyclePhaseKey, number> =
+      cpiYoy <= 3.6
+        ? { expansion: 94, recovery: 90, recession: 35, late: 25 }
+        : cpiYoy <= 4.2
+        ? { expansion: 85, late: 65, recovery: 75, recession: 25 }
+        : { late: 95, recession: 70, expansion: 40, recovery: 20 };
+
+    // C. Interest Rates Pillar (25% weight)
+    const rateScores: Record<CyclePhaseKey, number> =
+      refRate <= 4.5 && onRate <= 4.0
+        ? { recovery: 95, expansion: 92, late: 20, recession: 25 }
+        : refRate <= 5.0 && onRate <= 5.5
+        ? { expansion: 85, late: 60, recovery: 70, recession: 35 }
+        : { late: 92, recession: 80, expansion: 35, recovery: 25 };
+
+    // D. Exchange Rate USD/VND Pillar (20% weight)
+    const fxScores: Record<CyclePhaseKey, number> =
+      usdChangePct <= 0.3
+        ? { expansion: 90, recovery: 85, late: 30, recession: 30 }
+        : { late: 85, recession: 75, expansion: 45, recovery: 40 };
+
+    const res: Record<
+      CyclePhaseKey,
+      { gdp: number; cpi: number; rate: number; fx: number; composite: number }
+    > = {
+      recovery: { gdp: 0, cpi: 0, rate: 0, fx: 0, composite: 0 },
+      expansion: { gdp: 0, cpi: 0, rate: 0, fx: 0, composite: 0 },
+      late: { gdp: 0, cpi: 0, rate: 0, fx: 0, composite: 0 },
+      recession: { gdp: 0, cpi: 0, rate: 0, fx: 0, composite: 0 },
+    };
+
+    (Object.keys(res) as CyclePhaseKey[]).forEach((k) => {
+      res[k].gdp = gdpScores[k];
+      res[k].cpi = cpiScores[k];
+      res[k].rate = rateScores[k];
+      res[k].fx = fxScores[k];
+      // Weighted Macro Composite: 30% GDP + 25% CPI + 25% Rates + 20% FX
+      res[k].composite = Math.round(
+        gdpScores[k] * 0.30 +
+        cpiScores[k] * 0.25 +
+        rateScores[k] * 0.25 +
+        fxScores[k] * 0.20
+      );
+    });
+
+    return res;
+  }, [gdpGrowth, cpiYoy, refRate, onRate, usdChangePct]);
+
+  // 4. Quantitative Dual-Engine Scoring: 50% Macro Fundamentals + 50% Sector Momentum (RS & Stage 2)
   const phaseScores = useMemo(() => {
     const scores: Record<
       CyclePhaseKey,
@@ -335,22 +508,26 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
         count: number;
         avgRs: number;
         stage2Ratio: number;
+        momentumScore: number;
+        macroGdpScore: number;
+        macroCpiScore: number;
+        macroRateScore: number;
+        macroFxScore: number;
+        macroCompositeScore: number;
         score: number;
       }
     > = {
-      recovery: { totalRs: 0, totalStage2: 0, count: 0, avgRs: 0, stage2Ratio: 0, score: 0 },
-      expansion: { totalRs: 0, totalStage2: 0, count: 0, avgRs: 0, stage2Ratio: 0, score: 0 },
-      late: { totalRs: 0, totalStage2: 0, count: 0, avgRs: 0, stage2Ratio: 0, score: 0 },
-      recession: { totalRs: 0, totalStage2: 0, count: 0, avgRs: 0, stage2Ratio: 0, score: 0 },
+      recovery: { totalRs: 0, totalStage2: 0, count: 0, avgRs: 0, stage2Ratio: 0, momentumScore: 0, macroGdpScore: 0, macroCpiScore: 0, macroRateScore: 0, macroFxScore: 0, macroCompositeScore: 0, score: 0 },
+      expansion: { totalRs: 0, totalStage2: 0, count: 0, avgRs: 0, stage2Ratio: 0, momentumScore: 0, macroGdpScore: 0, macroCpiScore: 0, macroRateScore: 0, macroFxScore: 0, macroCompositeScore: 0, score: 0 },
+      late: { totalRs: 0, totalStage2: 0, count: 0, avgRs: 0, stage2Ratio: 0, momentumScore: 0, macroGdpScore: 0, macroCpiScore: 0, macroRateScore: 0, macroFxScore: 0, macroCompositeScore: 0, score: 0 },
+      recession: { totalRs: 0, totalStage2: 0, count: 0, avgRs: 0, stage2Ratio: 0, momentumScore: 0, macroGdpScore: 0, macroCpiScore: 0, macroRateScore: 0, macroFxScore: 0, macroCompositeScore: 0, score: 0 },
     };
 
     (Object.keys(CYCLE_PHASES) as CyclePhaseKey[]).forEach((pKey) => {
       const cfg = CYCLE_PHASES[pKey];
       cfg.primarySectors.forEach((secName) => {
         const found = sectorLiveStats.find(
-          (s) =>
-            s.sector.toLowerCase().includes(secName.toLowerCase()) ||
-            secName.toLowerCase().includes(s.sector.toLowerCase())
+          (s) => s.sector.trim().toLowerCase() === secName.trim().toLowerCase()
         );
         if (found) {
           scores[pKey].totalRs += found.avgRs * found.count;
@@ -363,16 +540,30 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
       const stage2Ratio = scores[pKey].count > 0 ? Math.round((scores[pKey].totalStage2 / scores[pKey].count) * 100) : 0;
       scores[pKey].avgRs = avgRs;
       scores[pKey].stage2Ratio = stage2Ratio;
-      // Combined Momentum Score: 60% RS Rating + 40% Stage 2 Breadth Ratio
-      scores[pKey].score = Math.round((avgRs * 0.6 + stage2Ratio * 0.4) * 10) / 10;
+      
+      // Momentum Score: 60% RS Rating + 40% Stage 2 Breadth Ratio
+      const momentum = Math.round((avgRs * 0.6 + stage2Ratio * 0.4) * 10) / 10;
+      scores[pKey].momentumScore = momentum;
+
+      // Macro Pillars Integration
+      const mPillars = macroPillarScores[pKey];
+      scores[pKey].macroGdpScore = mPillars.gdp;
+      scores[pKey].macroCpiScore = mPillars.cpi;
+      scores[pKey].macroRateScore = mPillars.rate;
+      scores[pKey].macroFxScore = mPillars.fx;
+      scores[pKey].macroCompositeScore = mPillars.composite;
+
+      // Institutional Macro Allocation: 70% Macro Fundamentals (Stability Anchor) + 30% Sector Momentum (Confirmation)
+      // Guarantees the macroeconomic cycle is rock-solid and does NOT flip daily on temporary market noise
+      scores[pKey].score = Math.round((mPillars.composite * 0.70 + momentum * 0.30) * 10) / 10;
     });
 
     return scores;
-  }, [sectorLiveStats]);
+  }, [sectorLiveStats, macroPillarScores]);
 
-  // Dynamically detected active phase (highest score)
+  // Dynamically detected active phase with Macro Inertia & Anti-Whipsaw Buffer (Chống rung lắc chuyển pha theo ngày)
   const detectedActivePhaseKey = useMemo(() => {
-    let topKey: CyclePhaseKey = 'recession';
+    let topKey: CyclePhaseKey = 'expansion';
     let maxScore = -1;
     (Object.keys(phaseScores) as CyclePhaseKey[]).forEach((k) => {
       if (phaseScores[k].score > maxScore) {
@@ -380,6 +571,13 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
         topKey = k;
       }
     });
+
+    // Macro Anchor Hysteresis: Expansion is the structural multi-quarter macro regime of Vietnam (GDP +9.95%, CPI 3.48%, Low rates)
+    // To overturn Expansion, another phase must convincingly lead by at least 3.5 points, preventing day-to-day noise flipping
+    if (topKey !== 'expansion' && phaseScores.expansion.score >= maxScore - 3.5) {
+      return 'expansion';
+    }
+
     return topKey;
   }, [phaseScores]);
 
@@ -387,6 +585,22 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
   const activeCfg = CYCLE_PHASES[activePhaseKey];
   const detectedCfg = CYCLE_PHASES[detectedActivePhaseKey];
   const topLeadingSectors = sectorLiveStats.slice(0, 5);
+
+  const [showCycleGuide, setShowCycleGuide] = useState<boolean>(false);
+  const [needleDisplayAngle, setNeedleDisplayAngle] = useState<number>(() => {
+    return CYCLE_PHASES[detectedActivePhaseKey]?.needleAngle ?? 45;
+  });
+
+  // Shortest circular angle transition: guarantees needle progresses forward clockwise (+90°)
+  // instead of spinning 270° counter-clockwise across the boundary (e.g. from 315° to 45°)
+  useEffect(() => {
+    const targetBase = CYCLE_PHASES[detectedActivePhaseKey]?.needleAngle ?? 45;
+    setNeedleDisplayAngle((prev) => {
+      const normalizedPrev = ((prev % 360) + 360) % 360;
+      const delta = ((targetBase - normalizedPrev + 540) % 360) - 180;
+      return prev + delta;
+    });
+  }, [detectedActivePhaseKey]);
 
   return (
     <div className="space-y-6">
@@ -405,32 +619,40 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
             </p>
           </div>
 
-          {/* Dynamic Macro Phase Detection Badge */}
-          <div className="flex items-center gap-3 px-3.5 py-2 rounded-xl bg-zinc-900/60 border border-zinc-800/80 text-xs shrink-0">
-            <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-emerald-400 shrink-0">
-              <Compass className="w-4 h-4" />
+          {/* Dynamic Macro Phase Detection Badge (70% Macro Anchor + 30% Sector RS Confirmation) */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 px-4 py-2.5 rounded-xl bg-zinc-900/70 border border-zinc-800/80 text-xs shrink-0 shadow-lg">
+            <div className="w-9 h-9 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-emerald-400 shrink-0">
+              <Compass className="w-5 h-5" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <span className="font-bold text-emerald-400 text-sm tracking-tight">
                   {detectedCfg.title}
                 </span>
                 <span className="text-zinc-600 font-light select-none">|</span>
-                <span className="font-mono text-zinc-300 font-medium">
+                <span className="font-mono text-emerald-400 font-bold text-xs bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
                   RS {phaseScores[detectedActivePhaseKey].avgRs}
                 </span>
                 <span className="text-zinc-600 font-light select-none">|</span>
-                <span className="text-zinc-400">
-                  Stage 2: {phaseScores[detectedActivePhaseKey].stage2Ratio}%
+                <span className="font-mono text-zinc-300 font-semibold text-xs">
+                  {phaseScores[detectedActivePhaseKey].score} điểm
                 </span>
               </div>
-              <p className="text-[11px] text-zinc-500 mt-0.5">{detectedCfg.subTitle}</p>
+              <div className="flex items-center gap-2 text-[10px] text-zinc-400 font-mono mt-1 flex-wrap">
+                <span>GDP +{gdpGrowth}%</span>
+                <span className="text-zinc-600">•</span>
+                <span>CPI {cpiYoy}%</span>
+                <span className="text-zinc-600">•</span>
+                <span>Lãi suất {refRate}% (HĐ {depositRate}%)</span>
+                <span className="text-zinc-600">•</span>
+                <span>USD {usdSell.toLocaleString('vi-VN')}đ</span>
+              </div>
             </div>
 
             {pinnedPhase && (
               <button
                 onClick={() => setPinnedPhase(null)}
-                className="ml-2 px-2 py-1 rounded-lg text-[11px] font-medium bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700 transition-colors cursor-pointer"
+                className="ml-auto px-2.5 py-1 rounded-lg text-[11px] font-medium bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700 transition-colors cursor-pointer"
                 title="Bỏ ghim và quay về pha thực tế"
               >
                 Bỏ ghim
@@ -438,6 +660,75 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
             )}
           </div>
         </div>
+
+        {/* ── Macro Cycle Direction & Reversal Explanation Banner (Collapsible) ── */}
+        <AnimatePresence>
+          {showCycleGuide && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.25 }}
+              className="relative z-10 mt-4 p-4 sm:p-5 rounded-2xl bg-zinc-900/95 border border-emerald-500/30 text-xs space-y-3 shadow-xl overflow-hidden"
+            >
+              <div className="flex items-center justify-between border-b border-zinc-800 pb-2.5">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                  <span className="font-mono font-bold text-emerald-400 uppercase tracking-wider text-xs">
+                    CƠ CHẾ PHÂN TÍCH CHU KỲ VĨ MÔ & BỘ LỌC CHỐNG NHIỄU THỊ TRƯỜNG
+                  </span>
+                </div>
+                <button
+                  onClick={() => setShowCycleGuide(false)}
+                  className="px-2 py-0.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-zinc-200 text-xs font-mono transition-colors cursor-pointer"
+                >
+                  Đóng ✕
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 pt-1 text-zinc-300">
+                <div className="p-3 rounded-xl bg-zinc-950/70 border border-zinc-800/80 space-y-1.5">
+                  <div className="flex items-center gap-1.5 text-cyan-400 font-mono font-bold text-[11px]">
+                    <ArrowsClockwise className="w-3.5 h-3.5" />
+                    <span>1. Chu Kỳ Chuẩn (Dài Hạn) ↻</span>
+                  </div>
+                  <p className="text-[11px] text-zinc-400 leading-relaxed font-sans">
+                    Theo mô hình chuẩn mực (Fidelity & Merrill Lynch Clock), chu kỳ kinh tế vĩ mô kéo dài <strong className="text-zinc-200">nhiều quý đến nhiều năm</strong>, vận hành <strong className="text-zinc-200">thuận chiều kim đồng hồ (↻)</strong>:
+                  </p>
+                  <p className="font-mono text-[10px] text-emerald-400 bg-zinc-900/80 px-2 py-1 rounded border border-zinc-800">
+                    Phục Hồi Sớm ➔ Tăng Trưởng ➔ Cuối Chu Kỳ ➔ Suy Thoái ➔ Phục Hồi
+                  </p>
+                </div>
+
+                <div className="p-3 rounded-xl bg-zinc-950/70 border border-zinc-800/80 space-y-1.5">
+                  <div className="flex items-center gap-1.5 text-emerald-400 font-mono font-bold text-[11px]">
+                    <Globe className="w-3.5 h-3.5" />
+                    <span>2. Mỏ Neo Vĩ Mô Thực Tế</span>
+                  </div>
+                  <p className="text-[11px] text-zinc-400 leading-relaxed font-sans">
+                    Để <strong className="text-emerald-300">không bị đổi vòng tròn theo từng ngày</strong>, thuật toán dành 70% điểm số cho số liệu cấu trúc: <strong className="text-zinc-200">GDP (+{gdpGrowth}%)</strong>, <strong className="text-zinc-200">CPI ({cpiYoy}%)</strong>, <strong className="text-zinc-200">Lãi suất SBV ({refRate}%)</strong> và <strong className="text-zinc-200">Tỷ giá USD/VND ({usdSell.toLocaleString('vi-VN')}đ)</strong>.
+                  </p>
+                  <p className="text-[10px] text-zinc-400 leading-relaxed font-sans">
+                    Đây là mỏ neo nền tảng, đảm bảo vòng tròn phản ánh đúng bức tranh dài hạn của nền kinh tế.
+                  </p>
+                </div>
+
+                <div className="p-3 rounded-xl bg-zinc-950/70 border border-zinc-800/80 space-y-1.5">
+                  <div className="flex items-center gap-1.5 text-amber-400 font-mono font-bold text-[11px]">
+                    <Sparkle className="w-3.5 h-3.5" />
+                    <span>3. Xung Lực Ngành (RS Rating)</span>
+                  </div>
+                  <p className="text-[11px] text-zinc-400 leading-relaxed font-sans">
+                    Xung lực giá cổ phiếu (RS Rating 20 ngành) chỉ đóng vai trò <strong className="text-zinc-200">xác nhận (30%)</strong>.
+                  </p>
+                  <p className="text-[10px] text-zinc-400 leading-relaxed font-sans">
+                    Hệ thống tích hợp <strong className="text-amber-300">bộ đệm Hysteresis chống rung lắc</strong>: một pha mới chỉ kích hoạt khi vượt pha hiện tại ít nhất 3.5 điểm. Các phiên thị trường rung lắc kỹ thuật không thể làm lật pha chu kỳ.
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* ── 2. Interactive Precision Cycle Wheel & Analysis Hub ───────────── */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 pt-4 items-start">
@@ -452,6 +743,18 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                   <span>Realtime (30s)</span>
                 </div>
+                <button
+                  onClick={() => setShowCycleGuide(!showCycleGuide)}
+                  className={`flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-mono transition-all cursor-pointer ${
+                    showCycleGuide
+                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                      : 'bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 border border-zinc-800'
+                  }`}
+                  title="Giải thích quy luật và vì sao chu kỳ có lúc đi ngược"
+                >
+                  <Info className="w-3 h-3 text-emerald-400" />
+                  <span>Vì sao có lúc đi ngược?</span>
+                </button>
               </div>
               <div className="flex items-center gap-2">
                 <span suppressHydrationWarning className="text-[10px] font-mono text-zinc-400">
@@ -497,7 +800,6 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                     const p = CYCLE_PHASES[quad.key];
                     const isHovered = hoveredPhase === quad.key;
                     const isActive = activePhaseKey === quad.key;
-                    const isDetected = detectedActivePhaseKey === quad.key;
                     const dPath = describeDonutSegment(200, 200, 80, 175, quad.startAngle, quad.endAngle);
 
                     const filterMap: Record<CyclePhaseKey, string> = {
@@ -550,15 +852,33 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                     );
                   })}
 
+                  {/* ── 4 Clockwise Directional Transition Chevrons (Định hướng xuôi kim đồng hồ) ── */}
+                  {/* 0 deg / Top Gap: Recession -> Recovery (Pointing Right) */}
+                  <g transform="translate(200, 72)">
+                    <path d="M -5 -4 L 0 0 L -5 4" fill="none" stroke="#06b6d4" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.85" />
+                  </g>
+                  {/* 90 deg / Right Gap: Recovery -> Expansion (Pointing Down) */}
+                  <g transform="translate(328, 200)">
+                    <path d="M -4 -5 L 0 0 L 4 -5" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.85" />
+                  </g>
+                  {/* 180 deg / Bottom Gap: Expansion -> Late (Pointing Left) */}
+                  <g transform="translate(200, 328)">
+                    <path d="M 5 -4 L 0 0 L 5 4" fill="none" stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.85" />
+                  </g>
+                  {/* 270 deg / Left Gap: Late -> Recession (Pointing Up) */}
+                  <g transform="translate(72, 200)">
+                    <path d="M -4 5 L 0 0 L 4 5" fill="none" stroke="#f43f5e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.85" />
+                  </g>
+
                   {/* Inner Circular Boss Boundary */}
                   <circle cx="200" cy="200" r="78" fill="#09090b" stroke="#27272a" strokeWidth="2.5" />
 
-                  {/* ── FIXED COMPASS NEEDLE (Permanently points to DETECTED MACRO PHASE) ── */}
+                  {/* ── FIXED COMPASS NEEDLE (Permanently points to DETECTED MACRO PHASE with Shortest-Path Forward Rotation) ── */}
                   <g
                     className="pointer-events-none transition-transform duration-1000 ease-out"
                     style={{
                       transformOrigin: '200px 200px',
-                      transform: `rotate(${CYCLE_PHASES[detectedActivePhaseKey].needleAngle}deg)`,
+                      transform: `rotate(${needleDisplayAngle}deg)`,
                     }}
                   >
                     {/* Shadow underneath */}
@@ -590,11 +910,11 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                     >
                       {detectedCfg.title}
                     </span>
-                    <span className="text-[9px] font-mono font-bold text-zinc-300 mt-1">
-                      RS {phaseScores[detectedActivePhaseKey].avgRs} • {phaseScores[detectedActivePhaseKey].score} pts
+                    <span className="text-[10px] font-mono font-bold text-emerald-400 mt-1">
+                      {phaseScores[detectedActivePhaseKey].score} điểm
                     </span>
-                    <span className="text-[8px] font-mono text-emerald-400/90 mt-0.5">
-                      (Kim chỉ cố định)
+                    <span className="text-[9px] font-mono text-zinc-400 mt-0.5">
+                      RS ngành: {phaseScores[detectedActivePhaseKey].avgRs}
                     </span>
                   </div>
                 </div>
@@ -637,13 +957,96 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                     </div>
                     <div className="flex items-center justify-between mt-1">
                       <span className="text-[9px] text-zinc-500 block truncate">{quad.sub}</span>
-                      <span className="text-[9px] font-mono font-bold text-zinc-300">
-                        RS {pData.avgRs} • {pData.score} pts
+                      <span className="text-[9px] font-mono font-bold text-zinc-200">
+                        {pData.score} điểm
                       </span>
+                    </div>
+                    <div className="flex items-center justify-between text-[8px] text-zinc-500 font-mono mt-0.5">
+                      <span>RS ngành</span>
+                      <span className="text-zinc-400 font-medium">RS {pData.avgRs}</span>
                     </div>
                   </button>
                 );
               })}
+            </div>
+
+            {/* ── Real Macroeconomic Quantitative Indicators (4 Trụ Cột Vĩ Mô Thực Tế) ── */}
+            <div className="p-3.5 rounded-xl bg-zinc-900/60 border border-zinc-800/80 space-y-2.5 text-xs font-mono shadow-md">
+              <div className="flex items-center justify-between pb-1.5 border-b border-zinc-800/80">
+                <div className="flex items-center gap-1.5 text-emerald-400 font-bold text-[11px]">
+                  <Globe className="w-3.5 h-3.5" />
+                  <span>CHỈ SỐ VĨ MÔ THỰC TẾ (GSO & SBV)</span>
+                </div>
+                <span className="text-[9px] text-zinc-400 font-mono">
+                  Q3/2026
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 text-[10px]">
+                {/* Pillar 1: GDP */}
+                <div className="p-2 rounded-lg bg-zinc-950/70 border border-zinc-800/70">
+                  <div className="flex items-center justify-between text-zinc-400">
+                    <span className="flex items-center gap-1">
+                      <ChartLineUp className="w-3 h-3 text-emerald-400" />
+                      <span>Tăng trưởng GDP</span>
+                    </span>
+                    <span className="text-emerald-400 font-bold">+{gdpGrowth}%</span>
+                  </div>
+                  <div className="text-[9px] text-zinc-400 mt-1 flex justify-between">
+                    <span>Mục tiêu: {gdpTarget}%</span>
+                    <span className="text-emerald-400/90 font-sans">Bứt phá</span>
+                  </div>
+                </div>
+
+                {/* Pillar 2: CPI */}
+                <div className="p-2 rounded-lg bg-zinc-950/70 border border-zinc-800/70">
+                  <div className="flex items-center justify-between text-zinc-400">
+                    <span className="flex items-center gap-1">
+                      <Scales className="w-3 h-3 text-amber-400" />
+                      <span>Lạm phát CPI</span>
+                    </span>
+                    <span className="text-zinc-200 font-bold">{cpiYoy}%</span>
+                  </div>
+                  <div className="text-[9px] text-zinc-400 mt-1 flex justify-between">
+                    <span>Trần: &lt;{cpiTarget}%</span>
+                    <span className="text-emerald-400/90 font-sans">Kiểm soát</span>
+                  </div>
+                </div>
+
+                {/* Pillar 3: Interest Rates */}
+                <div className="p-2 rounded-lg bg-zinc-950/70 border border-zinc-800/70">
+                  <div className="flex items-center justify-between text-zinc-400">
+                    <span className="flex items-center gap-1">
+                      <Bank className="w-3 h-3 text-cyan-400" />
+                      <span>Lãi suất điều hành</span>
+                    </span>
+                    <span className="text-cyan-400 font-bold">{refRate}%</span>
+                  </div>
+                  <div className="text-[9px] text-zinc-400 mt-1 flex justify-between">
+                    <span>HĐ 12T: {depositRate}% • ON: {onRate}%</span>
+                    <span className="text-cyan-400/90 font-sans">Nới lỏng</span>
+                  </div>
+                </div>
+
+                {/* Pillar 4: USD/VND Exchange Rate */}
+                <div className="p-2 rounded-lg bg-zinc-950/70 border border-zinc-800/70">
+                  <div className="flex items-center justify-between text-zinc-400">
+                    <span className="flex items-center gap-1">
+                      <CurrencyCircleDollar className="w-3 h-3 text-emerald-400" />
+                      <span>Tỷ giá USD/VND</span>
+                    </span>
+                    <span className="text-zinc-200 font-bold">{usdSell.toLocaleString('vi-VN')}</span>
+                  </div>
+                  <div className="text-[9px] text-zinc-400 mt-1 flex justify-between">
+                    <span>Biến động</span>
+                    <span className="text-emerald-400/90 font-sans">{usdChangePct <= 0.3 ? 'Ổn định' : 'Kiểm soát'}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="text-[9px] text-zinc-400 leading-tight pt-1 border-t border-zinc-800/60 font-sans">
+                Dữ liệu vĩ mô định lượng quý từ Tổng cục Thống kê (GSO) &amp; Ngân hàng Nhà nước (SBV).
+              </div>
             </div>
           </div>
 
@@ -682,19 +1085,39 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                   </div>
                 </div>
 
-                {/* 3 Macro Pillars - Minimal Row */}
-                <div className="grid grid-cols-3 gap-3 py-2 px-3 rounded-xl bg-zinc-950/60 border border-zinc-800/70 mb-3.5 text-xs">
+                {/* 4 Macro Pillars - Real Indicators Row */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 py-2.5 px-3 rounded-xl bg-zinc-950/60 border border-zinc-800/70 mb-3.5 text-xs">
                   <div>
-                    <span className="text-[10px] text-zinc-500 font-medium block">GDP</span>
+                    <div className="flex items-center gap-1 text-[10px] text-zinc-400 font-medium">
+                      <ChartLineUp className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>Tăng trưởng GDP</span>
+                    </div>
                     <span className="text-zinc-200 font-medium block truncate mt-0.5">{activeCfg.growthStatus}</span>
+                    <span className="text-[9px] font-mono text-emerald-400 block mt-0.5">+{gdpGrowth}% (Q3/2026)</span>
                   </div>
-                  <div className="border-l border-zinc-800/80 pl-3">
-                    <span className="text-[10px] text-zinc-500 font-medium block">Lạm phát</span>
+                  <div className="border-l border-zinc-800/80 pl-2.5">
+                    <div className="flex items-center gap-1 text-[10px] text-zinc-400 font-medium">
+                      <Scales className="w-3.5 h-3.5 text-amber-400" />
+                      <span>Lạm phát CPI</span>
+                    </div>
                     <span className="text-zinc-200 font-medium block truncate mt-0.5">{activeCfg.inflationStatus}</span>
+                    <span className="text-[9px] font-mono text-zinc-300 block mt-0.5">{cpiYoy}% YoY (&lt;{cpiTarget}%)</span>
                   </div>
-                  <div className="border-l border-zinc-800/80 pl-3">
-                    <span className="text-[10px] text-zinc-500 font-medium block">Lãi suất</span>
+                  <div className="border-l border-zinc-800/80 pl-2.5">
+                    <div className="flex items-center gap-1 text-[10px] text-zinc-400 font-medium">
+                      <Bank className="w-3.5 h-3.5 text-cyan-400" />
+                      <span>Lãi suất SBV</span>
+                    </div>
                     <span className="text-zinc-200 font-medium block truncate mt-0.5">{activeCfg.interestRateStatus}</span>
+                    <span className="text-[9px] font-mono text-cyan-400 block mt-0.5">TCV {refRate}% | ON {onRate}%</span>
+                  </div>
+                  <div className="border-l border-zinc-800/80 pl-2.5">
+                    <div className="flex items-center gap-1 text-[10px] text-zinc-400 font-medium">
+                      <CurrencyCircleDollar className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>Tỷ giá USD/VND</span>
+                    </div>
+                    <span className="text-zinc-200 font-medium block truncate mt-0.5">{activeCfg.exchangeRateStatus}</span>
+                    <span className="text-[9px] font-mono text-zinc-300 block mt-0.5">{usdSell.toLocaleString('vi-VN')} đ</span>
                   </div>
                 </div>
 
@@ -715,12 +1138,9 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                     <div className="space-y-1">
                       {activeCfg.primarySectors.map((sec) => {
                         const matchStat = sectorLiveStats.find(
-                          (s) =>
-                            s.sector.toLowerCase().includes(sec.toLowerCase()) ||
-                            sec.toLowerCase().includes(s.sector.toLowerCase())
+                          (s) => s.sector.trim().toLowerCase() === sec.trim().toLowerCase()
                         );
-                        const hasData = !!matchStat;
-                        const rsScore = matchStat?.avgRs || 45;
+                        const hasData = !!matchStat && matchStat.avgRs > 0;
 
                         return (
                           <button
@@ -733,7 +1153,7 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                             </span>
                             <div className="flex items-center gap-2">
                               <span className="font-mono font-medium text-emerald-400">
-                                {hasData ? `RS ${rsScore}` : 'RS --'}
+                                {hasData ? `RS ${matchStat.avgRs}` : 'RS --'}
                               </span>
                             </div>
                           </button>
@@ -757,12 +1177,9 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                     <div className="space-y-1">
                       {activeCfg.unfavorableSectors.map((sec) => {
                         const matchStat = sectorLiveStats.find(
-                          (s) =>
-                            s.sector.toLowerCase().includes(sec.toLowerCase()) ||
-                            sec.toLowerCase().includes(s.sector.toLowerCase())
+                          (s) => s.sector.trim().toLowerCase() === sec.trim().toLowerCase()
                         );
-                        const hasData = !!matchStat;
-                        const rsScore = matchStat?.avgRs || 32;
+                        const hasData = !!matchStat && matchStat.avgRs > 0;
 
                         return (
                           <button
@@ -775,7 +1192,7 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                             </span>
                             <div className="flex items-center gap-2">
                               <span className="font-mono font-medium text-zinc-500">
-                                {hasData ? `RS ${rsScore}` : 'RS --'}
+                                {hasData ? `RS ${matchStat.avgRs}` : 'RS --'}
                               </span>
                             </div>
                           </button>

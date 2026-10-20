@@ -79,12 +79,53 @@ async function getLiveSsiTicks(): Promise<Map<string, LiveTick>> {
 function enrichWithLiveTicks(items: MinerviniScreenerItem[], liveMap: Map<string, LiveTick>): MinerviniScreenerItem[] {
   return items.map((item) => {
     const live = liveMap.get(item.symbol.toUpperCase());
-    if (!live) return item;
+    const basePassed = typeof item.criteriaPassed === 'number' ? item.criteriaPassed : (typeof item.score === 'number' ? item.score : 0);
+
+    if (!live || !live.price || live.price <= 0) {
+      // Ensure existing items have correct isStage2Eligible flag
+      const isStage2Eligible = basePassed === 8;
+      const isStage2 = basePassed >= 7;
+      return {
+        ...item,
+        score: basePassed,
+        criteriaPassed: basePassed,
+        isStage2Eligible,
+        isStage2,
+      };
+    }
+
+    const livePriceK = live.price / 1000;
+    const oldPriceK = (item.price || 0) / 1000;
+    let criteriaPassed = basePassed;
+
+    // Dynamically re-evaluate price-sensitive criteria with live price
+    if (item.sma50 && item.sma150 && item.sma200 && oldPriceK > 0) {
+      const oldC1 = oldPriceK > item.sma150 && oldPriceK > item.sma200;
+      const liveC1 = livePriceK > item.sma150 && livePriceK > item.sma200;
+      if (oldC1 !== liveC1) {
+        criteriaPassed += liveC1 ? 1 : -1;
+      }
+
+      const oldC5 = oldPriceK > item.sma50;
+      const liveC5 = livePriceK > item.sma50;
+      if (oldC5 !== liveC5) {
+        criteriaPassed += liveC5 ? 1 : -1;
+      }
+      criteriaPassed = Math.max(0, Math.min(8, criteriaPassed));
+    }
+
+    const isStage2Eligible = criteriaPassed === 8;
+    const isStage2 = criteriaPassed >= 7;
+
     return {
       ...item,
       price: live.price > 0 ? live.price : item.price,
       changePct: live.changePct !== undefined && live.changePct !== null ? live.changePct : item.changePct,
       volume: live.volume > 0 ? live.volume : item.volume,
+      criteriaPassed,
+      score: criteriaPassed,
+      isStage2Eligible,
+      isStage2,
     };
   });
 }
@@ -314,14 +355,19 @@ const OUTSTANDING_SHARES_M: Record<string, number> = {
           const vol = d.v[len - 1] || 0;
 
           // SMA calculations
-          const calcSMA = (period: number) => {
-            const slice = d.c.slice(Math.max(0, len - period));
-            return slice.reduce((a: number, b: number) => a + b, 0) / slice.length;
+          const calcSMA = (period: number, endIdx: number = len - 1) => {
+            if (endIdx < period - 1) return 0;
+            const slice = d.c.slice(endIdx - period + 1, endIdx + 1);
+            return slice.reduce((a: number, b: number) => a + b, 0) / period;
           };
 
           const sma50 = calcSMA(50);
           const sma150 = calcSMA(Math.min(150, len));
           const sma200 = calcSMA(Math.min(200, len));
+
+          // SMA200 slope check (22 sessions ago ~ 1 month)
+          const sma200Past = len >= 222 ? calcSMA(200, len - 22) : sma200 * 0.99;
+          const sma200SlopeUp = sma200 >= sma200Past;
 
           const lookback = Math.min(250, len);
           const high52W = Math.max(...d.h.slice(len - lookback));
@@ -331,19 +377,19 @@ const OUTSTANDING_SHARES_M: Record<string, number> = {
           const distLow = low52W > 0 ? ((price - low52W) / low52W) * 100 : 0;
 
           // RS Rating calculation
-          const pQ1 = len > 63 ? (price - d.c[len - 63]) / d.c[len - 63] : 0;
-          const pQ2 = len > 126 ? (price - d.c[len - 126]) / d.c[len - 126] : 0;
-          const pQ3 = len > 189 ? (price - d.c[len - 189]) / d.c[len - 189] : 0;
-          const pQ4 = len > 240 ? (price - d.c[len - 240]) / d.c[len - 240] : 0;
+          const pQ1 = len > 63 ? (price - d.c[len - 1 - 63]) / d.c[len - 1 - 63] : 0;
+          const pQ2 = len > 126 ? (price - d.c[len - 1 - 126]) / d.c[len - 1 - 126] : 0;
+          const pQ3 = len > 189 ? (price - d.c[len - 1 - 189]) / d.c[len - 1 - 189] : 0;
+          const pQ4 = len > 240 ? (price - d.c[len - 1 - Math.min(250, len - 1)]) / d.c[len - 1 - Math.min(250, len - 1)] : 0;
           const rsRaw = 0.4 * pQ1 + 0.2 * pQ2 + 0.2 * pQ3 + 0.2 * pQ4;
-          let rsRating = Math.min(99, Math.max(1, Math.round(50 + rsRaw * 80)));
-          if (distHigh >= -10 && distLow >= 40) rsRating = Math.max(78, rsRating);
+          let rsRating = Math.min(99, Math.max(1, Math.round(50 + rsRaw * 75)));
+          if (distHigh >= -10 && distLow >= 50) rsRating = Math.max(80, rsRating);
 
           // Criteria checks
           let score = 0;
           if (price > sma150 && price > sma200) score++;
           if (sma150 > sma200) score++;
-          if (sma200 > 0) score++; // Slope check
+          if (sma200SlopeUp) score++; // Strict slope check
           if (sma50 > sma150 && sma50 > sma200) score++;
           if (price > sma50) score++;
           if (distLow >= 30) score++;
@@ -351,8 +397,9 @@ const OUTSTANDING_SHARES_M: Record<string, number> = {
           if (rsRating >= 70) score++;
 
           const isStage2 = score >= 7;
+          const isStage2Eligible = score === 8;
           if (!customSymbolsParam) {
-            if (onlyStage2 && !isStage2) return;
+            if (onlyStage2 && !isStage2Eligible) return;
             if (rsRating < minRS) return;
             if (vol < minVol && vol > 0) return;
             const mktCapT = getRealMarketCapT(sym, price);

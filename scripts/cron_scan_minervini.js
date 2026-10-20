@@ -133,14 +133,19 @@ async function runMinerviniScan() {
           const vol = d.v[len - 1] || 0;
 
           // SMA calculations
-          const calcSMA = (period) => {
-            const slice = d.c.slice(Math.max(0, len - period));
-            return slice.reduce((a, b) => a + b, 0) / slice.length;
+          const calcSMA = (period, endIdx = len - 1) => {
+            if (endIdx < period - 1) return 0;
+            const slice = d.c.slice(endIdx - period + 1, endIdx + 1);
+            return slice.reduce((a, b) => a + b, 0) / period;
           };
 
           const sma50 = calcSMA(50);
           const sma150 = calcSMA(Math.min(150, len));
           const sma200 = calcSMA(Math.min(200, len));
+
+          // SMA200 slope check (22 sessions ago ~ 1 month)
+          const sma200Past = len >= 222 ? calcSMA(200, len - 22) : sma200 * 0.99;
+          const sma200SlopeUp = sma200 >= sma200Past;
 
           const lookback = Math.min(250, len);
           const high52W = Math.max(...d.h.slice(len - lookback));
@@ -149,20 +154,20 @@ async function runMinerviniScan() {
           const distHigh = high52W > 0 ? ((price - high52W) / high52W) * 100 : 0;
           const distLow = low52W > 0 ? ((price - low52W) / low52W) * 100 : 0;
 
-          // RS Rating calculation (1-99)
-          const pQ1 = len > 63 ? (price - d.c[len - 63]) / d.c[len - 63] : 0;
-          const pQ2 = len > 126 ? (price - d.c[len - 126]) / d.c[len - 126] : 0;
-          const pQ3 = len > 189 ? (price - d.c[len - 189]) / d.c[len - 189] : 0;
-          const pQ4 = len > 240 ? (price - d.c[len - 240]) / d.c[len - 240] : 0;
+          // RS Rating calculation (1-99) - matching exact analysis/route.ts
+          const pQ1 = len > 63 ? (price - d.c[len - 1 - 63]) / d.c[len - 1 - 63] : 0;
+          const pQ2 = len > 126 ? (price - d.c[len - 1 - 126]) / d.c[len - 1 - 126] : 0;
+          const pQ3 = len > 189 ? (price - d.c[len - 1 - 189]) / d.c[len - 1 - 189] : 0;
+          const pQ4 = len > 240 ? (price - d.c[len - 1 - Math.min(250, len - 1)]) / d.c[len - 1 - Math.min(250, len - 1)] : 0;
           const rsRaw = 0.4 * pQ1 + 0.2 * pQ2 + 0.2 * pQ3 + 0.2 * pQ4;
-          let rsRating = Math.min(99, Math.max(1, Math.round(50 + rsRaw * 80)));
-          if (distHigh >= -10 && distLow >= 40) rsRating = Math.max(78, rsRating);
+          let rsRating = Math.min(99, Math.max(1, Math.round(50 + rsRaw * 75)));
+          if (distHigh >= -10 && distLow >= 50) rsRating = Math.max(80, rsRating);
 
           // Criteria checks (Trend Template 8/8)
           let score = 0;
           if (price > sma150 && price > sma200) score++;
           if (sma150 > sma200) score++;
-          if (sma200 > 0) score++;
+          if (sma200SlopeUp) score++;
           if (sma50 > sma150 && sma50 > sma200) score++;
           if (price > sma50) score++;
           if (distLow >= 30) score++;
@@ -170,6 +175,7 @@ async function runMinerviniScan() {
           if (rsRating >= 70) score++;
 
           const isStage2 = score >= 7;
+          const isStage2Eligible = score === 8;
 
           // Relative Volume 20 sessions
           const volSlice = d.v.slice(Math.max(0, len - 20));
@@ -201,7 +207,7 @@ async function runMinerviniScan() {
             rsRating,
             score,
             isStage2,
-            isStage2Eligible: isStage2,
+            isStage2Eligible,
             criteriaPassed: score,
             sma50: Math.round(sma50 * 100) / 100,
             sma150: Math.round(sma150 * 100) / 100,

@@ -40,7 +40,8 @@ export const RelativeRotationGraphCard: React.FC<RelativeRotationGraphCardProps>
       if (!res.ok) {
         throw new Error(`Lỗi tải dữ liệu RRG: HTTP ${res.status}`);
       }
-      const data: RRGDataset = await res.json();
+      const json = await res.json();
+      const data: RRGDataset = json.data || json;
       setDataset(data);
     } catch (err: unknown) {
       console.error('Failed to load RRG data:', err);

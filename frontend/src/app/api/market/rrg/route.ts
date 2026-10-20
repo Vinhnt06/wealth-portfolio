@@ -1,262 +1,247 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import {
-  RRGDataset,
-  RRGSectorData,
   RRG_SECTOR_CONFIGS,
-  getQuadrant,
   calculateRRGSeries,
+  getQuadrant,
+  RRGSectorData,
+  RRGDataset,
 } from '@/features/market/utils/rrgCalculator';
 
+export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-interface CandleData {
-  [timestamp: number]: number;
+interface CandlePoint {
+  date: string;
+  close: number;
 }
 
-// In-memory cache
-interface CacheEntry {
-  data: RRGDataset;
+// In-memory cache to guarantee sub-millisecond response on repeated hits
+interface RRGCacheItem {
   timestamp: number;
+  data: RRGDataset;
 }
-const cache = new Map<string, CacheEntry>();
-const CACHE_TTL_MS = 60 * 1000; // 60s cache
 
-async function fetchOHLC(
-  symbol: string,
-  isIndex: boolean,
-  fromSec: number,
-  toSec: number,
-  resolution: string
-): Promise<CandleData> {
-  const endpoint = isIndex ? 'index' : 'stock';
-  const url = `https://services.entrade.com.vn/chart-api/v2/ohlcs/${endpoint}?from=${fromSec}&to=${toSec}&symbol=${encodeURIComponent(
-    symbol
-  )}&resolution=${resolution}`;
+const cacheStore: Record<string, RRGCacheItem> = {};
+const CACHE_TTL_MS = 60 * 1000; // 60 seconds cache
+
+async function fetchEntradeCandles(symbol: string, isIndex: boolean, resolution: string = '1D'): Promise<CandlePoint[]> {
+  const type = isIndex ? 'index' : 'stock';
+  const now = Math.floor(Date.now() / 1000);
+  // Fetch ~180 days for 1D (~120 sessions) or 2 years for 1W (~104 weeks)
+  const daysBack = resolution === '1W' ? 730 : 180;
+  const from = now - daysBack * 24 * 3600;
 
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 4000);
 
-    const res = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-        Accept: 'application/json',
-      },
-      signal: controller.signal,
-      next: { revalidate: 60 },
-    });
+    const res = await fetch(
+      `https://services.entrade.com.vn/chart-api/v2/ohlcs/${type}?from=${from}&to=${now}&symbol=${encodeURIComponent(
+        symbol
+      )}&resolution=${resolution}`,
+      {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+          Accept: 'application/json',
+        },
+        signal: controller.signal,
+      }
+    );
     clearTimeout(timeout);
 
-    if (!res.ok) return {};
+    if (!res.ok) return [];
+    const json = await res.json();
+    if (!json.t || !json.c || !Array.isArray(json.t)) return [];
 
-    const data = await res.json();
-    if (!data.t || !Array.isArray(data.t) || !data.c || !Array.isArray(data.c)) {
-      return {};
-    }
-
-    const candleMap: CandleData = {};
-    for (let i = 0; i < data.t.length; i++) {
-      candleMap[data.t[i]] = data.c[i];
-    }
-    return candleMap;
+    return json.t.map((t: number, i: number) => ({
+      date: new Date(t * 1000).toISOString().split('T')[0],
+      close: json.c[i],
+    }));
   } catch {
-    return {};
+    return [];
   }
 }
 
-export async function GET(request: NextRequest) {
+export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const timeframe = searchParams.get('timeframe') || '1D'; // '1D' or '1W'
-  const tailLength = parseInt(searchParams.get('tail') || '4', 10);
-  const benchmark = searchParams.get('benchmark') || 'VNINDEX';
+  const timeframe = (searchParams.get('timeframe') || '1D').toUpperCase() === '1W' ? '1W' : '1D';
+  const tailLength = Math.max(2, Math.min(16, parseInt(searchParams.get('tail') || '4', 10)));
+  const benchmark = (searchParams.get('benchmark') || 'VNINDEX').toUpperCase();
 
   const cacheKey = `${timeframe}_${tailLength}_${benchmark}`;
-  const cached = cache.get(cacheKey);
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
-    return NextResponse.json(cached.data);
+  const now = Date.now();
+
+  if (cacheStore[cacheKey] && now - cacheStore[cacheKey].timestamp < CACHE_TTL_MS) {
+    return NextResponse.json({
+      success: true,
+      data: cacheStore[cacheKey].data,
+      source: 'cache',
+    });
   }
 
-  const nowSec = Math.floor(Date.now() / 1000);
-  // Fetch 160 days for daily, 450 days for weekly to cover lookback window
-  const daysBack = timeframe === '1W' ? 450 : 160;
-  const fromSec = nowSec - daysBack * 86400;
+  try {
+    // 1. Fetch Benchmark (VNINDEX) candles
+    const benchCandles = await fetchEntradeCandles(benchmark, true, timeframe);
+    if (!benchCandles.length) {
+      return NextResponse.json(
+        { success: false, error: 'Không thể tải dữ liệu nến chuẩn cho ' + benchmark },
+        { status: 502 }
+      );
+    }
 
-  // Extract all unique symbols from 16 sectors (take up to top 6 representative tickers per sector)
-  const allSymbols = new Set<string>();
-  RRG_SECTOR_CONFIGS.forEach((sector) => {
-    sector.symbols.slice(0, 6).forEach((sym) => allSymbols.add(sym));
-  });
-
-  const symbolList = Array.from(allSymbols);
-
-  // Fetch benchmark & stocks concurrently
-  const [benchCandles, ...stockCandlesList] = await Promise.all([
-    fetchOHLC(benchmark, true, fromSec, nowSec, timeframe),
-    ...symbolList.map((sym) => fetchOHLC(sym, false, fromSec, nowSec, timeframe)),
-  ]);
-
-  const stockMap = new Map<string, CandleData>();
-  symbolList.forEach((sym, idx) => {
-    stockMap.set(sym, stockCandlesList[idx]);
-  });
-
-  const benchTimestamps = Object.keys(benchCandles)
-    .map(Number)
-    .sort((a, b) => a - b);
-
-  if (benchTimestamps.length < 25) {
-    return NextResponse.json(
-      { error: 'Insufficient benchmark data from exchange' },
-      { status: 502 }
-    );
-  }
-
-  const formatDate = (ts: number): string => {
-    const d = new Date(ts * 1000);
-    return d.toISOString().split('T')[0];
-  };
-
-  const baseTs = benchTimestamps[0];
-  const benchPriceMap = new Map<number, number>();
-  benchTimestamps.forEach((ts) => benchPriceMap.set(ts, benchCandles[ts]));
-
-  const benchmarkPrices = benchTimestamps.map((ts) => ({
-    date: formatDate(ts),
-    close: benchCandles[ts],
-  }));
-
-  const sectors: RRGSectorData[] = [];
-  const summary = {
-    leading: 0,
-    weakening: 0,
-    lagging: 0,
-    improving: 0,
-    total: 0,
-  };
-
-  for (const config of RRG_SECTOR_CONFIGS) {
-    const targetSymbols = config.symbols.slice(0, 6);
-    const validSymbols = targetSymbols.filter((sym) => {
-      const cMap = stockMap.get(sym);
-      return cMap && Object.keys(cMap).length > 15;
+    // 2. Collect unique representative symbols for the 16 sectors (top 3 per sector)
+    const symbolsToFetch = new Set<string>();
+    RRG_SECTOR_CONFIGS.forEach((sector) => {
+      sector.symbols.slice(0, 3).forEach((s) => symbolsToFetch.add(s));
     });
 
-    if (validSymbols.length === 0) continue;
+    const symbolArray = Array.from(symbolsToFetch);
 
-    // Chuẩn hóa Sector Price Index (Equal-Weighted Price Index chuẩn hóa về 100 tại ngày gốc)
-    // Phương pháp này loại bỏ hoàn toàn sai số trôi dạt (compounding drift) và miễn nhiễm với nến thiếu
-    const symbolBasePrices = validSymbols.map((sym) => {
-      const cMap = stockMap.get(sym)!;
-      // Tìm giá tại baseTs hoặc giá sớm nhất khả dụng
-      if (cMap[baseTs] && cMap[baseTs] > 0) return cMap[baseTs];
-      const sortedKeys = Object.keys(cMap).map(Number).sort((a, b) => a - b);
-      return sortedKeys.length > 0 ? cMap[sortedKeys[0]] : 1;
-    });
-
-    const sectorPrices: { date: string; close: number }[] = [];
-
-    for (const ts of benchTimestamps) {
-      let sumNorm = 0;
-      let validCount = 0;
-
-      validSymbols.forEach((sym, sIdx) => {
-        const cMap = stockMap.get(sym);
-        if (cMap) {
-          const p = cMap[ts];
-          const p0 = symbolBasePrices[sIdx];
-          if (p && p > 0 && p0 && p0 > 0) {
-            sumNorm += (p / p0) * 100;
-            validCount++;
-          }
+    // Fetch stock candles in batches
+    const symbolCandleMap = new Map<string, CandlePoint[]>();
+    const batchSize = 10;
+    for (let i = 0; i < symbolArray.length; i += batchSize) {
+      const batch = symbolArray.slice(i, i + batchSize);
+      const batchPromises = batch.map(async (sym) => {
+        const candles = await fetchEntradeCandles(sym, false, timeframe);
+        return { sym, candles };
+      });
+      const batchRes = await Promise.all(batchPromises);
+      batchRes.forEach(({ sym, candles }) => {
+        if (candles.length) {
+          symbolCandleMap.set(sym, candles);
         }
       });
+    }
 
-      if (validCount > 0) {
-        sectorPrices.push({
-          date: formatDate(ts),
-          close: Number((sumNorm / validCount).toFixed(4)),
-        });
+    // 3. Synthesize sector composite prices
+    const dateList = benchCandles.map((c) => c.date);
+
+    const sectorsData: RRGSectorData[] = [];
+    let leadingCount = 0;
+    let weakeningCount = 0;
+    let laggingCount = 0;
+    let improvingCount = 0;
+
+    for (const config of RRG_SECTOR_CONFIGS) {
+      // Find valid stocks in this sector
+      const validStockCandles = config.symbols
+        .slice(0, 3)
+        .map((s) => symbolCandleMap.get(s))
+        .filter((c): c is CandlePoint[] => !!c && c.length >= 20);
+
+      if (!validStockCandles.length) continue;
+
+      // Map stock close prices by date
+      const stockPriceMaps = validStockCandles.map((candles) => {
+        const map = new Map<string, number>();
+        candles.forEach((c) => map.set(c.date, c.close));
+        return {
+          basePrice: candles[0]?.close || 1,
+          map,
+        };
+      });
+
+      // Construct normalized composite sector price
+      const sectorPrices: CandlePoint[] = [];
+      for (const d of dateList) {
+        let normalizedSum = 0;
+        let count = 0;
+        for (const item of stockPriceMaps) {
+          const price = item.map.get(d);
+          if (price !== undefined && price > 0) {
+            // Normalize relative to base price * 100
+            normalizedSum += (price / item.basePrice) * 100;
+            count++;
+          }
+        }
+        if (count > 0) {
+          sectorPrices.push({
+            date: d,
+            close: normalizedSum / count,
+          });
+        }
       }
+
+      if (sectorPrices.length < 28) continue;
+
+      // Calculate RRG series (points with tail)
+      const points = calculateRRGSeries(sectorPrices, benchCandles, 14, 1.8, tailLength);
+      if (!points.length) continue;
+
+      const currentPoint = points[points.length - 1];
+      const prevPoint = points.length >= 2 ? points[points.length - 2] : currentPoint;
+
+      const quadrant = getQuadrant(currentPoint.rsRatio, currentPoint.rsMomentum);
+      if (quadrant === 'leading') leadingCount++;
+      else if (quadrant === 'weakening') weakeningCount++;
+      else if (quadrant === 'lagging') laggingCount++;
+      else if (quadrant === 'improving') improvingCount++;
+
+      const dx = currentPoint.rsRatio - 100;
+      const dy = currentPoint.rsMomentum - 100;
+      const distanceFromCenter = Number(Math.sqrt(dx * dx + dy * dy).toFixed(2));
+      const rawAngle = (Math.atan2(dy, dx) * 180) / Math.PI;
+      const angle = Number(((rawAngle + 360) % 360).toFixed(1));
+
+      const vdx = currentPoint.rsRatio - prevPoint.rsRatio;
+      const vdy = currentPoint.rsMomentum - prevPoint.rsMomentum;
+      const velocity = Number(Math.sqrt(vdx * vdx + vdy * vdy).toFixed(2));
+
+      // 1-day/week change percent of sector
+      const lastClose = sectorPrices[sectorPrices.length - 1]?.close || 1;
+      const prevClose = sectorPrices[sectorPrices.length - 2]?.close || lastClose;
+      const changePercent = Number((((lastClose - prevClose) / prevClose) * 100).toFixed(2));
+
+      sectorsData.push({
+        id: config.id,
+        name: config.name,
+        shortName: config.shortName,
+        color: config.color,
+        symbols: config.symbols,
+        points,
+        currentPoint,
+        quadrant,
+        distanceFromCenter,
+        angle,
+        velocity,
+        changePercent,
+      });
     }
 
-    if (sectorPrices.length < 20) continue;
+    // Sort sectors by distance from center or velocity
+    sectorsData.sort((a, b) => b.distanceFromCenter - a.distanceFromCenter);
 
-    // Tính toán RRG theo thuật toán chuẩn Julius de Kempenaer (Rolling Z-Score 14 kỳ)
-    const points = calculateRRGSeries(
-      sectorPrices,
-      benchmarkPrices,
-      14,
-      1.8,
-      tailLength
-    );
+    const dataset: RRGDataset = {
+      sectors: sectorsData,
+      benchmark,
+      dateRange: {
+        start: dateList[0] || '',
+        end: dateList[dateList.length - 1] || '',
+      },
+      summary: {
+        leading: leadingCount,
+        weakening: weakeningCount,
+        lagging: laggingCount,
+        improving: improvingCount,
+        total: sectorsData.length,
+      },
+    };
 
-    if (points.length === 0) continue;
+    cacheStore[cacheKey] = {
+      timestamp: now,
+      data: dataset,
+    };
 
-    const currentPoint = points[points.length - 1];
-    const quadrant = getQuadrant(currentPoint.rsRatio, currentPoint.rsMomentum);
-
-    summary[quadrant]++;
-    summary.total++;
-
-    const dx = currentPoint.rsRatio - 100;
-    const dy = currentPoint.rsMomentum - 100;
-    const distanceFromCenter = Number(Math.sqrt(dx * dx + dy * dy).toFixed(2));
-    const angle = Number(
-      (((Math.atan2(dy, dx) * 180) / Math.PI + 360) % 360).toFixed(1)
-    );
-
-    let velocity = 0;
-    if (points.length >= 2) {
-      const prev = points[points.length - 2];
-      const pdx = currentPoint.rsRatio - prev.rsRatio;
-      const pdy = currentPoint.rsMomentum - prev.rsMomentum;
-      velocity = Number(Math.sqrt(pdx * pdx + pdy * pdy).toFixed(2));
-    }
-
-    // Recent change % (1 phiên gần nhất)
-    let changePercent = 0;
-    if (sectorPrices.length >= 2) {
-      const lastP = sectorPrices[sectorPrices.length - 1].close;
-      const prevP = sectorPrices[sectorPrices.length - 2].close;
-      changePercent = Number((((lastP - prevP) / prevP) * 100).toFixed(2));
-    }
-
-    sectors.push({
-      id: config.id,
-      name: config.name,
-      shortName: config.shortName,
-      color: config.color,
-      symbols: config.symbols,
-      points,
-      currentPoint,
-      quadrant,
-      distanceFromCenter,
-      angle,
-      velocity,
-      changePercent,
+    return NextResponse.json({
+      success: true,
+      data: dataset,
+      source: 'live',
     });
+  } catch (error: any) {
+    return NextResponse.json(
+      { success: false, error: error.message || 'Lỗi xử lý đồ thị RRG' },
+      { status: 500 }
+    );
   }
-
-  // Sắp xếp các ngành: Dẫn dắt đứng đầu, sau đó đến Suy yếu, Cải thiện, Tụt hậu
-  const quadrantOrder = { leading: 1, weakening: 2, improving: 3, lagging: 4 };
-  sectors.sort((a, b) => {
-    if (quadrantOrder[a.quadrant] !== quadrantOrder[b.quadrant]) {
-      return quadrantOrder[a.quadrant] - quadrantOrder[b.quadrant];
-    }
-    return b.currentPoint.rsRatio - a.currentPoint.rsRatio;
-  });
-
-  const dataset: RRGDataset = {
-    sectors,
-    benchmark,
-    dateRange: {
-      start: formatDate(benchTimestamps[0]),
-      end: formatDate(benchTimestamps[benchTimestamps.length - 1]),
-    },
-    summary,
-  };
-
-  cache.set(cacheKey, { data: dataset, timestamp: Date.now() });
-
-  return NextResponse.json(dataset);
 }

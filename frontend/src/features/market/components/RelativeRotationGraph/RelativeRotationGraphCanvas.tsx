@@ -334,6 +334,13 @@ export const RelativeRotationGraphCanvas = forwardRef<
     ctx.fillStyle = '#475569';
     ctx.fillText(`x${zoom.toFixed(1)} · nhấp đúp để về gốc`, width - 24, 36);
 
+    // Clockwise Cycle Orientation indicator at top center
+    ctx.font = '10px "JetBrains Mono", monospace';
+    ctx.fillStyle = '#334155';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText('↻ Luân chuyển chuẩn: Cải thiện ➔ Dẫn dắt ➔ Suy yếu ➔ Tụt hậu', width / 2, 18);
+
     // TỤT HẬU (Bottom-Left)
     ctx.font = 'bold 13px "Geist", -apple-system, sans-serif';
     ctx.fillStyle = '#f43f5e'; // Rose
@@ -414,9 +421,43 @@ export const RelativeRotationGraphCanvas = forwardRef<
         ctx.fill();
       }
 
+      // Directional arrowhead at the tip showing heading vector
+      if (screenPoints.length >= 2) {
+        const prevPt = screenPoints[screenPoints.length - 2];
+        const dx = headPt.x - prevPt.x;
+        const dy = headPt.y - prevPt.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist > 1.5) {
+          const angle = Math.atan2(dy, dx);
+          const arrowLen = isCurrentActive ? 8 : 6.5;
+          const arrowAngle = Math.PI / 6;
+
+          ctx.beginPath();
+          ctx.moveTo(headPt.x + Math.cos(angle) * (isCurrentActive ? 3.5 : 2.5), headPt.y + Math.sin(angle) * (isCurrentActive ? 3.5 : 2.5));
+          ctx.lineTo(
+            headPt.x - arrowLen * Math.cos(angle - arrowAngle),
+            headPt.y - arrowLen * Math.sin(angle - arrowAngle)
+          );
+          ctx.lineTo(
+            headPt.x - (arrowLen * 0.5) * Math.cos(angle),
+            headPt.y - (arrowLen * 0.5) * Math.sin(angle)
+          );
+          ctx.lineTo(
+            headPt.x - arrowLen * Math.cos(angle + arrowAngle),
+            headPt.y - arrowLen * Math.sin(angle + arrowAngle)
+          );
+          ctx.closePath();
+          ctx.fillStyle = '#ffffff';
+          ctx.fill();
+          ctx.strokeStyle = trailColor;
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        }
+      }
+
       // Main Dot
       ctx.beginPath();
-      ctx.arc(headPt.x, headPt.y, isCurrentActive ? 6.0 : 4.8, 0, Math.PI * 2);
+      ctx.arc(headPt.x, headPt.y, isCurrentActive ? 5.5 : 4.5, 0, Math.PI * 2);
       ctx.fillStyle = trailColor;
       ctx.fill();
       ctx.strokeStyle = '#ffffff';

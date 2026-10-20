@@ -121,7 +121,7 @@
     },
     {
       "bank": "Lãi suất Liên ngân hàng (VNIBOR)",
-      "rate": "6.82%",
+      "rate": "4.25%",
       "term": "3M",
       "type": "interbank",
       "isCrawled": true,

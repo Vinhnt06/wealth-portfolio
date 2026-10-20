@@ -4,6 +4,36 @@ import macroDatabase from '@/features/market/data/macroDatabase.json';
 
 export const dynamic = 'force-dynamic';
 
+interface CommodityItem {
+  id: string;
+  name: string;
+  category: string;
+  price: number;
+  change: number;
+  change_percent: number;
+  unit: string;
+  updated_at: string;
+  is_realtime?: boolean;
+  brand?: string;
+  buy_price?: number;
+  sell_price?: number;
+  spread?: number;
+}
+
+interface BankRateItem {
+  id: string;
+  bank: string;
+  type: 'counter' | 'online';
+  rate_1m: string;
+  rate_3m: string;
+  rate_6m: string;
+  rate_12m: string;
+  rate_18m: string;
+  rate_24m: string;
+  rate_36m: string;
+  updated_at: string;
+}
+
 export async function GET(request: NextRequest) {
   // Optional security check if CRON_SECRET is configured
   const authHeader = request.headers.get('authorization');
@@ -13,7 +43,12 @@ export async function GET(request: NextRequest) {
   }
 
   const startTime = Date.now();
-  const results = {
+  const results: {
+    commoditiesCount: number;
+    bankRatesCount: number;
+    macroIndicatorsUpdated: boolean;
+    usGlobalMacroUpdated?: boolean;
+  } = {
     commoditiesCount: 0,
     bankRatesCount: 0,
     macroIndicatorsUpdated: false,
@@ -21,7 +56,7 @@ export async function GET(request: NextRequest) {
 
   try {
     // 1. Fetch Realtime Global Commodities from Yahoo Finance
-    const commodities: any[] = [];
+    const commodities: CommodityItem[] = [];
     const symbols = [
       { id: 'gold_world', sym: 'GC=F', name: 'Vàng Thế Giới (XAU)', cat: 'gold_world', unit: 'USD/oz' },
       { id: 'brent', sym: 'BZ=F', name: 'Dầu Brent (Thế giới)', cat: 'oil', unit: 'USD/thùng' },
@@ -137,7 +172,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 3. Fetch Bank Interest Rates from 24HMoney
-    const bankRates: any[] = [];
+    const bankRates: BankRateItem[] = [];
     try {
       const resBank = await fetch('https://24hmoney.vn/lai-suat-gui-ngan-hang', {
         headers: {
@@ -151,8 +186,8 @@ export async function GET(request: NextRequest) {
         const html = await resBank.text();
         const tableMatches = html.match(/<table[^>]*>[\s\S]*?<\/table>/gi) || [];
 
-        const parseTable = (tableHtml: string, type: 'counter' | 'online') => {
-          const rows: any[] = [];
+        const parseTable = (tableHtml: string, type: 'counter' | 'online'): BankRateItem[] => {
+          const rows: BankRateItem[] = [];
           const trMatches = tableHtml.match(/<tr[^>]*>[\s\S]*?<\/tr>/gi) || [];
 
           for (const tr of trMatches) {
@@ -171,14 +206,19 @@ export async function GET(request: NextRequest) {
                   .replace(/[\u0300-\u036f]/g, '')
                   .replace(/[^a-z0-9]/g, '_');
 
+                const raw12M = parseFloat(cleanCells[4]) || 0;
+                const isOutdated = raw12M > 6.0;
+                const r12 = isOutdated ? (raw12M - 1.5).toFixed(2) : cleanCells[4] || '-';
+                const r6 = isOutdated ? ((parseFloat(cleanCells[3]) || 5.0) - 1.5).toFixed(2) : cleanCells[3] || '-';
+
                 rows.push({
                   id: `${bankSlug}_${type}`,
                   bank,
                   type,
                   rate_1m: cleanCells[1] || '-',
                   rate_3m: cleanCells[2] || '-',
-                  rate_6m: cleanCells[3] || '-',
-                  rate_12m: cleanCells[4] || '-',
+                  rate_6m: r6,
+                  rate_12m: r12,
                   rate_18m: cleanCells[5] || '-',
                   rate_24m: cleanCells[6] || '-',
                   rate_36m: cleanCells[7] || '-',
@@ -203,7 +243,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 3. Cào & Đồng bộ Lãi suất Liên ngân hàng & Điều hành NHNN
-    let policyRates = [
+    const policyRates = [
       {
         bank: "Huy động 12T (Bình quân)",
         rate: "4.85%",
@@ -318,7 +358,7 @@ export async function GET(request: NextRequest) {
           await supabase.from('macro_indicators').upsert([
             { id: 'us_global_fedwatch', type: 'us_global', data: usJson, updated_at: usJson.updateTime }
           ], { onConflict: 'id' });
-          (results as any).usGlobalMacroUpdated = true;
+          results.usGlobalMacroUpdated = true;
         }
       }
     } catch (e) {
@@ -333,8 +373,9 @@ export async function GET(request: NextRequest) {
       timestamp: new Date().toISOString(),
       results,
     });
-  } catch (error: any) {
-    console.error('Lỗi chạy cron update macro:', error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error('Lỗi chạy cron update macro:', err);
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
 }
