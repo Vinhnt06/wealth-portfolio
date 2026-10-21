@@ -53,7 +53,7 @@ export const CommoditiesAndGoldSection: React.FC = () => {
     updateTime: '',
   });
   const [rateType, setRateType] = useState<'online' | 'counter'>('online');
-  const [selectedTerm, setSelectedTerm] = useState<'rate6M' | 'rate12M' | 'rate24M'>('rate12M');
+  const [selectedTerm, setSelectedTerm] = useState<'rate1M' | 'rate3M' | 'rate6M' | 'rate12M' | 'rate18M' | 'rate24M' | 'rate36M'>('rate12M');
   const [bankSearch, setBankSearch] = useState('');
   const [loading, setLoading] = useState(false);
   const [lastRefreshed, setLastRefreshed] = useState<string>('');
@@ -105,15 +105,19 @@ export const CommoditiesAndGoldSection: React.FC = () => {
   );
 
   const sortedBanks = [...filteredBanks].sort((a, b) => {
-    const valA = parseFloat(a[selectedTerm]) || 0;
-    const valB = parseFloat(b[selectedTerm]) || 0;
+    const valA = parseFloat(a[selectedTerm] || '0') || 0;
+    const valB = parseFloat(b[selectedTerm] || '0') || 0;
     return valB - valA;
   });
 
   const termLabels = {
+    rate1M: '1 Tháng',
+    rate3M: '3 Tháng',
     rate6M: '6 Tháng',
     rate12M: '12 Tháng (Phổ biến)',
+    rate18M: '18 Tháng',
     rate24M: '24 Tháng',
+    rate36M: '36 Tháng',
   };
 
   return (
@@ -343,9 +347,9 @@ export const CommoditiesAndGoldSection: React.FC = () => {
             </div>
 
             {/* Term Filter */}
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-mono font-bold text-zinc-400 uppercase">Kỳ hạn so sánh:</span>
-              {(['rate6M', 'rate12M', 'rate24M'] as const).map((t) => (
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="text-xs font-mono font-bold text-zinc-400 uppercase mr-1">Kỳ hạn so sánh:</span>
+              {(['rate6M', 'rate12M', 'rate18M', 'rate24M', 'rate36M'] as const).map((t) => (
                 <button
                   key={t}
                   onClick={() => setSelectedTerm(t)}
@@ -393,6 +397,7 @@ export const CommoditiesAndGoldSection: React.FC = () => {
                 <div className="text-[11px] font-mono text-zinc-400 mt-2 pt-2 border-t border-zinc-800/60 flex justify-between">
                   <span>6T: {b.rate6M}%</span>
                   <span>12T: {b.rate12M}%</span>
+                  <span>18T: {b.rate18M || '-'}%</span>
                   <span>24T: {b.rate24M}%</span>
                 </div>
               </div>
@@ -410,7 +415,9 @@ export const CommoditiesAndGoldSection: React.FC = () => {
                     <th className="py-3 px-3 text-right">03 Tháng</th>
                     <th className="py-3 px-3 text-right font-bold text-zinc-200">06 Tháng</th>
                     <th className="py-3 px-3 text-right font-bold text-emerald-400">12 Tháng</th>
+                    <th className="py-3 px-3 text-right text-zinc-200">18 Tháng</th>
                     <th className="py-3 px-3 text-right">24 Tháng</th>
+                    <th className="py-3 px-3 text-right text-zinc-300">36 Tháng</th>
                     <th className="py-3 px-4 text-center">Xếp Hạng</th>
                   </tr>
                 </thead>
@@ -433,7 +440,9 @@ export const CommoditiesAndGoldSection: React.FC = () => {
                         <td className="py-2.5 px-3 text-right font-black text-emerald-400 text-sm">
                           {b.rate12M}%
                         </td>
+                        <td className="py-2.5 px-3 text-right text-zinc-200">{b.rate18M ? `${b.rate18M}%` : '-'}</td>
                         <td className="py-2.5 px-3 text-right text-zinc-300">{b.rate24M}%</td>
+                        <td className="py-2.5 px-3 text-right text-zinc-400">{b.rate36M ? `${b.rate36M}%` : '-'}</td>
                         <td className="py-2.5 px-4 text-center text-[10px] text-zinc-500 font-bold">
                           #{idx + 1}
                         </td>
