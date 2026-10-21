@@ -142,21 +142,16 @@ export const RRGControlBar: React.FC<RRGControlBarProps> = ({
           </span>
         </div>
 
-        {/* Date Range Display */}
+        {/* Session Date Display */}
         {dataset?.dateRange && (
-          <div className="hidden xl:flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-zinc-900 border border-zinc-800 text-zinc-400 text-[11px]">
-            <CalendarBlank className="w-3.5 h-3.5 text-zinc-500" />
-            <span>{formatDateDisplay(dataset.dateRange.start)}</span>
-            <span className="text-zinc-600">→</span>
-            <span>{formatDateDisplay(dataset.dateRange.end)}</span>
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-zinc-900 border border-zinc-800 text-zinc-300 text-[11px]">
+            <CalendarBlank className="w-3.5 h-3.5 text-zinc-400" />
+            <span className="text-zinc-400">Phiên:</span>
+            <span className="font-semibold text-emerald-400 font-mono">{formatDateDisplay(dataset.dateRange.end)}</span>
+            <span className="text-zinc-600">·</span>
+            <span className="text-zinc-400 text-[10px]">Chốt phiên EOD</span>
           </div>
         )}
-
-        {/* Live Data Badge */}
-        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-950/40 border border-emerald-800/40 text-emerald-400 text-[10px] font-bold">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          <span>Realtime Data</span>
-        </div>
       </div>
 
       {/* Right: Actions (Lưới, Ảnh, Refresh, Fullscreen/Close) */}
