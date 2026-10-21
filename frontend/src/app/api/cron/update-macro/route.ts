@@ -206,19 +206,14 @@ export async function GET(request: NextRequest) {
                   .replace(/[\u0300-\u036f]/g, '')
                   .replace(/[^a-z0-9]/g, '_');
 
-                const raw12M = parseFloat(cleanCells[4]) || 0;
-                const isOutdated = raw12M > 6.0;
-                const r12 = isOutdated ? (raw12M - 1.5).toFixed(2) : cleanCells[4] || '-';
-                const r6 = isOutdated ? ((parseFloat(cleanCells[3]) || 5.0) - 1.5).toFixed(2) : cleanCells[3] || '-';
-
                 rows.push({
                   id: `${bankSlug}_${type}`,
                   bank,
                   type,
                   rate_1m: cleanCells[1] || '-',
                   rate_3m: cleanCells[2] || '-',
-                  rate_6m: r6,
-                  rate_12m: r12,
+                  rate_6m: cleanCells[3] || '-',
+                  rate_12m: cleanCells[4] || '-',
                   rate_18m: cleanCells[5] || '-',
                   rate_24m: cleanCells[6] || '-',
                   rate_36m: cleanCells[7] || '-',

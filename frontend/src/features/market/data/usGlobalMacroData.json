@@ -1,7 +1,7 @@
 {
   "success": true,
-  "timestamp": "2026-10-21T09:43:51.354Z",
-  "updateTime": "16:43:50",
+  "timestamp": "2026-10-21T09:48:32.966Z",
+  "updateTime": "16:48:32",
   "indices": [
     {
       "symbol": "^GSPC",
@@ -47,9 +47,9 @@
       "symbol": "DX-Y.NYB",
       "name": "DXY Index",
       "category": "currency",
-      "price": 101.77,
-      "change": 0.07,
-      "changePercent": 0.07,
+      "price": 101.75,
+      "change": 0.05,
+      "changePercent": 0.05,
       "unit": "pts",
       "note": "Chỉ số đo lường sức mạnh đồng USD"
     },
@@ -57,9 +57,9 @@
       "symbol": "^VIX",
       "name": "CBOE VIX",
       "category": "volatility",
-      "price": 17.42,
-      "change": 0.11,
-      "changePercent": 0.64,
+      "price": 17.34,
+      "change": 0.03,
+      "changePercent": 0.17,
       "unit": "pts",
       "note": "Thước đo mức độ biến động & sợ hãi toàn cầu"
     }
@@ -77,8 +77,8 @@
       "pillar": "Áp Lực Tỷ Giá USD/VND",
       "status": "Tích Cực",
       "statusColor": "emerald",
-      "headline": "DXY biến động quanh mức 101.77 điểm",
-      "detail": "Chỉ số DXY hạ nhiệt quanh 101.77 giúp thu hẹp chênh lệch USD-VND, giảm áp lực bán can thiệp ngoại tệ của NHNN và hạn chế rủi ro tỷ giá nhập khẩu."
+      "headline": "DXY biến động quanh mức 101.75 điểm",
+      "detail": "Chỉ số DXY hạ nhiệt quanh 101.75 giúp thu hẹp chênh lệch USD-VND, giảm áp lực bán can thiệp ngoại tệ của NHNN và hạn chế rủi ro tỷ giá nhập khẩu."
     },
     {
       "pillar": "Không Gian Lãi Suất NHNN",
@@ -92,7 +92,7 @@
       "status": "Trung Lập",
       "statusColor": "amber",
       "headline": "Xu hướng dòng vốn ngoại trên TTCK",
-      "detail": "Lợi suất trái phiếu chính phủ Mỹ 10 năm (5.12%) và chỉ số VIX (17.42 điểm) phản ánh khẩu vị rủi ro toàn cầu đang trong tầm kiểm soát (Tâm lý ổn định), tạo điều kiện cân bằng dòng vốn ngoại trên HOSE/HNX."
+      "detail": "Lợi suất trái phiếu chính phủ Mỹ 10 năm (5.12%) và chỉ số VIX (17.34 điểm) phản ánh khẩu vị rủi ro toàn cầu đang trong tầm kiểm soát (Tâm lý ổn định), tạo điều kiện cân bằng dòng vốn ngoại trên HOSE/HNX."
     }
   ]
 }
