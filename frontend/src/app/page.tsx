@@ -11,15 +11,7 @@ import { useState, useEffect } from 'react';
 import { AssetCoverflow } from './components/AssetCoverflow';
 import { MarketSection } from './components/MarketSection';
 
-// Import client-side Spline component dynamically to avoid SSR errors
-const Spline = dynamic(() => import('@splinetool/react-spline'), {
-  ssr: false,
-  loading: () => (
-    <div className="w-full h-full bg-[#000000] flex items-center justify-center">
-      <div className="text-zinc-600 text-sm font-mono tracking-widest uppercase">Loading 3D Engine...</div>
-    </div>
-  ),
-});
+import { SafeSpline } from './components/SafeSpline';
 
 export default function Home() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -80,7 +72,7 @@ export default function Home() {
 
       {/* Hero Section - Full Screen Spline */}
       <section className="relative h-[100dvh] w-full">
-        <Spline scene="https://prod.spline.design/NlnhqLy4Kkj9lsrF/scene.splinecode" />
+        <SafeSpline scene="https://prod.spline.design/NlnhqLy4Kkj9lsrF/scene.splinecode" />
         {/* Scroll Indicator */}
         <motion.div
           className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 pointer-events-none"

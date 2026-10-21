@@ -6,16 +6,7 @@ import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useLanguage } from '../components/LanguageContext';
-import dynamic from 'next/dynamic';
-
-const Spline = dynamic(() => import('@splinetool/react-spline'), {
-    ssr: false,
-    loading: () => (
-        <div className="w-full h-full bg-zinc-950 flex items-center justify-center">
-            <div className="text-zinc-600 text-sm font-mono tracking-widest uppercase">Loading 3D...</div>
-        </div>
-    ),
-});
+import { SafeSpline } from '../components/SafeSpline';
 
 export default function LoginPage() {
     const [email, setEmail] = useState('');
@@ -45,7 +36,7 @@ export default function LoginPage() {
                 {/* Spline 3D Background - Fixed to container */}
                 <div className="absolute inset-0 z-0">
                     <div className="w-full h-full transform translate-x-[15%]">
-                        <Spline scene="https://prod.spline.design/7Uld6Oz2cKWvsxOq/scene.splinecode" />
+                        <SafeSpline scene="https://prod.spline.design/7Uld6Oz2cKWvsxOq/scene.splinecode" />
                     </div>
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
                     {/* Spline Watermark `Hider - Moved right */}

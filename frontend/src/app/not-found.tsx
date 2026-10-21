@@ -1,21 +1,12 @@
 'use client';
 
-import dynamic from 'next/dynamic';
+import { SafeSpline } from './components/SafeSpline';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { House, ArrowLeft } from '@phosphor-icons/react';
 import { useLanguage } from './components/LanguageContext';
 import { LanguageSwitcher } from './components/LanguageSwitcher';
 import { useSession } from 'next-auth/react';
-
-const Spline = dynamic(() => import('@splinetool/react-spline'), {
-    ssr: false,
-    loading: () => (
-        <div className="w-full h-full bg-black flex items-center justify-center">
-            <div className="text-zinc-700 text-xs font-mono tracking-widest uppercase">Loading 3D Scene...</div>
-        </div>
-    ),
-});
 
 export default function NotFound() {
     const { t } = useLanguage();
@@ -25,7 +16,7 @@ export default function NotFound() {
         <main className="relative w-full h-[100dvh] bg-black text-white overflow-hidden selection:bg-white selection:text-black">
             {/* Spline 3D Background */}
             <div className="absolute inset-0 z-0">
-                <Spline scene="https://prod.spline.design/nK1QatZ4h2dcb-x4/scene.splinecode" />
+                <SafeSpline scene="https://prod.spline.design/nK1QatZ4h2dcb-x4/scene.splinecode" />
             </div>
 
             {/* Content Overlay */}

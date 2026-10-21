@@ -5,17 +5,8 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useLanguage } from '../components/LanguageContext';
-import dynamic from 'next/dynamic';
+import { SafeSpline } from '../components/SafeSpline';
 import { useRouter } from 'next/navigation';
-
-const Spline = dynamic(() => import('@splinetool/react-spline'), {
-    ssr: false,
-    loading: () => (
-        <div className="w-full h-full bg-zinc-950 flex items-center justify-center">
-            <div className="text-zinc-600 text-sm font-mono tracking-widest uppercase">Loading 3D...</div>
-        </div>
-    ),
-});
 
 export default function SignupPage() {
     const router = useRouter();
@@ -102,7 +93,7 @@ export default function SignupPage() {
             >
                 <div className="absolute inset-0 z-0">
                     <div className="w-full h-full transform translate-x-[15%]">
-                        <Spline scene="https://prod.spline.design/7Uld6Oz2cKWvsxOq/scene.splinecode" />
+                        <SafeSpline scene="https://prod.spline.design/7Uld6Oz2cKWvsxOq/scene.splinecode" />
                     </div>
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
                     <div className="absolute bottom-4 right-[-5%] w-40 h-10 bg-black z-10 pointer-events-none" />
