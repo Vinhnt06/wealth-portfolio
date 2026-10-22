@@ -208,8 +208,7 @@ export interface TrendlineProResult {
   xInt?: number;
   displayedHighMarkers?: { idx: number; time: Time; price: number }[];
   displayedLowMarkers?: { idx: number; time: Time; price: number }[];
-  apex?: { idx: number; price: number };
-  isWedge?: boolean;
+  isDowntrend?: boolean;
 }
 
 export const FIB_FAN_RATIOS = [
@@ -236,13 +235,22 @@ export function calculateTrendlinePro(candles: CandlestickData<Time>[]): Trendli
   const lastIdx = total - 1;
   const lastClose = candles[lastIdx].close;
 
-  // 1. Detect significant swing points across the entire loaded series
-  // Radius of 6 bars filters out minor daily noise, extracting structural cycle pivots
-  const pivotRadius = 6;
+  // Active analysis window (up to 180 bars)
+  const lookback = Math.min(total, 180);
+  const startIdx = total - lookback;
+
+  // Trend detection: MA20 vs MA50 or price comparison
+  const closes = candles.map((c) => c.close);
+  const ma20 = closes.slice(-20).reduce((a, b) => a + b, 0) / 20;
+  const ma50 = closes.slice(-Math.min(50, total)).reduce((a, b) => a + b, 0) / Math.min(50, total);
+  const isDowntrend = ma20 < ma50 || lastClose < candles[startIdx].close;
+
+  // Detect swing highs and lows in active lookback (radius 4)
+  const pivotRadius = 4;
   const allSwingHighs: { idx: number; time: Time; price: number }[] = [];
   const allSwingLows: { idx: number; time: Time; price: number }[] = [];
 
-  for (let i = pivotRadius; i < total - pivotRadius; i++) {
+  for (let i = startIdx + pivotRadius; i < total - pivotRadius; i++) {
     const c = candles[i];
     let isHigh = true;
     let isLow = true;
@@ -254,152 +262,181 @@ export function calculateTrendlinePro(candles: CandlestickData<Time>[]): Trendli
     if (isLow) allSwingLows.push({ idx: i, time: c.time, price: c.low });
   }
 
-  // 2. Identify Primary Major Peak (Cycle High) and Major Trough (Cycle Low)
-  let primaryPeak = allSwingHighs[0] || { idx: 0, time: candles[0].time, price: candles[0].high };
-  for (const h of allSwingHighs) {
-    if (h.idx <= lastIdx - 15 && h.price > primaryPeak.price) {
-      primaryPeak = h;
-    }
-  }
-
-  let primaryTrough = allSwingLows[0] || { idx: 0, time: candles[0].time, price: candles[0].low };
-  for (const l of allSwingLows) {
-    if (l.idx <= lastIdx - 15 && l.price < primaryTrough.price) {
-      primaryTrough = l;
-    }
-  }
-
-  // 3. Determine Market Regime:
-  // Is this a major cycle downtrend / converging wedge from a cycle peak (e.g. OIL 25.63 -> 13.30, GEX 45.31 -> 23.65)?
-  const isDowntrendRegime = primaryPeak.price > lastClose * 1.05 && primaryPeak.idx < lastIdx - 15;
-
   let resP1: { idx: number; time: Time; price: number };
   let resP2: { idx: number; time: Time; price: number };
   let supP1: { idx: number; time: Time; price: number };
   let supP2: { idx: number; time: Time; price: number };
-  let resSlope: number;
-  let supSlope: number;
+  let trendSlope: number = 0;
   let currRes: number;
   let currSup: number;
-  let apex: { idx: number; price: number } | undefined = undefined;
-  let isWedge = false;
+  let channelDelta: number;
 
   const displayedHighMarkers: { idx: number; time: Time; price: number }[] = [];
   const displayedLowMarkers: { idx: number; time: Time; price: number }[] = [];
 
-  if (isDowntrendRegime) {
-    // ── Primary Converging Symmetrical Wedge (Matching Reference Chart) ──
-    isWedge = true;
-    const apexIdx = lastIdx + 3;
-    const apexPrice = lastClose;
-    apex = { idx: apexIdx, price: apexPrice };
+  if (isDowntrend && allSwingHighs.length >= 2) {
+    // ── DOWNTREND REGIME: Resistance line strictly hugs lower highs ──
+    let bestP1 = allSwingHighs[0];
+    let bestP2 = allSwingHighs[allSwingHighs.length - 1];
+    let bestSlope = (lastClose * 1.05 - bestP1.price) / Math.max(1, lastIdx - bestP1.idx);
+    let bestScore = -1e9;
 
-    // Find the major base low prior to the peak rally (lowest low before peak)
-    const lowsBeforePeak = allSwingLows.filter((l) => l.idx < primaryPeak.idx);
-    const majorBaseLow =
-      lowsBeforePeak.length > 0
-        ? lowsBeforePeak.reduce((min, cur) => (cur.price < min.price ? cur : min), lowsBeforePeak[0])
-        : allSwingLows.reduce((min, cur) => (cur.price < min.price ? cur : min), allSwingLows[0] || { idx: 0, time: candles[0].time, price: candles[0].low });
+    for (let i = 0; i < allSwingHighs.length; i++) {
+      for (let j = i + 1; j < allSwingHighs.length; j++) {
+        const p1 = allSwingHighs[i];
+        const p2 = allSwingHighs[j];
+        const dx = p2.idx - p1.idx;
+        if (dx < 10) continue;
+        const slope = (p2.price - p1.price) / dx;
+        if (slope > 0.02) continue; // Downtrend shouldn't have steep upward slope
 
-    resP1 = { idx: primaryPeak.idx, time: primaryPeak.time, price: primaryPeak.price };
-    resSlope = (apexPrice - resP1.price) / Math.max(1, apexIdx - resP1.idx);
-    resP2 = { idx: lastIdx, time: candles[lastIdx].time, price: apexPrice + resSlope * (lastIdx - apexIdx) };
+        const estRes = p1.price + slope * (lastIdx - p1.idx);
+        if (estRes < lastClose * 0.98 || estRes > lastClose * 1.25) continue;
 
-    supP1 = { idx: majorBaseLow.idx, time: majorBaseLow.time, price: majorBaseLow.price };
-    supSlope = (apexPrice - supP1.price) / Math.max(1, apexIdx - supP1.idx);
-    supP2 = { idx: lastIdx, time: candles[lastIdx].time, price: apexPrice + supSlope * (lastIdx - apexIdx) };
+        let touches = 0;
+        let breaches = 0;
+        let distSum = 0;
+        for (const h of allSwingHighs) {
+          if (h.idx >= p1.idx) {
+            const lineP = p1.price + slope * (h.idx - p1.idx);
+            const diff = lineP - h.price;
+            if (diff < -0.015 * lineP) breaches++;
+            else if (Math.abs(diff) <= 0.025 * lineP) touches++;
+            else if (diff > 0) distSum += diff;
+          }
+        }
 
-    // Select swing highs that hug the resistance line or key Fibonacci fan rays
-    const candidateHighs: { idx: number; time: Time; price: number }[] = [resP1];
-    for (const h of allSwingHighs) {
-      if (h.idx > resP1.idx) {
-        const pResAtH = apexPrice + resSlope * (h.idx - apexIdx);
-        const pSupAtH = apexPrice + supSlope * (h.idx - apexIdx);
-        const diffRes = Math.abs(h.price - pResAtH) / Math.max(1, pResAtH);
-        const ratio = pResAtH !== pSupAtH ? (h.price - pSupAtH) / (pResAtH - pSupAtH) : 0;
-        const touchesFibRay = [0.786, 0.618, 0.5, 0.382].some((t) => Math.abs(ratio - t) <= 0.06);
-
-        if (diffRes <= 0.05 || touchesFibRay) {
-          candidateHighs.push(h);
+        const score = touches * 20 - breaches * 35 - (distSum / Math.max(1, allSwingHighs.length)) * 10 + dx * 0.1;
+        if (score > bestScore) {
+          bestScore = score;
+          bestP1 = p1;
+          bestP2 = p2;
+          bestSlope = slope;
         }
       }
     }
 
-    // Deduplicate candidate highs within 12 bars (keep highest price)
-    candidateHighs.sort((a, b) => a.idx - b.idx);
-    const filteredHighs: typeof candidateHighs = [];
-    for (const ch of candidateHighs) {
-      const prev = filteredHighs[filteredHighs.length - 1];
-      if (!prev || ch.idx - prev.idx > 12) {
-        filteredHighs.push(ch);
-      } else if (ch.price > prev.price) {
-        filteredHighs[filteredHighs.length - 1] = ch;
-      }
-    }
-    displayedHighMarkers.push(...filteredHighs);
+    resP1 = bestP1;
+    resP2 = bestP2;
+    trendSlope = bestSlope;
+    currRes = resP1.price + trendSlope * (lastIdx - resP1.idx);
 
-    // Select swing lows that hug the support line
-    const candidateLows: { idx: number; time: Time; price: number }[] = [supP1];
-    for (const l of allSwingLows) {
-      if (l.idx > supP1.idx) {
-        const pSupAtL = apexPrice + supSlope * (l.idx - apexIdx);
-        const diffSup = Math.abs(l.price - pSupAtL) / Math.max(1, pSupAtL);
-        if (diffSup <= 0.06) {
-          candidateLows.push(l);
+    // Calculate parallel channelDelta hugging swing lows
+    const lowDists = allSwingLows
+      .filter((l) => l.idx >= resP1.idx - 10)
+      .map((l) => resP1.price + trendSlope * (l.idx - resP1.idx) - l.price)
+      .sort((a, b) => a - b);
+
+    channelDelta = lowDists.length > 0 ? lowDists[Math.floor(lowDists.length * 0.85)] : lastClose * 0.12;
+    channelDelta = Math.max(lastClose * 0.05, channelDelta);
+    currSup = currRes - channelDelta;
+
+    supP1 = { idx: resP1.idx, time: resP1.time, price: resP1.price - channelDelta };
+    supP2 = { idx: lastIdx, time: candles[lastIdx].time, price: currSup };
+  } else if (!isDowntrend && allSwingLows.length >= 2) {
+    // ── UPTREND REGIME: Support line strictly hugs higher lows ──
+    let bestP1 = allSwingLows[0];
+    let bestP2 = allSwingLows[allSwingLows.length - 1];
+    let bestSlope = (lastClose * 0.95 - bestP1.price) / Math.max(1, lastIdx - bestP1.idx);
+    let bestScore = -1e9;
+
+    for (let i = 0; i < allSwingLows.length; i++) {
+      for (let j = i + 1; j < allSwingLows.length; j++) {
+        const p1 = allSwingLows[i];
+        const p2 = allSwingLows[j];
+        const dx = p2.idx - p1.idx;
+        if (dx < 10) continue;
+        const slope = (p2.price - p1.price) / dx;
+        if (slope < -0.02) continue; // Uptrend shouldn't have steep downward slope
+
+        const estSup = p1.price + slope * (lastIdx - p1.idx);
+        if (estSup > lastClose * 1.02 || estSup < lastClose * 0.75) continue;
+
+        let touches = 0;
+        let breaches = 0;
+        let distSum = 0;
+        for (const l of allSwingLows) {
+          if (l.idx >= p1.idx) {
+            const lineP = p1.price + slope * (l.idx - p1.idx);
+            const diff = l.price - lineP;
+            if (diff < -0.015 * lineP) breaches++;
+            else if (Math.abs(diff) <= 0.025 * lineP) touches++;
+            else if (diff > 0) distSum += diff;
+          }
+        }
+
+        const score = touches * 20 - breaches * 35 - (distSum / Math.max(1, allSwingLows.length)) * 10 + dx * 0.1;
+        if (score > bestScore) {
+          bestScore = score;
+          bestP1 = p1;
+          bestP2 = p2;
+          bestSlope = slope;
         }
       }
     }
 
-    // Deduplicate candidate lows within 12 bars (keep lowest price)
-    candidateLows.sort((a, b) => a.idx - b.idx);
-    const filteredLows: typeof candidateLows = [];
-    for (const cl of candidateLows) {
-      const prev = filteredLows[filteredLows.length - 1];
-      if (!prev || cl.idx - prev.idx > 12) {
-        filteredLows.push(cl);
-      } else if (cl.price < prev.price) {
-        filteredLows[filteredLows.length - 1] = cl;
-      }
-    }
-    displayedLowMarkers.push(...filteredLows);
+    supP1 = bestP1;
+    supP2 = bestP2;
+    trendSlope = bestSlope;
+    currSup = supP1.price + trendSlope * (lastIdx - supP1.idx);
 
-    currRes = apexPrice + resSlope * (lastIdx - apexIdx);
-    currSup = apexPrice + supSlope * (lastIdx - apexIdx);
+    // Calculate parallel channelDelta hugging swing highs
+    const highDists = allSwingHighs
+      .filter((h) => h.idx >= supP1.idx - 10)
+      .map((h) => h.price - (supP1.price + trendSlope * (h.idx - supP1.idx)))
+      .sort((a, b) => a - b);
+
+    channelDelta = highDists.length > 0 ? highDists[Math.floor(highDists.length * 0.85)] : lastClose * 0.12;
+    channelDelta = Math.max(lastClose * 0.05, channelDelta);
+    currRes = currSup + channelDelta;
+
+    resP1 = { idx: supP1.idx, time: supP1.time, price: supP1.price + channelDelta };
+    resP2 = { idx: lastIdx, time: candles[lastIdx].time, price: currRes };
   } else {
-    // ── Primary Uptrend or Adaptive Regime ──
-    const startOffset = Math.max(0, total - Math.min(total, 250));
-    const highsInWindow = allSwingHighs.filter((h) => h.idx >= startOffset);
-    const lowsInWindow = allSwingLows.filter((l) => l.idx >= startOffset);
+    // ── FALLBACK / SIDEWAY REGIME ──
+    const maxHigh = allSwingHighs.length > 0 ? Math.max(...allSwingHighs.map((h) => h.price)) : lastClose * 1.05;
+    const minLow = allSwingLows.length > 0 ? Math.min(...allSwingLows.map((l) => l.price)) : lastClose * 0.95;
+    currRes = maxHigh;
+    currSup = minLow;
+    channelDelta = Math.max(0.5, currRes - currSup);
+    trendSlope = 0;
 
-    const minL = lowsInWindow.length > 0 ? lowsInWindow[0] : { idx: startOffset, time: candles[startOffset].time, price: candles[startOffset].low };
-    const maxH = highsInWindow.length > 0 ? highsInWindow[highsInWindow.length - 1] : { idx: lastIdx, time: candles[lastIdx].time, price: candles[lastIdx].high };
-
-    supP1 = minL;
-    supP2 = lowsInWindow[lowsInWindow.length - 1] || minL;
-    supSlope = (supP2.price - supP1.price) / Math.max(1, supP2.idx - supP1.idx);
-
-    resP1 = maxH;
-    resP2 = { idx: lastIdx, time: candles[lastIdx].time, price: maxH.price + supSlope * (lastIdx - maxH.idx) };
-    resSlope = supSlope;
-
-    displayedHighMarkers.push(resP1);
-    displayedLowMarkers.push(supP1);
-    if (supP2.idx !== supP1.idx) displayedLowMarkers.push(supP2);
-
-    currRes = resP1.price + resSlope * (lastIdx - resP1.idx);
-    currSup = supP1.price + supSlope * (lastIdx - supP1.idx);
+    resP1 = { idx: startIdx, time: candles[startIdx].time, price: currRes };
+    resP2 = { idx: lastIdx, time: candles[lastIdx].time, price: currRes };
+    supP1 = { idx: startIdx, time: candles[startIdx].time, price: currSup };
+    supP2 = { idx: lastIdx, time: candles[lastIdx].time, price: currSup };
   }
 
-  // Sanity Clamping
+  // Clamping
   if (currRes <= lastClose) currRes = Math.round(lastClose * 1.02 * 100) / 100;
   if (currSup >= lastClose || currSup <= 0) currSup = Math.round(lastClose * 0.98 * 100) / 100;
 
-  // Base Trough for horizontal guideline
-  const baseTrough = supP1;
+  // Display markers on peaks and troughs that touch trendlines or fib levels
+  allSwingHighs.forEach((h) => {
+    if (h.idx >= resP1.idx) {
+      const lineP = resP1.price + trendSlope * (h.idx - resP1.idx);
+      if (Math.abs(h.price - lineP) <= lineP * 0.035) {
+        displayedHighMarkers.push(h);
+      }
+    }
+  });
+  if (displayedHighMarkers.length === 0 && resP1) displayedHighMarkers.push(resP1);
+
+  allSwingLows.forEach((l) => {
+    if (l.idx >= supP1.idx) {
+      const lineP = supP1.price + trendSlope * (l.idx - supP1.idx);
+      if (Math.abs(l.price - lineP) <= lineP * 0.04) {
+        displayedLowMarkers.push(l);
+      }
+    }
+  });
+  if (displayedLowMarkers.length === 0 && supP1) displayedLowMarkers.push(supP1);
+
+  displayedHighMarkers.sort((a, b) => a.idx - b.idx);
+  displayedLowMarkers.sort((a, b) => a.idx - b.idx);
 
   const resistance = Math.round(currRes * 100) / 100;
   const support = Math.round(currSup * 100) / 100;
-  const channelDelta = Math.max(0.5, resistance - support);
   const fib0618 = Math.round((support + channelDelta * 0.618) * 100) / 100;
   const fib1618 = Math.round((support + channelDelta * 1.618) * 100) / 100;
 
@@ -409,14 +446,7 @@ export function calculateTrendlinePro(candles: CandlestickData<Time>[]): Trendli
   else if (currRatio >= 0.8) recommendation = 'QUAN SÁT';
   else recommendation = 'GIỮ';
 
-  displayedHighMarkers.sort((a, b) => a.idx - b.idx);
-  displayedLowMarkers.sort((a, b) => a.idx - b.idx);
-
-  let xInt: number | undefined = undefined;
-  if (Math.abs(resSlope - supSlope) > 1e-5) {
-    const calcX = (supP1.price - supSlope * supP1.idx - (resP1.price - resSlope * resP1.idx)) / (resSlope - supSlope);
-    if (Number.isFinite(calcX)) xInt = calcX;
-  }
+  const baseTrough = supP1;
 
   return {
     resistance,
@@ -428,19 +458,17 @@ export function calculateTrendlinePro(candles: CandlestickData<Time>[]): Trendli
     supP1,
     supP2,
     baseTrough,
-    resSlope,
-    supSlope,
+    resSlope: trendSlope,
+    supSlope: trendSlope,
     swingHighs: allSwingHighs,
     swingLows: allSwingLows,
-    slope: resSlope,
+    slope: trendSlope,
     channelDelta,
     startIdx: Math.max(0, Math.min(resP1.idx, supP1.idx)),
     recommendation,
-    xInt,
     displayedHighMarkers,
     displayedLowMarkers,
-    apex,
-    isWedge,
+    isDowntrend,
   };
 }
 
@@ -2182,7 +2210,7 @@ export function MarketCandleChart() {
       ctx.restore();
     }
 
-    // ── Render Trendline Pro Overlays (Automated Converging Wedge S/R & Fibonacci Wedge Rays) ────
+    // ── Render Trendline Pro Overlays (Parallel Trendline Channel & Fibonacci Levels) ────
     if (showTrendlinePro && trendlineProData && chart && series) {
       ctx.save();
       const timeScale = chart.timeScale();
@@ -2190,259 +2218,145 @@ export function MarketCandleChart() {
 
       const {
         resP1,
-        resSlope,
         supP1,
-        supSlope,
-        baseTrough,
-        swingHighs,
-        swingLows,
+        slope,
+        channelDelta,
         displayedHighMarkers,
         displayedLowMarkers,
+        isDowntrend,
       } = trendlineProData;
 
       const lastCandleIdx = Math.max(0, candles.length - 1);
-      const isWedge = !!trendlineProData.isWedge;
+      const projEndLogical = lastCandleIdx + 45;
 
       // Coordinate anchors
-      const xResStart = timeScale.logicalToCoordinate(resP1.idx as any);
-      const xSupStart = timeScale.logicalToCoordinate(supP1.idx as any);
+      const startLogicalIdx = Math.max(0, Math.min(resP1.idx, supP1.idx));
+      const xStart = timeScale.logicalToCoordinate(startLogicalIdx as any);
+      const xEnd = timeScale.logicalToCoordinate(projEndLogical as any);
       const xLastCandle = timeScale.logicalToCoordinate(lastCandleIdx as any);
 
-      if (xResStart === null || xSupStart === null || xLastCandle === null) {
+      if (xStart === null || xLastCandle === null) {
         ctx.restore();
         return;
       }
 
-      // Apex coordinates
-      let xApex: number;
-      let yApex: number;
-      if (isWedge && trendlineProData.apex) {
-        const coordX = timeScale.logicalToCoordinate(trendlineProData.apex.idx as any);
-        xApex = coordX !== null ? coordX : xLastCandle + 24;
-        const coordY = series.priceToCoordinate(trendlineProData.apex.price);
-        yApex = coordY !== null ? coordY : (series.priceToCoordinate(candles[lastCandleIdx].close) ?? h / 2);
-      } else {
-        xApex = Math.min(xLastCandle + 28, w - 75);
-        yApex = series.priceToCoordinate(trendlineProData.support) ?? h / 2;
-      }
+      const effectiveXEnd = xEnd !== null ? Math.min(w - 75, xEnd) : w - 75;
 
-      const yResStart = series.priceToCoordinate(resP1.price);
-      const ySupStart = series.priceToCoordinate(supP1.price);
-      const yResEnd = isWedge ? yApex : series.priceToCoordinate(trendlineProData.resistance);
-      const ySupEnd = isWedge ? yApex : series.priceToCoordinate(trendlineProData.support);
+      // Price functions for parallel channel:
+      const getSupPrice = (L: number) => supP1.price + slope * (L - supP1.idx);
+      const getResPrice = (L: number) => getSupPrice(L) + channelDelta;
+      const getFibPrice = (L: number, r: number) => getSupPrice(L) + r * channelDelta;
 
-      // ── 1. Shaded Wedge Corridor Background ──
-      if (isWedge && yResStart !== null && ySupStart !== null) {
+      // Y coordinates at start and end
+      const yResStart = series.priceToCoordinate(getResPrice(startLogicalIdx));
+      const yResEnd = series.priceToCoordinate(getResPrice(projEndLogical));
+      const ySupStart = series.priceToCoordinate(getSupPrice(startLogicalIdx));
+      const ySupEnd = series.priceToCoordinate(getSupPrice(projEndLogical));
+
+      // 1. Shaded Channel Corridor
+      if (yResStart !== null && yResEnd !== null && ySupStart !== null && ySupEnd !== null) {
         ctx.beginPath();
-        ctx.moveTo(xResStart, yResStart);
-        ctx.lineTo(xApex, yApex);
-        ctx.lineTo(xSupStart, ySupStart);
+        ctx.moveTo(xStart, yResStart);
+        ctx.lineTo(effectiveXEnd, yResEnd);
+        ctx.lineTo(effectiveXEnd, ySupEnd);
+        ctx.lineTo(xStart, ySupStart);
         ctx.closePath();
-        ctx.fillStyle = 'rgba(239, 68, 68, 0.04)';
+        ctx.fillStyle = isDowntrend ? 'rgba(239, 68, 68, 0.04)' : 'rgba(16, 185, 129, 0.04)';
         ctx.fill();
       }
 
-      // ── 1b. Horizontal Dashed Lime-Green Line from Starting Peak ──
-      if (yResStart !== null) {
-        ctx.beginPath();
-        ctx.setLineDash([4, 4]);
-        ctx.strokeStyle = '#84cc16';
-        ctx.lineWidth = 1.2;
-        ctx.moveTo(xResStart, yResStart);
-        ctx.lineTo(Math.min(w - 15, xApex + 40), yResStart);
-        ctx.stroke();
-        ctx.setLineDash([]);
-      }
-
-      // ── 1c. Intermediate Peaks Horizontal Dashed Lines (Matching Reference Image) ──
-      (displayedHighMarkers || []).forEach((sh) => {
-        if (!sh || sh.idx === resP1.idx) return;
-        const xSh = timeScale.logicalToCoordinate(sh.idx as any);
-        const ySh = series.priceToCoordinate(sh.price);
-        if (xSh !== null && ySh !== null && xSh > 0 && xSh < xApex && sh.price > candles[lastCandleIdx].close * 1.05) {
-          ctx.beginPath();
-          ctx.setLineDash([3, 3]);
-          ctx.strokeStyle = 'rgba(132, 204, 22, 0.45)';
-          ctx.lineWidth = 1.0;
-          ctx.moveTo(xSh, ySh);
-          ctx.lineTo(xApex, ySh);
-          ctx.stroke();
-          ctx.setLineDash([]);
-        }
-      });
-
-      // ── 2. Horizontal Base Line (Red Dashed Line at Base Trough) ──
-      if (ySupStart !== null) {
-        ctx.beginPath();
-        ctx.setLineDash([4, 4]);
-        ctx.strokeStyle = '#ef4444';
-        ctx.lineWidth = 1.2;
-        ctx.moveTo(xSupStart, ySupStart);
-        ctx.lineTo(Math.min(w - 15, xApex + 40), ySupStart);
-        ctx.stroke();
-        ctx.setLineDash([]);
-      }
-
-      // ── 3. Vertical Guideline at baseTrough (Historical breakout pivot) ──
-      const xBaseTrough = timeScale.logicalToCoordinate(baseTrough.idx as any);
-      if (xBaseTrough !== null && xBaseTrough > 0 && xBaseTrough < w - 60 && baseTrough.idx < lastCandleIdx - 5) {
-        ctx.beginPath();
-        ctx.setLineDash([3, 3]);
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
-        ctx.lineWidth = 1.0;
-        ctx.moveTo(xBaseTrough, 18);
-        ctx.lineTo(xBaseTrough, h - 26);
-        ctx.stroke();
-        ctx.setLineDash([]);
-
-        let dateLabel = '08/01/2026';
-        if (baseTrough.time) {
-          if (typeof baseTrough.time === 'string') {
-            const parts = baseTrough.time.split('-');
-            if (parts.length === 3) dateLabel = `${parts[2]}/${parts[1]}/${parts[0]}`;
-          } else if (typeof baseTrough.time === 'object' && 'day' in (baseTrough.time as any)) {
-            const t = baseTrough.time as any;
-            dateLabel = `${String(t.day).padStart(2, '0')}/${String(t.month).padStart(2, '0')}/${t.year}`;
-          }
-        }
-        ctx.font = 'bold 9px JetBrains Mono, monospace';
-        const dtw = ctx.measureText(dateLabel).width;
-        ctx.fillStyle = 'rgba(19, 23, 34, 0.9)';
-        ctx.fillRect(xBaseTrough - dtw / 2 - 4, h - 24, dtw + 8, 14);
-        ctx.fillStyle = 'rgba(212, 212, 216, 0.9)';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(dateLabel, xBaseTrough, h - 16);
-      }
-
-      // ── 4. Upper Resistance Trendline (Solid Lime Green connecting Peak to Apex) ──
+      // 2. Upper Resistance Trendline (Solid Lime Green #84cc16, lineWidth: 2)
       if (yResStart !== null && yResEnd !== null) {
         ctx.beginPath();
-        ctx.moveTo(xResStart, yResStart);
-        ctx.lineTo(xApex, yResEnd);
+        ctx.moveTo(xStart, yResStart);
+        ctx.lineTo(effectiveXEnd, yResEnd);
         ctx.strokeStyle = '#84cc16';
         ctx.lineWidth = 2.0;
         ctx.setLineDash([]);
         ctx.stroke();
       }
 
-      // ── 5. Lower Support Trendline (Solid Coral Red connecting Base Low to Apex) ──
+      // 3. Lower Support Trendline (Solid Coral Red #ef4444, lineWidth: 2)
       if (ySupStart !== null && ySupEnd !== null) {
         ctx.beginPath();
-        ctx.moveTo(xSupStart, ySupStart);
-        ctx.lineTo(xApex, ySupEnd);
+        ctx.moveTo(xStart, ySupStart);
+        ctx.lineTo(effectiveXEnd, ySupEnd);
         ctx.strokeStyle = '#ef4444';
         ctx.lineWidth = 2.0;
         ctx.setLineDash([]);
         ctx.stroke();
       }
 
-      // ── 6. Fibonacci Fan Rays (All radiating backwards from Apex across historical pivots) ──
-      const allRatios = [...FIB_FAN_RATIOS];
+      // 4. Parallel Fibonacci Channel Lines (Yellow dashed lines)
+      const allRatios = [...FIB_CHANNEL_RATIOS];
+      interface FibLabelItem {
+        r: number;
+        text: string;
+        color: string;
+        y: number;
+      }
+      const fibLabels: FibLabelItem[] = [];
+
       allRatios.forEach((r) => {
-        let startLogicalIdx: number;
-        if (r >= 1.0) startLogicalIdx = resP1.idx;
-        else if (r <= 0.0) startLogicalIdx = supP1.idx;
-        else startLogicalIdx = Math.min(resP1.idx, supP1.idx);
+        // Skip 1.0 and 0.0 because they are already drawn as solid lines above
+        if (Math.abs(r - 1.0) < 1e-4 || Math.abs(r - 0.0) < 1e-4) return;
 
-        const xStart = timeScale.logicalToCoordinate(startLogicalIdx as any);
-        const pResAtStart = trendlineProData.apex
-          ? trendlineProData.apex.price + resSlope * (startLogicalIdx - trendlineProData.apex.idx)
-          : resP1.price + resSlope * (startLogicalIdx - resP1.idx);
-        const pSupAtStart = trendlineProData.apex
-          ? trendlineProData.apex.price + supSlope * (startLogicalIdx - trendlineProData.apex.idx)
-          : supP1.price + supSlope * (startLogicalIdx - supP1.idx);
-        const pRayStart = pSupAtStart + r * (pResAtStart - pSupAtStart);
+        const pStart = getFibPrice(startLogicalIdx, r);
+        const pEnd = getFibPrice(projEndLogical, r);
 
-        const yStart = series.priceToCoordinate(pRayStart);
-        if (xStart !== null && yStart !== null) {
+        const yS = series.priceToCoordinate(pStart);
+        const yE = series.priceToCoordinate(pEnd);
+
+        if (yS !== null && yE !== null) {
           ctx.beginPath();
-          ctx.moveTo(xApex, yApex);
-          ctx.lineTo(xStart, yStart);
-          ctx.setLineDash([2, 3]);
+          ctx.moveTo(xStart, yS);
+          ctx.lineTo(effectiveXEnd, yE);
+
           if (r < 0) {
-            ctx.strokeStyle = 'rgba(239, 68, 68, 0.75)';
+            ctx.strokeStyle = 'rgba(248, 113, 113, 0.75)';
+            ctx.lineWidth = 1.0;
+            ctx.setLineDash([2, 3]);
+          } else if (r === 0.5) {
+            ctx.strokeStyle = '#facc15';
+            ctx.lineWidth = 1.2;
+            ctx.setLineDash([4, 4]);
           } else {
             ctx.strokeStyle = 'rgba(250, 204, 21, 0.75)';
+            ctx.lineWidth = 1.0;
+            ctx.setLineDash([2, 3]);
           }
-          ctx.lineWidth = 1.0;
           ctx.stroke();
           ctx.setLineDash([]);
+
+          if (yE >= 12 && yE <= h - 12) {
+            fibLabels.push({
+              r,
+              text: r.toString(),
+              color: r < 0 ? '#f87171' : '#facc15',
+              y: yE,
+            });
+          }
         }
       });
 
-      // ── 6b. Apex Ratios Stack (Rendered right at apex tip as in Reference Image) ──
-      if (isWedge) {
+      // 5. Clean Fibonacci ratio labels at the right projection edge
+      if (fibLabels.length > 0) {
         ctx.save();
-        ctx.font = 'bold 8px JetBrains Mono, monospace';
+        ctx.font = 'bold 8.5px JetBrains Mono, monospace';
         ctx.textAlign = 'left';
         ctx.textBaseline = 'middle';
 
-        const apexLabels = [
-          { text: '1.000', color: '#84cc16', dy: -18 },
-          { text: '0.786', color: '#facc15', dy: -13 },
-          { text: '0.618', color: '#facc15', dy: -8 },
-          { text: '0.500', color: '#facc15', dy: -3 },
-          { text: '0.382', color: '#facc15', dy: 2 },
-          { text: '0.236', color: '#facc15', dy: 7 },
-          { text: '0.000', color: '#ef4444', dy: 13 },
-          { text: '-0.618', color: '#f87171', dy: 19 },
-          { text: '-1.000', color: '#f87171', dy: 25 },
-        ];
-
-        apexLabels.forEach((al) => {
-          const ly = yApex + al.dy;
-          if (ly >= 10 && ly <= h - 10) {
-            const tw = ctx.measureText(al.text).width;
-            ctx.fillStyle = 'rgba(19, 23, 34, 0.9)';
-            ctx.fillRect(xApex + 3, ly - 5, tw + 4, 10);
-            ctx.fillStyle = al.color;
-            ctx.fillText(al.text, xApex + 5, ly);
-          }
+        fibLabels.forEach((lbl) => {
+          const tw = ctx.measureText(lbl.text).width;
+          ctx.fillStyle = 'rgba(19, 23, 34, 0.85)';
+          ctx.fillRect(effectiveXEnd + 3, lbl.y - 5, tw + 4, 11);
+          ctx.fillStyle = lbl.color;
+          ctx.fillText(lbl.text, effectiveXEnd + 5, lbl.y);
         });
         ctx.restore();
       }
 
-      // ── 6c. Breakout Projection Path (Yellow zigzag arrow pointing forward from Apex) ──
-      if (isWedge && xApex < w - 50) {
-        const availW = Math.max(25, Math.min(80, w - 80 - xApex));
-        const s = availW / 75;
-
-        const p0 = { x: xApex, y: yApex };
-        const p1 = { x: xApex + 10 * s, y: yApex + 12 * s };
-        const p2 = { x: xApex + 28 * s, y: yApex - 42 * s };
-        const p3 = { x: xApex + 44 * s, y: yApex - 24 * s };
-        const p4 = { x: xApex + 72 * s, y: yApex - 75 * s };
-
-        ctx.save();
-        ctx.beginPath();
-        ctx.moveTo(p0.x, p0.y);
-        ctx.lineTo(p1.x, p1.y);
-        ctx.lineTo(p2.x, p2.y);
-        ctx.lineTo(p3.x, p3.y);
-        ctx.lineTo(p4.x, p4.y);
-        ctx.strokeStyle = '#eab308';
-        ctx.lineWidth = 1.8;
-        ctx.stroke();
-
-        // Arrow head at p4
-        const dx = p4.x - p3.x;
-        const dy = p4.y - p3.y;
-        const angle = Math.atan2(dy, dx);
-        const headLen = 9;
-
-        ctx.beginPath();
-        ctx.moveTo(p4.x, p4.y);
-        ctx.lineTo(p4.x - headLen * Math.cos(angle - Math.PI / 6), p4.y - headLen * Math.sin(angle - Math.PI / 6));
-        ctx.moveTo(p4.x, p4.y);
-        ctx.lineTo(p4.x - headLen * Math.cos(angle + Math.PI / 6), p4.y - headLen * Math.sin(angle + Math.PI / 6));
-        ctx.strokeStyle = '#eab308';
-        ctx.lineWidth = 1.8;
-        ctx.stroke();
-        ctx.restore();
-      }
-
-      // ── 7. Swing Pivot Triangles (▼ on Highs, ▲ on Lows) ──
+      // 6. Swing Pivot Triangles (▼ on Highs, ▲ on Lows)
       (displayedHighMarkers || []).forEach((sh) => {
         if (!sh) return;
         const x = timeScale.logicalToCoordinate(sh.idx as any);
@@ -2473,11 +2387,12 @@ export function MarketCandleChart() {
         }
       });
 
-      // ── 8. Right Margin Badges Card (Hỗ trợ, Fib 0,618, Kháng cự, Fib 1,618) as in Reference Image ──
+      // 7. Right Margin Badges Card (Hỗ trợ, Fib 0,618, Kháng cự, Fib 1,618)
       const rightBadgeX = w - 75;
       const cardW = 70;
       const cardH = 68;
-      const cardY = Math.max(20, Math.min(h - cardH - 20, yApex - cardH / 2));
+      const midY = yResEnd !== null && ySupEnd !== null ? (yResEnd + ySupEnd) / 2 : h / 2;
+      const cardY = Math.max(20, Math.min(h - cardH - 20, midY - cardH / 2));
 
       ctx.save();
       ctx.fillStyle = 'rgba(19, 23, 34, 0.95)';
