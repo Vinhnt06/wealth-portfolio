@@ -238,8 +238,8 @@ export function calculateTrendlinePro(candles: CandlestickData<Time>[]): Trendli
   const lastIdx = total - 1;
   const lastClose = candles[lastIdx].close;
 
-  // Multi-window adaptive search: test [160, 100, 70, 50] to find the active market regime
-  const lookbacks = [160, 100, 70, 50];
+  // Multi-window adaptive search: test [160, 120, 90, 60] to find the active market regime
+  const lookbacks = [160, 120, 90, 60];
   let bestCandidate: {
     h1: { idx: number; time: Time; price: number };
     h2: { idx: number; time: Time; price: number };
@@ -253,75 +253,68 @@ export function calculateTrendlinePro(candles: CandlestickData<Time>[]): Trendli
     swingHighs: { idx: number; time: Time; price: number }[];
     swingLows: { idx: number; time: Time; price: number }[];
   } | null = null;
+  let highestScore = -Infinity;
 
   for (const lb of lookbacks) {
     const lookback = Math.min(total, lb);
     const startOffset = total - lookback;
 
-    const swingHighs: { idx: number; time: Time; price: number; calcPrice: number }[] = [];
-    const swingLows: { idx: number; time: Time; price: number; calcPrice: number }[] = [];
+    // Detect swing pivots with responsive 2-bar left and 1-2 bar right confirmation
+    const swingHighs: { idx: number; time: Time; price: number }[] = [];
+    const swingLows: { idx: number; time: Time; price: number }[] = [];
 
-    // Pivot detection with confirmation: radius of 3 bars to eliminate micro-fluctuations
-    const pivotRadius = 3;
-    let lastHighIdx = -999;
-    let lastLowIdx = -999;
-
-    for (let i = startOffset + pivotRadius; i < total - pivotRadius; i++) {
+    for (let i = startOffset + 2; i <= lastIdx; i++) {
       const c = candles[i];
-      let isHigh = true;
-      for (let k = 1; k <= pivotRadius; k++) {
-        if (candles[i - k].high > c.high || candles[i + k].high > c.high) {
-          isHigh = false;
-          break;
+      const leftH = Math.max(candles[i - 1].high, candles[i - 2].high);
+      const rightH = i < lastIdx ? (candles[i + 1] ? candles[i + 1].high : -Infinity) : -Infinity;
+      if (c.high >= leftH && (i === lastIdx || c.high >= rightH)) {
+        const lastH = swingHighs[swingHighs.length - 1];
+        if (lastH && i - lastH.idx < 4) {
+          if (c.high > lastH.price) {
+            swingHighs[swingHighs.length - 1] = { idx: i, time: c.time, price: c.high };
+          }
+        } else {
+          swingHighs.push({ idx: i, time: c.time, price: c.high });
         }
       }
 
-      let isLow = true;
-      for (let k = 1; k <= pivotRadius; k++) {
-        if (candles[i - k].low < c.low || candles[i + k].low < c.low) {
-          isLow = false;
-          break;
+      const leftL = Math.min(candles[i - 1].low, candles[i - 2].low);
+      const rightL = i < lastIdx ? (candles[i + 1] ? candles[i + 1].low : Infinity) : Infinity;
+      if (c.low <= leftL && (i === lastIdx || c.low <= rightL)) {
+        const lastL = swingLows[swingLows.length - 1];
+        if (lastL && i - lastL.idx < 4) {
+          if (c.low < lastL.price) {
+            swingLows[swingLows.length - 1] = { idx: i, time: c.time, price: c.low };
+          }
+        } else {
+          swingLows.push({ idx: i, time: c.time, price: c.low });
         }
-      }
-
-      if (isHigh && i - lastHighIdx >= 3) {
-        lastHighIdx = i;
-        // Điểm Swing High lấy chuẩn xác 100% râu nến cao nhất
-        swingHighs.push({ idx: i, time: c.time, price: c.high, calcPrice: c.high });
-      }
-      if (isLow && i - lastLowIdx >= 3) {
-        lastLowIdx = i;
-        // Điểm Swing Low lấy chuẩn xác 100% râu nến thấp nhất (không nâng khống tạo khoảng hổng)
-        swingLows.push({ idx: i, time: c.time, price: c.low, calcPrice: c.low });
       }
     }
 
     if (swingHighs.length < 2 || swingLows.length < 2) continue;
 
-    // 1. Candidate Resistance Highs (Upper Tangent - Bám sát đỉnh nến)
     const maxHighInWindow = Math.max(...swingHighs.map((h) => h.price));
-    const maxResSlope = (lastClose * 0.0025); // tối đa dốc lên 0.25%/bar
-    const minResSlope = -(lastClose * 0.004); // không dốc chúc xuống quá 0.4%/bar
+    const minLowInWindow = Math.min(...swingLows.map((l) => l.price));
+
+    // 1. Candidate Resistance Highs (Upper Tangent)
     const resCandidates: {
-      h1: { idx: number; time: Time; price: number; calcPrice: number };
-      h2: { idx: number; time: Time; price: number; calcPrice: number };
+      h1: { idx: number; time: Time; price: number };
+      h2: { idx: number; time: Time; price: number };
       slope: number;
       currRes: number;
-      breachPenalty: number;
       score: number;
     }[] = [];
 
     for (let i = 0; i < swingHighs.length; i++) {
       for (let j = i + 1; j < swingHighs.length; j++) {
-        const p1 = swingHighs[i];
-        const p2 = swingHighs[j];
-        const dx = p2.idx - p1.idx;
-        if (dx < 6) continue;
-        const slope = (p2.price - p1.price) / dx;
-        if (slope > maxResSlope || slope < minResSlope) continue;
-
-        const currRes = p1.price + slope * (lastIdx - p1.idx);
-        // Kháng cự tại nến hiện tại phải nằm sát ngay phía trên giá hiện tại (+0.1% đến +14%)
+        const h1 = swingHighs[i];
+        const h2 = swingHighs[j];
+        const dx = h2.idx - h1.idx;
+        if (dx < 7) continue;
+        const slope = (h2.price - h1.price) / dx;
+        if (slope > lastClose * 0.002 || slope < -lastClose * 0.005) continue;
+        const currRes = h1.price + slope * (lastIdx - h1.idx);
         if (currRes < lastClose * 1.001 || currRes > lastClose * 1.15) continue;
 
         let closeBreachCount = 0;
@@ -329,77 +322,48 @@ export function calculateTrendlinePro(candles: CandlestickData<Time>[]): Trendli
         let touches = 0;
         let totalGap = 0;
 
-        for (let k = p1.idx; k <= lastIdx; k++) {
-          const lineP = p1.price + slope * (k - p1.idx);
+        for (let k = h1.idx; k <= lastIdx; k++) {
+          const lineP = h1.price + slope * (k - h1.idx);
           const cK = candles[k];
-
-          // Nến đóng cửa vượt cản (Breakout)
           if (cK.close > lineP * 1.004) {
             closeBreachCount++;
             closeBreachSeverity += (cK.close - lineP * 1.004) / lineP;
           }
-
-          // Điểm chạm thực tế (chạm sát râu nến trong phạm vi 0.45%)
-          if (Math.abs(cK.high - lineP) <= lineP * 0.0045) {
-            touches++;
-          }
-
-          // Khoảng cách từ đỉnh nến tới cản
-          if (lineP >= cK.high) {
-            totalGap += (lineP - cK.high) / lineP;
-          }
+          if (Math.abs(cK.high - lineP) <= lineP * 0.004) touches++;
+          if (lineP >= cK.high) totalGap += (lineP - cK.high) / lineP;
         }
 
         if (closeBreachCount > 2) continue;
-
-        const count = Math.max(1, lastIdx - p1.idx);
-        const avgGap = totalGap / count;
-
-        const snugScore = Math.max(0, 1 - avgGap / 0.04) * 15000;
-        const touchScore = touches * 4000;
-        const proximityScore = Math.max(0, 1 - (currRes - lastClose) / (lastClose * 0.08)) * 8000;
-        const anchorsPeak = p1.price === maxHighInWindow || p2.price === maxHighInWindow ? 3000 : 0;
-
-        const score = snugScore + touchScore + proximityScore + anchorsPeak + dx * 10 - closeBreachSeverity * 50000;
-
-        resCandidates.push({
-          h1: p1,
-          h2: p2,
-          slope,
-          currRes,
-          breachPenalty: closeBreachSeverity,
-          score,
-        });
+        const avgGap = totalGap / Math.max(1, lastIdx - h1.idx);
+        const score =
+          touches * 3500 +
+          Math.max(0, 1 - avgGap / 0.04) * 8000 +
+          (h1.price === maxHighInWindow ? 4000 : 0) +
+          dx * 8 -
+          closeBreachSeverity * 50000;
+        resCandidates.push({ h1, h2, slope, currRes, score });
       }
     }
     resCandidates.sort((a, b) => b.score - a.score);
-    if (resCandidates.length === 0) continue;
-    const bestRes = resCandidates[0];
 
-    // 2. Candidate Support Lows (Lower Tangent - Ôm sát đáy nến, triệt tiêu khoảng hổng)
-    const minLowInWindow = Math.min(...swingLows.map((l) => l.price));
-    const minSupSlope = -(lastClose * 0.0025); // không dốc chúc xuống quá 0.25%/bar
-    const maxSupSlope = (lastClose * 0.004);   // không dốc lên quá 0.4%/bar
+    // 2. Candidate Support Lows (Lower Tangent - Ôm sát đáy nến, không bị hổng)
     const supCandidates: {
-      l1: { idx: number; time: Time; price: number; calcPrice: number };
-      l2: { idx: number; time: Time; price: number; calcPrice: number };
+      l1: { idx: number; time: Time; price: number };
+      l2: { idx: number; time: Time; price: number };
       slope: number;
       currSup: number;
-      breachPenalty: number;
       score: number;
     }[] = [];
 
     for (let i = 0; i < swingLows.length; i++) {
       for (let j = i + 1; j < swingLows.length; j++) {
-        const p1 = swingLows[i];
-        const p2 = swingLows[j];
-        const dx = p2.idx - p1.idx;
-        if (dx < 6) continue;
-        const slope = (p2.price - p1.price) / dx;
-        if (slope < minSupSlope || slope > maxSupSlope) continue;
-
-        const currSup = p1.price + slope * (lastIdx - p1.idx);
-        // Hỗ trợ tại nến hiện tại phải nằm sát ngay phía dưới giá hiện tại (-12% đến -0.1%) và luôn > 0
+        const l1 = swingLows[i];
+        const l2 = swingLows[j];
+        const dx = l2.idx - l1.idx;
+        if (dx < 7) continue;
+        const slope = (l2.price - l1.price) / dx;
+        if (slope < -lastClose * 0.0025 || slope > lastClose * 0.004) continue;
+        const currSup = l1.price + slope * (lastIdx - l1.idx);
         if (currSup < lastClose * 0.88 || currSup > lastClose * 0.999 || currSup <= 0) continue;
 
         let closeBreachCount = 0;
@@ -407,130 +371,133 @@ export function calculateTrendlinePro(candles: CandlestickData<Time>[]): Trendli
         let touches = 0;
         let totalGap = 0;
 
-        for (let k = p1.idx; k <= lastIdx; k++) {
-          const lineP = p1.price + slope * (k - p1.idx);
+        for (let k = l1.idx; k <= lastIdx; k++) {
+          const lineP = l1.price + slope * (k - l1.idx);
           const cK = candles[k];
-
-          // Thân nến đóng cửa thủng hỗ trợ
           if (cK.close < lineP * 0.996) {
             closeBreachCount++;
             closeBreachSeverity += (lineP * 0.996 - cK.close) / lineP;
           }
-
-          // Điểm chạm thực tế (chạm sát râu nến trong phạm vi 0.45%)
-          if (Math.abs(cK.low - lineP) <= lineP * 0.0045) {
-            touches++;
-          }
-
-          // Khoảng cách từ đáy nến tới hỗ trợ (càng nhỏ càng ôm sát nến, không bị hổng)
-          if (cK.low >= lineP) {
-            totalGap += (cK.low - lineP) / lineP;
-          }
+          if (Math.abs(cK.low - lineP) <= lineP * 0.004) touches++;
+          if (cK.low >= lineP) totalGap += (cK.low - lineP) / lineP;
         }
 
-        // Không chấp nhận đường bị quá 2 nến đóng cửa thủng
         if (closeBreachCount > 2) continue;
-
-        const count = Math.max(1, lastIdx - p1.idx);
-        const avgGap = totalGap / count;
-
-        // Điểm ôm sát đáy nến (Snug Fit Score - Tối đa 15000 điểm nếu avgGap cực thấp < 1.5%)
-        const snugScore = Math.max(0, 1 - avgGap / 0.04) * 15000;
-
-        // Điểm chạm tiếp xúc các đáy (Mỗi điểm chạm +4000 điểm)
-        const touchScore = touches * 4000;
-
-        // Điểm độ gần với nến hiện tại (Ưu tiên hỗ trợ sát giá hiện tại trong vòng 1% - 6%)
-        const proximityScore = Math.max(0, 1 - (lastClose - currSup) / (lastClose * 0.08)) * 8000;
-
-        // Điểm neo đáy nổi bật
-        const anchorsTrough = p1.price === minLowInWindow || p2.price === minLowInWindow ? 3000 : 0;
-
-        const score = snugScore + touchScore + proximityScore + anchorsTrough + dx * 10 - closeBreachSeverity * 50000;
-
-        supCandidates.push({
-          l1: p1,
-          l2: p2,
-          slope,
-          currSup,
-          breachPenalty: closeBreachSeverity,
-          score,
-        });
+        const avgGap = totalGap / Math.max(1, lastIdx - l1.idx);
+        const score =
+          touches * 3500 +
+          Math.max(0, 1 - avgGap / 0.04) * 10000 +
+          (l1.price === minLowInWindow || l2.price === minLowInWindow ? 4000 : 0) +
+          dx * 8 -
+          closeBreachSeverity * 50000;
+        supCandidates.push({ l1, l2, slope, currSup, score });
       }
     }
     supCandidates.sort((a, b) => b.score - a.score);
-    if (supCandidates.length === 0) continue;
-    const bestSup = supCandidates[0];
 
-    const h1 = bestRes.h1;
-    const h2 = bestRes.h2;
-    const resSlope = bestRes.slope;
-    let currRes = bestRes.currRes;
+    // 3. Find Best Non-Crossing Pair
+    for (const res of resCandidates.slice(0, 6)) {
+      for (const sup of supCandidates.slice(0, 10)) {
+        const startChannel = Math.min(res.h1.idx, sup.l1.idx);
+        const getResP = (x: number) => res.h1.price + res.slope * (x - res.h1.idx);
+        const getSupP = (x: number) => sup.l1.price + sup.slope * (x - sup.l1.idx);
 
-    const l1 = bestSup.l1;
-    const l2 = bestSup.l2;
-    const supSlope = bestSup.slope;
-    let currSup = bestSup.currSup;
+        // Strict Invariant: Resistance must be strictly above Support at EVERY bar from start to last candle
+        let crossOccurred = false;
+        for (let k = startChannel; k <= lastIdx; k++) {
+          const spread = getResP(k) - getSupP(k);
+          if (spread < 0.015 * lastClose) {
+            crossOccurred = true;
+            break;
+          }
+        }
+        if (crossOccurred) continue;
 
-    let xInt = Infinity;
-    if (Math.abs(resSlope - supSlope) > 1e-5) {
-      xInt = (l1.price - supSlope * l1.idx - (h1.price - resSlope * h1.idx)) / (resSlope - supSlope);
+        let xInt = Infinity;
+        if (Math.abs(res.slope - sup.slope) > 1e-5) {
+          xInt =
+            (sup.l1.price - sup.slope * sup.l1.idx - (res.h1.price - res.slope * res.h1.idx)) /
+            (res.slope - sup.slope);
+        }
+
+        // If lines converge towards the right (res.slope < sup.slope), apex MUST be in the future
+        if (res.slope < sup.slope && xInt < lastIdx + 15) {
+          continue; // Cannot converge in past or right upon last candle
+        }
+        // If lines converge towards the left (diverging wedge), apex must be in the past before start
+        if (res.slope > sup.slope && xInt > startChannel - 10) {
+          continue;
+        }
+
+        const comboScore = res.score + sup.score + (xInt >= lastIdx + 20 && xInt < lastIdx + 120 ? 5000 : 0);
+        if (comboScore > highestScore) {
+          highestScore = comboScore;
+          bestCandidate = {
+            h1: res.h1,
+            h2: res.h2,
+            l1: sup.l1,
+            l2: sup.l2,
+            resSlope: res.slope,
+            supSlope: sup.slope,
+            currRes: res.currRes,
+            currSup: sup.currSup,
+            xInt,
+            swingHighs,
+            swingLows,
+          };
+        }
+      }
     }
-
-    const spread = currRes - currSup;
-    // Kênh nêm co hẹp phải có biên độ thực tế từ 2% đến 22% giá hiện tại
-    if (spread >= 0.02 * lastClose && spread <= 0.24 * lastClose && (xInt < lastIdx - 5 || xInt > lastIdx + 12 || xInt === Infinity)) {
-      bestCandidate = { h1, h2, l1, l2, resSlope, supSlope, currRes, currSup, xInt, swingHighs, swingLows };
-      break;
-    }
+    if (bestCandidate) break; // Found strong multi-window structure
   }
 
-  // Fallback if no window met clean wedge criteria
+  // Failsafe Parallel Channel Fallback (Guaranteed 100% Non-Crossing)
   if (!bestCandidate) {
-    const lookback = Math.min(total, 80);
+    const lookback = Math.min(total, 90);
     const startOffset = total - lookback;
     let maxP = -Infinity;
     let maxIdx = startOffset;
     let minP = Infinity;
     let minIdx = startOffset;
     for (let i = startOffset; i < total; i++) {
-      if (candles[i].high > maxP) { maxP = candles[i].high; maxIdx = i; }
-      if (candles[i].low < minP) { minP = candles[i].low; minIdx = i; }
+      if (candles[i].high > maxP) {
+        maxP = candles[i].high;
+        maxIdx = i;
+      }
+      if (candles[i].low < minP) {
+        minP = candles[i].low;
+        minIdx = i;
+      }
     }
-    const safeRes = Math.max(maxP, lastClose * 1.06);
-    const safeSup = Math.min(minP, lastClose * 0.94);
-    const h1 = { idx: maxIdx, time: candles[maxIdx].time, price: maxP, calcPrice: maxP };
-    const h2 = { idx: lastIdx, time: candles[lastIdx].time, price: safeRes, calcPrice: safeRes };
-    const l1 = { idx: minIdx, time: candles[minIdx].time, price: minP, calcPrice: minP };
-    const l2 = { idx: lastIdx, time: candles[lastIdx].time, price: safeSup, calcPrice: safeSup };
+    const netSlope = (candles[lastIdx].close - candles[startOffset].close) / (lastIdx - startOffset);
+    const safeSlope = Math.max(-lastClose * 0.002, Math.min(lastClose * 0.002, netSlope * 0.5));
+
+    const h1 = { idx: maxIdx, time: candles[maxIdx].time, price: maxP };
+    const safeRes = Math.max(maxP + safeSlope * (lastIdx - maxIdx), lastClose * 1.02);
+    const h2 = { idx: lastIdx, time: candles[lastIdx].time, price: safeRes };
+    const actualResSlope = (safeRes - maxP) / Math.max(1, lastIdx - maxIdx);
+
+    const l1 = { idx: minIdx, time: candles[minIdx].time, price: minP };
+    const l2 = { idx: lastIdx, time: candles[lastIdx].time, price: minP + actualResSlope * (lastIdx - minIdx) };
+
     bestCandidate = {
       h1,
       h2,
       l1,
       l2,
-      resSlope: (safeRes - maxP) / Math.max(1, lastIdx - maxIdx),
-      supSlope: (safeSup - minP) / Math.max(1, lastIdx - minIdx),
+      resSlope: actualResSlope,
+      supSlope: actualResSlope,
       currRes: safeRes,
-      currSup: safeSup,
+      currSup: l2.price,
       xInt: Infinity,
       swingHighs: [h1],
       swingLows: [l1],
     };
   }
 
-  let { h1, h2, l1, l2, resSlope, supSlope, currRes, currSup, xInt, swingHighs, swingLows } = bestCandidate;
+  const { h1, h2, l1, l2, resSlope, supSlope, currRes, currSup, xInt, swingHighs, swingLows } = bestCandidate;
 
-  // Failsafe Sanity Clamping: Đảm bảo 100% Kháng cự và Hỗ trợ luôn nằm trong phạm vi thực tế
-  if (currRes > lastClose * 1.25 || currRes < lastClose * 1.001) {
-    currRes = Math.min(Math.max(...candles.slice(-80).map((c) => c.high)), lastClose * 1.15);
-    if (currRes <= lastClose) currRes = Math.round(lastClose * 1.06 * 100) / 100;
-  }
-  if (currSup < lastClose * 0.75 || currSup > lastClose * 0.999 || currSup <= 0) {
-    currSup = Math.max(Math.min(...candles.slice(-80).map((c) => c.low)), lastClose * 0.88);
-    if (currSup >= lastClose || currSup <= 0) currSup = Math.round(lastClose * 0.94 * 100) / 100;
-  }
-
-  // 3. Base Trough for Horizontal Level & Fibonacci Converging Fan
+  // 3. Base Trough for Horizontal Guideline
   let baseTrough: { idx: number; time: Time; price: number } = { idx: l1.idx, time: l1.time, price: l1.price };
   const lowsInWindow = swingLows.filter((sl) => sl.idx >= Math.min(h1.idx, l1.idx));
   if (lowsInWindow.length > 0) {
@@ -556,7 +523,7 @@ export function calculateTrendlinePro(candles: CandlestickData<Time>[]): Trendli
   else if (currRatio >= 0.85) recommendation = 'QUAN SÁT';
   else recommendation = 'GIỮ';
 
-  // 4. Extract Key Anchor & Touch Markers (Matches Reference Image exactly: 2 Highs, 2-3 Lows)
+  // 4. Extract Key Anchor & Touch Markers (Only major structural pivots & genuine touches)
   const displayedHighMarkers: { idx: number; time: Time; price: number }[] = [];
   if (candles[h1.idx]) {
     displayedHighMarkers.push({ idx: h1.idx, time: h1.time, price: candles[h1.idx].high });
@@ -572,9 +539,13 @@ export function calculateTrendlinePro(candles: CandlestickData<Time>[]): Trendli
   if (l2.idx !== l1.idx && candles[l2.idx]) {
     displayedLowMarkers.push({ idx: l2.idx, time: l2.time, price: candles[l2.idx].low });
   }
-  // Include intermediate baseTrough if it is a notable distinct swing low
-  if (baseTrough && baseTrough.idx !== l1.idx && baseTrough.idx !== l2.idx && baseTrough.idx > l1.idx && baseTrough.idx < lastIdx - 2) {
-    displayedLowMarkers.push({ idx: baseTrough.idx, time: baseTrough.time, price: baseTrough.price });
+  if (
+    baseTrough &&
+    baseTrough.idx !== l1.idx &&
+    baseTrough.idx !== l2.idx &&
+    candles[baseTrough.idx]
+  ) {
+    displayedLowMarkers.push({ idx: baseTrough.idx, time: baseTrough.time, price: candles[baseTrough.idx].low });
   }
 
   // Detect genuine touch points on the trendlines (within 0.25% margin)
@@ -2484,6 +2455,18 @@ export function MarketCandleChart() {
       // Target horizontal anchor for labels in clear margin beside current candle
       const targetLabelX = Math.min(xLastCandle + 24, w - 65);
 
+      // Vertical Guideline at future projection / apex (matches reference image teal dashed line)
+      if (effectiveProjEndX !== null && effectiveProjEndX > targetLabelX && effectiveProjEndX < w - 20) {
+        ctx.beginPath();
+        ctx.setLineDash([3, 3]);
+        ctx.strokeStyle = 'rgba(45, 212, 191, 0.45)';
+        ctx.lineWidth = 1.0;
+        ctx.moveTo(effectiveProjEndX, 18);
+        ctx.lineTo(effectiveProjEndX, h - 26);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
       // Current price levels at the latest candle (100% matched with legend)
       const currSpread = trendlineProData.resistance - trendlineProData.support;
 
@@ -2574,9 +2557,8 @@ export function MarketCandleChart() {
       const fanLabels: FibFanLabelItem[] = [];
 
       allRatios.forEach((r) => {
-        // Price at current candle - strictly separated across the full channel spread
-        const pCurrent = trendlineProData.support + r * currSpread;
-        // Price at start anchor
+        // Price at current candle and start anchor evaluated directly from linear formula
+        const pCurrent = getFibRayPrice(lastCandleIdx, r);
         const pStart = getFibRayPrice(startChannelIdx, r);
 
         const yStart = series.priceToCoordinate(pStart);
@@ -2598,6 +2580,20 @@ export function MarketCandleChart() {
           }
           ctx.stroke();
           ctx.setLineDash([]);
+
+          // Forward dashed projection to effectiveProjEndX
+          const pProj = getFibRayPrice(effectiveProjEndLogical, r);
+          const yProj = series.priceToCoordinate(pProj);
+          if (yProj !== null && effectiveProjEndX > targetLabelX) {
+            ctx.beginPath();
+            ctx.setLineDash([2, 3]);
+            ctx.moveTo(targetLabelX, yTarget);
+            ctx.lineTo(effectiveProjEndX, yProj);
+            ctx.strokeStyle = r < 0 ? 'rgba(248, 113, 113, 0.4)' : 'rgba(250, 204, 21, 0.4)';
+            ctx.lineWidth = 0.9;
+            ctx.stroke();
+            ctx.setLineDash([]);
+          }
 
           // Horizontal guideline from label to right edge for key levels (Fib 1.618, 0.618)
           if (r === 0.618 || r === 1.618) {
@@ -2696,8 +2692,12 @@ export function MarketCandleChart() {
       }
 
       // ── 7. Swing Pivot Triangles (▼ on Highs, ▲ on Lows) ──
-      // Hiển thị các điểm Swing Pivot chuẩn xác trên toàn bộ đỉnh sóng và đáy sóng
-      swingHighs.forEach((sh) => {
+      // Chỉ hiển thị các mốc đảo chiều then chốt và điểm chạm trendline chính (không hiển thị tràn lan)
+      const highMarkers = displayedHighMarkers && displayedHighMarkers.length > 0
+        ? displayedHighMarkers
+        : [trendlineProData.resP1, trendlineProData.resP2];
+
+      highMarkers.forEach((sh) => {
         if (!sh) return;
         const x = timeScale.logicalToCoordinate(sh.idx as any);
         const y = series.priceToCoordinate(sh.price);
@@ -2712,7 +2712,11 @@ export function MarketCandleChart() {
         }
       });
 
-      swingLows.forEach((sl) => {
+      const lowMarkers = displayedLowMarkers && displayedLowMarkers.length > 0
+        ? displayedLowMarkers
+        : [trendlineProData.supP1, trendlineProData.supP2];
+
+      lowMarkers.forEach((sl) => {
         if (!sl) return;
         const x = timeScale.logicalToCoordinate(sl.idx as any);
         const y = series.priceToCoordinate(sl.price);
