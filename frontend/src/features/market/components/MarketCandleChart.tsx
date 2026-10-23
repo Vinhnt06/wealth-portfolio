@@ -282,27 +282,21 @@ export function calculateTrendlinePro(candles: CandlestickData<Time>[]): Trendli
 
       if (isHigh && i - lastHighIdx >= 3) {
         lastHighIdx = i;
-        // Wick filtering for bearish rejection candles (nến đỏ rút râu / Bull Trap):
-        // Giá tính toán (calcPrice) loại bỏ bẫy quét thanh khoản râu nến đỏ,
-        // trong khi giá hiển thị (price) luôn đặt chính xác trên chóp râu nến c.high.
-        const isGreen = c.close >= c.open;
-        const calcPrice = isGreen ? c.high : Math.max(c.open, c.close + (c.high - c.close) * 0.35);
-        swingHighs.push({ idx: i, time: c.time, price: c.high, calcPrice });
+        // Điểm Swing High lấy chuẩn xác 100% râu nến cao nhất
+        swingHighs.push({ idx: i, time: c.time, price: c.high, calcPrice: c.high });
       }
       if (isLow && i - lastLowIdx >= 3) {
         lastLowIdx = i;
-        // Wick filtering for hammer/bear trap wicks:
-        const isRed = c.close <= c.open;
-        const calcPrice = isRed ? c.low : Math.min(c.open, c.close - (c.close - c.low) * 0.35);
-        swingLows.push({ idx: i, time: c.time, price: c.low, calcPrice });
+        // Điểm Swing Low lấy chuẩn xác 100% râu nến thấp nhất (không nâng khống tạo khoảng hổng)
+        swingLows.push({ idx: i, time: c.time, price: c.low, calcPrice: c.low });
       }
     }
 
     if (swingHighs.length < 2 || swingLows.length < 2) continue;
 
-    // 1. Candidate Resistance Highs (Upper Tangent - Realistic Slope & Boundaries)
-    const maxHighInWindow = Math.max(...swingHighs.map((h) => h.calcPrice));
-    const maxResSlope = (lastClose * 0.0025); // tối đa dốc lên 0.25%/bar, chống bắn dựng đứng lên trời
+    // 1. Candidate Resistance Highs (Upper Tangent - Bám sát đỉnh nến)
+    const maxHighInWindow = Math.max(...swingHighs.map((h) => h.price));
+    const maxResSlope = (lastClose * 0.0025); // tối đa dốc lên 0.25%/bar
     const minResSlope = -(lastClose * 0.004); // không dốc chúc xuống quá 0.4%/bar
     const resCandidates: {
       h1: { idx: number; time: Time; price: number; calcPrice: number };
@@ -318,37 +312,59 @@ export function calculateTrendlinePro(candles: CandlestickData<Time>[]): Trendli
         const p1 = swingHighs[i];
         const p2 = swingHighs[j];
         const dx = p2.idx - p1.idx;
-        if (dx < 8) continue;
-        const slope = (p2.calcPrice - p1.calcPrice) / dx;
+        if (dx < 6) continue;
+        const slope = (p2.price - p1.price) / dx;
         if (slope > maxResSlope || slope < minResSlope) continue;
 
-        const currRes = p1.calcPrice + slope * (lastIdx - p1.idx);
-        // Kháng cự tại nến hiện tại phải nằm hợp lý ngay phía trên giá hiện tại (+0.1% đến +22%)
-        if (currRes < lastClose * 1.001 || currRes > lastClose * 1.22) continue;
+        const currRes = p1.price + slope * (lastIdx - p1.idx);
+        // Kháng cự tại nến hiện tại phải nằm sát ngay phía trên giá hiện tại (+0.1% đến +14%)
+        if (currRes < lastClose * 1.001 || currRes > lastClose * 1.15) continue;
 
-        let breachPenalty = 0;
+        let closeBreachCount = 0;
+        let closeBreachSeverity = 0;
         let touches = 0;
+        let totalGap = 0;
+
         for (let k = p1.idx; k <= lastIdx; k++) {
-          const lineP = p1.calcPrice + slope * (k - p1.idx);
-          const diff = candles[k].high - lineP;
-          if (diff > lineP * 0.0015) {
-            breachPenalty += diff;
-          } else if (Math.abs(diff) <= lineP * 0.004) {
+          const lineP = p1.price + slope * (k - p1.idx);
+          const cK = candles[k];
+
+          // Nến đóng cửa vượt cản (Breakout)
+          if (cK.close > lineP * 1.004) {
+            closeBreachCount++;
+            closeBreachSeverity += (cK.close - lineP * 1.004) / lineP;
+          }
+
+          // Điểm chạm thực tế (chạm sát râu nến trong phạm vi 0.45%)
+          if (Math.abs(cK.high - lineP) <= lineP * 0.0045) {
             touches++;
+          }
+
+          // Khoảng cách từ đỉnh nến tới cản
+          if (lineP >= cK.high) {
+            totalGap += (lineP - cK.high) / lineP;
           }
         }
 
-        const isClean = breachPenalty < 0.05;
-        const anchorsPeak = p1.calcPrice === maxHighInWindow || p2.calcPrice === maxHighInWindow ? 5000 : 0;
-        const proximityScore = Math.max(0, 1 - (currRes - lastClose) / (lastClose * 0.22)) * 3000;
+        if (closeBreachCount > 2) continue;
+
+        const count = Math.max(1, lastIdx - p1.idx);
+        const avgGap = totalGap / count;
+
+        const snugScore = Math.max(0, 1 - avgGap / 0.04) * 15000;
+        const touchScore = touches * 4000;
+        const proximityScore = Math.max(0, 1 - (currRes - lastClose) / (lastClose * 0.08)) * 8000;
+        const anchorsPeak = p1.price === maxHighInWindow || p2.price === maxHighInWindow ? 3000 : 0;
+
+        const score = snugScore + touchScore + proximityScore + anchorsPeak + dx * 10 - closeBreachSeverity * 50000;
 
         resCandidates.push({
           h1: p1,
           h2: p2,
           slope,
           currRes,
-          breachPenalty,
-          score: (isClean ? 30000 : 0) - breachPenalty * 40000 + touches * 3000 + anchorsPeak + proximityScore + dx * 5,
+          breachPenalty: closeBreachSeverity,
+          score,
         });
       }
     }
@@ -356,9 +372,9 @@ export function calculateTrendlinePro(candles: CandlestickData<Time>[]): Trendli
     if (resCandidates.length === 0) continue;
     const bestRes = resCandidates[0];
 
-    // 2. Candidate Support Lows (Lower Tangent - Realistic Slope & Boundaries)
-    const minLowInWindow = Math.min(...swingLows.map((l) => l.calcPrice));
-    const minSupSlope = -(lastClose * 0.0025); // không dốc chúc xuống quá 0.25%/bar, chống đâm âm
+    // 2. Candidate Support Lows (Lower Tangent - Ôm sát đáy nến, triệt tiêu khoảng hổng)
+    const minLowInWindow = Math.min(...swingLows.map((l) => l.price));
+    const minSupSlope = -(lastClose * 0.0025); // không dốc chúc xuống quá 0.25%/bar
     const maxSupSlope = (lastClose * 0.004);   // không dốc lên quá 0.4%/bar
     const supCandidates: {
       l1: { idx: number; time: Time; price: number; calcPrice: number };
@@ -374,37 +390,67 @@ export function calculateTrendlinePro(candles: CandlestickData<Time>[]): Trendli
         const p1 = swingLows[i];
         const p2 = swingLows[j];
         const dx = p2.idx - p1.idx;
-        if (dx < 8) continue;
-        const slope = (p2.calcPrice - p1.calcPrice) / dx;
+        if (dx < 6) continue;
+        const slope = (p2.price - p1.price) / dx;
         if (slope < minSupSlope || slope > maxSupSlope) continue;
 
-        const currSup = p1.calcPrice + slope * (lastIdx - p1.idx);
-        // Hỗ trợ tại nến hiện tại phải nằm hợp lý ngay phía dưới giá hiện tại (-22% đến -0.1%) và luôn > 0
-        if (currSup < lastClose * 0.78 || currSup > lastClose * 0.999 || currSup <= 0) continue;
+        const currSup = p1.price + slope * (lastIdx - p1.idx);
+        // Hỗ trợ tại nến hiện tại phải nằm sát ngay phía dưới giá hiện tại (-12% đến -0.1%) và luôn > 0
+        if (currSup < lastClose * 0.88 || currSup > lastClose * 0.999 || currSup <= 0) continue;
 
-        let breachPenalty = 0;
+        let closeBreachCount = 0;
+        let closeBreachSeverity = 0;
         let touches = 0;
+        let totalGap = 0;
+
         for (let k = p1.idx; k <= lastIdx; k++) {
-          const lineP = p1.calcPrice + slope * (k - p1.idx);
-          const diff = lineP - candles[k].low;
-          if (diff > lineP * 0.0015) {
-            breachPenalty += diff;
-          } else if (Math.abs(diff) <= lineP * 0.004) {
+          const lineP = p1.price + slope * (k - p1.idx);
+          const cK = candles[k];
+
+          // Thân nến đóng cửa thủng hỗ trợ
+          if (cK.close < lineP * 0.996) {
+            closeBreachCount++;
+            closeBreachSeverity += (lineP * 0.996 - cK.close) / lineP;
+          }
+
+          // Điểm chạm thực tế (chạm sát râu nến trong phạm vi 0.45%)
+          if (Math.abs(cK.low - lineP) <= lineP * 0.0045) {
             touches++;
+          }
+
+          // Khoảng cách từ đáy nến tới hỗ trợ (càng nhỏ càng ôm sát nến, không bị hổng)
+          if (cK.low >= lineP) {
+            totalGap += (cK.low - lineP) / lineP;
           }
         }
 
-        const isClean = breachPenalty < 0.05;
-        const anchorsTrough = p1.calcPrice === minLowInWindow || p2.calcPrice === minLowInWindow ? 5000 : 0;
-        const proximityScore = Math.max(0, 1 - (lastClose - currSup) / (lastClose * 0.22)) * 3000;
+        // Không chấp nhận đường bị quá 2 nến đóng cửa thủng
+        if (closeBreachCount > 2) continue;
+
+        const count = Math.max(1, lastIdx - p1.idx);
+        const avgGap = totalGap / count;
+
+        // Điểm ôm sát đáy nến (Snug Fit Score - Tối đa 15000 điểm nếu avgGap cực thấp < 1.5%)
+        const snugScore = Math.max(0, 1 - avgGap / 0.04) * 15000;
+
+        // Điểm chạm tiếp xúc các đáy (Mỗi điểm chạm +4000 điểm)
+        const touchScore = touches * 4000;
+
+        // Điểm độ gần với nến hiện tại (Ưu tiên hỗ trợ sát giá hiện tại trong vòng 1% - 6%)
+        const proximityScore = Math.max(0, 1 - (lastClose - currSup) / (lastClose * 0.08)) * 8000;
+
+        // Điểm neo đáy nổi bật
+        const anchorsTrough = p1.price === minLowInWindow || p2.price === minLowInWindow ? 3000 : 0;
+
+        const score = snugScore + touchScore + proximityScore + anchorsTrough + dx * 10 - closeBreachSeverity * 50000;
 
         supCandidates.push({
           l1: p1,
           l2: p2,
           slope,
           currSup,
-          breachPenalty,
-          score: (isClean ? 30000 : 0) - breachPenalty * 40000 + touches * 3000 + anchorsTrough + proximityScore + dx * 5,
+          breachPenalty: closeBreachSeverity,
+          score,
         });
       }
     }
@@ -424,12 +470,12 @@ export function calculateTrendlinePro(candles: CandlestickData<Time>[]): Trendli
 
     let xInt = Infinity;
     if (Math.abs(resSlope - supSlope) > 1e-5) {
-      xInt = (l1.calcPrice - supSlope * l1.idx - (h1.calcPrice - resSlope * h1.idx)) / (resSlope - supSlope);
+      xInt = (l1.price - supSlope * l1.idx - (h1.price - resSlope * h1.idx)) / (resSlope - supSlope);
     }
 
     const spread = currRes - currSup;
-    // Kênh nêm co hẹp phải có biên độ thực tế từ 2% đến 25% giá hiện tại
-    if (spread >= 0.02 * lastClose && spread <= 0.28 * lastClose && (xInt < lastIdx - 5 || xInt > lastIdx + 12 || xInt === Infinity)) {
+    // Kênh nêm co hẹp phải có biên độ thực tế từ 2% đến 22% giá hiện tại
+    if (spread >= 0.02 * lastClose && spread <= 0.24 * lastClose && (xInt < lastIdx - 5 || xInt > lastIdx + 12 || xInt === Infinity)) {
       bestCandidate = { h1, h2, l1, l2, resSlope, supSlope, currRes, currSup, xInt, swingHighs, swingLows };
       break;
     }
@@ -481,16 +527,16 @@ export function calculateTrendlinePro(candles: CandlestickData<Time>[]): Trendli
   }
 
   // 3. Base Trough for Horizontal Level & Fibonacci Converging Fan
-  let baseTrough: { idx: number; time: Time; price: number } = { idx: l1.idx, time: l1.time, price: (l1 as any).calcPrice ?? l1.price };
+  let baseTrough: { idx: number; time: Time; price: number } = { idx: l1.idx, time: l1.time, price: l1.price };
   const lowsInWindow = swingLows.filter((sl) => sl.idx >= Math.min(h1.idx, l1.idx));
   if (lowsInWindow.length > 0) {
     baseTrough = [...lowsInWindow].sort((a, b) => a.price - b.price)[0];
   }
 
-  const resP1 = { idx: h1.idx, time: h1.time, price: (h1 as any).calcPrice ?? h1.price };
-  const resP2 = { idx: h2.idx, time: h2.time, price: (h2 as any).calcPrice ?? h2.price };
-  const supP1 = { idx: l1.idx, time: l1.time, price: (l1 as any).calcPrice ?? l1.price };
-  const supP2 = { idx: l2.idx, time: l2.time, price: (l2 as any).calcPrice ?? l2.price };
+  const resP1 = { idx: h1.idx, time: h1.time, price: h1.price };
+  const resP2 = { idx: h2.idx, time: h2.time, price: h2.price };
+  const supP1 = { idx: l1.idx, time: l1.time, price: l1.price };
+  const supP2 = { idx: l2.idx, time: l2.time, price: l2.price };
 
   const lastCloseVal = candles[lastIdx].close;
   const channelDelta = Math.max(0.5, currRes - currSup);
