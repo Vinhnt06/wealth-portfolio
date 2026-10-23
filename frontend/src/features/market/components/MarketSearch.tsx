@@ -1,13 +1,22 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { MagnifyingGlass, Command, X, TrendUp, Star } from '@phosphor-icons/react';
+import { MagnifyingGlass, Command, X, TrendUp, Star, ChartLine } from '@phosphor-icons/react';
 import { useMarketStore } from '../store/marketStore';
 
 import stockDatabase from '../data/stockDatabase.json';
 import realTicksData from '../data/realTicks.json';
 import { getStockPriceColor } from '../utils/priceColors';
+import { VN_MARKET_INDEXES, isMarketIndex, getMarketIndexMeta } from '../constants/marketIndexes';
+
+export interface SearchItem {
+  symbol: string;
+  name: string;
+  exchange: string;
+  sector: string;
+  isIndex?: boolean;
+}
 
 const VN_STOCK_DATABASE = stockDatabase as Array<{
   symbol: string;
@@ -21,6 +30,9 @@ const REAL_TICKS_MAP = realTicksData as Record<
   { price: number; ref: number; open: number; high: number; low: number; volume: number }
 >;
 
+// Popular market leaders for auto-suggestion when search query is empty
+const POPULAR_LEADER_SYMBOLS = ['HPG', 'VCB', 'FPT', 'SSI', 'TCB', 'VHM', 'MBB', 'MWG', 'VNM', 'STB', 'DGC', 'GAS'];
+
 export const MarketSearch: React.FC = () => {
   const router = useRouter();
   const pathname = usePathname();
@@ -30,7 +42,18 @@ export const MarketSearch: React.FC = () => {
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   
-  const { setSelectedSymbol, selectedSymbol, ticks, toggleWatchlistSymbol, watchlistSymbols, updateTick, openQuickView, closeQuickView, setViewMode } = useMarketStore();
+  const {
+    setSelectedSymbol,
+    selectedSymbol,
+    ticks,
+    indexes,
+    setSelectedIndexSymbol,
+    toggleWatchlistSymbol,
+    watchlistSymbols,
+    updateTick,
+    closeQuickView,
+    setViewMode,
+  } = useMarketStore();
 
   // Helper to normalize any stock price input cleanly into VND
   const normalizeToVnd = (p: number | null | undefined): number | null => {
@@ -90,29 +113,68 @@ export const MarketSearch: React.FC = () => {
   }, [isOpen]);
 
   const q = query.trim().toLowerCase();
-  const filtered = q
-    ? VN_STOCK_DATABASE.filter(
-        (item) =>
-          item.symbol.toLowerCase().includes(q) ||
-          item.name.toLowerCase().includes(q) ||
-          item.sector.toLowerCase().includes(q)
-      )
-        .sort((a, b) => {
-          const aSym = a.symbol.toLowerCase();
-          const bSym = b.symbol.toLowerCase();
-          if (aSym === q && bSym !== q) return -1;
-          if (bSym === q && aSym !== q) return 1;
-          if (aSym.startsWith(q) && !bSym.startsWith(q)) return -1;
-          if (bSym.startsWith(q) && !aSym.startsWith(q)) return 1;
-          if (aSym.includes(q) && bSym.includes(q)) {
-            if (aSym.length !== bSym.length) return aSym.length - bSym.length;
-          }
-          if (aSym.includes(q) && !bSym.includes(q)) return -1;
-          if (bSym.includes(q) && !aSym.includes(q)) return 1;
-          return 0;
-        })
-        .slice(0, 16)
-    : VN_STOCK_DATABASE.slice(0, 10);
+  const qClean = q.replace(/[-_\s]/g, '');
+
+  const filtered = useMemo<SearchItem[]>(() => {
+    if (!q) {
+      // Khi chưa gõ gì: Tự động đề xuất toàn bộ các Chỉ số thị trường trước, sau đó là Top cổ phiếu tâm điểm
+      const popularStocks = POPULAR_LEADER_SYMBOLS.map((sym) =>
+        VN_STOCK_DATABASE.find((s) => s.symbol === sym)
+      ).filter(Boolean) as SearchItem[];
+      return [...VN_MARKET_INDEXES, ...popularStocks];
+    }
+
+    // Kiểm tra nếu người dùng tìm kiếm từ khóa chỉ số
+    const isExplicitIndexQuery = [
+      'chiso',
+      'chỉ số',
+      'chi so',
+      'index',
+      'market',
+      'vni',
+      'thitruong',
+      'thị trường',
+      'vn-index',
+      'vnindex',
+    ].some((k) => qClean.includes(k.replace(/[-_\s]/g, '')) || q.includes(k));
+
+    // Lọc các chỉ số thị trường
+    const matchedIndices = VN_MARKET_INDEXES.filter((idx) => {
+      if (isExplicitIndexQuery) return true;
+      const symClean = idx.symbol.toLowerCase();
+      const nameClean = idx.name.toLowerCase();
+      const aliasesMatch = idx.aliases.some((al) => al.toLowerCase().replace(/[-_\s]/g, '').includes(qClean));
+      return (
+        symClean.includes(qClean) ||
+        nameClean.includes(q) ||
+        aliasesMatch
+      );
+    });
+
+    // Lọc cổ phiếu thông thường
+    const matchedStocks = VN_STOCK_DATABASE.filter(
+      (item) =>
+        item.symbol.toLowerCase().includes(qClean) ||
+        item.name.toLowerCase().includes(q) ||
+        item.sector.toLowerCase().includes(q)
+    );
+
+    matchedStocks.sort((a, b) => {
+      const aSym = a.symbol.toLowerCase();
+      const bSym = b.symbol.toLowerCase();
+      if (aSym === qClean && bSym !== qClean) return -1;
+      if (bSym === qClean && aSym !== qClean) return 1;
+      if (aSym.startsWith(qClean) && !bSym.startsWith(qClean)) return -1;
+      if (bSym.startsWith(qClean) && !aSym.startsWith(qClean)) return 1;
+      if (aSym.includes(qClean) && bSym.includes(qClean)) {
+        if (aSym.length !== bSym.length) return aSym.length - bSym.length;
+      }
+      return aSym.localeCompare(bSym);
+    });
+
+    // Ưu tiên hiển thị Chỉ số thị trường lên đầu danh sách tìm kiếm
+    return [...matchedIndices, ...matchedStocks].slice(0, 18);
+  }, [q, qClean]);
 
   // Lazy fetch quote for top visible items in search popup if neither tick nor screener exists
   useEffect(() => {
@@ -130,11 +192,15 @@ export const MarketSearch: React.FC = () => {
           .catch(() => {});
       }
     });
-  }, [isOpen, query, filtered, ticks, screenerMap, updateTick]);
+  }, [isOpen, filtered, ticks, screenerMap, updateTick]);
 
   const handleSelect = (symbol: string) => {
-    const s = symbol.toUpperCase();
+    const s = symbol.toUpperCase().trim();
+    const isIdx = isMarketIndex(s);
     setSelectedSymbol(s);
+    if (isIdx) {
+      setSelectedIndexSymbol(s);
+    }
     setViewMode('detail');
     closeQuickView();
     setIsOpen(false);
@@ -181,9 +247,183 @@ export const MarketSearch: React.FC = () => {
     }
   };
 
+  // Group items when query is empty or when indices exist
+  const indexItems = filtered.filter((item) => item.isIndex);
+  const stockItems = filtered.filter((item) => !item.isIndex);
+
+  const renderItemRow = (item: SearchItem) => {
+    const isSelected = selectedSymbol === item.symbol;
+
+    if (item.isIndex) {
+      // Dữ liệu chỉ số thị trường (VNINDEX, VN30, HNX, UPCOM)
+      const liveIndex = indexes[item.symbol];
+      const liveTick = ticks[item.symbol];
+      const val = liveIndex?.value ?? liveTick?.price;
+      const chg = liveIndex?.change ?? liveTick?.change ?? 0;
+      const pct = liveIndex?.changePercent ?? liveTick?.changePercent ?? 0;
+      const isPositive = chg >= 0;
+
+      const valDisplay = val ? val.toLocaleString('vi-VN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '--';
+      const pctDisplay = val ? (pct > 0 ? `+${pct.toFixed(2)}%` : `${pct.toFixed(2)}%`) : '--';
+
+      return (
+        <div
+          key={item.symbol}
+          onClick={() => handleSelect(item.symbol)}
+          className={`flex items-center justify-between p-2.5 rounded-xl cursor-pointer transition-colors ${
+            isSelected
+              ? 'bg-cyan-950/60 border border-cyan-500/50 shadow-sm'
+              : 'hover:bg-zinc-900/80'
+          }`}
+        >
+          {/* Left: Index Icon + Symbol + Exchange + Index Badge + Name */}
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-6 h-6 rounded-lg bg-cyan-950/80 border border-cyan-500/30 flex items-center justify-center shrink-0">
+              <ChartLine className="w-3.5 h-3.5 text-cyan-400" />
+            </div>
+
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="font-mono font-black text-xs sm:text-sm text-cyan-200">{item.symbol}</span>
+                <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-zinc-800 text-zinc-400">
+                  {item.exchange}
+                </span>
+                <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
+                  CHỈ SỐ
+                </span>
+              </div>
+              <p className="text-[11px] text-zinc-400 truncate max-w-[180px] sm:max-w-[210px] font-sans">
+                {item.name}
+              </p>
+            </div>
+          </div>
+
+          {/* Right: Live Index Value + Change % */}
+          <div className="text-right shrink-0 pl-2">
+            <div className="flex items-baseline justify-end gap-1 font-mono">
+              <span className={`text-xs sm:text-sm font-black ${isPositive ? 'text-emerald-400' : 'text-rose-400'}`}>
+                {valDisplay}
+              </span>
+              <span className="text-[9px] text-zinc-500">điểm</span>
+            </div>
+            <div className="flex items-center gap-1 justify-end mt-0.5 font-mono text-[10px] font-bold">
+              {val ? (
+                <span className={`px-1.5 py-0.2 rounded border ${isPositive ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'bg-rose-500/10 text-rose-400 border-rose-500/30'}`}>
+                  {pctDisplay}
+                </span>
+              ) : (
+                <span className="text-[9px] text-zinc-500 font-mono">Đang cập nhật</span>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Dữ liệu cổ phiếu thông thường
+    const liveTick = ticks[item.symbol];
+    const screenerItem = screenerMap[item.symbol];
+    const baseTick = REAL_TICKS_MAP[item.symbol];
+
+    const rawPrice = liveTick?.price ?? (screenerItem ? screenerItem.price : (baseTick?.price ?? null));
+    const price = normalizeToVnd(rawPrice);
+
+    const rawRef = liveTick?.referencePrice ?? (screenerItem && price ? Math.round(price / (1 + (screenerItem.changePercent || 0) / 100)) : (baseTick?.ref ?? price));
+    const ref = normalizeToVnd(rawRef);
+
+    const change = liveTick?.change ?? (price && ref ? price - ref : 0);
+    const changePercent = liveTick?.changePercent ?? (screenerItem?.changePercent ?? (price && ref && ref > 0 ? ((price - ref) / ref) * 100 : 0));
+    const isStarred = watchlistSymbols.includes(item.symbol);
+
+    const priceColor = getStockPriceColor({
+      price,
+      refPrice: ref,
+      change,
+      changePercent,
+      exchange: item.exchange,
+    });
+
+    const rsRating = screenerItem?.rsRating ?? (liveTick ? Math.min(99, Math.max(30, Math.round(50 + (liveTick.changePercent || 0) * 4))) : null);
+
+    const priceDisplayK = price ? (price / 1000).toFixed(2) : '--';
+    const pctDisplay = changePercent !== undefined && price ? (changePercent > 0 ? `+${changePercent.toFixed(2)}%` : `${changePercent.toFixed(2)}%`) : '--';
+
+    return (
+      <div
+        key={item.symbol}
+        onClick={() => handleSelect(item.symbol)}
+        className={`flex items-center justify-between p-2.5 rounded-xl cursor-pointer transition-colors ${
+          isSelected
+            ? 'bg-emerald-950/50 border border-emerald-500/40 shadow-sm'
+            : 'hover:bg-zinc-900/80'
+        }`}
+      >
+        {/* Left: Star + Symbol + Exchange + Company Name */}
+        <div className="flex items-center gap-2.5 min-w-0">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleWatchlistSymbol(item.symbol);
+            }}
+            className="text-zinc-500 hover:text-amber-400 transition-colors shrink-0"
+            title={isStarred ? 'Bỏ theo dõi' : 'Thêm vào theo dõi'}
+          >
+            <Star className={`w-3.5 h-3.5 ${isStarred ? 'text-amber-400 fill-amber-400' : ''}`} />
+          </button>
+
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="font-mono font-black text-xs sm:text-sm text-zinc-100">{item.symbol}</span>
+              <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-zinc-800 text-zinc-400">
+                {item.exchange}
+              </span>
+              {rsRating ? (
+                <span className={`px-1.5 py-0.2 rounded text-[10px] font-mono font-bold border ${
+                  rsRating >= 80
+                    ? 'bg-amber-500/20 text-amber-300 border-amber-400/50 shadow-[0_0_8px_rgba(245,158,11,0.2)]'
+                    : 'bg-zinc-800 text-zinc-300 border-zinc-700'
+                }`}>
+                  RS {rsRating}
+                </span>
+              ) : (
+                <span className="px-1.5 py-0.2 rounded text-[9px] font-mono text-zinc-500 bg-zinc-900 border border-zinc-800">
+                  RS --
+                </span>
+              )}
+            </div>
+            <p className="text-[11px] text-zinc-400 truncate max-w-[180px] sm:max-w-[210px] font-sans">
+              {item.name}
+            </p>
+          </div>
+        </div>
+
+        {/* Right: Live Price + Change % */}
+        <div className="text-right shrink-0 pl-2">
+          <div className="flex items-baseline justify-end gap-1 font-mono">
+            <span className={`text-xs sm:text-sm font-black ${priceColor.colorClass}`}>
+              {priceDisplayK !== '--' ? priceDisplayK : '--'}
+            </span>
+            {price && (
+              <span className="text-[9px] text-zinc-500">({price.toLocaleString('vi-VN')}đ)</span>
+            )}
+          </div>
+          <div className="flex items-center gap-1 justify-end mt-0.5 font-mono text-[10px] font-bold">
+            {price ? (
+              <span className={`px-1.5 py-0.2 rounded border ${priceColor.badgeBgClass}`}>
+                {pctDisplay}
+              </span>
+            ) : (
+              <span className="text-[9px] text-zinc-500 font-mono">Đang cập nhật</span>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div ref={containerRef} className="relative w-full z-[9999]">
-      {/* Inline Direct Header Search Input */}
+      {/* Direct Header Search Input */}
       <div
         className={`flex items-center px-3 py-2 bg-zinc-900/90 border rounded-xl transition-all shadow-inner ${
           isOpen ? 'border-emerald-500/50 ring-2 ring-emerald-500/20 bg-zinc-950' : 'border-zinc-800 hover:border-zinc-700'
@@ -200,7 +440,7 @@ export const MarketSearch: React.FC = () => {
             setIsOpen(true);
           }}
           onKeyDown={handleKeyDownInput}
-          placeholder="Tìm mã CP (VCB, FPT...)"
+          placeholder="Tìm mã CP, chỉ số (VN-INDEX, VN30, FPT...)"
           className="w-full bg-transparent text-xs font-mono text-zinc-100 placeholder-zinc-500 focus:outline-none"
         />
         {query ? (
@@ -220,10 +460,10 @@ export const MarketSearch: React.FC = () => {
         )}
       </div>
 
-      {/* Floating Autocomplete Dropdown List with Stock + Price + RS */}
+      {/* Floating Autocomplete Dropdown List with Indices + Stocks + RS */}
       {isOpen && (
-        <div className="fixed left-4 right-4 sm:absolute sm:left-0 sm:right-auto sm:w-[440px] max-w-[480px] top-16 sm:top-full mt-2 z-[99999] bg-zinc-950/98 border border-zinc-700/80 rounded-2xl shadow-[0_25px_60px_rgba(0,0,0,0.9)] overflow-hidden backdrop-blur-2xl animate-in fade-in duration-150 ring-1 ring-white/10">
-          <div className="max-h-80 overflow-y-auto p-1.5 divide-y divide-zinc-800/40 scrollbar-none">
+        <div className="fixed left-4 right-4 sm:absolute sm:left-0 sm:right-auto sm:w-[460px] max-w-[480px] top-16 sm:top-full mt-2 z-[99999] bg-zinc-950/98 border border-zinc-700/80 rounded-2xl shadow-[0_25px_60px_rgba(0,0,0,0.9)] overflow-hidden backdrop-blur-2xl animate-in fade-in duration-150 ring-1 ring-white/10">
+          <div className="max-h-96 overflow-y-auto p-1.5 divide-y divide-zinc-800/40 scrollbar-none">
             {filtered.length === 0 ? (
               <div
                 onClick={() => query.trim() && handleSelect(query.trim())}
@@ -232,117 +472,41 @@ export const MarketSearch: React.FC = () => {
                 Nhấn Enter để chọn mã &quot;<span className="font-bold uppercase">{query}</span>&quot;
               </div>
             ) : (
-              filtered.map((item) => {
-                const liveTick = ticks[item.symbol];
-                const screenerItem = screenerMap[item.symbol];
-                const baseTick = REAL_TICKS_MAP[item.symbol];
-
-                // Verified price normalized cleanly to VND (handling thousands vs full VND)
-                const rawPrice = liveTick?.price ?? (screenerItem ? screenerItem.price : (baseTick?.price ?? null));
-                const price = normalizeToVnd(rawPrice);
-
-                const rawRef = liveTick?.referencePrice ?? (screenerItem && price ? Math.round(price / (1 + (screenerItem.changePercent || 0) / 100)) : (baseTick?.ref ?? price));
-                const ref = normalizeToVnd(rawRef);
-
-                const change = liveTick?.change ?? (price && ref ? price - ref : 0);
-                const changePercent = liveTick?.changePercent ?? (screenerItem?.changePercent ?? (price && ref && ref > 0 ? ((price - ref) / ref) * 100 : 0));
-                const isStarred = watchlistSymbols.includes(item.symbol);
-                const isSelected = selectedSymbol === item.symbol;
-
-                const priceColor = getStockPriceColor({
-                  price,
-                  refPrice: ref,
-                  change,
-                  changePercent,
-                  exchange: item.exchange,
-                });
-
-                // Verified Minervini RS Rating (1-99)
-                const rsRating = screenerItem?.rsRating ?? (liveTick ? Math.min(99, Math.max(30, Math.round(50 + (liveTick.changePercent || 0) * 4))) : null);
-
-                const priceDisplayK = price ? (price / 1000).toFixed(2) : '--';
-                const pctDisplay = changePercent !== undefined && price ? (changePercent > 0 ? `+${changePercent.toFixed(2)}%` : `${changePercent.toFixed(2)}%`) : '--';
-
-                return (
-                  <div
-                    key={item.symbol}
-                    onClick={() => handleSelect(item.symbol)}
-                    className={`flex items-center justify-between p-2.5 rounded-xl cursor-pointer transition-colors ${
-                      isSelected
-                        ? 'bg-emerald-950/50 border border-emerald-500/40 shadow-sm'
-                        : 'hover:bg-zinc-900/80'
-                    }`}
-                  >
-                    {/* Left: Star + Symbol + Exchange + Company Name */}
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleWatchlistSymbol(item.symbol);
-                        }}
-                        className="text-zinc-500 hover:text-amber-400 transition-colors shrink-0"
-                      >
-                        <Star className={`w-3.5 h-3.5 ${isStarred ? 'text-amber-400 fill-amber-400' : ''}`} />
-                      </button>
-
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-mono font-black text-xs sm:text-sm text-zinc-100">{item.symbol}</span>
-                          <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-zinc-800 text-zinc-400">
-                            {item.exchange}
-                          </span>
-                          {/* Large Prominent RS Pill in Search */}
-                          {rsRating ? (
-                            <span className={`px-1.5 py-0.2 rounded text-[10px] font-mono font-bold border ${
-                              rsRating >= 80
-                                ? 'bg-amber-500/20 text-amber-300 border-amber-400/50 shadow-[0_0_8px_rgba(245,158,11,0.2)]'
-                                : 'bg-zinc-800 text-zinc-300 border-zinc-700'
-                            }`}>
-                              RS {rsRating}
-                            </span>
-                          ) : (
-                            <span className="px-1.5 py-0.2 rounded text-[9px] font-mono text-zinc-500 bg-zinc-900 border border-zinc-800">
-                              RS --
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-[11px] text-zinc-400 truncate max-w-[180px] sm:max-w-[210px] font-sans">
-                          {item.name}
-                        </p>
-                      </div>
+              <>
+                {/* Section 1: Chỉ số thị trường (Hiển thị đầu tiên nếu có) */}
+                {indexItems.length > 0 && (
+                  <div className="pb-1">
+                    <div className="px-2.5 py-1 text-[10px] font-mono uppercase tracking-wider text-cyan-400/90 flex items-center gap-1.5 font-bold">
+                      <ChartLine className="w-3.5 h-3.5 text-cyan-400" />
+                      <span>{q ? 'Chỉ Số Thị Trường' : 'Chỉ Số Thị Trường Đề Xuất'}</span>
                     </div>
-
-                    {/* Right: Live Price + Change % */}
-                    <div className="text-right shrink-0 pl-2">
-                      <div className="flex items-baseline justify-end gap-1 font-mono">
-                        <span className={`text-xs sm:text-sm font-black ${priceColor.colorClass}`}>
-                          {priceDisplayK !== '--' ? priceDisplayK : '--'}
-                        </span>
-                        {price && (
-                          <span className="text-[9px] text-zinc-500">({price.toLocaleString('vi-VN')}đ)</span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-1 justify-end mt-0.5 font-mono text-[10px] font-bold">
-                        {price ? (
-                          <span className={`px-1.5 py-0.2 rounded border ${priceColor.badgeBgClass}`}>
-                            {pctDisplay}
-                          </span>
-                        ) : (
-                          <span className="text-[9px] text-zinc-500 font-mono">Đang cập nhật</span>
-                        )}
-                      </div>
+                    <div className="space-y-0.5">
+                      {indexItems.map(renderItemRow)}
                     </div>
                   </div>
-                );
-              })
+                )}
+
+                {/* Section 2: Cổ phiếu niêm yết */}
+                {stockItems.length > 0 && (
+                  <div className={indexItems.length > 0 ? 'pt-1.5' : ''}>
+                    <div className="px-2.5 py-1 text-[10px] font-mono uppercase tracking-wider text-zinc-500 flex items-center gap-1.5 font-semibold">
+                      <TrendUp className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>{q ? 'Cổ Phiếu Niêm Yết' : 'Cổ Phiếu Tâm Điểm'}</span>
+                    </div>
+                    <div className="space-y-0.5">
+                      {stockItems.map(renderItemRow)}
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </div>
 
           <div className="px-3 py-2 bg-zinc-950/90 border-t border-zinc-800/80 flex items-center justify-between text-[10px] font-mono text-zinc-400">
-            <span>Bấm <kbd className="text-zinc-200 font-bold bg-zinc-800 px-1 rounded">↵</kbd> để chọn mã</span>
+            <span>Bấm <kbd className="text-zinc-200 font-bold bg-zinc-800 px-1 rounded">↵</kbd> để chọn</span>
             <span className="text-emerald-400 font-semibold flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              Giá & RS Realtime
+              Chỉ số & Cổ phiếu Realtime
             </span>
           </div>
         </div>

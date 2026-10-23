@@ -57,9 +57,37 @@ const STOCK_META_MAP = new Map<string, any>();
 const liveCompanyCache = new Map<string, { data: any; expiry: number }>();
 const CACHE_TTL_MS = 10 * 60 * 1000;
 
+import { isMarketIndex, getMarketIndexMeta } from '../../../../features/market/constants/marketIndexes';
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const symbol = (searchParams.get('symbol') || 'HPG').toUpperCase().trim();
+
+  // If queried symbol is a market index, return index overview metadata instead of company data
+  if (isMarketIndex(symbol)) {
+    const idxMeta = getMarketIndexMeta(symbol) || {
+      symbol,
+      name: `Chỉ số ${symbol}`,
+      exchange: symbol.includes('HNX') ? 'HNX' : symbol === 'UPCOM' ? 'UPCOM' : 'HOSE',
+      sector: 'Chỉ số thị trường',
+    };
+    return NextResponse.json({
+      success: true,
+      source: 'market_index',
+      data: {
+        symbol,
+        info: {
+          symbol,
+          business_model: `${idxMeta.name} là chỉ số phản ánh biến động thị trường của rổ cổ phiếu niêm yết trên sàn ${idxMeta.exchange}.`,
+          exchange: idxMeta.exchange,
+          isIndex: true,
+        },
+        shareholders: [],
+        officers: [],
+        financials: {},
+      },
+    });
+  }
 
   // 1. Check verified curated snapshot in companyProfiles.json
   const profilesMap = (companyProfiles as unknown) as Record<

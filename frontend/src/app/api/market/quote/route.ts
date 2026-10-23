@@ -7,6 +7,8 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const preferredRegion = 'sin1';
 
+import { VN_MARKET_INDEXES, isMarketIndex, getMarketIndexMeta } from '../../../../features/market/constants/marketIndexes';
+
 interface StockMeta {
   symbol: string;
   name: string;
@@ -17,6 +19,14 @@ interface StockMeta {
 const STOCK_LOOKUP = new Map<string, StockMeta>();
 (stockDatabase as StockMeta[]).forEach((item) => {
   STOCK_LOOKUP.set(item.symbol.toUpperCase(), item);
+});
+VN_MARKET_INDEXES.forEach((idx) => {
+  STOCK_LOOKUP.set(idx.symbol.toUpperCase(), {
+    symbol: idx.symbol,
+    name: idx.name,
+    exchange: idx.exchange,
+    sector: idx.sector,
+  });
 });
 
 // Cache for SSI board data (3 seconds TTL)
@@ -233,14 +243,14 @@ export async function GET(req: NextRequest) {
   const symbol = (searchParams.get('symbol') || 'HPG').toUpperCase().trim();
 
   // 1. Lookup metadata
-  const meta = STOCK_LOOKUP.get(symbol) || {
+  const isIndex = isMarketIndex(symbol);
+  const indexMeta = getMarketIndexMeta(symbol);
+  const meta = indexMeta || STOCK_LOOKUP.get(symbol) || {
     symbol,
-    name: `${symbol} Company`,
-    exchange: 'HOSE',
-    sector: 'Tổng hợp',
+    name: isIndex ? `Chỉ số ${symbol}` : `${symbol} Company`,
+    exchange: isIndex ? (symbol.includes('HNX') ? 'HNX' : symbol === 'UPCOM' ? 'UPCOM' : 'HOSE') : 'HOSE',
+    sector: isIndex ? 'Chỉ số thị trường' : 'Tổng hợp',
   };
-
-  const isIndex = ['VNINDEX', 'VN30', 'HNX', 'HNX30', 'UPCOM'].includes(symbol);
 
   // 2. FOR INDICES: Query Vietcap live gap-chart first
   if (isIndex) {

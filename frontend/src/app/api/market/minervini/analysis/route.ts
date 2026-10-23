@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import stockDatabase from '../../../../../features/market/data/stockDatabase.json';
 import { MinerviniAnalysisResult, MinerviniCriterion, MinerviniStrategySignal } from '../../../../../features/market/types/minervini.types';
 
+import { isMarketIndex, getMarketIndexMeta, VN_MARKET_INDEXES } from '../../../../../features/market/constants/marketIndexes';
+
 export const runtime = 'nodejs';
 export const preferredRegion = 'sin1';
 
@@ -11,6 +13,13 @@ const STOCK_MAP = new Map<string, { name: string; exchange: string; sector: stri
     name: item.name,
     exchange: item.exchange,
     sector: item.sector || 'Chung',
+  });
+});
+VN_MARKET_INDEXES.forEach((idx) => {
+  STOCK_MAP.set(idx.symbol.toUpperCase(), {
+    name: idx.name,
+    exchange: idx.exchange,
+    sector: idx.sector,
   });
 });
 
@@ -23,17 +32,20 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const symbol = (searchParams.get('symbol') || 'PVP').toUpperCase().trim();
 
-  const stockInfo = STOCK_MAP.get(symbol) || {
-    name: `Công ty CP ${symbol}`,
-    exchange: 'HOSE',
-    sector: 'Chung',
+  const isIndex = isMarketIndex(symbol);
+  const indexMeta = getMarketIndexMeta(symbol);
+  const stockInfo = indexMeta || STOCK_MAP.get(symbol) || {
+    name: isIndex ? `Chỉ số ${symbol}` : `Công ty CP ${symbol}`,
+    exchange: isIndex ? (symbol.includes('HNX') ? 'HNX' : symbol === 'UPCOM' ? 'UPCOM' : 'HOSE') : 'HOSE',
+    sector: isIndex ? 'Chỉ số thị trường' : 'Chung',
   };
 
   try {
     const nowSec = Math.floor(Date.now() / 1000);
     // Fetch 2 years of daily OHLC candles from DNSE
     const fromSec = nowSec - 730 * 24 * 3600;
-    const dnseUrl = `https://services.entrade.com.vn/chart-api/v2/ohlcs/stock?from=${fromSec}&to=${nowSec}&symbol=${encodeURIComponent(
+    const endpointType = isIndex ? 'index' : 'stock';
+    const dnseUrl = `https://services.entrade.com.vn/chart-api/v2/ohlcs/${endpointType}?from=${fromSec}&to=${nowSec}&symbol=${encodeURIComponent(
       symbol
     )}&resolution=1D`;
 

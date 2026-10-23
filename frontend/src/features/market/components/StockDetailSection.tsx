@@ -34,17 +34,28 @@ import { MinerviniStrategyPanel } from './MinerviniStrategyPanel';
 import { MinerviniAnalysisResult } from '../types/minervini.types';
 import stockDatabase from '../data/stockDatabase.json';
 import { getStockPriceColor, calculateExchangeCeilFloor } from '../utils/priceColors';
+import { VN_MARKET_INDEXES, isMarketIndex, getMarketIndexMeta } from '../constants/marketIndexes';
 
 interface StockMetadata {
   symbol: string;
   name: string;
   exchange: string;
   sector: string;
+  isIndex?: boolean;
 }
 
 const STOCK_META_MAP = new Map<string, StockMetadata>();
 (stockDatabase as StockMetadata[]).forEach((s) => {
   STOCK_META_MAP.set(s.symbol.toUpperCase().trim(), s);
+});
+VN_MARKET_INDEXES.forEach((idx) => {
+  STOCK_META_MAP.set(idx.symbol.toUpperCase().trim(), {
+    symbol: idx.symbol,
+    name: idx.name,
+    exchange: idx.exchange,
+    sector: idx.sector,
+    isIndex: true,
+  });
 });
 
 interface CompanyData {
@@ -107,7 +118,7 @@ interface StockDetailSectionProps {
 }
 
 export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackToOverview }) => {
-  const { selectedSymbol, setSelectedSymbol, ticks, watchlistSymbols, toggleWatchlistSymbol, updateTick, setViewMode } = useMarketStore();
+  const { selectedSymbol, setSelectedSymbol, setSelectedIndexSymbol, ticks, watchlistSymbols, toggleWatchlistSymbol, updateTick, setViewMode } = useMarketStore();
   const [activeTab, setActiveTab] = useState<'profile' | 'shareholders' | 'officers' | 'financials' | 'foreign' | 'orderbook'>('profile');
   const [companyData, setCompanyData] = useState<CompanyData | null>(null);
   const [foreignData, setForeignData] = useState<ForeignTradingData | null>(null);
@@ -169,19 +180,33 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
 
   const handleSwitchAndScanSymbol = (inputVal: string) => {
     const sym = inputVal.trim().toUpperCase();
-    if (!sym || sym.length !== 3) return;
+    if (!sym || sym.length < 3 || sym.length > 8) return;
     setSelectedSymbol(sym);
+    if (isMarketIndex(sym)) {
+      setSelectedIndexSymbol(sym);
+    }
     setQuickSymbolInput('');
     setScanFeedback(null);
   };
 
+  const isIndex = isMarketIndex(selectedSymbol);
+  const indexMeta = getMarketIndexMeta(selectedSymbol);
   const tick = ticks[selectedSymbol];
-  const meta = STOCK_META_MAP.get(selectedSymbol) || {
-    symbol: selectedSymbol,
-    name: `Công ty Cổ phần ${selectedSymbol}`,
-    exchange: 'HOSE',
-    sector: 'Doanh nghiệp niêm yết',
-  };
+  const meta: StockMetadata = indexMeta
+    ? {
+        symbol: indexMeta.symbol,
+        name: indexMeta.name,
+        exchange: indexMeta.exchange,
+        sector: indexMeta.sector,
+        isIndex: true,
+      }
+    : STOCK_META_MAP.get(selectedSymbol) || {
+        symbol: selectedSymbol,
+        name: isIndex ? `Chỉ số ${selectedSymbol}` : `Công ty Cổ phần ${selectedSymbol}`,
+        exchange: isIndex ? (selectedSymbol.includes('HNX') ? 'HNX' : selectedSymbol === 'UPCOM' ? 'UPCOM' : 'HOSE') : 'HOSE',
+        sector: isIndex ? 'Chỉ số thị trường' : 'Doanh nghiệp niêm yết',
+        isIndex,
+      };
 
   const isStarred = watchlistSymbols.includes(selectedSymbol);
 
@@ -237,16 +262,18 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
     return () => clearInterval(quoteInterval);
   }, [selectedSymbol, updateTick]);
 
-  const price = tick?.price || (minerviniData?.price ? Math.round(minerviniData.price * 1000) : 0);
-  const change = tick?.change !== undefined ? tick.change : (minerviniData?.change ? Math.round(minerviniData.change * 1000) : 0);
+  const price = isIndex
+    ? (tick?.price || 0)
+    : (tick?.price || (minerviniData?.price ? Math.round(minerviniData.price * 1000) : 0));
+  const change = tick?.change !== undefined ? tick.change : (minerviniData?.change ? (isIndex ? minerviniData.change : Math.round(minerviniData.change * 1000)) : 0);
   const changePercent = tick?.changePercent !== undefined ? tick.changePercent : (minerviniData?.changePct || 0);
   const isUp = change > 0;
   const isDown = change < 0;
 
-  const refPrice = tick?.referencePrice || (price > 0 ? Math.round(price - change) : 0);
+  const refPrice = tick?.referencePrice || (price > 0 ? (isIndex ? Number((price - change).toFixed(2)) : Math.round(price - change)) : 0);
   const calculatedCeilFloor = calculateExchangeCeilFloor(refPrice, meta.exchange);
-  const ceilPrice = tick?.ceilingPrice || calculatedCeilFloor.ceilingPrice;
-  const floorPrice = tick?.floorPrice || calculatedCeilFloor.floorPrice;
+  const ceilPrice = isIndex ? Number((refPrice * 1.07).toFixed(2)) : (tick?.ceilingPrice || calculatedCeilFloor.ceilingPrice);
+  const floorPrice = isIndex ? Number((refPrice * 0.93).toFixed(2)) : (tick?.floorPrice || calculatedCeilFloor.floorPrice);
 
   const priceColor = getStockPriceColor({
     price,
@@ -258,16 +285,18 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
     exchange: meta.exchange,
   });
 
-  const colorClass = priceColor.colorClass;
-  const bgBadgeClass = priceColor.badgeBgClass;
+  const colorClass = isIndex ? (isUp ? 'text-emerald-400' : isDown ? 'text-rose-400' : 'text-amber-400') : priceColor.colorClass;
+  const bgBadgeClass = isIndex
+    ? (isUp ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : isDown ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' : 'bg-amber-500/10 text-amber-400 border-amber-500/20')
+    : priceColor.badgeBgClass;
 
   const totalVol = tick?.totalVolume || tick?.volume || (minerviniData?.volume ? minerviniData.volume : 0);
   const rawHigh = tick?.high || 0;
   const rawLow = tick?.low || 0;
   const rawOpen = tick?.open || 0;
-  const highPrice = rawHigh > 0 ? (rawHigh < 1000 ? Math.round(rawHigh * 1000) : rawHigh) : 0;
-  const lowPrice = rawLow > 0 ? (rawLow < 1000 ? Math.round(rawLow * 1000) : rawLow) : 0;
-  const openPrice = rawOpen > 0 ? (rawOpen < 1000 ? Math.round(rawOpen * 1000) : rawOpen) : 0;
+  const highPrice = isIndex ? (rawHigh || price) : (rawHigh > 0 ? (rawHigh < 1000 ? Math.round(rawHigh * 1000) : rawHigh) : 0);
+  const lowPrice = isIndex ? (rawLow || price) : (rawLow > 0 ? (rawLow < 1000 ? Math.round(rawLow * 1000) : rawLow) : 0);
+  const openPrice = isIndex ? (rawOpen || price) : (rawOpen > 0 ? (rawOpen < 1000 ? Math.round(rawOpen * 1000) : rawOpen) : 0);
   const matchValueBillion = tick?.totalValue ? tick.totalValue / 1_000_000_000 : (price > 0 && totalVol > 0 ? (price * totalVol) / 1_000_000_000 : 0);
 
   const info = companyData?.info;
@@ -305,7 +334,7 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
                 value={quickSymbolInput}
                 onChange={(e) => setQuickSymbolInput(e.target.value.toUpperCase())}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter' && quickSymbolInput.trim().length === 3) {
+                  if (e.key === 'Enter' && quickSymbolInput.trim().length >= 3) {
                     handleSwitchAndScanSymbol(quickSymbolInput);
                   }
                 }}
@@ -313,7 +342,7 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
               />
               <button
                 onClick={() => handleSwitchAndScanSymbol(quickSymbolInput)}
-                disabled={quickSymbolInput.trim().length !== 3}
+                disabled={quickSymbolInput.trim().length < 3}
                 className="px-2 py-0.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[11px] font-medium transition-colors disabled:opacity-30 cursor-pointer"
               >
                 Xem
@@ -412,48 +441,59 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
               <p className="text-xs text-zinc-400 mt-0.5">{meta.name}</p>
             </div>
 
-            {/* Minervini Live RS Rating & Stage 2 Status */}
-            {minerviniData && (
-              <div className="flex items-center gap-3 px-3.5 py-1.5 rounded-xl bg-zinc-900/60 border border-zinc-800/80 text-xs">
-                {/* 1. RS Rating (Hero Stat) */}
-                <div className="flex items-baseline gap-1.5">
-                  <span className="text-[11px] text-zinc-400 font-medium">RS Rating:</span>
-                  <span className="font-mono font-bold text-amber-300 text-base leading-none">
-                    {minerviniData.rsRating}
-                  </span>
-                  <span className="text-[10px] font-mono text-zinc-500">/99</span>
-                  {minerviniData.rsRating >= 80 && (
-                    <span className="ml-1 px-1.5 py-0.2 rounded text-[9px] font-bold uppercase tracking-wider bg-amber-400/20 text-amber-300 border border-amber-400/30">
-                      Leader
+            {/* Minervini Live RS Rating & Stage 2 Status OR Market Index Badge */}
+            {isIndex ? (
+              <div className="flex items-center gap-3 px-3.5 py-1.5 rounded-xl bg-cyan-950/40 border border-cyan-800/40 text-xs">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+                  <span className="text-cyan-300 font-mono font-bold">CHỈ SỐ THỊ TRƯỜNG</span>
+                </div>
+                <span className="text-zinc-700 font-light select-none">|</span>
+                <span className="text-zinc-400 font-mono text-[11px]">Sở GDCK {meta.exchange}</span>
+              </div>
+            ) : (
+              minerviniData && (
+                <div className="flex items-center gap-3 px-3.5 py-1.5 rounded-xl bg-zinc-900/60 border border-zinc-800/80 text-xs">
+                  {/* 1. RS Rating (Hero Stat) */}
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-[11px] text-zinc-400 font-medium">RS Rating:</span>
+                    <span className="font-mono font-bold text-amber-300 text-base leading-none">
+                      {minerviniData.rsRating}
                     </span>
+                    <span className="text-[10px] font-mono text-zinc-500">/99</span>
+                    {minerviniData.rsRating >= 80 && (
+                      <span className="ml-1 px-1.5 py-0.2 rounded text-[9px] font-bold uppercase tracking-wider bg-amber-400/20 text-amber-300 border border-amber-400/30">
+                        Leader
+                      </span>
+                    )}
+                  </div>
+
+                  <span className="text-zinc-700 font-light select-none">|</span>
+
+                  {/* 2. Minervini Trend Template Criteria */}
+                  <div className="flex items-center gap-1.5">
+                    <span className={`w-1.5 h-1.5 rounded-full ${minerviniData.isStage2Eligible ? 'bg-emerald-400' : 'bg-zinc-500'}`} />
+                    <span className="text-zinc-300 font-medium">
+                      {minerviniData.isStage2Eligible ? 'Stage 2 (8/8 Đạt)' : `${minerviniData.passedCount}/8 Tiêu chí`}
+                    </span>
+                  </div>
+
+                  {minerviniData.sectorRank && (
+                    <>
+                      <span className="text-zinc-700 font-light select-none hidden sm:inline">|</span>
+                      {/* 3. Sector Rank */}
+                      <div className="hidden sm:flex items-center gap-1 text-zinc-400">
+                        <span>{minerviniData.sectorRank}</span>
+                        {minerviniData.sectorStatus && (
+                          <span className="text-zinc-500">
+                            ({minerviniData.sectorStatus.split(' ')[0]})
+                          </span>
+                        )}
+                      </div>
+                    </>
                   )}
                 </div>
-
-                <span className="text-zinc-700 font-light select-none">|</span>
-
-                {/* 2. Minervini Trend Template Criteria */}
-                <div className="flex items-center gap-1.5">
-                  <span className={`w-1.5 h-1.5 rounded-full ${minerviniData.isStage2Eligible ? 'bg-emerald-400' : 'bg-zinc-500'}`} />
-                  <span className="text-zinc-300 font-medium">
-                    {minerviniData.isStage2Eligible ? 'Stage 2 (8/8 Đạt)' : `${minerviniData.passedCount}/8 Tiêu chí`}
-                  </span>
-                </div>
-
-                {minerviniData.sectorRank && (
-                  <>
-                    <span className="text-zinc-700 font-light select-none hidden sm:inline">|</span>
-                    {/* 3. Sector Rank */}
-                    <div className="hidden sm:flex items-center gap-1 text-zinc-400">
-                      <span>{minerviniData.sectorRank}</span>
-                      {minerviniData.sectorStatus && (
-                        <span className="text-zinc-500">
-                          ({minerviniData.sectorStatus.split(' ')[0]})
-                        </span>
-                      )}
-                    </div>
-                  </>
-                )}
-              </div>
+              )
             )}
           </div>
 
@@ -461,12 +501,14 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
           <div className="w-full flex flex-wrap xl:flex-nowrap items-center justify-between gap-y-3 gap-x-4 lg:gap-x-6 bg-zinc-900/70 border border-zinc-800/80 p-3.5 sm:p-4 rounded-2xl backdrop-blur-md shadow-xl">
             {/* 1. Giá khớp lệnh */}
             <div className="shrink-0 border-r border-zinc-800/80 pr-4 lg:pr-5">
-              <span className="text-[10px] uppercase font-mono tracking-wider text-zinc-500 block whitespace-nowrap">GIÁ KHỚP LỆNH</span>
+              <span className="text-[10px] uppercase font-mono tracking-wider text-zinc-500 block whitespace-nowrap">
+                {isIndex ? 'ĐIỂM CHỈ SỐ' : 'GIÁ KHỚP LỆNH'}
+              </span>
               <div className="flex items-baseline gap-1 mt-0.5">
                 <span className={`text-2xl sm:text-3xl font-mono font-black tracking-tight whitespace-nowrap ${colorClass}`}>
-                  {price > 0 ? price.toLocaleString('vi-VN') : '--'}
+                  {price > 0 ? (isIndex ? price.toLocaleString('vi-VN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : price.toLocaleString('vi-VN')) : '--'}
                 </span>
-                <span className="text-xs font-mono text-zinc-500 font-bold">đ</span>
+                <span className="text-xs font-mono text-zinc-500 font-bold">{isIndex ? 'điểm' : 'đ'}</span>
               </div>
             </div>
 
@@ -483,31 +525,41 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
 
             {/* 3. Khung Trần / Sàn / TC */}
             <div className="shrink-0 border-r border-zinc-800/80 pr-4 lg:pr-5">
-              <span className="text-[10px] uppercase font-mono tracking-wider text-zinc-500 block whitespace-nowrap">TRẦN / SÀN / TC</span>
-              <div className="flex items-center gap-1.5 sm:gap-2 mt-1 text-xs font-mono font-bold whitespace-nowrap">
-                <span className="text-fuchsia-400" title="Giá Trần (CE)">{ceilPrice > 0 ? ceilPrice.toLocaleString('vi-VN') : '--'}</span>
-                <span className="text-zinc-600">/</span>
-                <span className="text-cyan-400" title="Giá Sàn (FL)">{floorPrice > 0 ? floorPrice.toLocaleString('vi-VN') : '--'}</span>
-                <span className="text-zinc-600">/</span>
-                <span className="text-amber-400" title="Tham Chiếu (TC)">{refPrice > 0 ? refPrice.toLocaleString('vi-VN') : '--'}</span>
-              </div>
+              <span className="text-[10px] uppercase font-mono tracking-wider text-zinc-500 block whitespace-nowrap">
+                {isIndex ? 'ĐÓNG CỬA TRƯỚC' : 'TRẦN / SÀN / TC'}
+              </span>
+              {isIndex ? (
+                <div className="mt-1 text-xs font-mono font-bold text-amber-400 whitespace-nowrap">
+                  {refPrice > 0 ? refPrice.toLocaleString('vi-VN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '--'} <span className="text-[10px] text-zinc-500 font-normal">điểm</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1.5 sm:gap-2 mt-1 text-xs font-mono font-bold whitespace-nowrap">
+                  <span className="text-fuchsia-400" title="Giá Trần (CE)">{ceilPrice > 0 ? ceilPrice.toLocaleString('vi-VN') : '--'}</span>
+                  <span className="text-zinc-600">/</span>
+                  <span className="text-cyan-400" title="Giá Sàn (FL)">{floorPrice > 0 ? floorPrice.toLocaleString('vi-VN') : '--'}</span>
+                  <span className="text-zinc-600">/</span>
+                  <span className="text-amber-400" title="Tham Chiếu (TC)">{refPrice > 0 ? refPrice.toLocaleString('vi-VN') : '--'}</span>
+                </div>
+              )}
             </div>
 
             {/* 4. Cao / Thấp trong phiên */}
             <div className="shrink-0 border-r border-zinc-800/80 pr-4 lg:pr-5">
               <span className="text-[10px] uppercase font-mono tracking-wider text-zinc-500 block whitespace-nowrap">CAO / THẤP PHIÊN</span>
               <div className="flex items-center gap-1.5 mt-1 text-xs font-mono font-bold whitespace-nowrap">
-                <span className="text-emerald-400">{highPrice > 0 ? highPrice.toLocaleString('vi-VN') : '--'}</span>
+                <span className="text-emerald-400">{highPrice > 0 ? (isIndex ? highPrice.toLocaleString('vi-VN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : highPrice.toLocaleString('vi-VN')) : '--'}</span>
                 <span className="text-zinc-600">/</span>
-                <span className="text-rose-400">{lowPrice > 0 ? lowPrice.toLocaleString('vi-VN') : '--'}</span>
+                <span className="text-rose-400">{lowPrice > 0 ? (isIndex ? lowPrice.toLocaleString('vi-VN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : lowPrice.toLocaleString('vi-VN')) : '--'}</span>
               </div>
             </div>
 
             {/* 5. Mở cửa */}
             <div className="shrink-0 border-r border-zinc-800/80 pr-4 lg:pr-5">
-              <span className="text-[10px] uppercase font-mono tracking-wider text-zinc-500 block whitespace-nowrap">GIÁ MỞ CỬA</span>
+              <span className="text-[10px] uppercase font-mono tracking-wider text-zinc-500 block whitespace-nowrap">
+                {isIndex ? 'ĐIỂM MỞ CỬA' : 'GIÁ MỞ CỬA'}
+              </span>
               <div className="mt-1 text-xs font-mono font-bold text-zinc-200 whitespace-nowrap">
-                {openPrice > 0 ? openPrice.toLocaleString('vi-VN') : (refPrice > 0 ? refPrice.toLocaleString('vi-VN') : '--')}
+                {openPrice > 0 ? (isIndex ? openPrice.toLocaleString('vi-VN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : openPrice.toLocaleString('vi-VN')) : (refPrice > 0 ? (isIndex ? refPrice.toLocaleString('vi-VN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : refPrice.toLocaleString('vi-VN')) : '--')}
               </div>
             </div>
 
@@ -553,44 +605,48 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
             }`}
           >
             <Buildings className="w-4 h-4" />
-            <span>Hồ Sơ Doanh Nghiệp</span>
+            <span>{isIndex ? 'Thông Tin Chỉ Số' : 'Hồ Sơ Doanh Nghiệp'}</span>
           </button>
 
-          <button
-            onClick={() => setActiveTab('shareholders')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all ${
-              activeTab === 'shareholders'
-                ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20'
-                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
-            }`}
-          >
-            <Users className="w-4 h-4" />
-            <span>Cổ Đông Lớn ({shareholders.length})</span>
-          </button>
+          {!isIndex && (
+            <>
+              <button
+                onClick={() => setActiveTab('shareholders')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all ${
+                  activeTab === 'shareholders'
+                    ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20'
+                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
+                }`}
+              >
+                <Users className="w-4 h-4" />
+                <span>Cổ Đông Lớn ({shareholders.length})</span>
+              </button>
 
-          <button
-            onClick={() => setActiveTab('officers')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all ${
-              activeTab === 'officers'
-                ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20'
-                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
-            }`}
-          >
-            <UserGear className="w-4 h-4" />
-            <span>Ban Lãnh Đạo & HĐQT ({officers.length})</span>
-          </button>
+              <button
+                onClick={() => setActiveTab('officers')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all ${
+                  activeTab === 'officers'
+                    ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20'
+                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
+                }`}
+              >
+                <UserGear className="w-4 h-4" />
+                <span>Ban Lãnh Đạo & HĐQT ({officers.length})</span>
+              </button>
 
-          <button
-            onClick={() => setActiveTab('financials')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all ${
-              activeTab === 'financials'
-                ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20'
-                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
-            }`}
-          >
-            <ChartBar className="w-4 h-4" />
-            <span>Chỉ Số Tài Chính</span>
-          </button>
+              <button
+                onClick={() => setActiveTab('financials')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all ${
+                  activeTab === 'financials'
+                    ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20'
+                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
+                }`}
+              >
+                <ChartBar className="w-4 h-4" />
+                <span>Chỉ Số Tài Chính</span>
+              </button>
+            </>
+          )}
 
           <button
             onClick={() => setActiveTab('foreign')}
@@ -621,12 +677,54 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
         <div className="p-6">
           {isLoading && (
             <div className="py-12 text-center text-xs font-mono text-zinc-500 animate-pulse">
-              Đang tải dữ liệu hồ sơ doanh nghiệp từ hệ thống...
+              Đang tải dữ liệu hồ sơ từ hệ thống...
             </div>
           )}
 
           {!isLoading && activeTab === 'profile' && (
-            <div className="space-y-6">
+            isIndex ? (
+              <div className="space-y-6">
+                {/* Core index metrics grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/70">
+                    <span className="text-[10px] font-mono text-zinc-500 block uppercase">Phân Loại</span>
+                    <span className="text-base font-mono font-bold text-cyan-400 mt-1 block">
+                      Chỉ Số Thị Trường
+                    </span>
+                  </div>
+                  <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/70">
+                    <span className="text-[10px] font-mono text-zinc-500 block uppercase">Sàn Giao Dịch</span>
+                    <span className="text-base font-mono font-bold text-zinc-100 mt-1 block">
+                      {meta.exchange}
+                    </span>
+                  </div>
+                  <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/70">
+                    <span className="text-[10px] font-mono text-zinc-500 block uppercase">Đơn Vị Đo Lường</span>
+                    <span className="text-base font-mono font-bold text-emerald-400 mt-1 block">
+                      Điểm Số (Points)
+                    </span>
+                  </div>
+                  <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/70">
+                    <span className="text-[10px] font-mono text-zinc-500 block uppercase">Dữ Liệu Trực Tiếp</span>
+                    <span className="text-base font-mono font-bold text-zinc-100 mt-1 block">
+                      DNSE Lightspeed
+                    </span>
+                  </div>
+                </div>
+
+                {/* Index Methodology & Overview */}
+                <div className="p-5 rounded-2xl bg-zinc-900/30 border border-zinc-800/60 space-y-3">
+                  <h3 className="text-sm font-bold text-zinc-200 flex items-center gap-2">
+                    <ShieldCheck className="w-4 h-4 text-cyan-400" />
+                    Giới Thiệu Chỉ Số & Quy Chuẩn Tính Toán
+                  </h3>
+                  <p className="text-xs text-zinc-300 leading-relaxed whitespace-pre-line">
+                    {info?.business_model || `${meta.name} là chỉ số đo lường hiệu suất của rổ cổ phiếu niêm yết trên sàn ${meta.exchange}. Được tính toán dựa trên phương pháp trọng số vốn hóa thị trường có điều chỉnh tỷ lệ tự do chuyển nhượng (free-float), phản ánh xu hướng toàn diện của dòng tiền và sức khỏe thị trường chứng khoán Việt Nam.`}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-6">
               {/* Core metrics grid */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/70">
@@ -702,7 +800,7 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
                 </div>
               </div>
             </div>
-          )}
+          ))}
 
           {!isLoading && activeTab === 'shareholders' && (
             <div className="space-y-4">

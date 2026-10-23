@@ -89,10 +89,14 @@ import {
 import { SuperTrendStrategyModal } from './SuperTrendStrategyModal';
 import stockDatabase from '../data/stockDatabase.json';
 import { getStockPriceColor } from '../utils/priceColors';
+import { VN_MARKET_INDEXES, isMarketIndex, getMarketIndexMeta } from '../constants/marketIndexes';
 
 const STOCK_MAP = new Map<string, { name: string; exchange: string }>();
 (stockDatabase as any[]).forEach((item) => {
   STOCK_MAP.set(item.symbol.toUpperCase(), { name: item.name, exchange: item.exchange });
+});
+VN_MARKET_INDEXES.forEach((idx) => {
+  STOCK_MAP.set(idx.symbol.toUpperCase(), { name: idx.name, exchange: idx.exchange });
 });
 
 // Timeframe Resolution Presets
@@ -1021,10 +1025,14 @@ export function MarketCandleChart() {
   }>>(new Map());
 
   const { selectedSymbol, ticks } = useMarketStore();
-  const stockInfo = STOCK_MAP.get(selectedSymbol.toUpperCase()) || {
-    name: `Công ty CP ${selectedSymbol}`,
-    exchange: 'HOSE',
-  };
+  const isIdx = isMarketIndex(selectedSymbol);
+  const indexMeta = getMarketIndexMeta(selectedSymbol);
+  const stockInfo = indexMeta
+    ? { name: indexMeta.name, exchange: indexMeta.exchange }
+    : STOCK_MAP.get(selectedSymbol.toUpperCase()) || {
+        name: isIdx ? `Chỉ số ${selectedSymbol}` : `Công ty CP ${selectedSymbol}`,
+        exchange: isIdx ? (selectedSymbol.includes('HNX') ? 'HNX' : selectedSymbol === 'UPCOM' ? 'UPCOM' : 'HOSE') : 'HOSE',
+      };
 
   const [resolution, setResolution] = useState<ResolutionId>('1D');
   const [activeRange, setActiveRange] = useState<string>('all');
