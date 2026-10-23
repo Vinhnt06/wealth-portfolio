@@ -2340,6 +2340,10 @@ export function MarketCandleChart() {
         return;
       }
 
+      // Unified Pattern Origin (Channel Start): Both Resistance & Support start at the common origin of the active structure
+      const startChannelIdx = Math.min(resP1.idx, supP1.idx);
+      const xChannelStart = timeScale.logicalToCoordinate(startChannelIdx as any) ?? Math.min(xResStart, xSupStart);
+
       const hasApex = trendlineProData.xInt !== undefined && trendlineProData.xInt > lastCandleIdx;
       const effectiveProjEndLogical = hasApex
         ? Math.min(projEndLogical, Math.floor(trendlineProData.xInt!))
@@ -2358,18 +2362,19 @@ export function MarketCandleChart() {
       // P(L, r) = getSupPrice(L) + r * (getResPrice(L) - getSupPrice(L))
       const getFibRayPrice = (L: number, r: number) => getSupPrice(L) + r * (getResPrice(L) - getSupPrice(L));
 
-      // ── 1. Shaded Wedge Corridor Background ──
-      if (xLastCandle > xResStart) {
-        const yResStart = series.priceToCoordinate(resP1.price);
-        const yBase = series.priceToCoordinate(pBase);
+      // ── 1. Shaded Wedge Corridor Background (Encloses the complete active channel from start to last candle) ──
+      if (xLastCandle > xChannelStart) {
+        const yResAtStart = series.priceToCoordinate(getResPrice(startChannelIdx));
+        const ySupAtStart = series.priceToCoordinate(getSupPrice(startChannelIdx));
         const yResAtLast = series.priceToCoordinate(getResPrice(lastCandleIdx));
+        const ySupAtLast = series.priceToCoordinate(getSupPrice(lastCandleIdx));
 
-        if (yResStart !== null && yBase !== null && yResAtLast !== null) {
+        if (yResAtStart !== null && ySupAtStart !== null && yResAtLast !== null && ySupAtLast !== null) {
           ctx.beginPath();
-          ctx.moveTo(xResStart, yResStart);
+          ctx.moveTo(xChannelStart, yResAtStart);
           ctx.lineTo(xLastCandle, yResAtLast);
-          ctx.lineTo(xLastCandle, yBase);
-          ctx.lineTo(xResStart, yBase);
+          ctx.lineTo(xLastCandle, ySupAtLast);
+          ctx.lineTo(xChannelStart, ySupAtStart);
           ctx.closePath();
           ctx.fillStyle = 'rgba(239, 68, 68, 0.055)';
           ctx.fill();
@@ -2383,7 +2388,7 @@ export function MarketCandleChart() {
         ctx.setLineDash([4, 4]);
         ctx.strokeStyle = '#f43f5e';
         ctx.lineWidth = 1.2;
-        const xBaseStart = Math.min(xResStart, xSupStart);
+        const xBaseStart = xChannelStart;
         ctx.moveTo(xBaseStart, yBase);
         ctx.lineTo(Math.min(w - 15, rayRightEdge + 35), yBase);
         ctx.stroke();
@@ -2428,48 +2433,74 @@ export function MarketCandleChart() {
       // Current price levels at the latest candle (100% matched with legend)
       const currSpread = trendlineProData.resistance - trendlineProData.support;
 
-      // ── 4. Upper Resistance Trendline (Solid Lime Green connecting Highs, extends forward) ──
-      const yResStart = series.priceToCoordinate(resP1.price);
+      // ── 4. Upper Resistance Trendline (Solid Lime Green connecting Highs, extends full span and forward) ──
+      const yResStart = series.priceToCoordinate(getResPrice(startChannelIdx));
       const yResEnd = series.priceToCoordinate(trendlineProData.resistance);
       if (yResStart !== null && yResEnd !== null) {
         ctx.beginPath();
-        ctx.moveTo(xResStart, yResStart);
+        ctx.moveTo(xChannelStart, yResStart);
         ctx.lineTo(targetLabelX, yResEnd);
         ctx.strokeStyle = '#84cc16';
         ctx.lineWidth = 2.0;
         ctx.setLineDash([]);
         ctx.stroke();
 
-        // Forward guideline
+        // Forward guideline along the slope to effectiveProjEndX
+        const yResProj = series.priceToCoordinate(getResPrice(effectiveProjEndLogical));
+        if (yResProj !== null && effectiveProjEndX > targetLabelX) {
+          ctx.beginPath();
+          ctx.setLineDash([3, 3]);
+          ctx.moveTo(targetLabelX, yResEnd);
+          ctx.lineTo(effectiveProjEndX, yResProj);
+          ctx.strokeStyle = 'rgba(132, 204, 22, 0.7)';
+          ctx.lineWidth = 1.4;
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+
+        // Horizontal price level marker to right axis
         ctx.beginPath();
-        ctx.setLineDash([3, 3]);
+        ctx.setLineDash([2, 4]);
         ctx.moveTo(targetLabelX, yResEnd);
         ctx.lineTo(Math.min(w - 15, rightEdge + 35), yResEnd);
-        ctx.strokeStyle = 'rgba(132, 204, 22, 0.5)';
-        ctx.lineWidth = 1.2;
+        ctx.strokeStyle = 'rgba(132, 204, 22, 0.35)';
+        ctx.lineWidth = 1.0;
         ctx.stroke();
         ctx.setLineDash([]);
       }
 
-      // ── 5. Lower Support Trendline (Solid Coral Red connecting Lows, extends forward) ──
-      const ySupStart = series.priceToCoordinate(supP1.price);
+      // ── 5. Lower Support Trendline (Solid Coral Red connecting Lows, extends full span and forward) ──
+      const ySupStart = series.priceToCoordinate(getSupPrice(startChannelIdx));
       const ySupEnd = series.priceToCoordinate(trendlineProData.support);
       if (ySupStart !== null && ySupEnd !== null) {
         ctx.beginPath();
-        ctx.moveTo(xSupStart, ySupStart);
+        ctx.moveTo(xChannelStart, ySupStart);
         ctx.lineTo(targetLabelX, ySupEnd);
         ctx.strokeStyle = '#ef4444';
         ctx.lineWidth = 2.0;
         ctx.setLineDash([]);
         ctx.stroke();
 
-        // Forward guideline
+        // Forward guideline along the slope to effectiveProjEndX
+        const ySupProj = series.priceToCoordinate(getSupPrice(effectiveProjEndLogical));
+        if (ySupProj !== null && effectiveProjEndX > targetLabelX) {
+          ctx.beginPath();
+          ctx.setLineDash([3, 3]);
+          ctx.moveTo(targetLabelX, ySupEnd);
+          ctx.lineTo(effectiveProjEndX, ySupProj);
+          ctx.strokeStyle = 'rgba(239, 68, 68, 0.7)';
+          ctx.lineWidth = 1.4;
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+
+        // Horizontal price level marker to right axis
         ctx.beginPath();
-        ctx.setLineDash([3, 3]);
+        ctx.setLineDash([2, 4]);
         ctx.moveTo(targetLabelX, ySupEnd);
         ctx.lineTo(Math.min(w - 15, rightEdge + 35), ySupEnd);
-        ctx.strokeStyle = 'rgba(239, 68, 68, 0.5)';
-        ctx.lineWidth = 1.2;
+        ctx.strokeStyle = 'rgba(239, 68, 68, 0.35)';
+        ctx.lineWidth = 1.0;
         ctx.stroke();
         ctx.setLineDash([]);
       }
@@ -2492,14 +2523,14 @@ export function MarketCandleChart() {
         // Price at current candle - strictly separated across the full channel spread
         const pCurrent = trendlineProData.support + r * currSpread;
         // Price at start anchor
-        const pStart = getFibRayPrice(resP1.idx, r);
+        const pStart = getFibRayPrice(startChannelIdx, r);
 
         const yStart = series.priceToCoordinate(pStart);
         const yTarget = series.priceToCoordinate(pCurrent);
 
         if (yStart !== null && yTarget !== null) {
           ctx.beginPath();
-          ctx.moveTo(xResStart, yStart);
+          ctx.moveTo(xChannelStart, yStart);
           ctx.lineTo(targetLabelX, yTarget);
 
           if (r < 0) {
