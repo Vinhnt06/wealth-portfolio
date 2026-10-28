@@ -96,9 +96,14 @@ case "$1" in
     start)
         echo -e "${GREEN}🎯 Starting YourFin Platform...${NC}"
         start_backend
-        sleep 3
         start_frontend
-        sleep 3
+        echo -e "${YELLOW}⏳ Waiting for services to initialize...${NC}"
+        for i in {1..12}; do
+            if curl -s http://localhost:8080/api/health > /dev/null 2>&1; then
+                break
+            fi
+            sleep 1
+        done
         status
         ;;
     stop)
@@ -112,9 +117,14 @@ case "$1" in
         stop_frontend
         sleep 2
         start_backend
-        sleep 3
         start_frontend
-        sleep 3
+        echo -e "${YELLOW}⏳ Waiting for services to initialize...${NC}"
+        for i in {1..12}; do
+            if curl -s http://localhost:8080/api/health > /dev/null 2>&1; then
+                break
+            fi
+            sleep 1
+        done
         status
         ;;
     status)

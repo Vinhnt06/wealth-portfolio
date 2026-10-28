@@ -604,9 +604,47 @@ export function calculateTrendlinePro(candles: CandlestickData<Time>[]): Trendli
 // ── Technical Indicator Calculations (RSI, MACD, MFI, OBV) ──────────
 export type SubIndicatorType = 'none' | 'rsi' | 'macd' | 'mfi' | 'obv';
 
-function calculateRSI(candles: CandlestickData<Time>[], period = 14): LineData<Time>[] {
-  if (!candles || candles.length <= period) return [];
-  const results: LineData<Time>[] = [];
+export interface RSIPoint {
+  index: number;
+  time: Time;
+  value: number;
+  priceClose: number;
+  priceHigh: number;
+  priceLow: number;
+}
+
+export interface ReversalDivergenceItem {
+  type: 'bullish' | 'bearish';
+  startIndex: number;
+  endIndex: number;
+  startTime: Time;
+  endTime: Time;
+  startRsi: number;
+  endRsi: number;
+  startPrice: number;
+  endPrice: number;
+}
+
+export interface ReversalDivergenceResult {
+  rsiPoints: RSIPoint[];
+  divergences: ReversalDivergenceItem[];
+  bullishCount: number;
+  bearishCount: number;
+  currentRsi: number;
+  latestDivergence?: ReversalDivergenceItem;
+}
+
+export function calculateReversalDivergenceRSI(
+  candles: CandlestickData<Time>[],
+  period = 14,
+  leftBars = 4,
+  rightBars = 3
+): ReversalDivergenceResult {
+  if (!candles || candles.length <= period) {
+    return { rsiPoints: [], divergences: [], bullishCount: 0, bearishCount: 0, currentRsi: 50 };
+  }
+
+  const rsiPoints: RSIPoint[] = [];
   let gains = 0;
   let losses = 0;
 
@@ -621,7 +659,14 @@ function calculateRSI(candles: CandlestickData<Time>[], period = 14): LineData<T
 
   let rs = avgLoss === 0 ? 100 : avgGain / avgLoss;
   let rsi = 100 - (100 / (1 + rs));
-  results.push({ time: candles[period].time, value: Math.round(rsi * 100) / 100 });
+  rsiPoints.push({
+    index: period,
+    time: candles[period].time,
+    value: Math.round(rsi * 100) / 100,
+    priceClose: candles[period].close,
+    priceHigh: candles[period].high,
+    priceLow: candles[period].low,
+  });
 
   for (let i = period + 1; i < candles.length; i++) {
     const diff = candles[i].close - candles[i - 1].close;
@@ -633,9 +678,141 @@ function calculateRSI(candles: CandlestickData<Time>[], period = 14): LineData<T
 
     rs = avgLoss === 0 ? 100 : avgGain / avgLoss;
     rsi = 100 - (100 / (1 + rs));
-    results.push({ time: candles[i].time, value: Math.round(rsi * 100) / 100 });
+    rsiPoints.push({
+      index: i,
+      time: candles[i].time,
+      value: Math.round(rsi * 100) / 100,
+      priceClose: candles[i].close,
+      priceHigh: candles[i].high,
+      priceLow: candles[i].low,
+    });
   }
-  return results;
+
+  if (rsiPoints.length === 0) {
+    return { rsiPoints: [], divergences: [], bullishCount: 0, bearishCount: 0, currentRsi: 50 };
+  }
+
+  const currentRsi = rsiPoints[rsiPoints.length - 1].value;
+
+  // Detect Swing Pivots on RSI
+  const swingLows: RSIPoint[] = [];
+  const swingHighs: RSIPoint[] = [];
+
+  for (let i = leftBars; i < rsiPoints.length - rightBars; i++) {
+    const curr = rsiPoints[i].value;
+
+    // Swing Low
+    let isLow = curr <= 62;
+    if (isLow) {
+      for (let k = 1; k <= leftBars; k++) {
+        if (rsiPoints[i - k].value < curr) {
+          isLow = false;
+          break;
+        }
+      }
+      if (isLow) {
+        for (let k = 1; k <= rightBars; k++) {
+          if (rsiPoints[i + k].value < curr) {
+            isLow = false;
+            break;
+          }
+        }
+      }
+    }
+    if (isLow) swingLows.push(rsiPoints[i]);
+
+    // Swing High
+    let isHigh = curr >= 38;
+    if (isHigh) {
+      for (let k = 1; k <= leftBars; k++) {
+        if (rsiPoints[i - k].value > curr) {
+          isHigh = false;
+          break;
+        }
+      }
+      if (isHigh) {
+        for (let k = 1; k <= rightBars; k++) {
+          if (rsiPoints[i + k].value > curr) {
+            isHigh = false;
+            break;
+          }
+        }
+      }
+    }
+    if (isHigh) swingHighs.push(rsiPoints[i]);
+  }
+
+  const divergences: ReversalDivergenceItem[] = [];
+
+  // Check Bullish Divergences (Swing Lows)
+  for (let i = 1; i < swingLows.length; i++) {
+    const p2 = swingLows[i];
+    for (let j = i - 1; j >= Math.max(0, i - 2); j--) {
+      const p1 = swingLows[j];
+      const dist = p2.index - p1.index;
+      if (dist < 4 || dist > 35) continue;
+      // Regular Bullish: Price made Lower Low or Double Bottom, RSI made Higher Low
+      if (p2.priceLow <= p1.priceLow * 1.002 && p2.value >= p1.value + 1.2) {
+        divergences.push({
+          type: 'bullish',
+          startIndex: p1.index,
+          endIndex: p2.index,
+          startTime: p1.time,
+          endTime: p2.time,
+          startRsi: p1.value,
+          endRsi: p2.value,
+          startPrice: p1.priceLow,
+          endPrice: p2.priceLow,
+        });
+        break;
+      }
+    }
+  }
+
+  // Check Bearish Divergences (Swing Highs)
+  for (let i = 1; i < swingHighs.length; i++) {
+    const p2 = swingHighs[i];
+    for (let j = i - 1; j >= Math.max(0, i - 2); j--) {
+      const p1 = swingHighs[j];
+      const dist = p2.index - p1.index;
+      if (dist < 4 || dist > 35) continue;
+      // Regular Bearish: Price made Higher High or Double Top, RSI made Lower High
+      if (p2.priceHigh >= p1.priceHigh * 0.998 && p2.value <= p1.value - 1.2) {
+        divergences.push({
+          type: 'bearish',
+          startIndex: p1.index,
+          endIndex: p2.index,
+          startTime: p1.time,
+          endTime: p2.time,
+          startRsi: p1.value,
+          endRsi: p2.value,
+          startPrice: p1.priceHigh,
+          endPrice: p2.priceHigh,
+        });
+        break;
+      }
+    }
+  }
+
+  divergences.sort((a, b) => a.endIndex - b.endIndex);
+
+  const bullishCount = divergences.filter((d) => d.type === 'bullish').length;
+  const bearishCount = divergences.filter((d) => d.type === 'bearish').length;
+  const latestDivergence = divergences.length > 0 ? divergences[divergences.length - 1] : undefined;
+
+  return {
+    rsiPoints,
+    divergences,
+    bullishCount,
+    bearishCount,
+    currentRsi,
+    latestDivergence,
+  };
+}
+
+function calculateRSI(candles: CandlestickData<Time>[], period = 14): LineData<Time>[] {
+  const res = calculateReversalDivergenceRSI(candles, period);
+  return res.rsiPoints.map((p) => ({ time: p.time, value: p.value }));
 }
 
 function calculateMACD(candles: CandlestickData<Time>[], fast = 12, slow = 26, signal = 9) {
@@ -1044,7 +1221,10 @@ export function MarketCandleChart() {
   }>({});
   const [dataVersion, setDataVersion] = useState<number>(0);
   const subChartContainerRef = useRef<HTMLDivElement>(null);
+  const subChartCanvasRef = useRef<HTMLCanvasElement>(null);
   const subChartRef = useRef<IChartApi | null>(null);
+  const reversalDivergenceResultRef = useRef<ReversalDivergenceResult | null>(null);
+  const [reversalDivergenceResult, setReversalDivergenceResult] = useState<ReversalDivergenceResult | null>(null);
   const loadedVolumesRef = useRef<HistogramData<Time>[]>([]);
 
   // Trendline Pro State
@@ -3033,8 +3213,66 @@ export function MarketCandleChart() {
       ctx.restore();
     }
 
+    // ── 7. Render Reversal Divergences on Main Price Candles (when activeSubIndicator === 'rsi') ──
+    if (activeSubIndicator === 'rsi' && reversalDivergenceResultRef.current && chart && series) {
+      const timeScale = chart.timeScale();
+      const divs = reversalDivergenceResultRef.current.divergences;
+      ctx.save();
+      for (const div of divs) {
+        const x1 = timeScale.timeToCoordinate(div.startTime);
+        const x2 = timeScale.timeToCoordinate(div.endTime);
+        const y1 = series.priceToCoordinate(div.startPrice);
+        const y2 = series.priceToCoordinate(div.endPrice);
+        if (x1 === null || x2 === null || y1 === null || y2 === null) continue;
+        if (Math.max(x1, x2) < 0 || Math.min(x1, x2) > w) continue;
+
+        const isBull = div.type === 'bullish';
+        const color = isBull ? '#06b6d4' : '#f43f5e';
+        const glowColor = isBull ? 'rgba(6, 182, 212, 0.4)' : 'rgba(244, 63, 94, 0.4)';
+
+        ctx.beginPath();
+        ctx.setLineDash([5, 3]);
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.lineWidth = 1.8;
+        ctx.strokeStyle = color;
+        ctx.shadowColor = glowColor;
+        ctx.shadowBlur = 4;
+        ctx.stroke();
+
+        // Pivot dots on price candles
+        [[x1, y1], [x2, y2]].forEach(([cx, cy]) => {
+          ctx.beginPath();
+          ctx.arc(cx, cy, 2.5, 0, Math.PI * 2);
+          ctx.fillStyle = color;
+          ctx.fill();
+        });
+
+        // Pill label at end point
+        const pillText = isBull ? '▲ Bull Div' : '▼ Bear Div';
+        ctx.font = 'bold 8.5px JetBrains Mono, monospace';
+        const textW = ctx.measureText(pillText).width;
+        const pillX = x2 + 6;
+        const pillY = y2;
+        ctx.fillStyle = isBull ? 'rgba(6, 182, 212, 0.15)' : 'rgba(244, 63, 94, 0.15)';
+        ctx.strokeStyle = isBull ? 'rgba(6, 182, 212, 0.5)' : 'rgba(244, 63, 94, 0.5)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([]);
+        ctx.beginPath();
+        ctx.roundRect(pillX, pillY - 7, textW + 8, 14, 3);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = isBull ? '#22d3ee' : '#fb7185';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(pillText, pillX + 4, pillY);
+      }
+      ctx.restore();
+    }
+
     ctx.restore();
-  }, [drawings, draftDrawing, showTrendlinePro, trendlineProData, hideDrawings, isMagnetMode, hoverSnapPoint, activeTool, selectedDrawingId, fiboSettings, fiboPeriods, showVolumeProfile, volumeProfileData, volumeProfileSettings, showSuperTrend, superTrendResult]);
+  }, [drawings, draftDrawing, showTrendlinePro, trendlineProData, hideDrawings, isMagnetMode, hoverSnapPoint, activeTool, selectedDrawingId, fiboSettings, fiboPeriods, showVolumeProfile, volumeProfileData, volumeProfileSettings, showSuperTrend, superTrendResult, activeSubIndicator, reversalDivergenceResult]);
 
   // Keep decoupled ref for chart and window callbacks
   redrawCanvasRef.current = redrawCanvas;
@@ -4333,39 +4571,52 @@ export function MarketCandleChart() {
 
     subChartRef.current = subChart;
 
+    let renderSubChartCanvas: (() => void) | null = null;
+
     if (activeSubIndicator === 'rsi') {
-      const rsiData = calculateRSI(candles, 14);
-      if (rsiData.length > 0) {
+      const reversalResult = calculateReversalDivergenceRSI(candles, 14);
+      reversalDivergenceResultRef.current = reversalResult;
+      setReversalDivergenceResult(reversalResult);
+
+      if (reversalResult.rsiPoints.length > 0) {
         const obSeries = subChart.addSeries(LineSeries, {
           color: 'rgba(244, 63, 94, 0.35)',
           lineWidth: 1,
+          lineStyle: LineStyle.Dashed,
           priceLineVisible: false,
           lastValueVisible: false,
         });
         const midSeries = subChart.addSeries(LineSeries, {
           color: 'rgba(255, 255, 255, 0.15)',
           lineWidth: 1,
+          lineStyle: LineStyle.Dotted,
           priceLineVisible: false,
           lastValueVisible: false,
         });
         const osSeries = subChart.addSeries(LineSeries, {
           color: 'rgba(16, 185, 129, 0.35)',
           lineWidth: 1,
+          lineStyle: LineStyle.Dashed,
           priceLineVisible: false,
           lastValueVisible: false,
         });
         const rsiSeries = subChart.addSeries(LineSeries, {
-          color: '#a855f7',
-          lineWidth: 2,
+          color: 'rgba(0, 0, 0, 0)', // Hidden so canvas overlay draws multi-colored line & glowing divergence
+          lineWidth: 1,
           priceFormat: { type: 'custom', formatter: (v: number) => v.toFixed(1) },
+          priceLineVisible: true,
+          lastValueVisible: true,
+          priceLineColor: reversalResult.currentRsi >= 50 ? '#10b981' : '#f43f5e',
+          title: 'RSI',
         });
 
-        obSeries.setData(rsiData.map((d) => ({ time: d.time, value: 70 })));
-        midSeries.setData(rsiData.map((d) => ({ time: d.time, value: 50 })));
-        osSeries.setData(rsiData.map((d) => ({ time: d.time, value: 30 })));
-        rsiSeries.setData(rsiData);
+        const lineData = reversalResult.rsiPoints.map((d) => ({ time: d.time, value: d.value }));
+        obSeries.setData(lineData.map((d) => ({ time: d.time, value: 70 })));
+        midSeries.setData(lineData.map((d) => ({ time: d.time, value: 50 })));
+        osSeries.setData(lineData.map((d) => ({ time: d.time, value: 30 })));
+        rsiSeries.setData(lineData);
 
-        const lastVal = rsiData[rsiData.length - 1]?.value;
+        const lastVal = reversalResult.currentRsi;
         setSubIndicatorValues({ rsi: lastVal });
 
         subChart.subscribeCrosshairMove((param) => {
@@ -4375,6 +4626,158 @@ export function MarketCandleChart() {
             setSubIndicatorValues({ rsi: val.value });
           }
         });
+
+        // Canvas overlay rendering for Reversal Divergences
+        renderSubChartCanvas = () => {
+          const canvas = subChartCanvasRef.current;
+          if (!canvas || !subChart || !rsiSeries) return;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return;
+
+          const dpr = window.devicePixelRatio || 1;
+          const w = canvas.clientWidth;
+          const h = canvas.clientHeight;
+          if (w <= 0 || h <= 0) return;
+
+          if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
+            canvas.width = Math.round(w * dpr);
+            canvas.height = Math.round(h * dpr);
+          }
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          ctx.clearRect(0, 0, w, h);
+
+          const timeScale = subChart.timeScale();
+          const visibleRange = timeScale.getVisibleLogicalRange();
+          if (!visibleRange) return;
+
+          const rsiPoints = reversalResult.rsiPoints;
+          if (rsiPoints.length === 0) return;
+
+          const y70 = rsiSeries.priceToCoordinate(70);
+          const y30 = rsiSeries.priceToCoordinate(30);
+
+          // 1. Shaded area / glow for Overbought (>70) and Oversold (<30)
+          if (y70 !== null) {
+            for (let i = Math.max(1, Math.floor(visibleRange.from) - 2); i <= Math.min(rsiPoints.length - 1, Math.ceil(visibleRange.to) + 2); i++) {
+              const pt = rsiPoints[i];
+              if (pt.value > 70) {
+                const ptPrev = rsiPoints[i - 1];
+                if (!ptPrev) continue;
+                const x1 = timeScale.timeToCoordinate(ptPrev.time);
+                const y1 = rsiSeries.priceToCoordinate(ptPrev.value);
+                const x2 = timeScale.timeToCoordinate(pt.time);
+                const y2 = rsiSeries.priceToCoordinate(pt.value);
+                if (x1 !== null && y1 !== null && x2 !== null && y2 !== null) {
+                  const grad = ctx.createLinearGradient(0, Math.min(y1, y2), 0, y70);
+                  grad.addColorStop(0, 'rgba(16, 185, 129, 0.22)');
+                  grad.addColorStop(1, 'rgba(16, 185, 129, 0.01)');
+                  ctx.fillStyle = grad;
+                  ctx.beginPath();
+                  ctx.moveTo(x1, y70);
+                  ctx.lineTo(x1, y1);
+                  ctx.lineTo(x2, y2);
+                  ctx.lineTo(x2, y70);
+                  ctx.closePath();
+                  ctx.fill();
+                }
+              }
+            }
+          }
+
+          if (y30 !== null) {
+            for (let i = Math.max(1, Math.floor(visibleRange.from) - 2); i <= Math.min(rsiPoints.length - 1, Math.ceil(visibleRange.to) + 2); i++) {
+              const pt = rsiPoints[i];
+              if (pt.value < 30) {
+                const ptPrev = rsiPoints[i - 1];
+                if (!ptPrev) continue;
+                const x1 = timeScale.timeToCoordinate(ptPrev.time);
+                const y1 = rsiSeries.priceToCoordinate(ptPrev.value);
+                const x2 = timeScale.timeToCoordinate(pt.time);
+                const y2 = rsiSeries.priceToCoordinate(pt.value);
+                if (x1 !== null && y1 !== null && x2 !== null && y2 !== null) {
+                  const grad = ctx.createLinearGradient(0, y30, 0, Math.max(y1, y2));
+                  grad.addColorStop(0, 'rgba(244, 63, 94, 0.01)');
+                  grad.addColorStop(1, 'rgba(244, 63, 94, 0.22)');
+                  ctx.fillStyle = grad;
+                  ctx.beginPath();
+                  ctx.moveTo(x1, y30);
+                  ctx.lineTo(x1, y1);
+                  ctx.lineTo(x2, y2);
+                  ctx.lineTo(x2, y30);
+                  ctx.closePath();
+                  ctx.fill();
+                }
+              }
+            }
+          }
+
+          // 2. Multi-color RSI line (Emerald green when rising, Rose red when falling)
+          const fromIdx = Math.max(1, Math.floor(visibleRange.from) - 2);
+          const toIdx = Math.min(rsiPoints.length - 1, Math.ceil(visibleRange.to) + 2);
+
+          for (let i = fromIdx; i <= toIdx; i++) {
+            const pPrev = rsiPoints[i - 1];
+            const pCurr = rsiPoints[i];
+            const x1 = timeScale.timeToCoordinate(pPrev.time);
+            const y1 = rsiSeries.priceToCoordinate(pPrev.value);
+            const x2 = timeScale.timeToCoordinate(pCurr.time);
+            const y2 = rsiSeries.priceToCoordinate(pCurr.value);
+            if (x1 === null || y1 === null || x2 === null || y2 === null) continue;
+
+            const isRising = pCurr.value >= pPrev.value;
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.lineWidth = 2;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.strokeStyle = isRising ? '#10b981' : '#f43f5e';
+            ctx.shadowColor = isRising ? 'rgba(16, 185, 129, 0.35)' : 'rgba(244, 63, 94, 0.35)';
+            ctx.shadowBlur = 3;
+            ctx.stroke();
+          }
+          ctx.shadowBlur = 0;
+
+          // 3. Reversal Divergence lines
+          for (const div of reversalResult.divergences) {
+            const x1 = timeScale.timeToCoordinate(div.startTime);
+            const x2 = timeScale.timeToCoordinate(div.endTime);
+            const y1 = rsiSeries.priceToCoordinate(div.startRsi);
+            const y2 = rsiSeries.priceToCoordinate(div.endRsi);
+            if (x1 === null || x2 === null || y1 === null || y2 === null) continue;
+
+            const isBull = div.type === 'bullish';
+            const color = isBull ? '#06b6d4' : '#f43f5e';
+            const glowColor = isBull ? 'rgba(6, 182, 212, 0.5)' : 'rgba(244, 63, 94, 0.5)';
+
+            ctx.save();
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.lineWidth = 2.2;
+            ctx.strokeStyle = color;
+            ctx.shadowColor = glowColor;
+            ctx.shadowBlur = 6;
+            ctx.stroke();
+
+            // End point circles
+            [[x1, y1], [x2, y2]].forEach(([cx, cy]) => {
+              ctx.beginPath();
+              ctx.arc(cx, cy, 3, 0, Math.PI * 2);
+              ctx.fillStyle = color;
+              ctx.fill();
+              ctx.beginPath();
+              ctx.arc(cx, cy, 1.5, 0, Math.PI * 2);
+              ctx.fillStyle = '#ffffff';
+              ctx.fill();
+            });
+            ctx.restore();
+          }
+        };
+
+        requestAnimationFrame(() => renderSubChartCanvas?.());
+        subChart.timeScale().subscribeVisibleLogicalRangeChange(() => renderSubChartCanvas?.());
+        subChart.timeScale().subscribeVisibleTimeRangeChange(() => renderSubChartCanvas?.());
       }
     } else if (activeSubIndicator === 'macd') {
       const macdRes = calculateMACD(candles, 12, 26, 9);
@@ -4533,6 +4936,7 @@ export function MarketCandleChart() {
           subChart.timeScale().setVisibleLogicalRange(range);
         } catch {}
         isSyncing = false;
+        renderSubChartCanvas?.();
       };
 
       const handleSubRangeChange = (range: any) => {
@@ -4542,6 +4946,7 @@ export function MarketCandleChart() {
           mainChart.timeScale().setVisibleLogicalRange(range);
         } catch {}
         isSyncing = false;
+        renderSubChartCanvas?.();
       };
 
       mainChart.timeScale().subscribeVisibleLogicalRangeChange(handleMainRangeChange);
@@ -4559,6 +4964,7 @@ export function MarketCandleChart() {
               subChart.timeScale().setVisibleLogicalRange(mainRange);
             } catch {}
           }
+          renderSubChartCanvas?.();
         }
       }
     });
@@ -5417,25 +5823,32 @@ export function MarketCandleChart() {
                     </button>
                   </div>
 
-                  {/* Section 3: Momentum & Oscillators */}
-                  <div className="text-[10px] font-mono uppercase tracking-wider text-purple-400 mb-1.5 px-1 pt-2 border-t border-zinc-800/80 font-bold flex items-center justify-between">
-                    <span>3. Động lượng & Dao động</span>
+                  {/* Section 3: Momentum & Reversal Divergences */}
+                  <div className="text-[10px] font-mono uppercase tracking-wider text-cyan-400 mb-1.5 px-1 pt-2 border-t border-zinc-800/80 font-bold flex items-center justify-between">
+                    <span>3. Động Lượng & Phân Kỳ Đảo Chiều</span>
                     <span className="text-zinc-500 text-[9px] font-normal">Khung phụ dưới</span>
                   </div>
                   <div className="flex flex-col gap-1 mb-2.5">
-                    {/* RSI */}
+                    {/* Reversal Divergences RSI */}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         setActiveSubIndicator(activeSubIndicator === 'rsi' ? 'none' : 'rsi');
                       }}
-                      className="flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-mono text-zinc-200 hover:bg-zinc-800/70 transition-all border border-transparent hover:border-zinc-800"
+                      className="flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-mono text-zinc-200 hover:bg-zinc-800/70 transition-all border border-transparent hover:border-zinc-800 group"
                     >
                       <span className="flex items-center gap-2">
-                        <span className="w-2.5 h-2.5 rounded-full bg-purple-500 shrink-0" />
-                        <div>
-                          <span className="font-semibold block">RSI (14)</span>
-                          <span className="text-[9.5px] text-zinc-500">Sức mạnh tương đối (Quá mua/Quá bán)</span>
+                        <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.6)] shrink-0" />
+                        <div className="text-left">
+                          <span className="font-semibold block text-zinc-100 flex items-center gap-1.5">
+                            Reversal Divergences (RSI)
+                            <span className="text-[9px] font-bold text-cyan-400 bg-cyan-500/15 px-1.5 py-0.2 rounded border border-cyan-500/30">
+                              PHÂN KỲ ĐẢO CHIỀU
+                            </span>
+                          </span>
+                          <span className="text-[9.5px] text-zinc-500">
+                            Phát hiện phân kỳ đỉnh/đáy (Bull/Bear) & Quá mua/bán
+                          </span>
                         </div>
                       </span>
                       <span className={`text-[10px] px-2 py-0.5 rounded-md font-bold transition-colors ${activeSubIndicator === 'rsi' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-zinc-800/60 text-zinc-500'}`}>
@@ -5452,10 +5865,10 @@ export function MarketCandleChart() {
                       className="flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-mono text-zinc-200 hover:bg-zinc-800/70 transition-all border border-transparent hover:border-zinc-800"
                     >
                       <span className="flex items-center gap-2">
-                        <span className="w-2.5 h-2.5 rounded-full bg-blue-500 shrink-0" />
-                        <div>
+                        <span className="w-2.5 h-2.5 rounded-full bg-blue-500 shrink-0 shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
+                        <div className="text-left">
                           <span className="font-semibold block">MACD (12, 26, 9)</span>
-                          <span className="text-[9.5px] text-zinc-500">Hội tụ / Phân kỳ & Histogram</span>
+                          <span className="text-[9.5px] text-zinc-500">Hội tụ / Phân kỳ & Histogram động lượng</span>
                         </div>
                       </span>
                       <span className={`text-[10px] px-2 py-0.5 rounded-md font-bold transition-colors ${activeSubIndicator === 'macd' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-zinc-800/60 text-zinc-500'}`}>
@@ -6218,7 +6631,7 @@ export function MarketCandleChart() {
                   <span className="text-zinc-500 text-[10px] uppercase font-bold mr-1">Chỉ báo phụ:</span>
                   {(
                     [
-                      { id: 'rsi', label: 'RSI (14)' },
+                      { id: 'rsi', label: 'Reversal Divergences (RSI)' },
                       { id: 'macd', label: 'MACD (12,26,9)' },
                       { id: 'mfi', label: 'MFI (14) - Dòng tiền' },
                       { id: 'obv', label: 'OBV - Cá mập gom' },
@@ -6242,18 +6655,31 @@ export function MarketCandleChart() {
                 <div className="flex items-center gap-3">
                   {activeSubIndicator === 'rsi' && (
                     <div className="flex items-center gap-2">
-                      <span className="text-purple-400 font-bold">
-                        RSI(14): <strong className="text-zinc-100">{subIndicatorValues.rsi !== undefined ? subIndicatorValues.rsi.toFixed(1) : '--'}</strong>
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0 shadow-[0_0_8px_rgba(16,185,129,0.7)] animate-pulse" />
+                      <span className="font-semibold text-zinc-200 flex items-center gap-1.5 text-xs">
+                        Reversal Divergences <span className="text-cyan-400 font-bold">RSI</span>
                       </span>
-                      <span className={`text-[10px] px-1.5 py-0.2 rounded font-bold ${
+                      <span className="text-zinc-100 font-mono font-bold text-xs">
+                        {subIndicatorValues.rsi !== undefined ? subIndicatorValues.rsi.toFixed(2) : '--'}
+                      </span>
+                      <span className={`text-[9.5px] px-1.5 py-0.2 rounded font-bold border ${
                         (subIndicatorValues.rsi ?? 50) >= 70
-                          ? 'bg-rose-500/20 text-rose-400'
+                          ? 'bg-rose-500/20 text-rose-400 border-rose-500/30'
                           : (subIndicatorValues.rsi ?? 50) <= 30
-                          ? 'bg-emerald-500/20 text-emerald-400'
-                          : 'bg-zinc-800 text-zinc-400'
+                          ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                          : 'bg-zinc-800 text-zinc-400 border-zinc-700/50'
                       }`}>
                         {(subIndicatorValues.rsi ?? 50) >= 70 ? 'Quá mua (>70)' : (subIndicatorValues.rsi ?? 50) <= 30 ? 'Quá bán (<30)' : 'Cân bằng'}
                       </span>
+                      {reversalDivergenceResult?.latestDivergence && (
+                        <span className={`text-[9.5px] px-1.5 py-0.2 rounded font-bold border flex items-center gap-1 ${
+                          reversalDivergenceResult.latestDivergence.type === 'bullish'
+                            ? 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30'
+                            : 'bg-rose-500/15 text-rose-300 border-rose-500/30'
+                        }`}>
+                          {reversalDivergenceResult.latestDivergence.type === 'bullish' ? '▲ Phân kỳ TĂNG' : '▼ Phân kỳ GIẢM'}
+                        </span>
+                      )}
                     </div>
                   )}
 
@@ -6315,8 +6741,14 @@ export function MarketCandleChart() {
                 </div>
               </div>
 
-              {/* Sub-chart container */}
-              <div ref={subChartContainerRef} className="w-full flex-1 min-h-0" />
+              {/* Sub-chart container with Canvas Overlay */}
+              <div className="w-full flex-1 min-h-0 relative">
+                <div ref={subChartContainerRef} className="w-full h-full min-h-0" />
+                <canvas
+                  ref={subChartCanvasRef}
+                  className="absolute inset-0 z-10 pointer-events-none"
+                />
+              </div>
             </div>
           )}
         </div>
