@@ -640,23 +640,67 @@ export function calculateReversalDivergenceRSI(
   leftBars = 4,
   rightBars = 3
 ): ReversalDivergenceResult {
-  if (!candles || candles.length <= period) {
+  if (!candles || candles.length === 0) {
     return { rsiPoints: [], divergences: [], bullishCount: 0, bearishCount: 0, currentRsi: 50 };
   }
 
   const rsiPoints: RSIPoint[] = [];
-  let gains = 0;
-  let losses = 0;
 
-  for (let i = 1; i <= period; i++) {
-    const diff = candles[i].close - candles[i - 1].close;
-    if (diff >= 0) gains += diff;
-    else losses += Math.abs(diff);
+  if (candles.length <= period) {
+    for (let i = 0; i < candles.length; i++) {
+      rsiPoints.push({
+        index: i,
+        time: candles[i].time,
+        value: 50,
+        priceClose: candles[i].close,
+        priceHigh: candles[i].high,
+        priceLow: candles[i].low,
+      });
+    }
+    return { rsiPoints, divergences: [], bullishCount: 0, bearishCount: 0, currentRsi: 50 };
   }
 
-  let avgGain = gains / period;
-  let avgLoss = losses / period;
+  // Pre-calculate changes for bars 0 .. period - 1 so every bar has a valid point
+  let cumGain = 0;
+  let cumLoss = 0;
 
+  // First bar at index 0
+  rsiPoints.push({
+    index: 0,
+    time: candles[0].time,
+    value: 50,
+    priceClose: candles[0].close,
+    priceHigh: candles[0].high,
+    priceLow: candles[0].low,
+  });
+
+  // Bars 1 to period - 1
+  for (let i = 1; i < period; i++) {
+    const diff = candles[i].close - candles[i - 1].close;
+    if (diff >= 0) cumGain += diff;
+    else cumLoss += Math.abs(diff);
+
+    const avgGain = cumGain / i;
+    const avgLoss = cumLoss / i;
+    const rs = avgLoss === 0 ? 100 : avgGain / avgLoss;
+    const rsi = 100 - (100 / (1 + rs));
+    rsiPoints.push({
+      index: i,
+      time: candles[i].time,
+      value: Math.round(rsi * 100) / 100,
+      priceClose: candles[i].close,
+      priceHigh: candles[i].high,
+      priceLow: candles[i].low,
+    });
+  }
+
+  // Bar at period (initial full sum)
+  const diffPeriod = candles[period].close - candles[period - 1].close;
+  if (diffPeriod >= 0) cumGain += diffPeriod;
+  else cumLoss += Math.abs(diffPeriod);
+
+  let avgGain = cumGain / period;
+  let avgLoss = cumLoss / period;
   let rs = avgLoss === 0 ? 100 : avgGain / avgLoss;
   let rsi = 100 - (100 / (1 + rs));
   rsiPoints.push({
@@ -668,6 +712,7 @@ export function calculateReversalDivergenceRSI(
     priceLow: candles[period].low,
   });
 
+  // Bars period + 1 to end (Wilder's smoothed RSI)
   for (let i = period + 1; i < candles.length; i++) {
     const diff = candles[i].close - candles[i - 1].close;
     const gain = diff > 0 ? diff : 0;
@@ -4601,8 +4646,8 @@ export function MarketCandleChart() {
           lastValueVisible: false,
         });
         const rsiSeries = subChart.addSeries(LineSeries, {
-          color: 'rgba(0, 0, 0, 0)', // Hidden so canvas overlay draws multi-colored line & glowing divergence
-          lineWidth: 1,
+          color: '#2dd4bf', // TradingView Teal / Emerald (Native line - ALWAYS visible at 60fps)
+          lineWidth: 2,
           priceFormat: { type: 'custom', formatter: (v: number) => v.toFixed(1) },
           priceLineVisible: true,
           lastValueVisible: true,
@@ -4627,7 +4672,7 @@ export function MarketCandleChart() {
           }
         });
 
-        // Canvas overlay rendering for Reversal Divergences
+        // Canvas overlay rendering for Reversal Divergences & Overbought/Oversold Clouds
         renderSubChartCanvas = () => {
           const canvas = subChartCanvasRef.current;
           if (!canvas || !subChart || !rsiSeries) return;
@@ -4647,9 +4692,6 @@ export function MarketCandleChart() {
           ctx.clearRect(0, 0, w, h);
 
           const timeScale = subChart.timeScale();
-          const visibleRange = timeScale.getVisibleLogicalRange();
-          if (!visibleRange) return;
-
           const rsiPoints = reversalResult.rsiPoints;
           if (rsiPoints.length === 0) return;
 
@@ -4657,72 +4699,60 @@ export function MarketCandleChart() {
           const y30 = rsiSeries.priceToCoordinate(30);
 
           // 1. Shaded area / glow for Overbought (>70) and Oversold (<30)
-          if (y70 !== null) {
-            for (let i = Math.max(1, Math.floor(visibleRange.from) - 2); i <= Math.min(rsiPoints.length - 1, Math.ceil(visibleRange.to) + 2); i++) {
-              const pt = rsiPoints[i];
-              if (pt.value > 70) {
-                const ptPrev = rsiPoints[i - 1];
-                if (!ptPrev) continue;
-                const x1 = timeScale.timeToCoordinate(ptPrev.time);
-                const y1 = rsiSeries.priceToCoordinate(ptPrev.value);
-                const x2 = timeScale.timeToCoordinate(pt.time);
-                const y2 = rsiSeries.priceToCoordinate(pt.value);
-                if (x1 !== null && y1 !== null && x2 !== null && y2 !== null) {
-                  const grad = ctx.createLinearGradient(0, Math.min(y1, y2), 0, y70);
-                  grad.addColorStop(0, 'rgba(16, 185, 129, 0.22)');
-                  grad.addColorStop(1, 'rgba(16, 185, 129, 0.01)');
-                  ctx.fillStyle = grad;
-                  ctx.beginPath();
-                  ctx.moveTo(x1, y70);
-                  ctx.lineTo(x1, y1);
-                  ctx.lineTo(x2, y2);
-                  ctx.lineTo(x2, y70);
-                  ctx.closePath();
-                  ctx.fill();
-                }
+          for (let i = 1; i < rsiPoints.length; i++) {
+            const pt = rsiPoints[i];
+            const ptPrev = rsiPoints[i - 1];
+            if (!pt || !ptPrev) continue;
+
+            if (pt.value > 70 && y70 !== null) {
+              const x1 = timeScale.timeToCoordinate(ptPrev.time);
+              const y1 = rsiSeries.priceToCoordinate(ptPrev.value);
+              const x2 = timeScale.timeToCoordinate(pt.time);
+              const y2 = rsiSeries.priceToCoordinate(pt.value);
+              if (x1 !== null && y1 !== null && x2 !== null && y2 !== null && Math.max(x1, x2) >= -20 && Math.min(x1, x2) <= w + 20) {
+                const grad = ctx.createLinearGradient(0, Math.min(y1, y2), 0, y70);
+                grad.addColorStop(0, 'rgba(16, 185, 129, 0.25)');
+                grad.addColorStop(1, 'rgba(16, 185, 129, 0.01)');
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.moveTo(x1, y70);
+                ctx.lineTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.lineTo(x2, y70);
+                ctx.closePath();
+                ctx.fill();
+              }
+            } else if (pt.value < 30 && y30 !== null) {
+              const x1 = timeScale.timeToCoordinate(ptPrev.time);
+              const y1 = rsiSeries.priceToCoordinate(ptPrev.value);
+              const x2 = timeScale.timeToCoordinate(pt.time);
+              const y2 = rsiSeries.priceToCoordinate(pt.value);
+              if (x1 !== null && y1 !== null && x2 !== null && y2 !== null && Math.max(x1, x2) >= -20 && Math.min(x1, x2) <= w + 20) {
+                const grad = ctx.createLinearGradient(0, y30, 0, Math.max(y1, y2));
+                grad.addColorStop(0, 'rgba(244, 63, 94, 0.01)');
+                grad.addColorStop(1, 'rgba(244, 63, 94, 0.25)');
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.moveTo(x1, y30);
+                ctx.lineTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.lineTo(x2, y30);
+                ctx.closePath();
+                ctx.fill();
               }
             }
           }
 
-          if (y30 !== null) {
-            for (let i = Math.max(1, Math.floor(visibleRange.from) - 2); i <= Math.min(rsiPoints.length - 1, Math.ceil(visibleRange.to) + 2); i++) {
-              const pt = rsiPoints[i];
-              if (pt.value < 30) {
-                const ptPrev = rsiPoints[i - 1];
-                if (!ptPrev) continue;
-                const x1 = timeScale.timeToCoordinate(ptPrev.time);
-                const y1 = rsiSeries.priceToCoordinate(ptPrev.value);
-                const x2 = timeScale.timeToCoordinate(pt.time);
-                const y2 = rsiSeries.priceToCoordinate(pt.value);
-                if (x1 !== null && y1 !== null && x2 !== null && y2 !== null) {
-                  const grad = ctx.createLinearGradient(0, y30, 0, Math.max(y1, y2));
-                  grad.addColorStop(0, 'rgba(244, 63, 94, 0.01)');
-                  grad.addColorStop(1, 'rgba(244, 63, 94, 0.22)');
-                  ctx.fillStyle = grad;
-                  ctx.beginPath();
-                  ctx.moveTo(x1, y30);
-                  ctx.lineTo(x1, y1);
-                  ctx.lineTo(x2, y2);
-                  ctx.lineTo(x2, y30);
-                  ctx.closePath();
-                  ctx.fill();
-                }
-              }
-            }
-          }
-
-          // 2. Multi-color RSI line (Emerald green when rising, Rose red when falling)
-          const fromIdx = Math.max(1, Math.floor(visibleRange.from) - 2);
-          const toIdx = Math.min(rsiPoints.length - 1, Math.ceil(visibleRange.to) + 2);
-
-          for (let i = fromIdx; i <= toIdx; i++) {
+          // 2. Multi-color RSI line highlight (Emerald green when rising, Rose red when falling)
+          for (let i = 1; i < rsiPoints.length; i++) {
             const pPrev = rsiPoints[i - 1];
             const pCurr = rsiPoints[i];
             const x1 = timeScale.timeToCoordinate(pPrev.time);
-            const y1 = rsiSeries.priceToCoordinate(pPrev.value);
             const x2 = timeScale.timeToCoordinate(pCurr.time);
+            if (x1 === null || x2 === null || Math.max(x1, x2) < -20 || Math.min(x1, x2) > w + 20) continue;
+            const y1 = rsiSeries.priceToCoordinate(pPrev.value);
             const y2 = rsiSeries.priceToCoordinate(pCurr.value);
-            if (x1 === null || y1 === null || x2 === null || y2 === null) continue;
+            if (y1 === null || y2 === null) continue;
 
             const isRising = pCurr.value >= pPrev.value;
             ctx.beginPath();
@@ -4745,6 +4775,7 @@ export function MarketCandleChart() {
             const y1 = rsiSeries.priceToCoordinate(div.startRsi);
             const y2 = rsiSeries.priceToCoordinate(div.endRsi);
             if (x1 === null || x2 === null || y1 === null || y2 === null) continue;
+            if (Math.max(x1, x2) < -30 || Math.min(x1, x2) > w + 30) continue;
 
             const isBull = div.type === 'bullish';
             const color = isBull ? '#06b6d4' : '#f43f5e';
