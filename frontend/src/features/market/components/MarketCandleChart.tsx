@@ -364,7 +364,7 @@ export function calculateTrendlinePro(candles: CandlestickData<Time>[]): Trendli
         const slope = (l2.price - l1.price) / dx;
         if (slope < -lastClose * 0.0025 || slope > lastClose * 0.004) continue;
         const currSup = l1.price + slope * (lastIdx - l1.idx);
-        if (currSup < lastClose * 0.88 || currSup > lastClose * 0.999 || currSup <= 0) continue;
+        if (currSup < lastClose * 0.75 || currSup > lastClose * 0.999 || currSup <= 0) continue;
 
         let closeBreachCount = 0;
         let closeBreachSeverity = 0;
@@ -387,7 +387,7 @@ export function calculateTrendlinePro(candles: CandlestickData<Time>[]): Trendli
         const score =
           touches * 3500 +
           Math.max(0, 1 - avgGap / 0.04) * 10000 +
-          (l1.price === minLowInWindow || l2.price === minLowInWindow ? 4000 : 0) +
+          (l1.price === minLowInWindow || l2.price === minLowInWindow ? 6000 : 0) +
           dx * 8 -
           closeBreachSeverity * 50000;
         supCandidates.push({ l1, l2, slope, currSup, score });
@@ -397,18 +397,28 @@ export function calculateTrendlinePro(candles: CandlestickData<Time>[]): Trendli
 
     // 3. Find Best Non-Crossing Pair
     for (const res of resCandidates.slice(0, 6)) {
-      for (const sup of supCandidates.slice(0, 10)) {
+      for (const sup of supCandidates.slice(0, 12)) {
         const startChannel = Math.min(res.h1.idx, sup.l1.idx);
         const getResP = (x: number) => res.h1.price + res.slope * (x - res.h1.idx);
         const getSupP = (x: number) => sup.l1.price + sup.slope * (x - sup.l1.idx);
 
-        // Strict Invariant: Resistance must be strictly above Support at EVERY bar from start to last candle
+        // Strict Invariant:
+        // 1. Resistance must be strictly above Support at EVERY bar from start to last candle
+        // 2. Support line cannot cut through historical candle closes in the drawn range [startChannel, lastIdx]
         let crossOccurred = false;
+        let channelBreaches = 0;
         for (let k = startChannel; k <= lastIdx; k++) {
           const spread = getResP(k) - getSupP(k);
           if (spread < 0.015 * lastClose) {
             crossOccurred = true;
             break;
+          }
+          if (candles[k] && candles[k].close < getSupP(k) * 0.994) {
+            channelBreaches++;
+            if (channelBreaches > 2) {
+              crossOccurred = true;
+              break;
+            }
           }
         }
         if (crossOccurred) continue;
