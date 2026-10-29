@@ -25,12 +25,14 @@ import {
   X,
   Funnel,
   MagnifyingGlass,
+  Scales,
 } from '@phosphor-icons/react';
 import { useMarketStore } from '../store/marketStore';
 import { MarketCandleChart } from './MarketCandleChart';
 import { OrderBook } from './OrderBook';
 import { InvestorFlowAnalysis } from './InvestorFlowAnalysis';
 import { MinerviniStrategyPanel } from './MinerviniStrategyPanel';
+import { FinancialValuationTab } from './FinancialValuationTab';
 import { MinerviniAnalysisResult } from '../types/minervini.types';
 import stockDatabase from '../data/stockDatabase.json';
 import { getStockPriceColor, calculateExchangeCeilFloor } from '../utils/priceColors';
@@ -642,8 +644,8 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
                     : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
                 }`}
               >
-                <ChartBar className="w-4 h-4" />
-                <span>Chỉ Số Tài Chính</span>
+                <Scales className="w-4 h-4" />
+                <span>BCTC & Định Giá (P/E • P/B • PEG)</span>
               </button>
             </>
           )}
@@ -874,48 +876,11 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
           )}
 
           {!isLoading && activeTab === 'financials' && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/70">
-                  <span className="text-[10px] font-mono text-zinc-500 block uppercase">P/E Hiện Tại</span>
-                  <span className="text-lg font-mono font-bold text-emerald-400 mt-1 block">
-                    {companyData?.financials?.pe ? `${companyData.financials.pe}x` : 'N/A'}
-                  </span>
-                </div>
-                <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/70">
-                  <span className="text-[10px] font-mono text-zinc-500 block uppercase">P/B</span>
-                  <span className="text-lg font-mono font-bold text-zinc-200 mt-1 block">
-                    {companyData?.financials?.pb ? `${companyData.financials.pb}x` : 'N/A'}
-                  </span>
-                </div>
-                <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/70">
-                  <span className="text-[10px] font-mono text-zinc-500 block uppercase">ROE</span>
-                  <span className="text-lg font-mono font-bold text-emerald-400 mt-1 block">
-                    {companyData?.financials?.roe ? `${companyData.financials.roe}%` : 'N/A'}
-                  </span>
-                </div>
-                <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/70">
-                  <span className="text-[10px] font-mono text-zinc-500 block uppercase">ROA</span>
-                  <span className="text-lg font-mono font-bold text-zinc-200 mt-1 block">
-                    {companyData?.financials?.roa ? `${companyData.financials.roa}%` : 'N/A'}
-                  </span>
-                </div>
-              </div>
-
-              <div className="p-4 rounded-xl bg-zinc-900/30 border border-zinc-800/50 text-xs text-zinc-400 leading-relaxed font-mono flex items-center justify-between">
-                <span>
-                  Chỉ số định giá & hiệu quả sinh lời kỳ{' '}
-                  <strong className="text-zinc-200">
-                    {companyData?.financials?.quarter ? `Quý ${companyData.financials.quarter}/` : ''}
-                    {companyData?.financials?.year || 'Mới nhất'}
-                  </strong>{' '}
-                  được đồng bộ chuẩn xác từ cổng báo cáo tài chính Vietcap IQ.
-                </span>
-                <span className="px-2.5 py-1 rounded bg-zinc-800/70 text-zinc-400 text-[11px] font-mono border border-zinc-700/40">
-                  Vietcap Official
-                </span>
-              </div>
-            </div>
+            <FinancialValuationTab
+              symbol={selectedSymbol}
+              currentPrice={price}
+              sectorName={meta.sector}
+            />
           )}
 
           {!isLoading && activeTab === 'foreign' && (

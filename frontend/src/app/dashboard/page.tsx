@@ -1,188 +1,311 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { DashboardLayout } from '../components/layout/DashboardLayout';
-import { TradingViewChart } from '../components/TradingViewChart';
-import { IndexBanner } from '../../features/market/components/IndexBanner';
-import { motion } from 'framer-motion';
-import { CandlestickData } from 'lightweight-charts';
-import { useLanguage } from '../components/LanguageContext';
-import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, Legend, LabelList
-} from 'recharts';
-import { Shield, Target, Plus, TrendUp, Sparkle, ArrowRight, Wallet, ChartPie, Globe } from '@phosphor-icons/react';
-import vnindexCandles from '../../features/market/data/vnindexHistory.json';
-
 import dynamic from 'next/dynamic';
+import { DashboardLayout } from '../components/layout/DashboardLayout';
+import { MarketPulseRibbon } from '../../features/market/components/MarketPulseRibbon';
+import { HeroMarketBento } from '../../features/market/components/HeroMarketBento';
+import { UnifiedMacroMatrix } from '../../features/market/components/UnifiedMacroMatrix';
 
-const EconomicCycleWheel = dynamic(
-  () => import('../../features/market/components/EconomicCycleWheel').then((m) => m.EconomicCycleWheel),
-  { ssr: false }
-);
-const MacroDataSection = dynamic(
-  () => import('../../features/market/components/MacroDataSection').then((m) => m.MacroDataSection),
-  { ssr: false }
-);
-const CommoditiesAndGoldSection = dynamic(
-  () => import('../../features/market/components/CommoditiesAndGoldSection').then((m) => m.CommoditiesAndGoldSection),
-  { ssr: false }
-);
-const USGlobalMacroSection = dynamic(
-  () => import('../../features/market/components/USGlobalMacroSection').then((m) => m.USGlobalMacroSection),
-  { ssr: false }
+const BankInterestRatesModule = dynamic(
+  () =>
+    import('../../features/market/components/BankInterestRatesModule').then(
+      (m) => m.BankInterestRatesModule
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="bg-[#111111] border border-[#1a1a1a] rounded-xl p-6 h-64 flex items-center justify-center font-mono text-xs text-zinc-500">
+        Đang nạp bảng lãi suất ngân hàng realtime...
+      </div>
+    ),
+  }
 );
 
-const realChartData = (vnindexCandles as unknown as CandlestickData[]).slice(-120);
+import {
+  TrendUp,
+  Scales,
+  ArrowRight,
+  ShieldCheck,
+  Lightning,
+  ChartLineUp,
+  Table,
+  CheckCircle,
+  Bank,
+} from '@phosphor-icons/react';
 
-const PORTFOLIO = {
-  totalNetWorth: 1242084.50,
-  change24h: 12402.10,
-  changePercent24h: 1.01,
-  allTimeReturn: 34.2,
-  assets: [
-    { key: 'stocks', value: 371874, change: 2.8 },
-    { key: 'bonds', value: 125000, change: 0.4 },
-    { key: 'crypto', value: 640210, change: 4.1 },
-    { key: 'metals', value: 105000, change: -0.2 },
-  ],
-};
-
-const PIE_COLORS = ['#10B981', '#3B82F6', '#F59E0B', '#6366F1'];
-const fmtUSD = (v: number) => v.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 });
-const fmtPrice = (v: number) => v.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 });
+// Real liquid blue-chip watchlist for quick financial valuation preview
+const BLUECHIP_WATCHLIST = [
+  { symbol: 'HPG', name: 'Tập đoàn Hòa Phát', sector: 'Thép & Kim loại' },
+  { symbol: 'FPT', name: 'Tập đoàn FPT', sector: 'Công nghệ thông tin' },
+  { symbol: 'VCB', name: 'Vietcombank', sector: 'Ngân hàng' },
+  { symbol: 'MWG', name: 'Thế Giới Di Động', sector: 'Bán lẻ' },
+  { symbol: 'VHM', name: 'Vinhomes', sector: 'Bất động sản' },
+  { symbol: 'SSI', name: 'Chứng khoán SSI', sector: 'Dịch vụ tài chính' },
+];
 
 export default function DashboardPage() {
-  const { t } = useLanguage();
-  const chartData = realChartData;
+  const [valuationData, setValuationData] = useState<Record<string, any>>({});
+  const [loadingValuations, setLoadingValuations] = useState<boolean>(true);
 
-  const assetLabels: Record<string, string> = {
-    stocks: t('assets.stocks') || 'Cổ phiếu',
-    bonds: t('assets.bonds') || 'Trái phiếu',
-    crypto: t('assets.crypto') || 'Tiền mã hóa',
-    metals: t('assets.precious_metals') || 'Vàng & Kim loại',
-  };
+  // Fetch real financial valuation for watchlist
+  useEffect(() => {
+    let isMounted = true;
+    async function loadQuickValuations() {
+      try {
+        const results = await Promise.allSettled(
+          BLUECHIP_WATCHLIST.map(async (item) => {
+            const res = await fetch(`/api/market/financials?symbol=${item.symbol}`, { cache: 'no-store' });
+            if (res.ok) {
+              const json = await res.json();
+              if (json.success && json.data) {
+                return { symbol: item.symbol, data: json.data };
+              }
+            }
+            return null;
+          })
+        );
 
-  const barData = PORTFOLIO.assets.map(a => ({ name: assetLabels[a.key], value: a.value, change: a.change }));
-  const pieData = PORTFOLIO.assets.map(a => ({ name: assetLabels[a.key], value: a.value }));
-  const timeframes = ['1D', '1W', '1M', '1Y', 'ALL'];
+        if (!isMounted) return;
+        const map: Record<string, any> = {};
+        results.forEach((r) => {
+          if (r.status === 'fulfilled' && r.value) {
+            map[r.value.symbol] = r.value.data;
+          }
+        });
+        setValuationData(map);
+      } catch (err) {
+        console.error('Lỗi fetch quick valuations:', err);
+      } finally {
+        if (isMounted) setLoadingValuations(false);
+      }
+    }
+
+    loadQuickValuations();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   return (
     <DashboardLayout>
-      <div className="space-y-8 max-w-[1440px] mx-auto pb-12">
+      <div className="space-y-6 max-w-[1536px] mx-auto pb-16 font-sans">
         
-        {/* ── 1. Executive Top Header Banner ── */}
-        <div className="p-6 bg-gradient-to-r from-zinc-950 via-zinc-900 to-zinc-950 border border-zinc-800/80 rounded-2xl backdrop-blur-xl flex flex-wrap items-center justify-between gap-6 shadow-2xl relative overflow-hidden">
-          <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+        {/* ── 1. Top Real-time Market Pulse Ribbon ── */}
+        <MarketPulseRibbon />
 
-          <div className="space-y-2 z-10">
-            <div className="flex items-center gap-2.5">
-              <span className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                <Sparkle className="w-4 h-4 animate-pulse" />
-              </span>
-              <h1 className="font-mono font-black text-2xl text-zinc-100 tracking-tight">EXECUTIVE OVERVIEW</h1>
-              <span className="px-2 py-0.5 text-[10px] font-mono font-bold rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                TỔNG QUAN TÀI CHÍNH
+        {/* ── 2. Terminal Intelligence Header (Quiet, Utilitarian, Zero AI-Slop) ── */}
+        <div className="bg-[#111111] border border-[#1a1a1a] rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <h1 className="font-mono text-sm font-bold uppercase tracking-wider text-zinc-100">
+                TERMINAL INTELLIGENCE & MARKET VALUATION
+              </h1>
+              <span className="px-2 py-0.5 text-[10px] font-mono font-bold text-amber-400 border border-amber-500/30 bg-amber-500/10 rounded flex items-center gap-1">
+                <ShieldCheck className="w-3 h-3" />
+                HỆ THỐNG DỮ LIỆU CHÍNH THỨC 100%
               </span>
             </div>
-            <p className="text-xs text-zinc-400 max-w-xl">
-              Báo cáo tổng hợp tài sản, chỉ số kinh tế vĩ mô, diễn biến thị trường và tin tức chứng khoán tiêu điểm
+            <p className="text-xs text-zinc-400">
+              Hệ thống giám sát dòng tiền thực, định giá P/E, P/B, PEG Peter Lynch, biểu lãi suất ngân hàng và vĩ mô tích hợp.
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-4 z-10 font-mono">
-            <div className="px-4 py-3 bg-zinc-900/80 border border-zinc-800 rounded-xl text-right">
-              <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">TỔNG TÀI SẢN (NET WORTH)</p>
-              <p className="text-2xl font-extrabold text-zinc-100">{fmtPrice(PORTFOLIO.totalNetWorth)}</p>
-            </div>
-            <div className="px-4 py-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-right">
-              <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">LỢI NHUẬN TỔNG THỂ</p>
-              <p className="text-2xl font-extrabold text-emerald-400">+{PORTFOLIO.allTimeReturn}%</p>
-            </div>
-          </div>
-        </div>
-
-        {/* ── 2. Realtime Market Index Pulse (Thị Trường) ── */}
-        <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 font-mono">
-              <TrendUp className="w-5 h-5 text-emerald-400" />
-              <h2 className="text-base font-bold text-zinc-100">DIỄN BIẾN CHỈ SỐ THỊ TRƯỜNG CHỨNG KHOÁN</h2>
-            </div>
+          {/* Quick Actions */}
+          <div className="flex items-center gap-2.5 font-mono text-xs">
             <Link
               href="/market"
-              className="text-xs font-mono text-emerald-400 hover:text-emerald-300 flex items-center gap-1 font-bold transition-colors"
+              className="px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-200 rounded-lg flex items-center gap-1.5 transition-colors"
             >
-              <span>Vào Live Terminal</span>
-              <ArrowRight className="w-3.5 h-3.5" />
+              <span>Live Terminal</span>
+              <ArrowRight className="w-3.5 h-3.5 text-zinc-400" />
+            </Link>
+            <Link
+              href="/market?symbol=HPG"
+              className="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 rounded-lg flex items-center gap-1.5 transition-colors"
+            >
+              <Scales className="w-3.5 h-3.5" />
+              <span>Định Giá Cổ Phiếu</span>
             </Link>
           </div>
-          <IndexBanner />
-        </section>
-
-        {/* ── 3. Thị Trường Mỹ, Lãi Suất Fed & Kinh Tế Vĩ Mô Toàn Cầu ── */}
-        <section className="space-y-8">
-          <USGlobalMacroSection />
-          <MacroDataSection />
-          <CommoditiesAndGoldSection />
-          <EconomicCycleWheel />
-        </section>
-
-        {/* ── 4. Portfolio Asset Allocation & Chart ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Asset Allocation Breakdown */}
-          <div className="lg:col-span-4 bg-zinc-950/90 border border-zinc-800/80 rounded-2xl p-6 backdrop-blur-xl space-y-6">
-            <div className="flex items-center justify-between border-b border-zinc-800/80 pb-3">
-              <div className="flex items-center gap-2 font-mono">
-                <ChartPie className="w-5 h-5 text-blue-400" />
-                <h3 className="text-sm font-bold text-zinc-100">PHÂN BỔ DANH MỤC TÀI SẢN</h3>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              {PORTFOLIO.assets.map((asset) => (
-                <div
-                  key={asset.key}
-                  className="p-3.5 bg-zinc-900/60 border border-zinc-800/60 rounded-xl flex items-center justify-between font-mono"
-                >
-                  <div>
-                    <p className="text-xs text-zinc-400 font-semibold">{assetLabels[asset.key]}</p>
-                    <p className="text-base font-bold text-zinc-100">{fmtUSD(asset.value)}</p>
-                  </div>
-                  <span className={`text-xs font-bold px-2 py-1 rounded-lg ${asset.change >= 0 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'}`}>
-                    {asset.change >= 0 ? '+' : ''}{asset.change}%
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Performance Chart */}
-          <div className="lg:col-span-8 bg-zinc-950/90 border border-zinc-800/80 rounded-2xl p-6 backdrop-blur-xl space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-800/80 pb-3">
-              <div>
-                <h3 className="font-mono font-bold text-sm text-zinc-100">DIỄN BIẾN CHỈ SỐ VN-INDEX (VNSTOCK REAL DATA)</h3>
-                <p className="text-xs text-zinc-400">Dữ liệu nến giá thực tế đồng bộ từ Sở giao dịch chứng khoán qua vnstock</p>
-              </div>
-              <div className="flex items-center gap-1 bg-zinc-900 p-1 rounded-xl border border-zinc-800">
-                {timeframes.map((tf) => (
-                  <button
-                    key={tf}
-                    className={`px-3 py-1 text-xs font-mono font-medium rounded-lg transition-all ${
-                      tf === '1M'
-                        ? 'bg-zinc-800 text-emerald-400 border border-zinc-700 font-bold'
-                        : 'text-zinc-400 hover:text-zinc-200'
-                    }`}
-                  >
-                    {tf}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <TradingViewChart data={chartData} chartType="area" height={300} />
-          </div>
         </div>
+
+        {/* ── 3. Hero Asymmetric Market Bento (68% Chart / 32% Opportunities Radar) ── */}
+        <section>
+          <HeroMarketBento />
+        </section>
+
+        {/* ── 4. Unified Macro & Commodities Matrix (3-Column Bento) ── */}
+        <section>
+          <UnifiedMacroMatrix />
+        </section>
+
+        {/* ── 5. Vietnam Bank Savings Interest Rates Module (Chính Thức Hệ Thống NHTM & Big 4) ── */}
+        <section>
+          <BankInterestRatesModule />
+        </section>
+
+        {/* ── 6. Quick Valuation Screener: Real Blue-chip Valuation Benchmarks ── */}
+        <section className="bg-[#111111] border border-[#1a1a1a] rounded-xl overflow-hidden">
+          <div className="px-5 py-3.5 border-b border-[#1a1a1a] flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-[#0d0d0d]">
+            <div className="flex items-center gap-2">
+              <Scales className="w-4 h-4 text-emerald-400" />
+              <h2 className="font-mono text-xs font-bold uppercase tracking-wider text-zinc-200">
+                BẢNG ĐỊNH GIÁ & TÀI CHÍNH CỔ PHIẾU TIÊU BIỂU (REAL FINANCIAL VALUATION)
+              </h2>
+              <span className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                <ShieldCheck className="w-3 h-3" />
+                BCTC KIỂM TOÁN CHÍNH THỨC
+              </span>
+            </div>
+            <div className="flex items-center gap-2 font-mono text-xs text-zinc-500">
+              <span>Nguồn: Vietcap IQ & Mô hình Peter Lynch</span>
+              <Link
+                href="/market"
+                className="text-emerald-400 hover:text-emerald-300 flex items-center gap-1 text-[11px] font-semibold"
+              >
+                <span>Xem tất cả mã</span>
+                <ArrowRight className="w-3 h-3" />
+              </Link>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left font-mono text-xs">
+              <thead>
+                <tr className="border-b border-[#1a1a1a] text-[11px] text-zinc-500 uppercase tracking-wider bg-[#0a0a0a]">
+                  <th className="py-2.5 px-4 font-medium">Mã CK</th>
+                  <th className="py-2.5 px-4 font-medium">Tên Doanh Nghiệp</th>
+                  <th className="py-2.5 px-4 font-medium">Ngành</th>
+                  <th className="py-2.5 px-4 font-medium text-right">P/E TTM</th>
+                  <th className="py-2.5 px-4 font-medium text-right">P/E Ngành</th>
+                  <th className="py-2.5 px-4 font-medium text-right">P/B</th>
+                  <th className="py-2.5 px-4 font-medium text-right">P/B Ngành</th>
+                  <th className="py-2.5 px-4 font-medium text-right">PEG Peter Lynch</th>
+                  <th className="py-2.5 px-4 font-medium text-center">Đánh Giá Định Giá</th>
+                  <th className="py-2.5 px-4 font-medium text-right">Thao Tác</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#1a1a1a] text-zinc-300">
+                {BLUECHIP_WATCHLIST.map((item) => {
+                  const val = valuationData[item.symbol];
+                  const isLoading = loadingValuations && !val;
+
+                  const pe = val?.valuation?.pe?.value;
+                  const sectorPe = val?.valuation?.pe?.sectorBenchmark;
+                  const pb = val?.valuation?.pb?.value;
+                  const sectorPb = val?.valuation?.pb?.sectorBenchmark;
+                  const peg = val?.valuation?.peg?.value;
+                  const verdict = val?.valuation?.summaryVerdict;
+
+                  return (
+                    <tr
+                      key={item.symbol}
+                      className="hover:bg-[#161616] transition-colors group"
+                    >
+                      <td className="py-3 px-4 font-bold text-zinc-100 flex items-center gap-2">
+                        <span>{item.symbol}</span>
+                      </td>
+                      <td className="py-3 px-4 text-zinc-300 font-sans">{item.name}</td>
+                      <td className="py-3 px-4 text-zinc-400 font-sans text-[11px]">{item.sector}</td>
+
+                      {/* P/E TTM */}
+                      <td className="py-3 px-4 text-right tabular-nums">
+                        {isLoading ? (
+                          <span className="text-zinc-600">...</span>
+                        ) : pe ? (
+                          <span className={pe < (sectorPe || 99) ? 'text-emerald-400 font-semibold' : 'text-zinc-300'}>
+                            {Number(pe).toFixed(1)}x
+                          </span>
+                        ) : (
+                          <span className="text-zinc-600">N/A</span>
+                        )}
+                      </td>
+
+                      {/* P/E Sector */}
+                      <td className="py-3 px-4 text-right tabular-nums text-zinc-500">
+                        {sectorPe ? `${Number(sectorPe).toFixed(1)}x` : '-'}
+                      </td>
+
+                      {/* P/B */}
+                      <td className="py-3 px-4 text-right tabular-nums">
+                        {isLoading ? (
+                          <span className="text-zinc-600">...</span>
+                        ) : pb ? (
+                          <span className={pb < (sectorPb || 99) ? 'text-emerald-400 font-semibold' : 'text-zinc-300'}>
+                            {Number(pb).toFixed(2)}x
+                          </span>
+                        ) : (
+                          <span className="text-zinc-600">N/A</span>
+                        )}
+                      </td>
+
+                      {/* P/B Sector */}
+                      <td className="py-3 px-4 text-right tabular-nums text-zinc-500">
+                        {sectorPb ? `${Number(sectorPb).toFixed(2)}x` : '-'}
+                      </td>
+
+                      {/* PEG */}
+                      <td className="py-3 px-4 text-right tabular-nums">
+                        {isLoading ? (
+                          <span className="text-zinc-600">...</span>
+                        ) : peg ? (
+                          <span
+                            className={
+                              peg < 1
+                                ? 'text-emerald-400 font-bold'
+                                : peg <= 1.5
+                                ? 'text-amber-400'
+                                : 'text-rose-400'
+                            }
+                          >
+                            {Number(peg).toFixed(2)}
+                          </span>
+                        ) : (
+                          <span className="text-zinc-600">N/A</span>
+                        )}
+                      </td>
+
+                      {/* Verdict */}
+                      <td className="py-3 px-4 text-center">
+                        {isLoading ? (
+                          <span className="text-zinc-600 text-[11px]">Đang tính...</span>
+                        ) : verdict ? (
+                          <span
+                            className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
+                              verdict === 'Định Giá Hấp Dẫn'
+                                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                                : verdict === 'Định Giá Hợp Lý'
+                                ? 'bg-zinc-800 text-zinc-300 border border-zinc-700'
+                                : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                            }`}
+                          >
+                            {verdict}
+                          </span>
+                        ) : (
+                          <span className="text-zinc-600 text-[10px]">Trung lập</span>
+                        )}
+                      </td>
+
+                      {/* Action */}
+                      <td className="py-3 px-4 text-right">
+                        <Link
+                          href={`/market?symbol=${item.symbol}`}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-zinc-400 group-hover:text-emerald-400 hover:bg-zinc-800/80 rounded transition-colors"
+                        >
+                          <span>Phân tích</span>
+                          <ArrowRight className="w-3 h-3" />
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </section>
 
       </div>
     </DashboardLayout>

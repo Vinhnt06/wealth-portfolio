@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 export interface BankRateItem {
   bank: string;
@@ -22,14 +22,18 @@ let cacheBankRates: {
   updateTime: string;
 } | null = null;
 
-const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes cache
+const CACHE_TTL_MS = 15 * 1000; // 15 seconds cache for high-frequency realtime
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const isForceRefresh = searchParams.get('refresh') === 'true' || searchParams.has('t');
   const now = Date.now();
-  if (cacheBankRates && now - cacheBankRates.timestamp < CACHE_TTL_MS) {
+
+  if (!isForceRefresh && cacheBankRates && now - cacheBankRates.timestamp < CACHE_TTL_MS) {
     return NextResponse.json({
       success: true,
       cached: true,
+      timestamp: cacheBankRates.timestamp,
       data: {
         counter: cacheBankRates.counter,
         online: cacheBankRates.online,

@@ -42,3 +42,12 @@ Before writing or editing UI (components, pages, styles — web or mobile), a **
 > 🔴 **For design work:** Open and READ the agent file. Rules are there.
 
 ---
+
+## 🎨 MANDATORY TASTE SKILL: `design-taste-frontend` (`Leonxlnx/taste-skill` v2)
+
+> 🔴 **BẮT BUỘC MỖI KHI LÀM FRONTEND / UI:** Mỗi khi thiết kế, tạo mới, tái cấu trúc hoặc chỉnh sửa bất kỳ giao diện, trang hoặc component Frontend nào:
+> 1. Phải nạp và áp dụng triệt để skill `@[design-taste-frontend]` (Taste Skill v2 từ `Leonxlnx/taste-skill`).
+> 2. Thông báo rõ: `📚 Using skill: @design-taste-frontend...` trước khi render UI.
+> 3. Tuyệt đối tuân thủ Anti-Slop Policy: Cấm bố cục generic/máy móc, cấm gradient màu tím (Purple Ban), typography sắc sảo (`Geist`, `Satoshi`, `JetBrains Mono`), bố cục Bento Asymmetric có tính quyết định cao và kiểm tra thẩm mỹ trực quan.
+
+---

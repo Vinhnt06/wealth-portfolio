@@ -8,4 +8,5 @@
 - [data] STRICT BAN ON MOCK DATA: Cấm mock data tài chính; chỉ dùng API thật (DNSE, Vnstock) → project-conventions.md
 - [deploy] LOCALHOST FIRST: Luôn sửa và test trên Localhost trước; chỉ đẩy Vercel khi người dùng xác nhận OK → project-conventions.md
 - [macro] GLOBAL MACRO & FEDWATCH RULES: Chỉ số Mỹ, FedWatch & Ma trận tác động vĩ mô VN → global-macro-rules.md
+- [design] MANDATORY TASTE SKILL: Luôn áp dụng @design-taste-frontend (tasteskill v2 Leonxlnx) cho mọi tác vụ Frontend/UI → design-rules.md
 

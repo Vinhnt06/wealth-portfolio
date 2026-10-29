@@ -24,7 +24,7 @@ start_backend() {
     fi
     
     # Start backend in background
-    java -jar target/api-0.0.1-SNAPSHOT.jar > backend.log 2>&1 &
+    nohup java -jar target/api-0.0.1-SNAPSHOT.jar > backend.log 2>&1 &
     echo $! > backend.pid
     echo -e "${GREEN}✅ Backend started on http://localhost:8080${NC}"
     echo -e "${GREEN}   PID: $(cat backend.pid)${NC}"
@@ -41,7 +41,7 @@ start_frontend() {
     fi
     
     # Start frontend in background
-    npm run dev > frontend.log 2>&1 &
+    nohup npm run dev > frontend.log 2>&1 &
     echo $! > frontend.pid
     echo -e "${GREEN}✅ Frontend started on http://localhost:3000${NC}"
     echo -e "${GREEN}   PID: $(cat frontend.pid)${NC}"
