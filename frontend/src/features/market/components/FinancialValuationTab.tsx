@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ResponsiveContainer,
   ComposedChart,
@@ -141,17 +141,15 @@ export const FinancialValuationTab: React.FC<FinancialValuationTabProps> = ({
   const maxRevenue = Math.max(...recent4Q.map((q) => q.revenue || 0), 1);
   const maxProfit = Math.max(...recent4Q.map((q) => Math.abs(q.netProfit || 0)), 1);
 
-  const chartData = useMemo(() => {
-    return recent4Q.map((q) => ({
-      period: q.periodLabel,
-      revenueT: Number((q.revenue / 1_000_000_000).toFixed(1)),
-      netProfitT: Number((q.netProfit / 1_000_000_000).toFixed(1)),
-      netMargin: Number(q.netMargin.toFixed(1)),
-      grossMargin: Number(q.grossMargin.toFixed(1)),
-      rawRevenue: q.revenue,
-      rawProfit: q.netProfit,
-    }));
-  }, [recent4Q]);
+  const chartData = recent4Q.map((q) => ({
+    period: q.periodLabel,
+    revenueT: Number((q.revenue / 1_000_000_000).toFixed(1)),
+    netProfitT: Number((q.netProfit / 1_000_000_000).toFixed(1)),
+    netMargin: Number(q.netMargin.toFixed(1)),
+    grossMargin: Number(q.grossMargin.toFixed(1)),
+    rawRevenue: q.revenue,
+    rawProfit: q.netProfit,
+  }));
 
   return (
     <div className="space-y-6">
