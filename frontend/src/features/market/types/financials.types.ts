@@ -15,6 +15,16 @@ export interface QuarterlyFinancialRecord {
 
 export type ValuationStatus = 'UNDERVALUED' | 'FAIR' | 'OVERVALUED' | 'LOSS_MAKING';
 
+export interface OutlierQuarterInfo {
+  quarter: number;
+  year: number;
+  periodLabel: string;
+  netProfit: number;
+  medianProfit: number;
+  deviationMultiple: number;
+  reason: string;
+}
+
 export interface StockValuationData {
   symbol: string;
   name: string;
@@ -32,11 +42,16 @@ export interface StockValuationData {
   debtToEquity: number | null;
   currentRatio: number | null;
   
-  // PEG & Growth (Option A + Method 1: TTM YoY)
+  // PEG & Growth (Option A + Method 1: TTM YoY + Peter Lynch Normalization)
   ttmNetProfitCurrent: number; // VND
   ttmNetProfitPrior: number; // VND
-  earningsGrowthYoY: number | null; // % (g)
-  peg: number | null; // PE / g
+  earningsGrowthYoY: number | null; // % (Raw TTM YoY)
+  peg: number | null; // PE / g (Normalized Peter Lynch PEG)
+  rawPeg: number | null; // PE / g (Raw TTM PEG without outlier trimming)
+  normalizedGrowthRate: number | null; // % (Normalized sustainable growth rate)
+  growthCalculationMethod: string; // e.g. "PETER_LYNCH_NORMALIZED" | "SUSTAINABLE_TTM" | "CORE_GROSS_ADJUSTED"
+  hasOutlierProfit: boolean; // Có quý lợi nhuận bất thường/đột biến
+  outlierInfo?: OutlierQuarterInfo | null;
   
   // Industry Benchmark Comparison
   sectorPe: number;

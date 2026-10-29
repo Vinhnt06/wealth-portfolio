@@ -100,6 +100,11 @@ export const FinancialValuationTab: React.FC<FinancialValuationTabProps> = ({
     roa,
     debtToEquity,
     peg,
+    rawPeg,
+    normalizedGrowthRate,
+    growthCalculationMethod,
+    hasOutlierProfit,
+    outlierInfo,
     earningsGrowthYoY,
     sectorPe,
     sectorPb,
@@ -369,13 +374,18 @@ export const FinancialValuationTab: React.FC<FinancialValuationTabProps> = ({
           </p>
         </div>
 
-        {/* Card 3: PEG Peter Lynch */}
+        {/* Card 3: PEG Peter Lynch Chuẩn Hóa Chuyên Sâu */}
         <div className="p-5 rounded-2xl bg-zinc-900/50 border border-zinc-800/70 hover:border-zinc-700/80 transition-all flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-mono uppercase text-zinc-500 tracking-wider">
-                CHỈ SỐ PEG (P/E ÷ TĂNG TRƯỞNG G)
-              </span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] font-mono uppercase text-zinc-500 tracking-wider">
+                  CHỈ SỐ PEG PETER LYNCH
+                </span>
+                <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold">
+                  CHUẨN HÓA
+                </span>
+              </div>
               <Lightning className="w-4 h-4 text-emerald-400" />
             </div>
 
@@ -389,16 +399,35 @@ export const FinancialValuationTab: React.FC<FinancialValuationTabProps> = ({
                     : 'text-zinc-100'
                 }`}
               >
-                {peg !== null ? peg : 'N/A'}
+                {peg !== null ? `${peg}` : 'N/A'}
               </span>
               <span className="text-xs font-mono text-zinc-500">
-                (Tăng trưởng LNST $g$: <strong className="text-zinc-200">
-                  {earningsGrowthYoY !== null
+                (Tăng trưởng cốt lõi $g$: <strong className="text-zinc-200">
+                  {normalizedGrowthRate !== null
+                    ? (normalizedGrowthRate > 0 ? `+${normalizedGrowthRate}%` : `${normalizedGrowthRate}%`)
+                    : earningsGrowthYoY !== null
                     ? (earningsGrowthYoY > 0 ? `+${earningsGrowthYoY}%` : `${earningsGrowthYoY}%`)
                     : 'N/A'}
                 </strong>)
               </span>
             </div>
+
+            {/* Outlier Alert Pill if detected */}
+            {hasOutlierProfit && outlierInfo && (
+              <div className="mt-2.5 p-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-[11px] font-sans text-amber-300 leading-snug">
+                <span className="font-bold flex items-center gap-1 text-amber-400">
+                  ⚠️ Phát hiện quý đột biến {outlierInfo.periodLabel}:
+                </span>
+                <span className="text-amber-200/90 text-[10.5px] block mt-0.5">
+                  LNST đạt {(outlierInfo.netProfit / 1e9).toFixed(1)} tỷ (gấp {outlierInfo.deviationMultiple}x trung vị). Đã tự động lọc bỏ đột biến để tính PEG theo tăng trưởng cốt lõi bền vững.
+                </span>
+                {rawPeg !== null && (
+                  <span className="text-[10px] font-mono text-zinc-400 block mt-1">
+                    PEG danh nghĩa (chưa lọc): <span className="line-through">{rawPeg}</span> (g: {earningsGrowthYoY}%)
+                  </span>
+                )}
+              </div>
+            )}
 
             {/* Peter Lynch Grade Badge */}
             <div className="mt-3">
@@ -413,16 +442,18 @@ export const FinancialValuationTab: React.FC<FinancialValuationTabProps> = ({
                   }`}
                 >
                   {peg < 0.75 ? (
-                    <span>🟢 Chuẩn Peter Lynch: Định giá rất hấp dẫn (PEG &lt; 0.75)</span>
+                    <span>💎 Chuẩn Peter Lynch: Định giá rất hấp dẫn (PEG &lt; 0.75)</span>
                   ) : peg <= 1.2 ? (
-                    <span>🟡 Định giá hợp lý tương xứng tăng trưởng</span>
+                    <span>🟢 Định giá hợp lý tương xứng tốc độ tăng trưởng</span>
                   ) : (
                     <span>🔴 Định giá đắt so với tốc độ tăng trưởng (PEG &gt; 1.5)</span>
                   )}
                 </div>
               ) : (
                 <div className="inline-flex items-center gap-1 text-xs font-mono font-medium px-2.5 py-1 rounded-xl bg-zinc-800/60 border border-zinc-700/50 text-zinc-400">
-                  {earningsGrowthYoY !== null && earningsGrowthYoY <= 0 ? (
+                  {normalizedGrowthRate !== null && normalizedGrowthRate <= 0 ? (
+                    <span>⚠️ Tăng trưởng LNST suy giảm ({normalizedGrowthRate}%), PEG không khả dụng</span>
+                  ) : earningsGrowthYoY !== null && earningsGrowthYoY <= 0 ? (
                     <span>⚠️ LNST tăng trưởng âm ({earningsGrowthYoY}%), PEG không khả dụng</span>
                   ) : (
                     <span>Chưa đủ dữ liệu tăng trưởng TTM</span>
@@ -433,7 +464,7 @@ export const FinancialValuationTab: React.FC<FinancialValuationTabProps> = ({
           </div>
 
           <p className="text-[11px] font-sans text-zinc-400 mt-4 pt-3 border-t border-zinc-800/60 leading-relaxed">
-            Công thức Peter Lynch: Cổ phiếu có PEG &lt; 1.0 đại diện cho doanh nghiệp tăng trưởng ở mức giá chiết khấu.
+            Hệ thống tự động loại trừ các quý lợi nhuận bất thường (bán tài sản, thoái vốn) và giới hạn trần tăng trưởng 50% theo nguyên lý Peter Lynch để đảm bảo định giá chuẩn xác.
           </p>
         </div>
       </div>

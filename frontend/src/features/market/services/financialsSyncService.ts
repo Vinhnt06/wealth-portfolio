@@ -8,6 +8,7 @@ import {
   QuarterlyFinancialRecord,
   StockValuationData,
   ValuationStatus,
+  OutlierQuarterInfo,
 } from '../types/financials.types';
 
 const sectorMap = sectorMapping as Record<string, string>;
@@ -206,35 +207,144 @@ export async function fetchStockValuationLive(symbol: string): Promise<StockValu
     };
   });
 
-  // 4. Calculate PEG
+  // 4. ROBUST PETER LYNCH PEG MODEL (Outlier & Base-Effect Normalization)
   let ttmNetProfitCurrent = 0;
   let ttmNetProfitPrior = 0;
-  let earningsGrowthYoY: number | null = null;
-  let peg: number | null = null;
+  let earningsGrowthYoY: number | null = null; // Raw TTM YoY
+  let rawPeg: number | null = null;
+  let normalizedGrowthRate: number | null = null;
+  let peg: number | null = null; // Normalized robust Peter Lynch PEG
+  let hasOutlierProfit = false;
+  let outlierInfo: OutlierQuarterInfo | null = null;
+  let growthCalculationMethod = 'SUSTAINABLE_TTM';
 
-  if (quarterlyHistory.length >= 8) {
+  if (quarterlyHistory.length >= 4) {
     const last4 = quarterlyHistory.slice(-4);
-    const prior4 = quarterlyHistory.slice(-8, -4);
     ttmNetProfitCurrent = last4.reduce((sum, item) => sum + item.netProfit, 0);
-    ttmNetProfitPrior = prior4.reduce((sum, item) => sum + item.netProfit, 0);
 
-    if (ttmNetProfitPrior > 0) {
-      earningsGrowthYoY = Number((((ttmNetProfitCurrent - ttmNetProfitPrior) / ttmNetProfitPrior) * 100).toFixed(2));
-    } else if (ttmNetProfitPrior < 0 && ttmNetProfitCurrent > 0) {
-      earningsGrowthYoY = 100.0;
-    }
-  } else if (quarterlyHistory.length >= 5) {
-    const latestQ = quarterlyHistory[quarterlyHistory.length - 1];
-    const sameQPrevYear = quarterlyHistory.find(
-      (item) => item.quarter === latestQ.quarter && item.year === latestQ.year - 1
-    );
-    if (sameQPrevYear && sameQPrevYear.netProfit > 0) {
-      earningsGrowthYoY = Number((((latestQ.netProfit - sameQPrevYear.netProfit) / sameQPrevYear.netProfit) * 100).toFixed(2));
-    }
-  }
+    if (quarterlyHistory.length >= 8) {
+      const prior4 = quarterlyHistory.slice(-8, -4);
+      ttmNetProfitPrior = prior4.reduce((sum, item) => sum + item.netProfit, 0);
 
-  if (pe !== null && pe > 0 && earningsGrowthYoY !== null && earningsGrowthYoY > 0) {
-    peg = Number((pe / earningsGrowthYoY).toFixed(2));
+      // Raw TTM YoY
+      if (ttmNetProfitPrior > 0) {
+        earningsGrowthYoY = Number((((ttmNetProfitCurrent - ttmNetProfitPrior) / ttmNetProfitPrior) * 100).toFixed(2));
+      } else if (ttmNetProfitPrior < 0 && ttmNetProfitCurrent > 0) {
+        earningsGrowthYoY = 100.0;
+      }
+
+      if (pe !== null && pe > 0 && earningsGrowthYoY !== null && earningsGrowthYoY > 0) {
+        rawPeg = Number((pe / earningsGrowthYoY).toFixed(2));
+      }
+
+      // --- OUTLIER DETECTION (Phát hiện quý đột biến bất thường) ---
+      const allProfits = quarterlyHistory.map((q) => q.netProfit);
+      const sortedProfits = [...allProfits].sort((a, b) => a - b);
+      const medianProfit = (sortedProfits[3] + sortedProfits[4]) / 2;
+      const minThreshold = 30_000_000_000; // 30 tỷ VNĐ
+
+      // Quý đột biến nếu LNST > 3.0x median (và > 50 tỷ) hoặc âm sâu bất thường
+      const outlierQuarters: QuarterlyFinancialRecord[] = [];
+      quarterlyHistory.forEach((q) => {
+        const benchmark = Math.max(minThreshold, Math.abs(medianProfit));
+        if (q.netProfit > 3.0 * benchmark || q.netProfit < -2.5 * benchmark) {
+          outlierQuarters.push(q);
+        }
+      });
+
+      if (outlierQuarters.length > 0) {
+        hasOutlierProfit = true;
+        const primaryOutlier = outlierQuarters.reduce((max, curr) =>
+          Math.abs(curr.netProfit) > Math.abs(max.netProfit) ? curr : max
+        );
+        const multiple = Number(
+          (Math.abs(primaryOutlier.netProfit) / Math.max(1, Math.abs(medianProfit))).toFixed(1)
+        );
+
+        outlierInfo = {
+          quarter: primaryOutlier.quarter,
+          year: primaryOutlier.year,
+          periodLabel: primaryOutlier.periodLabel,
+          netProfit: primaryOutlier.netProfit,
+          medianProfit: Number(medianProfit.toFixed(0)),
+          deviationMultiple: multiple,
+          reason:
+            primaryOutlier.netProfit > 0
+              ? `LNST ${primaryOutlier.periodLabel} đạt ${(primaryOutlier.netProfit / 1e9).toFixed(1)} tỷ (gấp ${multiple}x mức trung vị ${Math.round(medianProfit / 1e9)} tỷ) do doanh thu tài chính / thoái vốn / thu nhập một lần.`
+              : `Ghi nhận khoản lỗ bất thường ${(primaryOutlier.netProfit / 1e9).toFixed(1)} tỷ trong ${primaryOutlier.periodLabel} do trích lập dự phòng / khấu hao một lần.`,
+        };
+
+        // Chuẩn hóa loại bỏ đột biến: Thay thế quý đột biến bằng medianProfit
+        const normalizedHistory = quarterlyHistory.map((q) => {
+          const isOut = outlierQuarters.some((o) => o.quarter === q.quarter && o.year === q.year);
+          return {
+            ...q,
+            netProfit: isOut ? medianProfit : q.netProfit,
+          };
+        });
+
+        const normLast4 = normalizedHistory.slice(-4);
+        const normPrior4 = normalizedHistory.slice(-8, -4);
+        const normTtmCurrent = normLast4.reduce((s, x) => s + x.netProfit, 0);
+        const normTtmPrior = normPrior4.reduce((s, x) => s + x.netProfit, 0);
+
+        let adjustedGrowth = 0;
+        if (normTtmPrior > 0) {
+          adjustedGrowth = Number((((normTtmCurrent - normTtmPrior) / normTtmPrior) * 100).toFixed(2));
+        }
+
+        // Tăng trưởng Lợi nhuận gộp TTM (Gross Profit phản ánh cốt lõi sản xuất kinh doanh)
+        const last4Gross = last4.reduce((s, x) => s + x.grossProfit, 0);
+        const prior4Gross = prior4.reduce((s, x) => s + x.grossProfit, 0);
+        let grossGrowth = 0;
+        if (prior4Gross > 0) {
+          grossGrowth = Number((((last4Gross - prior4Gross) / prior4Gross) * 100).toFixed(2));
+        }
+
+        if (grossGrowth > 0 && adjustedGrowth <= 0) {
+          // Doanh thu và LNG vẫn tăng nhưng LNST bị méo
+          normalizedGrowthRate = Math.min(
+            50,
+            Math.max(5, Number((grossGrowth * 0.7 + adjustedGrowth * 0.3).toFixed(2)))
+          );
+          growthCalculationMethod = 'CORE_GROSS_ADJUSTED';
+        } else if (adjustedGrowth > 0) {
+          normalizedGrowthRate = Math.min(50, adjustedGrowth);
+          growthCalculationMethod = 'WINSORIZED_MEDIAN';
+        } else {
+          normalizedGrowthRate = adjustedGrowth;
+          growthCalculationMethod = 'NORMALIZED_LOSS';
+        }
+      } else {
+        // Không có quý đột biến: Áp dụng trần Peter Lynch (50%) để loại bỏ hiệu ứng đáy thấp
+        if (earningsGrowthYoY !== null) {
+          if (earningsGrowthYoY > 50) {
+            normalizedGrowthRate = 50.0;
+            growthCalculationMethod = 'PETER_LYNCH_CAPPED';
+          } else {
+            normalizedGrowthRate = earningsGrowthYoY;
+            growthCalculationMethod = 'SUSTAINABLE_TTM';
+          }
+        }
+      }
+    } else if (quarterlyHistory.length >= 5) {
+      const latestQ = quarterlyHistory[quarterlyHistory.length - 1];
+      const sameQPrevYear = quarterlyHistory.find(
+        (item) => item.quarter === latestQ.quarter && item.year === latestQ.year - 1
+      );
+      if (sameQPrevYear && sameQPrevYear.netProfit > 0) {
+        earningsGrowthYoY = Number(
+          (((latestQ.netProfit - sameQPrevYear.netProfit) / sameQPrevYear.netProfit) * 100).toFixed(2)
+        );
+        normalizedGrowthRate = earningsGrowthYoY > 50 ? 50.0 : earningsGrowthYoY;
+        growthCalculationMethod = 'QUARTER_YOY';
+      }
+    }
+
+    // TÍNH TOÁN PEG CHUẨN HÓA CUỐI CÙNG
+    if (pe !== null && pe > 0 && normalizedGrowthRate !== null && normalizedGrowthRate > 0) {
+      peg = Number((pe / normalizedGrowthRate).toFixed(2));
+    }
   }
 
   // 5. Industry Comparisons
@@ -249,6 +359,13 @@ export async function fetchStockValuationLive(symbol: string): Promise<StockValu
   let valuationScore = 50;
   let marginOfSafety = 0;
   const analysisPoints: string[] = [];
+
+  // Outlier Notification Point (Đưa lên đầu nếu có)
+  if (hasOutlierProfit && outlierInfo) {
+    analysisPoints.push(
+      `🔍 Phát hiện Quý Đột Biến: ${outlierInfo.periodLabel} có LNST ${(outlierInfo.netProfit / 1e9).toFixed(1)} tỷ (gấp ${outlierInfo.deviationMultiple}x trung vị). Mô hình đã tự động kích hoạt bộ lọc Chuẩn Hóa Peter Lynch để loại bỏ đột biến một lần, bảo vệ PEG không bị méo mó.`
+    );
+  }
 
   if (pe !== null && pe < 0) {
     valuationStatus = 'LOSS_MAKING';
@@ -286,23 +403,25 @@ export async function fetchStockValuationLive(symbol: string): Promise<StockValu
       }
     }
 
+    // Evaluate with normalized PEG
+    const effectiveGrowth = normalizedGrowthRate ?? earningsGrowthYoY;
     if (peg !== null) {
       if (peg < 0.7) {
         score += 25;
-        analysisPoints.push(`💎 Chỉ số PEG đạt ${peg} (< 0.7) - Chuẩn Peter Lynch: Tốc độ tăng trưởng LNST (+${earningsGrowthYoY}%) vượt trội so với mức định giá P/E.`);
+        analysisPoints.push(`💎 Chỉ số PEG chuẩn hóa đạt ${peg} (< 0.7) - Chuẩn Peter Lynch: Tốc độ tăng trưởng cốt lõi (+${effectiveGrowth}%) vượt trội so với mức định giá P/E.`);
       } else if (peg <= 1.1) {
         score += 15;
-        analysisPoints.push(`🟢 Chỉ số PEG đạt ${peg} (khoảng 1.0) - Tăng trưởng LNST (+${earningsGrowthYoY}%) tương xứng với định giá P/E.`);
+        analysisPoints.push(`🟢 Chỉ số PEG chuẩn hóa đạt ${peg} (khoảng 1.0) - Tăng trưởng cốt lõi (+${effectiveGrowth}%) tương xứng với định giá P/E.`);
       } else if (peg > 2.0) {
         score -= 20;
-        analysisPoints.push(`⚠️ Chỉ số PEG đạt ${peg} (> 2.0) - Tốc độ tăng trưởng LNST (+${earningsGrowthYoY}%) chưa theo kịp mức P/E hiện tại.`);
+        analysisPoints.push(`⚠️ Chỉ số PEG chuẩn hóa đạt ${peg} (> 2.0) - Tốc độ tăng trưởng cốt lõi (+${effectiveGrowth}%) chưa theo kịp mức P/E hiện tại.`);
       } else {
         score += 5;
-        analysisPoints.push(`🟡 Chỉ số PEG đạt ${peg} - Mức định giá ở trạng thái cân bằng.`);
+        analysisPoints.push(`🟡 Chỉ số PEG chuẩn hóa đạt ${peg} - Mức định giá ở trạng thái cân bằng.`);
       }
-    } else if (earningsGrowthYoY !== null && earningsGrowthYoY <= 0) {
+    } else if (effectiveGrowth !== null && effectiveGrowth <= 0) {
       score -= 20;
-      analysisPoints.push(`⚠️ Tốc độ tăng trưởng LNST TTM YoY suy giảm (${earningsGrowthYoY}%), do đó chỉ số PEG không áp dụng được.`);
+      analysisPoints.push(`⚠️ Tốc độ tăng trưởng LNST suy giảm (${effectiveGrowth}%), do đó chỉ số PEG không áp dụng được.`);
     }
 
     if (pe !== null && pe > 60 && pb !== null && pb < 0.8) {
@@ -350,6 +469,11 @@ export async function fetchStockValuationLive(symbol: string): Promise<StockValu
     ttmNetProfitPrior,
     earningsGrowthYoY,
     peg,
+    rawPeg,
+    normalizedGrowthRate,
+    growthCalculationMethod,
+    hasOutlierProfit,
+    outlierInfo,
     sectorPe,
     sectorPb,
     peVsSectorPercent,
