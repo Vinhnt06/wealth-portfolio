@@ -17,6 +17,14 @@
     {
       "path": "/api/cron/scan-minervini",
       "schedule": "15 8 * * 1-5"
+    },
+    {
+      "path": "/api/cron/sync-financials",
+      "schedule": "0 10 * * 1-5"
+    },
+    {
+      "path": "/api/cron/sync-financials",
+      "schedule": "0 0 * * 6"
     }
   ]
 }
