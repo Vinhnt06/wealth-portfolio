@@ -59,9 +59,69 @@ export interface MinerviniAnalysisResult {
   passedCount: number;
   totalCount: number;
   isStage2Eligible: boolean;
+  sma20?: number;
+  rsi14?: number;
+  distFromSMA20Pct?: number;
   criteria: MinerviniCriterion[];
   signals: MinerviniStrategySignal[];
   wyckoff?: WyckoffDiagnosis;
+  aiRecommendation?: AIRecommendation;
+}
+
+export interface HeatCriterion {
+  id: string;
+  label: string;
+  currentValue: string;
+  threshold: string;
+  status: 'SAFE' | 'WARNING' | 'DANGER';
+  note: string;
+}
+
+export interface HeatAnalysis {
+  isOverextended: boolean;
+  heatLevel: 'COOL' | 'WARM' | 'HOT' | 'OVERHEATED';
+  heatScore: number; // 0 - 100
+  heatLabel: string;
+  distFromSMA20Pct: number;
+  distFromSMA50Pct: number;
+  rsi14: number;
+  macdStatus: 'BULLISH' | 'BEARISH' | 'NEUTRAL';
+  macdHist: number;
+  climaxWarning: boolean;
+  criteria: HeatCriterion[];
+}
+
+export interface CapitalTranche {
+  step: number;
+  name: string;
+  pct: number;
+  targetPrice: string;
+  condition: string;
+  status: 'ACTIVE' | 'PENDING' | 'LOCKED';
+}
+
+export interface CapitalAllocationPlan {
+  totalBudgetPct: number;
+  tranches: CapitalTranche[];
+  maxLossBudgetPct: number;
+  stopLossPrice: number;
+  stopLossPct: number;
+  targetPrice1: number;
+  targetPrice2: number;
+  riskRewardRatio: number;
+  goldenRules: string[];
+}
+
+export interface AIRecommendation {
+  action: 'MUA THĂM DÒ (LẦN 1)' | 'MUA GIA TĂNG (LẦN 2)' | 'CHỜ KÉO NGƯỢC (PULLBACK)' | 'CẤM MUA ĐUỔI (QUÁ NÓNG)' | 'THEO DÕI NỀN GIÁ' | 'HẠ TỶ TRỌNG / QUẢN TRỊ RỦI RO';
+  actionType: 'BUY_PILOT' | 'BUY_ADD' | 'WAIT_PULLBACK' | 'NO_BUY_EXTENDED' | 'WATCH' | 'SELL_TRIM';
+  actionColor: 'emerald' | 'amber' | 'rose' | 'cyan';
+  headline: string;
+  summary: string;
+  shouldBuyNow: boolean;
+  buySuitabilityScore: number; // 0 - 100
+  heat: HeatAnalysis;
+  allocation: CapitalAllocationPlan;
 }
 
 export interface MinerviniScreenerItem {

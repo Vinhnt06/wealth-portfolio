@@ -1,6 +1,15 @@
 import { NextResponse } from 'next/server';
 import stockDatabase from '../../../../../features/market/data/stockDatabase.json';
-import { MinerviniAnalysisResult, MinerviniCriterion, MinerviniStrategySignal } from '../../../../../features/market/types/minervini.types';
+import {
+  MinerviniAnalysisResult,
+  MinerviniCriterion,
+  MinerviniStrategySignal,
+  AIRecommendation,
+  HeatAnalysis,
+  CapitalAllocationPlan,
+  CapitalTranche,
+  HeatCriterion,
+} from '../../../../../features/market/types/minervini.types';
 
 import { isMarketIndex, getMarketIndexMeta, VN_MARKET_INDEXES } from '../../../../../features/market/constants/marketIndexes';
 
@@ -90,9 +99,13 @@ export async function GET(request: Request) {
       return Math.round((sum / period) * 100) / 100;
     };
 
+    const sma20 = calcSMA(Math.min(20, count));
     const sma50 = calcSMA(50);
     const sma150 = calcSMA(Math.min(150, count));
     const sma200 = calcSMA(Math.min(200, count));
+
+    const distFromSMA20Pct = sma20 > 0 ? Math.round(((currentPrice - sma20) / sma20) * 1000) / 10 : 0;
+    const distFromSMA50Pct = sma50 > 0 ? Math.round(((currentPrice - sma50) / sma50) * 1000) / 10 : 0;
 
     // SMA200 22-sessions ago (1 month slope check)
     const sma200Past = count >= 222 ? calcSMA(200, count - 22) : sma200 * 0.99;
@@ -345,6 +358,320 @@ export async function GET(request: Request) {
 
     const wyckoffPassedCount = wyckoffCriteria.filter((c) => c.passed).length;
 
+    // ── Indicators for Heat & Extended Analysis (RSI, MACD) ──
+    // 1. RSI(14)
+    let gains = 0;
+    let losses = 0;
+    const rsiPeriod = 14;
+    for (let i = Math.max(1, count - rsiPeriod); i < count; i++) {
+      const diff = closes[i] - closes[i - 1];
+      if (diff >= 0) gains += diff;
+      else losses += Math.abs(diff);
+    }
+    const avgGain = gains / rsiPeriod;
+    const avgLoss = losses / rsiPeriod;
+    const rsVal = avgLoss === 0 ? 100 : avgGain / avgLoss;
+    const rsi14 = Number((100 - (100 / (1 + rsVal))).toFixed(1));
+
+    // 2. MACD (12, 26, 9)
+    let ema12 = closes[0];
+    let ema26 = closes[0];
+    const k12 = 2 / (12 + 1);
+    const k26 = 2 / (26 + 1);
+    const k9 = 2 / (9 + 1);
+    const macdLineSeries: number[] = [];
+    for (let i = 0; i < count; i++) {
+      ema12 = i === 0 ? closes[0] : closes[i] * k12 + ema12 * (1 - k12);
+      ema26 = i === 0 ? closes[0] : closes[i] * k26 + ema26 * (1 - k26);
+      macdLineSeries.push(ema12 - ema26);
+    }
+    let signalEMA = macdLineSeries[0];
+    for (let i = 0; i < count; i++) {
+      signalEMA = i === 0 ? macdLineSeries[0] : macdLineSeries[i] * k9 + signalEMA * (1 - k9);
+    }
+    const macdValue = Number(macdLineSeries[count - 1].toFixed(2));
+    const macdSignalValue = Number(signalEMA.toFixed(2));
+    const macdHist = Number((macdValue - macdSignalValue).toFixed(2));
+    const macdStatus: 'BULLISH' | 'BEARISH' | 'NEUTRAL' =
+      macdHist >= 0.05 ? 'BULLISH' : macdHist <= -0.05 ? 'BEARISH' : 'NEUTRAL';
+
+    // ── 3. Heat & Extended Analysis Checklist ──
+    let heatScore = 15;
+    let isOverextended = false;
+    let climaxWarning = false;
+
+    // Check 1: Khoảng cách MA20 (Ngưỡng Minervini: > 7% là bắt đầu quá đà, > 10% là cấm mua đuổi)
+    let ma20Status: 'SAFE' | 'WARNING' | 'DANGER' = 'SAFE';
+    if (distFromSMA20Pct > 8.0) {
+      ma20Status = 'DANGER';
+      heatScore += 35;
+      isOverextended = true;
+    } else if (distFromSMA20Pct > 5.0) {
+      ma20Status = 'WARNING';
+      heatScore += 18;
+    } else if (distFromSMA20Pct < -5.0) {
+      // Đang rơi sâu dưới MA20
+      ma20Status = 'WARNING';
+    }
+
+    // Check 2: Khoảng cách MA50 (> 20% là quá nóng)
+    let ma50Status: 'SAFE' | 'WARNING' | 'DANGER' = 'SAFE';
+    if (distFromSMA50Pct > 20.0) {
+      ma50Status = 'DANGER';
+      heatScore += 30;
+      isOverextended = true;
+    } else if (distFromSMA50Pct > 14.0) {
+      ma50Status = 'WARNING';
+      heatScore += 12;
+    }
+
+    // Check 3: RSI 14
+    let rsiStatus: 'SAFE' | 'WARNING' | 'DANGER' = 'SAFE';
+    if (rsi14 >= 72) {
+      rsiStatus = 'DANGER';
+      heatScore += 25;
+      isOverextended = true;
+    } else if (rsi14 >= 62) {
+      rsiStatus = 'WARNING';
+      heatScore += 10;
+    }
+
+    // Check 4: MACD Momentum
+    let macdCheckStatus: 'SAFE' | 'WARNING' | 'DANGER' = 'SAFE';
+    if (macdStatus === 'BEARISH') {
+      macdCheckStatus = 'WARNING';
+      heatScore += 10;
+    }
+
+    // Check 5: Tăng từ đáy 52 tuần
+    let baseRunStatus: 'SAFE' | 'WARNING' | 'DANGER' = 'SAFE';
+    if (distFrom52WLowPct >= 120) {
+      baseRunStatus = 'WARNING';
+      heatScore += 10;
+    }
+
+    if (distFromSMA20Pct > 10 && rsi14 > 70 && distFrom52WHighPct >= -5) {
+      climaxWarning = true;
+      isOverextended = true;
+      heatScore = Math.max(85, heatScore);
+    }
+
+    heatScore = Math.min(100, Math.max(10, heatScore));
+    let heatLevel: 'COOL' | 'WARM' | 'HOT' | 'OVERHEATED' = 'COOL';
+    let heatLabel = 'Hạ nhiệt an toàn (Cool)';
+
+    if (isOverextended || heatScore >= 75) {
+      heatLevel = heatScore >= 80 ? 'OVERHEATED' : 'HOT';
+      heatLabel = heatScore >= 80 ? 'Cực kỳ quá nóng (Overheated) 🚨' : 'Tăng nóng / Extended ⚠️';
+    } else if (heatScore >= 40 || Math.abs(distFromSMA20Pct) > 4) {
+      heatLevel = 'WARM';
+      heatLabel = 'Ấm vừa phải (Đang hạ nhiệt)';
+    }
+
+    const heatCriteria: HeatCriterion[] = [
+      {
+        id: 'ma20_dist',
+        label: 'Khoảng cách tới MA20',
+        currentValue: `${distFromSMA20Pct > 0 ? '+' : ''}${distFromSMA20Pct}%`,
+        threshold: 'An toàn: ≤ +5.0% | Nóng: > +8.0%',
+        status: ma20Status,
+        note:
+          ma20Status === 'DANGER'
+            ? 'Dãn quá xa MA20, rủi ro điều chỉnh cao'
+            : ma20Status === 'WARNING'
+            ? 'Đang mở rộng biên độ hoặc rướn'
+            : 'Sát đường hỗ trợ MA20 (An toàn)',
+      },
+      {
+        id: 'ma50_dist',
+        label: 'Khoảng cách tới MA50',
+        currentValue: `${distFromSMA50Pct > 0 ? '+' : ''}${distFromSMA50Pct}%`,
+        threshold: 'An toàn: ≤ +15.0% | Nóng: > +20.0%',
+        status: ma50Status,
+        note:
+          ma50Status === 'DANGER'
+            ? 'Tăng dốc đứng so với xu hướng trung hạn'
+            : ma50Status === 'WARNING'
+            ? 'Tăng tốt trên MA50'
+            : 'Gần nền hỗ trợ MA50',
+      },
+      {
+        id: 'rsi14',
+        label: 'Chỉ báo Quá Mua RSI(14)',
+        currentValue: `${rsi14}`,
+        threshold: 'Lý tưởng: 45 - 65 | Quá mua: > 70',
+        status: rsiStatus,
+        note:
+          rsiStatus === 'DANGER'
+            ? 'Vùng quá mua cực đại (RSI > 72)'
+            : rsiStatus === 'WARNING'
+            ? 'Động lượng mua mạnh'
+            : 'Vùng động lượng cân bằng',
+      },
+      {
+        id: 'macd_momentum',
+        label: 'Xung lượng MACD (12,26,9)',
+        currentValue: `${macdValue} vs ${macdSignalValue} (Hist: ${macdHist})`,
+        threshold: 'Tích cực: Hist ≥ 0 | Tiêu cực: Hist < 0',
+        status: macdCheckStatus,
+        note:
+          macdStatus === 'BEARISH'
+            ? 'MACD cắt dưới Signal — Đang suy yếu/điều chỉnh ngắn hạn'
+            : 'MACD trên Signal — Xung lượng tăng duy trì',
+      },
+      {
+        id: 'low52w_run',
+        label: 'Biên độ tăng từ đáy 52T',
+        currentValue: `+${distFrom52WLowPct}%`,
+        threshold: 'Đầu sóng: < 60% | Cuối sóng: > 120%',
+        status: baseRunStatus,
+        note:
+          distFrom52WLowPct >= 120
+            ? 'Sóng tăng đã kéo dài (Late Stage Base)'
+            : 'Biên độ tăng trong tầm kiểm soát',
+      },
+    ];
+
+    const heatAnalysis: HeatAnalysis = {
+      isOverextended,
+      heatLevel,
+      heatScore,
+      heatLabel,
+      distFromSMA20Pct,
+      distFromSMA50Pct,
+      rsi14,
+      macdStatus,
+      macdHist,
+      climaxWarning,
+      criteria: heatCriteria,
+    };
+
+    // ── 4. AI Recommendation & Action Classification ──
+    let action: AIRecommendation['action'] = 'CHỜ KÉO NGƯỢC (PULLBACK)';
+    let actionType: AIRecommendation['actionType'] = 'WAIT_PULLBACK';
+    let actionColor: AIRecommendation['actionColor'] = 'amber';
+    let shouldBuyNow = false;
+    let headline = '';
+    let summary = '';
+    let buySuitabilityScore = 50;
+
+    if (stage === 4) {
+      action = 'HẠ TỶ TRỌNG / QUẢN TRỊ RỦI RO';
+      actionType = 'SELL_TRIM';
+      actionColor = 'rose';
+      shouldBuyNow = false;
+      buySuitabilityScore = 15;
+      headline = 'Stage 4 (Downtrend) — Cấm mua bắt đáy';
+      summary =
+        'Giá nằm dưới toàn bộ đường trung bình dài hạn MA150/MA200. Mọi nhịp hồi đều là cơ hội bán cơ cấu, tuyệt đối không giải ngân mua mới.';
+    } else if (isOverextended) {
+      action = 'CẤM MUA ĐUỔI (QUÁ NÓNG)';
+      actionType = 'NO_BUY_EXTENDED';
+      actionColor = 'rose';
+      shouldBuyNow = false;
+      buySuitabilityScore = 25;
+      headline = `Điểm mua quá nóng — Extended (Cách MA20 ${distFromSMA20Pct}% · MA50 ${distFromSMA50Pct}%)`;
+      summary =
+        'Cổ phiếu đã tăng dốc quá xa các mốc hỗ trợ và có rủi ro tạo đỉnh ngắn hạn hoặc rung lắc điều chỉnh 8% – 15%. Tuyệt đối không mua đuổi FOMO, hãy kiên nhẫn đợi nhịp kéo ngược (pullback) về MA20/MA50 cạn cung.';
+    } else if (
+      isStage2Eligible &&
+      distFromSMA20Pct <= 3.5 &&
+      distFromSMA20Pct >= -2.5 &&
+      rsRating >= 70 &&
+      macdStatus !== 'BEARISH'
+    ) {
+      action = 'MUA THĂM DÒ (LẦN 1)';
+      actionType = 'BUY_PILOT';
+      actionColor = 'emerald';
+      shouldBuyNow = true;
+      buySuitabilityScore = 88;
+      headline = 'Đủ chuẩn Stage 2 & Vùng mua an toàn quanh MA20';
+      summary =
+        'Cổ phiếu thỏa mãn toàn bộ tiêu chí xu hướng và độ nóng đã hạ nhiệt an toàn về gần hỗ trợ. Đủ điều kiện kích hoạt lệnh giải ngân Thăm dò Lần 1 (30% tổng vốn vị thế).';
+    } else if (isStage2Eligible && (distFromSMA20Pct > 3.5 || macdStatus === 'BEARISH')) {
+      action = 'CHỜ KÉO NGƯỢC (PULLBACK)';
+      actionType = 'WAIT_PULLBACK';
+      actionColor = 'amber';
+      shouldBuyNow = false;
+      buySuitabilityScore = 58;
+      headline = 'Stage 2 Tăng trưởng — Chờ nến kiểm định MA20 cạn cung';
+      summary = `Cổ phiếu giữ được xu hướng tăng tốt (RS ${rsRating}/99), nhưng xung lượng ngắn hạn đang trong nhịp thoái lui hạ nhiệt (MACD Hist ${macdHist}). Chờ giá test lại MA20 (${sma20}) giữ vững trần nền trước khi mở vị thế.`;
+    } else {
+      action = 'THEO DÕI NỀN GIÁ';
+      actionType = 'WATCH';
+      actionColor = 'cyan';
+      shouldBuyNow = false;
+      buySuitabilityScore = 42;
+      headline = 'Pha tích lũy nền giá — Tiếp tục theo dõi';
+      summary =
+        'Cổ phiếu cần thêm thời gian thắt chặt biên độ dao động (VCP) và xác nhận sự nhập cuộc của dòng tiền lớn bảo trợ.';
+    }
+
+    // ── 5. Capital Allocation Plan (Scale-in Tranches) ──
+    const stopLossPrice = Number((currentPrice * 0.93).toFixed(1));
+    const stopLossPct = -7.0;
+    const targetPrice1 = Number((currentPrice * 1.15).toFixed(1));
+    const targetPrice2 = Number((currentPrice * 1.25).toFixed(1));
+    const riskRewardRatio = Number(
+      ((targetPrice1 - currentPrice) / Math.max(0.1, currentPrice - stopLossPrice)).toFixed(1)
+    );
+
+    const tranches: CapitalTranche[] = [
+      {
+        step: 1,
+        name: 'Lần 1: Vị thế Thăm dò (Pilot Position)',
+        pct: 30,
+        targetPrice: `Quanh ${currentPrice > sma20 ? sma20 : currentPrice}`,
+        condition: 'Giải ngân 30% tổng vốn khi giá kéo ngược chạm hỗ trợ MA20/MA50 có nến rút chân hoặc bứt phá chớm pivot.',
+        status: shouldBuyNow ? 'ACTIVE' : 'PENDING',
+      },
+      {
+        step: 2,
+        name: 'Lần 2: Gia tăng Bứt phá (Add on Strength)',
+        pct: 40,
+        targetPrice: `Vượt đỉnh ${formatK(high52W * 0.98)} kèm Vol bùng nổ`,
+        condition: 'Chỉ giải ngân 40% KHI VÀ CHỈ KHI Lần 1 đang CÓ LÃI (+2% đến +4%) và thanh khoản vượt 130% TB 20 phiên.',
+        status: 'LOCKED',
+      },
+      {
+        step: 3,
+        name: 'Lần 3: Kim tự tháp hoàn tất (Full Position)',
+        pct: 30,
+        targetPrice: 'Nhịp kiểm định (Retest) trần nền',
+        condition: 'Giải ngân 30% cuối cùng khi giá kiểm định thành công mốc kháng cự cũ (hỗ trợ mới), sẵn sàng cho sóng tăng mạnh.',
+        status: 'LOCKED',
+      },
+    ];
+
+    const capitalAllocation: CapitalAllocationPlan = {
+      totalBudgetPct: 100,
+      tranches,
+      maxLossBudgetPct: 1.5,
+      stopLossPrice,
+      stopLossPct,
+      targetPrice1,
+      targetPrice2,
+      riskRewardRatio,
+      goldenRules: [
+        'Tuyệt đối KHÔNG bao giờ bình quân giá xuống (Never average down on losers).',
+        'Luôn đặt lệnh Dừng lỗ tự động 7% ngay sau khi khớp lệnh để bảo vệ vốn.',
+        'Chỉ gia tăng tỷ trọng (Lần 2, 3) khi các vị thế trước ĐANG CÓ LÃI.',
+        'Chốt lời chủ động 1/2 vị thế khi đạt +15% đến +20%, 1/2 còn lại trailing stop theo MA20.',
+      ],
+    };
+
+    const aiRecommendation: AIRecommendation = {
+      action,
+      actionType,
+      actionColor,
+      headline,
+      summary,
+      shouldBuyNow,
+      buySuitabilityScore,
+      heat: heatAnalysis,
+      allocation: capitalAllocation,
+    };
+
     const result: MinerviniAnalysisResult = {
       symbol,
       name: stockInfo.name,
@@ -357,9 +684,12 @@ export async function GET(request: Request) {
       change: currentChange,
       changePct: Math.round(currentChangePct * 100) / 100,
       volume: currentVol,
+      sma20,
       sma50,
       sma150,
       sma200,
+      distFromSMA20Pct,
+      rsi14,
       sma200SlopeUp,
       high52W,
       low52W,
@@ -381,6 +711,7 @@ export async function GET(request: Request) {
         actionAdvice,
         criteria: wyckoffCriteria,
       },
+      aiRecommendation,
     };
 
     return NextResponse.json({

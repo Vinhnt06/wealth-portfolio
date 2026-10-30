@@ -15,6 +15,10 @@ import {
   Crown,
   Info,
   Sparkle,
+  Flame,
+  ShieldCheck,
+  Coins,
+  Target,
 } from '@phosphor-icons/react';
 import { MinerviniAnalysisResult } from '../types/minervini.types';
 
@@ -444,24 +448,223 @@ export const MinerviniStrategyPanel: React.FC<MinerviniStrategyPanelProps> = ({ 
           </div>
         )}
 
-        {/* ── TAB 5: AI PHÂN TÍCH THỰC TẾ ────────────────────────── */}
+        {/* ── TAB 5: AI KHUYẾN NGHỊ & KẾ HOẠCH GIẢI NGÂN VỐN ────────────────────────── */}
         {activeTab === 'ai' && data && (
-          <div className="p-3.5 rounded-xl bg-[#0a111a]/90 border border-zinc-800/80 text-xs space-y-2.5">
-            <div className="flex items-center gap-2 text-cyan-400 font-bold text-[11px] uppercase">
-              <Brain size={14} />
-              <span>AI Đánh Giá Kỹ Thuật: {data.symbol}</span>
+          <div className="space-y-3.5 pb-2">
+            {/* Header Card: AI Action Banner */}
+            <div
+              className={`p-3.5 rounded-xl border ${
+                data.aiRecommendation?.actionColor === 'emerald'
+                  ? 'bg-emerald-950/20 border-emerald-500/40 text-emerald-300'
+                  : data.aiRecommendation?.actionColor === 'rose'
+                  ? 'bg-rose-950/20 border-rose-500/40 text-rose-300'
+                  : 'bg-amber-950/20 border-amber-500/40 text-amber-300'
+              }`}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-zinc-200">
+                  <Brain size={16} weight="fill" className="text-cyan-400" />
+                  <span>KHUYẾN NGHỊ THUẬT TOÁN AI</span>
+                </div>
+                <span
+                  className={`text-[10px] font-black px-2 py-0.5 rounded border uppercase tracking-wider ${
+                    data.aiRecommendation?.actionColor === 'emerald'
+                      ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50'
+                      : data.aiRecommendation?.actionColor === 'rose'
+                      ? 'bg-rose-500/20 text-rose-300 border-rose-500/50'
+                      : 'bg-amber-500/20 text-amber-300 border-amber-500/50'
+                  }`}
+                >
+                  {data.aiRecommendation?.action || 'THEO DÕI NỀN GIÁ'}
+                </span>
+              </div>
+              <div className="text-xs font-bold text-zinc-100 mb-1">
+                {data.aiRecommendation?.headline}
+              </div>
+              <p className="text-[11px] text-zinc-400 leading-relaxed">
+                {data.aiRecommendation?.summary}
+              </p>
             </div>
 
-            <div className="p-3 rounded-lg bg-zinc-900/70 border border-zinc-800/60 text-[11px] leading-relaxed text-zinc-300 space-y-2">
-              <p>
-                • <strong>Xu hướng chính:</strong> Cổ phiếu đang ở <strong>{data.stageName}</strong> với <strong>{passedCount}/8</strong> tiêu chuẩn xu hướng được đáp ứng.
-              </p>
-              <p>
-                • <strong>Sức mạnh tương quan:</strong> Chỉ số RS đạt <strong>{data.rsRating}/99</strong>{data.rsRating >= 70 ? ', nằm trong nhóm cổ phiếu dẫn dắt khỏe hơn VN-Index.' : ', cần thêm sự xác nhận từ dòng tiền.'}
-              </p>
-              <p>
-                • <strong>Chiến lược hành động:</strong> {isStage2 ? 'Đủ điều kiện xem xét các điểm mua breakout nền giá VCP hoặc nhịp hồi hỗ trợ MA50.' : 'Nên kiên nhẫn quan sát quá trình hình thành nền giá tích lũy trước khi mở vị thế.'}
-              </p>
+            {/* Block 1: THƯỚC ĐO ĐỘ NÓNG & RỦI RO MUA ĐUỔI (HEAT & EXTENDED CHECK) */}
+            <div className="p-3.5 rounded-xl bg-[#0a111a]/90 border border-zinc-800/80 space-y-3 shadow-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 text-[11px] font-extrabold uppercase text-amber-400">
+                  <Flame size={15} weight="fill" />
+                  <span>ĐO ĐỘ NÓNG & RỦI RO MUA ĐUỔI</span>
+                </div>
+                <span
+                  className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
+                    data.aiRecommendation?.heat.heatLevel === 'OVERHEATED' ||
+                    data.aiRecommendation?.heat.heatLevel === 'HOT'
+                      ? 'bg-rose-500/20 text-rose-400 border-rose-500/40'
+                      : data.aiRecommendation?.heat.heatLevel === 'WARM'
+                      ? 'bg-amber-500/20 text-amber-400 border-amber-500/40'
+                      : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
+                  }`}
+                >
+                  {data.aiRecommendation?.heat.heatLabel || 'Hạ nhiệt an toàn'}
+                </span>
+              </div>
+
+              {/* Progress bar of Heat Score */}
+              <div className="space-y-1.5">
+                <div className="flex justify-between text-[10px] text-zinc-400">
+                  <span>
+                    Chỉ số nhiệt lượng:{' '}
+                    <strong className="text-zinc-200">
+                      {data.aiRecommendation?.heat.heatScore || 20}/100
+                    </strong>
+                  </span>
+                  <span
+                    className={
+                      data.aiRecommendation?.heat.isOverextended
+                        ? 'text-rose-400 font-bold'
+                        : 'text-emerald-400 font-bold'
+                    }
+                  >
+                    {data.aiRecommendation?.heat.isOverextended
+                      ? '⚠️ CẢNH BÁO QUÁ NÓNG'
+                      : '✓ VÙNG AN TOÀN'}
+                  </span>
+                </div>
+                <div className="w-full bg-zinc-900 h-2 rounded-full overflow-hidden border border-zinc-800">
+                  <div
+                    className={`h-full transition-all duration-500 ${
+                      (data.aiRecommendation?.heat.heatScore || 0) >= 70
+                        ? 'bg-gradient-to-r from-amber-500 to-rose-500'
+                        : (data.aiRecommendation?.heat.heatScore || 0) >= 40
+                        ? 'bg-gradient-to-r from-emerald-500 to-amber-500'
+                        : 'bg-emerald-500'
+                    }`}
+                    style={{
+                      width: `${Math.min(
+                        100,
+                        Math.max(10, data.aiRecommendation?.heat.heatScore || 20)
+                      )}%`,
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Table of Criteria */}
+              <div className="divide-y divide-zinc-800/50 text-xs pt-1">
+                {data.aiRecommendation?.heat.criteria.map((hc) => (
+                  <div key={hc.id} className="py-2 flex items-start justify-between gap-2">
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-1.5 text-zinc-200 font-medium text-[11px]">
+                        <span
+                          className={`w-1.5 h-1.5 rounded-full ${
+                            hc.status === 'DANGER'
+                              ? 'bg-rose-500'
+                              : hc.status === 'WARNING'
+                              ? 'bg-amber-400'
+                              : 'bg-emerald-400'
+                          }`}
+                        />
+                        <span>{hc.label}</span>
+                      </div>
+                      <div className="text-[10px] text-zinc-500">{hc.threshold}</div>
+                      <div className="text-[10px] text-zinc-400 italic">{hc.note}</div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <span
+                        className={`font-mono text-xs font-bold ${
+                          hc.status === 'DANGER'
+                            ? 'text-rose-400'
+                            : hc.status === 'WARNING'
+                            ? 'text-amber-300'
+                            : 'text-emerald-400'
+                        }`}
+                      >
+                        {hc.currentValue}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Block 2: QUY TẮC GIẢI NGÂN VỐN NHIỀU LẦN (SCALE-IN / KIM TỰ THÁP) */}
+            <div className="p-3.5 rounded-xl bg-[#0a111a]/90 border border-zinc-800/80 space-y-3 shadow-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 text-[11px] font-extrabold uppercase text-amber-400">
+                  <Coins size={15} weight="fill" />
+                  <span>KẾ HOẠCH GIẢI NGÂN VỐN (3 LẦN)</span>
+                </div>
+                <span className="text-[10px] text-zinc-400 font-mono">Quy tắc Kim Tự Tháp</span>
+              </div>
+
+              {/* Tranches List */}
+              <div className="space-y-2">
+                {data.aiRecommendation?.allocation.tranches.map((t) => (
+                  <div
+                    key={t.step}
+                    className={`p-2.5 rounded-lg border text-xs ${
+                      t.status === 'ACTIVE'
+                        ? 'bg-emerald-950/20 border-emerald-500/40 text-emerald-300'
+                        : 'bg-zinc-900/60 border-zinc-800/70 text-zinc-400'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-1.5 font-bold text-zinc-200 text-[11px]">
+                        <span
+                          className={`px-1.5 py-0.2 rounded text-[10px] font-black ${
+                            t.status === 'ACTIVE'
+                              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+                              : 'bg-zinc-800 text-zinc-400'
+                          }`}
+                        >
+                          {t.pct}% VỐN
+                        </span>
+                        <span>{t.name}</span>
+                      </div>
+                      <span className="font-mono text-[11px] font-bold text-amber-300">
+                        {t.targetPrice}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-zinc-400 leading-snug pl-1">
+                      {t.condition}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Risk/Reward & Stoploss Stats */}
+              <div className="p-2.5 rounded-lg bg-zinc-900/80 border border-zinc-800 grid grid-cols-3 gap-2 text-xs font-mono">
+                <div>
+                  <span className="text-[10px] text-zinc-500 block uppercase">Cắt Lỗ Tự Động</span>
+                  <span className="font-bold text-rose-400">
+                    {data.aiRecommendation?.allocation.stopLossPrice} ({data.aiRecommendation?.allocation.stopLossPct}%)
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-zinc-500 block uppercase">Mục Tiêu 1 (+15%)</span>
+                  <span className="font-bold text-emerald-400">
+                    {data.aiRecommendation?.allocation.targetPrice1}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-zinc-500 block uppercase">Tỷ Lệ Lãi/Lỗ</span>
+                  <span className="font-bold text-amber-300">
+                    1 : {data.aiRecommendation?.allocation.riskRewardRatio}
+                  </span>
+                </div>
+              </div>
+
+              {/* Golden Rules */}
+              <div className="pt-2 border-t border-zinc-800/60 space-y-1.5">
+                <div className="text-[10px] font-bold uppercase text-zinc-400 flex items-center gap-1">
+                  <ShieldCheck size={13} className="text-amber-400" />
+                  <span>3 NGUYÊN TẮC BẢO VỆ VỐN SỐNG CÒN:</span>
+                </div>
+                {data.aiRecommendation?.allocation.goldenRules.map((rule, idx) => (
+                  <div key={idx} className="flex items-start gap-1.5 text-[11px] text-zinc-400 leading-snug">
+                    <span className="text-amber-400 font-bold shrink-0">•</span>
+                    <span>{rule}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         )}
