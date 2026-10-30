@@ -118,6 +118,16 @@ export interface CapitalAllocationPlan {
   goldenRules: string[];
 }
 
+export interface BottomFishingAdvice {
+  isAvailable: boolean;
+  supportZone: string;
+  supportPrice: number;
+  stopLossPrice: number;
+  maxNavPct: number; // Tối đa 5-10% vốn
+  riskLevel: string;
+  warning: string;
+}
+
 export interface AIRecommendation {
   action:
     | 'MUA THĂM DÒ (LẦN 1)'
@@ -126,6 +136,7 @@ export interface AIRecommendation {
     | 'CẤM MUA ĐUỔI (QUÁ NÓNG)'
     | 'THEO DÕI NỀN GIÁ'
     | 'HẠ TỶ TRỌNG / QUẢN TRỊ RỦI RO'
+    | 'KHÔNG KHUYẾN NGHỊ MUA'
     | 'VI PHẠM TREND TEMPLATE (CẤM MUA)';
   actionType: 'BUY_PILOT' | 'BUY_ADD' | 'WAIT_PULLBACK' | 'NO_BUY_EXTENDED' | 'WATCH' | 'SELL_TRIM' | 'NO_BUY_TREND_FAIL';
   actionColor: 'emerald' | 'amber' | 'rose' | 'cyan';
@@ -140,6 +151,7 @@ export interface AIRecommendation {
   decisionVerdictText?: string;
   heat: HeatAnalysis;
   allocation: CapitalAllocationPlan;
+  bottomFishing?: BottomFishingAdvice;
 }
 
 export interface MinerviniScreenerItem {

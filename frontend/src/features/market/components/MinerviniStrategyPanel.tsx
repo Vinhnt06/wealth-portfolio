@@ -570,6 +570,46 @@ export const MinerviniStrategyPanel: React.FC<MinerviniStrategyPanelProps> = ({ 
               )}
             </div>
 
+            {/* THAM KHẢO BẮT ĐÁY (NẾU MUỐN MẠO HIỂM - CẢNH BÁO CỰC KỲ RỦI RO) */}
+            {data.aiRecommendation?.bottomFishing?.isAvailable && (
+              <div className="p-3.5 rounded-xl bg-gradient-to-br from-rose-950/30 via-zinc-900/90 to-amber-950/20 border border-rose-500/30 space-y-2.5 shadow-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-[11px] font-black uppercase text-rose-400">
+                    <Warning size={16} weight="fill" className="text-rose-400" />
+                    <span>THAM KHẢO BẮT ĐÁY (CỰC KỲ RỦI RO)</span>
+                  </div>
+                  <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-rose-500/20 border border-rose-500/40 text-rose-300">
+                    BẮT DAO RƠI ⚠️
+                  </span>
+                </div>
+
+                <div className="p-2.5 rounded-lg bg-black/40 border border-rose-900/40 grid grid-cols-3 gap-2 text-xs font-mono">
+                  <div>
+                    <span className="text-[10px] text-zinc-500 block uppercase">Vùng Hỗ Trợ</span>
+                    <span className="font-bold text-amber-300">
+                      {data.aiRecommendation.bottomFishing.supportPrice}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-zinc-500 block uppercase">Cắt Lỗ Tuyệt Đối</span>
+                    <span className="font-bold text-rose-400">
+                      {data.aiRecommendation.bottomFishing.stopLossPrice} (-5%)
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-zinc-500 block uppercase">Tỷ Trọng Tối Đa</span>
+                    <span className="font-bold text-zinc-300">
+                      {data.aiRecommendation.bottomFishing.maxNavPct}% NAV
+                    </span>
+                  </div>
+                </div>
+
+                <p className="text-[11px] text-rose-300/90 leading-relaxed italic bg-rose-950/40 p-2 rounded border border-rose-900/40">
+                  {data.aiRecommendation.bottomFishing.warning}
+                </p>
+              </div>
+            )}
+
             {/* Block 1: THƯỚC ĐO ĐỘ NÓNG & RỦI RO MUA ĐUỔI (HEAT & EXTENDED CHECK) */}
             <div className="p-3.5 rounded-xl bg-[#0a111a]/90 border border-zinc-800/80 space-y-3 shadow-lg">
               <div className="flex items-center justify-between">

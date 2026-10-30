@@ -9,6 +9,7 @@ import {
   CapitalAllocationPlan,
   CapitalTranche,
   HeatCriterion,
+  BottomFishingAdvice,
 } from '../../../../../features/market/types/minervini.types';
 
 import { isMarketIndex, getMarketIndexMeta, VN_MARKET_INDEXES } from '../../../../../features/market/constants/marketIndexes';
@@ -590,20 +591,34 @@ export async function GET(request: Request) {
     let decisionVerdictText = 'KHUYẾN NGHỊ: CHƯA NÊN MUA NGAY (CHỜ TEST MA20)';
     let trendGateMessage = '';
 
+    let bottomFishing: BottomFishingAdvice | undefined = undefined;
+
     if (!trendGatePassed) {
       // 🛑 CỔNG SỐ 1 KHÔNG QUA: Không đạt chuẩn Mark Minervini
-      trendGateMessage = `VI PHẠM BỘ LỌC XU HƯỚNG (Chỉ đạt ${passedCount}/8 tiêu chí — Chưa vào Stage 2)`;
-      action = 'VI PHẠM TREND TEMPLATE (CẤM MUA)';
+      // Thiết lập dứt khoát: KHÔNG KHUYẾN NGHỊ MUA, KHÔNG DÀI DÒNG
+      trendGateMessage = `VI PHẠM BỘ LỌC XU HƯỚNG (${passedCount}/8 tiêu chí đạt)`;
+      action = 'KHÔNG KHUYẾN NGHỊ MUA';
       actionType = 'NO_BUY_TREND_FAIL';
       actionColor = 'rose';
       shouldBuyNow = false;
-      buySuitabilityScore = Math.min(25, Math.round((passedCount / 8) * 30));
+      buySuitabilityScore = Math.min(20, Math.round((passedCount / 8) * 25));
       decisionVerdict = 'DO_NOT_BUY';
-      decisionVerdictText = 'CẢNH BÁO: KHÔNG ĐẠT CHUẨN XU HƯỚNG MINERVINI (CẤM MUA MỚI)';
-      headline = `Vi phạm Bộ Lọc Trend Template (${passedCount}/8 Tiêu chí đạt) — Xu hướng yếu/Xấu`;
-      summary = `Cổ phiếu đang vi phạm điều kiện tiên quyết số 1 của Mark Minervini: ${failedCriteria.slice(0, 3).join(', ')}${
-        failedCriteria.length > 3 ? ` và ${failedCriteria.length - 3} tiêu chí khác` : ''
-      }. Theo nguyên tắc sống còn của trường phái SEPA, TUYỆT ĐỐI KHÔNG giải ngân khi xu hướng chưa được bảo toàn. Mọi điểm mua lúc này đều có rủi ro thua lỗ cực cao.`;
+      decisionVerdictText = 'KHÔNG KHUYẾN NGHỊ MUA (KHÔNG ĐẠT MARK MINERVINI)';
+      headline = `Không đạt chuẩn Mark Minervini (${passedCount}/8 Tiêu chí) — KHÔNG MUA`;
+      summary = `Cổ phiếu không bảo toàn được xu hướng tăng trưởng (Chưa vào Stage 2 hoặc gãy trend). Theo kỷ luật Mark Minervini: Đứng ngoài quan sát, KHÔNG GIẢI NGÂN mua mới.`;
+
+      // Vùng hỗ trợ bắt đáy tham khảo (Dành cho nhà đầu tư mạo hiểm, CỰC KỲ RỦI RO)
+      const supportLevel = swingLow > 0 ? swingLow : low52W;
+      const bottomFishStopLoss = Number((supportLevel * 0.95).toFixed(1));
+      bottomFishing = {
+        isAvailable: true,
+        supportZone: `Vùng ${supportLevel} (Đáy hỗ trợ gần nhất)`,
+        supportPrice: supportLevel,
+        stopLossPrice: bottomFishStopLoss,
+        maxNavPct: 10,
+        riskLevel: 'CỰC KỲ RỦI RO (BẮT DAO RƠI)',
+        warning: `Cổ phiếu đang rơi ngược xu hướng chính. Nếu vẫn muốn bắt đáy mạo hiểm, chỉ giải ngân thăm dò tối đa 5% – 10% NAV tại vùng hỗ trợ và BẮT BUỘC cắt lỗ ngay nếu thủng mốc ${bottomFishStopLoss} (-5%).`,
+      };
     } else {
       // ✅ CỔNG SỐ 1 ĐÃ ĐẠT: Stage 2 Uptrend xác nhận -> Tiến hành xét Cổng số 2: Độ Nóng & Điểm Mua
       trendGateMessage = '✓ ĐẠT CHUẨN XU HƯỚNG MARK MINERVINI (Stage 2 Uptrend confirmed)';
@@ -755,6 +770,7 @@ export async function GET(request: Request) {
       decisionVerdictText,
       heat: heatAnalysis,
       allocation: capitalAllocation,
+      bottomFishing,
     };
 
     const result: MinerviniAnalysisResult = {

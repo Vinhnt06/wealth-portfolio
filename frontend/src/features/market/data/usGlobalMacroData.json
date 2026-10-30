@@ -1,7 +1,7 @@
 {
   "success": true,
-  "timestamp": "2026-10-30T13:25:59.403Z",
-  "updateTime": "20:25:59",
+  "timestamp": "2026-10-30T13:26:59.195Z",
+  "updateTime": "20:26:58",
   "indices": [
     {
       "symbol": "^GSPC",
@@ -39,7 +39,7 @@
       "category": "yield",
       "price": 4.93,
       "change": -0.06,
-      "changePercent": -1.16,
+      "changePercent": -1.2,
       "unit": "%",
       "note": "Lợi suất Trái phiếu Chính phủ Mỹ 10 năm"
     },
@@ -47,9 +47,9 @@
       "symbol": "DX-Y.NYB",
       "name": "DXY Index",
       "category": "currency",
-      "price": 101.9,
-      "change": -0.14,
-      "changePercent": -0.13,
+      "price": 101.88,
+      "change": -0.15,
+      "changePercent": -0.15,
       "unit": "pts",
       "note": "Chỉ số đo lường sức mạnh đồng USD"
     },
@@ -77,8 +77,8 @@
       "pillar": "Áp Lực Tỷ Giá USD/VND",
       "status": "Tích Cực",
       "statusColor": "emerald",
-      "headline": "DXY biến động quanh mức 101.90 điểm",
-      "detail": "Chỉ số DXY hạ nhiệt quanh 101.90 giúp thu hẹp chênh lệch USD-VND, giảm áp lực bán can thiệp ngoại tệ của NHNN và hạn chế rủi ro tỷ giá nhập khẩu."
+      "headline": "DXY biến động quanh mức 101.88 điểm",
+      "detail": "Chỉ số DXY hạ nhiệt quanh 101.88 giúp thu hẹp chênh lệch USD-VND, giảm áp lực bán can thiệp ngoại tệ của NHNN và hạn chế rủi ro tỷ giá nhập khẩu."
     },
     {
       "pillar": "Không Gian Lãi Suất NHNN",
