@@ -129,13 +129,42 @@ export async function GET() {
 
             if (buy > 1000000 && sell > 1000000) {
               let brand = 'Khác';
-              if (/SJC/i.test(colNameRaw)) brand = 'SJC';
-              else if (/DOJI/i.test(colNameRaw)) brand = 'DOJI';
-              else if (/PNJ/i.test(colNameRaw)) brand = 'PNJ';
-              else if (/Bảo Tín Minh Châu/i.test(colNameRaw)) brand = 'BTMC';
-              else if (/Bảo Tín Mạnh Hải/i.test(colNameRaw)) brand = 'BTMH';
-              else if (/Mi Hồng/i.test(colNameRaw)) brand = 'Mi Hồng';
-              else if (/Ngọc Hải/i.test(colNameRaw)) brand = 'Ngọc Hải';
+              let stableId = `vn_gold_${items.length}`;
+
+              if (/SJC/i.test(colNameRaw)) {
+                brand = 'SJC';
+                if (/miếng/i.test(colNameRaw)) stableId = 'gold_sjc';
+                else if (/nhẫn/i.test(colNameRaw)) stableId = 'gold_sjc_nhan';
+              } else if (/DOJI/i.test(colNameRaw)) {
+                brand = 'DOJI';
+                if (/nhẫn/i.test(colNameRaw)) stableId = 'gold_doji_nhan';
+              } else if (/PNJ/i.test(colNameRaw)) {
+                brand = 'PNJ';
+                if (/nhẫn/i.test(colNameRaw)) stableId = 'gold_pnj_nhan';
+              } else if (/Bảo Tín Minh Châu/i.test(colNameRaw)) {
+                brand = 'BTMC';
+                if (/miếng/i.test(colNameRaw)) stableId = 'gold_btmc_mieng';
+              } else if (/Bảo Tín Mạnh Hải/i.test(colNameRaw)) {
+                brand = 'BTMH';
+              } else if (/Mi Hồng/i.test(colNameRaw)) {
+                brand = 'Mi Hồng';
+                if (/nhẫn/i.test(colNameRaw)) stableId = 'gold_mihong_nhan';
+              } else if (/Ngọc Hải/i.test(colNameRaw)) {
+                brand = 'Ngọc Hải';
+              }
+
+              // Extract change from sell column (e.g. "141,400,000 ▼ 1,300,000")
+              let change = 0;
+              if (colSellRaw.includes('▲')) {
+                const diffMatch = colSellRaw.match(/▲\s*([0-9,]+)/);
+                if (diffMatch) change = parseInt(diffMatch[1].replace(/,/g, ''), 10);
+              } else if (colSellRaw.includes('▼')) {
+                const diffMatch = colSellRaw.match(/▼\s*([0-9,]+)/);
+                if (diffMatch) change = -parseInt(diffMatch[1].replace(/,/g, ''), 10);
+              }
+
+              const prevPrice = sell - change;
+              const changePercent = prevPrice > 0 ? Number(((change / prevPrice) * 100).toFixed(2)) : 0;
 
               // Clean display name
               let cleanName = colNameRaw
@@ -143,7 +172,7 @@ export async function GET() {
                 .replace(/\s+(vàng miếng|vàng nhẫn|vàng nữ trang|vàng trang sức)/gi, ' ($1)');
 
               items.push({
-                id: `vn_gold_${items.length}`,
+                id: stableId,
                 name: cleanName,
                 brand,
                 category: 'gold_vn',
@@ -152,7 +181,8 @@ export async function GET() {
                 sellPrice: sell,
                 spread: sell - buy,
                 unit: 'VNĐ/Lượng',
-                change: 0,
+                change,
+                changePercent,
                 updatedAt: 'Hôm nay (24HMoney)',
                 isRealtime: false,
               });
