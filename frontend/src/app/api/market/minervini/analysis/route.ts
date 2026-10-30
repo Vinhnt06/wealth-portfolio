@@ -575,6 +575,10 @@ export async function GET(request: Request) {
     };
 
     // ── 4. AI Recommendation & Action Classification ──
+    // QUY TẮC BẮT BUỘC SỐ 1: BỘ LỌC XU HƯỚNG MARK MINERVINI (TREND TEMPLATE GATEKEEPER)
+    const failedCriteria = criteria.filter((c) => !c.passed).map((c) => c.label);
+    const trendGatePassed = passedCount >= 7 && currentPrice > sma200 && stage === 2;
+
     let action: AIRecommendation['action'] = 'CHỜ KÉO NGƯỢC (PULLBACK)';
     let actionType: AIRecommendation['actionType'] = 'WAIT_PULLBACK';
     let actionColor: AIRecommendation['actionColor'] = 'amber';
@@ -582,77 +586,61 @@ export async function GET(request: Request) {
     let headline = '';
     let summary = '';
     let buySuitabilityScore = 50;
-
-    if (stage === 4) {
-      action = 'HẠ TỶ TRỌNG / QUẢN TRỊ RỦI RO';
-      actionType = 'SELL_TRIM';
-      actionColor = 'rose';
-      shouldBuyNow = false;
-      buySuitabilityScore = 15;
-      headline = 'Stage 4 (Downtrend) — Cấm mua bắt đáy';
-      summary =
-        'Giá nằm dưới toàn bộ đường trung bình dài hạn MA150/MA200. Mọi nhịp hồi đều là cơ hội bán cơ cấu, tuyệt đối không giải ngân mua mới.';
-    } else if (isOverextended) {
-      action = 'CẤM MUA ĐUỔI (QUÁ NÓNG)';
-      actionType = 'NO_BUY_EXTENDED';
-      actionColor = 'rose';
-      shouldBuyNow = false;
-      buySuitabilityScore = 25;
-      headline = `Điểm mua quá nóng — Extended (Cách MA20 ${distFromSMA20Pct}% · MA50 ${distFromSMA50Pct}%)`;
-      summary =
-        'Cổ phiếu đã tăng dốc quá xa các mốc hỗ trợ và có rủi ro tạo đỉnh ngắn hạn hoặc rung lắc điều chỉnh 8% – 15%. Tuyệt đối không mua đuổi FOMO, hãy kiên nhẫn đợi nhịp kéo ngược (pullback) về MA20/MA50 cạn cung.';
-    } else if (
-      isStage2Eligible &&
-      distFromSMA20Pct <= 3.5 &&
-      distFromSMA20Pct >= -2.5 &&
-      rsRating >= 70 &&
-      macdStatus !== 'BEARISH'
-    ) {
-      action = 'MUA THĂM DÒ (LẦN 1)';
-      actionType = 'BUY_PILOT';
-      actionColor = 'emerald';
-      shouldBuyNow = true;
-      buySuitabilityScore = 88;
-      headline = 'Đủ chuẩn Stage 2 & Vùng mua an toàn quanh MA20';
-      summary =
-        'Cổ phiếu thỏa mãn toàn bộ tiêu chí xu hướng và độ nóng đã hạ nhiệt an toàn về gần hỗ trợ. Đủ điều kiện kích hoạt lệnh giải ngân Thăm dò Lần 1 (30% tổng vốn vị thế).';
-    } else if (isStage2Eligible && (distFromSMA20Pct > 3.5 || macdStatus === 'BEARISH')) {
-      action = 'CHỜ KÉO NGƯỢC (PULLBACK)';
-      actionType = 'WAIT_PULLBACK';
-      actionColor = 'amber';
-      shouldBuyNow = false;
-      buySuitabilityScore = 58;
-      headline = 'Stage 2 Tăng trưởng — Chờ nến kiểm định MA20 cạn cung';
-      summary = `Cổ phiếu giữ được xu hướng tăng tốt (RS ${rsRating}/99), nhưng xung lượng ngắn hạn đang trong nhịp thoái lui hạ nhiệt (MACD Hist ${macdHist}). Chờ giá test lại MA20 (${sma20}) giữ vững trần nền trước khi mở vị thế.`;
-    } else {
-      action = 'THEO DÕI NỀN GIÁ';
-      actionType = 'WATCH';
-      actionColor = 'cyan';
-      shouldBuyNow = false;
-      buySuitabilityScore = 42;
-      headline = 'Pha tích lũy nền giá — Tiếp tục theo dõi';
-      summary =
-        'Cổ phiếu cần thêm thời gian thắt chặt biên độ dao động (VCP) và xác nhận sự nhập cuộc của dòng tiền lớn bảo trợ.';
-    }
-
     let decisionVerdict: AIRecommendation['decisionVerdict'] = 'WAIT';
     let decisionVerdictText = 'KHUYẾN NGHỊ: CHƯA NÊN MUA NGAY (CHỜ TEST MA20)';
+    let trendGateMessage = '';
 
-    if (actionType === 'BUY_PILOT') {
-      decisionVerdict = 'BUY_NOW';
-      decisionVerdictText = 'KHUYẾN NGHỊ: NÊN MUA (VÙNG MUA THĂM DÒ ĐẠT CHUẨN)';
-    } else if (actionType === 'WAIT_PULLBACK') {
-      decisionVerdict = 'WAIT';
-      decisionVerdictText = 'KHUYẾN NGHỊ: TẠM THỜI CHƯA MUA (CHỜ PULLBACK VỀ MA20)';
-    } else if (actionType === 'NO_BUY_EXTENDED') {
+    if (!trendGatePassed) {
+      // 🛑 CỔNG SỐ 1 KHÔNG QUA: Không đạt chuẩn Mark Minervini
+      trendGateMessage = `VI PHẠM BỘ LỌC XU HƯỚNG (Chỉ đạt ${passedCount}/8 tiêu chí — Chưa vào Stage 2)`;
+      action = 'VI PHẠM TREND TEMPLATE (CẤM MUA)';
+      actionType = 'NO_BUY_TREND_FAIL';
+      actionColor = 'rose';
+      shouldBuyNow = false;
+      buySuitabilityScore = Math.min(25, Math.round((passedCount / 8) * 30));
       decisionVerdict = 'DO_NOT_BUY';
-      decisionVerdictText = 'CẢNH BÁO: TUYỆT ĐỐI KHÔNG MUA ĐUỔI (RỦI RO ĐỈNH NGẮN HẠN)';
-    } else if (actionType === 'SELL_TRIM') {
-      decisionVerdict = 'DO_NOT_BUY';
-      decisionVerdictText = 'CẢNH BÁO: KHÔNG MUA BẮT ĐÁY (XU HƯỚNG DOWNTREND STAGE 4)';
-    } else if (actionType === 'WATCH') {
-      decisionVerdict = 'WAIT';
-      decisionVerdictText = 'KHUYẾN NGHỊ: TIẾP TỤC THEO DÕI NỀN GIÁ TÍCH LŨY VCP';
+      decisionVerdictText = 'CẢNH BÁO: KHÔNG ĐẠT CHUẨN XU HƯỚNG MINERVINI (CẤM MUA MỚI)';
+      headline = `Vi phạm Bộ Lọc Trend Template (${passedCount}/8 Tiêu chí đạt) — Xu hướng yếu/Xấu`;
+      summary = `Cổ phiếu đang vi phạm điều kiện tiên quyết số 1 của Mark Minervini: ${failedCriteria.slice(0, 3).join(', ')}${
+        failedCriteria.length > 3 ? ` và ${failedCriteria.length - 3} tiêu chí khác` : ''
+      }. Theo nguyên tắc sống còn của trường phái SEPA, TUYỆT ĐỐI KHÔNG giải ngân khi xu hướng chưa được bảo toàn. Mọi điểm mua lúc này đều có rủi ro thua lỗ cực cao.`;
+    } else {
+      // ✅ CỔNG SỐ 1 ĐÃ ĐẠT: Stage 2 Uptrend xác nhận -> Tiến hành xét Cổng số 2: Độ Nóng & Điểm Mua
+      trendGateMessage = '✓ ĐẠT CHUẨN XU HƯỚNG MARK MINERVINI (Stage 2 Uptrend confirmed)';
+
+      if (isOverextended) {
+        action = 'CẤM MUA ĐUỔI (QUÁ NÓNG)';
+        actionType = 'NO_BUY_EXTENDED';
+        actionColor = 'rose';
+        shouldBuyNow = false;
+        buySuitabilityScore = 30;
+        decisionVerdict = 'DO_NOT_BUY';
+        decisionVerdictText = 'CẢNH BÁO: TUYỆT ĐỐI KHÔNG MUA ĐUỔI (RỦI RO ĐỈNH NGẮN HẠN)';
+        headline = `Đạt Stage 2 nhưng QUÁ NÓNG — Extended (Cách MA20 ${distFromSMA20Pct}% · MA50 ${distFromSMA50Pct}%)`;
+        summary =
+          'Cổ phiếu thỏa mãn xu hướng tăng nhưng đã tăng dốc quá xa các mốc hỗ trợ và có rủi ro tạo đỉnh ngắn hạn hoặc rung lắc điều chỉnh 8% – 15%. Tuyệt đối không mua đuổi FOMO, hãy kiên nhẫn đợi nhịp kéo ngược (pullback) về MA20/MA50 cạn cung.';
+      } else if (distFromSMA20Pct <= 3.5 && distFromSMA20Pct >= -2.5 && macdStatus !== 'BEARISH') {
+        action = 'MUA THĂM DÒ (LẦN 1)';
+        actionType = 'BUY_PILOT';
+        actionColor = 'emerald';
+        shouldBuyNow = true;
+        buySuitabilityScore = 88;
+        decisionVerdict = 'BUY_NOW';
+        decisionVerdictText = 'KHUYẾN NGHỊ: NÊN MUA (VÙNG MUA THĂM DÒ ĐẠT CHUẨN)';
+        headline = 'Đủ chuẩn Stage 2 & Vùng mua an toàn quanh MA20';
+        summary =
+          'Cổ phiếu thỏa mãn toàn bộ tiêu chí xu hướng và độ nóng đã hạ nhiệt an toàn về gần hỗ trợ MA20. Đủ điều kiện kích hoạt lệnh giải ngân Thăm dò Lần 1 (30% tổng vốn vị thế).';
+      } else {
+        action = 'CHỜ KÉO NGƯỢC (PULLBACK)';
+        actionType = 'WAIT_PULLBACK';
+        actionColor = 'amber';
+        shouldBuyNow = false;
+        buySuitabilityScore = 65;
+        decisionVerdict = 'WAIT';
+        decisionVerdictText = 'KHUYẾN NGHỊ: TẠM THỜI CHƯA MUA (CHỜ PULLBACK VỀ MA20)';
+        headline = 'Stage 2 Tăng trưởng — Chờ nến kiểm định MA20 cạn cung';
+        summary = `Cổ phiếu giữ được xu hướng tăng tốt (RS ${rsRating}/99), nhưng xung lượng ngắn hạn đang trong nhịp thoái lui hạ nhiệt (MACD Hist ${macdHist}). Chờ giá test lại MA20 (${sma20}) giữ vững trần nền trước khi mở vị thế.`;
+      }
     }
 
     // ── 5. Capital Allocation Plan (Scale-in Tranches & Dynamic Stoploss) ──
@@ -676,7 +664,7 @@ export async function GET(request: Request) {
     // Dynamic Range Tranche 1
     const t1Low = Math.round(Math.min(currentPrice, sma20) * 0.995 * 10) / 10;
     const t1High = Math.round(Math.max(currentPrice, sma20) * 1.005 * 10) / 10;
-    const t1RangeStr = `Vùng ${t1Low} – ${t1High} (Quanh MA20)`;
+    const t1RangeStr = trendGatePassed ? `Vùng ${t1Low} – ${t1High} (Quanh MA20)` : 'KHÔNG CÓ ĐIỂM MUA';
     const volMilStr = (breakoutVolTrigger / 1_000_000).toFixed(1);
 
     const tranches: CapitalTranche[] = [
@@ -685,28 +673,48 @@ export async function GET(request: Request) {
         name: 'Lần 1: Vị thế Thăm dò (Pilot Position)',
         pct: 30,
         targetPrice: t1RangeStr,
-        priceRange: `${t1Low} - ${t1High}`,
-        condition: `Giải ngân 30% khi giá kéo ngược chạm hỗ trợ MA20 (${sma20}) hoặc nền giá, nến rút chân thanh khoản cạn kiệt.`,
-        status: shouldBuyNow ? 'ACTIVE' : actionType === 'NO_BUY_EXTENDED' || actionType === 'SELL_TRIM' ? 'BLOCKED' : 'PENDING',
-        statusLabel: shouldBuyNow ? 'KÍCH HOẠT VÙNG MUA' : actionType === 'NO_BUY_EXTENDED' ? 'TẠM KHÓA (QUÁ NÓNG)' : actionType === 'SELL_TRIM' ? 'CẤM MUA (DOWNTREND)' : 'CHỜ GIÁ VỀ HỖ TRỢ',
+        priceRange: trendGatePassed ? `${t1Low} - ${t1High}` : undefined,
+        condition: trendGatePassed
+          ? `Giải ngân 30% khi giá kéo ngược chạm hỗ trợ MA20 (${sma20}) hoặc nền giá, nến rút chân thanh khoản cạn kiệt.`
+          : `Lệnh bị khóa: Cổ phiếu chưa đạt chuẩn xu hướng Stage 2 (${passedCount}/8 tiêu chí). Mark Minervini nghiêm cấm mua khi trend không bảo toàn.`,
+        status: !trendGatePassed
+          ? 'BLOCKED'
+          : shouldBuyNow
+          ? 'ACTIVE'
+          : actionType === 'NO_BUY_EXTENDED'
+          ? 'BLOCKED'
+          : 'PENDING',
+        statusLabel: !trendGatePassed
+          ? 'KHÓA BỞI TREND TEMPLATE'
+          : shouldBuyNow
+          ? 'KÍCH HOẠT VÙNG MUA'
+          : actionType === 'NO_BUY_EXTENDED'
+          ? 'TẠM KHÓA (QUÁ NÓNG)'
+          : 'CHỜ GIÁ VỀ HỖ TRỢ',
       },
       {
         step: 2,
         name: 'Lần 2: Gia tăng Bứt phá (Add on Strength)',
         pct: 40,
-        targetPrice: `Vượt ${formatK(pivotTriggerPrice)} kèm Vol ≥ ${volMilStr}M cp`,
-        condition: `Chỉ giải ngân 40% KHI VÀ CHỈ KHI Lần 1 đang CÓ LÃI (+2% ~ +4%), giá bứt phá vượt kháng cự ${formatK(pivotTriggerPrice)} với Volume bùng nổ.`,
-        status: 'LOCKED',
-        statusLabel: 'CHỜ ĐIỀU KIỆN LẦN 1',
+        targetPrice: trendGatePassed ? `Vượt ${formatK(pivotTriggerPrice)} kèm Vol ≥ ${volMilStr}M cp` : 'KHÓA - CHƯA ĐẠT CHUẨN',
+        condition: trendGatePassed
+          ? `Chỉ giải ngân 40% KHI VÀ CHỈ KHI Lần 1 đang CÓ LÃI (+2% ~ +4%), giá bứt phá vượt kháng cự ${formatK(pivotTriggerPrice)} với Volume bùng nổ.`
+          : 'Lệnh bị khóa: Chỉ mở khi Lần 1 được kích hoạt và đạt chuẩn siêu cổ phiếu Stage 2.',
+        status: !trendGatePassed ? 'BLOCKED' : 'LOCKED',
+        statusLabel: !trendGatePassed ? 'KHÓA BỞI TREND TEMPLATE' : 'CHỜ ĐIỀU KIỆN LẦN 1',
       },
       {
         step: 3,
         name: 'Lần 3: Hoàn tất Kim tự tháp (Full Position)',
         pct: 30,
-        targetPrice: `Retest trần nền ${formatK(pivotTriggerPrice * 0.995)} – ${formatK(pivotTriggerPrice * 1.01)}`,
-        condition: `Giải ngân 30% cuối cùng khi giá kiểm định lại mốc ${formatK(pivotTriggerPrice)} thành công không bị gãy ngược, xác nhận xu hướng tăng phi mã.`,
-        status: 'LOCKED',
-        statusLabel: 'KHÓA (CHỜ RETEST)',
+        targetPrice: trendGatePassed
+          ? `Retest trần nền ${formatK(pivotTriggerPrice * 0.995)} – ${formatK(pivotTriggerPrice * 1.01)}`
+          : 'KHÓA - CHƯA ĐẠT CHUẨN',
+        condition: trendGatePassed
+          ? `Giải ngân 30% cuối cùng khi giá kiểm định lại mốc ${formatK(pivotTriggerPrice)} thành công không bị gãy ngược, xác nhận xu hướng tăng phi mã.`
+          : 'Lệnh bị khóa: Chỉ mở khi Lần 1 & 2 đã có lãi và xác nhận mô hình VCP.',
+        status: !trendGatePassed ? 'BLOCKED' : 'LOCKED',
+        statusLabel: !trendGatePassed ? 'KHÓA BỞI TREND TEMPLATE' : 'KHÓA (CHỜ RETEST)',
       },
     ];
 
@@ -724,6 +732,7 @@ export async function GET(request: Request) {
       pivotResistance: pivotTriggerPrice,
       swingLowSupport: swingLow,
       goldenRules: [
+        'NGUYÊN TẮC SỐ 1: BẮT BUỘC ĐẠT CHUẨN TREND TEMPLATE (Không bao giờ mua khi trend bị gãy hoặc chưa vào Stage 2).',
         'Tuyệt đối KHÔNG bao giờ bình quân giá xuống (Never average down on losers).',
         `Luôn đặt lệnh Dừng lỗ tự động ${stopLossPct}% (Mốc ${stopLossPrice}) ngay sau khi khớp lệnh để bảo vệ vốn.`,
         'Chỉ gia tăng tỷ trọng (Lần 2, 3) khi các vị thế trước ĐANG CÓ LÃI.',
@@ -739,6 +748,9 @@ export async function GET(request: Request) {
       summary,
       shouldBuyNow,
       buySuitabilityScore,
+      trendGatePassed,
+      trendGateMessage,
+      failedCriteria,
       decisionVerdict,
       decisionVerdictText,
       heat: heatAnalysis,

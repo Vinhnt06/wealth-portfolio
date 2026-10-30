@@ -119,13 +119,23 @@ export interface CapitalAllocationPlan {
 }
 
 export interface AIRecommendation {
-  action: 'MUA THĂM DÒ (LẦN 1)' | 'MUA GIA TĂNG (LẦN 2)' | 'CHỜ KÉO NGƯỢC (PULLBACK)' | 'CẤM MUA ĐUỔI (QUÁ NÓNG)' | 'THEO DÕI NỀN GIÁ' | 'HẠ TỶ TRỌNG / QUẢN TRỊ RỦI RO';
-  actionType: 'BUY_PILOT' | 'BUY_ADD' | 'WAIT_PULLBACK' | 'NO_BUY_EXTENDED' | 'WATCH' | 'SELL_TRIM';
+  action:
+    | 'MUA THĂM DÒ (LẦN 1)'
+    | 'MUA GIA TĂNG (LẦN 2)'
+    | 'CHỜ KÉO NGƯỢC (PULLBACK)'
+    | 'CẤM MUA ĐUỔI (QUÁ NÓNG)'
+    | 'THEO DÕI NỀN GIÁ'
+    | 'HẠ TỶ TRỌNG / QUẢN TRỊ RỦI RO'
+    | 'VI PHẠM TREND TEMPLATE (CẤM MUA)';
+  actionType: 'BUY_PILOT' | 'BUY_ADD' | 'WAIT_PULLBACK' | 'NO_BUY_EXTENDED' | 'WATCH' | 'SELL_TRIM' | 'NO_BUY_TREND_FAIL';
   actionColor: 'emerald' | 'amber' | 'rose' | 'cyan';
   headline: string;
   summary: string;
   shouldBuyNow: boolean;
   buySuitabilityScore: number; // 0 - 100
+  trendGatePassed: boolean;
+  trendGateMessage: string;
+  failedCriteria?: string[];
   decisionVerdict?: 'BUY_NOW' | 'WAIT' | 'DO_NOT_BUY';
   decisionVerdictText?: string;
   heat: HeatAnalysis;

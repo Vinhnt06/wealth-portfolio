@@ -523,6 +523,53 @@ export const MinerviniStrategyPanel: React.FC<MinerviniStrategyPanelProps> = ({ 
               </p>
             </div>
 
+            {/* CỔNG SỐ 1 BẮT BUỘC: BỘ LỌC XU HƯỚNG MARK MINERVINI (TREND TEMPLATE GATE) */}
+            <div
+              className={`p-3.5 rounded-xl border ${
+                data.aiRecommendation?.trendGatePassed
+                  ? 'bg-emerald-950/20 border-emerald-500/40 text-emerald-300'
+                  : 'bg-rose-950/25 border-rose-500/40 text-rose-300'
+              }`}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-zinc-200">
+                  <ShieldCheck size={16} weight="fill" className={data.aiRecommendation?.trendGatePassed ? 'text-emerald-400' : 'text-rose-400'} />
+                  <span>CỔNG SỐ 1: BỘ LỌC XU HƯỚNG MARK MINERVINI</span>
+                </div>
+                <span
+                  className={`text-[10px] font-mono font-black px-2 py-0.5 rounded border uppercase tracking-wider ${
+                    data.aiRecommendation?.trendGatePassed
+                      ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50'
+                      : 'bg-rose-500/20 text-rose-300 border-rose-500/50'
+                  }`}
+                >
+                  {data.aiRecommendation?.trendGatePassed
+                    ? `✓ ĐẠT CHUẨN (${data.passedCount}/8 TIÊU CHÍ)`
+                    : `✕ VI PHẠM (${data.passedCount}/8 TIÊU CHÍ ĐẠT)`}
+                </span>
+              </div>
+
+              <p className="text-[11px] leading-relaxed mb-2 text-zinc-300">
+                {data.aiRecommendation?.trendGatePassed
+                  ? 'Cổ phiếu bảo toàn hoàn hảo cấu trúc tăng trưởng Stage 2 theo đúng chuẩn Mark Minervini. Đường MA dài hạn dốc lên, giá nằm trên các mốc hỗ trợ chủ chốt. ĐỦ ĐIỀU KIỆN TIẾN HÀNH XÉT ĐIỂM GIẢI NGÂN.'
+                  : 'Cổ phiếu KHÔNG đạt chuẩn xu hướng của Mark Minervini. Theo nguyên tắc sống còn số 1 của trường phái SEPA: KHÓA TOÀN BỘ ĐIỂM MUA — TUYỆT ĐỐI KHÔNG GIẢI NGÂN KHI TREND CHƯA ĐƯỢC BẢO TOÀN.'}
+              </p>
+
+              {/* Violated criteria tags if failed */}
+              {!data.aiRecommendation?.trendGatePassed && data.aiRecommendation?.failedCriteria && data.aiRecommendation.failedCriteria.length > 0 && (
+                <div className="pt-2 border-t border-rose-900/40 space-y-1">
+                  <span className="text-[10px] uppercase font-bold text-rose-400 block">Các tiêu chí bị vi phạm:</span>
+                  <div className="flex flex-wrap gap-1.5 pt-0.5">
+                    {data.aiRecommendation.failedCriteria.map((fc, i) => (
+                      <span key={i} className="text-[10px] font-mono bg-rose-950/60 border border-rose-800/60 text-rose-300 px-2 py-0.5 rounded">
+                        ✕ {fc}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Block 1: THƯỚC ĐO ĐỘ NÓNG & RỦI RO MUA ĐUỔI (HEAT & EXTENDED CHECK) */}
             <div className="p-3.5 rounded-xl bg-[#0a111a]/90 border border-zinc-800/80 space-y-3 shadow-lg">
               <div className="flex items-center justify-between">
@@ -631,6 +678,19 @@ export const MinerviniStrategyPanel: React.FC<MinerviniStrategyPanelProps> = ({ 
                 </div>
                 <span className="text-[10px] text-zinc-400 font-mono">Quy tắc Kim Tự Tháp 30% - 40% - 30%</span>
               </div>
+              {/* Gate 1 Locking Warning if Trend Template Failed */}
+              {!data.aiRecommendation?.trendGatePassed && (
+                <div className="p-2.5 rounded-lg bg-rose-950/30 border border-rose-500/40 text-rose-300 text-xs flex items-start gap-2">
+                  <Prohibit size={18} weight="bold" className="text-rose-400 shrink-0 mt-0.5" />
+                  <div className="text-[11px] leading-relaxed">
+                    <strong className="block text-rose-200 uppercase font-black tracking-wide">
+                      KHÓA TOÀN BỘ LỆNH GIẢI NGÂN (VI PHẠM NGUYÊN TẮC SỐ 1)
+                    </strong>
+                    Cổ phiếu chưa bảo toàn xu hướng tăng Stage 2 của Mark Minervini (Chỉ đạt {data.passedCount}/8 tiêu chí). 
+                    Toàn bộ các lần giải ngân bị khóa tuyệt đối để bảo vệ vốn. Tuyệt đối không bắt đáy hay mua dò đáy khi trend chưa được bảo toàn.
+                  </div>
+                </div>
+              )}
 
               {/* Tranches List */}
               <div className="space-y-2">
