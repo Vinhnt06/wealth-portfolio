@@ -19,6 +19,12 @@ import {
   ShieldCheck,
   Coins,
   Target,
+  Lock,
+  Clock,
+  Warning,
+  CheckCircle,
+  Prohibit,
+  Crosshair,
 } from '@phosphor-icons/react';
 import { MinerviniAnalysisResult } from '../types/minervini.types';
 
@@ -451,7 +457,7 @@ export const MinerviniStrategyPanel: React.FC<MinerviniStrategyPanelProps> = ({ 
         {/* ── TAB 5: AI KHUYẾN NGHỊ & KẾ HOẠCH GIẢI NGÂN VỐN ────────────────────────── */}
         {activeTab === 'ai' && data && (
           <div className="space-y-3.5 pb-2">
-            {/* Header Card: AI Action Banner */}
+            {/* Header Card: AI Action Banner & Decision Verdict */}
             <div
               className={`p-3.5 rounded-xl border ${
                 data.aiRecommendation?.actionColor === 'emerald'
@@ -461,23 +467,54 @@ export const MinerviniStrategyPanel: React.FC<MinerviniStrategyPanelProps> = ({ 
                   : 'bg-amber-950/20 border-amber-500/40 text-amber-300'
               }`}
             >
-              <div className="flex items-center justify-between mb-2">
+              {/* Verdict Top Bar */}
+              <div className="flex items-center justify-between mb-2.5 pb-2 border-b border-white/5">
                 <div className="flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-zinc-200">
                   <Brain size={16} weight="fill" className="text-cyan-400" />
                   <span>KHUYẾN NGHỊ THUẬT TOÁN AI</span>
                 </div>
-                <span
-                  className={`text-[10px] font-black px-2 py-0.5 rounded border uppercase tracking-wider ${
-                    data.aiRecommendation?.actionColor === 'emerald'
-                      ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50'
-                      : data.aiRecommendation?.actionColor === 'rose'
-                      ? 'bg-rose-500/20 text-rose-300 border-rose-500/50'
-                      : 'bg-amber-500/20 text-amber-300 border-amber-500/50'
+                <div className="flex items-center gap-2">
+                  {/* Suitability Score */}
+                  <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-zinc-900/80 border border-zinc-700/60 text-zinc-300">
+                    Độ tin cậy: <strong className="text-amber-300">{data.aiRecommendation?.buySuitabilityScore || 50}/100</strong>
+                  </span>
+                  {/* Action Badge */}
+                  <span
+                    className={`text-[10px] font-black px-2 py-0.5 rounded border uppercase tracking-wider ${
+                      data.aiRecommendation?.actionColor === 'emerald'
+                        ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50'
+                        : data.aiRecommendation?.actionColor === 'rose'
+                        ? 'bg-rose-500/20 text-rose-300 border-rose-500/50'
+                        : 'bg-amber-500/20 text-amber-300 border-amber-500/50'
+                    }`}
+                  >
+                    {data.aiRecommendation?.action || 'THEO DÕI NỀN GIÁ'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Explicit Decision Verdict Banner */}
+              {data.aiRecommendation?.decisionVerdictText && (
+                <div
+                  className={`mb-2.5 px-3 py-1.5 rounded-lg border text-xs font-bold flex items-center gap-2 ${
+                    data.aiRecommendation.decisionVerdict === 'BUY_NOW'
+                      ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300'
+                      : data.aiRecommendation.decisionVerdict === 'DO_NOT_BUY'
+                      ? 'bg-rose-500/15 border-rose-500/30 text-rose-300'
+                      : 'bg-amber-500/15 border-amber-500/30 text-amber-300'
                   }`}
                 >
-                  {data.aiRecommendation?.action || 'THEO DÕI NỀN GIÁ'}
-                </span>
-              </div>
+                  {data.aiRecommendation.decisionVerdict === 'BUY_NOW' ? (
+                    <CheckCircle size={15} weight="fill" className="text-emerald-400 shrink-0" />
+                  ) : data.aiRecommendation.decisionVerdict === 'DO_NOT_BUY' ? (
+                    <Prohibit size={15} weight="bold" className="text-rose-400 shrink-0" />
+                  ) : (
+                    <Clock size={15} weight="bold" className="text-amber-400 shrink-0" />
+                  )}
+                  <span>{data.aiRecommendation.decisionVerdictText}</span>
+                </div>
+              )}
+
               <div className="text-xs font-bold text-zinc-100 mb-1">
                 {data.aiRecommendation?.headline}
               </div>
@@ -512,7 +549,7 @@ export const MinerviniStrategyPanel: React.FC<MinerviniStrategyPanelProps> = ({ 
                 <div className="flex justify-between text-[10px] text-zinc-400">
                   <span>
                     Chỉ số nhiệt lượng:{' '}
-                    <strong className="text-zinc-200">
+                    <strong className="text-zinc-200 font-mono">
                       {data.aiRecommendation?.heat.heatScore || 20}/100
                     </strong>
                   </span>
@@ -592,7 +629,7 @@ export const MinerviniStrategyPanel: React.FC<MinerviniStrategyPanelProps> = ({ 
                   <Coins size={15} weight="fill" />
                   <span>KẾ HOẠCH GIẢI NGÂN VỐN (3 LẦN)</span>
                 </div>
-                <span className="text-[10px] text-zinc-400 font-mono">Quy tắc Kim Tự Tháp</span>
+                <span className="text-[10px] text-zinc-400 font-mono">Quy tắc Kim Tự Tháp 30% - 40% - 30%</span>
               </div>
 
               {/* Tranches List */}
@@ -603,15 +640,19 @@ export const MinerviniStrategyPanel: React.FC<MinerviniStrategyPanelProps> = ({ 
                     className={`p-2.5 rounded-lg border text-xs ${
                       t.status === 'ACTIVE'
                         ? 'bg-emerald-950/20 border-emerald-500/40 text-emerald-300'
+                        : t.status === 'BLOCKED'
+                        ? 'bg-rose-950/20 border-rose-900/40 text-zinc-400'
                         : 'bg-zinc-900/60 border-zinc-800/70 text-zinc-400'
                     }`}
                   >
-                    <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center justify-between mb-1.5">
                       <div className="flex items-center gap-1.5 font-bold text-zinc-200 text-[11px]">
                         <span
                           className={`px-1.5 py-0.2 rounded text-[10px] font-black ${
                             t.status === 'ACTIVE'
                               ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+                              : t.status === 'BLOCKED'
+                              ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40'
                               : 'bg-zinc-800 text-zinc-400'
                           }`}
                         >
@@ -619,10 +660,39 @@ export const MinerviniStrategyPanel: React.FC<MinerviniStrategyPanelProps> = ({ 
                         </span>
                         <span>{t.name}</span>
                       </div>
-                      <span className="font-mono text-[11px] font-bold text-amber-300">
+
+                      {/* Tranche Status Badge */}
+                      <span
+                        className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border uppercase flex items-center gap-1 ${
+                          t.status === 'ACTIVE'
+                            ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                            : t.status === 'BLOCKED'
+                            ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                            : t.status === 'PENDING'
+                            ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                            : 'bg-zinc-800/80 text-zinc-500 border-zinc-700/40'
+                        }`}
+                      >
+                        {t.status === 'ACTIVE' ? (
+                          <CheckCircle size={11} weight="fill" />
+                        ) : t.status === 'BLOCKED' ? (
+                          <Prohibit size={11} />
+                        ) : t.status === 'PENDING' ? (
+                          <Clock size={11} />
+                        ) : (
+                          <Lock size={11} />
+                        )}
+                        <span>{t.statusLabel || (t.status === 'ACTIVE' ? 'KÍCH HOẠT' : t.status === 'PENDING' ? 'CHỜ GIÁ' : 'TẠM KHÓA')}</span>
+                      </span>
+                    </div>
+
+                    <div className="mb-1 pl-1">
+                      <span className="text-[10px] text-zinc-500 mr-1.5">Mức giá kích hoạt:</span>
+                      <span className="font-mono text-xs font-bold text-amber-300 bg-amber-950/30 px-1.5 py-0.5 rounded border border-amber-500/30">
                         {t.targetPrice}
                       </span>
                     </div>
+
                     <p className="text-[11px] text-zinc-400 leading-snug pl-1">
                       {t.condition}
                     </p>
@@ -651,6 +721,24 @@ export const MinerviniStrategyPanel: React.FC<MinerviniStrategyPanelProps> = ({ 
                   </span>
                 </div>
               </div>
+
+              {/* Volatility & Support/Resistance Metrics */}
+              {(data.aiRecommendation?.allocation.atr14 || data.aiRecommendation?.allocation.pivotResistance) && (
+                <div className="px-2.5 py-2 rounded-lg bg-zinc-900/50 border border-zinc-800/60 flex items-center justify-between text-[11px] font-mono text-zinc-400">
+                  <div className="flex items-center gap-1">
+                    <Crosshair size={13} className="text-cyan-400" />
+                    <span>ATR(14): <strong className="text-zinc-200">{data.aiRecommendation.allocation.atr14} ({data.aiRecommendation.allocation.atrPct}%)</strong></span>
+                  </div>
+                  <div>
+                    <span>Kháng cự Pivot: <strong className="text-amber-300">{data.aiRecommendation.allocation.pivotResistance}</strong></span>
+                  </div>
+                  {data.aiRecommendation.allocation.swingLowSupport && (
+                    <div>
+                      <span>Đáy Swing: <strong className="text-rose-400">{data.aiRecommendation.allocation.swingLowSupport}</strong></span>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Golden Rules */}
               <div className="pt-2 border-t border-zinc-800/60 space-y-1.5">

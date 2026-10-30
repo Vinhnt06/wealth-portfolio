@@ -15,6 +15,8 @@ import { isMarketIndex, getMarketIndexMeta, VN_MARKET_INDEXES } from '../../../.
 
 export const runtime = 'nodejs';
 export const preferredRegion = 'sin1';
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 const STOCK_MAP = new Map<string, { name: string; exchange: string; sector: string }>();
 (stockDatabase as any[]).forEach((item) => {
@@ -395,6 +397,32 @@ export async function GET(request: Request) {
     const macdStatus: 'BULLISH' | 'BEARISH' | 'NEUTRAL' =
       macdHist >= 0.05 ? 'BULLISH' : macdHist <= -0.05 ? 'BEARISH' : 'NEUTRAL';
 
+    // 3. ATR(14) - Average True Range (Đo lường biến động giá chuẩn Mark Minervini)
+    let sumTR = 0;
+    const atrPeriod = 14;
+    for (let i = Math.max(1, count - atrPeriod); i < count; i++) {
+      const high = highs[i];
+      const low = lows[i];
+      const prevClose = closes[i - 1];
+      const tr = Math.max(high - low, Math.abs(high - prevClose), Math.abs(low - prevClose));
+      sumTR += tr;
+    }
+    const atr14 = Number((sumTR / atrPeriod).toFixed(2));
+    const atrPct = Number(((atr14 / (currentPrice || 1)) * 100).toFixed(1));
+
+    // 4. Swing High Resistance Pivot & Swing Low Support (30 phiên gần nhất)
+    const swingLookback = Math.min(30, count);
+    const recentHighs = highs.slice(count - swingLookback);
+    const recentLows = lows.slice(count - swingLookback);
+    const swingHigh = Number(Math.max(...recentHighs).toFixed(1));
+    const swingLow = Number(Math.min(...recentLows).toFixed(1));
+
+    // Khối lượng trung bình 20 phiên & Ngưỡng Volume Bùng nổ (Vol Breakout)
+    const sma20Vol = Math.round(
+      volumes.slice(Math.max(0, count - 20)).reduce((a, b) => a + b, 0) / Math.min(20, count)
+    );
+    const breakoutVolTrigger = Math.round(sma20Vol * 1.3);
+
     // ── 3. Heat & Extended Analysis Checklist ──
     let heatScore = 15;
     let isOverextended = false;
@@ -607,39 +635,78 @@ export async function GET(request: Request) {
         'Cổ phiếu cần thêm thời gian thắt chặt biên độ dao động (VCP) và xác nhận sự nhập cuộc của dòng tiền lớn bảo trợ.';
     }
 
-    // ── 5. Capital Allocation Plan (Scale-in Tranches) ──
-    const stopLossPrice = Number((currentPrice * 0.93).toFixed(1));
-    const stopLossPct = -7.0;
-    const targetPrice1 = Number((currentPrice * 1.15).toFixed(1));
+    let decisionVerdict: AIRecommendation['decisionVerdict'] = 'WAIT';
+    let decisionVerdictText = 'KHUYẾN NGHỊ: CHƯA NÊN MUA NGAY (CHỜ TEST MA20)';
+
+    if (actionType === 'BUY_PILOT') {
+      decisionVerdict = 'BUY_NOW';
+      decisionVerdictText = 'KHUYẾN NGHỊ: NÊN MUA (VÙNG MUA THĂM DÒ ĐẠT CHUẨN)';
+    } else if (actionType === 'WAIT_PULLBACK') {
+      decisionVerdict = 'WAIT';
+      decisionVerdictText = 'KHUYẾN NGHỊ: TẠM THỜI CHƯA MUA (CHỜ PULLBACK VỀ MA20)';
+    } else if (actionType === 'NO_BUY_EXTENDED') {
+      decisionVerdict = 'DO_NOT_BUY';
+      decisionVerdictText = 'CẢNH BÁO: TUYỆT ĐỐI KHÔNG MUA ĐUỔI (RỦI RO ĐỈNH NGẮN HẠN)';
+    } else if (actionType === 'SELL_TRIM') {
+      decisionVerdict = 'DO_NOT_BUY';
+      decisionVerdictText = 'CẢNH BÁO: KHÔNG MUA BẮT ĐÁY (XU HƯỚNG DOWNTREND STAGE 4)';
+    } else if (actionType === 'WATCH') {
+      decisionVerdict = 'WAIT';
+      decisionVerdictText = 'KHUYẾN NGHỊ: TIẾP TỤC THEO DÕI NỀN GIÁ TÍCH LŨY VCP';
+    }
+
+    // ── 5. Capital Allocation Plan (Scale-in Tranches & Dynamic Stoploss) ──
+    // Stoploss động: Tuân thủ nghiêm ngặt quy tắc Mark Minervini tối đa -7% đến -8%
+    let stopLossPrice = Number((currentPrice * 0.93).toFixed(1));
+    if (swingLow < currentPrice && swingLow >= currentPrice * 0.93) {
+      stopLossPrice = Number((swingLow * 0.985).toFixed(1));
+    }
+    const stopLossPct = Number((((stopLossPrice - currentPrice) / currentPrice) * 100).toFixed(1));
+
+    // Mục tiêu giá 1 (+12% đến +15% hoặc vượt đỉnh pivot) & Mục tiêu 2 (+25%)
+    const pivotTriggerPrice = swingHigh > currentPrice ? swingHigh : Number((currentPrice * 1.03).toFixed(1));
+    const targetPrice1 = Number(
+      Math.max(currentPrice * 1.12, swingHigh > currentPrice ? swingHigh * 1.03 : currentPrice * 1.15).toFixed(1)
+    );
     const targetPrice2 = Number((currentPrice * 1.25).toFixed(1));
     const riskRewardRatio = Number(
       ((targetPrice1 - currentPrice) / Math.max(0.1, currentPrice - stopLossPrice)).toFixed(1)
     );
+
+    // Dynamic Range Tranche 1
+    const t1Low = Math.round(Math.min(currentPrice, sma20) * 0.995 * 10) / 10;
+    const t1High = Math.round(Math.max(currentPrice, sma20) * 1.005 * 10) / 10;
+    const t1RangeStr = `Vùng ${t1Low} – ${t1High} (Quanh MA20)`;
+    const volMilStr = (breakoutVolTrigger / 1_000_000).toFixed(1);
 
     const tranches: CapitalTranche[] = [
       {
         step: 1,
         name: 'Lần 1: Vị thế Thăm dò (Pilot Position)',
         pct: 30,
-        targetPrice: `Quanh ${currentPrice > sma20 ? sma20 : currentPrice}`,
-        condition: 'Giải ngân 30% tổng vốn khi giá kéo ngược chạm hỗ trợ MA20/MA50 có nến rút chân hoặc bứt phá chớm pivot.',
-        status: shouldBuyNow ? 'ACTIVE' : 'PENDING',
+        targetPrice: t1RangeStr,
+        priceRange: `${t1Low} - ${t1High}`,
+        condition: `Giải ngân 30% khi giá kéo ngược chạm hỗ trợ MA20 (${sma20}) hoặc nền giá, nến rút chân thanh khoản cạn kiệt.`,
+        status: shouldBuyNow ? 'ACTIVE' : actionType === 'NO_BUY_EXTENDED' || actionType === 'SELL_TRIM' ? 'BLOCKED' : 'PENDING',
+        statusLabel: shouldBuyNow ? 'KÍCH HOẠT VÙNG MUA' : actionType === 'NO_BUY_EXTENDED' ? 'TẠM KHÓA (QUÁ NÓNG)' : actionType === 'SELL_TRIM' ? 'CẤM MUA (DOWNTREND)' : 'CHỜ GIÁ VỀ HỖ TRỢ',
       },
       {
         step: 2,
         name: 'Lần 2: Gia tăng Bứt phá (Add on Strength)',
         pct: 40,
-        targetPrice: `Vượt đỉnh ${formatK(high52W * 0.98)} kèm Vol bùng nổ`,
-        condition: 'Chỉ giải ngân 40% KHI VÀ CHỈ KHI Lần 1 đang CÓ LÃI (+2% đến +4%) và thanh khoản vượt 130% TB 20 phiên.',
+        targetPrice: `Vượt ${formatK(pivotTriggerPrice)} kèm Vol ≥ ${volMilStr}M cp`,
+        condition: `Chỉ giải ngân 40% KHI VÀ CHỈ KHI Lần 1 đang CÓ LÃI (+2% ~ +4%), giá bứt phá vượt kháng cự ${formatK(pivotTriggerPrice)} với Volume bùng nổ.`,
         status: 'LOCKED',
+        statusLabel: 'CHỜ ĐIỀU KIỆN LẦN 1',
       },
       {
         step: 3,
-        name: 'Lần 3: Kim tự tháp hoàn tất (Full Position)',
+        name: 'Lần 3: Hoàn tất Kim tự tháp (Full Position)',
         pct: 30,
-        targetPrice: 'Nhịp kiểm định (Retest) trần nền',
-        condition: 'Giải ngân 30% cuối cùng khi giá kiểm định thành công mốc kháng cự cũ (hỗ trợ mới), sẵn sàng cho sóng tăng mạnh.',
+        targetPrice: `Retest trần nền ${formatK(pivotTriggerPrice * 0.995)} – ${formatK(pivotTriggerPrice * 1.01)}`,
+        condition: `Giải ngân 30% cuối cùng khi giá kiểm định lại mốc ${formatK(pivotTriggerPrice)} thành công không bị gãy ngược, xác nhận xu hướng tăng phi mã.`,
         status: 'LOCKED',
+        statusLabel: 'KHÓA (CHỜ RETEST)',
       },
     ];
 
@@ -652,11 +719,15 @@ export async function GET(request: Request) {
       targetPrice1,
       targetPrice2,
       riskRewardRatio,
+      atr14,
+      atrPct,
+      pivotResistance: pivotTriggerPrice,
+      swingLowSupport: swingLow,
       goldenRules: [
         'Tuyệt đối KHÔNG bao giờ bình quân giá xuống (Never average down on losers).',
-        'Luôn đặt lệnh Dừng lỗ tự động 7% ngay sau khi khớp lệnh để bảo vệ vốn.',
+        `Luôn đặt lệnh Dừng lỗ tự động ${stopLossPct}% (Mốc ${stopLossPrice}) ngay sau khi khớp lệnh để bảo vệ vốn.`,
         'Chỉ gia tăng tỷ trọng (Lần 2, 3) khi các vị thế trước ĐANG CÓ LÃI.',
-        'Chốt lời chủ động 1/2 vị thế khi đạt +15% đến +20%, 1/2 còn lại trailing stop theo MA20.',
+        `Chốt lời chủ động 1/2 vị thế khi đạt Target 1 (${targetPrice1}), phần còn lại trailing stop theo MA20.`,
       ],
     };
 
@@ -668,6 +739,8 @@ export async function GET(request: Request) {
       summary,
       shouldBuyNow,
       buySuitabilityScore,
+      decisionVerdict,
+      decisionVerdictText,
       heat: heatAnalysis,
       allocation: capitalAllocation,
     };

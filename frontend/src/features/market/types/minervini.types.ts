@@ -96,8 +96,10 @@ export interface CapitalTranche {
   name: string;
   pct: number;
   targetPrice: string;
+  priceRange?: string;
   condition: string;
-  status: 'ACTIVE' | 'PENDING' | 'LOCKED';
+  status: 'ACTIVE' | 'PENDING' | 'LOCKED' | 'BLOCKED';
+  statusLabel?: string;
 }
 
 export interface CapitalAllocationPlan {
@@ -109,6 +111,10 @@ export interface CapitalAllocationPlan {
   targetPrice1: number;
   targetPrice2: number;
   riskRewardRatio: number;
+  atr14?: number;
+  atrPct?: number;
+  pivotResistance?: number;
+  swingLowSupport?: number;
   goldenRules: string[];
 }
 
@@ -120,6 +126,8 @@ export interface AIRecommendation {
   summary: string;
   shouldBuyNow: boolean;
   buySuitabilityScore: number; // 0 - 100
+  decisionVerdict?: 'BUY_NOW' | 'WAIT' | 'DO_NOT_BUY';
+  decisionVerdictText?: string;
   heat: HeatAnalysis;
   allocation: CapitalAllocationPlan;
 }
