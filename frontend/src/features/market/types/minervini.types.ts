@@ -54,6 +54,8 @@ export interface MinerviniAnalysisResult {
   distFrom52WHighPct: number;
   distFrom52WLowPct: number;
   rsRating: number;
+  rsRank?: number;
+  rsUniverseTotal?: number;
   stage: 1 | 2 | 3 | 4;
   stageName: string;
   passedCount: number;
@@ -66,6 +68,20 @@ export interface MinerviniAnalysisResult {
   signals: MinerviniStrategySignal[];
   wyckoff?: WyckoffDiagnosis;
   aiRecommendation?: AIRecommendation;
+}
+
+export interface RsLeaderboardItem {
+  symbol: string;
+  rsRating: number;
+  rank: number;
+  totalStocks: number;
+  rawScore: number;
+  q1Perf: number;
+  q2Perf: number;
+  q3Perf: number;
+  q4Perf: number;
+  currentPrice: number;
+  calculatedDate: string;
 }
 
 export interface HeatCriterion {

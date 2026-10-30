@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -20,10 +21,14 @@ public class MarketController {
 
     private final BinanceClient binanceClient;
     private final YahooFinanceClient yahooFinanceClient;
+    private final com.yourfin.api.service.StockRsRatingService stockRsRatingService;
 
-    public MarketController(BinanceClient binanceClient, YahooFinanceClient yahooFinanceClient) {
+    public MarketController(BinanceClient binanceClient,
+                            YahooFinanceClient yahooFinanceClient,
+                            com.yourfin.api.service.StockRsRatingService stockRsRatingService) {
         this.binanceClient = binanceClient;
         this.yahooFinanceClient = yahooFinanceClient;
+        this.stockRsRatingService = stockRsRatingService;
         logger.info("MarketController initialized");
     }
 
@@ -93,5 +98,50 @@ public class MarketController {
             errorResponse.put("error", e.getMessage());
             return ResponseEntity.ok(errorResponse);
         }
+    }
+
+    /**
+     * Lấy điểm RS Rating chuẩn Percentile 1-99 toàn thị trường của 1 cổ phiếu
+     */
+    @GetMapping("/rs-rating/{symbol}")
+    public ResponseEntity<Map<String, Object>> getStockRsRating(@PathVariable String symbol) {
+        return stockRsRatingService.getRsRating(symbol)
+                .map(dto -> {
+                    Map<String, Object> res = new HashMap<>();
+                    res.put("success", true);
+                    res.put("data", dto);
+                    return ResponseEntity.ok(res);
+                })
+                .orElseGet(() -> {
+                    Map<String, Object> res = new HashMap<>();
+                    res.put("success", false);
+                    res.put("message", "Chưa có dữ liệu RS Rating cho mã " + symbol);
+                    return ResponseEntity.ok(res);
+                });
+    }
+
+    /**
+     * Lấy danh sách Top cổ phiếu có RS Rating cao nhất thị trường (Bảng Vàng Minervini)
+     */
+    @GetMapping("/rs-rating/top")
+    public ResponseEntity<Map<String, Object>> getTopRsStocks(@RequestParam(defaultValue = "30") int limit) {
+        List<com.yourfin.api.dto.StockRsDto> topList = stockRsRatingService.getTopRsStocks(limit);
+        Map<String, Object> res = new HashMap<>();
+        res.put("success", true);
+        res.put("count", topList.size());
+        res.put("data", topList);
+        return ResponseEntity.ok(res);
+    }
+
+    /**
+     * Yêu cầu tính toán lại toàn bộ điểm RS Rating thị trường ngay lập tức
+     */
+    @PostMapping("/rs-rating/refresh")
+    public ResponseEntity<Map<String, Object>> refreshRsRatings() {
+        new Thread(stockRsRatingService::calculateAndSaveAllRsRatings, "rs-rating-manual-refresh").start();
+        Map<String, Object> res = new HashMap<>();
+        res.put("success", true);
+        res.put("message", "Đã kích hoạt tác vụ tính toán RS Rating ngầm");
+        return ResponseEntity.ok(res);
     }
 }

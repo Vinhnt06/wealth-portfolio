@@ -138,8 +138,28 @@ export async function GET(request: Request) {
     const q4 = getPerf(Math.min(250, count));
     const rawRsScore = 0.4 * q1 + 0.2 * q2 + 0.2 * q3 + 0.2 * q4;
 
-    // Map to percentile 1-99 (Zero Mock Data: Không tự động ép điểm RS lên 80 khi gần đỉnh)
-    const rsRating = Math.min(99, Math.max(1, Math.round(50 + rawRsScore * 75)));
+    // Default formula-based fallback
+    let rsRating = Math.min(99, Math.max(1, Math.round(50 + rawRsScore * 75)));
+    let rsRank: number | undefined;
+    let rsUniverseTotal: number | undefined;
+
+    // Fetch True Percentile RS Rating from Spring Boot Backend Service (95 Liquid VN Universe)
+    try {
+      const backendRsRes = await fetch(`http://localhost:8080/api/market/rs-rating/${symbol}`, {
+        signal: AbortSignal.timeout(1500),
+        next: { revalidate: 300 }
+      });
+      if (backendRsRes.ok) {
+        const rsJson = await backendRsRes.json();
+        if (rsJson.success && rsJson.data?.rsRating) {
+          rsRating = rsJson.data.rsRating;
+          rsRank = rsJson.data.rank;
+          rsUniverseTotal = rsJson.data.totalStocks;
+        }
+      }
+    } catch {
+      // Backend offline or timeout -> fallback gracefully to calculated rawRsScore
+    }
 
     // Evaluate 8 Minervini Trend Template Criteria matching exact VN TERMINAL Pro format
     const formatK = (val: number) => (val > 1000 ? (val / 1000).toFixed(0) : val.toFixed(0));
@@ -216,7 +236,9 @@ export async function GET(request: Request) {
         label: 'Sức mạnh giá RS Rating (≥ 70)',
         description: 'Điểm sức mạnh giá tương đối theo trọng số IBD Minervini đạt tối thiểu 70 điểm',
         passed: rsRating >= 70,
-        value: `RS Rating: ${rsRating}/99 điểm`,
+        value: rsRank && rsUniverseTotal
+          ? `RS Rating: ${rsRating}/99 điểm (Top ${rsRank}/${rsUniverseTotal} thị trường)`
+          : `RS Rating: ${rsRating}/99 điểm`,
         comparisonValue: `${rsRating}`,
       },
     ];
@@ -226,7 +248,7 @@ export async function GET(request: Request) {
 
     let stage: 1 | 2 | 3 | 4 = 1;
     let stageName = 'Stage 1 (Tích lũy / Base)';
-    if (passedCount >= 7) {
+    if (passedCount === 8) {
       stage = 2;
       stageName = 'Stage 2 (Tăng trưởng / Đủ điều kiện xét mua)';
     } else if (currentPrice < sma200 && sma50 < sma200) {
@@ -240,8 +262,8 @@ export async function GET(request: Request) {
     // Zero Mock Data: Không bịa đặt số liệu thống kê winRate hay profitPct giả
     const signals: MinerviniStrategySignal[] = [];
 
-    // Dynamic Sector Rank & RS directly synchronized with Live RRG Engine (100% Real Data, Zero Mock)
-    const rrgDataset = await getLiveRRGDataset('1D', 4, 'VNINDEX');
+    // Dynamic Sector Rank & RS directly synchronized with Live RRG Engine (1W Weekly Frame - JdK Standard)
+    const rrgDataset = await getLiveRRGDataset('1W', 4, 'VNINDEX');
     const rrgSectorInfo = findMatchingRRGSector(symbol, stockInfo.sector, rrgDataset);
 
     const matchedSectorName = rrgSectorInfo?.sectorName || stockInfo.sector || 'Chung';
@@ -552,7 +574,7 @@ export async function GET(request: Request) {
     // ── 4. AI Recommendation & Action Classification ──
     // QUY TẮC BẮT BUỘC SỐ 1: BỘ LỌC XU HƯỚNG MARK MINERVINI (TREND TEMPLATE GATEKEEPER)
     const failedCriteria = criteria.filter((c) => !c.passed).map((c) => c.label);
-    const trendGatePassed = passedCount >= 7 && currentPrice > sma200 && stage === 2;
+    const trendGatePassed = passedCount === 8 && currentPrice > sma200 && stage === 2;
 
     let action: AIRecommendation['action'] = 'CHỜ KÉO NGƯỢC (PULLBACK)';
     let actionType: AIRecommendation['actionType'] = 'WAIT_PULLBACK';
@@ -771,6 +793,8 @@ export async function GET(request: Request) {
       distFrom52WHighPct,
       distFrom52WLowPct,
       rsRating,
+      rsRank,
+      rsUniverseTotal,
       stage,
       stageName,
       passedCount,

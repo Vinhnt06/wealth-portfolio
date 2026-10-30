@@ -11,6 +11,7 @@ import {
   ChartLineUp,
   Funnel,
   TrendUp,
+  TrendDown,
   Brain,
   Crown,
   Info,
@@ -25,22 +26,52 @@ import {
   CheckCircle,
   Prohibit,
   Crosshair,
+  MagnifyingGlass,
 } from '@phosphor-icons/react';
-import { MinerviniAnalysisResult } from '../types/minervini.types';
+import { MinerviniAnalysisResult, RsLeaderboardItem } from '../types/minervini.types';
+import { useMarketStore } from '../store/marketStore';
 
 interface MinerviniStrategyPanelProps {
   symbol: string;
 }
 
 export const MinerviniStrategyPanel: React.FC<MinerviniStrategyPanelProps> = ({ symbol }) => {
+  const { setSelectedSymbol } = useMarketStore();
   const [activeTab, setActiveTab] = useState<'strategies' | 'indicators' | 'screener' | 'leaderboard' | 'ai'>('strategies');
   const [data, setData] = useState<MinerviniAnalysisResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
 
+  // Leaderboard State
+  const [leaderboard, setLeaderboard] = useState<RsLeaderboardItem[]>([]);
+  const [isLeaderboardLoading, setIsLeaderboardLoading] = useState(false);
+  const [leaderboardFilter, setLeaderboardFilter] = useState<'all' | 'rs80' | 'rs70'>('all');
+  const [searchFilter, setSearchFilter] = useState('');
+
   // Collapsible accordion states
   const [openMinervini, setOpenMinervini] = useState(true);
   const [openWyckoff, setOpenWyckoff] = useState(true);
+
+  const fetchLeaderboard = useCallback(() => {
+    setIsLeaderboardLoading(true);
+    fetch('/api/market/minervini/leaderboard?limit=35')
+      .then((res) => res.json())
+      .then((resData) => {
+        setIsLeaderboardLoading(false);
+        if (resData.success && Array.isArray(resData.data)) {
+          setLeaderboard(resData.data);
+        }
+      })
+      .catch(() => {
+        setIsLeaderboardLoading(false);
+      });
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === 'leaderboard' && leaderboard.length === 0) {
+      fetchLeaderboard();
+    }
+  }, [activeTab, leaderboard.length, fetchLeaderboard]);
 
   const fetchAnalysis = useCallback(() => {
     if (!symbol) return;
@@ -298,9 +329,16 @@ export const MinerviniStrategyPanel: React.FC<MinerviniStrategyPanelProps> = ({ 
                     <Gauge size={14} className="text-amber-400" />
                     Sức Mạnh Giá RS (Minervini vs VNINDEX)
                   </span>
-                  <div className="flex items-baseline gap-1 px-2.5 py-0.5 rounded-lg bg-amber-500/20 border border-amber-400/40">
-                    <span className="font-black text-amber-300 text-base">{data.rsRating}</span>
-                    <span className="text-[10px] text-amber-400/70">/99</span>
+                  <div className="flex items-center gap-1.5">
+                    {data.rsRank && data.rsUniverseTotal && (
+                      <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 border border-zinc-700">
+                        Top {data.rsRank}/{data.rsUniverseTotal}
+                      </span>
+                    )}
+                    <div className="flex items-baseline gap-1 px-2.5 py-0.5 rounded-lg bg-amber-500/20 border border-amber-400/40">
+                      <span className="font-black text-amber-300 text-base">{data.rsRating}</span>
+                      <span className="text-[10px] text-amber-400/70">/99</span>
+                    </div>
                   </div>
                 </div>
 
@@ -415,7 +453,14 @@ export const MinerviniStrategyPanel: React.FC<MinerviniStrategyPanelProps> = ({ 
               <div className="p-2.5 rounded-lg bg-zinc-900/60 border border-zinc-800/60 flex items-center justify-between">
                 <div>
                   <div className="text-[11px] text-zinc-400">Sức mạnh giá RS Rating</div>
-                  <div className="font-bold text-zinc-100">{data.rsRating}/99 điểm</div>
+                  <div className="font-bold text-zinc-100">
+                    {data.rsRating}/99 điểm
+                    {data.rsRank && data.rsUniverseTotal && (
+                      <span className="text-[10px] text-zinc-400 font-normal ml-1.5 font-mono">
+                        (Top {data.rsRank}/{data.rsUniverseTotal})
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <span className={`text-[11px] font-black px-2 py-1 rounded ${
                   data.rsRating >= 70 ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-zinc-800 text-zinc-400'
@@ -454,17 +499,217 @@ export const MinerviniStrategyPanel: React.FC<MinerviniStrategyPanelProps> = ({ 
           </div>
         )}
 
-        {/* ── TAB 4: BẢNG VÀNG ───────────────────────────────────── */}
+        {/* ── TAB 4: BẢNG VÀNG SỨC MẠNH GIÁ RS (TOP LEADERS) ──────── */}
         {activeTab === 'leaderboard' && (
-          <div className="p-4 rounded-xl bg-[#0a111a]/90 border border-zinc-800/80 text-center space-y-3">
-            <Crown size={28} className="text-amber-400 mx-auto" weight="fill" />
-            <div className="text-xs font-bold text-zinc-200">Bảng Vàng Stage 2 Toàn Thị Trường</div>
-            <p className="text-[11px] text-zinc-400 leading-relaxed">
-              Tính năng quét tự động toàn bộ cổ phiếu thỏa mãn đồng thời 8/8 tiêu chí Trend Template và RS &ge; 70 trên HOSE & HNX đang được hoàn thiện kết nối dữ liệu.
-            </p>
-            <div className="p-2.5 rounded-lg bg-zinc-900/60 border border-zinc-800/60 text-[11px] text-zinc-400 text-left flex items-start gap-2">
-              <Info size={16} className="text-cyan-400 shrink-0 mt-0.5" />
-              <span>Hiện tại, bạn có thể nhập trực tiếp bất kỳ mã cổ phiếu nào (ví dụ: VCB, FPT, HPG, SSI, DGC...) vào ô tìm kiếm để kiểm tra tức thì.</span>
+          <div className="space-y-3 pb-3">
+            {/* Header Banner & Controls */}
+            <div className="p-3 rounded-xl bg-gradient-to-br from-[#0c131d] to-[#080d14] border border-amber-500/20 shadow-lg">
+              <div className="flex items-center justify-between mb-2 pb-2 border-b border-zinc-800/60">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-amber-500/20 border border-amber-400/40 flex items-center justify-center shrink-0">
+                    <Crown size={16} className="text-amber-400" weight="fill" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-black text-zinc-100 flex items-center gap-1.5 tracking-wide">
+                      BẢNG VÀNG RS RATING (1-99)
+                      <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                        TOP DẪN DẮT
+                      </span>
+                    </div>
+                    <div className="text-[10px] text-zinc-400 font-mono">
+                      Xếp hạng toàn thị trường (95 mã thanh khoản cao nhất)
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  onClick={fetchLeaderboard}
+                  disabled={isLeaderboardLoading}
+                  className="flex items-center gap-1 px-2 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700/80 text-[10px] text-zinc-300 hover:text-zinc-100 font-mono transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
+                  title="Làm mới bảng xếp hạng RS"
+                >
+                  <ArrowsClockwise
+                    size={11}
+                    className={`text-amber-400 ${isLeaderboardLoading ? 'animate-spin' : ''}`}
+                  />
+                  <span>{isLeaderboardLoading ? 'Đang tải' : 'Cập nhật'}</span>
+                </button>
+              </div>
+
+              {/* Filters & Search Bar */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
+                {/* Search Box */}
+                <div className="relative flex-1">
+                  <MagnifyingGlass size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-500" />
+                  <input
+                    type="text"
+                    value={searchFilter}
+                    onChange={(e) => setSearchFilter(e.target.value.toUpperCase().trim())}
+                    placeholder="Tìm mã (VD: PET, VIC...)"
+                    className="w-full pl-7 pr-2.5 py-1 text-[11px] font-mono bg-zinc-950/80 border border-zinc-800 rounded-lg text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-amber-400/60"
+                  />
+                  {searchFilter && (
+                    <button
+                      onClick={() => setSearchFilter('')}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 text-[10px]"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+
+                {/* Filter Pills */}
+                <div className="flex items-center gap-1 text-[10px] font-mono shrink-0">
+                  <button
+                    onClick={() => setLeaderboardFilter('all')}
+                    className={`px-2 py-1 rounded-md transition-all cursor-pointer ${
+                      leaderboardFilter === 'all'
+                        ? 'bg-zinc-800 text-zinc-100 border border-zinc-700 font-bold'
+                        : 'text-zinc-500 hover:text-zinc-300'
+                    }`}
+                  >
+                    Tất cả
+                  </button>
+                  <button
+                    onClick={() => setLeaderboardFilter('rs80')}
+                    className={`px-2 py-1 rounded-md transition-all cursor-pointer ${
+                      leaderboardFilter === 'rs80'
+                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold'
+                        : 'text-zinc-500 hover:text-emerald-400/80'
+                    }`}
+                  >
+                    RS ≥ 80
+                  </button>
+                  <button
+                    onClick={() => setLeaderboardFilter('rs70')}
+                    className={`px-2 py-1 rounded-md transition-all cursor-pointer ${
+                      leaderboardFilter === 'rs70'
+                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold'
+                        : 'text-zinc-500 hover:text-amber-400/80'
+                    }`}
+                  >
+                    RS ≥ 70
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Leaderboard Table / Card List */}
+            {isLeaderboardLoading && leaderboard.length === 0 ? (
+              <div className="p-8 rounded-xl bg-zinc-900/40 border border-zinc-800/60 text-center space-y-2">
+                <ArrowsClockwise size={20} className="text-amber-400 animate-spin mx-auto" />
+                <div className="text-xs text-zinc-400 font-mono">Đang tính toán bảng xếp hạng RS Rating toàn thị trường...</div>
+              </div>
+            ) : (
+              <div className="space-y-1.5 max-h-[420px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-zinc-800">
+                {leaderboard
+                  .filter((item) => {
+                    if (searchFilter && !item.symbol.includes(searchFilter)) return false;
+                    if (leaderboardFilter === 'rs80') return item.rsRating >= 80;
+                    if (leaderboardFilter === 'rs70') return item.rsRating >= 70;
+                    return true;
+                  })
+                  .map((item) => {
+                    const isSelected = item.symbol === symbol;
+                    const isTop1 = item.rank === 1;
+                    const isTop10 = item.rank <= 10;
+
+                    return (
+                      <div
+                        key={item.symbol}
+                        onClick={() => setSelectedSymbol(item.symbol)}
+                        className={`group p-2.5 rounded-xl border transition-all duration-150 cursor-pointer flex items-center justify-between ${
+                          isSelected
+                            ? 'bg-emerald-950/25 border-emerald-500/50 shadow-md shadow-emerald-500/10'
+                            : 'bg-zinc-900/60 hover:bg-zinc-900 border-zinc-800/70 hover:border-zinc-700'
+                        }`}
+                      >
+                        {/* Left: Rank & Symbol */}
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          {/* Rank Badge */}
+                          <div
+                            className={`w-6 h-6 rounded-lg flex items-center justify-center font-mono font-black text-xs shrink-0 ${
+                              isTop1
+                                ? 'bg-amber-400 text-zinc-950 shadow-sm shadow-amber-400/30'
+                                : item.rank === 2
+                                ? 'bg-zinc-300 text-zinc-950 font-bold'
+                                : item.rank === 3
+                                ? 'bg-amber-700/80 text-amber-100 font-bold'
+                                : isTop10
+                                ? 'bg-emerald-950/60 text-emerald-400 border border-emerald-500/30 font-bold'
+                                : 'bg-zinc-800/80 text-zinc-400 font-medium'
+                            }`}
+                          >
+                            {item.rank}
+                          </div>
+
+                          {/* Symbol & Price */}
+                          <div>
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-mono font-black text-xs text-zinc-100 group-hover:text-amber-300 transition-colors">
+                                {item.symbol}
+                              </span>
+                              {isSelected && (
+                                <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                                  Đang xem
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-[10px] font-mono text-zinc-400">
+                              {item.currentPrice > 0 ? `${item.currentPrice.toFixed(1)}k` : 'N/A'}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Middle: Performance Metrics */}
+                        <div className="hidden sm:flex flex-col items-end text-right font-mono text-[10px] px-2">
+                          <div className="text-zinc-500 text-[9px]">Hiệu suất 3T / 1N</div>
+                          <div className="flex items-center gap-1.5 font-bold">
+                            <span className={item.q1Perf >= 0 ? 'text-emerald-400' : 'text-rose-400'}>
+                              {item.q1Perf >= 0 ? `+${item.q1Perf}%` : `${item.q1Perf}%`}
+                            </span>
+                            <span className="text-zinc-600">/</span>
+                            <span className={item.q4Perf >= 0 ? 'text-emerald-400' : 'text-rose-400'}>
+                              {item.q4Perf >= 0 ? `+${item.q4Perf}%` : `${item.q4Perf}%`}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Right: RS Rating Badge */}
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <div
+                            className={`px-2 py-1 rounded-lg border flex items-baseline gap-0.5 ${
+                              item.rsRating >= 90
+                                ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300'
+                                : item.rsRating >= 80
+                                ? 'bg-teal-500/15 border-teal-500/40 text-teal-300'
+                                : item.rsRating >= 70
+                                ? 'bg-amber-500/15 border-amber-500/40 text-amber-300'
+                                : 'bg-zinc-800/80 border-zinc-700/60 text-zinc-400'
+                            }`}
+                          >
+                            <span className="font-mono font-black text-xs leading-none">
+                              {item.rsRating}
+                            </span>
+                            <span className="text-[9px] opacity-70 leading-none">/99</span>
+                          </div>
+                          <CaretRight size={12} className="text-zinc-600 group-hover:text-zinc-300 group-hover:translate-x-0.5 transition-all" />
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
+
+            {/* Method Educational Badge */}
+            <div className="p-2.5 rounded-lg bg-zinc-900/60 border border-zinc-800/60 text-[10px] text-zinc-400 space-y-1">
+              <div className="flex items-center gap-1.5 text-zinc-300 font-bold">
+                <Info size={14} className="text-cyan-400 shrink-0" />
+                <span>Quy chuẩn tính toán RS Rating IBD Minervini:</span>
+              </div>
+              <p className="leading-relaxed text-zinc-400 pl-4 font-mono">
+                RS = 40% Q1 (3 tháng) + 20% Q2 (6 tháng) + 20% Q3 (9 tháng) + 20% Q4 (12 tháng). Phân vị Percentile (1-99) đối sánh trên 95 cổ phiếu thanh khoản cao nhất VN-Index. Tự động lưu và cập nhật mỗi ngày lúc 15:15.
+              </p>
             </div>
           </div>
         )}

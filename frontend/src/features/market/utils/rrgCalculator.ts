@@ -36,6 +36,7 @@ export interface RRGSectorData {
   angle: number;              // Góc quay theo độ (0 - 360)
   velocity: number;           // Vận tốc luân chuyển
   changePercent: number;      // % thay đổi phiên gần nhất
+  relativePerf3M?: number;    // % hiệu suất tương đối 3 tháng (13 tuần) so với Benchmark
 }
 
 export interface RRGDataset {

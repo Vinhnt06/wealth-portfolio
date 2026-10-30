@@ -77,15 +77,15 @@ export async function getLiveRRGDataset(
     const benchCandles = await fetchEntradeCandles(benchmark, true, timeframe);
     if (!benchCandles.length) return null;
 
-    // 2. Collect unique representative symbols for the 16 sectors (top 3 per sector)
+    // 2. Thu thập top 5 cổ phiếu thanh khoản cao nhất mỗi ngành để mở rộng rổ, chống lệch mã đơn lẻ
     const symbolsToFetch = new Set<string>();
     RRG_SECTOR_CONFIGS.forEach((sector) => {
-      sector.symbols.slice(0, 3).forEach((s) => symbolsToFetch.add(s));
+      sector.symbols.slice(0, 5).forEach((s) => symbolsToFetch.add(s));
     });
 
     const symbolArray = Array.from(symbolsToFetch);
     const symbolCandleMap = new Map<string, CandlePoint[]>();
-    const batchSize = 10;
+    const batchSize = 15;
     for (let i = 0; i < symbolArray.length; i += batchSize) {
       const batch = symbolArray.slice(i, i + batchSize);
       const batchPromises = batch.map(async (sym) => {
@@ -100,7 +100,7 @@ export async function getLiveRRGDataset(
       });
     }
 
-    // 3. Synthesize sector composite prices
+    // 3. Xây dựng chuỗi giá tổ hợp ngành (Composite Sector Price)
     const dateList = benchCandles.map((c) => c.date);
     const sectorsData: RRGSectorData[] = [];
     let leadingCount = 0;
@@ -110,7 +110,7 @@ export async function getLiveRRGDataset(
 
     for (const config of RRG_SECTOR_CONFIGS) {
       const validStockCandles = config.symbols
-        .slice(0, 3)
+        .slice(0, 5)
         .map((s) => symbolCandleMap.get(s))
         .filter((c): c is CandlePoint[] => !!c && c.length >= 20);
 
@@ -172,6 +172,21 @@ export async function getLiveRRGDataset(
       const prevClose = sectorPrices[sectorPrices.length - 2]?.close || lastClose;
       const changePercent = Number((((lastClose - prevClose) / prevClose) * 100).toFixed(2));
 
+      // Hiệu suất tương đối 3 tháng (13 tuần / 63 phiên) so với VNINDEX
+      const lookbackPeriods = timeframe === '1W' ? 13 : 63;
+      let relativePerf3M = 0;
+      if (sectorPrices.length > lookbackPeriods && benchCandles.length > lookbackPeriods) {
+        const sLast = sectorPrices[sectorPrices.length - 1].close;
+        const sPast = sectorPrices[sectorPrices.length - 1 - lookbackPeriods].close;
+        const bLast = benchCandles[benchCandles.length - 1].close;
+        const bPast = benchCandles[benchCandles.length - 1 - lookbackPeriods].close;
+        if (sPast > 0 && bPast > 0) {
+          const sReturn = ((sLast - sPast) / sPast) * 100;
+          const bReturn = ((bLast - bPast) / bPast) * 100;
+          relativePerf3M = Number((sReturn - bReturn).toFixed(2));
+        }
+      }
+
       sectorsData.push({
         id: config.id,
         name: config.name,
@@ -185,6 +200,7 @@ export async function getLiveRRGDataset(
         angle,
         velocity,
         changePercent,
+        relativePerf3M,
       });
     }
 
@@ -227,11 +243,12 @@ export interface SectorRRGInfo {
   quadrant: RRGQuadrant;
   rsRatio: number;
   rsMomentum: number;
+  relativePerf3M: number;
 }
 
 /**
  * Khớp mã cổ phiếu và nhóm ngành với kết quả RRG thực tế để trả về trạng thái chuẩn hóa, 
- * tuyệt đối không dùng số liệu mock hay bảng hardcode tĩnh.
+ * tách bạch rõ ràng giữa Sức mạnh ngành (IBD Industry Group Rank 3 Tháng) và Pha luân chuyển RRG.
  */
 export function findMatchingRRGSector(
   symbol: string,
@@ -276,13 +293,16 @@ export function findMatchingRRGSector(
 
   if (!matched) return null;
 
-  // Xếp hạng 16 nhóm ngành theo rsRatio giảm dần (Chuẩn Julius de Kempenaer)
-  const sortedByRs = [...rrgDataset.sectors].sort((a, b) => b.currentPoint.rsRatio - a.currentPoint.rsRatio);
-  const rankIndex = sortedByRs.findIndex((s) => s.id === matched!.id);
+  // 1. Xếp hạng 16 nhóm ngành theo Sức mạnh tương đối 3 tháng so với VNINDEX (Chuẩn Industry Group của O'Neil & Minervini)
+  const sortedByPerf = [...rrgDataset.sectors].sort((a, b) => (b.relativePerf3M ?? 0) - (a.relativePerf3M ?? 0));
+  const rankIndex = sortedByPerf.findIndex((s) => s.id === matched!.id);
   const rank = rankIndex >= 0 ? rankIndex + 1 : 1;
-  const total = sortedByRs.length;
+  const total = sortedByPerf.length;
 
-  // Map quadrant sang nhãn tiếng Việt chuẩn
+  // 2. Điểm sức mạnh ngành RS Rating (thang điểm 1 - 99 theo thứ hạng 3 tháng)
+  const sectorRS = Math.round(Math.min(99, Math.max(1, 99 - ((rank - 1) / Math.max(1, total - 1)) * 65)));
+
+  // 3. Chu kỳ luân chuyển RRG (Theo góc phần tư Julius de Kempenaer trên đồ thị tuần)
   let sectorStatus: 'Dẫn dắt (Leading)' | 'Cải thiện (Improving)' | 'Suy yếu (Weakening)' | 'Tụt hậu (Lagging)';
   switch (matched.quadrant) {
     case 'leading':
@@ -300,9 +320,6 @@ export function findMatchingRRGSector(
       break;
   }
 
-  // Điểm sức mạnh ngành RS Rating (thang điểm 1 - 99 theo thứ hạng tương đối)
-  const sectorRS = Math.round(Math.min(99, Math.max(1, 99 - ((rank - 1) / Math.max(1, total - 1)) * 65)));
-
   return {
     sectorId: matched.id,
     sectorName: matched.name,
@@ -312,5 +329,6 @@ export function findMatchingRRGSector(
     quadrant: matched.quadrant,
     rsRatio: matched.currentPoint.rsRatio,
     rsMomentum: matched.currentPoint.rsMomentum,
+    relativePerf3M: matched.relativePerf3M ?? 0,
   };
 }
