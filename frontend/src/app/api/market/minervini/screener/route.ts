@@ -7,6 +7,8 @@ import { SECTOR_MAPPING, SECTOR_LEADER_UNIVERSE, getSymbolsBySector } from '../.
 
 export const runtime = 'nodejs';
 export const preferredRegion = 'sin1';
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 // Comprehensive universe of 180+ liquid VN equities across all 20 industry sectors
 const DEFAULT_UNIVERSE = SECTOR_LEADER_UNIVERSE;
@@ -21,6 +23,62 @@ function getScanFilePath() {
     if (fs.existsSync(p)) return p;
   }
   return possiblePaths[0];
+}
+
+// Load true percentile RS ratings from Spring Boot service or filesystem database
+async function getRsRatingsMap(): Promise<Map<string, { rsRating: number; rank: number }>> {
+  const map = new Map<string, { rsRating: number; rank: number }>();
+  // 1. First priority: Live Spring Boot RS percentiles (95 liquid VN equities)
+  try {
+    const res = await fetch('http://localhost:8080/api/market/rs-rating/top?limit=100', {
+      signal: AbortSignal.timeout(1200),
+      cache: 'no-store',
+    });
+    if (res.ok) {
+      const json = await res.json();
+      if (json.success && Array.isArray(json.data)) {
+        for (const item of json.data) {
+          if (item && item.symbol && typeof item.rsRating === 'number') {
+            map.set(item.symbol.toUpperCase(), {
+              rsRating: item.rsRating,
+              rank: item.rank,
+            });
+          }
+        }
+        if (map.size > 0) return map;
+      }
+    }
+  } catch {}
+
+  // 2. Fallback: Filesystem cache search across potential runtime working directories
+  const possiblePaths = [
+    path.resolve(process.cwd(), '../data/stock_rs_ratings.json'),
+    path.resolve(process.cwd(), 'data/stock_rs_ratings.json'),
+    path.resolve(process.cwd(), 'Documents/YourFin/data/stock_rs_ratings.json'),
+    path.resolve(process.cwd(), 'frontend/data/stock_rs_ratings.json'),
+    path.resolve(process.cwd(), 'src/features/market/data/stock_rs_ratings.json'),
+    path.resolve(process.cwd(), 'frontend/src/features/market/data/stock_rs_ratings.json'),
+  ];
+  for (const p of possiblePaths) {
+    if (fs.existsSync(p)) {
+      try {
+        const raw = fs.readFileSync(p, 'utf-8');
+        const parsed = JSON.parse(raw);
+        for (const [sym, data] of Object.entries(parsed)) {
+          if (data && typeof (data as any).rsRating === 'number') {
+            map.set(sym.toUpperCase(), {
+              rsRating: (data as any).rsRating,
+              rank: (data as any).rank,
+            });
+          }
+        }
+        if (map.size > 0) return map;
+      } catch (e) {
+        console.error('Error reading stock_rs_ratings.json:', e);
+      }
+    }
+  }
+  return map;
 }
 
 // In-memory cache for screener results (60 seconds TTL)
@@ -76,27 +134,40 @@ async function getLiveSsiTicks(): Promise<Map<string, LiveTick>> {
   return ssiCache?.map || map;
 }
 
-function enrichWithLiveTicks(items: MinerviniScreenerItem[], liveMap: Map<string, LiveTick>): MinerviniScreenerItem[] {
+function enrichWithLiveTicks(
+  items: MinerviniScreenerItem[],
+  liveMap: Map<string, LiveTick>,
+  rsMap?: Map<string, { rsRating: number; rank: number }>
+): MinerviniScreenerItem[] {
   return items.map((item) => {
-    const live = liveMap.get(item.symbol.toUpperCase());
+    const sym = item.symbol.toUpperCase();
+    const live = liveMap.get(sym);
+    const rsInfo = rsMap?.get(sym);
+    const rsRating = rsInfo?.rsRating ?? item.rsRating;
     const basePassed = typeof item.criteriaPassed === 'number' ? item.criteriaPassed : (typeof item.score === 'number' ? item.score : 0);
 
+    let criteriaPassed = basePassed;
+    // If RS rating changed from cached value, adjust criteriaPassed for criterion 8 (RS >= 70)
+    const oldRsPassed = (item.rsRating || 0) >= 70;
+    const newRsPassed = rsRating >= 70;
+    if (oldRsPassed !== newRsPassed) {
+      criteriaPassed += newRsPassed ? 1 : -1;
+    }
+
     if (!live || !live.price || live.price <= 0) {
-      // Ensure existing items have correct isStage2Eligible flag
-      const isStage2Eligible = basePassed === 8;
-      const isStage2 = basePassed >= 7;
+      const isStage2 = criteriaPassed === 8;
       return {
         ...item,
-        score: basePassed,
-        criteriaPassed: basePassed,
-        isStage2Eligible,
+        rsRating,
+        score: criteriaPassed,
+        criteriaPassed,
+        isStage2Eligible: isStage2,
         isStage2,
       };
     }
 
     const livePriceK = live.price / 1000;
     const oldPriceK = (item.price || 0) / 1000;
-    let criteriaPassed = basePassed;
 
     // Dynamically re-evaluate price-sensitive criteria with live price
     if (item.sma50 && item.sma150 && item.sma200 && oldPriceK > 0) {
@@ -114,17 +185,17 @@ function enrichWithLiveTicks(items: MinerviniScreenerItem[], liveMap: Map<string
       criteriaPassed = Math.max(0, Math.min(8, criteriaPassed));
     }
 
-    const isStage2Eligible = criteriaPassed === 8;
-    const isStage2 = criteriaPassed >= 7;
+    const isStage2 = criteriaPassed === 8;
 
     return {
       ...item,
       price: live.price > 0 ? live.price : item.price,
       changePct: live.changePct !== undefined && live.changePct !== null ? live.changePct : item.changePct,
       volume: live.volume > 0 ? live.volume : item.volume,
+      rsRating,
       criteriaPassed,
       score: criteriaPassed,
-      isStage2Eligible,
+      isStage2Eligible: isStage2,
       isStage2,
     };
   });
@@ -164,7 +235,7 @@ function upsertScanFile(itemsToUpsert: MinerviniScreenerItem[]) {
     const updatedList = Array.from(itemMap.values()).sort((a, b) => b.rsRating - a.rsRating);
     fileJson.data = updatedList;
     fileJson.totalScanned = updatedList.length;
-    fileJson.stage2Count = updatedList.filter((s) => s.isStage2Eligible || s.isStage2).length;
+    fileJson.stage2Count = updatedList.filter((s) => s.criteriaPassed === 8).length;
     fileJson.leadersCount = updatedList.filter((s) => s.rsRating >= 90).length;
     fileJson.scannedAt = Date.now();
     fileJson.scannedAtText = vnTime;
@@ -272,8 +343,8 @@ const OUTSTANDING_SHARES_M: Record<string, number> = {
               if (minMktCapT > 0 && item.mktCapT < minMktCapT) return false;
               return true;
             });
-            const liveMap = await getLiveSsiTicks();
-            const enriched = enrichWithLiveTicks(filtered, liveMap);
+            const [liveMap, rsMap] = await Promise.all([getLiveSsiTicks(), getRsRatingsMap()]);
+            const enriched = enrichWithLiveTicks(filtered, liveMap, rsMap).sort((a, b) => b.rsRating - a.rsRating);
             return NextResponse.json({
               success: true,
               total: enriched.length,
@@ -304,8 +375,8 @@ const OUTSTANDING_SHARES_M: Record<string, number> = {
         if (minMktCapT > 0 && item.mktCapT < minMktCapT) return false;
         return true;
       });
-      const liveMap = await getLiveSsiTicks();
-      const enriched = enrichWithLiveTicks(filtered, liveMap);
+      const [liveMap, rsMap] = await Promise.all([getLiveSsiTicks(), getRsRatingsMap()]);
+      const enriched = enrichWithLiveTicks(filtered, liveMap, rsMap).sort((a, b) => b.rsRating - a.rsRating);
       return NextResponse.json({
         success: true,
         total: enriched.length,
@@ -319,6 +390,7 @@ const OUTSTANDING_SHARES_M: Record<string, number> = {
     const dbMap = new Map<string, any>();
     (stockDatabase as any[]).forEach((s) => dbMap.set(s.symbol.toUpperCase(), s));
 
+    const rsMap = await getRsRatingsMap();
     const results: MinerviniScreenerItem[] = [];
 
     // Parallel analysis for symbols
@@ -354,20 +426,20 @@ const OUTSTANDING_SHARES_M: Record<string, number> = {
           const chgPct = prev > 0 ? Math.round(((price - prev) / prev) * 10000) / 100 : 0;
           const vol = d.v[len - 1] || 0;
 
-          // SMA calculations
+          // Strict SMA calculations requiring mature historical trading candles
           const calcSMA = (period: number, endIdx: number = len - 1) => {
             if (endIdx < period - 1) return 0;
             const slice = d.c.slice(endIdx - period + 1, endIdx + 1);
             return slice.reduce((a: number, b: number) => a + b, 0) / period;
           };
 
-          const sma50 = calcSMA(50);
-          const sma150 = calcSMA(Math.min(150, len));
-          const sma200 = calcSMA(Math.min(200, len));
+          const sma50 = len >= 50 ? calcSMA(50) : 0;
+          const sma150 = len >= 150 ? calcSMA(150) : 0;
+          const sma200 = len >= 200 ? calcSMA(200) : 0;
 
-          // SMA200 slope check (22 sessions ago ~ 1 month)
-          const sma200Past = len >= 222 ? calcSMA(200, len - 22) : sma200 * 0.99;
-          const sma200SlopeUp = sma200 >= sma200Past;
+          // SMA200 slope check (22 sessions ago ~ 1 month): must have at least 222 bars and valid sma200
+          const sma200Past = (len >= 222 && sma200 > 0) ? calcSMA(200, len - 22) : 0;
+          const sma200SlopeUp = sma200 > 0 && sma200Past > 0 && sma200 >= sma200Past;
 
           const lookback = Math.min(250, len);
           const high52W = Math.max(...d.h.slice(len - lookback));
@@ -376,27 +448,34 @@ const OUTSTANDING_SHARES_M: Record<string, number> = {
           const distHigh = high52W > 0 ? ((price - high52W) / high52W) * 100 : 0;
           const distLow = low52W > 0 ? ((price - low52W) / low52W) * 100 : 0;
 
-          // RS Rating calculation
-          const pQ1 = len > 63 ? (price - d.c[len - 1 - 63]) / d.c[len - 1 - 63] : 0;
-          const pQ2 = len > 126 ? (price - d.c[len - 1 - 126]) / d.c[len - 1 - 126] : 0;
-          const pQ3 = len > 189 ? (price - d.c[len - 1 - 189]) / d.c[len - 1 - 189] : 0;
-          const pQ4 = len > 240 ? (price - d.c[len - 1 - Math.min(250, len - 1)]) / d.c[len - 1 - Math.min(250, len - 1)] : 0;
-          const rsRaw = 0.4 * pQ1 + 0.2 * pQ2 + 0.2 * pQ3 + 0.2 * pQ4;
-          let rsRating = Math.min(99, Math.max(1, Math.round(50 + rsRaw * 75)));
-          if (distHigh >= -10 && distLow >= 50) rsRating = Math.max(80, rsRating);
+          // RS Rating calculation:
+          // 1. First priority: Pre-calculated 95-stock Spring Boot percentile database (IBD 40-20-20-20 weighted mapped 1-99)
+          const preCalculated = rsMap.get(sym.toUpperCase());
+          let rsRating: number;
+          if (preCalculated && typeof preCalculated.rsRating === 'number') {
+            rsRating = preCalculated.rsRating;
+          } else {
+            // 2. Standard 4-quarter weighted formula for stocks outside 95 universe, strictly without fake boosting
+            const pQ1 = len > 63 ? (price - d.c[len - 1 - 63]) / d.c[len - 1 - 63] : 0;
+            const pQ2 = len > 126 ? (price - d.c[len - 1 - 126]) / d.c[len - 1 - 126] : 0;
+            const pQ3 = len > 189 ? (price - d.c[len - 1 - 189]) / d.c[len - 1 - 189] : 0;
+            const pQ4 = len > 240 ? (price - d.c[len - 1 - Math.min(250, len - 1)]) / d.c[len - 1 - Math.min(250, len - 1)] : 0;
+            const rsRaw = 0.4 * pQ1 + 0.2 * pQ2 + 0.2 * pQ3 + 0.2 * pQ4;
+            rsRating = Math.min(99, Math.max(1, Math.round(50 + rsRaw * 60)));
+          }
 
-          // Criteria checks
+          // Strict Criteria checks (Minervini Trend Template 8/8)
           let score = 0;
-          if (price > sma150 && price > sma200) score++;
-          if (sma150 > sma200) score++;
+          if (sma150 > 0 && sma200 > 0 && price > sma150 && price > sma200) score++;
+          if (sma150 > 0 && sma200 > 0 && sma150 > sma200) score++;
           if (sma200SlopeUp) score++; // Strict slope check
-          if (sma50 > sma150 && sma50 > sma200) score++;
-          if (price > sma50) score++;
+          if (sma50 > 0 && sma150 > 0 && sma200 > 0 && sma50 > sma150 && sma50 > sma200) score++;
+          if (sma50 > 0 && price > sma50) score++;
           if (distLow >= 30) score++;
           if (distHigh >= -25) score++;
           if (rsRating >= 70) score++;
 
-          const isStage2 = score >= 7;
+          const isStage2 = score === 8;
           const isStage2Eligible = score === 8;
           if (!customSymbolsParam) {
             if (onlyStage2 && !isStage2Eligible) return;
@@ -477,7 +556,7 @@ const OUTSTANDING_SHARES_M: Record<string, number> = {
     }
 
     const liveMap = await getLiveSsiTicks();
-    const enrichedResults = enrichWithLiveTicks(results, liveMap);
+    const enrichedResults = enrichWithLiveTicks(results, liveMap, rsMap).sort((a, b) => b.rsRating - a.rsRating);
 
     return NextResponse.json({
       success: true,
