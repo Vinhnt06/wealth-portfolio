@@ -40,7 +40,7 @@ export interface MinerviniAnalysisResult {
   sector: string;
   sectorRank?: string;
   sectorRS?: number;
-  sectorStatus?: 'Dẫn dắt (Leading)' | 'Cải thiện (Improving)' | 'Suy yếu (Lagging)';
+  sectorStatus?: 'Dẫn dắt (Leading)' | 'Cải thiện (Improving)' | 'Suy yếu (Weakening)' | 'Tụt hậu (Lagging)' | string;
   price: number;
   change: number;
   changePct: number;

@@ -428,9 +428,22 @@ export const MinerviniStrategyPanel: React.FC<MinerviniStrategyPanelProps> = ({ 
                 <div className="p-2.5 rounded-lg bg-zinc-900/60 border border-zinc-800/60 flex items-center justify-between">
                   <div>
                     <div className="text-[11px] text-zinc-400">Nhóm ngành</div>
-                    <div className="font-bold text-zinc-100">{data.sector}</div>
+                    <div className="font-bold text-zinc-100 flex items-center gap-1.5">
+                      <span>{data.sector}</span>
+                      {data.sectorRank && (
+                        <span className="text-[10px] font-mono text-zinc-400 font-normal">({data.sectorRank})</span>
+                      )}
+                    </div>
                   </div>
-                  <span className="text-[10px] font-bold text-zinc-400 px-2 py-0.5 rounded bg-zinc-800">
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
+                    data.sectorStatus?.includes('Leading') || data.sectorStatus?.includes('Dẫn dắt')
+                      ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                      : data.sectorStatus?.includes('Improving') || data.sectorStatus?.includes('Cải thiện')
+                      ? 'bg-sky-500/20 text-sky-400 border-sky-500/30'
+                      : data.sectorStatus?.includes('Weakening') || data.sectorStatus?.includes('Suy yếu')
+                      ? 'bg-amber-500/20 text-amber-400 border-amber-500/30'
+                      : 'bg-rose-500/20 text-rose-400 border-rose-500/30'
+                  }`}>
                     {data.sectorStatus || 'Đang theo dõi'}
                   </span>
                 </div>

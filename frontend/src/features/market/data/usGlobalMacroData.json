@@ -1,15 +1,15 @@
 {
   "success": true,
-  "timestamp": "2026-10-30T13:26:59.195Z",
-  "updateTime": "20:26:58",
+  "timestamp": "2026-10-30T13:31:37.947Z",
+  "updateTime": "20:31:37",
   "indices": [
     {
       "symbol": "^GSPC",
       "name": "S&P 500",
       "category": "equity",
-      "price": 7720.39,
-      "change": -23.59,
-      "changePercent": -0.3,
+      "price": 7628.47,
+      "change": -91.92,
+      "changePercent": -1.19,
       "unit": "pts",
       "note": "Phong vũ biểu CK Mỹ (Top 500 CP)"
     },
@@ -17,9 +17,9 @@
       "symbol": "^IXIC",
       "name": "Nasdaq Comp",
       "category": "equity",
-      "price": 26184.72,
-      "change": -365.13,
-      "changePercent": -1.38,
+      "price": 25588.98,
+      "change": -595.74,
+      "changePercent": -2.27,
       "unit": "pts",
       "note": "Chỉ số nhóm cổ phiếu công nghệ Mỹ"
     },
@@ -27,9 +27,9 @@
       "symbol": "^DJI",
       "name": "Dow Jones",
       "category": "equity",
-      "price": 52342.56,
-      "change": -132.54,
-      "changePercent": -0.25,
+      "price": 52139.04,
+      "change": -203.52,
+      "changePercent": -0.39,
       "unit": "pts",
       "note": "30 Bluechip lớn nhất sàn New York"
     },
@@ -39,7 +39,7 @@
       "category": "yield",
       "price": 4.93,
       "change": -0.06,
-      "changePercent": -1.2,
+      "changePercent": -1.24,
       "unit": "%",
       "note": "Lợi suất Trái phiếu Chính phủ Mỹ 10 năm"
     },
@@ -47,9 +47,9 @@
       "symbol": "DX-Y.NYB",
       "name": "DXY Index",
       "category": "currency",
-      "price": 101.88,
-      "change": -0.15,
-      "changePercent": -0.15,
+      "price": 101.9,
+      "change": -0.14,
+      "changePercent": -0.13,
       "unit": "pts",
       "note": "Chỉ số đo lường sức mạnh đồng USD"
     },
@@ -57,9 +57,9 @@
       "symbol": "^VIX",
       "name": "CBOE VIX",
       "category": "volatility",
-      "price": 18.74,
-      "change": 1.54,
-      "changePercent": 8.95,
+      "price": 18.68,
+      "change": 1.48,
+      "changePercent": 8.61,
       "unit": "pts",
       "note": "Thước đo mức độ biến động & sợ hãi toàn cầu"
     }
@@ -77,8 +77,8 @@
       "pillar": "Áp Lực Tỷ Giá USD/VND",
       "status": "Tích Cực",
       "statusColor": "emerald",
-      "headline": "DXY biến động quanh mức 101.88 điểm",
-      "detail": "Chỉ số DXY hạ nhiệt quanh 101.88 giúp thu hẹp chênh lệch USD-VND, giảm áp lực bán can thiệp ngoại tệ của NHNN và hạn chế rủi ro tỷ giá nhập khẩu."
+      "headline": "DXY biến động quanh mức 101.90 điểm",
+      "detail": "Chỉ số DXY hạ nhiệt quanh 101.90 giúp thu hẹp chênh lệch USD-VND, giảm áp lực bán can thiệp ngoại tệ của NHNN và hạn chế rủi ro tỷ giá nhập khẩu."
     },
     {
       "pillar": "Không Gian Lãi Suất NHNN",
@@ -92,7 +92,7 @@
       "status": "Trung Lập",
       "statusColor": "amber",
       "headline": "Xu hướng dòng vốn ngoại trên TTCK",
-      "detail": "Lợi suất trái phiếu chính phủ Mỹ 10 năm (4.93%) và chỉ số VIX (18.74 điểm) phản ánh khẩu vị rủi ro toàn cầu đang trong tầm kiểm soát (Tâm lý ổn định), tạo điều kiện cân bằng dòng vốn ngoại trên HOSE/HNX."
+      "detail": "Lợi suất trái phiếu chính phủ Mỹ 10 năm (4.93%) và chỉ số VIX (18.68 điểm) phản ánh khẩu vị rủi ro toàn cầu đang trong tầm kiểm soát (Tâm lý ổn định), tạo điều kiện cân bằng dòng vốn ngoại trên HOSE/HNX."
     }
   ]
 }
