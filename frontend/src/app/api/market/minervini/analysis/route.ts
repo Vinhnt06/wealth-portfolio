@@ -103,17 +103,18 @@ export async function GET(request: Request) {
       return Math.round((sum / period) * 100) / 100;
     };
 
-    const sma20 = calcSMA(Math.min(20, count));
+    const sma20 = calcSMA(20);
     const sma50 = calcSMA(50);
-    const sma150 = calcSMA(Math.min(150, count));
-    const sma200 = calcSMA(Math.min(200, count));
+    const sma150 = calcSMA(150);
+    const sma200 = calcSMA(200);
 
     const distFromSMA20Pct = sma20 > 0 ? Math.round(((currentPrice - sma20) / sma20) * 1000) / 10 : 0;
     const distFromSMA50Pct = sma50 > 0 ? Math.round(((currentPrice - sma50) / sma50) * 1000) / 10 : 0;
 
     // SMA200 22-sessions ago (1 month slope check)
-    const sma200Past = count >= 222 ? calcSMA(200, count - 22) : sma200 * 0.99;
-    const sma200SlopeUp = sma200 >= sma200Past;
+    const hasEnoughDataForSMA200Slope = count >= 222 && sma200 > 0;
+    const sma200Past = hasEnoughDataForSMA200Slope ? calcSMA(200, count - 22) : 0;
+    const sma200SlopeUp = hasEnoughDataForSMA200Slope && sma200Past > 0 ? sma200 >= sma200Past : false;
 
     // 52-week High and Low (last 250 sessions)
     const lookback52W = Math.min(250, count);
@@ -137,11 +138,8 @@ export async function GET(request: Request) {
     const q4 = getPerf(Math.min(250, count));
     const rawRsScore = 0.4 * q1 + 0.2 * q2 + 0.2 * q3 + 0.2 * q4;
 
-    // Map to percentile 1-99
-    let rsRating = Math.min(99, Math.max(1, Math.round(50 + rawRsScore * 75)));
-    if (distFrom52WHighPct >= -10 && distFrom52WLowPct >= 50) {
-      rsRating = Math.max(80, rsRating);
-    }
+    // Map to percentile 1-99 (Zero Mock Data: Không tự động ép điểm RS lên 80 khi gần đỉnh)
+    const rsRating = Math.min(99, Math.max(1, Math.round(50 + rawRsScore * 75)));
 
     // Evaluate 8 Minervini Trend Template Criteria matching exact VN TERMINAL Pro format
     const formatK = (val: number) => (val > 1000 ? (val / 1000).toFixed(0) : val.toFixed(0));
@@ -151,40 +149,50 @@ export async function GET(request: Request) {
         id: 1,
         label: 'Giá > MA150 và > MA200',
         description: 'Giá cổ phiếu phải nằm trên cả đường MA 150 ngày và MA 200 ngày',
-        passed: currentPrice > sma150 && currentPrice > sma200,
-        value: `${currentPrice} > MA150(${sma150}) & MA200(${sma200})`,
-        comparisonValue: `${formatK(currentPrice)} / ${formatK(sma150)} / ${formatK(sma200)}`,
+        passed: sma150 > 0 && sma200 > 0 && currentPrice > sma150 && currentPrice > sma200,
+        value: sma150 > 0 && sma200 > 0
+          ? `${currentPrice} > MA150(${sma150}) & MA200(${sma200})`
+          : 'Chưa đủ dữ liệu nến (cần ≥ 200 phiên)',
+        comparisonValue: sma150 > 0 && sma200 > 0 ? `${formatK(currentPrice)} / ${formatK(sma150)} / ${formatK(sma200)}` : 'N/A',
       },
       {
         id: 2,
         label: 'MA150 > MA200',
         description: 'Đường MA 150 ngày phải nằm trên đường MA 200 ngày',
-        passed: sma150 > sma200,
-        value: `MA150(${sma150}) ${sma150 > sma200 ? '>' : '<'} MA200(${sma200})`,
-        comparisonValue: `${formatK(sma150)} > ${formatK(sma200)}`,
+        passed: sma150 > 0 && sma200 > 0 && sma150 > sma200,
+        value: sma150 > 0 && sma200 > 0
+          ? `MA150(${sma150}) ${sma150 > sma200 ? '>' : '<='} MA200(${sma200})`
+          : 'Chưa đủ dữ liệu nến (cần ≥ 200 phiên)',
+        comparisonValue: sma150 > 0 && sma200 > 0 ? `${formatK(sma150)} > ${formatK(sma200)}` : 'N/A',
       },
       {
         id: 3,
         label: 'MA200 dốc lên (≥1 tháng)',
         description: 'Đường MA 200 ngày đang trong xu hướng dốc lên tối thiểu 22 phiên',
         passed: sma200SlopeUp,
-        value: sma200SlopeUp ? 'Đang dốc lên (+)' : 'Đi ngang hoặc dốc xuống (-)',
-        comparisonValue: `${formatK(sma200)} vs ${formatK(sma200Past)}`,
+        value: !hasEnoughDataForSMA200Slope
+          ? 'Chưa đủ dữ liệu (cần ≥ 222 phiên)'
+          : sma200SlopeUp
+          ? 'Đang dốc lên (+)'
+          : 'Đi ngang hoặc dốc xuống (-)',
+        comparisonValue: hasEnoughDataForSMA200Slope ? `${formatK(sma200)} vs ${formatK(sma200Past)}` : 'N/A',
       },
       {
         id: 4,
         label: 'MA50 > MA150 > MA200',
         description: 'Đường MA 50 ngày phải nằm trên cả đường MA 150 ngày và MA 200 ngày',
-        passed: sma50 > sma150 && sma50 > sma200,
-        value: `MA50(${sma50}) vs MA150(${sma150}) & MA200(${sma200})`,
-        comparisonValue: formatK(sma50),
+        passed: sma50 > 0 && sma150 > 0 && sma200 > 0 && sma50 > sma150 && sma50 > sma200,
+        value: sma50 > 0 && sma150 > 0 && sma200 > 0
+          ? `MA50(${sma50}) vs MA150(${sma150}) & MA200(${sma200})`
+          : 'Chưa đủ dữ liệu nến (cần ≥ 200 phiên)',
+        comparisonValue: sma50 > 0 ? formatK(sma50) : 'N/A',
       },
       {
         id: 5,
         label: 'Giá > MA50',
         description: 'Giá cổ phiếu hiện tại nằm trên đường trung bình MA 50 ngày',
-        passed: currentPrice > sma50,
-        value: `${currentPrice} ${currentPrice > sma50 ? '>' : '<='} MA50(${sma50})`,
+        passed: sma50 > 0 && currentPrice > sma50,
+        value: `${currentPrice} ${sma50 > 0 && currentPrice > sma50 ? '>' : '<='} MA50(${sma50})`,
         comparisonValue: `${formatK(currentPrice)} / ${formatK(sma50)}`,
       },
       {
@@ -205,11 +213,11 @@ export async function GET(request: Request) {
       },
       {
         id: 8,
-        label: 'RS mạnh hơn VNINDEX',
-        description: 'Xếp hạng sức mạnh giá tương đối (RS Rating) đạt tối thiểu 70',
+        label: 'Sức mạnh giá RS Rating (≥ 70)',
+        description: 'Điểm sức mạnh giá tương đối theo trọng số IBD Minervini đạt tối thiểu 70 điểm',
         passed: rsRating >= 70,
-        value: `RS Rating: ${rsRating}/99`,
-        comparisonValue: `${(rsRating / 50).toFixed(2)}`,
+        value: `RS Rating: ${rsRating}/99 điểm`,
+        comparisonValue: `${rsRating}`,
       },
     ];
 
@@ -237,9 +245,9 @@ export async function GET(request: Request) {
     const rrgSectorInfo = findMatchingRRGSector(symbol, stockInfo.sector, rrgDataset);
 
     const matchedSectorName = rrgSectorInfo?.sectorName || stockInfo.sector || 'Chung';
-    const sectorRank = rrgSectorInfo?.sectorRank || 'Top 8 / 16 ngành';
-    const sectorRS = rrgSectorInfo?.sectorRS ?? Math.round((rsRating + 65) / 2);
-    const sectorStatus = rrgSectorInfo?.sectorStatus || (sectorRS >= 80 ? 'Dẫn dắt (Leading)' : sectorRS >= 65 ? 'Cải thiện (Improving)' : 'Tụt hậu (Lagging)');
+    const sectorRank = rrgSectorInfo?.sectorRank;
+    const sectorRS = rrgSectorInfo?.sectorRS;
+    const sectorStatus = rrgSectorInfo?.sectorStatus;
 
     // Wyckoff & Price Action Diagnosis (Phase A - E)
     const last40High = Math.max(...highs.slice(Math.max(0, count - 40)));

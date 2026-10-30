@@ -442,9 +442,11 @@ export const MinerviniStrategyPanel: React.FC<MinerviniStrategyPanelProps> = ({ 
                       ? 'bg-sky-500/20 text-sky-400 border-sky-500/30'
                       : data.sectorStatus?.includes('Weakening') || data.sectorStatus?.includes('Suy yếu')
                       ? 'bg-amber-500/20 text-amber-400 border-amber-500/30'
-                      : 'bg-rose-500/20 text-rose-400 border-rose-500/30'
+                      : data.sectorStatus?.includes('Lagging') || data.sectorStatus?.includes('Tụt hậu')
+                      ? 'bg-rose-500/20 text-rose-400 border-rose-500/30'
+                      : 'bg-zinc-800 text-zinc-400 border-zinc-700/50'
                   }`}>
-                    {data.sectorStatus || 'Đang theo dõi'}
+                    {data.sectorStatus || 'Chưa có dữ liệu RRG'}
                   </span>
                 </div>
               )}
