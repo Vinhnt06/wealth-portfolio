@@ -25,11 +25,13 @@ Managing investments across multiple asset classes shouldn't be complicated. You
 ### 🎯 Key Features
 
 - **📊 Multi-Asset Portfolio Tracking** - Monitor crypto, stocks, gold, and forex in one unified dashboard
-- **📈 Real-Time Market Data** - Live prices from Binance, Yahoo Finance, and Frankfurter APIs
+- **🌊 Sector Money Flow Monitor** - Matrix table & stacked rotation chart tracking liquidity breakdown (Bank, CK, BĐS, Thép, Họ Vin) with climax/overheating alerts & daily cron update
+- **⚡ Mark Minervini Trend Template Screener** - Strict 8/8 Stage 2 trend criteria with William O'Neil 1-99 RS Percentile Rating
+- **🧭 Relative Rotation Graph (RRG) & Macro Clock** - Visual sector rotation trajectories and macroeconomic cycle mapping
+- **📈 Real-Time Market Streaming** - High-frequency tick data from DNSE Entrade & SSI iBoard
 - **💹 P&L Analytics** - Instant profit/loss calculations with visual insights
 - **🔐 Bank-Grade Security** - JWT authentication with Spring Security
-- **⚡ Lightning Fast** - Built on modern tech stack for optimal performance
-- **📱 Responsive Design** - Beautiful UI that works on all devices
+- **📱 Responsive Design** - Dark Glassmorphism Bento UI crafted with Geist & JetBrains Mono typography
 
 ---
 
