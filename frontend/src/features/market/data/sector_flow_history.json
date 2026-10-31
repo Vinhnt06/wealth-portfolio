@@ -2,47 +2,49 @@
   {
     "date": "2026-10-30",
     "displayDate": "26-10-30",
-    "totalMarket": 9560,
+    "totalMarket": 12466.67,
     "nh": {
-      "total": 2792.38,
-      "buy": 1160.48,
-      "sell": 1631.9,
-      "ratioPct": 29.21,
+      "total": 2816.77,
+      "buy": 1059.4,
+      "sell": 1757.37,
+      "ratioPct": 22.59,
       "isClimax": false,
       "isTrough": false
     },
     "ck": {
-      "total": 1146.13,
-      "buy": 405.84,
-      "sell": 740.29,
-      "ratioPct": 11.99,
+      "total": 1159.45,
+      "buy": 323.72,
+      "sell": 835.73,
+      "ratioPct": 9.3,
       "isClimax": false,
       "isTrough": false
     },
     "bds": {
-      "total": 1646.7,
-      "buy": 900.61,
-      "sell": 746.09,
-      "ratioPct": 17.22,
+      "total": 1644.23,
+      "buy": 807.05,
+      "sell": 837.18,
+      "ratioPct": 13.19,
       "isClimax": false,
       "isTrough": false
     },
     "thep": {
-      "total": 629.06,
-      "buy": 247.55,
-      "sell": 381.51,
-      "ratioPct": 6.58,
+      "total": 634.98,
+      "buy": 251.04,
+      "sell": 383.95,
+      "ratioPct": 5.09,
       "isClimax": false,
       "isTrough": false
     },
     "vin": {
-      "total": 2126.9,
-      "buy": 1303.14,
-      "sell": 823.75,
-      "ratioPct": 22.25,
+      "total": 2093.49,
+      "buy": 913.91,
+      "sell": 1179.58,
+      "ratioPct": 16.79,
       "isClimax": true,
       "isTrough": false
-    }
+    },
+    "updatedAt": "22:46:23 31/10/2026",
+    "sessionLabel": "Chốt Phiên Chiều (15:00)"
   },
   {
     "date": "2026-10-29",
