@@ -39,7 +39,7 @@ async function fetchLiveFromSsi(): Promise<SessionSectorFlow | null> {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 3500);
 
-    const [hoseRes, hnxRes] = await Promise.all([
+    const [hoseRes, hnxRes, upcomRes] = await Promise.all([
       fetch('https://iboard-query.ssi.com.vn/stock/exchange/hose', {
         headers: { 'User-Agent': 'Mozilla/5.0' },
         signal: controller.signal,
@@ -48,13 +48,18 @@ async function fetchLiveFromSsi(): Promise<SessionSectorFlow | null> {
         headers: { 'User-Agent': 'Mozilla/5.0' },
         signal: controller.signal,
       }),
+      fetch('https://iboard-query.ssi.com.vn/stock/exchange/upcom', {
+        headers: { 'User-Agent': 'Mozilla/5.0' },
+        signal: controller.signal,
+      }),
     ]);
     clearTimeout(timeout);
 
-    if (!hoseRes.ok && !hnxRes.ok) return null;
+    if (!hoseRes.ok && !hnxRes.ok && !upcomRes.ok) return null;
 
     const hose = hoseRes.ok ? await hoseRes.json() : { data: [] };
     const hnx = hnxRes.ok ? await hnxRes.json() : { data: [] };
+    const upcom = upcomRes.ok ? await upcomRes.json() : { data: [] };
 
     let totalMarketVal = 0;
     let bankVal = 0, bankBuy = 0, bankSell = 0;
@@ -64,7 +69,7 @@ async function fetchLiveFromSsi(): Promise<SessionSectorFlow | null> {
     let vinVal = 0, vinBuy = 0, vinSell = 0;
 
     let tradeDateRaw = '';
-    const allStocks = [...(hose.data || []), ...(hnx.data || [])];
+    const allStocks = [...(hose.data || []), ...(hnx.data || []), ...(upcom.data || [])];
     if (allStocks.length === 0) return null;
 
     for (const s of allStocks) {

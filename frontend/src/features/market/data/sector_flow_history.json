@@ -2,12 +2,12 @@
   {
     "date": "2026-10-30",
     "displayDate": "26-10-30",
-    "totalMarket": 12466.67,
+    "totalMarket": 13027.39,
     "nh": {
-      "total": 2816.77,
-      "buy": 1059.4,
-      "sell": 1757.37,
-      "ratioPct": 22.59,
+      "total": 2826.78,
+      "buy": 1059.58,
+      "sell": 1767.2,
+      "ratioPct": 21.7,
       "isClimax": false,
       "isTrough": false
     },
@@ -15,7 +15,7 @@
       "total": 1159.45,
       "buy": 323.72,
       "sell": 835.73,
-      "ratioPct": 9.3,
+      "ratioPct": 8.9,
       "isClimax": false,
       "isTrough": false
     },
@@ -23,15 +23,15 @@
       "total": 1644.23,
       "buy": 807.05,
       "sell": 837.18,
-      "ratioPct": 13.19,
+      "ratioPct": 12.62,
       "isClimax": false,
       "isTrough": false
     },
     "thep": {
-      "total": 634.98,
-      "buy": 251.04,
-      "sell": 383.95,
-      "ratioPct": 5.09,
+      "total": 661.23,
+      "buy": 259.54,
+      "sell": 401.69,
+      "ratioPct": 5.08,
       "isClimax": false,
       "isTrough": false
     },
@@ -39,11 +39,11 @@
       "total": 2093.49,
       "buy": 913.91,
       "sell": 1179.58,
-      "ratioPct": 16.79,
+      "ratioPct": 16.07,
       "isClimax": true,
       "isTrough": false
     },
-    "updatedAt": "22:46:23 31/10/2026",
+    "updatedAt": "23:13:17 31/10/2026",
     "sessionLabel": "Chốt Phiên Chiều (15:00)"
   },
   {

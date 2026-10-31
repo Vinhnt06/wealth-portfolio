@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 6000);
 
-    const [hoseRes, hnxRes] = await Promise.all([
+    const [hoseRes, hnxRes, upcomRes] = await Promise.all([
       fetch('https://iboard-query.ssi.com.vn/stock/exchange/hose', {
         headers: { 'User-Agent': 'Mozilla/5.0' },
         signal: controller.signal,
@@ -52,15 +52,20 @@ export async function GET(request: NextRequest) {
         headers: { 'User-Agent': 'Mozilla/5.0' },
         signal: controller.signal,
       }),
+      fetch('https://iboard-query.ssi.com.vn/stock/exchange/upcom', {
+        headers: { 'User-Agent': 'Mozilla/5.0' },
+        signal: controller.signal,
+      }),
     ]);
     clearTimeout(timeout);
 
-    if (!hoseRes.ok && !hnxRes.ok) {
-      throw new Error(`SSI iBoard returned error HOSE:${hoseRes.status} HNX:${hnxRes.status}`);
+    if (!hoseRes.ok && !hnxRes.ok && !upcomRes.ok) {
+      throw new Error(`SSI iBoard returned error HOSE:${hoseRes.status} HNX:${hnxRes.status} UPCOM:${upcomRes.status}`);
     }
 
     const hose = hoseRes.ok ? await hoseRes.json() : { data: [] };
     const hnx = hnxRes.ok ? await hnxRes.json() : { data: [] };
+    const upcom = upcomRes.ok ? await upcomRes.json() : { data: [] };
 
     let totalMarketVal = 0;
     let bankVal = 0, bankBuy = 0, bankSell = 0;
@@ -70,7 +75,7 @@ export async function GET(request: NextRequest) {
     let vinVal = 0, vinBuy = 0, vinSell = 0;
 
     let tradeDateRaw = '';
-    const allStocks = [...(hose.data || []), ...(hnx.data || [])];
+    const allStocks = [...(hose.data || []), ...(hnx.data || []), ...(upcom.data || [])];
     if (allStocks.length === 0) {
       return NextResponse.json({ success: false, message: 'No stock data received from SSI' });
     }
