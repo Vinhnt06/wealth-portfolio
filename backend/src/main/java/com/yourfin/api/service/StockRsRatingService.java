@@ -107,8 +107,35 @@ public class StockRsRatingService {
      */
     @Scheduled(cron = "0 15 15 * * MON-FRI", zone = "Asia/Ho_Chi_Minh")
     public void scheduledUpdate() {
-        logger.info("Bắt đầu tác vụ tính toán RS Rating toàn thị trường sau phiên...");
+        logger.info("Bắt đầu tác vụ tính toán RS Rating và chốt sổ dòng tiền ngành sau phiên chiều...");
         calculateAndSaveAllRsRatings();
+        triggerSectorFlowUpdate();
+    }
+
+    /**
+     * Tự động chạy sau phiên sáng (11h30 thứ 2 - thứ 6)
+     */
+    @Scheduled(cron = "0 30 11 * * MON-FRI", zone = "Asia/Ho_Chi_Minh")
+    public void scheduledMorningUpdate() {
+        logger.info("Bắt đầu tác vụ chốt sổ dòng tiền ngành phiên sáng (11h30)...");
+        triggerSectorFlowUpdate();
+    }
+
+    private void triggerSectorFlowUpdate() {
+        try {
+            WebClient.create()
+                    .get()
+                    .uri("http://localhost:3000/api/cron/update-sector-flow")
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .timeout(Duration.ofSeconds(10))
+                    .subscribe(
+                            res -> logger.info("Đã chốt sổ Dòng Tiền Ngành thành công qua Next.js cron!"),
+                            err -> logger.debug("Lưu ý: Frontend chưa chạy trên port 3000: {}", err.getMessage())
+                    );
+        } catch (Exception e) {
+            logger.debug("Lỗi kích hoạt sector flow cron: {}", e.getMessage());
+        }
     }
 
     /**
