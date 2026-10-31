@@ -21,13 +21,13 @@ interface MarketState {
   isChartExpanded: boolean;
   activeTab: 'orderbook' | 'info' | 'foreign';
   isQuickViewOpen: boolean;
-  viewMode: 'overview' | 'detail' | 'screener' | 'rrg';
+  viewMode: 'overview' | 'detail' | 'screener' | 'rrg' | 'flow';
 
   // Actions
   setWsStatus: (status: WsStatus) => void;
   setSelectedSymbol: (symbol: string) => void;
   setSelectedIndexSymbol: (symbol: string) => void;
-  setViewMode: (viewMode: 'overview' | 'detail' | 'screener' | 'rrg') => void;
+  setViewMode: (viewMode: 'overview' | 'detail' | 'screener' | 'rrg' | 'flow') => void;
   setActiveTab: (tab: 'orderbook' | 'info' | 'foreign') => void;
   openQuickView: (symbol?: string) => void;
   closeQuickView: () => void;

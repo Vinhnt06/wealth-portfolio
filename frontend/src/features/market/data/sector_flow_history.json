@@ -1,0 +1,1892 @@
+[
+  {
+    "date": "2026-10-30",
+    "displayDate": "26-10-30",
+    "totalMarket": 9560,
+    "nh": {
+      "total": 2792.38,
+      "buy": 1160.48,
+      "sell": 1631.9,
+      "ratioPct": 29.21,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "ck": {
+      "total": 1146.13,
+      "buy": 405.84,
+      "sell": 740.29,
+      "ratioPct": 11.99,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "bds": {
+      "total": 1646.7,
+      "buy": 900.61,
+      "sell": 746.09,
+      "ratioPct": 17.22,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "thep": {
+      "total": 629.06,
+      "buy": 247.55,
+      "sell": 381.51,
+      "ratioPct": 6.58,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "vin": {
+      "total": 2126.9,
+      "buy": 1303.14,
+      "sell": 823.75,
+      "ratioPct": 22.25,
+      "isClimax": true,
+      "isTrough": false
+    }
+  },
+  {
+    "date": "2026-10-29",
+    "displayDate": "26-10-29",
+    "totalMarket": 9448,
+    "nh": {
+      "total": 3171.63,
+      "buy": 1364.35,
+      "sell": 1807.27,
+      "ratioPct": 33.57,
+      "isClimax": true,
+      "isTrough": false
+    },
+    "ck": {
+      "total": 1088.76,
+      "buy": 463.84,
+      "sell": 624.93,
+      "ratioPct": 11.52,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "bds": {
+      "total": 907.99,
+      "buy": 346.42,
+      "sell": 561.57,
+      "ratioPct": 9.61,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "thep": {
+      "total": 972.51,
+      "buy": 595.22,
+      "sell": 377.29,
+      "ratioPct": 10.29,
+      "isClimax": true,
+      "isTrough": false
+    },
+    "vin": {
+      "total": 782.73,
+      "buy": 366.26,
+      "sell": 416.47,
+      "ratioPct": 8.28,
+      "isClimax": false,
+      "isTrough": false
+    }
+  },
+  {
+    "date": "2026-10-28",
+    "displayDate": "26-10-28",
+    "totalMarket": 9644,
+    "nh": {
+      "total": 3893.8,
+      "buy": 2197.43,
+      "sell": 1696.37,
+      "ratioPct": 40.38,
+      "isClimax": true,
+      "isTrough": false
+    },
+    "ck": {
+      "total": 934.06,
+      "buy": 442.62,
+      "sell": 491.44,
+      "ratioPct": 9.69,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "bds": {
+      "total": 1081.15,
+      "buy": 453.88,
+      "sell": 627.27,
+      "ratioPct": 11.21,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "thep": {
+      "total": 359.73,
+      "buy": 142.84,
+      "sell": 216.89,
+      "ratioPct": 3.73,
+      "isClimax": false,
+      "isTrough": true
+    },
+    "vin": {
+      "total": 890.7,
+      "buy": 442.35,
+      "sell": 448.35,
+      "ratioPct": 9.24,
+      "isClimax": false,
+      "isTrough": false
+    }
+  },
+  {
+    "date": "2026-10-27",
+    "displayDate": "26-10-27",
+    "totalMarket": 7962,
+    "nh": {
+      "total": 2804.54,
+      "buy": 1303.13,
+      "sell": 1501.41,
+      "ratioPct": 35.22,
+      "isClimax": true,
+      "isTrough": false
+    },
+    "ck": {
+      "total": 1086.95,
+      "buy": 459.87,
+      "sell": 627.09,
+      "ratioPct": 13.65,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "bds": {
+      "total": 917.84,
+      "buy": 430.14,
+      "sell": 487.71,
+      "ratioPct": 11.53,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "thep": {
+      "total": 366.14,
+      "buy": 222.95,
+      "sell": 143.19,
+      "ratioPct": 4.6,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "vin": {
+      "total": 710.56,
+      "buy": 387.5,
+      "sell": 323.06,
+      "ratioPct": 8.92,
+      "isClimax": false,
+      "isTrough": false
+    }
+  },
+  {
+    "date": "2026-10-26",
+    "displayDate": "26-10-26",
+    "totalMarket": 9431,
+    "nh": {
+      "total": 3006.14,
+      "buy": 1215.43,
+      "sell": 1790.71,
+      "ratioPct": 31.88,
+      "isClimax": true,
+      "isTrough": false
+    },
+    "ck": {
+      "total": 1405.23,
+      "buy": 546.59,
+      "sell": 858.64,
+      "ratioPct": 14.9,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "bds": {
+      "total": 1436.43,
+      "buy": 568.64,
+      "sell": 867.79,
+      "ratioPct": 15.23,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "thep": {
+      "total": 282.04,
+      "buy": 121.75,
+      "sell": 160.3,
+      "ratioPct": 2.99,
+      "isClimax": false,
+      "isTrough": true
+    },
+    "vin": {
+      "total": 1076.45,
+      "buy": 516.07,
+      "sell": 560.38,
+      "ratioPct": 11.41,
+      "isClimax": false,
+      "isTrough": false
+    }
+  },
+  {
+    "date": "2026-10-23",
+    "displayDate": "26-10-23",
+    "totalMarket": 12653,
+    "nh": {
+      "total": 4850.12,
+      "buy": 3125.87,
+      "sell": 1724.25,
+      "ratioPct": 38.33,
+      "isClimax": true,
+      "isTrough": false
+    },
+    "ck": {
+      "total": 1718.3,
+      "buy": 924.68,
+      "sell": 793.62,
+      "ratioPct": 13.58,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "bds": {
+      "total": 1264.57,
+      "buy": 734.21,
+      "sell": 530.36,
+      "ratioPct": 9.99,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "thep": {
+      "total": 391.72,
+      "buy": 174.4,
+      "sell": 217.32,
+      "ratioPct": 3.1,
+      "isClimax": false,
+      "isTrough": true
+    },
+    "vin": {
+      "total": 981.12,
+      "buy": 616.17,
+      "sell": 364.96,
+      "ratioPct": 7.75,
+      "isClimax": false,
+      "isTrough": false
+    }
+  },
+  {
+    "date": "2026-10-22",
+    "displayDate": "26-10-22",
+    "totalMarket": 10696,
+    "nh": {
+      "total": 3251.22,
+      "buy": 1586.15,
+      "sell": 1665.07,
+      "ratioPct": 30.4,
+      "isClimax": true,
+      "isTrough": false
+    },
+    "ck": {
+      "total": 1504.75,
+      "buy": 629.05,
+      "sell": 875.7,
+      "ratioPct": 14.07,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "bds": {
+      "total": 1750.97,
+      "buy": 994.57,
+      "sell": 756.39,
+      "ratioPct": 16.37,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "thep": {
+      "total": 445.76,
+      "buy": 255.34,
+      "sell": 190.42,
+      "ratioPct": 4.17,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "vin": {
+      "total": 1628.7,
+      "buy": 1093.67,
+      "sell": 535.02,
+      "ratioPct": 15.23,
+      "isClimax": true,
+      "isTrough": false
+    }
+  },
+  {
+    "date": "2026-10-21",
+    "displayDate": "26-10-21",
+    "totalMarket": 15020,
+    "nh": {
+      "total": 4133.8,
+      "buy": 2527.58,
+      "sell": 1606.22,
+      "ratioPct": 27.52,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "ck": {
+      "total": 2472.33,
+      "buy": 1638.09,
+      "sell": 834.24,
+      "ratioPct": 16.46,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "bds": {
+      "total": 2380.06,
+      "buy": 1561.27,
+      "sell": 818.79,
+      "ratioPct": 15.85,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "thep": {
+      "total": 776.95,
+      "buy": 456.19,
+      "sell": 320.76,
+      "ratioPct": 5.17,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "vin": {
+      "total": 1586.61,
+      "buy": 1110.63,
+      "sell": 475.98,
+      "ratioPct": 10.56,
+      "isClimax": false,
+      "isTrough": false
+    }
+  },
+  {
+    "date": "2026-10-20",
+    "displayDate": "26-10-20",
+    "totalMarket": 9835,
+    "nh": {
+      "total": 3225.17,
+      "buy": 1733,
+      "sell": 1492.17,
+      "ratioPct": 32.79,
+      "isClimax": true,
+      "isTrough": false
+    },
+    "ck": {
+      "total": 1124.19,
+      "buy": 679.8,
+      "sell": 444.39,
+      "ratioPct": 11.43,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "bds": {
+      "total": 1334.45,
+      "buy": 554.91,
+      "sell": 779.54,
+      "ratioPct": 13.57,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "thep": {
+      "total": 709.11,
+      "buy": 487.68,
+      "sell": 221.43,
+      "ratioPct": 7.21,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "vin": {
+      "total": 1233.31,
+      "buy": 451.06,
+      "sell": 782.25,
+      "ratioPct": 12.54,
+      "isClimax": false,
+      "isTrough": false
+    }
+  },
+  {
+    "date": "2026-10-19",
+    "displayDate": "26-10-19",
+    "totalMarket": 10909,
+    "nh": {
+      "total": 3702.7,
+      "buy": 1442.71,
+      "sell": 2259.99,
+      "ratioPct": 33.94,
+      "isClimax": true,
+      "isTrough": false
+    },
+    "ck": {
+      "total": 1847.14,
+      "buy": 933.11,
+      "sell": 914.02,
+      "ratioPct": 16.93,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "bds": {
+      "total": 1202.88,
+      "buy": 459.83,
+      "sell": 743.05,
+      "ratioPct": 11.03,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "thep": {
+      "total": 338.3,
+      "buy": 128.19,
+      "sell": 210.11,
+      "ratioPct": 3.1,
+      "isClimax": false,
+      "isTrough": true
+    },
+    "vin": {
+      "total": 854.66,
+      "buy": 268.42,
+      "sell": 586.24,
+      "ratioPct": 7.83,
+      "isClimax": false,
+      "isTrough": false
+    }
+  },
+  {
+    "date": "2026-10-16",
+    "displayDate": "26-10-16",
+    "totalMarket": 8919,
+    "nh": {
+      "total": 3280.84,
+      "buy": 1883.13,
+      "sell": 1397.72,
+      "ratioPct": 36.78,
+      "isClimax": true,
+      "isTrough": false
+    },
+    "ck": {
+      "total": 1132.55,
+      "buy": 579.56,
+      "sell": 552.99,
+      "ratioPct": 12.7,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "bds": {
+      "total": 1124.41,
+      "buy": 663.02,
+      "sell": 461.39,
+      "ratioPct": 12.61,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "thep": {
+      "total": 259.72,
+      "buy": 142.34,
+      "sell": 117.38,
+      "ratioPct": 2.91,
+      "isClimax": false,
+      "isTrough": true
+    },
+    "vin": {
+      "total": 1097.38,
+      "buy": 587.79,
+      "sell": 509.6,
+      "ratioPct": 12.3,
+      "isClimax": false,
+      "isTrough": false
+    }
+  },
+  {
+    "date": "2026-10-15",
+    "displayDate": "26-10-15",
+    "totalMarket": 12466,
+    "nh": {
+      "total": 4055.87,
+      "buy": 2198.62,
+      "sell": 1857.25,
+      "ratioPct": 32.54,
+      "isClimax": true,
+      "isTrough": false
+    },
+    "ck": {
+      "total": 1908.57,
+      "buy": 1275.71,
+      "sell": 632.86,
+      "ratioPct": 15.31,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "bds": {
+      "total": 1602.84,
+      "buy": 763.81,
+      "sell": 839.02,
+      "ratioPct": 12.86,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "thep": {
+      "total": 535.76,
+      "buy": 305.28,
+      "sell": 230.49,
+      "ratioPct": 4.3,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "vin": {
+      "total": 1687.58,
+      "buy": 660.62,
+      "sell": 1026.96,
+      "ratioPct": 13.54,
+      "isClimax": false,
+      "isTrough": false
+    }
+  },
+  {
+    "date": "2026-10-14",
+    "displayDate": "26-10-14",
+    "totalMarket": 9040,
+    "nh": {
+      "total": 3033.44,
+      "buy": 1427.41,
+      "sell": 1606.03,
+      "ratioPct": 33.56,
+      "isClimax": true,
+      "isTrough": false
+    },
+    "ck": {
+      "total": 1029.78,
+      "buy": 581.3,
+      "sell": 448.49,
+      "ratioPct": 11.39,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "bds": {
+      "total": 1270.47,
+      "buy": 446.77,
+      "sell": 823.7,
+      "ratioPct": 14.05,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "thep": {
+      "total": 542.51,
+      "buy": 353.8,
+      "sell": 188.71,
+      "ratioPct": 6,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "vin": {
+      "total": 1429.36,
+      "buy": 477.28,
+      "sell": 952.07,
+      "ratioPct": 15.81,
+      "isClimax": true,
+      "isTrough": false
+    }
+  },
+  {
+    "date": "2026-10-13",
+    "displayDate": "26-10-13",
+    "totalMarket": 8392,
+    "nh": {
+      "total": 3360.98,
+      "buy": 1922.38,
+      "sell": 1438.6,
+      "ratioPct": 40.05,
+      "isClimax": true,
+      "isTrough": false
+    },
+    "ck": {
+      "total": 830.31,
+      "buy": 362.36,
+      "sell": 467.96,
+      "ratioPct": 9.89,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "bds": {
+      "total": 986.53,
+      "buy": 565.08,
+      "sell": 421.44,
+      "ratioPct": 11.76,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "thep": {
+      "total": 277.26,
+      "buy": 105.8,
+      "sell": 171.46,
+      "ratioPct": 3.3,
+      "isClimax": false,
+      "isTrough": true
+    },
+    "vin": {
+      "total": 1070.84,
+      "buy": 674.63,
+      "sell": 396.21,
+      "ratioPct": 12.76,
+      "isClimax": false,
+      "isTrough": false
+    }
+  },
+  {
+    "date": "2026-10-12",
+    "displayDate": "26-10-12",
+    "totalMarket": 8672,
+    "nh": {
+      "total": 3188.5,
+      "buy": 1849.83,
+      "sell": 1338.66,
+      "ratioPct": 36.77,
+      "isClimax": true,
+      "isTrough": false
+    },
+    "ck": {
+      "total": 770.6,
+      "buy": 346.02,
+      "sell": 424.59,
+      "ratioPct": 8.89,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "bds": {
+      "total": 920.11,
+      "buy": 435.77,
+      "sell": 484.34,
+      "ratioPct": 10.61,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "thep": {
+      "total": 757.41,
+      "buy": 505.05,
+      "sell": 252.35,
+      "ratioPct": 8.73,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "vin": {
+      "total": 953.34,
+      "buy": 298.29,
+      "sell": 655.05,
+      "ratioPct": 10.99,
+      "isClimax": false,
+      "isTrough": false
+    }
+  },
+  {
+    "date": "2026-10-09",
+    "displayDate": "26-10-09",
+    "totalMarket": 13786,
+    "nh": {
+      "total": 4731.01,
+      "buy": 2903.06,
+      "sell": 1827.96,
+      "ratioPct": 34.32,
+      "isClimax": true,
+      "isTrough": false
+    },
+    "ck": {
+      "total": 1906.48,
+      "buy": 1101.17,
+      "sell": 805.31,
+      "ratioPct": 13.83,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "bds": {
+      "total": 1959.91,
+      "buy": 1285.75,
+      "sell": 674.15,
+      "ratioPct": 14.22,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "thep": {
+      "total": 363.72,
+      "buy": 164.65,
+      "sell": 199.07,
+      "ratioPct": 2.64,
+      "isClimax": false,
+      "isTrough": true
+    },
+    "vin": {
+      "total": 1182.19,
+      "buy": 555.97,
+      "sell": 626.21,
+      "ratioPct": 8.58,
+      "isClimax": false,
+      "isTrough": false
+    }
+  },
+  {
+    "date": "2026-10-08",
+    "displayDate": "26-10-08",
+    "totalMarket": 9029,
+    "nh": {
+      "total": 3024.82,
+      "buy": 1339.73,
+      "sell": 1685.09,
+      "ratioPct": 33.5,
+      "isClimax": true,
+      "isTrough": false
+    },
+    "ck": {
+      "total": 1234.38,
+      "buy": 429.6,
+      "sell": 804.77,
+      "ratioPct": 13.67,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "bds": {
+      "total": 1313.38,
+      "buy": 498.64,
+      "sell": 814.74,
+      "ratioPct": 14.55,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "thep": {
+      "total": 296.44,
+      "buy": 122.07,
+      "sell": 174.36,
+      "ratioPct": 3.28,
+      "isClimax": false,
+      "isTrough": true
+    },
+    "vin": {
+      "total": 1532.87,
+      "buy": 582.17,
+      "sell": 950.7,
+      "ratioPct": 16.98,
+      "isClimax": true,
+      "isTrough": false
+    }
+  },
+  {
+    "date": "2026-10-07",
+    "displayDate": "26-10-07",
+    "totalMarket": 7556,
+    "nh": {
+      "total": 2873.84,
+      "buy": 1419.47,
+      "sell": 1454.37,
+      "ratioPct": 38.03,
+      "isClimax": true,
+      "isTrough": false
+    },
+    "ck": {
+      "total": 723.92,
+      "buy": 263.92,
+      "sell": 460,
+      "ratioPct": 9.58,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "bds": {
+      "total": 1010.81,
+      "buy": 455.85,
+      "sell": 554.96,
+      "ratioPct": 13.38,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "thep": {
+      "total": 303.05,
+      "buy": 125.34,
+      "sell": 177.71,
+      "ratioPct": 4.01,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "vin": {
+      "total": 1299.15,
+      "buy": 513.78,
+      "sell": 785.37,
+      "ratioPct": 17.19,
+      "isClimax": true,
+      "isTrough": false
+    }
+  },
+  {
+    "date": "2026-10-06",
+    "displayDate": "26-10-06",
+    "totalMarket": 12198,
+    "nh": {
+      "total": 3938.53,
+      "buy": 1999.15,
+      "sell": 1939.38,
+      "ratioPct": 32.29,
+      "isClimax": true,
+      "isTrough": false
+    },
+    "ck": {
+      "total": 2041.53,
+      "buy": 1193.5,
+      "sell": 848.04,
+      "ratioPct": 16.74,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "bds": {
+      "total": 1564.71,
+      "buy": 840.85,
+      "sell": 723.87,
+      "ratioPct": 12.83,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "thep": {
+      "total": 383.79,
+      "buy": 189.62,
+      "sell": 194.17,
+      "ratioPct": 3.15,
+      "isClimax": false,
+      "isTrough": true
+    },
+    "vin": {
+      "total": 1552.23,
+      "buy": 831.52,
+      "sell": 720.71,
+      "ratioPct": 12.73,
+      "isClimax": false,
+      "isTrough": false
+    }
+  },
+  {
+    "date": "2026-10-05",
+    "displayDate": "26-10-05",
+    "totalMarket": 8020,
+    "nh": {
+      "total": 2447.25,
+      "buy": 1219.82,
+      "sell": 1227.43,
+      "ratioPct": 30.51,
+      "isClimax": true,
+      "isTrough": false
+    },
+    "ck": {
+      "total": 956.15,
+      "buy": 432.27,
+      "sell": 523.88,
+      "ratioPct": 11.92,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "bds": {
+      "total": 1097.95,
+      "buy": 620.36,
+      "sell": 477.59,
+      "ratioPct": 13.69,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "thep": {
+      "total": 711.89,
+      "buy": 410.17,
+      "sell": 301.72,
+      "ratioPct": 8.88,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "vin": {
+      "total": 977.26,
+      "buy": 628.62,
+      "sell": 348.64,
+      "ratioPct": 12.19,
+      "isClimax": false,
+      "isTrough": false
+    }
+  },
+  {
+    "date": "2026-10-02",
+    "displayDate": "26-10-02",
+    "totalMarket": 10042,
+    "nh": {
+      "total": 3038.92,
+      "buy": 1213,
+      "sell": 1825.92,
+      "ratioPct": 30.26,
+      "isClimax": true,
+      "isTrough": false
+    },
+    "ck": {
+      "total": 1454.39,
+      "buy": 488.04,
+      "sell": 966.36,
+      "ratioPct": 14.48,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "bds": {
+      "total": 1276.4,
+      "buy": 602.52,
+      "sell": 673.88,
+      "ratioPct": 12.71,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "thep": {
+      "total": 757.69,
+      "buy": 329.52,
+      "sell": 428.17,
+      "ratioPct": 7.55,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "vin": {
+      "total": 1214.82,
+      "buy": 689.81,
+      "sell": 525.01,
+      "ratioPct": 12.1,
+      "isClimax": false,
+      "isTrough": false
+    }
+  },
+  {
+    "date": "2026-10-01",
+    "displayDate": "26-10-01",
+    "totalMarket": 8482,
+    "nh": {
+      "total": 2969.58,
+      "buy": 1293.15,
+      "sell": 1676.42,
+      "ratioPct": 35.01,
+      "isClimax": true,
+      "isTrough": false
+    },
+    "ck": {
+      "total": 1281.06,
+      "buy": 619.1,
+      "sell": 661.96,
+      "ratioPct": 15.1,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "bds": {
+      "total": 1001.49,
+      "buy": 500.41,
+      "sell": 501.08,
+      "ratioPct": 11.81,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "thep": {
+      "total": 261.09,
+      "buy": 112.76,
+      "sell": 148.33,
+      "ratioPct": 3.08,
+      "isClimax": false,
+      "isTrough": true
+    },
+    "vin": {
+      "total": 1358.67,
+      "buy": 481.84,
+      "sell": 876.83,
+      "ratioPct": 16.02,
+      "isClimax": true,
+      "isTrough": false
+    }
+  },
+  {
+    "date": "2026-09-30",
+    "displayDate": "26-09-30",
+    "totalMarket": 8554,
+    "nh": {
+      "total": 2507.26,
+      "buy": 1248.44,
+      "sell": 1258.81,
+      "ratioPct": 29.31,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "ck": {
+      "total": 912.81,
+      "buy": 373.87,
+      "sell": 538.93,
+      "ratioPct": 10.67,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "bds": {
+      "total": 1845.33,
+      "buy": 1044.43,
+      "sell": 800.9,
+      "ratioPct": 21.57,
+      "isClimax": true,
+      "isTrough": false
+    },
+    "thep": {
+      "total": 294.8,
+      "buy": 123.49,
+      "sell": 171.31,
+      "ratioPct": 3.45,
+      "isClimax": false,
+      "isTrough": true
+    },
+    "vin": {
+      "total": 877.15,
+      "buy": 349.68,
+      "sell": 527.47,
+      "ratioPct": 10.25,
+      "isClimax": false,
+      "isTrough": false
+    }
+  },
+  {
+    "date": "2026-09-29",
+    "displayDate": "26-09-29",
+    "totalMarket": 8318,
+    "nh": {
+      "total": 2757.81,
+      "buy": 1245.05,
+      "sell": 1512.76,
+      "ratioPct": 33.15,
+      "isClimax": true,
+      "isTrough": false
+    },
+    "ck": {
+      "total": 1047.98,
+      "buy": 572.11,
+      "sell": 475.86,
+      "ratioPct": 12.6,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "bds": {
+      "total": 1179.61,
+      "buy": 639.37,
+      "sell": 540.24,
+      "ratioPct": 14.18,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "thep": {
+      "total": 421.29,
+      "buy": 244.78,
+      "sell": 176.51,
+      "ratioPct": 5.06,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "vin": {
+      "total": 835.48,
+      "buy": 420.14,
+      "sell": 415.34,
+      "ratioPct": 10.04,
+      "isClimax": false,
+      "isTrough": false
+    }
+  },
+  {
+    "date": "2026-09-28",
+    "displayDate": "26-09-28",
+    "totalMarket": 11092,
+    "nh": {
+      "total": 3441.82,
+      "buy": 1502.21,
+      "sell": 1939.61,
+      "ratioPct": 31.03,
+      "isClimax": true,
+      "isTrough": false
+    },
+    "ck": {
+      "total": 1732.48,
+      "buy": 561.79,
+      "sell": 1170.7,
+      "ratioPct": 15.62,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "bds": {
+      "total": 1499.33,
+      "buy": 727.8,
+      "sell": 771.53,
+      "ratioPct": 13.52,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "thep": {
+      "total": 535.92,
+      "buy": 172.75,
+      "sell": 363.17,
+      "ratioPct": 4.83,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "vin": {
+      "total": 852.96,
+      "buy": 457.64,
+      "sell": 395.32,
+      "ratioPct": 7.69,
+      "isClimax": false,
+      "isTrough": false
+    }
+  },
+  {
+    "date": "2026-09-25",
+    "displayDate": "26-09-25",
+    "totalMarket": 9954,
+    "nh": {
+      "total": 3831.07,
+      "buy": 2121.34,
+      "sell": 1709.73,
+      "ratioPct": 38.49,
+      "isClimax": true,
+      "isTrough": false
+    },
+    "ck": {
+      "total": 916.95,
+      "buy": 372.73,
+      "sell": 544.23,
+      "ratioPct": 9.21,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "bds": {
+      "total": 1390.17,
+      "buy": 781.93,
+      "sell": 608.24,
+      "ratioPct": 13.97,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "thep": {
+      "total": 332.2,
+      "buy": 139.7,
+      "sell": 192.49,
+      "ratioPct": 3.34,
+      "isClimax": false,
+      "isTrough": true
+    },
+    "vin": {
+      "total": 1201.78,
+      "buy": 813.83,
+      "sell": 387.95,
+      "ratioPct": 12.07,
+      "isClimax": false,
+      "isTrough": false
+    }
+  },
+  {
+    "date": "2026-09-24",
+    "displayDate": "26-09-24",
+    "totalMarket": 10460,
+    "nh": {
+      "total": 3138.41,
+      "buy": 1382.82,
+      "sell": 1755.59,
+      "ratioPct": 30,
+      "isClimax": true,
+      "isTrough": false
+    },
+    "ck": {
+      "total": 1370.62,
+      "buy": 596.09,
+      "sell": 774.54,
+      "ratioPct": 13.1,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "bds": {
+      "total": 1915.71,
+      "buy": 673.21,
+      "sell": 1242.5,
+      "ratioPct": 18.31,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "thep": {
+      "total": 373.98,
+      "buy": 145.28,
+      "sell": 228.7,
+      "ratioPct": 3.58,
+      "isClimax": false,
+      "isTrough": true
+    },
+    "vin": {
+      "total": 2018.45,
+      "buy": 626.62,
+      "sell": 1391.84,
+      "ratioPct": 19.3,
+      "isClimax": true,
+      "isTrough": false
+    }
+  },
+  {
+    "date": "2026-09-23",
+    "displayDate": "26-09-23",
+    "totalMarket": 9951,
+    "nh": {
+      "total": 4274.53,
+      "buy": 2434.97,
+      "sell": 1839.57,
+      "ratioPct": 42.96,
+      "isClimax": true,
+      "isTrough": false
+    },
+    "ck": {
+      "total": 1025.67,
+      "buy": 442.27,
+      "sell": 583.4,
+      "ratioPct": 10.31,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "bds": {
+      "total": 912.77,
+      "buy": 354.44,
+      "sell": 558.33,
+      "ratioPct": 9.17,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "thep": {
+      "total": 254.99,
+      "buy": 108.77,
+      "sell": 146.22,
+      "ratioPct": 2.56,
+      "isClimax": false,
+      "isTrough": true
+    },
+    "vin": {
+      "total": 1259.17,
+      "buy": 410.88,
+      "sell": 848.29,
+      "ratioPct": 12.65,
+      "isClimax": false,
+      "isTrough": false
+    }
+  },
+  {
+    "date": "2026-09-22",
+    "displayDate": "26-09-22",
+    "totalMarket": 7015,
+    "nh": {
+      "total": 2486.66,
+      "buy": 1275.64,
+      "sell": 1211.02,
+      "ratioPct": 35.45,
+      "isClimax": true,
+      "isTrough": false
+    },
+    "ck": {
+      "total": 873.62,
+      "buy": 482.53,
+      "sell": 391.09,
+      "ratioPct": 12.45,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "bds": {
+      "total": 998.98,
+      "buy": 575.39,
+      "sell": 423.59,
+      "ratioPct": 14.24,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "thep": {
+      "total": 200.5,
+      "buy": 100.88,
+      "sell": 99.62,
+      "ratioPct": 2.86,
+      "isClimax": false,
+      "isTrough": true
+    },
+    "vin": {
+      "total": 943.16,
+      "buy": 614.09,
+      "sell": 329.07,
+      "ratioPct": 13.44,
+      "isClimax": false,
+      "isTrough": false
+    }
+  },
+  {
+    "date": "2026-09-21",
+    "displayDate": "26-09-21",
+    "totalMarket": 11570,
+    "nh": {
+      "total": 3669.09,
+      "buy": 1796.95,
+      "sell": 1872.14,
+      "ratioPct": 31.71,
+      "isClimax": true,
+      "isTrough": false
+    },
+    "ck": {
+      "total": 1643.84,
+      "buy": 500.65,
+      "sell": 1143.2,
+      "ratioPct": 14.21,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "bds": {
+      "total": 1843.24,
+      "buy": 635.45,
+      "sell": 1207.79,
+      "ratioPct": 15.93,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "thep": {
+      "total": 364.31,
+      "buy": 127.83,
+      "sell": 236.48,
+      "ratioPct": 3.15,
+      "isClimax": false,
+      "isTrough": true
+    },
+    "vin": {
+      "total": 2213.46,
+      "buy": 664.04,
+      "sell": 1549.42,
+      "ratioPct": 19.13,
+      "isClimax": true,
+      "isTrough": false
+    }
+  },
+  {
+    "date": "2026-09-18",
+    "displayDate": "26-09-18",
+    "totalMarket": 16807,
+    "nh": {
+      "total": 5776.43,
+      "buy": 2404.61,
+      "sell": 3371.82,
+      "ratioPct": 34.37,
+      "isClimax": true,
+      "isTrough": false
+    },
+    "ck": {
+      "total": 2223.88,
+      "buy": 1106.72,
+      "sell": 1117.15,
+      "ratioPct": 13.23,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "bds": {
+      "total": 2210.72,
+      "buy": 948.43,
+      "sell": 1262.29,
+      "ratioPct": 13.15,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "thep": {
+      "total": 713.32,
+      "buy": 402.58,
+      "sell": 310.75,
+      "ratioPct": 4.24,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "vin": {
+      "total": 4722.24,
+      "buy": 1787.31,
+      "sell": 2934.92,
+      "ratioPct": 28.1,
+      "isClimax": true,
+      "isTrough": false
+    }
+  },
+  {
+    "date": "2026-09-17",
+    "displayDate": "26-09-17",
+    "totalMarket": 12624,
+    "nh": {
+      "total": 3992.03,
+      "buy": 2564.72,
+      "sell": 1427.32,
+      "ratioPct": 31.62,
+      "isClimax": true,
+      "isTrough": false
+    },
+    "ck": {
+      "total": 2419.58,
+      "buy": 1660.74,
+      "sell": 758.84,
+      "ratioPct": 19.17,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "bds": {
+      "total": 1382.46,
+      "buy": 895.32,
+      "sell": 487.15,
+      "ratioPct": 10.95,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "thep": {
+      "total": 411.4,
+      "buy": 263.61,
+      "sell": 147.78,
+      "ratioPct": 3.26,
+      "isClimax": false,
+      "isTrough": true
+    },
+    "vin": {
+      "total": 1653.03,
+      "buy": 956.21,
+      "sell": 696.82,
+      "ratioPct": 13.09,
+      "isClimax": false,
+      "isTrough": false
+    }
+  },
+  {
+    "date": "2026-09-16",
+    "displayDate": "26-09-16",
+    "totalMarket": 7945,
+    "nh": {
+      "total": 2601.9,
+      "buy": 1322.74,
+      "sell": 1279.16,
+      "ratioPct": 32.75,
+      "isClimax": true,
+      "isTrough": false
+    },
+    "ck": {
+      "total": 1106.23,
+      "buy": 394.57,
+      "sell": 711.66,
+      "ratioPct": 13.92,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "bds": {
+      "total": 1166.72,
+      "buy": 560.69,
+      "sell": 606.04,
+      "ratioPct": 14.69,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "thep": {
+      "total": 289.19,
+      "buy": 116.03,
+      "sell": 173.16,
+      "ratioPct": 3.64,
+      "isClimax": false,
+      "isTrough": true
+    },
+    "vin": {
+      "total": 1541.08,
+      "buy": 799.7,
+      "sell": 741.38,
+      "ratioPct": 19.4,
+      "isClimax": true,
+      "isTrough": false
+    }
+  },
+  {
+    "date": "2026-09-15",
+    "displayDate": "26-09-15",
+    "totalMarket": 10009,
+    "nh": {
+      "total": 3806.45,
+      "buy": 2309.58,
+      "sell": 1496.87,
+      "ratioPct": 38.03,
+      "isClimax": true,
+      "isTrough": false
+    },
+    "ck": {
+      "total": 1318.55,
+      "buy": 801.95,
+      "sell": 516.6,
+      "ratioPct": 13.17,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "bds": {
+      "total": 1067.73,
+      "buy": 516.77,
+      "sell": 550.96,
+      "ratioPct": 10.67,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "thep": {
+      "total": 313.38,
+      "buy": 186.51,
+      "sell": 126.88,
+      "ratioPct": 3.13,
+      "isClimax": false,
+      "isTrough": true
+    },
+    "vin": {
+      "total": 1664.57,
+      "buy": 705.29,
+      "sell": 959.28,
+      "ratioPct": 16.63,
+      "isClimax": true,
+      "isTrough": false
+    }
+  },
+  {
+    "date": "2026-09-14",
+    "displayDate": "26-09-14",
+    "totalMarket": 12359,
+    "nh": {
+      "total": 3473.22,
+      "buy": 1706.05,
+      "sell": 1767.17,
+      "ratioPct": 28.1,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "ck": {
+      "total": 2456.85,
+      "buy": 925.9,
+      "sell": 1530.95,
+      "ratioPct": 19.88,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "bds": {
+      "total": 1547,
+      "buy": 790.2,
+      "sell": 756.8,
+      "ratioPct": 12.52,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "thep": {
+      "total": 556.47,
+      "buy": 199.63,
+      "sell": 356.84,
+      "ratioPct": 4.5,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "vin": {
+      "total": 1880.99,
+      "buy": 963.9,
+      "sell": 917.08,
+      "ratioPct": 15.22,
+      "isClimax": true,
+      "isTrough": false
+    }
+  },
+  {
+    "date": "2026-09-11",
+    "displayDate": "26-09-11",
+    "totalMarket": 12692,
+    "nh": {
+      "total": 4006.61,
+      "buy": 1536.15,
+      "sell": 2470.46,
+      "ratioPct": 31.57,
+      "isClimax": true,
+      "isTrough": false
+    },
+    "ck": {
+      "total": 2117.95,
+      "buy": 651.61,
+      "sell": 1466.34,
+      "ratioPct": 16.69,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "bds": {
+      "total": 1599.95,
+      "buy": 589.04,
+      "sell": 1010.91,
+      "ratioPct": 12.61,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "thep": {
+      "total": 525.13,
+      "buy": 179.65,
+      "sell": 345.48,
+      "ratioPct": 4.14,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "vin": {
+      "total": 1616.32,
+      "buy": 676.03,
+      "sell": 940.28,
+      "ratioPct": 12.73,
+      "isClimax": false,
+      "isTrough": false
+    }
+  },
+  {
+    "date": "2026-09-10",
+    "displayDate": "26-09-10",
+    "totalMarket": 8251,
+    "nh": {
+      "total": 2301.23,
+      "buy": 1221.74,
+      "sell": 1079.49,
+      "ratioPct": 27.89,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "ck": {
+      "total": 1130.53,
+      "buy": 650.37,
+      "sell": 480.16,
+      "ratioPct": 13.7,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "bds": {
+      "total": 1607.54,
+      "buy": 962.21,
+      "sell": 645.33,
+      "ratioPct": 19.48,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "thep": {
+      "total": 323.53,
+      "buy": 134.85,
+      "sell": 188.68,
+      "ratioPct": 3.92,
+      "isClimax": false,
+      "isTrough": true
+    },
+    "vin": {
+      "total": 2388.41,
+      "buy": 1370.41,
+      "sell": 1017.99,
+      "ratioPct": 28.95,
+      "isClimax": true,
+      "isTrough": false
+    }
+  },
+  {
+    "date": "2026-09-09",
+    "displayDate": "26-09-09",
+    "totalMarket": 10095,
+    "nh": {
+      "total": 3139.44,
+      "buy": 1607.86,
+      "sell": 1531.59,
+      "ratioPct": 31.1,
+      "isClimax": true,
+      "isTrough": false
+    },
+    "ck": {
+      "total": 1217,
+      "buy": 457.29,
+      "sell": 759.71,
+      "ratioPct": 12.06,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "bds": {
+      "total": 1678.51,
+      "buy": 693.64,
+      "sell": 984.87,
+      "ratioPct": 16.63,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "thep": {
+      "total": 526.51,
+      "buy": 307.18,
+      "sell": 219.33,
+      "ratioPct": 5.22,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "vin": {
+      "total": 2315.23,
+      "buy": 876.23,
+      "sell": 1439,
+      "ratioPct": 22.93,
+      "isClimax": true,
+      "isTrough": false
+    }
+  },
+  {
+    "date": "2026-09-08",
+    "displayDate": "26-09-08",
+    "totalMarket": 7474,
+    "nh": {
+      "total": 2079.08,
+      "buy": 1032.77,
+      "sell": 1046.31,
+      "ratioPct": 27.82,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "ck": {
+      "total": 1285.34,
+      "buy": 753.8,
+      "sell": 531.54,
+      "ratioPct": 17.2,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "bds": {
+      "total": 1169.04,
+      "buy": 512.2,
+      "sell": 656.84,
+      "ratioPct": 15.64,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "thep": {
+      "total": 324.54,
+      "buy": 200.01,
+      "sell": 124.53,
+      "ratioPct": 4.34,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "vin": {
+      "total": 2214.28,
+      "buy": 1296.71,
+      "sell": 917.56,
+      "ratioPct": 29.63,
+      "isClimax": true,
+      "isTrough": false
+    }
+  },
+  {
+    "date": "2026-09-07",
+    "displayDate": "26-09-07",
+    "totalMarket": 10292,
+    "nh": {
+      "total": 2659.51,
+      "buy": 1046.84,
+      "sell": 1612.67,
+      "ratioPct": 25.84,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "ck": {
+      "total": 1878.42,
+      "buy": 647.38,
+      "sell": 1231.04,
+      "ratioPct": 18.25,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "bds": {
+      "total": 1681.23,
+      "buy": 630.93,
+      "sell": 1050.3,
+      "ratioPct": 16.34,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "thep": {
+      "total": 470.48,
+      "buy": 187.12,
+      "sell": 283.37,
+      "ratioPct": 4.57,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "vin": {
+      "total": 2674.47,
+      "buy": 932.94,
+      "sell": 1741.53,
+      "ratioPct": 25.99,
+      "isClimax": true,
+      "isTrough": false
+    }
+  },
+  {
+    "date": "2026-09-04",
+    "displayDate": "26-09-04",
+    "totalMarket": 10844,
+    "nh": {
+      "total": 3444.82,
+      "buy": 1981.15,
+      "sell": 1463.67,
+      "ratioPct": 31.77,
+      "isClimax": true,
+      "isTrough": false
+    },
+    "ck": {
+      "total": 1206.01,
+      "buy": 548.34,
+      "sell": 657.68,
+      "ratioPct": 11.12,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "bds": {
+      "total": 2054.45,
+      "buy": 1254.11,
+      "sell": 800.33,
+      "ratioPct": 18.95,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "thep": {
+      "total": 343.37,
+      "buy": 150.12,
+      "sell": 193.25,
+      "ratioPct": 3.17,
+      "isClimax": false,
+      "isTrough": true
+    },
+    "vin": {
+      "total": 3180.38,
+      "buy": 2201.35,
+      "sell": 979.04,
+      "ratioPct": 29.33,
+      "isClimax": true,
+      "isTrough": false
+    }
+  },
+  {
+    "date": "2026-09-03",
+    "displayDate": "26-09-03",
+    "totalMarket": 10826,
+    "nh": {
+      "total": 3485.87,
+      "buy": 1306.81,
+      "sell": 2179.06,
+      "ratioPct": 32.2,
+      "isClimax": true,
+      "isTrough": false
+    },
+    "ck": {
+      "total": 1641.51,
+      "buy": 749.57,
+      "sell": 891.94,
+      "ratioPct": 15.16,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "bds": {
+      "total": 1266.73,
+      "buy": 622.07,
+      "sell": 644.66,
+      "ratioPct": 11.7,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "thep": {
+      "total": 642.87,
+      "buy": 230.43,
+      "sell": 412.44,
+      "ratioPct": 5.94,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "vin": {
+      "total": 2398.53,
+      "buy": 1629.97,
+      "sell": 768.55,
+      "ratioPct": 22.16,
+      "isClimax": true,
+      "isTrough": false
+    }
+  }
+]

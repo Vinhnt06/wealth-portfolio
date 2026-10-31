@@ -8,6 +8,7 @@ import { MarketOverviewSection } from '../../features/market/components/MarketOv
 import { StockDetailSection } from '../../features/market/components/StockDetailSection';
 import { MarkMinerviniScreener } from '../../features/market/components/MarkMinerviniScreener';
 import { RelativeRotationGraphCard } from '../../features/market/components/RelativeRotationGraph';
+import { SectorMoneyFlowSection } from '../../features/market/components/SectorMoneyFlowSection';
 import {
   ChartPieSlice,
   Buildings,
@@ -90,6 +91,18 @@ export default function MarketTerminalPage() {
             </button>
 
             <button
+              onClick={() => setViewMode('flow')}
+              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                viewMode === 'flow'
+                  ? 'bg-zinc-800 text-cyan-400 shadow-sm'
+                  : 'text-zinc-400 hover:text-zinc-200'
+              }`}
+            >
+              <TrendUp className="w-3.5 h-3.5" />
+              <span>Dòng Tiền Ngành</span>
+            </button>
+
+            <button
               onClick={() => setViewMode('rrg')}
               className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
                 viewMode === 'rrg'
@@ -161,11 +174,13 @@ export default function MarketTerminalPage() {
           </div>
         </div>
 
-        {/* Dynamic Context View: Macro Overview vs Minervini Screener vs RRG vs Stock Deep-Dive */}
+        {/* Dynamic Context View: Macro Overview vs Minervini Screener vs Sector Flow vs RRG vs Stock Deep-Dive */}
         {viewMode === 'overview' ? (
           <MarketOverviewSection onSelectSector={() => setViewMode('screener')} />
         ) : viewMode === 'screener' ? (
           <MarkMinerviniScreener />
+        ) : viewMode === 'flow' ? (
+          <SectorMoneyFlowSection />
         ) : viewMode === 'rrg' ? (
           <div className="space-y-6">
             <RelativeRotationGraphCard defaultHeight={700} />
