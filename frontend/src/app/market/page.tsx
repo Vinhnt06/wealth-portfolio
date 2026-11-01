@@ -117,16 +117,9 @@ function MarketTerminalContent() {
             <IconComponent className="w-5 h-5" />
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-base sm:text-lg font-semibold text-zinc-100 tracking-tight">
-                {meta.title}
-              </h1>
-              {viewMode !== 'overview' && (
-                <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-md border uppercase ${meta.bgColor} ${meta.color} ${meta.borderColor}`}>
-                  {viewMode.toUpperCase()}
-                </span>
-              )}
-            </div>
+            <h1 className="text-base sm:text-lg font-semibold text-zinc-100 tracking-tight">
+              {meta.title}
+            </h1>
             <p className="text-xs text-zinc-400 mt-0.5">
               {meta.subtitle}
             </p>

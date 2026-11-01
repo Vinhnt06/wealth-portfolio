@@ -82,8 +82,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         labelKey: string;
         href: string;
         mode?: 'overview' | 'flow' | 'screener' | 'rrg' | null;
-        badge?: string;
-        badgeColor?: string;
     }
 
     interface NavSection {
@@ -102,8 +100,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             title: 'THỊ TRƯỜNG & DÒNG TIỀN',
             items: [
                 { icon: ChartPieSlice, labelKey: 'Thị Trường Realtime', href: '/market?tab=overview', mode: 'overview' },
-                { icon: TrendUp, labelKey: 'dash.nav.flow', href: '/market?tab=flow', mode: 'flow', badge: '11 Ngành', badgeColor: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20' },
-                { icon: Funnel, labelKey: 'dash.nav.screener', href: '/market?tab=screener', mode: 'screener', badge: 'SEPA', badgeColor: 'bg-amber-500/10 text-amber-300 border-amber-500/20' },
+                { icon: TrendUp, labelKey: 'dash.nav.flow', href: '/market?tab=flow', mode: 'flow' },
+                { icon: Funnel, labelKey: 'dash.nav.screener', href: '/market?tab=screener', mode: 'screener' },
                 { icon: Compass, labelKey: 'dash.nav.rrg', href: '/market?tab=rrg', mode: 'rrg' },
             ],
         },
@@ -241,16 +239,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                                                     className={`${active ? 'text-emerald-400' : 'text-zinc-500 group-hover:text-zinc-300'} transition-colors shrink-0`}
                                                 />
                                                 {!isCollapsed && (
-                                                    <div className="flex items-center justify-between flex-1 min-w-0">
-                                                        <span className={`text-xs font-medium ${active ? 'text-emerald-300 font-semibold' : 'text-zinc-400 group-hover:text-zinc-200'} transition-colors truncate`}>
-                                                            {label}
-                                                        </span>
-                                                        {item.badge && (
-                                                            <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border uppercase shrink-0 ${item.badgeColor || 'bg-zinc-800 text-zinc-300 border-zinc-700'}`}>
-                                                                {item.badge}
-                                                            </span>
-                                                        )}
-                                                    </div>
+                                                    <span className={`text-xs font-medium ${active ? 'text-emerald-300 font-semibold' : 'text-zinc-400 group-hover:text-zinc-200'} transition-colors truncate`}>
+                                                        {label}
+                                                    </span>
                                                 )}
                                             </Link>
                                         );
