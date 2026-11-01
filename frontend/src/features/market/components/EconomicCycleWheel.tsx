@@ -16,10 +16,32 @@ import {
   Bank,
   Globe,
   CurrencyCircleDollar,
+  Waveform,
+  SlidersHorizontal,
+  ShieldCheck,
+  Lightning,
 } from '@phosphor-icons/react';
 import { MinerviniScreenerItem } from '../types/minervini.types';
 import { SECTOR_MAPPING } from '../data/sectorMapping';
 import macroDatabase from '../data/macroDatabase.json';
+
+export type RiskAppetite = 'aggressive' | 'balanced' | 'conservative';
+
+export interface YieldCurvePoint {
+  term: string;
+  label: string;
+  rate: number;
+}
+
+export interface YieldCurveData {
+  points: YieldCurvePoint[];
+  spread: number;
+  slopeType: 'steep' | 'moderate' | 'flat' | 'inverted';
+  slopeLabel: string;
+  slopeDesc: string;
+  slopeColor: string;
+  slopeBadge: string;
+}
 
 export interface MacroGdpRecord {
   period?: string;
@@ -266,6 +288,22 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [isClient, setIsClient] = useState<boolean>(false);
 
+  // Dynamic Portfolio Controls
+  const [riskAppetite, setRiskAppetite] = useState<RiskAppetite>('balanced');
+  const [isDynamicAllocation, setIsDynamicAllocation] = useState<boolean>(true);
+  const [showPillarsBreakdown, setShowPillarsBreakdown] = useState<boolean>(false);
+
+  // Global Sentiment & US 10Y Yield
+  const [globalMacro, setGlobalMacro] = useState<{
+    us10Y: number;
+    dxy: number;
+    vix: number;
+  }>({
+    us10Y: 4.93,
+    dxy: 101.96,
+    vix: 19.42,
+  });
+
   // Real Macroeconomic Data State (GDP, CPI, Interest Rates, Exchange Rates)
   const [macroData, setMacroData] = useState<{
     gdp: MacroGdpRecord[];
@@ -283,9 +321,10 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
 
   const fetchMacroData = useCallback(async () => {
     try {
-      const [resInd, resRates] = await Promise.all([
+      const [resInd, resRates, resGlobal] = await Promise.all([
         fetch('/api/macro/indicators', { cache: 'no-store' }),
         fetch('/api/macro/exchange-rate', { cache: 'no-store' }),
+        fetch('/api/macro/us-global', { cache: 'no-store' }),
       ]);
       if (resInd.ok) {
         const indJson = await resInd.json();
@@ -306,6 +345,19 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
             ...prev,
             exchangeRate: rateJson.data,
           }));
+        }
+      }
+      if (resGlobal.ok) {
+        const gJson = await resGlobal.json();
+        if (gJson.success && Array.isArray(gJson.indices)) {
+          const tnx = gJson.indices.find((i: any) => i.symbol === '^TNX');
+          const dxyItem = gJson.indices.find((i: any) => i.symbol === 'DX-Y.NYB');
+          const vixItem = gJson.indices.find((i: any) => i.symbol === '^VIX');
+          setGlobalMacro({
+            us10Y: tnx?.price || 4.93,
+            dxy: dxyItem?.price || 101.96,
+            vix: vixItem?.price || 19.42,
+          });
         }
       }
     } catch (err) {
@@ -421,10 +473,17 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
   );
   const onRate = parseFloat(onRateItem?.rate?.replace('%', '') || '3.5');
 
+  const rate3MItem = macroData.interestRate?.find(
+    (r: MacroRateRecord) => r.term === '3M' || (typeof r.bank === 'string' && r.bank.includes('3M'))
+  );
+  const rate3M = parseFloat(rate3MItem?.rate?.replace('%', '') || '4.25');
+
   const depositRateItem = macroData.interestRate?.find(
     (r: MacroRateRecord) => r.type === 'deposit' || (typeof r.bank === 'string' && r.bank.includes('Huy động'))
   );
   const depositRate = parseFloat(depositRateItem?.rate?.replace('%', '') || '4.85');
+
+  const yield10Y = globalMacro.us10Y || 4.93;
 
   const usdItem = macroData.exchangeRate?.find(
     (e: MacroExchangeRecord) =>
@@ -434,12 +493,63 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
   const usdSell = usdItem?.sell || 25420;
   const usdChangePct = Math.abs(usdItem?.changePercent || 0.05);
 
-  // 3. Quantitative Macroeconomic Pillar Engine (GDP 30%, CPI 25%, Rates 25%, FX 20%)
+  // 3. Quantitative Yield Curve & Term Spread Engine
+  const yieldCurveData: YieldCurveData = useMemo(() => {
+    const spread = Number((yield10Y - onRate).toFixed(2));
+    let slopeType: 'steep' | 'moderate' | 'flat' | 'inverted' = 'steep';
+    let slopeLabel = 'Dốc lên tích cực (Normal Steep)';
+    let slopeDesc = 'Chi phí vốn ngắn hạn rẻ, biên lãi ngân hàng mở rộng, kích thích tăng trưởng mở rộng';
+    let slopeColor = 'text-emerald-400';
+    let slopeBadge = 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30';
+
+    if (spread >= 0.75) {
+      slopeType = 'steep';
+      slopeLabel = 'Dốc lên tích cực (Normal Steep)';
+      slopeDesc = `Lợi suất 10Y (${yield10Y}%) cao hơn lãi suất ngắn hạn ON (${onRate}%) +${spread}% — Tín dụng rẻ thúc đẩy mạnh pha Mở Rộng`;
+      slopeColor = 'text-emerald-400';
+      slopeBadge = 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30';
+    } else if (spread >= 0.2) {
+      slopeType = 'moderate';
+      slopeLabel = 'Dốc vừa phải (Moderate)';
+      slopeDesc = 'Đường cong cân bằng, thị trường trong pha phục hồi hoặc duy trì tăng trưởng';
+      slopeColor = 'text-cyan-400';
+      slopeBadge = 'bg-cyan-500/15 text-cyan-400 border-cyan-500/30';
+    } else if (spread >= -0.1) {
+      slopeType = 'flat';
+      slopeLabel = 'Đường cong phẳng (Flattening)';
+      slopeDesc = 'Lãi suất ngắn hạn đuổi kịp dài hạn — Cảnh báo áp lực chi phí vốn gia tăng ở Cuối Chu Kỳ';
+      slopeColor = 'text-amber-400';
+      slopeBadge = 'bg-amber-500/15 text-amber-400 border-amber-500/30';
+    } else {
+      slopeType = 'inverted';
+      slopeLabel = 'Đường cong đảo ngược (Inverted)';
+      slopeDesc = 'Lãi suất ngắn hạn cao hơn dài hạn — Cảnh báo kinh điển rủi ro Suy Thoái trong 6-18 tháng tới';
+      slopeColor = 'text-rose-400';
+      slopeBadge = 'bg-rose-500/15 text-rose-400 border-rose-500/30';
+    }
+
+    return {
+      points: [
+        { term: 'ON', label: 'Qua đêm', rate: onRate },
+        { term: '3M', label: '3 Tháng', rate: rate3M },
+        { term: '12M', label: '1 Năm', rate: depositRate },
+        { term: '10Y', label: '10 Năm', rate: yield10Y },
+      ],
+      spread,
+      slopeType,
+      slopeLabel,
+      slopeDesc,
+      slopeColor,
+      slopeBadge,
+    };
+  }, [onRate, rate3M, depositRate, yield10Y]);
+
+  // 4. Quantitative 5-Pillar Macroeconomic Engine (GDP 25%, CPI 20%, Rates 20%, FX 15%, Yield Curve 20%)
   const macroPillarScores: Record<
     CyclePhaseKey,
-    { gdp: number; cpi: number; rate: number; fx: number; composite: number }
+    { gdp: number; cpi: number; rate: number; fx: number; yield: number; composite: number }
   > = useMemo(() => {
-    // A. GDP Pillar (30% weight)
+    // A. GDP Pillar (25% weight)
     const gdpScores: Record<CyclePhaseKey, number> =
       gdpGrowth >= 8.0
         ? { expansion: 96, recovery: 65, late: 45, recession: 10 }
@@ -449,7 +559,7 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
         ? { recovery: 85, late: 55, expansion: 45, recession: 50 }
         : { recession: 92, late: 40, recovery: 35, expansion: 15 };
 
-    // B. CPI Inflation Pillar (25% weight)
+    // B. CPI Inflation Pillar (20% weight)
     const cpiScores: Record<CyclePhaseKey, number> =
       cpiYoy <= 3.6
         ? { expansion: 94, recovery: 90, recession: 35, late: 25 }
@@ -457,7 +567,7 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
         ? { expansion: 85, late: 65, recovery: 75, recession: 25 }
         : { late: 95, recession: 70, expansion: 40, recovery: 20 };
 
-    // C. Interest Rates Pillar (25% weight)
+    // C. Interest Rates Pillar (20% weight)
     const rateScores: Record<CyclePhaseKey, number> =
       refRate <= 4.5 && onRate <= 4.0
         ? { recovery: 95, expansion: 92, late: 20, recession: 25 }
@@ -465,20 +575,30 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
         ? { expansion: 85, late: 60, recovery: 70, recession: 35 }
         : { late: 92, recession: 80, expansion: 35, recovery: 25 };
 
-    // D. Exchange Rate USD/VND Pillar (20% weight)
+    // D. Exchange Rate USD/VND Pillar (15% weight)
     const fxScores: Record<CyclePhaseKey, number> =
       usdChangePct <= 0.3
         ? { expansion: 90, recovery: 85, late: 30, recession: 30 }
         : { late: 85, recession: 75, expansion: 45, recovery: 40 };
 
+    // E. Yield Curve Term Spread Pillar (20% weight)
+    const yieldScores: Record<CyclePhaseKey, number> =
+      yieldCurveData.spread >= 0.75
+        ? { expansion: 96, recovery: 88, late: 35, recession: 15 }
+        : yieldCurveData.spread >= 0.2
+        ? { recovery: 92, expansion: 82, late: 55, recession: 25 }
+        : yieldCurveData.spread >= -0.1
+        ? { late: 94, recession: 72, expansion: 40, recovery: 30 }
+        : { recession: 96, late: 80, expansion: 20, recovery: 20 };
+
     const res: Record<
       CyclePhaseKey,
-      { gdp: number; cpi: number; rate: number; fx: number; composite: number }
+      { gdp: number; cpi: number; rate: number; fx: number; yield: number; composite: number }
     > = {
-      recovery: { gdp: 0, cpi: 0, rate: 0, fx: 0, composite: 0 },
-      expansion: { gdp: 0, cpi: 0, rate: 0, fx: 0, composite: 0 },
-      late: { gdp: 0, cpi: 0, rate: 0, fx: 0, composite: 0 },
-      recession: { gdp: 0, cpi: 0, rate: 0, fx: 0, composite: 0 },
+      recovery: { gdp: 0, cpi: 0, rate: 0, fx: 0, yield: 0, composite: 0 },
+      expansion: { gdp: 0, cpi: 0, rate: 0, fx: 0, yield: 0, composite: 0 },
+      late: { gdp: 0, cpi: 0, rate: 0, fx: 0, yield: 0, composite: 0 },
+      recession: { gdp: 0, cpi: 0, rate: 0, fx: 0, yield: 0, composite: 0 },
     };
 
     (Object.keys(res) as CyclePhaseKey[]).forEach((k) => {
@@ -486,19 +606,21 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
       res[k].cpi = cpiScores[k];
       res[k].rate = rateScores[k];
       res[k].fx = fxScores[k];
-      // Weighted Macro Composite: 30% GDP + 25% CPI + 25% Rates + 20% FX
+      res[k].yield = yieldScores[k];
+      // 5-Pillar Weighted Macro Composite: 25% GDP + 20% CPI + 20% Rates + 15% FX + 20% Yield Curve
       res[k].composite = Math.round(
-        gdpScores[k] * 0.30 +
-        cpiScores[k] * 0.25 +
-        rateScores[k] * 0.25 +
-        fxScores[k] * 0.20
+        gdpScores[k] * 0.25 +
+        cpiScores[k] * 0.20 +
+        rateScores[k] * 0.20 +
+        fxScores[k] * 0.15 +
+        yieldScores[k] * 0.20
       );
     });
 
     return res;
-  }, [gdpGrowth, cpiYoy, refRate, onRate, usdChangePct]);
+  }, [gdpGrowth, cpiYoy, refRate, onRate, usdChangePct, yieldCurveData.spread]);
 
-  // 4. Quantitative Dual-Engine Scoring: 50% Macro Fundamentals + 50% Sector Momentum (RS & Stage 2)
+  // 5. Quantitative Dual-Engine Scoring: 70% Macro Fundamentals + 30% Sector Momentum (RS & Stage 2)
   const phaseScores = useMemo(() => {
     const scores: Record<
       CyclePhaseKey,
@@ -513,14 +635,15 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
         macroCpiScore: number;
         macroRateScore: number;
         macroFxScore: number;
+        macroYieldScore: number;
         macroCompositeScore: number;
         score: number;
       }
     > = {
-      recovery: { totalRs: 0, totalStage2: 0, count: 0, avgRs: 0, stage2Ratio: 0, momentumScore: 0, macroGdpScore: 0, macroCpiScore: 0, macroRateScore: 0, macroFxScore: 0, macroCompositeScore: 0, score: 0 },
-      expansion: { totalRs: 0, totalStage2: 0, count: 0, avgRs: 0, stage2Ratio: 0, momentumScore: 0, macroGdpScore: 0, macroCpiScore: 0, macroRateScore: 0, macroFxScore: 0, macroCompositeScore: 0, score: 0 },
-      late: { totalRs: 0, totalStage2: 0, count: 0, avgRs: 0, stage2Ratio: 0, momentumScore: 0, macroGdpScore: 0, macroCpiScore: 0, macroRateScore: 0, macroFxScore: 0, macroCompositeScore: 0, score: 0 },
-      recession: { totalRs: 0, totalStage2: 0, count: 0, avgRs: 0, stage2Ratio: 0, momentumScore: 0, macroGdpScore: 0, macroCpiScore: 0, macroRateScore: 0, macroFxScore: 0, macroCompositeScore: 0, score: 0 },
+      recovery: { totalRs: 0, totalStage2: 0, count: 0, avgRs: 0, stage2Ratio: 0, momentumScore: 0, macroGdpScore: 0, macroCpiScore: 0, macroRateScore: 0, macroFxScore: 0, macroYieldScore: 0, macroCompositeScore: 0, score: 0 },
+      expansion: { totalRs: 0, totalStage2: 0, count: 0, avgRs: 0, stage2Ratio: 0, momentumScore: 0, macroGdpScore: 0, macroCpiScore: 0, macroRateScore: 0, macroFxScore: 0, macroYieldScore: 0, macroCompositeScore: 0, score: 0 },
+      late: { totalRs: 0, totalStage2: 0, count: 0, avgRs: 0, stage2Ratio: 0, momentumScore: 0, macroGdpScore: 0, macroCpiScore: 0, macroRateScore: 0, macroFxScore: 0, macroYieldScore: 0, macroCompositeScore: 0, score: 0 },
+      recession: { totalRs: 0, totalStage2: 0, count: 0, avgRs: 0, stage2Ratio: 0, momentumScore: 0, macroGdpScore: 0, macroCpiScore: 0, macroRateScore: 0, macroFxScore: 0, macroYieldScore: 0, macroCompositeScore: 0, score: 0 },
     };
 
     (Object.keys(CYCLE_PHASES) as CyclePhaseKey[]).forEach((pKey) => {
@@ -551,10 +674,10 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
       scores[pKey].macroCpiScore = mPillars.cpi;
       scores[pKey].macroRateScore = mPillars.rate;
       scores[pKey].macroFxScore = mPillars.fx;
+      scores[pKey].macroYieldScore = mPillars.yield;
       scores[pKey].macroCompositeScore = mPillars.composite;
 
       // Institutional Macro Allocation: 70% Macro Fundamentals (Stability Anchor) + 30% Sector Momentum (Confirmation)
-      // Guarantees the macroeconomic cycle is rock-solid and does NOT flip daily on temporary market noise
       scores[pKey].score = Math.round((mPillars.composite * 0.70 + momentum * 0.30) * 10) / 10;
     });
 
@@ -585,6 +708,80 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
   const activeCfg = CYCLE_PHASES[activePhaseKey];
   const detectedCfg = CYCLE_PHASES[detectedActivePhaseKey];
   const topLeadingSectors = sectorLiveStats.slice(0, 5);
+
+  // 6. Dynamic Asset Allocation Engine (Institutional Quantitative Optimization)
+  const dynamicPriorityAssets = useMemo(() => {
+    const baseList = activeCfg.priorityAssets;
+    if (!isDynamicAllocation) return baseList;
+
+    const currentScore = phaseScores[activePhaseKey]?.score ?? 70;
+    const vix = globalMacro.vix || 19.42;
+    const spread = yieldCurveData.spread;
+
+    // Calculate dynamic weights for the 4 asset classes based on riskAppetite, phaseScore, VIX, Yield Spread
+    const adjusted = baseList.map((item) => {
+      let dynamicPct = item.weightPct;
+
+      if (activePhaseKey === 'expansion') {
+        if (item.asset.includes('Cổ phiếu')) {
+          if (riskAppetite === 'aggressive') dynamicPct = Math.min(88, item.weightPct + 8);
+          else if (riskAppetite === 'conservative') dynamicPct = Math.max(55, item.weightPct - 15);
+          else dynamicPct = item.weightPct + (currentScore >= 75 ? 3 : 0) - (vix >= 22 ? 4 : 0);
+        } else if (item.asset.includes('Hàng hóa')) {
+          if (riskAppetite === 'aggressive') dynamicPct = Math.min(20, item.weightPct + 3);
+          else if (riskAppetite === 'conservative') dynamicPct = Math.max(8, item.weightPct - 5);
+        } else if (item.asset.includes('Tiền mặt')) {
+          if (riskAppetite === 'aggressive') dynamicPct = Math.max(3, item.weightPct - 5);
+          else if (riskAppetite === 'conservative') dynamicPct = item.weightPct + 12;
+          else if (vix >= 22) dynamicPct = item.weightPct + 4;
+        } else if (item.asset.includes('Trái phiếu')) {
+          if (riskAppetite === 'aggressive') dynamicPct = Math.max(1, item.weightPct - 1);
+          else if (riskAppetite === 'conservative') dynamicPct = item.weightPct + 8;
+        }
+      } else if (activePhaseKey === 'recovery') {
+        if (item.asset.includes('Cổ phiếu')) {
+          if (riskAppetite === 'aggressive') dynamicPct = Math.min(85, item.weightPct + 8);
+          else if (riskAppetite === 'conservative') dynamicPct = Math.max(50, item.weightPct - 15);
+        } else if (item.asset.includes('Bất động sản')) {
+          if (riskAppetite === 'aggressive') dynamicPct = Math.min(25, item.weightPct + 4);
+          else if (riskAppetite === 'conservative') dynamicPct = Math.max(10, item.weightPct - 5);
+        } else if (item.asset.includes('Tiền mặt')) {
+          if (riskAppetite === 'conservative') dynamicPct = item.weightPct + 10;
+        }
+      } else if (activePhaseKey === 'late') {
+        if (item.asset.includes('Hàng hóa')) {
+          if (riskAppetite === 'aggressive') dynamicPct = Math.min(50, item.weightPct + 8);
+        } else if (item.asset.includes('Tiền mặt')) {
+          if (riskAppetite === 'conservative') dynamicPct = item.weightPct + 10;
+        }
+      } else if (activePhaseKey === 'recession') {
+        if (item.asset.includes('Tiền mặt')) {
+          if (riskAppetite === 'conservative') dynamicPct = Math.min(80, item.weightPct + 10);
+        } else if (item.asset.includes('Trái phiếu')) {
+          if (riskAppetite === 'conservative') dynamicPct = item.weightPct + 5;
+        }
+      }
+
+      return { ...item, dynamicPct };
+    });
+
+    // Normalize so total sum is exactly 100%
+    const totalSum = adjusted.reduce((acc, cur) => acc + cur.dynamicPct, 0) || 100;
+    return adjusted.map((item, idx) => {
+      const normalizedPct = Math.round((item.dynamicPct / totalSum) * 100);
+      let status: 'overweight' | 'neutral' | 'underweight' = item.status;
+      if (normalizedPct >= 35) status = 'overweight';
+      else if (normalizedPct <= 10) status = 'underweight';
+      else status = 'neutral';
+
+      return {
+        ...item,
+        weightPct: normalizedPct,
+        weight: `${normalizedPct}%`,
+        status,
+      };
+    });
+  }, [activeCfg, isDynamicAllocation, riskAppetite, phaseScores, activePhaseKey, globalMacro.vix, yieldCurveData.spread]);
 
   const [showCycleGuide, setShowCycleGuide] = useState<boolean>(false);
   const [needleDisplayAngle, setNeedleDisplayAngle] = useState<number>(() => {
@@ -970,18 +1167,28 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
               })}
             </div>
 
-            {/* ── Real Macroeconomic Quantitative Indicators (4 Trụ Cột Vĩ Mô Thực Tế) ── */}
-            <div className="p-3.5 rounded-xl bg-zinc-900/60 border border-zinc-800/80 space-y-2.5 text-xs font-mono shadow-md">
+            {/* ── Real Macroeconomic Quantitative Indicators (6 Trụ Cột Vĩ Mô & Thanh Khoản Thực Tế) ── */}
+            <div className="p-3.5 rounded-xl bg-zinc-900/60 border border-zinc-800/80 space-y-3 text-xs font-mono shadow-md">
               <div className="flex items-center justify-between pb-1.5 border-b border-zinc-800/80">
                 <div className="flex items-center gap-1.5 text-emerald-400 font-bold text-[11px]">
                   <Globe className="w-3.5 h-3.5" />
-                  <span>CHỈ SỐ VĨ MÔ THỰC TẾ (GSO & SBV)</span>
+                  <span>CHỈ SỐ VĨ MÔ & ĐƯỜNG CONG LỢI SUẤT</span>
                 </div>
-                <span className="text-[9px] text-zinc-400 font-mono">
-                  Q3/2026
-                </span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[9px] text-zinc-400 font-mono">
+                    Q3/2026
+                  </span>
+                  <button
+                    onClick={() => setShowPillarsBreakdown(!showPillarsBreakdown)}
+                    className="px-1.5 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[9px] font-sans transition-colors cursor-pointer"
+                    title="Xem điểm số chi tiết từng trụ cột"
+                  >
+                    {showPillarsBreakdown ? 'Thu gọn' : 'Chi tiết 5 trụ cột'}
+                  </button>
+                </div>
               </div>
 
+              {/* 6 Macro Pillars Grid */}
               <div className="grid grid-cols-2 gap-2 text-[10px]">
                 {/* Pillar 1: GDP */}
                 <div className="p-2 rounded-lg bg-zinc-950/70 border border-zinc-800/70">
@@ -1042,10 +1249,139 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                     <span className="text-emerald-400/90 font-sans">{usdChangePct <= 0.3 ? 'Ổn định' : 'Kiểm soát'}</span>
                   </div>
                 </div>
+
+                {/* Pillar 5: Yield Curve Term Spread (Độ dốc đường cong lợi suất) */}
+                <div className="p-2 rounded-lg bg-zinc-950/70 border border-zinc-800/70">
+                  <div className="flex items-center justify-between text-zinc-400">
+                    <span className="flex items-center gap-1">
+                      <Waveform className="w-3 h-3 text-emerald-400" />
+                      <span>Đường cong Lợi suất</span>
+                    </span>
+                    <span className={`font-bold ${yieldCurveData.spread >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                      {yieldCurveData.spread >= 0 ? '+' : ''}{yieldCurveData.spread}%
+                    </span>
+                  </div>
+                  <div className="text-[9px] text-zinc-400 mt-1 flex justify-between">
+                    <span>10Y - ON Spread</span>
+                    <span className="text-emerald-400/90 font-sans">Dốc lên (+1.43%)</span>
+                  </div>
+                </div>
+
+                {/* Pillar 6: Global Macro & VIX */}
+                <div className="p-2 rounded-lg bg-zinc-950/70 border border-zinc-800/70">
+                  <div className="flex items-center justify-between text-zinc-400">
+                    <span className="flex items-center gap-1">
+                      <ShieldCheck className="w-3 h-3 text-cyan-400" />
+                      <span>Tâm lý Toàn cầu</span>
+                    </span>
+                    <span className="text-cyan-400 font-bold">VIX {globalMacro.vix}</span>
+                  </div>
+                  <div className="text-[9px] text-zinc-400 mt-1 flex justify-between">
+                    <span>DXY: {globalMacro.dxy}</span>
+                    <span className="text-cyan-400/90 font-sans">Ổn định</span>
+                  </div>
+                </div>
               </div>
 
+              {/* ── Interactive Yield Curve Term Structure Visualizer ── */}
+              <div className="p-2.5 rounded-lg bg-zinc-950/90 border border-zinc-800/80 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-zinc-300 flex items-center gap-1">
+                    <Waveform className="w-3.5 h-3.5 text-emerald-400" />
+                    ĐƯỜNG CONG LỢI SUẤT (YIELD CURVE)
+                  </span>
+                  <span className={`text-[9px] px-1.5 py-0.5 rounded font-mono font-bold ${yieldCurveData.slopeBadge}`}>
+                    {yieldCurveData.slopeLabel}
+                  </span>
+                </div>
+
+                {/* Curve SVG Diagram */}
+                <div className="relative pt-2 pb-1">
+                  <div className="flex items-end justify-between gap-2 h-14 px-1">
+                    {yieldCurveData.points.map((pt, idx) => {
+                      const maxR = 6.0;
+                      const minR = 2.0;
+                      const hPct = Math.max(20, Math.min(100, Math.round(((pt.rate - minR) / (maxR - minR)) * 100)));
+                      const is10Y = pt.term === '10Y';
+                      return (
+                        <div key={pt.term} className="flex-1 flex flex-col items-center gap-1">
+                          <span className="text-[9px] font-mono font-bold text-zinc-200">
+                            {pt.rate}%
+                          </span>
+                          <div className="w-full bg-zinc-900 rounded-t h-8 flex items-end justify-center p-0.5">
+                            <div
+                              style={{ height: `${hPct}%` }}
+                              className={`w-full rounded-t transition-all duration-700 ${
+                                is10Y ? 'bg-emerald-400' : 'bg-cyan-500/70'
+                              }`}
+                            />
+                          </div>
+                          <span className="text-[9px] font-mono text-zinc-400 font-bold">
+                            {pt.term}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div className="text-[9px] text-zinc-400 leading-tight pt-1 border-t border-zinc-800/60 font-sans">
+                  {yieldCurveData.slopeDesc}
+                </div>
+              </div>
+
+              {/* ── Collapsible 5-Pillar Score Breakdown Table ── */}
+              <AnimatePresence>
+                {showPillarsBreakdown && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="p-2.5 rounded-lg bg-zinc-950 border border-zinc-800 space-y-2 text-[9px] font-mono overflow-hidden"
+                  >
+                    <div className="flex items-center justify-between pb-1 border-b border-zinc-800 text-zinc-400 font-bold">
+                      <span>TRỤ CỘT ĐỊNH LƯỢNG</span>
+                      <span>PHỤC HỒI | MỞ RỘNG | CUỐI | SUY THOÁI</span>
+                    </div>
+                    <div className="space-y-1 text-zinc-300">
+                      <div className="flex justify-between">
+                        <span className="text-zinc-400">1. GDP (25%):</span>
+                        <span>{macroPillarScores.recovery.gdp} | <strong className="text-emerald-400">{macroPillarScores.expansion.gdp}</strong> | {macroPillarScores.late.gdp} | {macroPillarScores.recession.gdp}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-zinc-400">2. CPI (20%):</span>
+                        <span>{macroPillarScores.recovery.cpi} | <strong className="text-emerald-400">{macroPillarScores.expansion.cpi}</strong> | {macroPillarScores.late.cpi} | {macroPillarScores.recession.cpi}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-zinc-400">3. Lãi suất SBV (20%):</span>
+                        <span>{macroPillarScores.recovery.rate} | <strong className="text-emerald-400">{macroPillarScores.expansion.rate}</strong> | {macroPillarScores.late.rate} | {macroPillarScores.recession.rate}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-zinc-400">4. Tỷ giá USD/VND (15%):</span>
+                        <span>{macroPillarScores.recovery.fx} | <strong className="text-emerald-400">{macroPillarScores.expansion.fx}</strong> | {macroPillarScores.late.fx} | {macroPillarScores.recession.fx}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-zinc-400">5. Đường cong Lợi suất (20%):</span>
+                        <span>{macroPillarScores.recovery.yield} | <strong className="text-emerald-400">{macroPillarScores.expansion.yield}</strong> | {macroPillarScores.late.yield} | {macroPillarScores.recession.yield}</span>
+                      </div>
+                      <div className="flex justify-between pt-1 border-t border-zinc-800 font-bold text-zinc-200">
+                        <span className="text-emerald-400">Vĩ Mô Tổng Hợp (70%):</span>
+                        <span>{macroPillarScores.recovery.composite} | <strong className="text-emerald-400">{macroPillarScores.expansion.composite}</strong> | {macroPillarScores.late.composite} | {macroPillarScores.recession.composite}</span>
+                      </div>
+                      <div className="flex justify-between text-zinc-300">
+                        <span className="text-cyan-400">Xung lực Ngành RS (30%):</span>
+                        <span>{phaseScores.recovery.momentumScore} | <strong className="text-cyan-400">{phaseScores.expansion.momentumScore}</strong> | {phaseScores.late.momentumScore} | {phaseScores.recession.momentumScore}</span>
+                      </div>
+                      <div className="flex justify-between pt-1 border-t border-zinc-800 font-bold text-zinc-100">
+                        <span>ĐIỂM CHUNG CUỘC:</span>
+                        <span>{phaseScores.recovery.score} | <strong className="text-emerald-400">{phaseScores.expansion.score}</strong> | {phaseScores.late.score} | {phaseScores.recession.score}</span>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               <div className="text-[9px] text-zinc-400 leading-tight pt-1 border-t border-zinc-800/60 font-sans">
-                Dữ liệu vĩ mô định lượng quý từ Tổng cục Thống kê (GSO) &amp; Ngân hàng Nhà nước (SBV).
+                Thuật toán lượng hóa 5 Trụ cột Vĩ mô (GSO, SBV, TPCP) + Xung lực giá RS 20 ngành thực tế.
               </div>
             </div>
           </div>
@@ -1204,7 +1540,7 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
 
                 {/* ── Asset Allocation Strategy & Top Priority Assets (Fidelity & Merrill Lynch Model) ── */}
                 <div className="p-4 rounded-2xl bg-zinc-950/90 border border-zinc-800/80 text-xs font-mono mb-3 space-y-3.5 shadow-lg">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-zinc-800/80 gap-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-zinc-800/80 gap-3">
                     <div className="flex items-center gap-2">
                       <div className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300">
                         <Scales className="w-4 h-4" />
@@ -1214,9 +1550,65 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                           Phân bổ tài sản khuyến nghị
                         </span>
                         <span className="text-[11px] text-zinc-500 font-sans block">
-                          Tối ưu hóa theo chu kỳ kinh tế
+                          Tối ưu hóa đa yếu tố theo chu kỳ kinh tế
                         </span>
                       </div>
+                    </div>
+
+                    {/* Risk Appetite Selector & Dynamic Engine Toggle */}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <div className="flex items-center bg-zinc-900/90 p-1 rounded-xl border border-zinc-800 text-[11px] font-sans">
+                        <button
+                          type="button"
+                          onClick={() => setRiskAppetite('aggressive')}
+                          className={`flex items-center gap-1 px-2.5 py-1 rounded-lg transition-all ${
+                            riskAppetite === 'aggressive'
+                              ? 'bg-rose-500/20 text-rose-400 font-semibold border border-rose-500/40 shadow-sm'
+                              : 'text-zinc-400 hover:text-zinc-200'
+                          }`}
+                        >
+                          <Lightning className="w-3.5 h-3.5" />
+                          <span>Tấn công</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setRiskAppetite('balanced')}
+                          className={`flex items-center gap-1 px-2.5 py-1 rounded-lg transition-all ${
+                            riskAppetite === 'balanced'
+                              ? 'bg-cyan-500/20 text-cyan-400 font-semibold border border-cyan-500/40 shadow-sm'
+                              : 'text-zinc-400 hover:text-zinc-200'
+                          }`}
+                        >
+                          <Scales className="w-3.5 h-3.5" />
+                          <span>Cân bằng</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setRiskAppetite('conservative')}
+                          className={`flex items-center gap-1 px-2.5 py-1 rounded-lg transition-all ${
+                            riskAppetite === 'conservative'
+                              ? 'bg-emerald-500/20 text-emerald-400 font-semibold border border-emerald-500/40 shadow-sm'
+                              : 'text-zinc-400 hover:text-zinc-200'
+                          }`}
+                        >
+                          <ShieldCheck className="w-3.5 h-3.5" />
+                          <span>Phòng thủ</span>
+                        </button>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => setIsDynamicAllocation((prev) => !prev)}
+                        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-[11px] font-sans transition-all ${
+                          isDynamicAllocation
+                            ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30'
+                            : 'bg-zinc-900 text-zinc-500 border-zinc-800 hover:text-zinc-300'
+                        }`}
+                        title="Bật/tắt thuật toán phân bổ động theo điểm số chu kỳ thực tế, VIX và độ dốc đường cong lợi suất"
+                      >
+                        <SlidersHorizontal className="w-3.5 h-3.5" />
+                        <span>{isDynamicAllocation ? 'Phân bổ Động' : 'Tĩnh (Chuẩn)'}</span>
+                      </button>
                     </div>
                   </div>
 
@@ -1230,6 +1622,11 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                         <span className="text-[10px] text-zinc-400 font-medium uppercase tracking-wider">
                           Tài sản dẫn đầu
                         </span>
+                        {isDynamicAllocation && (
+                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 font-mono">
+                            Khẩu vị: {riskAppetite === 'aggressive' ? 'Tấn công (+Beta)' : riskAppetite === 'conservative' ? 'Phòng thủ (+Cash/Bond)' : 'Cân bằng'}
+                          </span>
+                        )}
                       </div>
                       <div className="text-sm font-semibold text-zinc-100 leading-tight">
                         {activeCfg.topPriorityAsset}
@@ -1245,12 +1642,12 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                     <div className="flex items-center justify-between text-[10px] text-zinc-400">
                       <span className="font-bold flex items-center gap-1.5 text-zinc-300">
                         <ChartLineUp className="w-3.5 h-3.5 text-cyan-400" />
-                        TỶ TRỌNG PHÂN BỔ MÔ PHỎNG (%)
+                        TỶ TRỌNG PHÂN BỔ {isDynamicAllocation ? 'ĐỘNG (QUANT ENGINE)' : 'MÔ PHỎNG'} (%)
                       </span>
                       <span>Tổng: 100%</span>
                     </div>
                     <div className="h-3 w-full bg-zinc-900 rounded-lg overflow-hidden flex gap-0.5 p-0.5 border border-zinc-800">
-                      {activeCfg.priorityAssets.map((item, idx) => {
+                      {dynamicPriorityAssets.map((item, idx) => {
                         const colors = [
                           'bg-cyan-400',
                           'bg-emerald-400',
@@ -1271,7 +1668,7 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
 
                   {/* 4 Asset Classes Cards Grid (Cân đối, không đè chữ, có mini-bar) */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
-                    {activeCfg.priorityAssets.map((item) => {
+                    {dynamicPriorityAssets.map((item) => {
                       const isTop1 = item.rank === 1;
                       const statusColor = 
                         item.status === 'overweight' 
