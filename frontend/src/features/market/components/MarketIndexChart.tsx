@@ -207,7 +207,7 @@ export const MarketIndexChart: React.FC = () => {
         const days = timeframe === '3M' ? 90 : timeframe === '6M' ? 180 : timeframe === '1Y' ? 365 : 1825;
         const res = await fetch(`/api/market/history?symbol=${activeIndexKey}&resolution=1D&days=${days}`);
         const json = await res.json();
-        if (!isMounted || !json.success || !Array.isArray(json.data) || json.data.length === 0) return;
+        if (!isMounted || !chartRef.current || !json.success || !Array.isArray(json.data) || json.data.length === 0) return;
 
         const rawData = json.data;
         const candles = rawData.map((item: any) => {
@@ -244,11 +244,16 @@ export const MarketIndexChart: React.FC = () => {
           }
         }
 
-        candleSeries.setData(candles);
-        volumeSeries.setData(volumes);
-        if (showMA20) ma20Series.setData(ma20);
-        if (showMA50) ma50Series.setData(ma50);
-        chart.timeScale().fitContent();
+        if (!isMounted || !chartRef.current) return;
+        try {
+          candleSeries.setData(candles);
+          volumeSeries.setData(volumes);
+          if (showMA20) ma20Series.setData(ma20);
+          if (showMA50) ma50Series.setData(ma50);
+          chart.timeScale().fitContent();
+        } catch {
+          // Chart might already be disposed
+        }
       } catch (err) {
         console.error('Failed to load real index candles:', err);
       }
@@ -257,38 +262,52 @@ export const MarketIndexChart: React.FC = () => {
     fetchRealCandles();
 
     chart.subscribeCrosshairMove((param) => {
-      if (!param.time || !param.seriesData) {
+      if (!isMounted || !param.time || !param.seriesData) {
         setHoveredData(null);
         return;
       }
-      const c = param.seriesData.get(candleSeries) as any;
-      if (c) {
-        const change = c.close - c.open;
-        const changePct = c.open ? (change / c.open) * 100 : 0;
-        setHoveredData({
-          open: c.open,
-          high: c.high,
-          low: c.low,
-          close: c.close,
-          changePct,
-        });
+      try {
+        const c = param.seriesData.get(candleSeries) as any;
+        if (c) {
+          const change = c.close - c.open;
+          const changePct = c.open ? (change / c.open) * 100 : 0;
+          setHoveredData({
+            open: c.open,
+            high: c.high,
+            low: c.low,
+            close: c.close,
+            changePct,
+          });
+        }
+      } catch {
+        // Disposed guard
       }
     });
 
     const handleResize = () => {
-      if (container && chart) {
-        chart.applyOptions({
-          width: container.clientWidth,
-          height: container.clientHeight,
-        });
+      if (container && chartRef.current) {
+        try {
+          chart.applyOptions({
+            width: container.clientWidth,
+            height: container.clientHeight,
+          });
+        } catch {}
       }
     };
 
     window.addEventListener('resize', handleResize);
 
     return () => {
+      isMounted = false;
       window.removeEventListener('resize', handleResize);
-      chart.remove();
+      try {
+        chart.remove();
+      } catch {}
+      chartRef.current = null;
+      candleSeriesRef.current = null;
+      volumeSeriesRef.current = null;
+      ma20SeriesRef.current = null;
+      ma50SeriesRef.current = null;
     };
   }, [timeframe, showMA20, showMA50, activeIndexKey]);
 

@@ -43,8 +43,11 @@ export interface SessionSectorFlow {
   isLive?: boolean;
 }
 
-interface SectorMoneyFlowTableProps {
+export interface SectorMoneyFlowTableProps {
+  data?: SessionSectorFlow[];
+  loading?: boolean;
   onDataLoaded?: (data: SessionSectorFlow[]) => void;
+  hideTimeframe?: boolean;
 }
 
 // Meta definition for sectors
@@ -140,11 +143,19 @@ export function getMoneyFlowHeatStyle(pct: number | undefined): {
   }
 }
 
-export function SectorMoneyFlowTable({ onDataLoaded }: SectorMoneyFlowTableProps) {
-  const [data, setData] = useState<SessionSectorFlow[]>([]);
-  const [loading, setLoading] = useState(true);
+export function SectorMoneyFlowTable({
+  data: propData,
+  loading: propLoading,
+  onDataLoaded,
+  hideTimeframe,
+}: SectorMoneyFlowTableProps) {
+  const [internalData, setInternalData] = useState<SessionSectorFlow[]>([]);
+  const [internalLoading, setInternalLoading] = useState(true);
   const [limit, setLimit] = useState<number>(20);
   const [warnings, setWarnings] = useState<string[]>([]);
+
+  const data = propData !== undefined ? propData : internalData;
+  const loading = propLoading !== undefined ? propLoading : internalLoading;
 
   // View Layout Mode:
   // - 'timeline': Bảng theo từng phiên (ngang)
@@ -160,13 +171,14 @@ export function SectorMoneyFlowTable({ onDataLoaded }: SectorMoneyFlowTableProps
   const [selectedSession, setSelectedSession] = useState<SessionSectorFlow | null>(null);
 
   const fetchData = async (limitVal: number) => {
-    setLoading(true);
+    if (propData !== undefined) return;
+    setInternalLoading(true);
     try {
       const res = await fetch(`/api/market/sector-flow?limit=${limitVal}`);
       if (res.ok) {
         const json = await res.json();
         if (json.success && Array.isArray(json.data)) {
-          setData(json.data);
+          setInternalData(json.data);
           setWarnings(json.warnings || []);
           if (onDataLoaded) onDataLoaded(json.data);
         }
@@ -174,13 +186,15 @@ export function SectorMoneyFlowTable({ onDataLoaded }: SectorMoneyFlowTableProps
     } catch (e) {
       console.error('Failed to load sector flow data:', e);
     } finally {
-      setLoading(false);
+      setInternalLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchData(limit);
-  }, [limit]);
+    if (propData === undefined) {
+      fetchData(limit);
+    }
+  }, [limit, propData]);
 
   const formatVal = (val: number | undefined) => {
     if (val === undefined || isNaN(val)) return '-';
@@ -289,43 +303,47 @@ export function SectorMoneyFlowTable({ onDataLoaded }: SectorMoneyFlowTableProps
             </div>
           )}
 
-          {/* Timeframe Limit Pills */}
-          <div className="flex items-center p-1 rounded-xl bg-zinc-900/90 border border-zinc-800 text-xs font-medium">
-            <button
-              onClick={() => setLimit(10)}
-              className={`px-2.5 py-1 rounded-lg transition-all ${
-                limit === 10 ? 'bg-zinc-800 text-zinc-100 shadow-sm' : 'text-zinc-400 hover:text-zinc-200'
-              }`}
-            >
-              10 Phiên
-            </button>
-            <button
-              onClick={() => setLimit(20)}
-              className={`px-2.5 py-1 rounded-lg transition-all ${
-                limit === 20 ? 'bg-zinc-800 text-zinc-100 shadow-sm' : 'text-zinc-400 hover:text-zinc-200'
-              }`}
-            >
-              20 Phiên
-            </button>
-            <button
-              onClick={() => setLimit(30)}
-              className={`px-2.5 py-1 rounded-lg transition-all ${
-                limit === 30 ? 'bg-zinc-800 text-zinc-100 shadow-sm' : 'text-zinc-400 hover:text-zinc-200'
-              }`}
-            >
-              30 Phiên
-            </button>
-          </div>
+          {/* Timeframe Limit Pills (Hidden if managed globally at top of page) */}
+          {!hideTimeframe && propData === undefined && (
+            <div className="flex items-center p-1 rounded-xl bg-zinc-900/90 border border-zinc-800 text-xs font-medium">
+              <button
+                onClick={() => setLimit(10)}
+                className={`px-2.5 py-1 rounded-lg transition-all ${
+                  limit === 10 ? 'bg-zinc-800 text-zinc-100 shadow-sm' : 'text-zinc-400 hover:text-zinc-200'
+                }`}
+              >
+                10 Phiên
+              </button>
+              <button
+                onClick={() => setLimit(20)}
+                className={`px-2.5 py-1 rounded-lg transition-all ${
+                  limit === 20 ? 'bg-zinc-800 text-zinc-100 shadow-sm' : 'text-zinc-400 hover:text-zinc-200'
+                }`}
+              >
+                20 Phiên
+              </button>
+              <button
+                onClick={() => setLimit(30)}
+                className={`px-2.5 py-1 rounded-lg transition-all ${
+                  limit === 30 ? 'bg-zinc-800 text-zinc-100 shadow-sm' : 'text-zinc-400 hover:text-zinc-200'
+                }`}
+              >
+                30 Phiên
+              </button>
+            </div>
+          )}
 
           {/* Refresh Button */}
-          <button
-            onClick={() => fetchData(limit)}
-            disabled={loading}
-            title="Làm mới dữ liệu"
-            className="p-2 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200 transition-colors disabled:opacity-50"
-          >
-            <ArrowClockwise className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          </button>
+          {!hideTimeframe && propData === undefined && (
+            <button
+              onClick={() => fetchData(limit)}
+              disabled={loading}
+              title="Làm mới dữ liệu"
+              className="p-2 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200 transition-colors disabled:opacity-50"
+            >
+              <ArrowClockwise className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            </button>
+          )}
         </div>
       </div>
 

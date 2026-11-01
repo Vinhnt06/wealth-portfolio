@@ -230,8 +230,8 @@ export function SectorFlowChart({
       </div>
 
       {/* Chart Canvas */}
-      <div className={`${variant === 'full' ? 'h-[320px]' : 'h-[280px]'} w-full`}>
-        <ResponsiveContainer width="100%" height="100%">
+      <div className={`${variant === 'full' ? 'h-[320px]' : 'h-[280px]'} w-full min-w-0 relative`}>
+        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
           {chartMode === 'ratio' ? (
             <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <defs>
