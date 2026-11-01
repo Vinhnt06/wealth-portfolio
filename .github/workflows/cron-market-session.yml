@@ -1,0 +1,47 @@
+name: 📈 YourFin Market Post-Session Auto-Sync
+
+on:
+  schedule:
+    # Chạy tự động lúc 15:30 Giờ Việt Nam (08:30 UTC), từ Thứ 2 đến Thứ 6 hàng tuần (ngay sau khi kết thúc phiên ATC 15:00)
+    - cron: '30 8 * * 1-5'
+  workflow_dispatch: # Cho phép trigger thủ công trực tiếp từ GitHub Actions bất kỳ lúc nào
+
+permissions:
+  contents: write
+
+jobs:
+  sync-market-session:
+    name: 📊 Chốt Dữ Liệu Dòng Tiền Ngành & Quét Minervini
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: ⚙️ Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: 🚀 Chốt Lịch Sử Dòng Tiền Ngành (Entrade API)
+        run: |
+          node scripts/build_sector_flow_history.js
+
+      - name: 🔍 Quét Bộ Lọc Cổ Phiếu Minervini Trend Template
+        run: |
+          node scripts/cron_scan_minervini.js
+
+      - name: 💾 Commit & Push Dữ Liệu Sau Phiên Lên Repository
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add frontend/src/features/market/data/sector_flow_history.json frontend/src/features/market/data/lastMinerviniScan.json
+          if git diff --staged --quiet; then
+            echo "✅ Dữ liệu đã là mới nhất, không có thay đổi cần commit."
+          else
+            git commit -m "chore(data): auto-sync market sector flow and minervini screener after session"
+            git push origin main
+            echo "🚀 Đã cập nhật và đẩy dữ liệu chốt phiên thành công lên production!"
+          fi
