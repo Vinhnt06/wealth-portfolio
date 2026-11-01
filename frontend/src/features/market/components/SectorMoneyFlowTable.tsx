@@ -70,12 +70,14 @@ export function getMoneyFlowHeatStyle(pct: number | undefined): {
   className: string;
   badgeClass: string;
   dotColor: string;
+  cellClass: string;
 } {
   if (pct === undefined || isNaN(pct)) {
     return {
       className: 'bg-zinc-900/60 text-zinc-400',
       badgeClass: 'bg-zinc-800 text-zinc-400',
       dotColor: '#71717a',
+      cellClass: 'bg-zinc-900/60 text-zinc-500',
     };
   }
 
@@ -85,6 +87,7 @@ export function getMoneyFlowHeatStyle(pct: number | undefined): {
       className: 'bg-emerald-600/75 text-emerald-50 font-bold border border-emerald-400/40 shadow-[0_0_10px_rgba(16,185,129,0.25)]',
       badgeClass: 'bg-emerald-950/90 text-emerald-300 border border-emerald-600/50',
       dotColor: '#10b981',
+      cellClass: 'bg-emerald-600/90 text-white font-black shadow-[inset_0_0_12px_rgba(16,185,129,0.35)]',
     };
   } else if (pct >= 18) {
     // Mạnh (Xanh lục vừa)
@@ -92,6 +95,7 @@ export function getMoneyFlowHeatStyle(pct: number | undefined): {
       className: 'bg-emerald-700/65 text-emerald-100 font-semibold border border-emerald-500/30',
       badgeClass: 'bg-emerald-950/80 text-emerald-300 border border-emerald-700/50',
       dotColor: '#059669',
+      cellClass: 'bg-emerald-700/85 text-emerald-50 font-bold',
     };
   } else if (pct >= 12) {
     // Khá tốt (Xanh chuối / Teal)
@@ -99,6 +103,7 @@ export function getMoneyFlowHeatStyle(pct: number | undefined): {
       className: 'bg-teal-700/60 text-teal-100 font-medium border border-teal-600/30',
       badgeClass: 'bg-teal-950/80 text-teal-300 border border-teal-700/40',
       dotColor: '#0d9488',
+      cellClass: 'bg-teal-700/80 text-teal-50 font-bold',
     };
   } else if (pct >= 8) {
     // Trung bình khá (Vàng sáng / Amber)
@@ -106,6 +111,7 @@ export function getMoneyFlowHeatStyle(pct: number | undefined): {
       className: 'bg-amber-600/65 text-amber-50 font-medium border border-amber-500/30',
       badgeClass: 'bg-amber-950/80 text-amber-300 border border-amber-600/40',
       dotColor: '#f59e0b',
+      cellClass: 'bg-amber-600/80 text-amber-50 font-bold',
     };
   } else if (pct >= 5) {
     // Trung bình (Cam / Orange)
@@ -113,6 +119,7 @@ export function getMoneyFlowHeatStyle(pct: number | undefined): {
       className: 'bg-orange-600/60 text-orange-100 border border-orange-500/30',
       badgeClass: 'bg-orange-950/80 text-orange-300 border border-orange-600/40',
       dotColor: '#ea580c',
+      cellClass: 'bg-orange-600/85 text-orange-50 font-bold',
     };
   } else if (pct >= 2.5) {
     // Thấp (Đỏ cam / Rose)
@@ -120,6 +127,7 @@ export function getMoneyFlowHeatStyle(pct: number | undefined): {
       className: 'bg-rose-700/60 text-rose-100 border border-rose-600/30',
       badgeClass: 'bg-rose-950/80 text-rose-300 border border-rose-700/40',
       dotColor: '#e11d48',
+      cellClass: 'bg-rose-700/85 text-rose-50 font-bold',
     };
   } else {
     // Rất thấp / Cạn kiệt (Đỏ gạch sẫm - Dried up)
@@ -127,6 +135,7 @@ export function getMoneyFlowHeatStyle(pct: number | undefined): {
       className: 'bg-red-900/65 text-red-200 border border-red-800/40',
       badgeClass: 'bg-red-950/80 text-red-300 border border-red-800/50',
       dotColor: '#991b1b',
+      cellClass: 'bg-red-950/95 text-red-200 font-semibold',
     };
   }
 }
@@ -351,113 +360,124 @@ export function SectorMoneyFlowTable({ onDataLoaded }: SectorMoneyFlowTableProps
         </span>
       </div>
 
-      {/* VIEW 1: TIMELINE TABLE (BẢNG THEO PHIÊN) */}
+      {/* VIEW 1: DATA TABLE (BẢNG DỮ LIỆU CÁC PHIÊN GIAO DỊCH) */}
       {viewLayout === 'timeline' && (
         <div className="relative overflow-x-auto rounded-2xl border border-zinc-800/80 bg-zinc-950/90 shadow-2xl">
           <table className="w-full text-left text-xs text-zinc-200 border-collapse">
             <thead className="bg-zinc-900/95 text-zinc-300 font-mono text-[11px] sticky top-0 z-20 backdrop-blur-md border-b border-zinc-800">
-              <tr>
-                <th className="px-3.5 py-3 whitespace-nowrap border-r border-zinc-800/80 text-zinc-400">
+              {/* Tầng 1: Phân nhóm lớn */}
+              <tr className="border-b border-zinc-800/80">
+                <th rowSpan={2} className="px-3.5 py-3 whitespace-nowrap border-r border-zinc-800 text-zinc-400 text-left">
                   Ngày GD
                 </th>
-                <th className="px-3.5 py-3 whitespace-nowrap border-r border-zinc-800/80 text-emerald-400 bg-emerald-950/20">
-                  Tổng TT
+                <th rowSpan={2} className="px-3.5 py-3 whitespace-nowrap border-r border-zinc-700 text-emerald-400 bg-emerald-950/20 text-right font-bold">
+                  Tổng TT (Tỷ)
                 </th>
 
-                {/* Ngân hàng */}
-                <th className="px-3.5 py-3 whitespace-nowrap border-r border-zinc-800/60 bg-blue-950/30 text-blue-300 font-bold">
+                {/* Khối % Tỷ trọng Dòng tiền - ĐỨNG SÁT NHAU THÀNH DẢI MA TRẬN NHIỆT */}
+                <th colSpan={5} className="py-2.5 px-3 border-r border-zinc-700 bg-emerald-950/30 text-emerald-300 text-center font-bold tracking-wider uppercase text-xs">
+                  ⚡ Tỷ Trọng Dòng Tiền (%) — Ma Trận Nhiệt Liền Khối
+                </th>
+
+                {/* Khối Giá Trị Giao Dịch */}
+                <th colSpan={isCompact ? 5 : 15} className="py-2.5 px-3 border-r border-zinc-800 bg-zinc-900/80 text-zinc-300 text-center font-bold tracking-wider uppercase text-xs">
+                  💰 Giá Trị Khớp Lệnh (Tỷ VNĐ)
+                </th>
+
+                <th rowSpan={2} className="px-3 py-3 whitespace-nowrap text-center text-zinc-400">
+                  Chi Tiết
+                </th>
+              </tr>
+
+              {/* Tầng 2: Tên cột chi tiết */}
+              <tr className="border-b border-zinc-800 text-center">
+                {/* 5 Cột % sát nhau */}
+                <th className="px-3 py-2 border-r border-zinc-800/60 bg-blue-950/30 text-blue-300 text-center font-bold min-w-[78px]">
+                  % NH
+                </th>
+                <th className="px-3 py-2 border-r border-zinc-800/60 bg-amber-950/30 text-amber-300 text-center font-bold min-w-[78px]">
+                  % CK
+                </th>
+                <th className="px-3 py-2 border-r border-zinc-800/60 bg-emerald-950/30 text-emerald-300 text-center font-bold min-w-[78px]">
+                  % BĐS
+                </th>
+                <th className="px-3 py-2 border-r border-zinc-800/60 bg-cyan-950/30 text-cyan-300 text-center font-bold min-w-[78px]">
+                  % Thép
+                </th>
+                <th className="px-3 py-2 border-r border-zinc-700 bg-indigo-950/30 text-indigo-300 text-center font-bold min-w-[78px]">
+                  % VIN
+                </th>
+
+                {/* 5 Cột Tổng Tỷ VNĐ */}
+                <th className="px-3 py-2 border-r border-zinc-800/40 text-blue-300 text-right font-medium">
                   Tổng NH
                 </th>
                 {!isCompact && (
                   <>
-                    <th className="px-3 py-3 whitespace-nowrap border-r border-zinc-800/40 text-emerald-400 font-normal">
+                    <th className="px-2.5 py-2 border-r border-zinc-800/30 text-emerald-400 text-right font-normal">
                       Mua NH
                     </th>
-                    <th className="px-3 py-3 whitespace-nowrap border-r border-zinc-800/80 text-rose-400 font-normal">
+                    <th className="px-2.5 py-2 border-r border-zinc-800/50 text-rose-400 text-right font-normal">
                       Bán NH
                     </th>
                   </>
                 )}
-                <th className="px-3 py-3 whitespace-nowrap border-r border-zinc-800/80 text-center font-bold text-blue-300">
-                  % NH
-                </th>
 
-                {/* Chứng khoán */}
-                <th className="px-3.5 py-3 whitespace-nowrap border-r border-zinc-800/60 bg-amber-950/20 text-amber-300 font-bold">
+                <th className="px-3 py-2 border-r border-zinc-800/40 text-amber-300 text-right font-medium">
                   Tổng CK
                 </th>
                 {!isCompact && (
                   <>
-                    <th className="px-3 py-3 whitespace-nowrap border-r border-zinc-800/40 text-emerald-400 font-normal">
+                    <th className="px-2.5 py-2 border-r border-zinc-800/30 text-emerald-400 text-right font-normal">
                       Mua CK
                     </th>
-                    <th className="px-3 py-3 whitespace-nowrap border-r border-zinc-800/80 text-rose-400 font-normal">
+                    <th className="px-2.5 py-2 border-r border-zinc-800/50 text-rose-400 text-right font-normal">
                       Bán CK
                     </th>
                   </>
                 )}
-                <th className="px-3 py-3 whitespace-nowrap border-r border-zinc-800/80 text-center font-bold text-amber-300">
-                  % CK
-                </th>
 
-                {/* Bất động sản */}
-                <th className="px-3.5 py-3 whitespace-nowrap border-r border-zinc-800/60 bg-emerald-950/20 text-emerald-300 font-bold">
+                <th className="px-3 py-2 border-r border-zinc-800/40 text-emerald-300 text-right font-medium">
                   Tổng BĐS
                 </th>
                 {!isCompact && (
                   <>
-                    <th className="px-3 py-3 whitespace-nowrap border-r border-zinc-800/40 text-emerald-400 font-normal">
+                    <th className="px-2.5 py-2 border-r border-zinc-800/30 text-emerald-400 text-right font-normal">
                       Mua BĐS
                     </th>
-                    <th className="px-3 py-3 whitespace-nowrap border-r border-zinc-800/80 text-rose-400 font-normal">
+                    <th className="px-2.5 py-2 border-r border-zinc-800/50 text-rose-400 text-right font-normal">
                       Bán BĐS
                     </th>
                   </>
                 )}
-                <th className="px-3 py-3 whitespace-nowrap border-r border-zinc-800/80 text-center font-bold text-emerald-300">
-                  % BĐS
-                </th>
 
-                {/* Thép */}
-                <th className="px-3.5 py-3 whitespace-nowrap border-r border-zinc-800/60 bg-cyan-950/30 text-cyan-300 font-bold">
+                <th className="px-3 py-2 border-r border-zinc-800/40 text-cyan-300 text-right font-medium">
                   Tổng Thép
                 </th>
                 {!isCompact && (
                   <>
-                    <th className="px-3 py-3 whitespace-nowrap border-r border-zinc-800/40 text-emerald-400 font-normal">
+                    <th className="px-2.5 py-2 border-r border-zinc-800/30 text-emerald-400 text-right font-normal">
                       Mua Thép
                     </th>
-                    <th className="px-3 py-3 whitespace-nowrap border-r border-zinc-800/80 text-rose-400 font-normal">
+                    <th className="px-2.5 py-2 border-r border-zinc-800/50 text-rose-400 text-right font-normal">
                       Bán Thép
                     </th>
                   </>
                 )}
-                <th className="px-3 py-3 whitespace-nowrap border-r border-zinc-800/80 text-center font-bold text-cyan-300">
-                  % Thép
-                </th>
 
-                {/* Họ Vin */}
-                <th className="px-3.5 py-3 whitespace-nowrap border-r border-zinc-800/60 bg-indigo-950/30 text-indigo-300 font-bold">
+                <th className="px-3 py-2 border-r border-zinc-800 text-indigo-300 text-right font-medium">
                   Tổng VIN
                 </th>
                 {!isCompact && (
                   <>
-                    <th className="px-3 py-3 whitespace-nowrap border-r border-zinc-800/40 text-emerald-400 font-normal">
+                    <th className="px-2.5 py-2 border-r border-zinc-800/30 text-emerald-400 text-right font-normal">
                       Mua VIN
                     </th>
-                    <th className="px-3 py-3 whitespace-nowrap border-r border-zinc-800/80 text-rose-400 font-normal">
+                    <th className="px-2.5 py-2 border-r border-zinc-800 text-rose-400 text-right font-normal">
                       Bán VIN
                     </th>
                   </>
                 )}
-                <th className="px-3 py-3 whitespace-nowrap border-r border-zinc-800/80 text-center font-bold text-indigo-300">
-                  % VIN
-                </th>
-
-                {/* Soi chi tiết */}
-                <th className="px-3 py-3 whitespace-nowrap text-center text-zinc-400">
-                  Chi Tiết
-                </th>
               </tr>
             </thead>
 
@@ -482,7 +502,7 @@ export function SectorMoneyFlowTable({ onDataLoaded }: SectorMoneyFlowTableProps
                   return (
                     <tr
                       key={row.date}
-                      className={`hover:bg-zinc-800/30 transition-colors ${
+                      className={`hover:bg-zinc-800/30 transition-colors border-b border-zinc-800/60 ${
                         row.isLive ? 'bg-emerald-950/10' : ''
                       }`}
                     >
@@ -500,119 +520,101 @@ export function SectorMoneyFlowTable({ onDataLoaded }: SectorMoneyFlowTableProps
                       </td>
 
                       {/* Tổng TT */}
-                      <td className="px-3.5 py-2.5 whitespace-nowrap border-r border-zinc-800/80 font-bold text-emerald-400 bg-emerald-950/10">
+                      <td className="px-3.5 py-2.5 whitespace-nowrap border-r border-zinc-700 font-bold text-emerald-400 bg-emerald-950/10 text-right">
                         {formatVal(row.totalMarket)}
                       </td>
 
-                      {/* Ngân hàng */}
-                      <td className="px-3.5 py-2.5 whitespace-nowrap border-r border-zinc-800/60 font-bold text-zinc-100 bg-zinc-900/30">
+                      {/* ── 5 Ô % DÒNG TIỀN FILL FULL MÀU CELL, ĐỨNG SÁT NHAU ── */}
+                      <td className={`px-2 py-2.5 whitespace-nowrap border-r border-zinc-900/60 text-center font-bold text-xs ${nhStyle.cellClass}`}>
+                        {formatVal(row.nh?.ratioPct)}%
+                      </td>
+
+                      <td className={`px-2 py-2.5 whitespace-nowrap border-r border-zinc-900/60 text-center font-bold text-xs ${ckStyle.cellClass}`}>
+                        {formatVal(row.ck?.ratioPct)}%
+                      </td>
+
+                      <td className={`px-2 py-2.5 whitespace-nowrap border-r border-zinc-900/60 text-center font-bold text-xs ${bdsStyle.cellClass}`}>
+                        {formatVal(row.bds?.ratioPct)}%
+                      </td>
+
+                      <td className={`px-2 py-2.5 whitespace-nowrap border-r border-zinc-900/60 text-center font-bold text-xs ${thepStyle.cellClass}`}>
+                        {formatVal(row.thep?.ratioPct)}%
+                      </td>
+
+                      <td className={`px-2 py-2.5 whitespace-nowrap border-r border-zinc-700 text-center font-bold text-xs ${vinStyle.cellClass}`}>
+                        {formatVal(row.vin?.ratioPct)}%
+                      </td>
+
+                      {/* ── 5 CỘT GIÁ TRỊ GIAO DỊCH (TỶ VNĐ) ── */}
+                      <td className="px-3.5 py-2.5 whitespace-nowrap border-r border-zinc-800/60 font-bold text-zinc-100 bg-zinc-900/30 text-right">
                         {formatVal(row.nh?.total)}
                       </td>
                       {!isCompact && (
                         <>
-                          <td className="px-3 py-2.5 whitespace-nowrap border-r border-zinc-800/40 text-emerald-400">
+                          <td className="px-2.5 py-2.5 whitespace-nowrap border-r border-zinc-800/40 text-emerald-400 text-right">
                             {formatVal(row.nh?.buy)}
                           </td>
-                          <td className="px-3 py-2.5 whitespace-nowrap border-r border-zinc-800/80 text-rose-400">
+                          <td className="px-2.5 py-2.5 whitespace-nowrap border-r border-zinc-800/80 text-rose-400 text-right">
                             {formatVal(row.nh?.sell)}
                           </td>
                         </>
                       )}
-                      <td className="px-2 py-1.5 whitespace-nowrap border-r border-zinc-800/80 text-center">
-                        <span
-                          className={`inline-block px-2.5 py-1 rounded-md text-[11px] ${nhStyle.className}`}
-                        >
-                          {formatVal(row.nh?.ratioPct)}%
-                        </span>
-                      </td>
 
-                      {/* Chứng khoán */}
-                      <td className="px-3.5 py-2.5 whitespace-nowrap border-r border-zinc-800/60 font-bold text-zinc-100 bg-zinc-900/30">
+                      <td className="px-3.5 py-2.5 whitespace-nowrap border-r border-zinc-800/60 font-bold text-zinc-100 bg-zinc-900/30 text-right">
                         {formatVal(row.ck?.total)}
                       </td>
                       {!isCompact && (
                         <>
-                          <td className="px-3 py-2.5 whitespace-nowrap border-r border-zinc-800/40 text-emerald-400">
+                          <td className="px-2.5 py-2.5 whitespace-nowrap border-r border-zinc-800/40 text-emerald-400 text-right">
                             {formatVal(row.ck?.buy)}
                           </td>
-                          <td className="px-3 py-2.5 whitespace-nowrap border-r border-zinc-800/80 text-rose-400">
+                          <td className="px-2.5 py-2.5 whitespace-nowrap border-r border-zinc-800/80 text-rose-400 text-right">
                             {formatVal(row.ck?.sell)}
                           </td>
                         </>
                       )}
-                      <td className="px-2 py-1.5 whitespace-nowrap border-r border-zinc-800/80 text-center">
-                        <span
-                          className={`inline-block px-2.5 py-1 rounded-md text-[11px] ${ckStyle.className}`}
-                        >
-                          {formatVal(row.ck?.ratioPct)}%
-                        </span>
-                      </td>
 
-                      {/* Bất động sản */}
-                      <td className="px-3.5 py-2.5 whitespace-nowrap border-r border-zinc-800/60 font-bold text-zinc-100 bg-zinc-900/30">
+                      <td className="px-3.5 py-2.5 whitespace-nowrap border-r border-zinc-800/60 font-bold text-zinc-100 bg-zinc-900/30 text-right">
                         {formatVal(row.bds?.total)}
                       </td>
                       {!isCompact && (
                         <>
-                          <td className="px-3 py-2.5 whitespace-nowrap border-r border-zinc-800/40 text-emerald-400">
+                          <td className="px-2.5 py-2.5 whitespace-nowrap border-r border-zinc-800/40 text-emerald-400 text-right">
                             {formatVal(row.bds?.buy)}
                           </td>
-                          <td className="px-3 py-2.5 whitespace-nowrap border-r border-zinc-800/80 text-rose-400">
+                          <td className="px-2.5 py-2.5 whitespace-nowrap border-r border-zinc-800/80 text-rose-400 text-right">
                             {formatVal(row.bds?.sell)}
                           </td>
                         </>
                       )}
-                      <td className="px-2 py-1.5 whitespace-nowrap border-r border-zinc-800/80 text-center">
-                        <span
-                          className={`inline-block px-2.5 py-1 rounded-md text-[11px] ${bdsStyle.className}`}
-                        >
-                          {formatVal(row.bds?.ratioPct)}%
-                        </span>
-                      </td>
 
-                      {/* Thép */}
-                      <td className="px-3.5 py-2.5 whitespace-nowrap border-r border-zinc-800/60 font-bold text-zinc-100 bg-zinc-900/30">
+                      <td className="px-3.5 py-2.5 whitespace-nowrap border-r border-zinc-800/60 font-bold text-zinc-100 bg-zinc-900/30 text-right">
                         {formatVal(row.thep?.total)}
                       </td>
                       {!isCompact && (
                         <>
-                          <td className="px-3 py-2.5 whitespace-nowrap border-r border-zinc-800/40 text-emerald-400">
+                          <td className="px-2.5 py-2.5 whitespace-nowrap border-r border-zinc-800/40 text-emerald-400 text-right">
                             {formatVal(row.thep?.buy)}
                           </td>
-                          <td className="px-3 py-2.5 whitespace-nowrap border-r border-zinc-800/80 text-rose-400">
+                          <td className="px-2.5 py-2.5 whitespace-nowrap border-r border-zinc-800/80 text-rose-400 text-right">
                             {formatVal(row.thep?.sell)}
                           </td>
                         </>
                       )}
-                      <td className="px-2 py-1.5 whitespace-nowrap border-r border-zinc-800/80 text-center">
-                        <span
-                          className={`inline-block px-2.5 py-1 rounded-md text-[11px] ${thepStyle.className}`}
-                        >
-                          {formatVal(row.thep?.ratioPct)}%
-                        </span>
-                      </td>
 
-                      {/* Họ Vin */}
-                      <td className="px-3.5 py-2.5 whitespace-nowrap border-r border-zinc-800/60 font-bold text-zinc-100 bg-zinc-900/30">
+                      <td className="px-3.5 py-2.5 whitespace-nowrap border-r border-zinc-800 font-bold text-zinc-100 bg-zinc-900/30 text-right">
                         {formatVal(row.vin?.total)}
                       </td>
                       {!isCompact && (
                         <>
-                          <td className="px-3 py-2.5 whitespace-nowrap border-r border-zinc-800/40 text-emerald-400">
+                          <td className="px-2.5 py-2.5 whitespace-nowrap border-r border-zinc-800/40 text-emerald-400 text-right">
                             {formatVal(row.vin?.buy)}
                           </td>
-                          <td className="px-3 py-2.5 whitespace-nowrap border-r border-zinc-800/80 text-rose-400">
+                          <td className="px-2.5 py-2.5 whitespace-nowrap border-r border-zinc-800 text-rose-400 text-right">
                             {formatVal(row.vin?.sell)}
                           </td>
                         </>
                       )}
-                      <td className="px-2 py-1.5 whitespace-nowrap border-r border-zinc-800/80 text-center">
-                        <span
-                          className={`inline-block px-2.5 py-1 rounded-md text-[11px] ${vinStyle.className}`}
-                        >
-                          {formatVal(row.vin?.ratioPct)}%
-                        </span>
-                      </td>
 
                       {/* Button Xem Chi Tiết */}
                       <td className="px-3 py-2 whitespace-nowrap text-center">
@@ -682,15 +684,11 @@ export function SectorMoneyFlowTable({ onDataLoaded }: SectorMoneyFlowTableProps
                       return (
                         <td
                           key={s.date}
-                          className="p-1 border-r border-zinc-800/60 text-center"
+                          className={`py-3 px-2 border-r border-zinc-900/60 text-center font-bold text-xs cursor-pointer transition-all hover:brightness-125 ${heat.cellClass}`}
                           title={`${meta.label} (${s.date}): ${pct}% • Tổng GTGD: ${formatVal(itemData?.total)} Tỷ`}
+                          onClick={() => setSelectedSession(s)}
                         >
-                          <div
-                            className={`py-2 px-2 rounded-lg font-bold transition-transform hover:scale-105 cursor-pointer ${heat.className}`}
-                            onClick={() => setSelectedSession(s)}
-                          >
-                            <span>{pct !== undefined ? `${pct.toFixed(2)}%` : '-'}</span>
-                          </div>
+                          <span>{pct !== undefined ? `${pct.toFixed(2)}%` : '-'}</span>
                         </td>
                       );
                     })}
