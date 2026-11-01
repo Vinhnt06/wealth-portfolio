@@ -793,9 +793,9 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
     };
     const currentKey = detectedActivePhaseKey;
     const nextKey = sequenceMap[currentKey];
-    const currentScore = phaseScores[currentKey]?.score ?? 70;
-    const nextScore = phaseScores[nextKey]?.score ?? 40;
-    const scoreDiff = currentScore - nextScore;
+    const currentScore = Math.round(phaseScores[currentKey]?.score ?? 70);
+    const nextScore = Math.round(phaseScores[nextKey]?.score ?? 40);
+    const scoreDiff = Math.max(0, currentScore - nextScore);
 
     // Transition readiness probability:
     // If diff is large (>30 pts), probability of shifting is low (<15%)
@@ -821,25 +821,28 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
         ? 'bg-amber-500/15 text-amber-400 border-amber-500/30' 
         : 'bg-rose-500/15 text-rose-400 border-rose-500/30';
 
+    const currentTitle = QUADRANTS.find((q) => q.key === currentKey)?.shortTitle || CYCLE_PHASES[currentKey].title;
+    const nextTitle = QUADRANTS.find((q) => q.key === nextKey)?.shortTitle || CYCLE_PHASES[nextKey].title;
+
     const triggers = [
       {
-        factor: 'Đường cong TPCP',
-        status: yieldCurveData.spread > 0.75 ? 'Dốc an toàn (+1.43%)' : 'Co hẹp (<0.5%)',
+        factor: 'TPCP (10Y - ON)',
+        status: yieldCurveData.spread > 0.75 ? '+1.43% (Dốc an toàn)' : 'Co hẹp (<0.5%)',
         isTriggered: yieldCurveData.spread <= 0.75,
       },
       {
-        factor: 'Lạm phát CPI',
-        status: cpiYoy < 4.0 ? `Trong kiểm soát (${cpiYoy}%)` : 'Căng thẳng (>4.0%)',
+        factor: 'Lạm phát (CPI)',
+        status: cpiYoy < 4.0 ? `${cpiYoy}% (Ổn định)` : 'Căng (>4.0%)',
         isTriggered: cpiYoy >= 4.0,
       },
       {
-        factor: 'Lãi suất liên ngân hàng',
-        status: onRate < 4.5 ? `Dồi dào (${onRate}%)` : 'Thắt chặt (>4.5%)',
+        factor: 'Lãi suất qua đêm',
+        status: onRate < 4.5 ? `${onRate}% (Dồi dào)` : 'Thắt chặt (>4.5%)',
         isTriggered: onRate >= 4.5,
       },
       {
-        factor: 'Tâm lý toàn cầu (VIX)',
-        status: (globalMacro.vix || 19) < 22 ? `Bình ổn (${globalMacro.vix || 19.4})` : 'Biến động mạnh (>22)',
+        factor: 'Tâm lý (VIX)',
+        status: (globalMacro.vix || 19) < 22 ? `${globalMacro.vix || 19.4} (Bình ổn)` : 'Biến động (>22)',
         isTriggered: (globalMacro.vix || 19) >= 22,
       },
     ];
@@ -847,8 +850,8 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
     return {
       currentKey,
       nextKey,
-      currentTitle: CYCLE_PHASES[currentKey].title,
-      nextTitle: CYCLE_PHASES[nextKey].title,
+      currentTitle,
+      nextTitle,
       currentScore,
       nextScore,
       scoreDiff,
@@ -1244,29 +1247,31 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
             </div>
 
             {/* ── Cảnh Báo Sớm & Thước Đo Sắp Chuyển Pha (Cycle Transition Radar) ── */}
-            <div className="p-3 rounded-xl bg-zinc-900/70 border border-zinc-800/80 text-xs font-mono space-y-2.5 shadow-md">
-              <div className="flex items-center justify-between pb-1.5 border-b border-zinc-800/80">
-                <div className="flex items-center gap-1.5 text-zinc-200 font-bold text-[11px]">
-                  <Waveform className="w-3.5 h-3.5 text-cyan-400" />
+            <div className="p-3.5 rounded-xl bg-zinc-900/70 border border-zinc-800/80 text-xs font-mono space-y-2.5 shadow-md">
+              <div className="flex items-center justify-between pb-1.5 border-b border-zinc-800/80 gap-2">
+                <div className="flex items-center gap-1.5 text-zinc-200 font-bold text-[11px] truncate">
+                  <Waveform className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
                   <span>XÁC SUẤT & ĐIỀU KIỆN CHUYỂN PHA</span>
                 </div>
-                <span className={`text-[9px] px-2 py-0.5 rounded border font-semibold ${transitionRadar.statusBadge}`}>
+                <span className={`text-[9px] px-2 py-0.5 rounded border font-semibold shrink-0 ${transitionRadar.statusBadge}`}>
                   {transitionRadar.statusLabel}
                 </span>
               </div>
 
               {/* Progress meter towards next phase */}
-              <div className="space-y-1">
-                <div className="flex items-center justify-between text-[10px]">
-                  <span className="text-zinc-400 flex items-center gap-1">
-                    Xu hướng: <strong className="text-zinc-200">{transitionRadar.currentTitle}</strong>
-                    <span className="text-zinc-600">→</span>
-                    <strong className="text-amber-400">{transitionRadar.nextTitle}</strong>
-                  </span>
-                  <span className="font-bold text-zinc-300">
-                    Dịch chuyển: {transitionRadar.shiftProbability}%
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between text-[11px] gap-2">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span className="text-zinc-400 text-[10px] shrink-0 font-sans">Pha:</span>
+                    <span className="font-bold text-emerald-400 truncate">{transitionRadar.currentTitle}</span>
+                    <span className="text-zinc-500 shrink-0">→</span>
+                    <span className="font-bold text-amber-400 truncate">{transitionRadar.nextTitle}</span>
+                  </div>
+                  <span className="text-[10px] text-zinc-300 shrink-0 font-mono">
+                    Áp lực đổi pha: <strong className={transitionRadar.shiftProbability >= 50 ? 'text-rose-400' : 'text-emerald-400'}>{transitionRadar.shiftProbability}%</strong>
                   </span>
                 </div>
+
                 <div className="h-2 w-full bg-zinc-950 rounded-full overflow-hidden border border-zinc-800 flex">
                   <div
                     style={{ width: `${100 - transitionRadar.shiftProbability}%` }}
@@ -1279,18 +1284,19 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                     title={`Áp lực dịch chuyển sang pha sau: ${transitionRadar.shiftProbability}%`}
                   />
                 </div>
-                <div className="flex justify-between text-[8px] text-zinc-500 font-sans">
-                  <span>Cách biệt an toàn (+{transitionRadar.scoreDiff} điểm)</span>
-                  <span>Kim chỉ xoay khi chênh lệch &lt; 5 điểm</span>
+
+                <div className="flex items-center justify-between text-[9px] text-zinc-500 font-sans">
+                  <span>Cách biệt an toàn: <strong className="text-zinc-300 font-mono">+{transitionRadar.scoreDiff} điểm</strong></span>
+                  <span>Ngưỡng kích hoạt xoay kim: <strong className="text-zinc-400 font-mono">&lt; 5 điểm</strong></span>
                 </div>
               </div>
 
-              {/* 4 Early Warning Triggers Checklist */}
-              <div className="grid grid-cols-2 gap-1.5 pt-1 border-t border-zinc-800/60 text-[9px]">
+              {/* 4 Early Warning Triggers Grid - Concise & Clean */}
+              <div className="grid grid-cols-2 gap-1.5 pt-1.5 border-t border-zinc-800/60 text-[10px]">
                 {transitionRadar.triggers.map((trig, idx) => (
-                  <div key={idx} className="p-1.5 rounded bg-zinc-950/60 border border-zinc-800/60 flex items-center justify-between">
-                    <span className="text-zinc-400 truncate">{trig.factor}:</span>
-                    <span className={`font-semibold shrink-0 ml-1 ${trig.isTriggered ? 'text-rose-400' : 'text-emerald-400'}`}>
+                  <div key={idx} className="p-1.5 px-2 rounded-lg bg-zinc-950/70 border border-zinc-800/60 flex items-center justify-between gap-1">
+                    <span className="text-zinc-400 font-sans text-[9px]">{trig.factor}</span>
+                    <span className={`font-mono font-semibold text-[9px] shrink-0 ${trig.isTriggered ? 'text-rose-400' : 'text-emerald-400'}`}>
                       {trig.status}
                     </span>
                   </div>
