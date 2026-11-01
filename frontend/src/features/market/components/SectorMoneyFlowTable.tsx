@@ -374,14 +374,14 @@ export function SectorMoneyFlowTable({ onDataLoaded }: SectorMoneyFlowTableProps
                   Tổng TT (Tỷ)
                 </th>
 
-                {/* Khối % Tỷ trọng Dòng tiền - ĐỨNG SÁT NHAU THÀNH DẢI MA TRẬN NHIỆT */}
-                <th colSpan={5} className="py-2.5 px-3 border-r border-zinc-700 bg-emerald-950/30 text-emerald-300 text-center font-bold tracking-wider uppercase text-xs">
-                  ⚡ Tỷ Trọng Dòng Tiền (%) — Ma Trận Nhiệt Liền Khối
+                {/* Khối % Tỷ trọng Dòng tiền */}
+                <th colSpan={5} className="py-2 px-3 border-r border-zinc-700 bg-emerald-950/30 text-emerald-300 text-center font-bold tracking-wider uppercase text-xs">
+                  TỶ TRỌNG (%)
                 </th>
 
                 {/* Khối Giá Trị Giao Dịch */}
-                <th colSpan={isCompact ? 5 : 15} className="py-2.5 px-3 border-r border-zinc-800 bg-zinc-900/80 text-zinc-300 text-center font-bold tracking-wider uppercase text-xs">
-                  💰 Giá Trị Khớp Lệnh (Tỷ VNĐ)
+                <th colSpan={isCompact ? 5 : 15} className="py-2 px-3 border-r border-zinc-800 bg-zinc-900/80 text-zinc-300 text-center font-bold tracking-wider uppercase text-xs">
+                  GIÁ TRỊ (TỶ)
                 </th>
 
                 <th rowSpan={2} className="px-3 py-3 whitespace-nowrap text-center text-zinc-400">
