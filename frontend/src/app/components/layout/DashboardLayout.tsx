@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '../LanguageContext';
 import { LanguageSwitcher } from '../LanguageSwitcher';
 import { MarketSearch } from '@/features/market/components/MarketSearch';
+import { useMarketStore } from '@/features/market/store/marketStore';
 import {
     House,
     User,
@@ -16,10 +17,11 @@ import {
     TrendUp,
     Bell,
     Newspaper,
-    GraduationCap,
-    ClockCounterClockwise,
     Gear,
     ChartBar,
+    ChartPieSlice,
+    Funnel,
+    Compass,
     SignOut,
     CaretDown,
     WarningCircle,
@@ -73,21 +75,59 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         });
     };
 
-    const navItems = [
-        { icon: House, labelKey: 'dash.nav.overview', href: '/dashboard' },
-        { icon: ChartBar, labelKey: 'Thị Trường Realtime', href: '/market' },
-        { icon: TrendUp, labelKey: 'dash.nav.markets', href: '/dashboard/markets' },
-        { icon: GraduationCap, labelKey: 'dash.nav.learn', href: '/dashboard/learn' },
-        { icon: ClockCounterClockwise, labelKey: 'dash.nav.history', href: '/dashboard/history' },
+    const viewMode = useMarketStore((s) => s.viewMode);
+
+    interface NavItem {
+        icon: any;
+        labelKey: string;
+        href: string;
+        mode?: 'overview' | 'flow' | 'screener' | 'rrg' | null;
+        badge?: string;
+        badgeColor?: string;
+    }
+
+    interface NavSection {
+        title?: string;
+        items: NavItem[];
+    }
+
+    const navSections: NavSection[] = [
+        {
+            title: 'DANH MỤC',
+            items: [
+                { icon: House, labelKey: 'dash.nav.overview', href: '/dashboard', mode: null },
+            ],
+        },
+        {
+            title: 'THỊ TRƯỜNG & DÒNG TIỀN',
+            items: [
+                { icon: ChartPieSlice, labelKey: 'Thị Trường Realtime', href: '/market?tab=overview', mode: 'overview' },
+                { icon: TrendUp, labelKey: 'dash.nav.flow', href: '/market?tab=flow', mode: 'flow', badge: '11 Ngành', badgeColor: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20' },
+                { icon: Funnel, labelKey: 'dash.nav.screener', href: '/market?tab=screener', mode: 'screener', badge: 'SEPA', badgeColor: 'bg-amber-500/10 text-amber-300 border-amber-500/20' },
+                { icon: Compass, labelKey: 'dash.nav.rrg', href: '/market?tab=rrg', mode: 'rrg' },
+            ],
+        },
+        {
+            title: 'THÔNG TIN',
+            items: [
+                { icon: Newspaper, labelKey: 'dash.nav.news', href: '/news', mode: null },
+            ],
+        },
     ];
 
     const currentPathname = usePathname();
 
+    const isItemActive = (item: NavItem) => {
+        if (item.mode) {
+            return currentPathname === '/market' && (viewMode === item.mode || (item.mode === 'overview' && viewMode === 'detail'));
+        }
+        return currentPathname === item.href;
+    };
+
     const topNavItems = [
         { labelKey: 'dash.nav.portfolio', href: '/dashboard' },
         { labelKey: 'Thị Trường Realtime', href: '/market' },
-        { labelKey: 'dash.nav.analytics', href: '/dashboard/analytics' },
-        { labelKey: 'dash.nav.settings', href: '/dashboard/settings' },
+        { labelKey: 'dash.nav.news', href: '/news' },
     ];
 
     const isActive = (href: string) => currentPathname === href;
@@ -162,37 +202,61 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                             )}
                         </div>
 
-                        <nav className="mt-1">
-                            {navItems.map((item) => {
-                                const active = isActive(item.href);
-                                const label = item.labelKey.startsWith('dash.') ? t(item.labelKey) : item.labelKey;
-                                return (
-                                    <Link
-                                        key={item.href}
-                                        href={item.href}
-                                        title={isCollapsed ? label : undefined}
-                                        onClick={() => isMobile && setIsSidebarOpen(false)}
-                                        className={`flex items-center ${
-                                            isCollapsed ? 'justify-center px-2 py-3' : 'gap-3 px-4 py-2.5'
-                                        } transition-all duration-200 group border-l-2 ${
-                                            active
-                                                ? 'bg-white/5 border-white text-white'
-                                                : 'border-transparent hover:bg-white/[0.03] text-zinc-500 hover:text-zinc-300'
-                                        }`}
-                                    >
-                                        <item.icon
-                                            size={isCollapsed ? 20 : 17}
-                                            weight={active ? 'fill' : 'regular'}
-                                            className={`${active ? 'text-white' : 'text-zinc-500 group-hover:text-zinc-300'} transition-colors shrink-0`}
-                                        />
-                                        {!isCollapsed && (
-                                            <span className={`text-xs font-medium ${active ? 'text-white' : 'text-zinc-400 group-hover:text-zinc-200'} transition-colors truncate`}>
-                                                {label}
-                                            </span>
-                                        )}
-                                    </Link>
-                                );
-                            })}
+                        <nav className="mt-1 space-y-3">
+                            {navSections.map((section, sIdx) => (
+                                <div key={sIdx} className="space-y-0.5">
+                                    {!isCollapsed && section.title && (
+                                        <div className="px-4 pt-2 pb-1 text-[9px] font-mono font-bold tracking-[0.12em] text-zinc-500 uppercase">
+                                            {section.title}
+                                        </div>
+                                    )}
+                                    {isCollapsed && sIdx > 0 && (
+                                        <div className="w-8 h-[1px] bg-white/5 mx-auto my-1.5" />
+                                    )}
+                                    {section.items.map((item) => {
+                                        const active = isItemActive(item);
+                                        const label = item.labelKey.startsWith('dash.') ? t(item.labelKey) : item.labelKey;
+                                        return (
+                                            <Link
+                                                key={item.href}
+                                                href={item.href}
+                                                title={isCollapsed ? label : undefined}
+                                                onClick={() => {
+                                                    if (isMobile) setIsSidebarOpen(false);
+                                                    if (item.mode) {
+                                                        useMarketStore.getState().setViewMode(item.mode);
+                                                    }
+                                                }}
+                                                className={`flex items-center ${
+                                                    isCollapsed ? 'justify-center px-2 py-2.5' : 'gap-3 px-4 py-2'
+                                                } transition-all duration-200 group border-l-2 ${
+                                                    active
+                                                        ? 'bg-emerald-500/10 border-emerald-500 text-emerald-400 font-semibold shadow-[inset_0_0_12px_rgba(16,185,129,0.06)]'
+                                                        : 'border-transparent hover:bg-white/[0.03] text-zinc-400 hover:text-zinc-200'
+                                                }`}
+                                            >
+                                                <item.icon
+                                                    size={isCollapsed ? 20 : 17}
+                                                    weight={active ? 'fill' : 'regular'}
+                                                    className={`${active ? 'text-emerald-400' : 'text-zinc-500 group-hover:text-zinc-300'} transition-colors shrink-0`}
+                                                />
+                                                {!isCollapsed && (
+                                                    <div className="flex items-center justify-between flex-1 min-w-0">
+                                                        <span className={`text-xs font-medium ${active ? 'text-emerald-300 font-semibold' : 'text-zinc-400 group-hover:text-zinc-200'} transition-colors truncate`}>
+                                                            {label}
+                                                        </span>
+                                                        {item.badge && (
+                                                            <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border uppercase shrink-0 ${item.badgeColor || 'bg-zinc-800 text-zinc-300 border-zinc-700'}`}>
+                                                                {item.badge}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </Link>
+                                        );
+                                    })}
+                                </div>
+                            ))}
                         </nav>
 
                         {/* Sidebar Footer */}

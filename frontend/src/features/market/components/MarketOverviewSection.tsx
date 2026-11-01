@@ -15,32 +15,41 @@ import {
   TrendUp,
   TrendDown,
   Flame,
-  ChartLineUp,
-  Compass
+  ChartLineUp
 } from '@phosphor-icons/react';
 import { EconomicCycleWheel } from './EconomicCycleWheel';
 import { USGlobalMacroSection } from './USGlobalMacroSection';
-import { RelativeRotationGraphCard } from './RelativeRotationGraph';
 
 interface MarketOverviewSectionProps {
   onSelectSector?: (sectorName: string) => void;
-  defaultTab?: 'heatmap' | 'chart' | 'rrg';
+  defaultTab?: 'heatmap' | 'chart';
 }
 
 export const MarketOverviewSection: React.FC<MarketOverviewSectionProps> = React.memo(({
   onSelectSector,
   defaultTab = 'heatmap'
 }) => {
-  const [overviewTab, setOverviewTab] = useState<'heatmap' | 'chart' | 'rrg'>(defaultTab);
+  const [overviewTab, setOverviewTab] = useState<'heatmap' | 'chart'>(defaultTab);
 
   return (
     <div className="space-y-6">
       {/* 1. Full-Width Market Index Banner (VN-INDEX 1735.09, VN30, HNX, UPCOM) */}
       <IndexBanner />
 
-      {/* Overview View Switcher */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center p-1 rounded-xl bg-zinc-950/80 border border-zinc-800/80 backdrop-blur-xl">
+      {/* Overview Section Header & View Toggle (Seamless inline segment, no navbar clash) */}
+      <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+        <div className="flex items-center gap-2.5">
+          <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="text-xs font-mono font-bold text-zinc-300 tracking-wider uppercase">
+            TRUNG TÂM PHÂN TÍCH TOÀN CẢNH
+          </span>
+          <span className="text-[11px] text-zinc-600 hidden sm:inline">•</span>
+          <span className="text-xs text-zinc-400 hidden sm:inline">
+            {overviewTab === 'heatmap' ? 'Bản đồ nhiệt vốn hóa & thanh khoản các nhóm ngành' : 'Đồ thị chỉ số kỹ thuật & cán cân độ rộng thị trường'}
+          </span>
+        </div>
+
+        <div className="inline-flex items-center p-1 rounded-xl bg-zinc-950/90 border border-zinc-800/80 backdrop-blur-xl">
           <button
             onClick={() => setOverviewTab('heatmap')}
             className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold transition-all ${
@@ -49,7 +58,7 @@ export const MarketOverviewSection: React.FC<MarketOverviewSectionProps> = React
                 : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
             }`}
           >
-            <Flame className="w-4 h-4" weight="fill" />
+            <Flame className="w-3.5 h-3.5" weight="fill" />
             <span>Bản Đồ Nhiệt (Heatmap)</span>
           </button>
 
@@ -61,29 +70,15 @@ export const MarketOverviewSection: React.FC<MarketOverviewSectionProps> = React
                 : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
             }`}
           >
-            <ChartLineUp className="w-4 h-4" />
-            <span>Biểu Đồ Chỉ Số & Độ Rộng</span>
-          </button>
-
-          <button
-            onClick={() => setOverviewTab('rrg')}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold transition-all ${
-              overviewTab === 'rrg'
-                ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20'
-                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
-            }`}
-          >
-            <Compass className="w-4 h-4" />
-            <span>Luân Chuyển Dòng Tiền (RRG)</span>
+            <ChartLineUp className="w-3.5 h-3.5" />
+            <span>Biểu Đồ & Độ Rộng</span>
           </button>
         </div>
       </div>
 
-      {/* 2. Main Terminal Hub: Heatmap, Index Chart, or RRG */}
+      {/* 2. Main Terminal Hub: Heatmap or Index Chart */}
       {overviewTab === 'heatmap' ? (
         <MarketHeatmap />
-      ) : overviewTab === 'rrg' ? (
-        <RelativeRotationGraphCard defaultHeight={620} />
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Market Overview Chart - Fixed Full-Height, Never Collapsed */}
