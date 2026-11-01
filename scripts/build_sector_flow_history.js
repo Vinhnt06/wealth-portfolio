@@ -2,11 +2,17 @@ const fs = require('fs');
 const path = require('path');
 
 const SECTORS = {
-  NH: ['VCB', 'BID', 'CTG', 'TCB', 'MBB', 'ACB', 'VPB', 'HDB', 'STB', 'LPB', 'SHB', 'TPB', 'VIB', 'MSB', 'OCB', 'SSB', 'EIB', 'NAB'],
-  CK: ['SSI', 'VND', 'VCI', 'HCM', 'SHS', 'MBS', 'FTS', 'BSI', 'CTS', 'VIX', 'AGR', 'ORS'],
-  BDS: ['VHM', 'NVL', 'PDR', 'DIG', 'DXG', 'CEO', 'KDH', 'NLG', 'TCH', 'KBC', 'IDC', 'SZC', 'BCM', 'HDG', 'NTL'],
-  THEP: ['HPG', 'HSG', 'NKG', 'VGS', 'TLH', 'SMC'],
-  VIN: ['VIC', 'VHM', 'VRE'],
+  bds: ['VHM', 'NVL', 'PDR', 'DIG', 'DXG', 'CEO', 'KDH', 'NLG', 'TCH', 'KBC', 'IDC', 'SZC', 'BCM', 'HDG', 'NTL'],
+  nh: ['VCB', 'BID', 'CTG', 'TCB', 'MBB', 'ACB', 'VPB', 'HDB', 'STB', 'LPB', 'SHB', 'TPB', 'VIB', 'MSB', 'OCB', 'SSB', 'EIB', 'NAB'],
+  ck: ['SSI', 'VND', 'VCI', 'HCM', 'SHS', 'MBS', 'FTS', 'BSI', 'CTS', 'VIX', 'AGR', 'ORS'],
+  thep: ['HPG', 'HSG', 'NKG', 'VGS', 'TLH', 'SMC'],
+  thuc_pham: ['VNM', 'MSN', 'SAB', 'DBC', 'HAG', 'BAF', 'VHC', 'ANV', 'PAN'],
+  cong_nghiep: ['VCG', 'HHV', 'CII', 'CTD', 'FCN', 'LCG', 'GEX', 'GMD', 'HAH'],
+  ban_le: ['MWG', 'FRT', 'DGW', 'PET', 'PNJ'],
+  dau_khi: ['GAS', 'PLX', 'BSR', 'PVD', 'PVS', 'PVT'],
+  cntt: ['FPT', 'CMG', 'ELC', 'CTR'],
+  hoa_chat: ['DGC', 'DCM', 'DPM', 'GVR', 'CSV', 'LAS', 'BFC'],
+  vin: ['VIC', 'VHM', 'VRE'],
 };
 
 async function fetchCandles(symbol, isIndex = false, fromSec, nowSec) {
@@ -30,7 +36,7 @@ async function sleep(ms) {
 async function main() {
   console.log('Fetching historical daily sessions from Entrade...');
   const nowSec = Math.floor(Date.now() / 1000);
-  const fromSec = nowSec - 60 * 86400; // last 60 calendar days (~40 sessions)
+  const fromSec = nowSec - 60 * 86400; // last 60 calendar days (~42 sessions)
 
   // 1. Fetch VNINDEX
   const vnData = await fetchCandles('VNINDEX', true, fromSec, nowSec);
@@ -53,13 +59,13 @@ async function main() {
   console.log(`Fetching candles for ${symbolList.length} sector tickers...`);
 
   const candleMap = {};
-  for (let i = 0; i < symbolList.length; i += 10) {
-    const batch = symbolList.slice(i, i + 10);
+  for (let i = 0; i < symbolList.length; i += 12) {
+    const batch = symbolList.slice(i, i + 12);
     const results = await Promise.all(batch.map(sym => fetchCandles(sym, false, fromSec, nowSec)));
     batch.forEach((sym, idx) => {
       if (results[idx]) candleMap[sym] = results[idx];
     });
-    await sleep(200);
+    await sleep(150);
   }
 
   // 3. Aggregate each session
@@ -72,13 +78,10 @@ async function main() {
     const displayDate = dateStr.slice(2); // YY-MM-DD
 
     // Sector values for this session
-    const sectorStats = {
-      NH: { total: 0, buy: 0, sell: 0 },
-      CK: { total: 0, buy: 0, sell: 0 },
-      BDS: { total: 0, buy: 0, sell: 0 },
-      THEP: { total: 0, buy: 0, sell: 0 },
-      VIN: { total: 0, buy: 0, sell: 0 },
-    };
+    const sectorStats = {};
+    for (const secKey of Object.keys(SECTORS)) {
+      sectorStats[secKey] = { total: 0, buy: 0, sell: 0 };
+    }
 
     for (const [secKey, syms] of Object.entries(SECTORS)) {
       for (const sym of syms) {
@@ -109,71 +112,38 @@ async function main() {
       }
     }
 
-    // Estimate total market turnover from VNINDEX volume * avg price + HNX
-    const vnClose = vnData.c[sIdx];
-    const vnVol = vnData.v[sIdx];
-    // VNIndex point to market value factor: typically HOSE turnover is ~ 18-25 VND/share average on VNIndex
-    // Sum of core pillar sectors typically represents ~60-70% of total market
-    const pillarSum = sectorStats.NH.total + sectorStats.CK.total + sectorStats.BDS.total + sectorStats.THEP.total;
-    // Real market turnover in Vietnam is approx pillarSum / 0.65
-    const totalMarket = Math.round(pillarSum / 0.65);
+    // Estimate total market turnover from pillar sum across all sectors
+    // All 11 sectors represent ~85-90% of total market
+    let allSectorsSum = 0;
+    for (const [secKey, stats] of Object.entries(sectorStats)) {
+      if (secKey !== 'vin') allSectorsSum += stats.total; // Vin is subset of BDS
+    }
+    const totalMarket = Math.round(allSectorsSum / 0.88);
 
     const round2 = v => Number(v.toFixed(2));
 
-    const nhRatio = round2((sectorStats.NH.total / totalMarket) * 100);
-    const ckRatio = round2((sectorStats.CK.total / totalMarket) * 100);
-    const bdsRatio = round2((sectorStats.BDS.total / totalMarket) * 100);
-    const thepRatio = round2((sectorStats.THEP.total / totalMarket) * 100);
-    const vinRatio = round2((sectorStats.VIN.total / totalMarket) * 100);
-
-    history.push({
+    const sessionObj = {
       date: dateStr,
       displayDate,
       totalMarket: round2(totalMarket),
-      nh: {
-        total: round2(sectorStats.NH.total),
-        buy: round2(sectorStats.NH.buy),
-        sell: round2(sectorStats.NH.sell),
-        ratioPct: nhRatio,
-        isClimax: nhRatio >= 30,
-        isTrough: nhRatio <= 16,
-      },
-      ck: {
-        total: round2(sectorStats.CK.total),
-        buy: round2(sectorStats.CK.buy),
-        sell: round2(sectorStats.CK.sell),
-        ratioPct: ckRatio,
-        isClimax: ckRatio >= 20,
-        isTrough: ckRatio <= 8,
-      },
-      bds: {
-        total: round2(sectorStats.BDS.total),
-        buy: round2(sectorStats.BDS.buy),
-        sell: round2(sectorStats.BDS.sell),
-        ratioPct: bdsRatio,
-        isClimax: bdsRatio >= 20,
-        isTrough: bdsRatio <= 8,
-      },
-      thep: {
-        total: round2(sectorStats.THEP.total),
-        buy: round2(sectorStats.THEP.buy),
-        sell: round2(sectorStats.THEP.sell),
-        ratioPct: thepRatio,
-        isClimax: thepRatio >= 9,
-        isTrough: thepRatio <= 4,
-      },
-      vin: {
-        total: round2(sectorStats.VIN.total),
-        buy: round2(sectorStats.VIN.buy),
-        sell: round2(sectorStats.VIN.sell),
-        ratioPct: vinRatio,
-        isClimax: vinRatio >= 15,
-        isTrough: vinRatio <= 5,
-      },
-    });
+    };
+
+    for (const [secKey, stats] of Object.entries(sectorStats)) {
+      const ratio = round2((stats.total / (totalMarket || 1)) * 100);
+      sessionObj[secKey] = {
+        total: round2(stats.total),
+        buy: round2(stats.buy),
+        sell: round2(stats.sell),
+        ratioPct: ratio,
+        isClimax: (secKey === 'nh' && ratio >= 30) || (secKey === 'ck' && ratio >= 20) || (secKey === 'bds' && ratio >= 22) || (secKey === 'thep' && ratio >= 9) || (secKey === 'vin' && ratio >= 15),
+        isTrough: (secKey === 'nh' && ratio <= 16) || (secKey === 'ck' && ratio <= 8) || (secKey === 'bds' && ratio <= 8) || (secKey === 'thep' && ratio <= 4),
+      };
+    }
+
+    history.push(sessionObj);
   }
 
-  // Sort descending by date (most recent session first, like in the image)
+  // Sort descending by date (most recent session first)
   history.sort((a, b) => b.date.localeCompare(a.date));
 
   const outDir = path.join(__dirname, '../frontend/src/features/market/data');

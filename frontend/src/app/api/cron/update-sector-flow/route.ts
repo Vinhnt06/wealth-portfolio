@@ -6,11 +6,17 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 const SECTORS_LIST = {
-  banks: new Set(['VCB', 'BID', 'CTG', 'TCB', 'MBB', 'ACB', 'VPB', 'HDB', 'STB', 'LPB', 'SHB', 'TPB', 'VIB', 'MSB', 'OCB', 'SSB', 'EIB', 'NAB', 'ABB', 'BAB', 'BVB']),
-  cks: new Set(['SSI', 'VND', 'VCI', 'HCM', 'SHS', 'MBS', 'FTS', 'BSI', 'CTS', 'VIX', 'AGR', 'ORS', 'TVS', 'PHS']),
-  bds: new Set(['VHM', 'NVL', 'PDR', 'DIG', 'DXG', 'CEO', 'KDH', 'NLG', 'TCH', 'KBC', 'IDC', 'SZC', 'BCM', 'SIP', 'HDG', 'NTL']),
-  theps: new Set(['HPG', 'HSG', 'NKG', 'VGS', 'TLH', 'SMC', 'TVN']),
-  vins: new Set(['VIC', 'VHM', 'VRE']),
+  bds: new Set(['VHM', 'NVL', 'PDR', 'DIG', 'DXG', 'CEO', 'KDH', 'NLG', 'TCH', 'KBC', 'IDC', 'SZC', 'BCM', 'HDG', 'NTL']),
+  nh: new Set(['VCB', 'BID', 'CTG', 'TCB', 'MBB', 'ACB', 'VPB', 'HDB', 'STB', 'LPB', 'SHB', 'TPB', 'VIB', 'MSB', 'OCB', 'SSB', 'EIB', 'NAB', 'ABB', 'BAB', 'BVB']),
+  ck: new Set(['SSI', 'VND', 'VCI', 'HCM', 'SHS', 'MBS', 'FTS', 'BSI', 'CTS', 'VIX', 'AGR', 'ORS', 'TVS', 'PHS']),
+  thep: new Set(['HPG', 'HSG', 'NKG', 'VGS', 'TLH', 'SMC', 'TVN']),
+  thuc_pham: new Set(['VNM', 'MSN', 'SAB', 'DBC', 'HAG', 'BAF', 'VHC', 'ANV', 'PAN']),
+  cong_nghiep: new Set(['VCG', 'HHV', 'CII', 'CTD', 'FCN', 'LCG', 'GEX', 'GMD', 'HAH']),
+  ban_le: new Set(['MWG', 'FRT', 'DGW', 'PET', 'PNJ']),
+  dau_khi: new Set(['GAS', 'PLX', 'BSR', 'PVD', 'PVS', 'PVT']),
+  cntt: new Set(['FPT', 'CMG', 'ELC', 'CTR']),
+  hoa_chat: new Set(['DGC', 'DCM', 'DPM', 'GVR', 'CSV', 'LAS', 'BFC']),
+  vin: new Set(['VIC', 'VHM', 'VRE']),
 };
 
 function getHistoryFilePath() {
@@ -25,7 +31,6 @@ function getHistoryFilePath() {
 }
 
 export async function GET(request: NextRequest) {
-  // Optional security verification if CRON_SECRET is set
   const authHeader = request.headers.get('authorization');
   const cronSecret = process.env.CRON_SECRET;
   if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
@@ -68,11 +73,10 @@ export async function GET(request: NextRequest) {
     const upcom = upcomRes.ok ? await upcomRes.json() : { data: [] };
 
     let totalMarketVal = 0;
-    let bankVal = 0, bankBuy = 0, bankSell = 0;
-    let ckVal = 0, ckBuy = 0, ckSell = 0;
-    let bdsVal = 0, bdsBuy = 0, bdsSell = 0;
-    let thepVal = 0, thepBuy = 0, thepSell = 0;
-    let vinVal = 0, vinBuy = 0, vinSell = 0;
+    const stats: Record<string, { total: number; buy: number; sell: number }> = {};
+    for (const k of Object.keys(SECTORS_LIST)) {
+      stats[k] = { total: 0, buy: 0, sell: 0 };
+    }
 
     let tradeDateRaw = '';
     const allStocks = [...(hose.data || []), ...(hnx.data || []), ...(upcom.data || [])];
@@ -94,20 +98,12 @@ export async function GET(request: NextRequest) {
       totalMarketVal += val;
 
       const sym = s.stockSymbol;
-      if (SECTORS_LIST.banks.has(sym)) {
-        bankVal += val; bankBuy += buVal; bankSell += sdVal;
-      }
-      if (SECTORS_LIST.cks.has(sym)) {
-        ckVal += val; ckBuy += buVal; ckSell += sdVal;
-      }
-      if (SECTORS_LIST.bds.has(sym)) {
-        bdsVal += val; bdsBuy += buVal; bdsSell += sdVal;
-      }
-      if (SECTORS_LIST.theps.has(sym)) {
-        thepVal += val; thepBuy += buVal; thepSell += sdVal;
-      }
-      if (SECTORS_LIST.vins.has(sym)) {
-        vinVal += val; vinBuy += buVal; vinSell += sdVal;
+      for (const [secKey, set] of Object.entries(SECTORS_LIST)) {
+        if (set.has(sym)) {
+          stats[secKey].total += val;
+          stats[secKey].buy += buVal;
+          stats[secKey].sell += sdVal;
+        }
       }
     }
 
@@ -115,7 +111,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, message: 'Market volume is 0' });
     }
 
-    // Format tradeDate
     let dateStr = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' });
     if (tradeDateRaw && tradeDateRaw.length === 8) {
       dateStr = `${tradeDateRaw.slice(0, 4)}-${tradeDateRaw.slice(4, 6)}-${tradeDateRaw.slice(6, 8)}`;
@@ -125,61 +120,37 @@ export async function GET(request: NextRequest) {
     const toB = (v: number) => Number((v / 1e9).toFixed(2));
     const toPct = (secVal: number) => Number(((secVal / (totalMarketVal || 1)) * 100).toFixed(2));
 
-    const nhRatio = toPct(bankVal);
-    const ckRatio = toPct(ckVal);
-    const bdsRatio = toPct(bdsVal);
-    const thepRatio = toPct(thepVal);
-    const vinRatio = toPct(vinVal);
+    const buildSectorItem = (key: string) => {
+      const ratio = toPct(stats[key].total);
+      return {
+        total: toB(stats[key].total),
+        buy: toB(stats[key].buy),
+        sell: toB(stats[key].sell),
+        ratioPct: ratio,
+        isClimax: (key === 'nh' && ratio >= 30) || (key === 'ck' && ratio >= 20) || (key === 'bds' && ratio >= 22) || (key === 'thep' && ratio >= 9) || (key === 'vin' && ratio >= 15),
+        isTrough: (key === 'nh' && ratio <= 16) || (key === 'ck' && ratio <= 8) || (key === 'bds' && ratio <= 8) || (key === 'thep' && ratio <= 4),
+      };
+    };
 
-    const sessionData = {
+    const sessionData: any = {
       date: dateStr,
       displayDate,
       totalMarket: toB(totalMarketVal),
-      nh: {
-        total: toB(bankVal),
-        buy: toB(bankBuy),
-        sell: toB(bankSell),
-        ratioPct: nhRatio,
-        isClimax: nhRatio >= 30,
-        isTrough: nhRatio <= 16,
-      },
-      ck: {
-        total: toB(ckVal),
-        buy: toB(ckBuy),
-        sell: toB(ckSell),
-        ratioPct: ckRatio,
-        isClimax: ckRatio >= 20,
-        isTrough: ckRatio <= 8,
-      },
-      bds: {
-        total: toB(bdsVal),
-        buy: toB(bdsBuy),
-        sell: toB(bdsSell),
-        ratioPct: bdsRatio,
-        isClimax: bdsRatio >= 20,
-        isTrough: bdsRatio <= 8,
-      },
-      thep: {
-        total: toB(thepVal),
-        buy: toB(thepBuy),
-        sell: toB(thepSell),
-        ratioPct: thepRatio,
-        isClimax: thepRatio >= 9,
-        isTrough: thepRatio <= 4,
-      },
-      vin: {
-        total: toB(vinVal),
-        buy: toB(vinBuy),
-        sell: toB(vinSell),
-        ratioPct: vinRatio,
-        isClimax: vinRatio >= 15,
-        isTrough: vinRatio <= 5,
-      },
+      bds: buildSectorItem('bds'),
+      nh: buildSectorItem('nh'),
+      ck: buildSectorItem('ck'),
+      thep: buildSectorItem('thep'),
+      thuc_pham: buildSectorItem('thuc_pham'),
+      cong_nghiep: buildSectorItem('cong_nghiep'),
+      ban_le: buildSectorItem('ban_le'),
+      dau_khi: buildSectorItem('dau_khi'),
+      cntt: buildSectorItem('cntt'),
+      hoa_chat: buildSectorItem('hoa_chat'),
+      vin: buildSectorItem('vin'),
       updatedAt: vnTime,
       sessionLabel,
     };
 
-    // Load and update history file
     const filePath = getHistoryFilePath();
     let history: any[] = [];
     if (fs.existsSync(filePath)) {
@@ -197,7 +168,6 @@ export async function GET(request: NextRequest) {
       history.unshift(sessionData);
     }
 
-    // Keep up to 60 trading sessions
     const trimmed = history.slice(0, 60);
     fs.writeFileSync(filePath, JSON.stringify(trimmed, null, 2), 'utf-8');
 
