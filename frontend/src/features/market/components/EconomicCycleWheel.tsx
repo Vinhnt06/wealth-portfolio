@@ -783,6 +783,82 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
     });
   }, [activeCfg, isDynamicAllocation, riskAppetite, phaseScores, activePhaseKey, globalMacro.vix, yieldCurveData.spread]);
 
+  // 7. Cycle Transition Readiness & Imminent Phase Radar
+  const transitionRadar = useMemo(() => {
+    const sequenceMap: Record<CyclePhaseKey, CyclePhaseKey> = {
+      recovery: 'expansion',
+      expansion: 'late',
+      late: 'recession',
+      recession: 'recovery',
+    };
+    const currentKey = detectedActivePhaseKey;
+    const nextKey = sequenceMap[currentKey];
+    const currentScore = phaseScores[currentKey]?.score ?? 70;
+    const nextScore = phaseScores[nextKey]?.score ?? 40;
+    const scoreDiff = currentScore - nextScore;
+
+    // Transition readiness probability:
+    // If diff is large (>30 pts), probability of shifting is low (<15%)
+    // If diff is close (<10 pts), probability of shifting is high (>70%)
+    let shiftProbability = Math.max(8, Math.min(95, Math.round(100 - (scoreDiff / 40) * 100)));
+    
+    // Additional stress test adjustments from Yield Spread & VIX
+    if (yieldCurveData.slopeType === 'inverted') shiftProbability = Math.min(98, shiftProbability + 25);
+    else if (yieldCurveData.slopeType === 'flat') shiftProbability = Math.min(95, shiftProbability + 15);
+    if ((globalMacro.vix || 19) >= 25) shiftProbability = Math.min(95, shiftProbability + 10);
+
+    const statusLabel = 
+      shiftProbability < 30 
+        ? 'Pha hiện tại rất vững chắc' 
+        : shiftProbability < 60 
+        ? 'Bắt đầu có tín hiệu dịch chuyển' 
+        : 'Cảnh báo: Kim chuẩn bị chuyển pha';
+
+    const statusBadge = 
+      shiftProbability < 30 
+        ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' 
+        : shiftProbability < 60 
+        ? 'bg-amber-500/15 text-amber-400 border-amber-500/30' 
+        : 'bg-rose-500/15 text-rose-400 border-rose-500/30';
+
+    const triggers = [
+      {
+        factor: 'Đường cong TPCP',
+        status: yieldCurveData.spread > 0.75 ? 'Dốc an toàn (+1.43%)' : 'Co hẹp (<0.5%)',
+        isTriggered: yieldCurveData.spread <= 0.75,
+      },
+      {
+        factor: 'Lạm phát CPI',
+        status: cpiYoy < 4.0 ? `Trong kiểm soát (${cpiYoy}%)` : 'Căng thẳng (>4.0%)',
+        isTriggered: cpiYoy >= 4.0,
+      },
+      {
+        factor: 'Lãi suất liên ngân hàng',
+        status: onRate < 4.5 ? `Dồi dào (${onRate}%)` : 'Thắt chặt (>4.5%)',
+        isTriggered: onRate >= 4.5,
+      },
+      {
+        factor: 'Tâm lý toàn cầu (VIX)',
+        status: (globalMacro.vix || 19) < 22 ? `Bình ổn (${globalMacro.vix || 19.4})` : 'Biến động mạnh (>22)',
+        isTriggered: (globalMacro.vix || 19) >= 22,
+      },
+    ];
+
+    return {
+      currentKey,
+      nextKey,
+      currentTitle: CYCLE_PHASES[currentKey].title,
+      nextTitle: CYCLE_PHASES[nextKey].title,
+      currentScore,
+      nextScore,
+      scoreDiff,
+      shiftProbability,
+      statusLabel,
+      statusBadge,
+      triggers,
+    };
+  }, [detectedActivePhaseKey, phaseScores, yieldCurveData, globalMacro.vix, cpiYoy, onRate]);
+
   const [showCycleGuide, setShowCycleGuide] = useState<boolean>(false);
   const [needleDisplayAngle, setNeedleDisplayAngle] = useState<number>(() => {
     return CYCLE_PHASES[detectedActivePhaseKey]?.needleAngle ?? 45;
@@ -1165,6 +1241,61 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                   </button>
                 );
               })}
+            </div>
+
+            {/* ── Cảnh Báo Sớm & Thước Đo Sắp Chuyển Pha (Cycle Transition Radar) ── */}
+            <div className="p-3 rounded-xl bg-zinc-900/70 border border-zinc-800/80 text-xs font-mono space-y-2.5 shadow-md">
+              <div className="flex items-center justify-between pb-1.5 border-b border-zinc-800/80">
+                <div className="flex items-center gap-1.5 text-zinc-200 font-bold text-[11px]">
+                  <Waveform className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>XÁC SUẤT & ĐIỀU KIỆN CHUYỂN PHA</span>
+                </div>
+                <span className={`text-[9px] px-2 py-0.5 rounded border font-semibold ${transitionRadar.statusBadge}`}>
+                  {transitionRadar.statusLabel}
+                </span>
+              </div>
+
+              {/* Progress meter towards next phase */}
+              <div className="space-y-1">
+                <div className="flex items-center justify-between text-[10px]">
+                  <span className="text-zinc-400 flex items-center gap-1">
+                    Xu hướng: <strong className="text-zinc-200">{transitionRadar.currentTitle}</strong>
+                    <span className="text-zinc-600">→</span>
+                    <strong className="text-amber-400">{transitionRadar.nextTitle}</strong>
+                  </span>
+                  <span className="font-bold text-zinc-300">
+                    Dịch chuyển: {transitionRadar.shiftProbability}%
+                  </span>
+                </div>
+                <div className="h-2 w-full bg-zinc-950 rounded-full overflow-hidden border border-zinc-800 flex">
+                  <div
+                    style={{ width: `${100 - transitionRadar.shiftProbability}%` }}
+                    className="h-full bg-emerald-500 rounded-l-full transition-all duration-700"
+                    title={`Pha hiện tại vững chắc: ${100 - transitionRadar.shiftProbability}%`}
+                  />
+                  <div
+                    style={{ width: `${transitionRadar.shiftProbability}%` }}
+                    className="h-full bg-amber-500 rounded-r-full transition-all duration-700"
+                    title={`Áp lực dịch chuyển sang pha sau: ${transitionRadar.shiftProbability}%`}
+                  />
+                </div>
+                <div className="flex justify-between text-[8px] text-zinc-500 font-sans">
+                  <span>Cách biệt an toàn (+{transitionRadar.scoreDiff} điểm)</span>
+                  <span>Kim chỉ xoay khi chênh lệch &lt; 5 điểm</span>
+                </div>
+              </div>
+
+              {/* 4 Early Warning Triggers Checklist */}
+              <div className="grid grid-cols-2 gap-1.5 pt-1 border-t border-zinc-800/60 text-[9px]">
+                {transitionRadar.triggers.map((trig, idx) => (
+                  <div key={idx} className="p-1.5 rounded bg-zinc-950/60 border border-zinc-800/60 flex items-center justify-between">
+                    <span className="text-zinc-400 truncate">{trig.factor}:</span>
+                    <span className={`font-semibold shrink-0 ml-1 ${trig.isTriggered ? 'text-rose-400' : 'text-emerald-400'}`}>
+                      {trig.status}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
 
             {/* ── Real Macroeconomic Quantitative Indicators (6 Trụ Cột Vĩ Mô & Thanh Khoản Thực Tế) ── */}
