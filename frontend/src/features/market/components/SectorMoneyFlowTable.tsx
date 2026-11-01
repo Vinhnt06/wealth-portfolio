@@ -48,16 +48,16 @@ interface SectorMoneyFlowTableProps {
 }
 
 // Meta definition for sectors
-const SECTOR_META: Record<string, { label: string; code: string; color: string }> = {
+export const SECTOR_META: Record<string, { label: string; code: string; color: string }> = {
   bds: { label: 'Bất động sản', code: 'BĐS', color: '#10b981' },
   nh: { label: 'Ngân hàng', code: 'NH', color: '#3b82f6' },
   ck: { label: 'Dịch vụ tài chính / CK', code: 'CK', color: '#f59e0b' },
   thep: { label: 'Tài nguyên Cơ bản / Thép', code: 'Thép', color: '#06b6d4' },
   thuc_pham: { label: 'Thực phẩm & Đồ uống', code: 'TP', color: '#84cc16' },
-  cong_nghiep: { label: 'Hàng & DV Công nghiệp', code: 'CN', color: '#6366f1' },
+  cong_nghiep: { label: 'Hàng & DV Công nghiệp', code: 'CN', color: '#64748b' },
   ban_le: { label: 'Bán lẻ', code: 'Bán Lẻ', color: '#ec4899' },
   dau_khi: { label: 'Dầu khí & Năng lượng', code: 'Dầu Khí', color: '#14b8a6' },
-  cntt: { label: 'Công nghệ Thông tin', code: 'CNTT', color: '#8b5cf6' },
+  cntt: { label: 'Công nghệ Thông tin', code: 'CNTT', color: '#0284c7' },
   hoa_chat: { label: 'Hóa chất & Phân bón', code: 'Hóa Chất', color: '#eab308' },
   vin: { label: 'Họ Vin (VIC/VHM/VRE)', code: 'VIN', color: '#f43f5e' },
 };
