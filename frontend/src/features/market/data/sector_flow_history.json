@@ -1,5 +1,98 @@
 [
   {
+    "date": "2026-11-02",
+    "displayDate": "26-11-02",
+    "totalMarket": 15225,
+    "bds": {
+      "total": 1375.57,
+      "buy": 568.43,
+      "sell": 807.14,
+      "ratioPct": 9.03,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "nh": {
+      "total": 5266.76,
+      "buy": 1872.96,
+      "sell": 3393.8,
+      "ratioPct": 34.59,
+      "isClimax": true,
+      "isTrough": false
+    },
+    "ck": {
+      "total": 1822.06,
+      "buy": 795.04,
+      "sell": 1027.02,
+      "ratioPct": 11.97,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "thep": {
+      "total": 707.77,
+      "buy": 244.48,
+      "sell": 463.29,
+      "ratioPct": 4.65,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "thuc_pham": {
+      "total": 1014.8,
+      "buy": 424.8,
+      "sell": 590,
+      "ratioPct": 6.67,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "cong_nghiep": {
+      "total": 693.06,
+      "buy": 268.32,
+      "sell": 424.73,
+      "ratioPct": 4.55,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "ban_le": {
+      "total": 783.84,
+      "buy": 299.1,
+      "sell": 484.74,
+      "ratioPct": 5.15,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "dau_khi": {
+      "total": 754.14,
+      "buy": 248.12,
+      "sell": 506.02,
+      "ratioPct": 4.95,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "cntt": {
+      "total": 650.88,
+      "buy": 196.87,
+      "sell": 454.01,
+      "ratioPct": 4.28,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "hoa_chat": {
+      "total": 329.03,
+      "buy": 99.98,
+      "sell": 229.05,
+      "ratioPct": 2.16,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "vin": {
+      "total": 1238.94,
+      "buy": 616.35,
+      "sell": 622.6,
+      "ratioPct": 8.14,
+      "isClimax": false,
+      "isTrough": false
+    }
+  },
+  {
     "date": "2026-10-30",
     "displayDate": "26-10-30",
     "totalMarket": 10079,
@@ -3808,99 +3901,6 @@
       "buy": 2201.35,
       "sell": 979.04,
       "ratioPct": 28.79,
-      "isClimax": true,
-      "isTrough": false
-    }
-  },
-  {
-    "date": "2026-09-03",
-    "displayDate": "26-09-03",
-    "totalMarket": 12224,
-    "bds": {
-      "total": 1266.73,
-      "buy": 622.07,
-      "sell": 644.66,
-      "ratioPct": 10.36,
-      "isClimax": false,
-      "isTrough": false
-    },
-    "nh": {
-      "total": 3485.87,
-      "buy": 1306.81,
-      "sell": 2179.06,
-      "ratioPct": 28.52,
-      "isClimax": false,
-      "isTrough": false
-    },
-    "ck": {
-      "total": 1641.51,
-      "buy": 749.57,
-      "sell": 891.94,
-      "ratioPct": 13.43,
-      "isClimax": false,
-      "isTrough": false
-    },
-    "thep": {
-      "total": 642.87,
-      "buy": 230.43,
-      "sell": 412.44,
-      "ratioPct": 5.26,
-      "isClimax": false,
-      "isTrough": false
-    },
-    "thuc_pham": {
-      "total": 803.48,
-      "buy": 323.15,
-      "sell": 480.33,
-      "ratioPct": 6.57,
-      "isClimax": false,
-      "isTrough": false
-    },
-    "cong_nghiep": {
-      "total": 411.61,
-      "buy": 164.61,
-      "sell": 247,
-      "ratioPct": 3.37,
-      "isClimax": false,
-      "isTrough": false
-    },
-    "ban_le": {
-      "total": 635.21,
-      "buy": 216.55,
-      "sell": 418.66,
-      "ratioPct": 5.2,
-      "isClimax": false,
-      "isTrough": false
-    },
-    "dau_khi": {
-      "total": 922.8,
-      "buy": 358.33,
-      "sell": 564.48,
-      "ratioPct": 7.55,
-      "isClimax": false,
-      "isTrough": false
-    },
-    "cntt": {
-      "total": 287.69,
-      "buy": 113.54,
-      "sell": 174.16,
-      "ratioPct": 2.35,
-      "isClimax": false,
-      "isTrough": false
-    },
-    "hoa_chat": {
-      "total": 659.48,
-      "buy": 439.43,
-      "sell": 220.04,
-      "ratioPct": 5.39,
-      "isClimax": false,
-      "isTrough": false
-    },
-    "vin": {
-      "total": 2398.53,
-      "buy": 1629.97,
-      "sell": 768.55,
-      "ratioPct": 19.62,
       "isClimax": true,
       "isTrough": false
     }
