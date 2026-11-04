@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import realTicksData from '../../../../features/market/data/realTicks.json';
 import stockDatabase from '../../../../features/market/data/stockDatabase.json';
 import { calculateExchangeCeilFloor } from '../../../../features/market/utils/priceColors';
+import { isMarketTradingSession } from '../../../../features/market/utils/marketHours';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -189,27 +190,31 @@ async function fetchFromEntrade(symbol: string): Promise<any | null> {
       const json1D = await res1D.json();
       const mult = isIndex ? 1 : 1000;
       if (json1D?.c?.length > 0) {
-        const last1D = json1D.c.length - 1;
-        const ref = json1D.c[last1D] * mult;
+        const len = json1D.c.length;
+        const last1D = len - 1;
+        // In Vietnam stock market, official reference price (giá tham chiếu) is previous trading session close
+        const prev1D = len > 1 ? len - 2 : last1D;
+        const ref = json1D.c[prev1D] * mult;
 
-        let livePrice = ref;
-        let liveOpen = json1D.o[last1D] * mult;
-        let liveHigh = json1D.h[last1D] * mult;
-        let liveLow = json1D.l[last1D] * mult;
-        let liveVol = json1D.v[last1D] || 0;
+        let livePrice = json1D.c[last1D] * mult;
+        let liveOpen = (json1D.o?.[last1D] ?? json1D.c[last1D]) * mult;
+        let liveHigh = (json1D.h?.[last1D] ?? json1D.c[last1D]) * mult;
+        let liveLow = (json1D.l?.[last1D] ?? json1D.c[last1D]) * mult;
+        let liveVol = json1D.v?.[last1D] || 0;
 
-        if (res1M.ok) {
+        if (res1M.ok && isMarketTradingSession()) {
           const json1M = await res1M.json();
           if (json1M?.c?.length > 0) {
             const last1M = json1M.c.length - 1;
-            livePrice = json1M.c[last1M] * mult;
+            const mPrice = json1M.c[last1M] * mult;
+            if (mPrice > 0) livePrice = mPrice;
             // Aggregate today's high, low, volume
             const hs = json1M.h as number[];
             const ls = json1M.l as number[];
             const vs = json1M.v as number[];
             if (hs.length > 0) liveHigh = Math.max(...hs) * mult;
             if (ls.length > 0) liveLow = Math.min(...ls) * mult;
-            if (json1M.o.length > 0) liveOpen = json1M.o[0] * mult;
+            if (json1M.o?.length > 0) liveOpen = json1M.o[0] * mult;
             if (vs.length > 0) liveVol = vs.reduce((a: number, b: number) => a + b, 0);
           }
         }
@@ -365,11 +370,18 @@ export async function GET(req: NextRequest) {
         timestamp: Date.now(),
       };
 
-      return NextResponse.json({
-        success: true,
-        source: 'ssi_iboard',
-        data: result,
-      });
+      // Nếu ngoài giờ giao dịch (15:05 -> 08:30 sáng hôm sau) mà SSI đã chạy batch sang ngày mới
+      // (matchedPrice = 0 hoặc volume = 0 và change = 0%), không lấy kết quả rỗng này mà chuyển sang Entrade
+      const isOutsideHours = !isMarketTradingSession();
+      const isSsiResetRollover = isOutsideHours && (matchedPrice === 0 || totalVolume === 0) && (rawChange === 0 || rawChangePct === 0);
+
+      if (!isSsiResetRollover) {
+        return NextResponse.json({
+          success: true,
+          source: 'ssi_iboard',
+          data: result,
+        });
+      }
     }
   } catch {
     // Continue to secondary source

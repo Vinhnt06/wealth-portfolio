@@ -8,6 +8,7 @@ import { useMarketStore } from '../store/marketStore';
 import stockDatabase from '../data/stockDatabase.json';
 import realTicksData from '../data/realTicks.json';
 import { getStockPriceColor } from '../utils/priceColors';
+import { isMarketTradingSession } from '../utils/marketHours';
 import { VN_MARKET_INDEXES, isMarketIndex, getMarketIndexMeta } from '../constants/marketIndexes';
 
 export interface SearchItem {
@@ -331,8 +332,12 @@ export const MarketSearch: React.FC = () => {
     const rawRef = liveTick?.referencePrice ?? (screenerItem && price ? Math.round(price / (1 + (screenerItem.changePercent || 0) / 100)) : (baseTick?.ref ?? price));
     const ref = normalizeToVnd(rawRef);
 
+    const isOutsideHours = !isMarketTradingSession();
     const change = liveTick?.change ?? (price && ref ? price - ref : 0);
-    const changePercent = liveTick?.changePercent ?? (screenerItem?.changePercent ?? (price && ref && ref > 0 ? ((price - ref) / ref) * 100 : 0));
+    const changePercent =
+      isOutsideHours && (!liveTick || liveTick.changePercent === 0) && screenerItem?.changePercent
+        ? screenerItem.changePercent
+        : (liveTick?.changePercent ?? (screenerItem?.changePercent ?? (price && ref && ref > 0 ? ((price - ref) / ref) * 100 : 0)));
     const isStarred = watchlistSymbols.includes(item.symbol);
 
     const priceColor = getStockPriceColor({

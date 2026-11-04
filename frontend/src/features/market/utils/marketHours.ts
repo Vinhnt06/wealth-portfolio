@@ -87,3 +87,26 @@ export function getMarketSessionInfo(): MarketSessionInfo {
     };
   }
 }
+
+/**
+ * Kiểm tra xem hiện tại có đang trong phiên giao dịch hoặc khung giờ reset ATO (08:30 - 15:05, Thứ 2 - Thứ 6) hay không.
+ * - Từ 08:30 sáng: Thị trường mở cổng nhận lệnh ATO trước 30p, các mã bắt đầu reset về 0% tham chiếu cho phiên mới.
+ * - Từ 15:05 chiều đến trước 08:30 sáng hôm sau (và cả ngày Thứ 7, Chủ Nhật):
+ *   Thị trường ĐÓNG CỬA. Toàn bộ % tăng giảm và giá đóng cửa của phiên gần nhất PHẢI ĐƯỢC GIỮ NGUYÊN.
+ *   Tuyệt đối không được reset về 0% khi CTCK chạy batch chốt sổ cuối ngày (20:30 - 21:00).
+ */
+export function isMarketTradingSession(): boolean {
+  const now = new Date();
+  const vnTimeStr = now.toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' });
+  const vnDate = new Date(vnTimeStr);
+  const day = vnDate.getDay(); // 0: Chủ Nhật, 6: Thứ Bảy
+  if (day === 0 || day === 6) return false;
+
+  const hours = vnDate.getHours();
+  const minutes = vnDate.getMinutes();
+  const timeVal = hours * 60 + minutes;
+
+  // Khung giờ hoạt động phiên (bao gồm 30p trước ATO nhận lệnh lúc 08:30 đến hết giao dịch thỏa thuận 15:05)
+  return timeVal >= 8 * 60 + 30 && timeVal <= 15 * 60 + 5;
+}
+

@@ -33,6 +33,7 @@ import { MinerviniScreenerItem } from '../types/minervini.types';
 import { getStockPriceColor } from '../utils/priceColors';
 import { SECTOR_MAPPING, ICB_20_SECTORS } from '../data/sectorMapping';
 import { EconomicCycleWheel } from './EconomicCycleWheel';
+import { isMarketTradingSession } from '../utils/marketHours';
 import financialsDatabase from '../data/financialsDatabase.json';
 
 const finMap = (financialsDatabase as any)?.data || {};
@@ -268,11 +269,15 @@ export const MarkMinerviniScreener: React.FC = () => {
       const live = ticks[sym];
       const fin = finMap[sym];
 
+      const isOutside = !isMarketTradingSession();
       const currentPrice = live && live.price > 0 ? live.price : item.price;
+      // Ngoài phiên (15:05 -> 08:30 sáng hôm sau): giữ nguyên mức thay đổi chốt phiên nếu tick nhận được là 0% do CTCK chốt sổ
       const currentChangePct =
-        live && live.changePercent !== undefined && !isNaN(live.changePercent)
-          ? live.changePercent
-          : item.changePct;
+        isOutside && (live?.changePercent === 0 || live?.changePercent === undefined) && item.changePct !== 0
+          ? item.changePct
+          : (live && live.changePercent !== undefined && !isNaN(live.changePercent)
+              ? live.changePercent
+              : item.changePct);
       const currentVolume =
         live && (live.totalVolume || live.volume)
           ? live.totalVolume || live.volume

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { TickData, QuotesData, OHLCCandle, MarketIndexData, WsStatus } from '../types/dnse.types';
+import { isMarketTradingSession } from '../utils/marketHours';
 
 interface MarketState {
   // Connection state
@@ -87,20 +88,65 @@ export const useMarketStore = create<MarketState>()(
   indexes: {},
 
   updateTick: (tick) =>
-    set((state) => ({
-      ticks: {
-        ...state.ticks,
-        [tick.symbol]: tick,
-      },
-    })),
+    set((state) => {
+      const existing = state.ticks[tick.symbol];
+      // Ngoài khung giờ giao dịch (15:05 -> 08:30 sáng hôm sau):
+      // Tuyệt đối không cho phép tick rỗng/batch chốt sổ lúc 21h (change = 0% với vol = 0) ghi đè kết quả phiên đóng cửa
+      if (
+        !isMarketTradingSession() &&
+        existing &&
+        existing.changePercent !== 0 &&
+        tick.changePercent === 0 &&
+        (tick.totalVolume === 0 || tick.volume === 0)
+      ) {
+        return {
+          ticks: {
+            ...state.ticks,
+            [tick.symbol]: {
+              ...tick,
+              price: existing.price > 0 ? existing.price : tick.price,
+              change: existing.change,
+              changePercent: existing.changePercent,
+              totalVolume: existing.totalVolume > 0 ? existing.totalVolume : tick.totalVolume,
+            },
+          },
+        };
+      }
+
+      return {
+        ticks: {
+          ...state.ticks,
+          [tick.symbol]: tick,
+        },
+      };
+    }),
 
   // Gộp nhiều tick trong 1 lần set() để heatmap poll 700+ mã không re-render từng mã
   updateTicks: (ticks) =>
     set((state) => {
       if (ticks.length === 0) return state;
       const next = { ...state.ticks };
+      const outsideSession = !isMarketTradingSession();
+
       for (const tick of ticks) {
-        next[tick.symbol] = tick;
+        const existing = next[tick.symbol];
+        if (
+          outsideSession &&
+          existing &&
+          existing.changePercent !== 0 &&
+          tick.changePercent === 0 &&
+          (tick.totalVolume === 0 || tick.volume === 0)
+        ) {
+          next[tick.symbol] = {
+            ...tick,
+            price: existing.price > 0 ? existing.price : tick.price,
+            change: existing.change,
+            changePercent: existing.changePercent,
+            totalVolume: existing.totalVolume > 0 ? existing.totalVolume : tick.totalVolume,
+          };
+        } else {
+          next[tick.symbol] = tick;
+        }
       }
       return { ticks: next };
     }),

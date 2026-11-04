@@ -2,6 +2,21 @@ import { NextResponse } from 'next/server';
 import stockDatabase from '../../../../features/market/data/stockDatabase.json';
 import { SECTOR_MAPPING } from '../../../../features/market/data/sectorMapping';
 import lastMinerviniScanData from '../../../../features/market/data/lastMinerviniScan.json';
+import { isMarketTradingSession } from '../../../../features/market/utils/marketHours';
+
+// Map dữ liệu quét chốt phiên gần nhất từ bộ lọc Mark Minervini (100% real Entrade)
+const SCAN_CLOSING_MAP = new Map<string, { price: number; changePct: number; volume: number }>();
+if (Array.isArray((lastMinerviniScanData as any)?.data)) {
+  ((lastMinerviniScanData as any).data).forEach((item: any) => {
+    if (item.symbol) {
+      SCAN_CLOSING_MAP.set(String(item.symbol).toUpperCase(), {
+        price: Number(item.price || 0),
+        changePct: Number(item.changePct || 0),
+        volume: Number(item.volume || 0),
+      });
+    }
+  });
+}
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -161,8 +176,17 @@ async function fetchFromVietcap(): Promise<HeatmapStock[] | null> {
       const price = matched > 0 ? matched : refPrice;
       if (price <= 0 || refPrice <= 0) continue;
 
-      const change = price - refPrice;
-      const changePercent = refPrice > 0 ? Number(((change / refPrice) * 100).toFixed(2)) : 0;
+      let change = price - refPrice;
+      let changePercent = refPrice > 0 ? Number(((change / refPrice) * 100).toFixed(2)) : 0;
+
+      // Ngoài phiên (15:05 -> 08:30 sáng hôm sau): nếu batch chốt sổ cuối ngày đẩy về 0%, giữ nguyên % chốt phiên
+      if (!isMarketTradingSession() && (change === 0 || changePercent === 0)) {
+        const scan = SCAN_CLOSING_MAP.get(symbol);
+        if (scan && scan.changePct !== 0) {
+          changePercent = scan.changePct;
+          change = Math.round(price - price / (1 + scan.changePct / 100));
+        }
+      }
       const volume = Number(mp.accumulatedVolume || 0);
       // accumulatedValue của Vietcap tính theo triệu VND
       const totalValue = Number(mp.accumulatedValue || 0) * 1_000_000;
@@ -234,14 +258,23 @@ async function fetchFromSsi(): Promise<HeatmapStock[] | null> {
       const price = s.matchedPrice > 0 ? s.matchedPrice : refPrice;
       if (price <= 0) continue;
 
-      const change =
+      let change =
         s.priceChange !== undefined && s.priceChange !== null ? s.priceChange : price - refPrice;
-      const changePercent =
+      let changePercent =
         s.priceChangePercent !== undefined && s.priceChangePercent !== null
           ? Number(Number(s.priceChangePercent).toFixed(2))
           : refPrice > 0
           ? Number(((change / refPrice) * 100).toFixed(2))
           : 0;
+
+      // Ngoài phiên (15:05 -> 08:30 sáng hôm sau): nếu batch chốt sổ cuối ngày đẩy về 0%, giữ nguyên % chốt phiên
+      if (!isMarketTradingSession() && (change === 0 || changePercent === 0)) {
+        const scan = SCAN_CLOSING_MAP.get(sym);
+        if (scan && scan.changePct !== 0) {
+          changePercent = scan.changePct;
+          change = Math.round(price - price / (1 + scan.changePct / 100));
+        }
+      }
 
       const sharesM = OUTSTANDING_SHARES_M[sym] || (price > 0 ? 250 : 0);
       items.push({

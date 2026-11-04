@@ -36,6 +36,7 @@ import { FinancialValuationTab } from './FinancialValuationTab';
 import { MinerviniAnalysisResult } from '../types/minervini.types';
 import stockDatabase from '../data/stockDatabase.json';
 import { getStockPriceColor, calculateExchangeCeilFloor } from '../utils/priceColors';
+import { isMarketTradingSession } from '../utils/marketHours';
 import { VN_MARKET_INDEXES, isMarketIndex, getMarketIndexMeta } from '../constants/marketIndexes';
 
 interface StockMetadata {
@@ -264,11 +265,24 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
     return () => clearInterval(quoteInterval);
   }, [selectedSymbol, updateTick]);
 
-  const price = isIndex
+  const isOutside = !isMarketTradingSession();
+  const rawPrice = isIndex
     ? (tick?.price || 0)
     : (tick?.price || (minerviniData?.price ? Math.round(minerviniData.price * 1000) : 0));
-  const change = tick?.change !== undefined ? tick.change : (minerviniData?.change ? (isIndex ? minerviniData.change : Math.round(minerviniData.change * 1000)) : 0);
-  const changePercent = tick?.changePercent !== undefined ? tick.changePercent : (minerviniData?.changePct || 0);
+  const price = rawPrice;
+
+  const minerviniChg = minerviniData?.change ? (isIndex ? minerviniData.change : Math.round(minerviniData.change * 1000)) : 0;
+  const minerviniPct = minerviniData?.changePct || 0;
+
+  const change =
+    isOutside && (!tick || tick.change === 0) && minerviniChg !== 0
+      ? minerviniChg
+      : (tick?.change !== undefined ? tick.change : minerviniChg);
+
+  const changePercent =
+    isOutside && (!tick || tick.changePercent === 0) && minerviniPct !== 0
+      ? minerviniPct
+      : (tick?.changePercent !== undefined ? tick.changePercent : minerviniPct);
   const isUp = change > 0;
   const isDown = change < 0;
 
