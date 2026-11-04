@@ -4,11 +4,13 @@ import path from 'path';
 import stockDatabase from '../../../../../features/market/data/stockDatabase.json';
 import { MinerviniScreenerItem } from '../../../../../features/market/types/minervini.types';
 import { SECTOR_MAPPING, SECTOR_LEADER_UNIVERSE, getSymbolsBySector } from '../../../../../features/market/data/sectorMapping';
+import financialsData from '../../../../../features/market/data/financialsDatabase.json';
 
 export const runtime = 'nodejs';
 export const preferredRegion = 'sin1';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
+
 
 // Comprehensive universe of 180+ liquid VN equities across all 20 industry sectors
 const DEFAULT_UNIVERSE = SECTOR_LEADER_UNIVERSE;
@@ -105,6 +107,7 @@ async function getLiveSsiTicks(): Promise<Map<string, LiveTick>> {
         fetch(`https://iboard-query.ssi.com.vn/stock/exchange/${ex}`, {
           headers: { 'User-Agent': 'Mozilla/5.0' },
           cache: 'no-store',
+          signal: AbortSignal.timeout(2500),
         })
           .then((r) => r.json())
           .catch(() => ({ data: [] }))
@@ -314,14 +317,14 @@ const OUTSTANDING_SHARES_M: Record<string, number> = {
   TNG: 113, MSH: 75, GIL: 69, STK: 102, TCM: 101, VGT: 500,
 };
 
-  // Real market cap calculation from verified shares outstanding (in nghìn tỷ VND)
-  const getRealMarketCapT = (sym: string, price: number) => {
+  // Real market cap calculation from verified shares outstanding (in Tỷ VND)
+  const getRealMarketCapT = (sym: string, priceK: number) => {
     const sharesM = OUTSTANDING_SHARES_M[sym];
     if (!sharesM) return 0;
-    // price is in 1,000 VND (from Entrade), sharesM is in millions of shares (10^6).
-    // Total market cap in VND = sharesM * 10^6 * price * 10^3 = sharesM * price * 10^9 VND.
-    // In nghìn tỷ VND (10^12 VND) = (sharesM * price * 10^9) / 10^12 = (sharesM * price) / 1000.
-    return Math.round(((sharesM * (price || 0)) / 1000) * 10) / 10;
+    // priceK is in 1,000 VND (from Entrade), sharesM is in millions of shares (10^6).
+    // Total market cap in VND = sharesM * 10^6 * priceK * 10^3 = sharesM * priceK * 10^9 VND.
+    // In Tỷ VND (10^9 VND) = sharesM * priceK.
+    return Math.round(sharesM * (priceK || 0));
   };
 
   try {
@@ -335,6 +338,7 @@ const OUTSTANDING_SHARES_M: Record<string, number> = {
           const fileRaw = fs.readFileSync(scanFile, 'utf8');
           const fileJson = JSON.parse(fileRaw);
           if (Array.isArray(fileJson.data) && fileJson.data.length > 0) {
+            const finMap = (financialsData as any)?.data || {};
             const filtered = fileJson.data.filter((item: any) => {
               if (sectorFilter !== 'all' && !item.sector.toLowerCase().includes(sectorFilter)) return false;
               if (onlyStage2 && !item.isStage2Eligible) return false;
@@ -343,8 +347,20 @@ const OUTSTANDING_SHARES_M: Record<string, number> = {
               if (minMktCapT > 0 && item.mktCapT < minMktCapT) return false;
               return true;
             });
+            const normalized = filtered.map((item: any) => {
+              const sym = item.symbol.toUpperCase();
+              const fin = finMap[sym];
+              const sharesM = OUTSTANDING_SHARES_M[sym] || (item.price > 0 ? 250 : 0);
+              const mktCapT = item.mktCapT > 100 ? item.mktCapT : Math.round(sharesM * ((item.price || 0) / 1000));
+              return {
+                ...item,
+                mktCapT,
+                pe: item.pe ?? fin?.pe ?? null,
+                epsGrowthYoY: item.epsGrowthYoY ?? fin?.earningsGrowthYoY ?? null,
+              };
+            });
             const [liveMap, rsMap] = await Promise.all([getLiveSsiTicks(), getRsRatingsMap()]);
-            const enriched = enrichWithLiveTicks(filtered, liveMap, rsMap).sort((a, b) => b.rsRating - a.rsRating);
+            const enriched = enrichWithLiveTicks(normalized, liveMap, rsMap).sort((a, b) => b.rsRating - a.rsRating);
             return NextResponse.json({
               success: true,
               total: enriched.length,
@@ -367,6 +383,7 @@ const OUTSTANDING_SHARES_M: Record<string, number> = {
 
     // Fast-path 2: return from memory cache if available and fresh
     if (!forceRefresh && !customSymbolsParam && cachedUniverseData && Date.now() - cachedUniverseData.timestamp < CACHE_TTL_MS) {
+      const finMap = (financialsData as any)?.data || {};
       const filtered = cachedUniverseData.items.filter((item) => {
         if (sectorFilter !== 'all' && !item.sector.toLowerCase().includes(sectorFilter)) return false;
         if (onlyStage2 && !item.isStage2Eligible) return false;
@@ -375,8 +392,20 @@ const OUTSTANDING_SHARES_M: Record<string, number> = {
         if (minMktCapT > 0 && item.mktCapT < minMktCapT) return false;
         return true;
       });
+      const normalized = filtered.map((item: any) => {
+        const sym = item.symbol.toUpperCase();
+        const fin = finMap[sym];
+        const sharesM = OUTSTANDING_SHARES_M[sym] || (item.price > 0 ? 250 : 0);
+        const mktCapT = item.mktCapT > 100 ? item.mktCapT : Math.round(sharesM * ((item.price || 0) / 1000));
+        return {
+          ...item,
+          mktCapT,
+          pe: item.pe ?? fin?.pe ?? null,
+          epsGrowthYoY: item.epsGrowthYoY ?? fin?.earningsGrowthYoY ?? null,
+        };
+      });
       const [liveMap, rsMap] = await Promise.all([getLiveSsiTicks(), getRsRatingsMap()]);
-      const enriched = enrichWithLiveTicks(filtered, liveMap, rsMap).sort((a, b) => b.rsRating - a.rsRating);
+      const enriched = enrichWithLiveTicks(normalized, liveMap, rsMap).sort((a, b) => b.rsRating - a.rsRating);
       return NextResponse.json({
         success: true,
         total: enriched.length,
@@ -399,6 +428,7 @@ const OUTSTANDING_SHARES_M: Record<string, number> = {
         try {
           const info = dbMap.get(sym) || { name: sym, exchange: 'HOSE' };
           const sector = SECTOR_MAPPING[sym] || info.sector || 'Khác';
+          const fin = ((financialsData as any)?.data || {})[sym];
 
           // Filter sector early if specified (unless custom symbol on-demand scan)
           if (!customSymbolsParam && sectorFilter !== 'all' && !sector.toLowerCase().includes(sectorFilter)) {
@@ -505,9 +535,9 @@ const OUTSTANDING_SHARES_M: Record<string, number> = {
             volume: vol,
             relVol,
             mktCapT,
-            pe: null,
+            pe: fin?.pe ?? null,
             epsDilTTM: null,
-            epsGrowthYoY: null,
+            epsGrowthYoY: fin?.earningsGrowthYoY ?? null,
             divYieldPct: null,
             analystRating: 'No rating',
             rsRating,

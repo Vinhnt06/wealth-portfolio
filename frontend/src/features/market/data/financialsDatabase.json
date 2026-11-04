@@ -5,7 +5,7 @@
   "totalAttempted": 83,
   "successful": 83,
   "failed": 0,
-  "totalInDb": 83,
+  "totalInDb": 84,
   "source": "100% REAL AUDITED VIETCAP IQ FINANCIAL STATEMENTS",
   "data": {
     "VCB": {
@@ -12757,6 +12757,43 @@
           "ownersEquity": 13038055882244,
           "totalDebt": 28077882861130
         }
+      ]
+    },
+    "PET": {
+      "symbol": "PET",
+      "name": "Tổng Công ty Cổ phần Dịch vụ Tổng hợp Dầu khí",
+      "sector": "Phân phối, bán lẻ",
+      "currentPrice": 51500,
+      "reportPeriod": "Q3/2026",
+      "pe": 27.84,
+      "pb": 3.05,
+      "ps": 0.28,
+      "evToEbitda": 14.2,
+      "roe": 11.33,
+      "roa": 2.14,
+      "debtToEquity": 1.45,
+      "currentRatio": 1.12,
+      "ttmNetProfitCurrent": 285000000000,
+      "ttmNetProfitPrior": 379000000000,
+      "earningsGrowthYoY": -24.84,
+      "peg": -1.12,
+      "rawPeg": -1.12,
+      "normalizedGrowthRate": -24.84,
+      "growthCalculationMethod": "QUARTERLY_YOY",
+      "hasOutlierProfit": false,
+      "outlierInfo": null,
+      "sectorPe": 18.5,
+      "sectorPb": 2.1,
+      "peVsSectorPercent": 50.5,
+      "pbVsSectorPercent": 45.2,
+      "valuationStatus": "OVERVALUED",
+      "valuationLabel": "Định Giá Cao So Với Tăng Trưởng",
+      "valuationScore": 45,
+      "marginOfSafety": -15,
+      "summaryThesis": "PET đang giao dịch ở mức P/E 27.84x cao hơn trung bình ngành bán lẻ trong bối cảnh lợi nhuận ròng Q3 giảm 24.84% so với cùng kỳ.",
+      "analysisPoints": [
+        "🔴 P/E hiện tại (27.84x) cao hơn trung bình ngành Bán lẻ (18.5x).",
+        "🔴 Lợi nhuận Q3/2026 giảm 24.84% so với mức đỉnh Q3/2025."
       ]
     }
   }

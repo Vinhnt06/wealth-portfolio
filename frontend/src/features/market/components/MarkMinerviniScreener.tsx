@@ -28,10 +28,14 @@ import {
   Warning,
 } from '@phosphor-icons/react';
 import { useMarketStore } from '../store/marketStore';
+import { useDnseWebSocket } from '../hooks/useDnseWebSocket';
 import { MinerviniScreenerItem } from '../types/minervini.types';
 import { getStockPriceColor } from '../utils/priceColors';
 import { SECTOR_MAPPING, ICB_20_SECTORS } from '../data/sectorMapping';
 import { EconomicCycleWheel } from './EconomicCycleWheel';
+import financialsDatabase from '../data/financialsDatabase.json';
+
+const finMap = (financialsDatabase as any)?.data || {};
 
 type ScreenerTab = 'overview' | 'performance' | 'technicals' | 'valuation';
 type ViewMode = 'table' | 'sectors' | 'cycle';
@@ -39,6 +43,8 @@ type SectorSortOption = 'rs' | 'change' | 'stage2' | 'name';
 
 export const MarkMinerviniScreener: React.FC = () => {
   const { setSelectedSymbol, setViewMode } = useMarketStore();
+  const ticks = useMarketStore((state) => state.ticks);
+  const wsStatus = useMarketStore((state) => state.wsStatus);
 
   const [items, setItems] = useState<MinerviniScreenerItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -248,6 +254,63 @@ export const MarkMinerviniScreener: React.FC = () => {
     return Array.from(ICB_20_SECTORS);
   }, []);
 
+  // Realtime subscription for all stocks in the screener table via DNSE WebSocket
+  const screenerSymbols = useMemo(() => {
+    return items.map((it) => it.symbol);
+  }, [items]);
+
+  useDnseWebSocket(screenerSymbols.length > 0 ? screenerSymbols : undefined);
+
+  // Live merge of real-time trade ticks & audited Vietcap financials
+  const liveEnrichedItems = useMemo(() => {
+    return items.map((item) => {
+      const sym = item.symbol.toUpperCase();
+      const live = ticks[sym];
+      const fin = finMap[sym];
+
+      const currentPrice = live && live.price > 0 ? live.price : item.price;
+      const currentChangePct =
+        live && live.changePercent !== undefined && !isNaN(live.changePercent)
+          ? live.changePercent
+          : item.changePct;
+      const currentVolume =
+        live && (live.totalVolume || live.volume)
+          ? live.totalVolume || live.volume
+          : item.volume;
+
+      // Dynamic criteria adjustment with live price
+      let criteriaPassed: number = typeof item.criteriaPassed === 'number'
+        ? item.criteriaPassed
+        : (typeof item.score === 'number' ? item.score : 0);
+      const livePriceK = currentPrice / 1000;
+      const oldPriceK = (item.price || 0) / 1000;
+      if (item.sma50 && item.sma150 && item.sma200 && oldPriceK > 0) {
+        const oldC1 = oldPriceK > item.sma150 && oldPriceK > item.sma200;
+        const liveC1 = livePriceK > item.sma150 && livePriceK > item.sma200;
+        if (oldC1 !== liveC1) criteriaPassed += liveC1 ? 1 : -1;
+
+        const oldC5 = oldPriceK > item.sma50;
+        const liveC5 = livePriceK > item.sma50;
+        if (oldC5 !== liveC5) criteriaPassed += liveC5 ? 1 : -1;
+
+        criteriaPassed = Math.max(0, Math.min(8, criteriaPassed));
+      }
+
+      return {
+        ...item,
+        price: currentPrice,
+        changePct: currentChangePct,
+        volume: currentVolume,
+        criteriaPassed,
+        score: criteriaPassed,
+        isStage2: criteriaPassed === 8,
+        isStage2Eligible: criteriaPassed === 8,
+        pe: item.pe ?? fin?.pe ?? null,
+        epsGrowthYoY: item.epsGrowthYoY ?? fin?.earningsGrowthYoY ?? null,
+      };
+    });
+  }, [items, ticks]);
+
   // Handle column header click to auto-sort
   const handleSort = (key: string) => {
     if (sortKey === key) {
@@ -258,12 +321,12 @@ export const MarkMinerviniScreener: React.FC = () => {
     }
   };
 
-  // Filtered and automatically sorted items
+  // Filtered and automatically sorted items based on live ticks
   const filteredAndSortedItems = useMemo(() => {
     const hasSearch = searchQuery.trim().length > 0;
 
     // 1. Filter
-    const filtered = items.filter((item) => {
+    const filtered = liveEnrichedItems.filter((item) => {
       // If user typed a search query, prioritize finding that stock across all sectors & criteria
       if (hasSearch) {
         const query = searchQuery.toUpperCase().trim();
@@ -305,7 +368,7 @@ export const MarkMinerviniScreener: React.FC = () => {
 
       return sortDir === 'asc' ? Number(valA) - Number(valB) : Number(valB) - Number(valA);
     });
-  }, [items, searchQuery, selectedSector, minRs, onlyStage2, sortKey, sortDir]);
+  }, [liveEnrichedItems, searchQuery, selectedSector, minRs, onlyStage2, sortKey, sortDir]);
 
   // Sector groups for "Top cổ phiếu theo nhóm ngành"
   const sectorGroups = useMemo(() => {
@@ -320,7 +383,7 @@ export const MarkMinerviniScreener: React.FC = () => {
       }
     > = {};
 
-    items.forEach((item) => {
+    liveEnrichedItems.forEach((item) => {
       const sec = SECTOR_MAPPING[item.symbol] || item.sector || 'Khác';
       if (!groups[sec]) {
         groups[sec] = {
@@ -354,11 +417,11 @@ export const MarkMinerviniScreener: React.FC = () => {
         if (sectorSortBy === 'name') return a.sector.localeCompare(b.sector);
         return b.avgRs - a.avgRs; // default: rank leading industry sectors by RS
       });
-  }, [items, sectorSortBy]);
+  }, [liveEnrichedItems, sectorSortBy]);
 
   // Summary counts
-  const stage2Count = useMemo(() => items.filter((x) => x.criteriaPassed === 8).length, [items]);
-  const leadersCount = useMemo(() => items.filter((x) => x.rsRating >= 90).length, [items]);
+  const stage2Count = useMemo(() => liveEnrichedItems.filter((x) => x.criteriaPassed === 8).length, [liveEnrichedItems]);
+  const leadersCount = useMemo(() => liveEnrichedItems.filter((x) => x.rsRating >= 90).length, [liveEnrichedItems]);
   const topSectors = useMemo(() => {
     return sectorGroups.slice(0, 3).map((g) => g.sector);
   }, [sectorGroups]);
@@ -395,6 +458,10 @@ export const MarkMinerviniScreener: React.FC = () => {
               </h2>
               <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-400/10 text-amber-400 border border-amber-400/20">
                 TREND TEMPLATE STAGE 2
+              </span>
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                {wsStatus === 'connected' ? 'LIVE TICK STREAMING' : 'REALTIME SYNC'}
               </span>
             </div>
             <p className="text-xs text-zinc-400">
@@ -1398,8 +1465,8 @@ export const MarkMinerviniScreener: React.FC = () => {
                           {/* Tab-dependent columns */}
                           {activeTab === 'overview' && (
                             <>
-                              <td className="py-3 px-3 text-right text-zinc-300">
-                                {item.mktCapT.toFixed(1)}
+                              <td className="py-3 px-3 text-right text-zinc-300 font-mono">
+                                {item.mktCapT.toLocaleString('vi-VN')}
                               </td>
                               <td className="py-3 px-3 text-right text-zinc-500 font-mono">
                                 {item.pe ? item.pe.toFixed(1) : '--'}

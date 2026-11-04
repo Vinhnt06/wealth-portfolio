@@ -4,6 +4,7 @@ import path from 'path';
 import stockDatabase from '../../../../features/market/data/stockDatabase.json';
 import { SECTOR_LEADER_UNIVERSE } from '../../../../features/market/data/sectorMapping';
 import sectorFullMapping from '../../../../features/market/data/sectorFullMapping.json';
+import financialsData from '../../../../features/market/data/financialsDatabase.json';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -131,7 +132,7 @@ export async function GET(request: NextRequest) {
           if (distHigh >= -25) score++;
           if (rsRating >= 70) score++;
 
-          const isStage2 = score >= 7;
+          const isStage2 = score === 8;
           const isStage2Eligible = score === 8;
 
           const volSlice = d.v.slice(Math.max(0, len - 20));
@@ -139,11 +140,13 @@ export async function GET(request: NextRequest) {
           const relVol = avgVol20 > 0 ? Math.round((vol / avgVol20) * 100) / 100 : 1;
 
           const sharesM = OUTSTANDING_SHARES_M[sym] || (price > 0 ? 250 : 0);
-          const mktCapT = Math.round(((sharesM * price) / 1000000) * 10) / 10;
+          const mktCapT = Math.round(sharesM * price);
 
           const p1W = len > 5 ? Math.round(((price - d.c[len - 5]) / d.c[len - 5]) * 10000) / 100 : chgPct;
           const p1M = len > 22 ? Math.round(((price - d.c[len - 22]) / d.c[len - 22]) * 10000) / 100 : 0;
           const p1Y = len > 240 ? Math.round(((price - d.c[len - 240]) / d.c[len - 240]) * 10000) / 100 : 0;
+
+          const fin = ((financialsData as any)?.data || {})[sym];
 
           results.push({
             symbol: sym,
@@ -155,9 +158,9 @@ export async function GET(request: NextRequest) {
             volume: vol,
             relVol,
             mktCapT,
-            pe: null,
+            pe: fin?.pe ?? null,
             epsDilTTM: null,
-            epsGrowthYoY: null,
+            epsGrowthYoY: fin?.earningsGrowthYoY ?? null,
             divYieldPct: null,
             analystRating: 'No rating',
             rsRating,
