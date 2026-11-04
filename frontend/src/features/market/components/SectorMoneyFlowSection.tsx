@@ -22,8 +22,8 @@ export function SectorMoneyFlowSection() {
   const [warnings, setWarnings] = useState<string[]>([]);
   const [selectedSession, setSelectedSession] = useState<SessionSectorFlow | null>(null);
 
-  const fetchData = async (limitVal: number) => {
-    setLoading(true);
+  const fetchData = async (limitVal: number, isBackground = false) => {
+    if (!isBackground) setLoading(true);
     try {
       const res = await fetch(`/api/market/sector-flow?limit=${limitVal}`);
       if (res.ok) {
@@ -36,12 +36,16 @@ export function SectorMoneyFlowSection() {
     } catch (e) {
       console.error('Failed to load sector flow data:', e);
     } finally {
-      setLoading(false);
+      if (!isBackground) setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchData(limit);
+    const interval = setInterval(() => {
+      fetchData(limit, true);
+    }, 15000);
+    return () => clearInterval(interval);
   }, [limit]);
 
   const latest = data[0];
@@ -53,6 +57,10 @@ export function SectorMoneyFlowSection() {
         <div>
           <h1 className="text-base sm:text-lg font-bold text-zinc-100 flex items-center gap-2">
             <span>Dòng Tiền Ngành & Ma Trận Thanh Khoản Thị Trường</span>
+            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              LIVE UPDATE
+            </span>
           </h1>
           <p className="text-xs text-zinc-400 mt-0.5">
             Dữ liệu realtime từ 3 sàn HOSE, HNX, UPCOM • Đơn vị: Tỷ VNĐ
