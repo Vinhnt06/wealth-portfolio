@@ -197,7 +197,7 @@ export const ShareholderStructureView: React.FC<ShareholderStructureViewProps> =
     });
   }, [breakdownItems]);
 
-  // Comprehensive Timeline Data for Line Chart with Delta Net Change
+  // Comprehensive Timeline Data for Line Chart (100% Real Data from Filings)
   const timelineData = useMemo(() => {
     const rawSnaps = structure?.historicalSnapshots || [];
     const currentMajor = Number((100 - (structure?.freeFloatPercentage || 50)).toFixed(2));
@@ -205,26 +205,28 @@ export const ShareholderStructureView: React.FC<ShareholderStructureViewProps> =
 
     let snaps: HistoricalSnapshot[] = [];
 
-    if (rawSnaps.length >= 2) {
+    if (rawSnaps.length > 0) {
       snaps = [...rawSnaps];
-      // Append current period if not yet present
+      // If latest period is missing current real-time verified list, append it
       const last = snaps[snaps.length - 1];
-      if (last.date !== 'Hiện Tại') {
+      if (last && last.date !== 'Hiện Tại' && rawShareholders.length > 0) {
+        // Only append if last record is older than recent
         snaps.push({
           date: 'Hiện Tại',
           majorHoldersPct: currentMajor,
           freeFloatPct: currentFreeFloat,
-          shareholderRecorded: rawShareholders.length || last.shareholderRecorded,
+          shareholderRecorded: rawShareholders.length,
         });
       }
-    } else {
-      // If historical filings are sparse, construct multi-year real curve anchored to current official filings
+    } else if (rawShareholders.length > 0) {
+      // Single real point anchored to current official list if no historical filings
       snaps = [
-        { date: '2022', majorHoldersPct: Number((currentMajor * 0.78).toFixed(2)), freeFloatPct: Number((100 - currentMajor * 0.78).toFixed(2)), shareholderRecorded: Math.max(5, Math.round(rawShareholders.length * 0.6)) },
-        { date: '2023', majorHoldersPct: Number((currentMajor * 0.88).toFixed(2)), freeFloatPct: Number((100 - currentMajor * 0.88).toFixed(2)), shareholderRecorded: Math.max(8, Math.round(rawShareholders.length * 0.75)) },
-        { date: '2024', majorHoldersPct: Number((currentMajor * 0.94).toFixed(2)), freeFloatPct: Number((100 - currentMajor * 0.94).toFixed(2)), shareholderRecorded: Math.max(12, Math.round(rawShareholders.length * 0.85)) },
-        { date: '2025', majorHoldersPct: Number((currentMajor * 0.98).toFixed(2)), freeFloatPct: Number((100 - currentMajor * 0.98).toFixed(2)), shareholderRecorded: Math.max(15, Math.round(rawShareholders.length * 0.95)) },
-        { date: 'Hiện Tại', majorHoldersPct: currentMajor, freeFloatPct: currentFreeFloat, shareholderRecorded: rawShareholders.length },
+        {
+          date: 'Hiện Tại',
+          majorHoldersPct: currentMajor,
+          freeFloatPct: currentFreeFloat,
+          shareholderRecorded: rawShareholders.length,
+        },
       ];
     }
 
@@ -242,10 +244,10 @@ export const ShareholderStructureView: React.FC<ShareholderStructureViewProps> =
 
   // SVG Line Chart Coordinate Mapping
   const chartWidth = 640;
-  const chartHeight = 170;
+  const chartHeight = 175;
   const paddingLeft = 45;
   const paddingRight = 30;
-  const paddingTop = 20;
+  const paddingTop = 25;
   const paddingBottom = 35;
 
   const drawableWidth = chartWidth - paddingLeft - paddingRight;
@@ -258,17 +260,15 @@ export const ShareholderStructureView: React.FC<ShareholderStructureViewProps> =
     return timelineData.map((d, idx) => {
       const x = paddingLeft + (idx / Math.max(1, timelineData.length - 1)) * drawableWidth;
       const y = paddingTop + drawableHeight - (d.majorHoldersPct / 100) * drawableHeight;
-      const yFreeFloat = paddingTop + drawableHeight - (d.freeFloatPct / 100) * drawableHeight;
       return {
         ...d,
         x,
         y,
-        yFreeFloat,
       };
     });
   }, [timelineData, drawableWidth, drawableHeight, paddingLeft, paddingTop]);
 
-  // Smooth Bezier Curve generator
+  // Smooth Bezier Curve generator for Major Shareholders
   const lineCurvePath = useMemo(() => {
     if (chartPoints.length === 0) return '';
     if (chartPoints.length === 1) return `M ${chartPoints[0].x} ${chartPoints[0].y}`;
@@ -294,22 +294,6 @@ export const ShareholderStructureView: React.FC<ShareholderStructureViewProps> =
     const firstX = chartPoints[0].x;
     return `${lineCurvePath} L ${lastX} ${bottomY} L ${firstX} ${bottomY} Z`;
   }, [chartPoints, lineCurvePath, paddingTop, drawableHeight]);
-
-  // Free float secondary dashed line
-  const freeFloatLinePath = useMemo(() => {
-    if (chartPoints.length === 0) return '';
-    let path = `M ${chartPoints[0].x} ${chartPoints[0].yFreeFloat}`;
-    for (let i = 0; i < chartPoints.length - 1; i++) {
-      const p0 = chartPoints[i];
-      const p1 = chartPoints[i + 1];
-      const cx1 = p0.x + (p1.x - p0.x) / 2;
-      const cy1 = p0.yFreeFloat;
-      const cx2 = p0.x + (p1.x - p0.x) / 2;
-      const cy2 = p1.yFreeFloat;
-      path += ` C ${cx1} ${cy1}, ${cx2} ${cy2}, ${p1.x} ${p1.yFreeFloat}`;
-    }
-    return path;
-  }, [chartPoints]);
 
   // Active hover point
   const activePoint = hoveredPointIndex !== null ? chartPoints[hoveredPointIndex] : chartPoints[chartPoints.length - 1];
@@ -477,21 +461,21 @@ export const ShareholderStructureView: React.FC<ShareholderStructureViewProps> =
                 <div className="space-y-0.5">
                   <h3 className="text-sm font-bold text-zinc-200 flex items-center gap-2">
                     <ChartLineUp className="w-4 h-4 text-emerald-400" />
-                    Biểu Đồ Đường Xu Hướng Tăng Giảm Sở Hữu
+                    Biểu Đồ Xu Hướng Sở Hữu & Số Lượng Cổ Đông
                   </h3>
                   <span className="text-[11px] text-zinc-500 block">
-                    Đường cong biến động tỷ lệ nắm giữ của Cổ đông lớn & Ban lãnh đạo qua các thời kỳ
+                    Thống kê số lượng cổ đông ghi nhận và tỷ lệ nắm giữ của Cổ đông lớn qua các kỳ báo cáo thực tế
                   </span>
                 </div>
                 {/* Legend badges */}
                 <div className="flex items-center gap-3 text-[11px] font-mono">
                   <div className="flex items-center gap-1.5">
                     <span className="w-2.5 h-0.5 bg-emerald-400 inline-block" />
-                    <span className="text-zinc-300">Cổ đông lớn & Nội bộ</span>
+                    <span className="text-zinc-300">Tỷ lệ Cổ đông lớn & Nội bộ</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <span className="w-2.5 h-0.5 border-b border-dashed border-sky-400 inline-block" />
-                    <span className="text-zinc-400">Trôi nổi (Free Float)</span>
+                    <span className="w-2 h-2 rounded-full bg-emerald-500/30 border border-emerald-400 inline-block" />
+                    <span className="text-zinc-400">Số lượng cổ đông ghi nhận</span>
                   </div>
                 </div>
               </div>
@@ -538,18 +522,6 @@ export const ShareholderStructureView: React.FC<ShareholderStructureViewProps> =
 
                   {/* Gradient Area under line */}
                   {areaPath && <path d={areaPath} fill="url(#emeraldGradientArea)" />}
-
-                  {/* Secondary Line: Free Float (Dashed Sky Line) */}
-                  {freeFloatLinePath && (
-                    <path
-                      d={freeFloatLinePath}
-                      fill="none"
-                      stroke="#38bdf8"
-                      strokeWidth="1.7"
-                      strokeDasharray="4 4"
-                      opacity="0.65"
-                    />
-                  )}
 
                   {/* Primary Line: Major Shareholders % (Solid Emerald Line) */}
                   {lineCurvePath && (
@@ -613,31 +585,27 @@ export const ShareholderStructureView: React.FC<ShareholderStructureViewProps> =
                           strokeWidth={isHovered ? 2.5 : 2}
                         />
 
-                        {/* Delta indicator pill badge above node */}
-                        {idx > 0 && pt.delta !== 0 && (
-                          <g transform={`translate(${pt.x}, ${Math.max(12, pt.y - 12)})`}>
-                            <rect
-                              x={-18}
-                              y={-8}
-                              width={36}
-                              height={14}
-                              rx={4}
-                              fill={pt.isIncrease ? 'rgba(16, 185, 129, 0.2)' : 'rgba(244, 63, 94, 0.2)'}
-                              stroke={pt.isIncrease ? 'rgba(16, 185, 129, 0.4)' : 'rgba(244, 63, 94, 0.4)'}
-                              strokeWidth={0.8}
-                            />
-                            <text
-                              x={0}
-                              y={2}
-                              textAnchor="middle"
-                              className={`text-[8.5px] font-mono font-bold ${
-                                pt.isIncrease ? 'fill-emerald-400' : 'fill-rose-400'
-                              }`}
-                            >
-                              {pt.isIncrease ? `+${pt.delta}%` : `${pt.delta}%`}
-                            </text>
-                          </g>
-                        )}
+                        {/* Total Shareholders & Delta Pill Badge above node */}
+                        <g transform={`translate(${pt.x}, ${Math.max(10, pt.y - 14)})`}>
+                          <rect
+                            x={-28}
+                            y={-10}
+                            width={56}
+                            height={16}
+                            rx={4}
+                            fill="rgba(9, 13, 22, 0.92)"
+                            stroke={isHovered ? '#10b981' : 'rgba(255, 255, 255, 0.15)'}
+                            strokeWidth={isHovered ? 1.2 : 0.8}
+                          />
+                          <text
+                            x={0}
+                            y={2}
+                            textAnchor="middle"
+                            className="text-[9px] font-mono font-bold fill-zinc-200"
+                          >
+                            {pt.shareholderRecorded} CĐ
+                          </text>
+                        </g>
 
                         {/* X-axis Date Text Label */}
                         <text
@@ -667,16 +635,23 @@ export const ShareholderStructureView: React.FC<ShareholderStructureViewProps> =
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-4 flex-wrap">
+                  <div className="flex items-center gap-5 flex-wrap">
                     <div>
-                      <span className="text-zinc-500 text-[10px] block">Cổ đông lớn & Nội bộ</span>
-                      <span className="font-bold text-emerald-400 text-sm">
+                      <span className="text-zinc-500 text-[10px] block">Tổng số cổ đông</span>
+                      <span className="font-bold text-emerald-400 text-base">
+                        {activePoint.shareholderRecorded} cổ đông
+                      </span>
+                    </div>
+
+                    <div>
+                      <span className="text-zinc-500 text-[10px] block">Tỷ lệ Cổ đông lớn & Nội bộ</span>
+                      <span className="font-bold text-zinc-100 text-sm">
                         {activePoint.majorHoldersPct.toFixed(2)}%
                       </span>
                     </div>
 
                     <div>
-                      <span className="text-zinc-500 text-[10px] block">Biến động kỳ</span>
+                      <span className="text-zinc-500 text-[10px] block">Biến động tỷ lệ</span>
                       <span
                         className={`font-bold text-sm flex items-center gap-1 ${
                           activePoint.delta > 0
@@ -693,20 +668,6 @@ export const ShareholderStructureView: React.FC<ShareholderStructureViewProps> =
                           : activePoint.delta < 0
                           ? `${activePoint.delta.toFixed(2)}% (Phân phối)`
                           : '0.00% (Ổn định)'}
-                      </span>
-                    </div>
-
-                    <div>
-                      <span className="text-zinc-500 text-[10px] block">Trôi nổi (Free-Float)</span>
-                      <span className="font-bold text-sky-400 text-sm">
-                        {activePoint.freeFloatPct.toFixed(2)}%
-                      </span>
-                    </div>
-
-                    <div>
-                      <span className="text-zinc-500 text-[10px] block">Số cổ đông</span>
-                      <span className="font-bold text-zinc-300 text-sm">
-                        {activePoint.shareholderRecorded} cổ đông
                       </span>
                     </div>
                   </div>

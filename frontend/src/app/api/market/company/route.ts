@@ -320,23 +320,57 @@ export async function GET(request: Request) {
       });
     }
 
-    // Build timeline snapshots of historical ownership
-    const byDate: Record<string, { totalPct: number; count: number; totalShares: number }> = {};
+    // Build timeline snapshots of historical ownership from real filings (Finfo + Vietcap)
+    const byPeriod: Record<string, { totalPct: number; count: number; totalShares: number }> = {};
+
+    // 1. Ingest historical filings from VNDirect Finfo
     rawFinfoShareholders.forEach((s: any) => {
-      const d = (s.effectiveDate || '').slice(0, 7);
-      if (!d) return;
-      if (!byDate[d]) byDate[d] = { totalPct: 0, count: 0, totalShares: 0 };
-      byDate[d].totalPct += Number(s.ownershipPct || 0);
-      byDate[d].totalShares += Number(s.numberOfShares || 0);
-      byDate[d].count += 1;
+      const rawDate = s.effectiveDate || '';
+      if (!rawDate) return;
+      const periodKey = rawDate.slice(0, 7); // YYYY-MM
+      if (!byPeriod[periodKey]) {
+        byPeriod[periodKey] = { totalPct: 0, count: 0, totalShares: 0 };
+      }
+      const pct = Number(s.ownershipPct || 0);
+      const sh = Number(s.numberOfShares || 0);
+      byPeriod[periodKey].totalPct += pct;
+      byPeriod[periodKey].totalShares += sh;
+      byPeriod[periodKey].count += 1;
     });
 
-    const historicalSnapshots = Object.keys(byDate).sort().map((d) => ({
-      date: d,
-      majorHoldersPct: Number(Math.min(100, byDate[d].totalPct).toFixed(2)),
-      freeFloatPct: Number(Math.max(0, 100 - byDate[d].totalPct).toFixed(2)),
-      shareholderRecorded: byDate[d].count,
-    }));
+    // 2. Ingest latest filing from Vietcap if available
+    if (rawVciShareholders.length > 0) {
+      const vciDates = rawVciShareholders
+        .map((x) => (x.publicDate || x.updateDate || '').slice(0, 7))
+        .filter(Boolean);
+      const latestVciDate = vciDates.sort().reverse()[0] || 'Hiện Tại';
+
+      let vciTotalPct = 0;
+      let vciTotalShares = 0;
+      rawVciShareholders.forEach((item) => {
+        const rawPct = Number(item.percentage || 0);
+        const ownershipPct = rawPct <= 1 && rawPct > 0 ? rawPct * 100 : rawPct;
+        vciTotalPct += ownershipPct;
+        vciTotalShares += Number(item.quantity || 0);
+      });
+
+      // Update or add latest period from Vietcap verified data
+      byPeriod[latestVciDate] = {
+        totalPct: vciTotalPct,
+        count: rawVciShareholders.length,
+        totalShares: vciTotalShares,
+      };
+    }
+
+    // Sort chronologically and format
+    const historicalSnapshots = Object.keys(byPeriod)
+      .sort()
+      .map((d) => ({
+        date: d,
+        majorHoldersPct: Number(Math.min(100, byPeriod[d].totalPct).toFixed(2)),
+        freeFloatPct: Number(Math.max(0, 100 - byPeriod[d].totalPct).toFixed(2)),
+        shareholderRecorded: byPeriod[d].count,
+      }));
 
     // Calculate Comprehensive Shareholder Structure
     const totalShares = Number(rawVciStructure?.totalShares || vciDetails?.issueShare || 0);
