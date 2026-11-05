@@ -81,8 +81,8 @@ export const RelativeRotationGraphCanvas = forwardRef<
       });
     });
 
-    // Provide comfortable margin around outermost points (at least 5.5 units)
-    spanRef.current = Math.max(5.5, Number((maxDist + 1.2).toFixed(1)));
+    // Provide comfortable margin around outermost points
+    spanRef.current = Math.max(3.0, Math.min(8.0, Number((maxDist + 0.8).toFixed(1))));
   }, [sectors]);
 
   const resetView = useCallback(() => {
@@ -222,12 +222,12 @@ export const RelativeRotationGraphCanvas = forwardRef<
 
     // 3. Grid Lines
     const currentSpan = spanRef.current / zoom;
-    const step = currentSpan > 8 ? 2 : currentSpan > 3 ? 1 : 0.5;
+    const step = currentSpan > 6 ? 1 : 0.5;
 
-    const minX = Math.floor(100 - currentSpan);
-    const maxX = Math.ceil(100 + currentSpan);
-    const minY = Math.floor(100 - currentSpan);
-    const maxY = Math.ceil(100 + currentSpan);
+    const minX = Math.floor((100 - currentSpan) * 2) / 2;
+    const maxX = Math.ceil((100 + currentSpan) * 2) / 2;
+    const minY = Math.floor((100 - currentSpan) * 2) / 2;
+    const maxY = Math.ceil((100 + currentSpan) * 2) / 2;
 
     if (showGrid) {
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
@@ -235,7 +235,7 @@ export const RelativeRotationGraphCanvas = forwardRef<
       ctx.setLineDash([]);
 
       // Vertical Grid lines
-      for (let x = minX; x <= maxX; x += step) {
+      for (let x = minX; x <= maxX + 0.001; x += step) {
         if (Math.abs(x - 100) < 0.001) continue;
         const sPos = worldToScreen(x, 100, width, height, zoom, pan);
         if (sPos.x >= 0 && sPos.x <= width) {
@@ -247,7 +247,7 @@ export const RelativeRotationGraphCanvas = forwardRef<
       }
 
       // Horizontal Grid lines
-      for (let y = minY; y <= maxY; y += step) {
+      for (let y = minY; y <= maxY + 0.001; y += step) {
         if (Math.abs(y - 100) < 0.001) continue;
         const sPos = worldToScreen(100, y, width, height, zoom, pan);
         if (sPos.y >= 0 && sPos.y <= height) {
@@ -277,30 +277,32 @@ export const RelativeRotationGraphCanvas = forwardRef<
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // 5. Axis Labels (Values along axes)
+    // 5. Axis Labels (Values along axes formatted like 97.5, 98.0, 98.5 ... 100 ... 102.5)
     ctx.font = '11px "JetBrains Mono", monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
 
     // X-Axis tick values along bottom
-    for (let x = minX; x <= maxX; x += step) {
+    for (let x = minX; x <= maxX + 0.001; x += step) {
       const sPos = worldToScreen(x, 100, width, height, zoom, pan);
       if (sPos.x >= 35 && sPos.x <= width - 35) {
         const isCenter = Math.abs(x - 100) < 0.001;
         ctx.fillStyle = isCenter ? '#ffffff' : '#64748b';
-        ctx.fillText(`${x}`, sPos.x, height - 24);
+        const label = isCenter ? '100' : x.toFixed(1);
+        ctx.fillText(label, sPos.x, height - 24);
       }
     }
 
     // Y-Axis tick values along left
     ctx.textAlign = 'right';
     ctx.textBaseline = 'middle';
-    for (let y = minY; y <= maxY; y += step) {
+    for (let y = minY; y <= maxY + 0.001; y += step) {
       const sPos = worldToScreen(100, y, width, height, zoom, pan);
       if (sPos.y >= 30 && sPos.y <= height - 35) {
         const isCenter = Math.abs(y - 100) < 0.001;
         ctx.fillStyle = isCenter ? '#ffffff' : '#64748b';
-        ctx.fillText(`${y}`, 36, sPos.y);
+        const label = isCenter ? '100' : y.toFixed(1);
+        ctx.fillText(label, 36, sPos.y);
       }
     }
 
@@ -358,7 +360,6 @@ export const RelativeRotationGraphCanvas = forwardRef<
     ctx.fillText('SUY YẾU', width - 24, height - 32);
 
     // 7. Draw Sector Trails & Markers with Smart Z-Index Sorting
-    // When a ray is selected/hovered: others are deeply dimmed (opacity: 0.12), active ray is vibrant (opacity: 1.0) and drawn LAST on top!
     const isAnyActive = Boolean(activeSectorId);
 
     // Sort so the active ray renders last (highest z-index)
@@ -391,35 +392,30 @@ export const RelativeRotationGraphCanvas = forwardRef<
         ctx.shadowBlur = 12;
       }
 
-      // 7a. Smooth Curve for Trail
+      // 7a. Clean Straight Line Segments for Trail (Standard JdK RRG)
+      // Connects consecutive sessions directly: p[0] -> p[1] -> ... -> p[n]
       if (screenPoints.length >= 2) {
         ctx.beginPath();
         ctx.strokeStyle = trailColor;
-        ctx.lineWidth = isCurrentActive ? 3.2 : 1.6;
+        ctx.lineWidth = isCurrentActive ? 3.0 : 1.6;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
 
         ctx.moveTo(screenPoints[0].x, screenPoints[0].y);
-        for (let i = 0; i < screenPoints.length - 1; i++) {
-          const current = screenPoints[i];
-          const next = screenPoints[i + 1];
-          const midX = (current.x + next.x) / 2;
-          const midY = (current.y + next.y) / 2;
-          ctx.quadraticCurveTo(current.x, current.y, midX, midY);
+        for (let i = 1; i < screenPoints.length; i++) {
+          ctx.lineTo(screenPoints[i].x, screenPoints[i].y);
         }
-        const lastPt = screenPoints[screenPoints.length - 1];
-        ctx.lineTo(lastPt.x, lastPt.y);
         ctx.stroke();
       }
 
       // Reset shadow blur before dots & pills
       ctx.shadowBlur = 0;
 
-      // 7b. Past Historical Dots
+      // 7b. Past Historical Dots (Firmly sitting on the trail vertices)
       for (let i = 0; i < screenPoints.length - 1; i++) {
         const pt = screenPoints[i];
         const progress = (i + 1) / screenPoints.length;
-        const dotRadius = isCurrentActive ? 2.8 + progress * 2.0 : 2.0 + progress * 1.5;
+        const dotRadius = isCurrentActive ? 3.0 + progress * 1.5 : 2.0 + progress * 1.2;
         const dotAlpha = 0.35 + progress * 0.45;
 
         ctx.beginPath();
@@ -427,6 +423,9 @@ export const RelativeRotationGraphCanvas = forwardRef<
         ctx.fillStyle = trailColor;
         ctx.globalAlpha = opacity * dotAlpha;
         ctx.fill();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
       }
 
       // 7c. Head Marker (Current Point)
@@ -453,7 +452,7 @@ export const RelativeRotationGraphCanvas = forwardRef<
         const dx = headPt.x - prevPt.x;
         const dy = headPt.y - prevPt.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist > 1.5) {
+        if (dist > 1.0) {
           const angle = Math.atan2(dy, dx);
           const arrowLen = isCurrentActive ? 9.5 : 6.5;
           const arrowAngle = Math.PI / 6;
@@ -918,23 +917,23 @@ export const RelativeRotationGraphCanvas = forwardRef<
       )}
 
       {/* Bottom Canvas Footer / Legend Guideline matching user reference */}
-      <div className="absolute bottom-1 left-0 right-0 px-4 py-1 flex items-center justify-between text-[10px] text-slate-500 font-mono pointer-events-none bg-gradient-to-t from-[#090d16] via-[#090d16]/80 to-transparent">
-        <div className="flex items-center gap-3 flex-wrap">
-          <span className="flex items-center gap-1 text-emerald-400">
+      <div className="absolute bottom-1 left-0 right-0 px-4 py-1.5 flex items-center justify-between text-[10px] text-slate-400 font-mono pointer-events-none bg-gradient-to-t from-[#090d16] via-[#090d16]/90 to-transparent">
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <span className="flex items-center gap-1 text-emerald-400 font-semibold">
             <span className="w-2 h-2 rounded-sm bg-emerald-500 inline-block" /> Dẫn dắt
           </span>
-          <span className="flex items-center gap-1 text-amber-400">
+          <span className="flex items-center gap-1 text-amber-400 font-semibold">
             <span className="w-2 h-2 rounded-sm bg-amber-500 inline-block" /> Suy yếu
           </span>
-          <span className="flex items-center gap-1 text-rose-400">
+          <span className="flex items-center gap-1 text-rose-400 font-semibold">
             <span className="w-2 h-2 rounded-sm bg-rose-500 inline-block" /> Tụt hậu
           </span>
-          <span className="flex items-center gap-1 text-sky-400">
+          <span className="flex items-center gap-1 text-sky-400 font-semibold">
             <span className="w-2 h-2 rounded-sm bg-sky-500 inline-block" /> Cải thiện
           </span>
           <span className="text-slate-600 hidden md:inline">·</span>
           <span className="hidden md:inline text-slate-400">
-            Bấm tia để khóa giai đoạn & làm mờ các tia khác · Cuộn chuột phóng to · Kéo dời khung
+            Trục ngang RS-Ratio · trục dọc RS-Momentum · chuẩn đối chiếu {benchmark} · xoay theo chiều kim đồng hồ · cuộn chuột phóng to · kéo dời khung · nhấp đúp về khung gốc · bấm tia để làm mờ các tia khác
           </span>
         </div>
       </div>

@@ -364,27 +364,52 @@ export function getQuadrantInfo(quadrant: RRGQuadrant): {
   }
 }
 
+function calcEMA(arr: number[], span: number): number[] {
+  const k = 2 / (span + 1);
+  const res: number[] = [];
+  let ema = arr[0] || 0;
+  res.push(ema);
+  for (let i = 1; i < arr.length; i++) {
+    ema = arr[i] * k + ema * (1 - k);
+    res.push(ema);
+  }
+  return res;
+}
+
+function calcSMA(arr: number[], period: number): number[] {
+  const res: number[] = [];
+  for (let i = 0; i < arr.length; i++) {
+    const start = Math.max(0, i - period + 1);
+    const slice = arr.slice(start, i + 1);
+    res.push(slice.reduce((a, b) => a + b, 0) / slice.length);
+  }
+  return res;
+}
+
 /**
- * Tính toán JdK RS-Ratio và JdK RS-Momentum theo thuật toán chuẩn Julius de Kempenaer:
+ * Tính toán JdK RS-Ratio và JdK RS-Momentum theo thuật toán chuẩn Julius de Kempenaer (JdK RRG):
  * 
  * 1. Relative Strength (RS):
- *    RS(t) = [Price_Sector(t) / Price_Benchmark(t)] * 100
+ *    RS(t) = [Price_Stock(t) / Price_Benchmark(t)] * 100
  * 
- * 2. JdK RS-Ratio (Rolling Z-score normalization):
- *    RS-Ratio(t) = 100 + [(RS(t) - SMA(RS, window)) / StdDev(RS, window)] * scaleFactor
+ * 2. JdK RS-Ratio (Làm mượt kép EMA + SMA khử nhiễu, chuẩn hóa quanh baseline 100):
+ *    EMA_RS = EMA(RS, window)
+ *    SMA_EMA = SMA(EMA_RS, window)
+ *    RS-Ratio(t) = 100 * [EMA_RS(t) / SMA_EMA(t)]
  * 
- * 3. JdK RS-Momentum (Rate of change of RS-Ratio normalized):
- *    ROC(t) = [(RS-Ratio(t) / RS-Ratio(t-1)) - 1] * 100
- *    RS-Momentum(t) = 100 + [(ROC(t) - SMA(ROC, window)) / StdDev(ROC, window)] * scaleFactor
+ * 3. JdK RS-Momentum (Tốc độ thay đổi đà tăng/giảm của RS-Ratio qua EMA):
+ *    ROC(t) = [RS-Ratio(t) - RS-Ratio(t - k)] / RS-Ratio(t - k)
+ *    EMA_ROC = EMA(ROC, window)
+ *    RS-Momentum(t) = 100 + 100 * EMA_ROC(t)
  */
 export function calculateRRGSeries(
   sectorPrices: { date: string; close: number }[],
   benchmarkPrices: { date: string; close: number }[],
   window: number = 14,
-  scaleFactor: number = 1.8,
+  scaleFactor: number = 1.0,
   tailLength: number = 4
 ): RRGPoint[] {
-  // Đồng bộ ngày giữa sector và benchmark
+  // Đồng bộ ngày giữa mã cổ phiếu/ngành và benchmark (VNINDEX)
   const bMap = new Map<string, number>();
   benchmarkPrices.forEach((b) => bMap.set(b.date, b.close));
 
@@ -400,41 +425,23 @@ export function calculateRRGSeries(
     return [];
   }
 
-  // 1. Tính Relative Strength (RS)
+  // 1. Relative Strength (RS)
   const rawRs = validPairs.map((p) => (p.sectorClose / p.benchClose) * 100);
 
-  // 2. Rolling Z-Score để tính JdK RS-Ratio chuẩn hóa quanh 100
-  const rsRatio: number[] = [];
-  for (let i = 0; i < rawRs.length; i++) {
-    const start = Math.max(0, i - window + 1);
-    const slice = rawRs.slice(start, i + 1);
-    const mean = slice.reduce((a, b) => a + b, 0) / slice.length;
-    const variance = slice.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / slice.length;
-    const std = Math.sqrt(variance) || 1e-4;
+  // 2. JdK RS-Ratio (Làm mượt kép EMA + SMA theo chuẩn Julius de Kempenaer)
+  const emaRs = calcEMA(rawRs, window);
+  const emaRsMean = calcSMA(emaRs, window);
+  const rsRatio = emaRs.map((v, i) => (emaRsMean[i] > 0 ? (100 * v) / emaRsMean[i] : 100));
 
-    const zScore = (rawRs[i] - mean) / std;
-    rsRatio.push(100 + zScore * scaleFactor);
+  // 3. JdK RS-Momentum (Rate of change of RS-Ratio smoothed via EMA)
+  const roc: number[] = [];
+  const k = 10; // Chu kỳ quán tính 10 phiên
+  for (let i = 0; i < rsRatio.length; i++) {
+    const prev = rsRatio[Math.max(0, i - k)] || 100;
+    roc.push((rsRatio[i] - prev) / prev);
   }
-
-  // 3. Rate of Change (ROC) của RS-Ratio
-  const roc: number[] = [0];
-  for (let i = 1; i < rsRatio.length; i++) {
-    const prev = rsRatio[i - 1] || 100;
-    roc.push(((rsRatio[i] / prev) - 1) * 100);
-  }
-
-  // 4. JdK RS-Momentum = Normalized ROC quanh 100
-  const rsMomentum: number[] = [];
-  for (let i = 0; i < roc.length; i++) {
-    const start = Math.max(0, i - window + 1);
-    const slice = roc.slice(start, i + 1);
-    const mean = slice.reduce((a, b) => a + b, 0) / slice.length;
-    const variance = slice.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / slice.length;
-    const std = Math.sqrt(variance) || 1e-4;
-
-    const zScore = (roc[i] - mean) / std;
-    rsMomentum.push(100 + zScore * scaleFactor);
-  }
+  const emaRoc = calcEMA(roc, window);
+  const rsMomentum = emaRoc.map((v) => 100 + 100 * v);
 
   const fullRRGPoints: RRGPoint[] = [];
   for (let i = 0; i < validPairs.length; i++) {
@@ -446,6 +453,6 @@ export function calculateRRGSeries(
     });
   }
 
-  // Trả về số điểm đuôi tương ứng (ví dụ 4 kỳ gần nhất)
-  return fullRRGPoints.slice(-tailLength);
+  // Đuôi N kỳ tương ứng N+1 điểm liên kết (ví dụ đuôi 4 kỳ = 5 điểm: t-4, t-3, t-2, t-1, t)
+  return fullRRGPoints.slice(-(tailLength + 1));
 }
