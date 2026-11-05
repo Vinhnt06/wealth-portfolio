@@ -1,11 +1,10 @@
 'use client';
 
-import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   createChart,
   ColorType,
   IChartApi,
-  ISeriesApi,
   LineSeries,
   HistogramSeries,
   CandlestickData,
@@ -14,15 +13,17 @@ import {
   Time,
   LineStyle,
 } from 'lightweight-charts';
-import { X, Sparkle, TrendUp, TrendDown, Info } from '@phosphor-icons/react';
+import { X, Sparkle, CaretDown, Minus } from '@phosphor-icons/react';
 import { calculateRSTemplate, RSTemplateDataset } from '../utils/rsIndicators';
+
+export type RSTemplateViewMode = 'all' | 'rs_line' | 'mansfield' | 'oneil';
 
 interface RSTemplateSubChartProps {
   stockCandles: CandlestickData<Time>[];
   mainChart: IChartApi | null;
   onClose: () => void;
   selectedSymbol: string;
-  onSwitchIndicator?: (type: 'none' | 'rsi' | 'macd' | 'mfi' | 'obv' | 'rs_template') => void;
+  initialView?: RSTemplateViewMode;
 }
 
 // Module-level cache for VNINDEX candles
@@ -71,7 +72,7 @@ export const RSTemplateSubChart: React.FC<RSTemplateSubChartProps> = ({
   mainChart,
   onClose,
   selectedSymbol,
-  onSwitchIndicator,
+  initialView = 'all',
 }) => {
   const containerPane1Ref = useRef<HTMLDivElement>(null);
   const containerPane2Ref = useRef<HTMLDivElement>(null);
@@ -83,6 +84,15 @@ export const RSTemplateSubChart: React.FC<RSTemplateSubChartProps> = ({
 
   const [isLoading, setIsLoading] = useState(true);
   const [dataset, setDataset] = useState<RSTemplateDataset | null>(null);
+  const [activeView, setActiveView] = useState<RSTemplateViewMode>(initialView);
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
+  // Sync activeView with initialView prop changes
+  useEffect(() => {
+    if (initialView) {
+      setActiveView(initialView);
+    }
+  }, [initialView]);
 
   // Live Hover Inspection Values
   const [hoverValues, setHoverValues] = useState<{
@@ -118,14 +128,9 @@ export const RSTemplateSubChart: React.FC<RSTemplateSubChartProps> = ({
     };
   }, [stockCandles, selectedSymbol]);
 
-  // 2. Initialize and Synchronize the 3 Sub-Chart Panes
+  // 2. Initialize and Synchronize Sub-Chart Panes
   useEffect(() => {
-    if (!dataset || isLoading) return;
-
-    const c1 = containerPane1Ref.current;
-    const c2 = containerPane2Ref.current;
-    const c3 = containerPane3Ref.current;
-    if (!c1 || !c2 || !c3) return;
+    if (!dataset || isLoading || isCollapsed) return;
 
     // Cleanup previous chart instances if any
     [chartPane1Ref, chartPane2Ref, chartPane3Ref].forEach((ref) => {
@@ -167,151 +172,176 @@ export const RSTemplateSubChart: React.FC<RSTemplateSubChartProps> = ({
       },
     };
 
-    const width = c1.clientWidth || 600;
-    const height = 90; // Compact pane height for clean 3-stack
+    const subCharts: IChartApi[] = [];
+    let rsSeriesInstance: any = null;
+    let ma50SeriesInstance: any = null;
+    let mansfieldSeriesInstance: any = null;
+    let oneilSeriesInstance: any = null;
 
-    // ── Pane 1: RS Line vs VNINDEX (with MA50) ─────────────────────────
-    const chart1 = createChart(c1, {
-      ...commonOptions,
-      width,
-      height,
-    });
-    chartPane1Ref.current = chart1;
+    const paneHeight = activeView === 'all' ? 72 : 105;
 
-    // Dashed reference baseline
-    const refLineSeries = chart1.addSeries(LineSeries, {
-      color: 'rgba(255, 255, 255, 0.15)',
-      lineWidth: 1,
-      lineStyle: LineStyle.Dashed,
-      priceLineVisible: false,
-      lastValueVisible: false,
-    });
+    // ── PANE 1: RS Line vs VNINDEX (with MA50) ─────────────────────────
+    if (activeView === 'all' || activeView === 'rs_line') {
+      const c1 = containerPane1Ref.current;
+      if (c1) {
+        const width = c1.clientWidth || 600;
+        const chart1 = createChart(c1, {
+          ...commonOptions,
+          width,
+          height: paneHeight,
+        });
+        chartPane1Ref.current = chart1;
+        subCharts.push(chart1);
 
-    // MA50 of RS Line (Blue)
-    const ma50Series = chart1.addSeries(LineSeries, {
-      color: '#3b82f6',
-      lineWidth: 1,
-      priceLineVisible: false,
-      lastValueVisible: true,
-      priceFormat: { type: 'custom', formatter: (v: number) => v.toFixed(1) },
-      title: 'MA50',
-    });
+        const refLineSeries = chart1.addSeries(LineSeries, {
+          color: 'rgba(255, 255, 255, 0.15)',
+          lineWidth: 1,
+          lineStyle: LineStyle.Dashed,
+          priceLineVisible: false,
+          lastValueVisible: false,
+        });
 
-    // RS Line (Yellow / Amber)
-    const rsSeries = chart1.addSeries(LineSeries, {
-      color: '#f59e0b',
-      lineWidth: 2,
-      priceLineVisible: true,
-      lastValueVisible: true,
-      priceLineColor: '#f59e0b',
-      priceFormat: { type: 'custom', formatter: (v: number) => v.toFixed(1) },
-      title: 'RS',
-    });
+        const ma50Series = chart1.addSeries(LineSeries, {
+          color: '#3b82f6',
+          lineWidth: 1,
+          priceLineVisible: false,
+          lastValueVisible: true,
+          priceFormat: { type: 'custom', formatter: (v: number) => v.toFixed(1) },
+          title: 'MA50',
+        });
 
-    const rsLineData: LineData<Time>[] = dataset.rsPoints.map((p) => ({ time: p.time, value: p.rs }));
-    const ma50LineData: LineData<Time>[] = dataset.rsPoints
-      .filter((p) => p.ma50 !== undefined)
-      .map((p) => ({ time: p.time, value: p.ma50 as number }));
+        const rsSeries = chart1.addSeries(LineSeries, {
+          color: '#f59e0b',
+          lineWidth: 2,
+          priceLineVisible: true,
+          lastValueVisible: true,
+          priceLineColor: '#f59e0b',
+          priceFormat: { type: 'custom', formatter: (v: number) => v.toFixed(1) },
+          title: 'RS',
+        });
 
-    // Baseline reference (median or 100)
-    const refBaselineData: LineData<Time>[] = rsLineData.map((d) => ({ time: d.time, value: 100 }));
-    refLineSeries.setData(refBaselineData);
-    ma50Series.setData(ma50LineData);
-    rsSeries.setData(rsLineData);
+        const rsLineData: LineData<Time>[] = dataset.rsPoints.map((p) => ({ time: p.time, value: p.rs }));
+        const ma50LineData: LineData<Time>[] = dataset.rsPoints
+          .filter((p) => p.ma50 !== undefined)
+          .map((p) => ({ time: p.time, value: p.ma50 as number }));
 
-    // ── Pane 2: Mansfield RS (Stan Weinstein Histogram) ────────────────
-    const chart2 = createChart(c2, {
-      ...commonOptions,
-      width,
-      height,
-    });
-    chartPane2Ref.current = chart2;
+        const refBaselineData: LineData<Time>[] = rsLineData.map((d) => ({ time: d.time, value: 100 }));
+        refLineSeries.setData(refBaselineData);
+        ma50Series.setData(ma50LineData);
+        rsSeries.setData(rsLineData);
 
-    const zeroRefSeries = chart2.addSeries(LineSeries, {
-      color: 'rgba(255, 255, 255, 0.2)',
-      lineWidth: 1,
-      lineStyle: LineStyle.Dotted,
-      priceLineVisible: false,
-      lastValueVisible: false,
-    });
+        rsSeriesInstance = rsSeries;
+        ma50SeriesInstance = ma50Series;
+      }
+    }
 
-    const mansfieldSeries = chart2.addSeries(HistogramSeries, {
-      priceFormat: { type: 'custom', formatter: (v: number) => `${v > 0 ? '+' : ''}${v.toFixed(2)}` },
-      priceLineVisible: true,
-      lastValueVisible: true,
-      priceLineColor: '#2dd4bf',
-      title: 'Mansfield',
-    });
+    // ── PANE 2: Mansfield RS (Stan Weinstein Histogram) ───────────────
+    if (activeView === 'all' || activeView === 'mansfield') {
+      const c2 = containerPane2Ref.current;
+      if (c2) {
+        const width = c2.clientWidth || 600;
+        const chart2 = createChart(c2, {
+          ...commonOptions,
+          width,
+          height: paneHeight,
+        });
+        chartPane2Ref.current = chart2;
+        subCharts.push(chart2);
 
-    const mansfieldData: HistogramData<Time>[] = dataset.mansfieldPoints.map((p) => ({
-      time: p.time,
-      value: p.value,
-      color: p.color,
-    }));
+        const zeroRefSeries = chart2.addSeries(LineSeries, {
+          color: 'rgba(255, 255, 255, 0.2)',
+          lineWidth: 1,
+          lineStyle: LineStyle.Dashed,
+          priceLineVisible: false,
+          lastValueVisible: false,
+        });
 
-    const zeroLineData: LineData<Time>[] = mansfieldData.map((d) => ({ time: d.time, value: 0 }));
-    zeroRefSeries.setData(zeroLineData);
-    mansfieldSeries.setData(mansfieldData);
+        const mansfieldSeries = chart2.addSeries(HistogramSeries, {
+          priceFormat: { type: 'custom', formatter: (v: number) => v.toFixed(2) },
+          priceLineVisible: true,
+          lastValueVisible: true,
+          priceLineColor: '#2dd4bf',
+          title: 'Mansfield',
+        });
 
-    // ── Pane 3: RS Score (O'Neil 1-99) ─────────────────────────────────
-    const chart3 = createChart(c3, {
-      ...commonOptions,
-      width,
-      height,
-      timeScale: {
-        visible: false, // hidden time scale to keep alignment pristine
-        borderColor: 'rgba(255, 255, 255, 0.08)',
-      },
-    });
-    chartPane3Ref.current = chart3;
+        const mansfieldData: HistogramData<Time>[] = dataset.mansfieldPoints.map((p) => ({
+          time: p.time,
+          value: p.value,
+          color: p.color,
+        }));
 
-    // Guideline at 80 (Leader Threshold - Green)
-    const line80 = chart3.addSeries(LineSeries, {
-      color: 'rgba(16, 185, 129, 0.25)',
-      lineWidth: 1,
-      lineStyle: LineStyle.Dashed,
-      priceLineVisible: false,
-      lastValueVisible: false,
-    });
+        const zeroLineData: LineData<Time>[] = mansfieldData.map((d) => ({ time: d.time, value: 0 }));
+        zeroRefSeries.setData(zeroLineData);
+        mansfieldSeries.setData(mansfieldData);
 
-    // Guideline at 70 (Minervini Stage 2 Threshold - Amber)
-    const line70 = chart3.addSeries(LineSeries, {
-      color: 'rgba(245, 158, 11, 0.25)',
-      lineWidth: 1,
-      lineStyle: LineStyle.Dashed,
-      priceLineVisible: false,
-      lastValueVisible: false,
-    });
+        mansfieldSeriesInstance = mansfieldSeries;
+      }
+    }
 
-    // Guideline at 50 (Median Baseline - Gray)
-    const line50 = chart3.addSeries(LineSeries, {
-      color: 'rgba(255, 255, 255, 0.12)',
-      lineWidth: 1,
-      lineStyle: LineStyle.Dotted,
-      priceLineVisible: false,
-      lastValueVisible: false,
-    });
+    // ── PANE 3: RS Score (William O'Neil 1-99) ──────────────────────────
+    if (activeView === 'all' || activeView === 'oneil') {
+      const c3 = containerPane3Ref.current;
+      if (c3) {
+        const width = c3.clientWidth || 600;
+        const chart3 = createChart(c3, {
+          ...commonOptions,
+          width,
+          height: paneHeight,
+          timeScale: {
+            visible: true,
+            borderColor: 'rgba(255, 255, 255, 0.08)',
+          },
+        });
+        chartPane3Ref.current = chart3;
+        subCharts.push(chart3);
 
-    // O'Neil RS Score Line (Yellow / Golden)
-    const oneilSeries = chart3.addSeries(LineSeries, {
-      color: '#fbbf24',
-      lineWidth: 2,
-      priceFormat: { type: 'custom', formatter: (v: number) => v.toFixed(0) },
-      priceLineVisible: true,
-      lastValueVisible: true,
-      priceLineColor: '#fbbf24',
-      title: 'RS Score',
-    });
+        const line80 = chart3.addSeries(LineSeries, {
+          color: 'rgba(16, 185, 129, 0.4)',
+          lineWidth: 1,
+          lineStyle: LineStyle.Dashed,
+          priceLineVisible: false,
+          lastValueVisible: false,
+        });
 
-    const oneilLineData: LineData<Time>[] = dataset.oneilPoints.map((p) => ({ time: p.time, value: p.score }));
-    line80.setData(oneilLineData.map((d) => ({ time: d.time, value: 80 })));
-    line70.setData(oneilLineData.map((d) => ({ time: d.time, value: 70 })));
-    line50.setData(oneilLineData.map((d) => ({ time: d.time, value: 50 })));
-    oneilSeries.setData(oneilLineData);
+        const line70 = chart3.addSeries(LineSeries, {
+          color: 'rgba(245, 158, 11, 0.35)',
+          lineWidth: 1,
+          lineStyle: LineStyle.Dashed,
+          priceLineVisible: false,
+          lastValueVisible: false,
+        });
+
+        const line50 = chart3.addSeries(LineSeries, {
+          color: 'rgba(255, 255, 255, 0.15)',
+          lineWidth: 1,
+          lineStyle: LineStyle.Dotted,
+          priceLineVisible: false,
+          lastValueVisible: false,
+        });
+
+        const oneilSeries = chart3.addSeries(LineSeries, {
+          color: '#fbbf24',
+          lineWidth: 2,
+          priceFormat: { type: 'custom', formatter: (v: number) => v.toFixed(0) },
+          priceLineVisible: true,
+          lastValueVisible: true,
+          priceLineColor: '#fbbf24',
+          title: 'RS Score',
+        });
+
+        const oneilLineData: LineData<Time>[] = dataset.oneilPoints.map((p) => ({ time: p.time, value: p.score }));
+        line80.setData(oneilLineData.map((d) => ({ time: d.time, value: 80 })));
+        line70.setData(oneilLineData.map((d) => ({ time: d.time, value: 70 })));
+        line50.setData(oneilLineData.map((d) => ({ time: d.time, value: 50 })));
+        oneilSeries.setData(oneilLineData);
+
+        oneilSeriesInstance = oneilSeries;
+      }
+    }
+
+    if (subCharts.length === 0) return;
 
     // ── Synchronization: Bidirectional TimeScale with Main Chart ───────
-    const subCharts = [chart1, chart2, chart3];
-
     let isSyncing = false;
     const syncTimeScale = (sourceChart: IChartApi, targets: (IChartApi | null)[]) => {
       sourceChart.timeScale().subscribeVisibleLogicalRangeChange((range) => {
@@ -349,10 +379,10 @@ export const RSTemplateSubChart: React.FC<RSTemplateSubChartProps> = ({
     const handleCrosshairMove = (param: any) => {
       if (!param || !param.time || !param.seriesData) return;
 
-      const rsVal = param.seriesData.get(rsSeries)?.value;
-      const ma50Val = param.seriesData.get(ma50Series)?.value;
-      const mansfieldVal = param.seriesData.get(mansfieldSeries)?.value;
-      const oneilVal = param.seriesData.get(oneilSeries)?.value;
+      const rsVal = rsSeriesInstance ? param.seriesData.get(rsSeriesInstance)?.value : undefined;
+      const ma50Val = ma50SeriesInstance ? param.seriesData.get(ma50SeriesInstance)?.value : undefined;
+      const mansfieldVal = mansfieldSeriesInstance ? param.seriesData.get(mansfieldSeriesInstance)?.value : undefined;
+      const oneilVal = oneilSeriesInstance ? param.seriesData.get(oneilSeriesInstance)?.value : undefined;
 
       setHoverValues((prev) => ({
         rs: typeof rsVal === 'number' ? rsVal : prev.rs,
@@ -367,36 +397,39 @@ export const RSTemplateSubChart: React.FC<RSTemplateSubChartProps> = ({
       mainChart.subscribeCrosshairMove(handleCrosshairMove);
     }
 
-    // Resize Observer for all 3 panes
-    const resizeObserver = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        const w = entry.contentRect.width;
-        if (w > 0) {
-          subCharts.forEach((sc) => sc.applyOptions({ width: w }));
-          if (mainChart) {
-            const range = mainChart.timeScale().getVisibleLogicalRange();
-            if (range) {
-              subCharts.forEach((sc) => {
-                try {
-                  sc.timeScale().setVisibleLogicalRange(range);
-                } catch {}
-              });
+    // Resize Observer for mounted panes
+    const firstContainer = containerPane1Ref.current || containerPane2Ref.current || containerPane3Ref.current;
+    let resizeObserver: ResizeObserver | null = null;
+    if (firstContainer) {
+      resizeObserver = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          const w = entry.contentRect.width;
+          if (w > 0) {
+            subCharts.forEach((sc) => sc.applyOptions({ width: w }));
+            if (mainChart) {
+              const range = mainChart.timeScale().getVisibleLogicalRange();
+              if (range) {
+                subCharts.forEach((sc) => {
+                  try {
+                    sc.timeScale().setVisibleLogicalRange(range);
+                  } catch {}
+                });
+              }
             }
           }
         }
-      }
-    });
-
-    resizeObserver.observe(c1);
+      });
+      resizeObserver.observe(firstContainer);
+    }
 
     return () => {
-      resizeObserver.disconnect();
+      if (resizeObserver) resizeObserver.disconnect();
       subCharts.forEach((sc) => sc.remove());
       chartPane1Ref.current = null;
       chartPane2Ref.current = null;
       chartPane3Ref.current = null;
     };
-  }, [dataset, isLoading, mainChart]);
+  }, [dataset, isLoading, mainChart, activeView, isCollapsed]);
 
   // Status badges
   const isAboveMA50 = (hoverValues.rs ?? 0) >= (hoverValues.ma50 ?? 0);
@@ -405,44 +438,81 @@ export const RSTemplateSubChart: React.FC<RSTemplateSubChartProps> = ({
 
   return (
     <div className="w-full border-t border-zinc-800/80 bg-zinc-950 flex flex-col relative shrink-0 select-none">
-      {/* Top Banner Toolbar */}
+      {/* ── Top Header Toolbar ────────────────────────────────────────── */}
       <div className="flex items-center justify-between px-3 py-1 bg-zinc-900/90 border-b border-zinc-800/80 text-[11px] font-mono">
+        {/* Left: Title + Current Values */}
         <div className="flex items-center gap-2">
-          <Sparkle className="w-4 h-4 text-amber-400" weight="fill" />
+          <Sparkle className="w-3.5 h-3.5 text-amber-400 shrink-0" weight="fill" />
           <span className="font-bold text-zinc-100 uppercase tracking-wider text-xs">
-            BỘ TEMPLATE RS (3-IN-1)
+            {activeView === 'all'
+              ? '⚡ BỘ TEMPLATE RS (3-IN-1)'
+              : activeView === 'rs_line'
+              ? '⚡ RS LINE VS VNINDEX'
+              : activeView === 'mansfield'
+              ? '⚡ MANSFIELD RS HISTOGRAM'
+              : '⚡ O\'NEIL RS SCORE (1-99)'}
           </span>
-          <span className="text-[10px] text-zinc-500 font-normal hidden sm:inline">
-            • O'Neil & Stan Weinstein Leading Methodology vs VNINDEX
-          </span>
+
+          {/* Quick Telemetry Summary when in single-pane or collapsed */}
+          <div className="hidden lg:flex items-center gap-2 ml-2 text-[10.5px]">
+            {(activeView === 'all' || activeView === 'rs_line') && (
+              <span className="text-amber-400 font-bold">
+                RS: {hoverValues.rs !== undefined ? hoverValues.rs.toFixed(1) : '--'}
+                <span className="text-blue-400 font-normal ml-1">
+                  (MA50: {hoverValues.ma50 !== undefined ? hoverValues.ma50.toFixed(1) : '--'})
+                </span>
+              </span>
+            )}
+            {(activeView === 'all' || activeView === 'mansfield') && (
+              <span className={`font-bold ${isMansfieldPositive ? 'text-teal-400' : 'text-teal-600'}`}>
+                Mansfield: {hoverValues.mansfield !== undefined ? `${hoverValues.mansfield > 0 ? '+' : ''}${hoverValues.mansfield.toFixed(2)}` : '--'}
+              </span>
+            )}
+            {(activeView === 'all' || activeView === 'oneil') && (
+              <span className="text-yellow-400 font-bold">
+                RS Score: {hoverValues.oneil !== undefined ? hoverValues.oneil.toFixed(0) : '--'}
+              </span>
+            )}
+          </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          {onSwitchIndicator && (
-            <div className="flex items-center gap-1 mr-1">
-              <span className="text-zinc-500 text-[10px] uppercase font-bold mr-1 hidden md:inline">Chỉ báo:</span>
-              {[
-                { id: 'rs_template', label: '⚡ Template RS' },
-                { id: 'rsi', label: 'RSI Phân kỳ' },
-                { id: 'macd', label: 'MACD' },
-                { id: 'mfi', label: 'MFI' },
-                { id: 'obv', label: 'OBV' },
-              ].map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => onSwitchIndicator(tab.id as any)}
-                  className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all ${
-                    tab.id === 'rs_template'
-                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'
-                      : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-          )}
+        {/* Center: View Switcher Pills */}
+        <div className="flex items-center gap-1">
+          <span className="text-zinc-500 text-[9.5px] uppercase font-bold mr-1 hidden md:inline">Chế độ:</span>
+          {(
+            [
+              { id: 'all', label: 'Tất cả (3-in-1)' },
+              { id: 'rs_line', label: 'RS Line' },
+              { id: 'mansfield', label: 'Mansfield' },
+              { id: 'oneil', label: 'RS Score' },
+            ] as const
+          ).map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => {
+                setActiveView(tab.id);
+                setIsCollapsed(false);
+              }}
+              className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold transition-all ${
+                activeView === tab.id
+                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'
+                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
 
+        {/* Right: Minimize & Close Controls */}
+        <div className="flex items-center gap-1.5 ml-2">
+          <button
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="p-1 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded transition-colors cursor-pointer"
+            title={isCollapsed ? 'Mở rộng đồ thị RS' : 'Thu gọn đồ thị RS để phóng to chart chính'}
+          >
+            {isCollapsed ? <CaretDown size={14} /> : <Minus size={14} />}
+          </button>
           <button
             onClick={onClose}
             className="p-1 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded transition-colors cursor-pointer"
@@ -453,108 +523,105 @@ export const RSTemplateSubChart: React.FC<RSTemplateSubChartProps> = ({
         </div>
       </div>
 
-      {isLoading ? (
-        <div className="h-[285px] w-full flex items-center justify-center text-xs font-mono text-zinc-500 animate-pulse">
+      {/* ── Sub-Chart Body ────────────────────────────────────────────── */}
+      {isCollapsed ? null : isLoading ? (
+        <div className="h-[120px] w-full flex items-center justify-center text-xs font-mono text-zinc-500 animate-pulse">
           Đang đồng bộ nến VN-INDEX và tính toán bộ chỉ báo RS Template...
         </div>
       ) : (
         <div className="flex flex-col divide-y divide-zinc-800/60">
-          {/* ── PANE 1: RS Line vs VNINDEX (with MA50) ─────────────────── */}
-          <div className="w-full flex flex-col bg-zinc-950/60">
-            {/* Header Telemetry */}
-            <div className="flex items-center justify-between px-3 py-0.5 text-[11px] font-mono bg-zinc-900/40">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0" />
-                <span className="font-bold text-zinc-200 text-xs">RS Line vs VNINDEX</span>
-                <span className="text-amber-400 font-bold ml-1">
-                  RS: {hoverValues.rs !== undefined ? hoverValues.rs.toFixed(1) : '--'}
-                </span>
-                <span className="text-blue-400 font-bold ml-1">
-                  MA50: {hoverValues.ma50 !== undefined ? hoverValues.ma50.toFixed(1) : '--'}
-                </span>
+          {/* PANE 1: RS Line vs VNINDEX (with MA50) */}
+          {(activeView === 'all' || activeView === 'rs_line') && (
+            <div className="w-full flex flex-col bg-zinc-950/60">
+              <div className="flex items-center justify-between px-3 py-0.5 text-[10.5px] font-mono bg-zinc-900/40">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0" />
+                  <span className="font-bold text-zinc-200 text-xs">RS Line vs VNINDEX</span>
+                  <span className="text-amber-400 font-bold ml-1">
+                    RS: {hoverValues.rs !== undefined ? hoverValues.rs.toFixed(1) : '--'}
+                  </span>
+                  <span className="text-blue-400 font-bold ml-1">
+                    MA50: {hoverValues.ma50 !== undefined ? hoverValues.ma50.toFixed(1) : '--'}
+                  </span>
+                </div>
+                <div>
+                  <span
+                    className={`text-[9.5px] px-2 py-0.2 rounded font-bold border ${
+                      isAboveMA50
+                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                        : 'bg-rose-500/10 text-rose-400 border-rose-500/30'
+                    }`}
+                  >
+                    {isAboveMA50 ? '▲ VƯỢT MA50 (DẪN DẮT)' : '▼ DƯỚI MA50'}
+                  </span>
+                </div>
               </div>
-              <div>
-                <span
-                  className={`text-[9.5px] px-2 py-0.2 rounded font-bold border ${
-                    isAboveMA50
-                      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                      : 'bg-rose-500/10 text-rose-400 border-rose-500/30'
-                  }`}
-                >
-                  {isAboveMA50 ? '▲ VƯỢT MA50 (DẪN DẮT)' : '▼ DƯỚI MA50'}
-                </span>
-              </div>
+              <div ref={containerPane1Ref} className={`w-full ${activeView === 'all' ? 'h-[72px]' : 'h-[105px]'}`} />
             </div>
-            {/* Chart Canvas */}
-            <div ref={containerPane1Ref} className="w-full h-[90px]" />
-          </div>
+          )}
 
-          {/* ── PANE 2: Mansfield RS (Stan Weinstein Histogram) ───────── */}
-          <div className="w-full flex flex-col bg-zinc-950/60">
-            {/* Header Telemetry */}
-            <div className="flex items-center justify-between px-3 py-0.5 text-[11px] font-mono bg-zinc-900/40">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-teal-400 shrink-0" />
-                <span className="font-bold text-zinc-200 text-xs">Mansfield RS</span>
-                <span
-                  className={`font-bold ml-1 ${
-                    isMansfieldPositive ? 'text-teal-400' : 'text-teal-600'
-                  }`}
-                >
-                  Mansfield:{' '}
-                  {hoverValues.mansfield !== undefined
-                    ? `${hoverValues.mansfield > 0 ? '+' : ''}${hoverValues.mansfield.toFixed(2)}`
-                    : '--'}
-                </span>
+          {/* PANE 2: Mansfield RS (Stan Weinstein Histogram) */}
+          {(activeView === 'all' || activeView === 'mansfield') && (
+            <div className="w-full flex flex-col bg-zinc-950/60">
+              <div className="flex items-center justify-between px-3 py-0.5 text-[10.5px] font-mono bg-zinc-900/40">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-teal-400 shrink-0" />
+                  <span className="font-bold text-zinc-200 text-xs">Mansfield RS</span>
+                  <span className={`font-bold ml-1 ${isMansfieldPositive ? 'text-teal-400' : 'text-teal-600'}`}>
+                    Mansfield:{' '}
+                    {hoverValues.mansfield !== undefined
+                      ? `${hoverValues.mansfield > 0 ? '+' : ''}${hoverValues.mansfield.toFixed(2)}`
+                      : '--'}
+                  </span>
+                </div>
+                <div>
+                  <span
+                    className={`text-[9.5px] px-2 py-0.2 rounded font-bold border ${
+                      isMansfieldPositive
+                        ? 'bg-teal-500/15 text-teal-300 border-teal-500/30'
+                        : 'bg-zinc-800 text-zinc-400 border-zinc-700/50'
+                    }`}
+                  >
+                    {isMansfieldPositive ? '★ OUTPERFORM VNINDEX' : 'UNDERPERFORM VNINDEX'}
+                  </span>
+                </div>
               </div>
-              <div>
-                <span
-                  className={`text-[9.5px] px-2 py-0.2 rounded font-bold border ${
-                    isMansfieldPositive
-                      ? 'bg-teal-500/15 text-teal-300 border-teal-500/30'
-                      : 'bg-zinc-800 text-zinc-400 border-zinc-700/50'
-                  }`}
-                >
-                  {isMansfieldPositive ? '★ OUTPERFORM VNINDEX' : 'UNDERPERFORM VNINDEX'}
-                </span>
-              </div>
+              <div ref={containerPane2Ref} className={`w-full ${activeView === 'all' ? 'h-[72px]' : 'h-[105px]'}`} />
             </div>
-            {/* Chart Canvas */}
-            <div ref={containerPane2Ref} className="w-full h-[90px]" />
-          </div>
+          )}
 
-          {/* ── PANE 3: RS Score (William O'Neil 1-99) ────────────────── */}
-          <div className="w-full flex flex-col bg-zinc-950/60">
-            {/* Header Telemetry */}
-            <div className="flex items-center justify-between px-3 py-0.5 text-[11px] font-mono bg-zinc-900/40">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-yellow-400 shrink-0" />
-                <span className="font-bold text-zinc-200 text-xs">RS Score (O'Neil)</span>
-                <span className="text-yellow-400 font-bold ml-1">
-                  RS Score: {hoverValues.oneil !== undefined ? hoverValues.oneil.toFixed(0) : '--'}
-                </span>
-              </div>
-              <div>
-                <span
-                  className={`text-[9.5px] px-2 py-0.2 rounded font-bold border ${
-                    isLeaderOneil
-                      ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+          {/* PANE 3: RS Score (William O'Neil 1-99) */}
+          {(activeView === 'all' || activeView === 'oneil') && (
+            <div className="w-full flex flex-col bg-zinc-950/60">
+              <div className="flex items-center justify-between px-3 py-0.5 text-[10.5px] font-mono bg-zinc-900/40">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-yellow-400 shrink-0" />
+                  <span className="font-bold text-zinc-200 text-xs">RS Score (O'Neil)</span>
+                  <span className="text-yellow-400 font-bold ml-1">
+                    Score: {hoverValues.oneil !== undefined ? hoverValues.oneil.toFixed(0) : '--'}
+                  </span>
+                </div>
+                <div>
+                  <span
+                    className={`text-[9.5px] px-2 py-0.2 rounded font-bold border ${
+                      isLeaderOneil
+                        ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+                        : (hoverValues.oneil ?? 50) >= 70
+                        ? 'bg-amber-500/15 text-amber-300 border-amber-500/30'
+                        : 'bg-zinc-800 text-zinc-400 border-zinc-700/50'
+                    }`}
+                  >
+                    {isLeaderOneil
+                      ? 'SIÊU CỔ PHIẾU (RS ≥ 80)'
                       : (hoverValues.oneil ?? 50) >= 70
-                      ? 'bg-amber-500/15 text-amber-300 border-amber-500/30'
-                      : 'bg-zinc-800 text-zinc-400 border-zinc-700/50'
-                  }`}
-                >
-                  {isLeaderOneil
-                    ? 'SIÊU CỔ PHIẾU (RS ≥ 80)'
-                    : (hoverValues.oneil ?? 50) >= 70
-                    ? 'MINERVINI STAGE 2 (RS ≥ 70)'
-                    : 'BÌNH THƯỜNG'}
-                </span>
+                      ? 'MINERVINI STAGE 2 (RS ≥ 70)'
+                      : 'BÌNH THƯỜNG'}
+                  </span>
+                </div>
               </div>
+              <div ref={containerPane3Ref} className={`w-full ${activeView === 'all' ? 'h-[72px]' : 'h-[105px]'}`} />
             </div>
-            {/* Chart Canvas */}
-            <div ref={containerPane3Ref} className="w-full h-[90px]" />
-          </div>
+          )}
         </div>
       )}
     </div>

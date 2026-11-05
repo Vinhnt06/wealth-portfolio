@@ -1,7 +1,7 @@
 {
   "success": true,
-  "timestamp": "2026-11-05T12:42:31.857Z",
-  "updateTime": "19:42:31",
+  "timestamp": "2026-11-05T13:04:02.507Z",
+  "updateTime": "20:04:02",
   "indices": [
     {
       "symbol": "^GSPC",
@@ -57,9 +57,9 @@
       "symbol": "^VIX",
       "name": "CBOE VIX",
       "category": "volatility",
-      "price": 16.9,
-      "change": -3.93,
-      "changePercent": -18.89,
+      "price": 16.94,
+      "change": -3.89,
+      "changePercent": -18.66,
       "unit": "pts",
       "note": "Thước đo mức độ biến động & sợ hãi toàn cầu"
     }
@@ -92,7 +92,7 @@
       "status": "Trung Lập",
       "statusColor": "amber",
       "headline": "Xu hướng dòng vốn ngoại trên TTCK",
-      "detail": "Lợi suất trái phiếu chính phủ Mỹ 10 năm (4.89%) và chỉ số VIX (16.90 điểm) phản ánh khẩu vị rủi ro toàn cầu đang trong tầm kiểm soát (Tâm lý ổn định), tạo điều kiện cân bằng dòng vốn ngoại trên HOSE/HNX."
+      "detail": "Lợi suất trái phiếu chính phủ Mỹ 10 năm (4.89%) và chỉ số VIX (16.94 điểm) phản ánh khẩu vị rủi ro toàn cầu đang trong tầm kiểm soát (Tâm lý ổn định), tạo điều kiện cân bằng dòng vốn ngoại trên HOSE/HNX."
     }
   ]
 }
