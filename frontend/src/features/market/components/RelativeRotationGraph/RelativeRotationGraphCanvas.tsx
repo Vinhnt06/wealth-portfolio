@@ -279,44 +279,56 @@ export const RelativeRotationGraphCanvas = forwardRef<
 
     // 5. Axis Labels (Values along axes formatted like 97.5, 98.0, 98.5 ... 100 ... 102.5)
     ctx.font = '11px "JetBrains Mono", monospace';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'top';
+    ctx.textBaseline = 'middle';
+
+    const axisBottomY = height - 20;
 
     // X-Axis tick values along bottom
+    ctx.textAlign = 'center';
     for (let x = minX; x <= maxX + 0.001; x += step) {
       const sPos = worldToScreen(x, 100, width, height, zoom, pan);
-      if (sPos.x >= 35 && sPos.x <= width - 35) {
+      if (sPos.x >= 45 && sPos.x <= width - 45) {
         const isCenter = Math.abs(x - 100) < 0.001;
-        ctx.fillStyle = isCenter ? '#ffffff' : '#64748b';
+        ctx.fillStyle = isCenter ? '#ffffff' : '#94a3b8';
+        ctx.font = isCenter
+          ? 'bold 11px "JetBrains Mono", monospace'
+          : '11px "JetBrains Mono", monospace';
         const label = isCenter ? '100' : x.toFixed(1);
-        ctx.fillText(label, sPos.x, height - 24);
+        ctx.fillText(label, sPos.x, axisBottomY);
       }
     }
 
     // Y-Axis tick values along left
     ctx.textAlign = 'right';
-    ctx.textBaseline = 'middle';
     for (let y = minY; y <= maxY + 0.001; y += step) {
       const sPos = worldToScreen(100, y, width, height, zoom, pan);
-      if (sPos.y >= 30 && sPos.y <= height - 35) {
+      if (sPos.y >= 30 && sPos.y <= height - 38) {
         const isCenter = Math.abs(y - 100) < 0.001;
-        ctx.fillStyle = isCenter ? '#ffffff' : '#64748b';
+        ctx.fillStyle = isCenter ? '#ffffff' : '#94a3b8';
+        ctx.font = isCenter
+          ? 'bold 11px "JetBrains Mono", monospace'
+          : '11px "JetBrains Mono", monospace';
         const label = isCenter ? '100' : y.toFixed(1);
-        ctx.fillText(label, 36, sPos.y);
+        ctx.fillText(label, 44, sPos.y);
       }
     }
 
-    // Axis Titles
-    ctx.font = '11px "JetBrains Mono", monospace';
-    ctx.fillStyle = '#475569';
+    // Axis Titles (RS-Ratio label placed directly below 100 on the bottom axis)
+    ctx.font = '10px "JetBrains Mono", monospace';
+    ctx.fillStyle = '#64748b';
     ctx.textAlign = 'center';
-    ctx.fillText('RS-Ratio →', width / 2, height - 10);
+    ctx.textBaseline = 'top';
+    ctx.fillText('RS-Ratio →', centerScreen.x, height - 10);
 
+    // RS-Momentum label rotated vertically on the left
     ctx.save();
     ctx.translate(14, height / 2);
     ctx.rotate(-Math.PI / 2);
     ctx.textAlign = 'center';
-    ctx.fillText('RS-Momentum ↑', 0, 0);
+    ctx.textBaseline = 'middle';
+    ctx.font = '11px "JetBrains Mono", monospace';
+    ctx.fillStyle = '#64748b';
+    ctx.fillText('RS-Momentum —', 0, 0);
     ctx.restore();
 
     // 6. 4 Quadrant Banners
@@ -326,7 +338,7 @@ export const RelativeRotationGraphCanvas = forwardRef<
     ctx.fillStyle = '#38bdf8'; // Sky
     ctx.textAlign = 'left';
     ctx.textBaseline = 'top';
-    ctx.fillText('CẢI THIỆN', 48, 18);
+    ctx.fillText('CẢI THIỆN', 54, 18);
 
     // DẪN DẮT (Top-Right)
     ctx.fillStyle = '#10b981'; // Emerald
@@ -348,16 +360,16 @@ export const RelativeRotationGraphCanvas = forwardRef<
 
     // TỤT HẬU (Bottom-Left)
     ctx.font = 'bold 13px "Geist", -apple-system, sans-serif';
-    ctx.fillStyle = '#f43f5e'; // Rose
+    ctx.fillStyle = '#ef4444'; // Red
     ctx.textAlign = 'left';
     ctx.textBaseline = 'bottom';
-    ctx.fillText('TỤT HẬU', 48, height - 32);
+    ctx.fillText('TỤT HẬU', 54, height - 38);
 
     // SUY YẾU (Bottom-Right)
     ctx.fillStyle = '#f59e0b'; // Amber
     ctx.textAlign = 'right';
     ctx.textBaseline = 'bottom';
-    ctx.fillText('SUY YẾU', width - 24, height - 32);
+    ctx.fillText('SUY YẾU', width - 24, height - 38);
 
     // 7. Draw Sector Trails & Markers with Smart Z-Index Sorting
     const isAnyActive = Boolean(activeSectorId);
@@ -483,59 +495,36 @@ export const RelativeRotationGraphCanvas = forwardRef<
         }
       }
 
-      // Main Dot
+      // Main Head Dot (Distinct circle with quadrant ring & center)
       ctx.beginPath();
-      ctx.arc(headPt.x, headPt.y, isCurrentActive ? 6.5 : 4.5, 0, Math.PI * 2);
+      ctx.arc(headPt.x, headPt.y, isCurrentActive ? 6.0 : 4.5, 0, Math.PI * 2);
+      ctx.fillStyle = isCurrentActive ? '#ffffff' : '#090d16';
+      ctx.fill();
+      ctx.strokeStyle = trailColor;
+      ctx.lineWidth = isCurrentActive ? 2.5 : 2.0;
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(headPt.x, headPt.y, isCurrentActive ? 3.0 : 2.0, 0, Math.PI * 2);
       ctx.fillStyle = trailColor;
       ctx.fill();
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = isCurrentActive ? 2.0 : 1.5;
-      ctx.stroke();
 
-      // 7d. Smart Label with Pill Tag
+      // 7d. Clean Stock Symbol Label (Matching sample image: pure text in quadrant color)
       const labelText = sec.shortName;
-      ctx.font = `${isCurrentActive ? 'bold 12px' : '11px'} "Geist", -apple-system, sans-serif`;
+      ctx.font = `${isCurrentActive ? 'bold 12px' : '600 11px'} "Geist", -apple-system, sans-serif`;
       const textWidth = ctx.measureText(labelText).width;
-      const pillWidth = textWidth + 12;
-      const pillHeight = 20;
 
-      const placeLeft = headPt.x > width - 120;
-      const pillX = placeLeft ? headPt.x - pillWidth - 10 : headPt.x + 10;
-      const pillY = headPt.y - pillHeight / 2;
-
-      // Pill Box
-      ctx.fillStyle = isCurrentActive
-        ? 'rgba(15, 23, 42, 0.98)'
-        : 'rgba(9, 13, 22, 0.88)';
-      ctx.strokeStyle = isCurrentActive ? trailColor : 'rgba(255, 255, 255, 0.12)';
-      ctx.lineWidth = isCurrentActive ? 1.5 : 1;
-
-      // Rounded rectangle
-      ctx.beginPath();
-      const r = 4;
-      ctx.moveTo(pillX + r, pillY);
-      ctx.lineTo(pillX + pillWidth - r, pillY);
-      ctx.quadraticCurveTo(pillX + pillWidth, pillY, pillX + pillWidth, pillY + r);
-      ctx.lineTo(pillX + pillWidth, pillY + pillHeight - r);
-      ctx.quadraticCurveTo(
-        pillX + pillWidth,
-        pillY + pillHeight,
-        pillX + pillWidth - r,
-        pillY + pillHeight
-      );
-      ctx.lineTo(pillX + r, pillY + pillHeight);
-      ctx.quadraticCurveTo(pillX, pillY + pillHeight, pillX, pillY + pillHeight - r);
-      ctx.lineTo(pillX, pillY + r);
-      ctx.quadraticCurveTo(pillX, pillY, pillX + r, pillY);
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
-
-      // Pill Label Text
-      ctx.fillStyle = isCurrentActive ? '#ffffff' : trailColor;
-      ctx.textAlign = 'left';
+      const placeLeft = headPt.x > width - 80;
+      const textX = placeLeft ? headPt.x - 8 : headPt.x + 8;
+      ctx.textAlign = placeLeft ? 'right' : 'left';
       ctx.textBaseline = 'middle';
-      ctx.fillText(labelText, pillX + 6, headPt.y);
+
+      // Subtle shadow for legibility over grid lines
+      ctx.shadowColor = '#000000';
+      ctx.shadowBlur = 4;
+      ctx.fillStyle = isCurrentActive ? '#ffffff' : trailColor;
+      ctx.fillText(labelText, textX, headPt.y);
+      ctx.shadowBlur = 0;
 
       ctx.restore();
     });
@@ -916,27 +905,6 @@ export const RelativeRotationGraphCanvas = forwardRef<
         </div>
       )}
 
-      {/* Bottom Canvas Footer / Legend Guideline matching user reference */}
-      <div className="absolute bottom-1 left-0 right-0 px-4 py-1.5 flex items-center justify-between text-[10px] text-slate-400 font-mono pointer-events-none bg-gradient-to-t from-[#090d16] via-[#090d16]/90 to-transparent">
-        <div className="flex items-center gap-2.5 flex-wrap">
-          <span className="flex items-center gap-1 text-emerald-400 font-semibold">
-            <span className="w-2 h-2 rounded-sm bg-emerald-500 inline-block" /> Dẫn dắt
-          </span>
-          <span className="flex items-center gap-1 text-amber-400 font-semibold">
-            <span className="w-2 h-2 rounded-sm bg-amber-500 inline-block" /> Suy yếu
-          </span>
-          <span className="flex items-center gap-1 text-rose-400 font-semibold">
-            <span className="w-2 h-2 rounded-sm bg-rose-500 inline-block" /> Tụt hậu
-          </span>
-          <span className="flex items-center gap-1 text-sky-400 font-semibold">
-            <span className="w-2 h-2 rounded-sm bg-sky-500 inline-block" /> Cải thiện
-          </span>
-          <span className="text-slate-600 hidden md:inline">·</span>
-          <span className="hidden md:inline text-slate-400">
-            Trục ngang RS-Ratio · trục dọc RS-Momentum · chuẩn đối chiếu {benchmark} · xoay theo chiều kim đồng hồ · cuộn chuột phóng to · kéo dời khung · nhấp đúp về khung gốc · bấm tia để làm mờ các tia khác
-          </span>
-        </div>
-      </div>
     </div>
   );
 });
