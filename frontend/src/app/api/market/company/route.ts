@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import companyProfiles from '../../../../features/market/data/companyProfiles.json';
 import stockDatabase from '../../../../features/market/data/stockDatabase.json';
+import totalShareholdersHistoryData from '../../../../features/market/data/totalShareholdersHistory.json';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -36,6 +37,14 @@ export interface Shareholder {
   is_insider?: boolean;
 }
 
+export interface TotalShareholdersSnapshot {
+  year: string;
+  period: string;
+  totalShareholders: number;
+  changeFromPrev: number;
+  changePercent: number;
+}
+
 export interface ShareholderStructure {
   totalShares: number;
   statePercentage: number;
@@ -63,6 +72,8 @@ export interface ShareholderStructure {
     freeFloatPct: number;
     shareholderRecorded: number;
   }>;
+  totalShareholdersHistory?: TotalShareholdersSnapshot[];
+  totalShareholdersCurrent?: number;
 }
 
 interface Officer {
@@ -397,6 +408,12 @@ export async function GET(request: Request) {
       { id: 'freefloat', label: 'Cổ đông nhỏ lẻ (Trôi nổi)', percentage: Number(freeFloatPct.toFixed(2)), volume: freeFloatShares, color: '#71717a' },
     ].filter((b) => b.percentage > 0 || b.volume > 0);
 
+    // Extract real total shareholders history from verified ĐHĐCĐ & VSD filings
+    const totalShareholdersHistoryList: TotalShareholdersSnapshot[] = (totalShareholdersHistoryData as Record<string, TotalShareholdersSnapshot[]>)[symbol] || [];
+    const latestTotalShareholders = totalShareholdersHistoryList.length > 0
+      ? totalShareholdersHistoryList[totalShareholdersHistoryList.length - 1].totalShareholders
+      : undefined;
+
     const shareholderStructure: ShareholderStructure = {
       totalShares,
       statePercentage: Number(statePct.toFixed(2)),
@@ -413,6 +430,8 @@ export async function GET(request: Request) {
       concentrationLevel,
       breakdown: structureBreakdown,
       historicalSnapshots,
+      totalShareholdersHistory: totalShareholdersHistoryList,
+      totalShareholdersCurrent: latestTotalShareholders,
     };
 
 

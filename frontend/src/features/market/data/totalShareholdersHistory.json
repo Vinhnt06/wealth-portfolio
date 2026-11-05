@@ -1,0 +1,130 @@
+{
+  "HPG": [
+    { "year": "2021", "period": "ĐHĐCĐ 2021", "totalShareholders": 62861, "changeFromPrev": 0, "changePercent": 0 },
+    { "year": "2022", "period": "ĐHĐCĐ 2022", "totalShareholders": 161205, "changeFromPrev": 98344, "changePercent": 156.45 },
+    { "year": "2023", "period": "ĐHĐCĐ 2023", "totalShareholders": 179108, "changeFromPrev": 17903, "changePercent": 11.11 },
+    { "year": "2024", "period": "ĐHĐCĐ 2024", "totalShareholders": 165914, "changeFromPrev": -13194, "changePercent": -7.37 },
+    { "year": "2025", "period": "ĐHĐCĐ 2025", "totalShareholders": 194000, "changeFromPrev": 28086, "changePercent": 16.93 },
+    { "year": "2026", "period": "ĐHĐCĐ 2026", "totalShareholders": 298500, "changeFromPrev": 104500, "changePercent": 53.87 }
+  ],
+  "FPT": [
+    { "year": "2021", "period": "ĐHĐCĐ 2021", "totalShareholders": 34500, "changeFromPrev": 0, "changePercent": 0 },
+    { "year": "2022", "period": "ĐHĐCĐ 2022", "totalShareholders": 44358, "changeFromPrev": 9858, "changePercent": 28.57 },
+    { "year": "2023", "period": "ĐHĐCĐ 2023", "totalShareholders": 50200, "changeFromPrev": 5842, "changePercent": 13.17 },
+    { "year": "2024", "period": "ĐHĐCĐ 2024", "totalShareholders": 58429, "changeFromPrev": 8229, "changePercent": 16.39 },
+    { "year": "2025", "period": "ĐHĐCĐ 2025", "totalShareholders": 92500, "changeFromPrev": 34071, "changePercent": 58.31 },
+    { "year": "2026", "period": "ĐHĐCĐ 2026", "totalShareholders": 127300, "changeFromPrev": 34800, "changePercent": 37.62 }
+  ],
+  "DIG": [
+    { "year": "2021", "period": "ĐHĐCĐ 2021", "totalShareholders": 18500, "changeFromPrev": 0, "changePercent": 0 },
+    { "year": "2022", "period": "ĐHĐCĐ 2022", "totalShareholders": 48280, "changeFromPrev": 29780, "changePercent": 160.97 },
+    { "year": "2023", "period": "ĐHĐCĐ 2023", "totalShareholders": 64907, "changeFromPrev": 16627, "changePercent": 34.44 },
+    { "year": "2024", "period": "ĐHĐCĐ 2024", "totalShareholders": 68500, "changeFromPrev": 3593, "changePercent": 5.54 },
+    { "year": "2025", "period": "ĐHĐCĐ 2025", "totalShareholders": 75200, "changeFromPrev": 6700, "changePercent": 9.78 }
+  ],
+  "SSI": [
+    { "year": "2021", "period": "ĐHĐCĐ 2021", "totalShareholders": 38200, "changeFromPrev": 0, "changePercent": 0 },
+    { "year": "2022", "period": "ĐHĐCĐ 2022", "totalShareholders": 52100, "changeFromPrev": 13900, "changePercent": 36.39 },
+    { "year": "2023", "period": "ĐHĐCĐ 2023", "totalShareholders": 68400, "changeFromPrev": 16300, "changePercent": 31.29 },
+    { "year": "2024", "period": "ĐHĐCĐ 2024", "totalShareholders": 85200, "changeFromPrev": 16800, "changePercent": 24.56 },
+    { "year": "2025", "period": "ĐHĐCĐ 2025", "totalShareholders": 105000, "changeFromPrev": 19800, "changePercent": 23.24 }
+  ],
+  "VND": [
+    { "year": "2021", "period": "ĐHĐCĐ 2021", "totalShareholders": 42000, "changeFromPrev": 0, "changePercent": 0 },
+    { "year": "2022", "period": "ĐHĐCĐ 2022", "totalShareholders": 78500, "changeFromPrev": 36500, "changePercent": 86.9 },
+    { "year": "2023", "period": "ĐHĐCĐ 2023", "totalShareholders": 108200, "changeFromPrev": 29700, "changePercent": 37.83 },
+    { "year": "2024", "period": "ĐHĐCĐ 2024", "totalShareholders": 115400, "changeFromPrev": 7200, "changePercent": 6.65 },
+    { "year": "2025", "period": "ĐHĐCĐ 2025", "totalShareholders": 128000, "changeFromPrev": 12600, "changePercent": 10.92 }
+  ],
+  "VCB": [
+    { "year": "2021", "period": "ĐHĐCĐ 2021", "totalShareholders": 28400, "changeFromPrev": 0, "changePercent": 0 },
+    { "year": "2022", "period": "ĐHĐCĐ 2022", "totalShareholders": 36200, "changeFromPrev": 7800, "changePercent": 27.46 },
+    { "year": "2023", "period": "ĐHĐCĐ 2023", "totalShareholders": 42500, "changeFromPrev": 6300, "changePercent": 17.4 },
+    { "year": "2024", "period": "ĐHĐCĐ 2024", "totalShareholders": 48900, "changeFromPrev": 6400, "changePercent": 15.06 },
+    { "year": "2025", "period": "ĐHĐCĐ 2025", "totalShareholders": 55200, "changeFromPrev": 6300, "changePercent": 12.88 }
+  ],
+  "TCB": [
+    { "year": "2021", "period": "ĐHĐCĐ 2021", "totalShareholders": 35000, "changeFromPrev": 0, "changePercent": 0 },
+    { "year": "2022", "period": "ĐHĐCĐ 2022", "totalShareholders": 54200, "changeFromPrev": 19200, "changePercent": 54.86 },
+    { "year": "2023", "period": "ĐHĐCĐ 2023", "totalShareholders": 62800, "changeFromPrev": 8600, "changePercent": 15.87 },
+    { "year": "2024", "period": "ĐHĐCĐ 2024", "totalShareholders": 74500, "changeFromPrev": 11700, "changePercent": 18.63 },
+    { "year": "2025", "period": "ĐHĐCĐ 2025", "totalShareholders": 89000, "changeFromPrev": 14500, "changePercent": 19.46 }
+  ],
+  "MBB": [
+    { "year": "2021", "period": "ĐHĐCĐ 2021", "totalShareholders": 48000, "changeFromPrev": 0, "changePercent": 0 },
+    { "year": "2022", "period": "ĐHĐCĐ 2022", "totalShareholders": 76500, "changeFromPrev": 28500, "changePercent": 59.38 },
+    { "year": "2023", "period": "ĐHĐCĐ 2023", "totalShareholders": 92400, "changeFromPrev": 15900, "changePercent": 20.78 },
+    { "year": "2024", "period": "ĐHĐCĐ 2024", "totalShareholders": 105800, "changeFromPrev": 13400, "changePercent": 14.5 },
+    { "year": "2025", "period": "ĐHĐCĐ 2025", "totalShareholders": 122000, "changeFromPrev": 16200, "changePercent": 15.31 }
+  ],
+  "VPB": [
+    { "year": "2021", "period": "ĐHĐCĐ 2021", "totalShareholders": 38000, "changeFromPrev": 0, "changePercent": 0 },
+    { "year": "2022", "period": "ĐHĐCĐ 2022", "totalShareholders": 68000, "changeFromPrev": 30000, "changePercent": 78.95 },
+    { "year": "2023", "period": "ĐHĐCĐ 2023", "totalShareholders": 89500, "changeFromPrev": 21500, "changePercent": 31.62 },
+    { "year": "2024", "period": "ĐHĐCĐ 2024", "totalShareholders": 102300, "changeFromPrev": 12800, "changePercent": 14.3 },
+    { "year": "2025", "period": "ĐHĐCĐ 2025", "totalShareholders": 118000, "changeFromPrev": 15700, "changePercent": 15.35 }
+  ],
+  "STB": [
+    { "year": "2021", "period": "ĐHĐCĐ 2021", "totalShareholders": 42000, "changeFromPrev": 0, "changePercent": 0 },
+    { "year": "2022", "period": "ĐHĐCĐ 2022", "totalShareholders": 72400, "changeFromPrev": 30400, "changePercent": 72.38 },
+    { "year": "2023", "period": "ĐHĐCĐ 2023", "totalShareholders": 91200, "changeFromPrev": 18800, "changePercent": 25.97 },
+    { "year": "2024", "period": "ĐHĐCĐ 2024", "totalShareholders": 98500, "changeFromPrev": 7300, "changePercent": 8.0 },
+    { "year": "2025", "period": "ĐHĐCĐ 2025", "totalShareholders": 108000, "changeFromPrev": 9500, "changePercent": 9.64 }
+  ],
+  "MWG": [
+    { "year": "2021", "period": "ĐHĐCĐ 2021", "totalShareholders": 24000, "changeFromPrev": 0, "changePercent": 0 },
+    { "year": "2022", "period": "ĐHĐCĐ 2022", "totalShareholders": 41200, "changeFromPrev": 17200, "changePercent": 71.67 },
+    { "year": "2023", "period": "ĐHĐCĐ 2023", "totalShareholders": 58600, "changeFromPrev": 17400, "changePercent": 42.23 },
+    { "year": "2024", "period": "ĐHĐCĐ 2024", "totalShareholders": 64300, "changeFromPrev": 5700, "changePercent": 9.73 },
+    { "year": "2025", "period": "ĐHĐCĐ 2025", "totalShareholders": 72500, "changeFromPrev": 8200, "changePercent": 12.75 }
+  ],
+  "VHM": [
+    { "year": "2021", "period": "ĐHĐCĐ 2021", "totalShareholders": 26500, "changeFromPrev": 0, "changePercent": 0 },
+    { "year": "2022", "period": "ĐHĐCĐ 2022", "totalShareholders": 45200, "changeFromPrev": 18700, "changePercent": 70.57 },
+    { "year": "2023", "period": "ĐHĐCĐ 2023", "totalShareholders": 62800, "changeFromPrev": 17600, "changePercent": 38.94 },
+    { "year": "2024", "period": "ĐHĐCĐ 2024", "totalShareholders": 74500, "changeFromPrev": 11700, "changePercent": 18.63 },
+    { "year": "2025", "period": "ĐHĐCĐ 2025", "totalShareholders": 88000, "changeFromPrev": 13500, "changePercent": 18.12 }
+  ],
+  "VIC": [
+    { "year": "2021", "period": "ĐHĐCĐ 2021", "totalShareholders": 29000, "changeFromPrev": 0, "changePercent": 0 },
+    { "year": "2022", "period": "ĐHĐCĐ 2022", "totalShareholders": 46500, "changeFromPrev": 17500, "changePercent": 60.34 },
+    { "year": "2023", "period": "ĐHĐCĐ 2023", "totalShareholders": 61200, "changeFromPrev": 14700, "changePercent": 31.61 },
+    { "year": "2024", "period": "ĐHĐCĐ 2024", "totalShareholders": 71800, "changeFromPrev": 10600, "changePercent": 17.32 },
+    { "year": "2025", "period": "ĐHĐCĐ 2025", "totalShareholders": 83500, "changeFromPrev": 11700, "changePercent": 16.3 }
+  ],
+  "VRE": [
+    { "year": "2021", "period": "ĐHĐCĐ 2021", "totalShareholders": 18500, "changeFromPrev": 0, "changePercent": 0 },
+    { "year": "2022", "period": "ĐHĐCĐ 2022", "totalShareholders": 32400, "changeFromPrev": 13900, "changePercent": 75.14 },
+    { "year": "2023", "period": "ĐHĐCĐ 2023", "totalShareholders": 45800, "changeFromPrev": 13400, "changePercent": 41.36 },
+    { "year": "2024", "period": "ĐHĐCĐ 2024", "totalShareholders": 53200, "changeFromPrev": 7400, "changePercent": 16.16 },
+    { "year": "2025", "period": "ĐHĐCĐ 2025", "totalShareholders": 61000, "changeFromPrev": 7800, "changePercent": 14.66 }
+  ],
+  "HDB": [
+    { "year": "2021", "period": "ĐHĐCĐ 2021", "totalShareholders": 21000, "changeFromPrev": 0, "changePercent": 0 },
+    { "year": "2022", "period": "ĐHĐCĐ 2022", "totalShareholders": 36500, "changeFromPrev": 15500, "changePercent": 73.81 },
+    { "year": "2023", "period": "ĐHĐCĐ 2023", "totalShareholders": 48200, "changeFromPrev": 11700, "changePercent": 32.05 },
+    { "year": "2024", "period": "ĐHĐCĐ 2024", "totalShareholders": 56400, "changeFromPrev": 8200, "changePercent": 17.01 },
+    { "year": "2025", "period": "ĐHĐCĐ 2025", "totalShareholders": 65000, "changeFromPrev": 8600, "changePercent": 15.25 }
+  ],
+  "ACB": [
+    { "year": "2021", "period": "ĐHĐCĐ 2021", "totalShareholders": 32000, "changeFromPrev": 0, "changePercent": 0 },
+    { "year": "2022", "period": "ĐHĐCĐ 2022", "totalShareholders": 51400, "changeFromPrev": 19400, "changePercent": 60.63 },
+    { "year": "2023", "period": "ĐHĐCĐ 2023", "totalShareholders": 64800, "changeFromPrev": 13400, "changePercent": 26.07 },
+    { "year": "2024", "period": "ĐHĐCĐ 2024", "totalShareholders": 76200, "changeFromPrev": 11400, "changePercent": 17.59 },
+    { "year": "2025", "period": "ĐHĐCĐ 2025", "totalShareholders": 88000, "changeFromPrev": 11800, "changePercent": 15.49 }
+  ],
+  "CTG": [
+    { "year": "2021", "period": "ĐHĐCĐ 2021", "totalShareholders": 31000, "changeFromPrev": 0, "changePercent": 0 },
+    { "year": "2022", "period": "ĐHĐCĐ 2022", "totalShareholders": 49500, "changeFromPrev": 18500, "changePercent": 59.68 },
+    { "year": "2023", "period": "ĐHĐCĐ 2023", "totalShareholders": 61200, "changeFromPrev": 11700, "changePercent": 23.64 },
+    { "year": "2024", "period": "ĐHĐCĐ 2024", "totalShareholders": 72400, "changeFromPrev": 11200, "changePercent": 18.3 },
+    { "year": "2025", "period": "ĐHĐCĐ 2025", "totalShareholders": 84000, "changeFromPrev": 11600, "changePercent": 16.02 }
+  ],
+  "BID": [
+    { "year": "2021", "period": "ĐHĐCĐ 2021", "totalShareholders": 25000, "changeFromPrev": 0, "changePercent": 0 },
+    { "year": "2022", "period": "ĐHĐCĐ 2022", "totalShareholders": 39500, "changeFromPrev": 14500, "changePercent": 58.0 },
+    { "year": "2023", "period": "ĐHĐCĐ 2023", "totalShareholders": 48600, "changeFromPrev": 9100, "changePercent": 23.04 },
+    { "year": "2024", "period": "ĐHĐCĐ 2024", "totalShareholders": 57200, "changeFromPrev": 8600, "changePercent": 17.7 },
+    { "year": "2025", "period": "ĐHĐCĐ 2025", "totalShareholders": 66000, "changeFromPrev": 8800, "changePercent": 15.38 }
+  ]
+}
