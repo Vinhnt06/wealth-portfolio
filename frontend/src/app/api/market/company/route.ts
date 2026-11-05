@@ -25,11 +25,44 @@ interface CompanyInfo {
   unverified?: boolean;
 }
 
-interface Shareholder {
+export interface Shareholder {
   name: string;
   shares_owned: number;
   ownership_percentage: number;
   update_date?: string;
+  owner_type?: 'INDIVIDUAL' | 'CORPORATE';
+  position?: string;
+  is_major?: boolean;
+  is_insider?: boolean;
+}
+
+export interface ShareholderStructure {
+  totalShares: number;
+  statePercentage: number;
+  stateVolume: number;
+  foreignPercentage: number;
+  foreignerVolume: number;
+  maximumForeignPercentage: number;
+  bodPercentage: number;
+  institutionPercentage: number;
+  otherPercentage: number;
+  otherVolume: number;
+  freeFloat: number;
+  freeFloatPercentage: number;
+  concentrationLevel: 'CÔ ĐẶC CAO' | 'CƠ CẤU CÂN BẰNG' | 'ĐA SỞ HỮU';
+  breakdown: Array<{
+    id: string;
+    label: string;
+    percentage: number;
+    volume: number;
+    color: string;
+  }>;
+  historicalSnapshots?: Array<{
+    date: string;
+    majorHoldersPct: number;
+    freeFloatPct: number;
+    shareholderRecorded: number;
+  }>;
 }
 
 interface Officer {
@@ -114,8 +147,16 @@ export async function GET(request: Request) {
       sector: 'Doanh nghiệp niêm yết',
     };
 
-    const [vciShareholdersRes, vciDetailsRes, finfoProfileRes, vciFinancialsRes] = await Promise.allSettled([
+    const [vciShareholdersRes, vciStructureRes, vciDetailsRes, finfoProfileRes, vciFinancialsRes, finfoShareholdersRes] = await Promise.allSettled([
       fetch(`https://iq.vietcap.com.vn/api/iq-insight-service/v1/company/${symbol}/shareholder`, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          'Origin': 'https://iq.vietcap.com.vn',
+          'Referer': 'https://iq.vietcap.com.vn/',
+        },
+        next: { revalidate: 600 },
+      }),
+      fetch(`https://iq.vietcap.com.vn/api/iq-insight-service/v1/company/${symbol}/shareholder-structure`, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
           'Origin': 'https://iq.vietcap.com.vn',
@@ -145,6 +186,12 @@ export async function GET(request: Request) {
         },
         next: { revalidate: 600 },
       }),
+      fetch(`https://api-finfo.vndirect.com.vn/v4/shareholders?q=code:${symbol}&size=100`, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        },
+        next: { revalidate: 600 },
+      }),
     ]);
 
     let finfoData: any = null;
@@ -163,11 +210,27 @@ export async function GET(request: Request) {
       }
     }
 
+    let rawVciStructure: any = null;
+    if (vciStructureRes.status === 'fulfilled' && vciStructureRes.value.ok) {
+      const json = await vciStructureRes.value.json();
+      if (json.successful && json.data) {
+        rawVciStructure = json.data;
+      }
+    }
+
     let rawVciShareholders: any[] = [];
     if (vciShareholdersRes.status === 'fulfilled' && vciShareholdersRes.value.ok) {
       const json = await vciShareholdersRes.value.json();
       if (json.successful && Array.isArray(json.data)) {
         rawVciShareholders = json.data;
+      }
+    }
+
+    let rawFinfoShareholders: any[] = [];
+    if (finfoShareholdersRes.status === 'fulfilled' && finfoShareholdersRes.value.ok) {
+      const json = await finfoShareholdersRes.value.json();
+      if (Array.isArray(json.data)) {
+        rawFinfoShareholders = json.data;
       }
     }
 
@@ -184,7 +247,6 @@ export async function GET(request: Request) {
     if (vciFinancialsRes.status === 'fulfilled' && vciFinancialsRes.value.ok) {
       const json = await vciFinancialsRes.value.json();
       if (json.successful && Array.isArray(json.data) && json.data.length > 0) {
-        // Find latest record with valid PE or PB
         const validList = json.data.filter((d: any) => typeof d.pe === 'number' || typeof d.pb === 'number');
         const latest = validList.length > 0 ? validList[validList.length - 1] : json.data[json.data.length - 1];
         if (latest) {
@@ -211,52 +273,114 @@ export async function GET(request: Request) {
       const rawPct = Number(item.percentage || 0);
       const ownershipPct = rawPct <= 1 && rawPct > 0 ? Number((rawPct * 100).toFixed(2)) : Number(rawPct.toFixed(2));
       const shares = Number(item.quantity || 0);
+      const pos = item.positionName && item.positionName.trim() !== '' ? item.positionName.trim() : undefined;
+      const ownerType = item.ownerType === 'CORPORATE' ? 'CORPORATE' : 'INDIVIDUAL';
 
       // Major shareholder or meaningful stake
-      if (ownershipPct >= 0.1 || shares > 100000) {
+      if (ownershipPct >= 0.05 || shares > 50000) {
         shareholders.push({
           name,
           shares_owned: shares,
           ownership_percentage: ownershipPct,
-          update_date: item.publicDate || undefined,
+          owner_type: ownerType,
+          position: pos,
+          is_major: ownershipPct >= 5.0,
+          is_insider: Boolean(pos),
+          update_date: item.publicDate || (item.updateDate ? item.updateDate.split('T')[0] : undefined),
         });
       }
 
       // Officer / Board member
-      if (item.positionName && item.positionName.trim() !== '') {
+      if (pos) {
         officers.push({
           name,
-          owner_code: item.positionName,
-          position: item.positionName,
+          owner_code: pos,
+          position: pos,
           from_date: item.publicDate ? String(item.publicDate).slice(0, 4) : undefined,
         });
       }
     });
 
-    // Fallback: If Vietcap had no shareholders, try Finfo shareholders endpoint
-    if (shareholders.length === 0) {
-      try {
-        const finfoShareRes = await fetch(`https://api-finfo.vndirect.com.vn/v4/shareholders?q=code:${symbol}`);
-        if (finfoShareRes.ok) {
-          const sJson = await finfoShareRes.json();
-          if (Array.isArray(sJson.data)) {
-            sJson.data.forEach((s: any) => {
-              if (s.shareholderName) {
-                const pct = Number(s.ownershipPct || 0);
-                shareholders.push({
-                  name: s.shareholderName,
-                  shares_owned: Number(s.numberOfShares || 0),
-                  ownership_percentage: Number(pct.toFixed(2)),
-                  update_date: s.effectiveDate || undefined,
-                });
-              }
-            });
-          }
+    // Fallback: If Vietcap had no shareholders, use Finfo
+    if (shareholders.length === 0 && rawFinfoShareholders.length > 0) {
+      rawFinfoShareholders.forEach((s: any) => {
+        if (s.shareholderName) {
+          const pct = Number(s.ownershipPct || 0);
+          shareholders.push({
+            name: s.shareholderName,
+            shares_owned: Number(s.numberOfShares || 0),
+            ownership_percentage: Number(pct.toFixed(2)),
+            owner_type: s.shareholderType === 'COMPANY' ? 'CORPORATE' : 'INDIVIDUAL',
+            position: s.roleType || undefined,
+            is_major: pct >= 5.0,
+            is_insider: Boolean(s.roleType),
+            update_date: s.effectiveDate || undefined,
+          });
         }
-      } catch {
-        // Ignore fallback error
-      }
+      });
     }
+
+    // Build timeline snapshots of historical ownership
+    const byDate: Record<string, { totalPct: number; count: number; totalShares: number }> = {};
+    rawFinfoShareholders.forEach((s: any) => {
+      const d = (s.effectiveDate || '').slice(0, 7);
+      if (!d) return;
+      if (!byDate[d]) byDate[d] = { totalPct: 0, count: 0, totalShares: 0 };
+      byDate[d].totalPct += Number(s.ownershipPct || 0);
+      byDate[d].totalShares += Number(s.numberOfShares || 0);
+      byDate[d].count += 1;
+    });
+
+    const historicalSnapshots = Object.keys(byDate).sort().map((d) => ({
+      date: d,
+      majorHoldersPct: Number(Math.min(100, byDate[d].totalPct).toFixed(2)),
+      freeFloatPct: Number(Math.max(0, 100 - byDate[d].totalPct).toFixed(2)),
+      shareholderRecorded: byDate[d].count,
+    }));
+
+    // Calculate Comprehensive Shareholder Structure
+    const totalShares = Number(rawVciStructure?.totalShares || vciDetails?.issueShare || 0);
+    const statePct = Number(rawVciStructure?.statePercentage ?? vciDetails?.statePercentage ?? 0) * 100;
+    const foreignPct = Number(rawVciStructure?.foreignPercentage ?? vciDetails?.foreignerPercentage ?? 0) * 100;
+    const maxForeignPct = Number(vciDetails?.maximumForeignPercentage ?? 0.49) * 100;
+    const bodPct = Number(rawVciStructure?.bodPercentage ?? 0) * 100;
+    const instPct = Number(rawVciStructure?.institutionPercentage ?? 0) * 100;
+    const freeFloatPct = Number(vciDetails?.freeFloatPercentage ? vciDetails.freeFloatPercentage * 100 : (rawVciStructure?.otherPercentage ? rawVciStructure.otherPercentage * 100 : 50));
+    const freeFloatShares = Number(vciDetails?.freeFloat || rawVciStructure?.otherVolume || Math.round((totalShares * freeFloatPct) / 100));
+
+    let concentrationLevel: 'CÔ ĐẶC CAO' | 'CƠ CẤU CÂN BẰNG' | 'ĐA SỞ HỮU' = 'CƠ CẤU CÂN BẰNG';
+    if (freeFloatPct <= 25 || (statePct + bodPct + foreignPct) >= 75) {
+      concentrationLevel = 'CÔ ĐẶC CAO';
+    } else if (freeFloatPct >= 60) {
+      concentrationLevel = 'ĐA SỞ HỮU';
+    }
+
+    const structureBreakdown = [
+      { id: 'state', label: 'Nhà nước', percentage: Number(statePct.toFixed(2)), volume: Number(rawVciStructure?.stateVolume || Math.round((totalShares * statePct) / 100)), color: '#38bdf8' },
+      { id: 'foreign', label: 'Khối ngoại', percentage: Number(foreignPct.toFixed(2)), volume: Number(rawVciStructure?.foreignerVolume || Math.round((totalShares * foreignPct) / 100)), color: '#10b981' },
+      { id: 'bod', label: 'Ban Lãnh Đạo & HĐQT', percentage: Number(bodPct.toFixed(2)), volume: Math.round((totalShares * bodPct) / 100), color: '#f59e0b' },
+      { id: 'institution', label: 'Tổ chức trong nước', percentage: Number(instPct.toFixed(2)), volume: Math.round((totalShares * instPct) / 100), color: '#2563eb' },
+      { id: 'freefloat', label: 'Cổ đông nhỏ lẻ (Trôi nổi)', percentage: Number(freeFloatPct.toFixed(2)), volume: freeFloatShares, color: '#71717a' },
+    ].filter((b) => b.percentage > 0 || b.volume > 0);
+
+    const shareholderStructure: ShareholderStructure = {
+      totalShares,
+      statePercentage: Number(statePct.toFixed(2)),
+      stateVolume: Number(rawVciStructure?.stateVolume || Math.round((totalShares * statePct) / 100)),
+      foreignPercentage: Number(foreignPct.toFixed(2)),
+      foreignerVolume: Number(rawVciStructure?.foreignerVolume || Math.round((totalShares * foreignPct) / 100)),
+      maximumForeignPercentage: Number(maxForeignPct.toFixed(2)),
+      bodPercentage: Number(bodPct.toFixed(2)),
+      institutionPercentage: Number(instPct.toFixed(2)),
+      otherPercentage: Number(freeFloatPct.toFixed(2)),
+      otherVolume: freeFloatShares,
+      freeFloat: freeFloatShares,
+      freeFloatPercentage: Number(freeFloatPct.toFixed(2)),
+      concentrationLevel,
+      breakdown: structureBreakdown,
+      historicalSnapshots,
+    };
+
 
     // If snapshot has pre-curated full officers and live API returned empty officers, use snapshot officers
     const curatedProfile = profilesMap[symbol];
@@ -266,6 +390,9 @@ export async function GET(request: Request) {
     if (shareholders.length === 0 && curatedProfile?.shareholders && curatedProfile.shareholders.length > 0) {
       shareholders.push(...curatedProfile.shareholders);
     }
+
+    // Sort shareholders by ownership percentage descending
+    shareholders.sort((a, b) => (b.ownership_percentage || 0) - (a.ownership_percentage || 0));
 
     // CEO discovery from officers
     const ceoOfficer = officers.find((o) =>
@@ -298,9 +425,10 @@ export async function GET(request: Request) {
     const finalData = {
       symbol,
       info: companyInfo,
-      shareholders: shareholders.slice(0, 15),
-      officers: officers.slice(0, 15),
+      shareholders, // full list of verified real shareholders
+      officers: officers.slice(0, 20),
       financials,
+      shareholderStructure,
     };
 
     // Cache valid responses
@@ -335,6 +463,7 @@ export async function GET(request: Request) {
       shareholders: [],
       officers: [],
       financials: { pe: null, pb: null, roe: null, roa: null, year: null, quarter: null },
+      shareholderStructure: null,
     };
 
     return NextResponse.json({
@@ -344,3 +473,4 @@ export async function GET(request: Request) {
     });
   }
 }
+

@@ -33,6 +33,7 @@ import { OrderBook } from './OrderBook';
 import { InvestorFlowAnalysis } from './InvestorFlowAnalysis';
 import { MinerviniStrategyPanel } from './MinerviniStrategyPanel';
 import { FinancialValuationTab } from './FinancialValuationTab';
+import { ShareholderStructureView } from './ShareholderStructureView';
 import { MinerviniAnalysisResult } from '../types/minervini.types';
 import stockDatabase from '../data/stockDatabase.json';
 import { getStockPriceColor, calculateExchangeCeilFloor } from '../utils/priceColors';
@@ -635,7 +636,7 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
                 }`}
               >
                 <Users className="w-4 h-4" />
-                <span>Cổ Đông Lớn ({shareholders.length})</span>
+                <span>Cổ Đông & Sở Hữu ({shareholders.length})</span>
               </button>
 
               <button
@@ -819,45 +820,7 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
           ))}
 
           {!isLoading && activeTab === 'shareholders' && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold text-zinc-200">Danh Sách Cổ Đông Lớn & Cơ Cấu Sở Hữu</h3>
-                <span className="text-xs font-mono text-zinc-500">Dữ liệu công bố chính thức</span>
-              </div>
-
-              {shareholders.length === 0 ? (
-                <div className="py-8 text-center text-xs text-zinc-500 font-mono">Chưa có dữ liệu danh sách cổ đông</div>
-              ) : (
-                <div className="overflow-x-auto rounded-xl border border-zinc-800/80">
-                  <table className="w-full text-xs font-mono">
-                    <thead className="bg-zinc-900/80 text-zinc-400 border-b border-zinc-800">
-                      <tr>
-                        <th className="py-3 px-4 text-left font-semibold">Tên Cổ Đông</th>
-                        <th className="py-3 px-4 text-right font-semibold">Số Lượng Cổ Phiếu</th>
-                        <th className="py-3 px-4 text-right font-semibold">Tỷ Lệ Sở Hữu</th>
-                        <th className="py-3 px-4 text-right font-semibold">Cập Nhật</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-zinc-800/60">
-                      {shareholders.map((sh, idx) => (
-                        <tr key={idx} className="hover:bg-zinc-900/40 transition-colors">
-                          <td className="py-3 px-4 font-sans font-medium text-zinc-200">{sh.name}</td>
-                          <td className="py-3 px-4 text-right font-bold text-zinc-100">
-                            {sh.shares_owned ? sh.shares_owned.toLocaleString('vi-VN') : '--'}
-                          </td>
-                          <td className="py-3 px-4 text-right font-bold text-emerald-400">
-                            {sh.ownership_percentage ? `${sh.ownership_percentage.toFixed(2)}%` : '--'}
-                          </td>
-                          <td className="py-3 px-4 text-right text-zinc-500 text-[11px]">
-                            {sh.update_date ? sh.update_date.split('T')[0] : '2026-06'}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
+            <ShareholderStructureView companyData={companyData} livePrice={price} />
           )}
 
           {!isLoading && activeTab === 'officers' && (
