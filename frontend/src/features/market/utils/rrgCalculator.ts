@@ -376,37 +376,28 @@ function calcEMA(arr: number[], span: number): number[] {
   return res;
 }
 
-function calcSMA(arr: number[], period: number): number[] {
-  const res: number[] = [];
-  for (let i = 0; i < arr.length; i++) {
-    const start = Math.max(0, i - period + 1);
-    const slice = arr.slice(start, i + 1);
-    res.push(slice.reduce((a, b) => a + b, 0) / slice.length);
-  }
-  return res;
-}
 
 /**
- * Tính toán JdK RS-Ratio và JdK RS-Momentum theo thuật toán chuẩn Julius de Kempenaer (JdK RRG):
- * 
- * 1. Relative Strength (RS):
- *    RS(t) = [Price_Stock(t) / Price_Benchmark(t)] * 100
- * 
- * 2. JdK RS-Ratio (Làm mượt kép EMA + SMA khử nhiễu, chuẩn hóa quanh baseline 100):
- *    EMA_RS = EMA(RS, window)
- *    SMA_EMA = SMA(EMA_RS, window)
- *    RS-Ratio(t) = 100 * [EMA_RS(t) / SMA_EMA(t)]
- * 
- * 3. JdK RS-Momentum (Tốc độ thay đổi đà tăng/giảm của RS-Ratio qua EMA):
- *    ROC(t) = [RS-Ratio(t) - RS-Ratio(t - k)] / RS-Ratio(t - k)
- *    EMA_ROC = EMA(ROC, window)
- *    RS-Momentum(t) = 100 + 100 * EMA_ROC(t)
+ * Tính JdK RS-Ratio và JdK RS-Momentum (bản tái lập chuẩn hoá của Julius de Kempenaer):
+ *
+ * 1. RS(t)          = Price_Stock(t) / Price_Benchmark(t) * 100
+ * 2. sRS            = EMA(RS, 5)                       – khử nhiễu phiên
+ * 3. RS-Ratio(t)    = 100 + [sRS(t) - Mean(sRS, n)] / Std(sRS, n)
+ *                     → >100: mạnh hơn xu hướng tương đối gần đây; đơn vị = độ lệch chuẩn,
+ *                       nên mọi mã/ngành so sánh được trên cùng thang (~97.5 → 102.5)
+ * 4. ΔRatio(t)      = EMA(RS-Ratio(t) - RS-Ratio(t-1), 3)
+ * 5. RS-Momentum(t) = 100 + ΔRatio(t) / RMS(ΔRatio, n)
+ *                     → >100 khi và chỉ khi RS-Ratio đang đi lên, tạo vòng xoay
+ *                       đúng chiều kim đồng hồ Cải thiện → Dẫn dắt → Suy yếu → Tụt hậu
  */
+const RS_SMOOTH = 5;
+const MOMENTUM_SMOOTH = 3;
+
 export function calculateRRGSeries(
   sectorPrices: { date: string; close: number }[],
   benchmarkPrices: { date: string; close: number }[],
   window: number = 14,
-  scaleFactor: number = 1.0,
+  _scaleFactor: number = 1.0,
   tailLength: number = 4
 ): RRGPoint[] {
   // Đồng bộ ngày giữa mã cổ phiếu/ngành và benchmark (VNINDEX)
@@ -421,30 +412,38 @@ export function calculateRRGSeries(
     }
   });
 
-  if (validPairs.length < window * 2) {
+  // Cần đủ dữ liệu khởi động: n phiên cho Ratio + n phiên cho Momentum + đuôi
+  const firstValid = 2 * window;
+  if (validPairs.length < firstValid + tailLength + 1) {
     return [];
   }
 
-  // 1. Relative Strength (RS)
+  // 1. Relative Strength (RS) và làm mượt
   const rawRs = validPairs.map((p) => (p.sectorClose / p.benchClose) * 100);
+  const smoothRs = calcEMA(rawRs, RS_SMOOTH);
 
-  // 2. JdK RS-Ratio (Làm mượt kép EMA + SMA theo chuẩn Julius de Kempenaer)
-  const emaRs = calcEMA(rawRs, window);
-  const emaRsMean = calcSMA(emaRs, window);
-  const rsRatio = emaRs.map((v, i) => (emaRsMean[i] > 0 ? (100 * v) / emaRsMean[i] : 100));
+  // 2. RS-Ratio: z-score của RS đã làm mượt trên cửa sổ n
+  const rsRatio = smoothRs.map((v, i) => {
+    if (i < window - 1) return 100;
+    const slice = smoothRs.slice(i - window + 1, i + 1);
+    const mean = slice.reduce((a, b) => a + b, 0) / window;
+    const variance = slice.reduce((a, b) => a + (b - mean) ** 2, 0) / (window - 1);
+    const std = Math.sqrt(variance);
+    return std > 0 ? 100 + (v - mean) / std : 100;
+  });
 
-  // 3. JdK RS-Momentum (Rate of change of RS-Ratio smoothed via EMA)
-  const roc: number[] = [];
-  const k = 10; // Chu kỳ quán tính 10 phiên
-  for (let i = 0; i < rsRatio.length; i++) {
-    const prev = rsRatio[Math.max(0, i - k)] || 100;
-    roc.push((rsRatio[i] - prev) / prev);
-  }
-  const emaRoc = calcEMA(roc, window);
-  const rsMomentum = emaRoc.map((v) => 100 + 100 * v);
+  // 3. RS-Momentum: độ dốc của RS-Ratio, chuẩn hoá theo RMS (giữ nguyên dấu)
+  const ratioDelta = rsRatio.map((v, i) => (i >= window ? v - rsRatio[i - 1] : 0));
+  const smoothDelta = calcEMA(ratioDelta, MOMENTUM_SMOOTH);
+  const rsMomentum = smoothDelta.map((v, i) => {
+    if (i < firstValid) return 100;
+    const slice = smoothDelta.slice(i - window + 1, i + 1);
+    const rms = Math.sqrt(slice.reduce((a, b) => a + b * b, 0) / window);
+    return rms > 0 ? 100 + v / rms : 100;
+  });
 
   const fullRRGPoints: RRGPoint[] = [];
-  for (let i = 0; i < validPairs.length; i++) {
+  for (let i = firstValid; i < validPairs.length; i++) {
     fullRRGPoints.push({
       date: validPairs[i].date,
       rsRatio: Number(rsRatio[i].toFixed(2)),
