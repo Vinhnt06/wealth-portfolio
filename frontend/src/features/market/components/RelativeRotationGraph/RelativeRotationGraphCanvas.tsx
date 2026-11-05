@@ -167,6 +167,9 @@ export const RelativeRotationGraphCanvas = forwardRef<
     [getScale]
   );
 
+  // Active sector tracking (Selected sector takes priority, or hovered sector)
+  const activeSectorId = selectedSectorId || hoveredSector?.sector.id || null;
+
   // Canvas Render Loop
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -195,7 +198,7 @@ export const RelativeRotationGraphCanvas = forwardRef<
     // Center Crosshair (100, 100)
     const centerScreen = worldToScreen(100, 100, width, height, zoom, pan);
 
-    // 2. 4 Quadrant Background Tints (Matching user reference image)
+    // 2. 4 Quadrant Background Tints
     // Top-Left: CẢI THIỆN (Blue tint)
     ctx.fillStyle = 'rgba(56, 189, 248, 0.04)';
     ctx.fillRect(0, 0, centerScreen.x, centerScreen.y);
@@ -339,7 +342,7 @@ export const RelativeRotationGraphCanvas = forwardRef<
     ctx.fillStyle = '#334155';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
-    ctx.fillText('↻ Luân chuyển chuẩn: Cải thiện ➔ Dẫn dắt ➔ Suy yếu ➔ Tụt hậu', width / 2, 18);
+    ctx.fillText('↻ Luân chuyển: Cải thiện ➔ Dẫn dắt ➔ Suy yếu ➔ Tụt hậu', width / 2, 18);
 
     // TỤT HẬU (Bottom-Left)
     ctx.font = 'bold 13px "Geist", -apple-system, sans-serif';
@@ -354,13 +357,21 @@ export const RelativeRotationGraphCanvas = forwardRef<
     ctx.textBaseline = 'bottom';
     ctx.fillText('SUY YẾU', width - 24, height - 32);
 
-    // 7. Draw Sector Trails & Markers
-    const isAnyHovered = hoveredSector !== null;
-    const activeSectorId = hoveredSector?.sector.id || selectedSectorId;
+    // 7. Draw Sector Trails & Markers with Smart Z-Index Sorting
+    // When a ray is selected/hovered: others are deeply dimmed (opacity: 0.12), active ray is vibrant (opacity: 1.0) and drawn LAST on top!
+    const isAnyActive = Boolean(activeSectorId);
 
-    sectors.forEach((sec) => {
+    // Sort so the active ray renders last (highest z-index)
+    const sortedSectors = [...sectors].sort((a, b) => {
+      if (a.id === activeSectorId) return 1;
+      if (b.id === activeSectorId) return -1;
+      return 0;
+    });
+
+    sortedSectors.forEach((sec) => {
       const isCurrentActive = activeSectorId === sec.id;
-      const opacity = isAnyHovered && !isCurrentActive ? 0.2 : 1.0;
+      // Dim inactive rays down to 0.12 so the focused ray is unmistakably clear
+      const opacity = isAnyActive ? (isCurrentActive ? 1.0 : 0.12) : 1.0;
 
       const screenPoints = sec.points.map((p) =>
         worldToScreen(p.rsRatio, p.rsMomentum, width, height, zoom, pan)
@@ -374,11 +385,17 @@ export const RelativeRotationGraphCanvas = forwardRef<
       ctx.save();
       ctx.globalAlpha = opacity;
 
-      // 7a. Smooth Quadratic Curve for Trail
+      // Glow effect for active ray
+      if (isCurrentActive) {
+        ctx.shadowColor = trailColor;
+        ctx.shadowBlur = 12;
+      }
+
+      // 7a. Smooth Curve for Trail
       if (screenPoints.length >= 2) {
         ctx.beginPath();
         ctx.strokeStyle = trailColor;
-        ctx.lineWidth = isCurrentActive ? 2.6 : 1.6;
+        ctx.lineWidth = isCurrentActive ? 3.2 : 1.6;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
 
@@ -395,11 +412,14 @@ export const RelativeRotationGraphCanvas = forwardRef<
         ctx.stroke();
       }
 
-      // 7b. Past Historical Dots (Fade in toward head)
+      // Reset shadow blur before dots & pills
+      ctx.shadowBlur = 0;
+
+      // 7b. Past Historical Dots
       for (let i = 0; i < screenPoints.length - 1; i++) {
         const pt = screenPoints[i];
         const progress = (i + 1) / screenPoints.length;
-        const dotRadius = 2.0 + progress * 1.5;
+        const dotRadius = isCurrentActive ? 2.8 + progress * 2.0 : 2.0 + progress * 1.5;
         const dotAlpha = 0.35 + progress * 0.45;
 
         ctx.beginPath();
@@ -413,12 +433,18 @@ export const RelativeRotationGraphCanvas = forwardRef<
       const headPt = screenPoints[screenPoints.length - 1];
       ctx.globalAlpha = opacity;
 
-      // Glowing outer ring if active or leading
+      // Glowing outer ring if active
       if (isCurrentActive) {
         ctx.beginPath();
-        ctx.arc(headPt.x, headPt.y, 11, 0, Math.PI * 2);
+        ctx.arc(headPt.x, headPt.y, 14, 0, Math.PI * 2);
         ctx.fillStyle = `${trailColor}33`;
         ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(headPt.x, headPt.y, 9, 0, Math.PI * 2);
+        ctx.strokeStyle = trailColor;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
       }
 
       // Directional arrowhead at the tip showing heading vector
@@ -429,18 +455,21 @@ export const RelativeRotationGraphCanvas = forwardRef<
         const dist = Math.sqrt(dx * dx + dy * dy);
         if (dist > 1.5) {
           const angle = Math.atan2(dy, dx);
-          const arrowLen = isCurrentActive ? 8 : 6.5;
+          const arrowLen = isCurrentActive ? 9.5 : 6.5;
           const arrowAngle = Math.PI / 6;
 
           ctx.beginPath();
-          ctx.moveTo(headPt.x + Math.cos(angle) * (isCurrentActive ? 3.5 : 2.5), headPt.y + Math.sin(angle) * (isCurrentActive ? 3.5 : 2.5));
+          ctx.moveTo(
+            headPt.x + Math.cos(angle) * (isCurrentActive ? 4.5 : 2.5),
+            headPt.y + Math.sin(angle) * (isCurrentActive ? 4.5 : 2.5)
+          );
           ctx.lineTo(
             headPt.x - arrowLen * Math.cos(angle - arrowAngle),
             headPt.y - arrowLen * Math.sin(angle - arrowAngle)
           );
           ctx.lineTo(
-            headPt.x - (arrowLen * 0.5) * Math.cos(angle),
-            headPt.y - (arrowLen * 0.5) * Math.sin(angle)
+            headPt.x - arrowLen * 0.5 * Math.cos(angle),
+            headPt.y - arrowLen * 0.5 * Math.sin(angle)
           );
           ctx.lineTo(
             headPt.x - arrowLen * Math.cos(angle + arrowAngle),
@@ -450,40 +479,39 @@ export const RelativeRotationGraphCanvas = forwardRef<
           ctx.fillStyle = '#ffffff';
           ctx.fill();
           ctx.strokeStyle = trailColor;
-          ctx.lineWidth = 1;
+          ctx.lineWidth = 1.2;
           ctx.stroke();
         }
       }
 
       // Main Dot
       ctx.beginPath();
-      ctx.arc(headPt.x, headPt.y, isCurrentActive ? 5.5 : 4.5, 0, Math.PI * 2);
+      ctx.arc(headPt.x, headPt.y, isCurrentActive ? 6.5 : 4.5, 0, Math.PI * 2);
       ctx.fillStyle = trailColor;
       ctx.fill();
       ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 1.5;
+      ctx.lineWidth = isCurrentActive ? 2.0 : 1.5;
       ctx.stroke();
 
-      // 7d. Smart Label with Pill Tag (Anti-Collision & Edge-Aware)
+      // 7d. Smart Label with Pill Tag
       const labelText = sec.shortName;
       ctx.font = `${isCurrentActive ? 'bold 12px' : '11px'} "Geist", -apple-system, sans-serif`;
       const textWidth = ctx.measureText(labelText).width;
-      const pillWidth = textWidth + 10;
-      const pillHeight = 18;
+      const pillWidth = textWidth + 12;
+      const pillHeight = 20;
 
-      // Smart flip if near right or left border
-      const placeLeft = headPt.x > width - 110;
-      const pillX = placeLeft ? headPt.x - pillWidth - 8 : headPt.x + 8;
+      const placeLeft = headPt.x > width - 120;
+      const pillX = placeLeft ? headPt.x - pillWidth - 10 : headPt.x + 10;
       const pillY = headPt.y - pillHeight / 2;
 
-      // Pill Background Box
+      // Pill Box
       ctx.fillStyle = isCurrentActive
-        ? 'rgba(15, 23, 42, 0.95)'
+        ? 'rgba(15, 23, 42, 0.98)'
         : 'rgba(9, 13, 22, 0.88)';
       ctx.strokeStyle = isCurrentActive ? trailColor : 'rgba(255, 255, 255, 0.12)';
-      ctx.lineWidth = 1;
+      ctx.lineWidth = isCurrentActive ? 1.5 : 1;
 
-      // Rounded rectangle for pill
+      // Rounded rectangle
       ctx.beginPath();
       const r = 4;
       ctx.moveTo(pillX + r, pillY);
@@ -508,18 +536,98 @@ export const RelativeRotationGraphCanvas = forwardRef<
       ctx.fillStyle = isCurrentActive ? '#ffffff' : trailColor;
       ctx.textAlign = 'left';
       ctx.textBaseline = 'middle';
-      ctx.fillText(labelText, pillX + 5, headPt.y);
+      ctx.fillText(labelText, pillX + 6, headPt.y);
 
       ctx.restore();
     });
 
     ctx.restore();
-  }, [sectors, showGrid, zoom, pan, hoveredSector, selectedSectorId, worldToScreen]);
+  }, [sectors, showGrid, zoom, pan, activeSectorId, worldToScreen]);
 
-  // Mouse & Touch Handlers for Dragging, Hovering & Zoom
+  // Helper: Distance from point (px, py) to line segment (x1, y1) -> (x2, y2)
+  const distToSegment = (
+    px: number,
+    py: number,
+    x1: number,
+    y1: number,
+    x2: number,
+    y2: number
+  ): number => {
+    const l2 = (x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1);
+    if (l2 === 0) return Math.hypot(px - x1, py - y1);
+    let t = ((px - x1) * (x2 - x1) + (py - y1) * (y2 - y1)) / l2;
+    t = Math.max(0, Math.min(1, t));
+    return Math.hypot(px - (x1 + t * (x2 - x1)), py - (y1 + t * (y2 - y1)));
+  };
+
+  // Find sector near mouse (checks Head Dot, Pill Box, and Trail Segments)
+  const findSectorAtPosition = useCallback(
+    (
+      mouseX: number,
+      mouseY: number,
+      width: number,
+      height: number
+    ): RRGSectorData | null => {
+      // 1. First check Head Dot (< 26px) & Pill Box
+      for (const sec of sectors) {
+        const headPoint = sec.points[sec.points.length - 1];
+        if (!headPoint) continue;
+
+        const sPos = worldToScreen(
+          headPoint.rsRatio,
+          headPoint.rsMomentum,
+          width,
+          height,
+          zoom,
+          pan
+        );
+
+        // Head dot radius hit-test
+        const distHead = Math.hypot(mouseX - sPos.x, mouseY - sPos.y);
+        if (distHead < 26) return sec;
+
+        // Pill box hit-test
+        const labelText = sec.shortName;
+        const textWidth = labelText.length * 7.5 + 12;
+        const placeLeft = sPos.x > width - 120;
+        const pillX = placeLeft ? sPos.x - textWidth - 10 : sPos.x + 10;
+        const pillY = sPos.y - 10;
+        if (
+          mouseX >= pillX - 4 &&
+          mouseX <= pillX + textWidth + 4 &&
+          mouseY >= pillY - 4 &&
+          mouseY <= pillY + 24
+        ) {
+          return sec;
+        }
+      }
+
+      // 2. Second check along Trail Curve segments (< 12px)
+      for (const sec of sectors) {
+        const screenPoints = sec.points.map((p) =>
+          worldToScreen(p.rsRatio, p.rsMomentum, width, height, zoom, pan)
+        );
+
+        for (let i = 0; i < screenPoints.length - 1; i++) {
+          const p1 = screenPoints[i];
+          const p2 = screenPoints[i + 1];
+          const d = distToSegment(mouseX, mouseY, p1.x, p1.y, p2.x, p2.y);
+          if (d < 12) return sec;
+        }
+      }
+
+      return null;
+    },
+    [sectors, worldToScreen, zoom, pan]
+  );
+
+  // Mouse & Touch Handlers
+  const dragDistanceRef = useRef<number>(0);
+
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (e.button !== 0) return;
     setIsDragging(true);
+    dragDistanceRef.current = 0;
     dragStartRef.current = { x: e.clientX, y: e.clientY };
     panStartRef.current = { ...pan };
   };
@@ -531,6 +639,7 @@ export const RelativeRotationGraphCanvas = forwardRef<
     if (isDragging) {
       const dx = e.clientX - dragStartRef.current.x;
       const dy = e.clientY - dragStartRef.current.y;
+      dragDistanceRef.current += Math.hypot(dx, dy);
       setPan({
         x: panStartRef.current.x + dx,
         y: panStartRef.current.y + dy,
@@ -538,37 +647,15 @@ export const RelativeRotationGraphCanvas = forwardRef<
       return;
     }
 
-    // Hit-testing for Hover Tooltip
     const rect = canvas.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
 
-    let closestSector: RRGSectorData | null = null;
-    let minDistance = 24; // 24px radius
+    const matchedSector = findSectorAtPosition(mouseX, mouseY, rect.width, rect.height);
 
-    sectors.forEach((sec) => {
-      const headPoint = sec.points[sec.points.length - 1];
-      if (!headPoint) return;
-
-      const sPos = worldToScreen(
-        headPoint.rsRatio,
-        headPoint.rsMomentum,
-        rect.width,
-        rect.height,
-        zoom,
-        pan
-      );
-
-      const dist = Math.hypot(mouseX - sPos.x, mouseY - sPos.y);
-      if (dist < minDistance) {
-        minDistance = dist;
-        closestSector = sec;
-      }
-    });
-
-    if (closestSector) {
+    if (matchedSector) {
       setHoveredSector({
-        sector: closestSector,
+        sector: matchedSector,
         x: mouseX,
         y: mouseY,
       });
@@ -581,13 +668,29 @@ export const RelativeRotationGraphCanvas = forwardRef<
     setIsDragging(false);
   };
 
-  const handleClick = () => {
-    if (hoveredSector) {
-      if (selectedSectorId === hoveredSector.sector.id) {
+  const handleClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    // If dragged more than 6px, it was a pan operation, not a click
+    if (dragDistanceRef.current > 6) return;
+
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+
+    const matchedSector = findSectorAtPosition(mouseX, mouseY, rect.width, rect.height);
+
+    if (matchedSector) {
+      // Toggle selection: click same sector to deselect, or select new sector
+      if (selectedSectorId === matchedSector.id) {
         onSelectSector?.(null);
       } else {
-        onSelectSector?.(hoveredSector.sector.id);
+        onSelectSector?.(matchedSector.id);
       }
+    } else {
+      // Click on empty space: clear selection and restore all rays
+      onSelectSector?.(null);
     }
   };
 
@@ -600,6 +703,10 @@ export const RelativeRotationGraphCanvas = forwardRef<
     const zoomDelta = e.deltaY > 0 ? 0.9 : 1.1;
     setZoom((z) => Math.min(3.5, Math.max(0.6, Number((z * zoomDelta).toFixed(2)))));
   };
+
+  // Currently focused sector for the Inspector Card
+  const focusedSector = sectors.find((s) => s.id === selectedSectorId) || null;
+  const focusedQInfo = focusedSector ? getQuadrantInfo(focusedSector.quadrant) : null;
 
   return (
     <div
@@ -618,10 +725,129 @@ export const RelativeRotationGraphCanvas = forwardRef<
         className={`w-full h-full block ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
       />
 
-      {/* Floating Hover Tooltip */}
-      {hoveredSector && (
+      {/* Pinned Stage Inspector HUD (When a ray is clicked/focused) */}
+      {focusedSector && focusedQInfo && (
+        <div className="absolute top-4 left-4 z-30 animate-fadeIn max-w-[340px] pointer-events-auto">
+          <div className="bg-slate-950/95 backdrop-blur-xl border border-white/15 rounded-xl p-3.5 shadow-2xl shadow-black/90">
+            {/* Header: Name + Quadrant Badge + Close button */}
+            <div className="flex items-center justify-between gap-2 pb-2.5 mb-2.5 border-b border-white/10">
+              <div className="flex items-center gap-2">
+                <span
+                  className="w-3 h-3 rounded-full ring-2 ring-white/30 shrink-0"
+                  style={{ backgroundColor: focusedQInfo.color }}
+                />
+                <div>
+                  <h4 className="text-sm font-bold text-white tracking-tight">
+                    {focusedSector.name}
+                  </h4>
+                  <span className="text-[10px] text-slate-400 font-mono">
+                    {focusedSector.shortName} · Chuẩn đối chiếu {benchmark}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-1.5">
+                <span
+                  className="text-[11px] font-bold px-2 py-0.5 rounded tracking-wide uppercase font-mono shadow-sm"
+                  style={{
+                    color: focusedQInfo.color,
+                    backgroundColor: focusedQInfo.bgColor,
+                    border: `1px solid ${focusedQInfo.borderColor}`,
+                  }}
+                >
+                  {focusedQInfo.name}
+                </span>
+                <button
+                  onClick={() => onSelectSector?.(null)}
+                  title="Hiện lại tất cả tia (Bỏ chọn)"
+                  className="w-5 h-5 rounded flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 transition-colors text-xs"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            {/* Stage Description & Strategy Note */}
+            <div
+              className="p-2 rounded-lg text-[11px] leading-relaxed mb-2.5 font-sans"
+              style={{
+                backgroundColor: focusedQInfo.bgColor,
+                border: `1px solid ${focusedQInfo.borderColor}`,
+                color: '#e2e8f0',
+              }}
+            >
+              <div className="font-semibold text-[10px] uppercase tracking-wider mb-0.5" style={{ color: focusedQInfo.color }}>
+                Đặc điểm giai đoạn {focusedQInfo.name}:
+              </div>
+              {focusedQInfo.description}
+            </div>
+
+            {/* Metrics Grid */}
+            <div className="grid grid-cols-2 gap-2 text-[11px] font-mono">
+              <div className="bg-white/5 rounded-lg p-2 border border-white/5">
+                <span className="text-slate-400 block text-[10px]">JdK RS-Ratio</span>
+                <span className="text-white font-bold text-xs">
+                  {focusedSector.currentPoint.rsRatio.toFixed(2)}
+                </span>
+                <span className="text-[9px] text-slate-500 block">
+                  {focusedSector.currentPoint.rsRatio >= 100 ? 'Mạnh hơn VNINDEX' : 'Yếu hơn VNINDEX'}
+                </span>
+              </div>
+
+              <div className="bg-white/5 rounded-lg p-2 border border-white/5">
+                <span className="text-slate-400 block text-[10px]">JdK RS-Momentum</span>
+                <span className="text-white font-bold text-xs">
+                  {focusedSector.currentPoint.rsMomentum.toFixed(2)}
+                </span>
+                <span className="text-[9px] text-slate-500 block">
+                  {focusedSector.currentPoint.rsMomentum >= 100 ? 'Đà tăng gia tốc' : 'Đà tăng giảm tốc'}
+                </span>
+              </div>
+
+              <div className="bg-white/5 rounded-lg p-2 border border-white/5">
+                <span className="text-slate-400 block text-[10px]">Vận tốc luân chuyển</span>
+                <span className="text-slate-200 font-bold text-xs">
+                  {focusedSector.velocity.toFixed(2)}
+                </span>
+                <span className="text-[9px] text-slate-500 block">
+                  Góc hướng: {focusedSector.angle}°
+                </span>
+              </div>
+
+              <div className="bg-white/5 rounded-lg p-2 border border-white/5">
+                <span className="text-slate-400 block text-[10px]">Biến động giá phiên</span>
+                <span
+                  className={`font-bold text-xs ${
+                    focusedSector.changePercent >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                  }`}
+                >
+                  {focusedSector.changePercent >= 0 ? '+' : ''}
+                  {focusedSector.changePercent.toFixed(2)}%
+                </span>
+                <span className="text-[9px] text-slate-500 block">
+                  Khoảng cách tâm: {focusedSector.distanceFromCenter.toFixed(2)}
+                </span>
+              </div>
+            </div>
+
+            {/* Reset focus CTA */}
+            <div className="mt-2.5 pt-2 border-t border-white/5 flex items-center justify-between text-[10px] text-slate-400">
+              <span>Đang làm mờ các tia khác</span>
+              <button
+                onClick={() => onSelectSector?.(null)}
+                className="text-emerald-400 hover:text-emerald-300 font-medium underline underline-offset-2 transition-colors"
+              >
+                Hiện lại tất cả tia
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Hover Tooltip (When hovering without selecting that sector) */}
+      {hoveredSector && hoveredSector.sector.id !== selectedSectorId && (
         <div
-          className="pointer-events-none absolute z-30 transform -translate-x-1/2 -translate-y-full mb-3"
+          className="pointer-events-none absolute z-20 transform -translate-x-1/2 -translate-y-full mb-3"
           style={{
             left: `${hoveredSector.x}px`,
             top: `${hoveredSector.y}px`,
@@ -642,8 +868,7 @@ export const RelativeRotationGraphCanvas = forwardRef<
                 className="text-[10px] font-bold px-1.5 py-0.5 rounded tracking-wider uppercase"
                 style={{
                   color: getQuadrantInfo(hoveredSector.sector.quadrant).color,
-                  backgroundColor: getQuadrantInfo(hoveredSector.sector.quadrant)
-                    .bgColor,
+                  backgroundColor: getQuadrantInfo(hoveredSector.sector.quadrant).bgColor,
                 }}
               >
                 {getQuadrantInfo(hoveredSector.sector.quadrant).name}
@@ -664,7 +889,7 @@ export const RelativeRotationGraphCanvas = forwardRef<
                 </span>
               </div>
               <div>
-                <span className="text-slate-500 block text-[10px]">Vận tốc (V)</span>
+                <span className="text-slate-500 block text-[10px]">Vận tốc</span>
                 <span className="text-slate-300 font-medium">
                   {hoveredSector.sector.velocity.toFixed(2)}
                 </span>
@@ -684,13 +909,35 @@ export const RelativeRotationGraphCanvas = forwardRef<
               </div>
             </div>
 
-            <div className="mt-2 pt-2 border-t border-white/5 text-[10px] text-slate-400 flex flex-wrap gap-1">
-              <span className="text-slate-500">Mã trụ:</span>
-              {hoveredSector.sector.symbols.slice(0, 5).join(', ')}
+            <div className="mt-2 pt-1.5 border-t border-white/5 text-[9px] text-emerald-400 flex items-center justify-between">
+              <span>Bấm vào để xem rõ giai đoạn</span>
+              <span>Làm mờ tia khác</span>
             </div>
           </div>
         </div>
       )}
+
+      {/* Bottom Canvas Footer / Legend Guideline matching user reference */}
+      <div className="absolute bottom-1 left-0 right-0 px-4 py-1 flex items-center justify-between text-[10px] text-slate-500 font-mono pointer-events-none bg-gradient-to-t from-[#090d16] via-[#090d16]/80 to-transparent">
+        <div className="flex items-center gap-3 flex-wrap">
+          <span className="flex items-center gap-1 text-emerald-400">
+            <span className="w-2 h-2 rounded-sm bg-emerald-500 inline-block" /> Dẫn dắt
+          </span>
+          <span className="flex items-center gap-1 text-amber-400">
+            <span className="w-2 h-2 rounded-sm bg-amber-500 inline-block" /> Suy yếu
+          </span>
+          <span className="flex items-center gap-1 text-rose-400">
+            <span className="w-2 h-2 rounded-sm bg-rose-500 inline-block" /> Tụt hậu
+          </span>
+          <span className="flex items-center gap-1 text-sky-400">
+            <span className="w-2 h-2 rounded-sm bg-sky-500 inline-block" /> Cải thiện
+          </span>
+          <span className="text-slate-600 hidden md:inline">·</span>
+          <span className="hidden md:inline text-slate-400">
+            Bấm tia để khóa giai đoạn & làm mờ các tia khác · Cuộn chuột phóng to · Kéo dời khung
+          </span>
+        </div>
+      </div>
     </div>
   );
 });

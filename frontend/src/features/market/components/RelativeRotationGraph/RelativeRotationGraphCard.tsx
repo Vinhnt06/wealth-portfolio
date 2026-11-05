@@ -17,6 +17,7 @@ export const RelativeRotationGraphCard: React.FC<RelativeRotationGraphCardProps>
   className = '',
   defaultHeight = 620,
 }) => {
+  const [group, setGroup] = useState<string>('all');
   const [timeframe, setTimeframe] = useState<'1D' | '1W'>('1D');
   const [tailLength, setTailLength] = useState<number>(4);
   const [showGrid, setShowGrid] = useState<boolean>(true);
@@ -35,7 +36,7 @@ export const RelativeRotationGraphCard: React.FC<RelativeRotationGraphCardProps>
 
     try {
       const res = await fetch(
-        `/api/market/rrg?timeframe=${timeframe}&tail=${tailLength}&benchmark=VNINDEX`
+        `/api/market/rrg?timeframe=${timeframe}&tail=${tailLength}&benchmark=VNINDEX&group=${group}`
       );
       if (!res.ok) {
         throw new Error(`Lỗi tải dữ liệu RRG: HTTP ${res.status}`);
@@ -53,11 +54,16 @@ export const RelativeRotationGraphCard: React.FC<RelativeRotationGraphCardProps>
     } finally {
       setIsLoading(false);
     }
-  }, [timeframe, tailLength]);
+  }, [timeframe, tailLength, group]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  const handleGroupChange = (newGroup: string) => {
+    setGroup(newGroup);
+    setSelectedSectorId(null);
+  };
 
   return (
     <div
@@ -66,6 +72,8 @@ export const RelativeRotationGraphCard: React.FC<RelativeRotationGraphCardProps>
       {/* Control Bar Header */}
       <RRGControlBar
         dataset={dataset}
+        group={group}
+        onChangeGroup={handleGroupChange}
         timeframe={timeframe}
         onChangeTimeframe={setTimeframe}
         tailLength={tailLength}
@@ -111,7 +119,7 @@ export const RelativeRotationGraphCard: React.FC<RelativeRotationGraphCardProps>
             style={{ height: defaultHeight }}
           >
             <div className="w-8 h-8 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" />
-            <span>Đang tính toán luân chuyển dòng tiền 16 nhóm ngành từ nến Entrade...</span>
+            <span>Đang tính toán luân chuyển dòng tiền thực tế từ nến Entrade...</span>
           </div>
         ) : error && !dataset ? (
           <div
@@ -153,6 +161,8 @@ export const RelativeRotationGraphCard: React.FC<RelativeRotationGraphCardProps>
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         dataset={dataset}
+        group={group}
+        onChangeGroup={handleGroupChange}
         timeframe={timeframe}
         onChangeTimeframe={setTimeframe}
         tailLength={tailLength}

@@ -55,6 +55,138 @@ export interface RRGDataset {
   };
 }
 
+export interface RRGGroupOption {
+  id: string;
+  name: string;
+  shortName: string;
+  category: 'sector' | 'industry' | 'index';
+  symbols?: string[];
+}
+
+export const RRG_GROUP_OPTIONS: RRGGroupOption[] = [
+  { id: 'all', name: 'Toàn bộ 16 Nhóm Ngành', shortName: '16 Ngành', category: 'sector' },
+  {
+    id: 'banking',
+    name: 'Ngân hàng',
+    shortName: 'Ngân hàng',
+    category: 'industry',
+    // 22 mã ngân hàng niêm yết chuẩn trên HOSE/HNX/UPCOM
+    symbols: [
+      'VCB', 'BID', 'CTG', 'TCB', 'MBB', 'ACB', 'VPB', 'STB', 'HDB', 'LPB',
+      'SHB', 'TPB', 'VIB', 'OCB', 'MSB', 'EIB', 'BAB', 'BVB', 'NVB', 'NAB',
+      'SSB', 'ABB'
+    ],
+  },
+  {
+    id: 'securities',
+    name: 'Chứng khoán',
+    shortName: 'Chứng khoán',
+    category: 'industry',
+    symbols: [
+      'SSI', 'VND', 'VCI', 'HCM', 'SHS', 'MBS', 'FTS', 'BSI', 'CTS', 'AGR',
+      'VDS', 'ORS', 'BVS', 'TVS', 'VIX', 'APG'
+    ],
+  },
+  {
+    id: 'real_estate',
+    name: 'Bất động sản',
+    shortName: 'BĐS',
+    category: 'industry',
+    symbols: [
+      'VHM', 'VIC', 'VRE', 'KDH', 'NLG', 'PDR', 'DXG', 'DIG', 'NVL', 'CEO',
+      'HDC', 'DXS', 'TCH', 'KHG', 'SCR', 'CRE', 'HQC', 'IJC'
+    ],
+  },
+  {
+    id: 'industrial_park',
+    name: 'Khu công nghiệp',
+    shortName: 'KCN',
+    category: 'industry',
+    symbols: ['BCM', 'KBC', 'IDC', 'SZC', 'VGC', 'SIP', 'LHG', 'NTL', 'TIP'],
+  },
+  {
+    id: 'steel',
+    name: 'Thép & Kim loại',
+    shortName: 'Thép',
+    category: 'industry',
+    symbols: ['HPG', 'HSG', 'NKG', 'VGS', 'TLH', 'TVN', 'SMC', 'POM'],
+  },
+  {
+    id: 'oil_gas',
+    name: 'Dầu khí',
+    shortName: 'Dầu khí',
+    category: 'industry',
+    symbols: ['GAS', 'PVD', 'PVS', 'BSR', 'PLX', 'PVT', 'PVC', 'PVB'],
+  },
+  {
+    id: 'retail',
+    name: 'Bán lẻ & Tiêu dùng',
+    shortName: 'Bán lẻ',
+    category: 'industry',
+    symbols: ['MWG', 'PNJ', 'FRT', 'DGW', 'PET', 'MSN', 'VNM', 'SAB'],
+  },
+  {
+    id: 'tech',
+    name: 'Công nghệ thông tin',
+    shortName: 'Công nghệ',
+    category: 'industry',
+    symbols: ['FPT', 'CMG', 'CTR', 'ELC', 'FOX', 'VGI'],
+  },
+  {
+    id: 'chemicals',
+    name: 'Hóa chất & Phân bón',
+    shortName: 'Hóa chất',
+    category: 'industry',
+    symbols: ['DGC', 'DPM', 'DCM', 'BFC', 'CSV', 'LAS', 'DDV'],
+  },
+  {
+    id: 'construction',
+    name: 'Xây dựng & Hạ tầng',
+    shortName: 'Xây dựng',
+    category: 'industry',
+    symbols: ['VCG', 'HHV', 'CII', 'FCN', 'CTD', 'LCG', 'HUT', 'C4G'],
+  },
+  {
+    id: 'logistics',
+    name: 'Cảng biển & Logistics',
+    shortName: 'Cảng biển',
+    category: 'industry',
+    symbols: ['GMD', 'HAH', 'VSC', 'PVT', 'VOS', 'VIP', 'DXP'],
+  },
+  {
+    id: 'energy',
+    name: 'Năng lượng & Điện',
+    shortName: 'Năng lượng',
+    category: 'industry',
+    symbols: ['POW', 'REE', 'PC1', 'GEG', 'HDG', 'NT2', 'VSH'],
+  },
+  {
+    id: 'seafood_agri',
+    name: 'Thủy sản & Nông nghiệp',
+    shortName: 'Thủy sản & NN',
+    category: 'industry',
+    symbols: ['VHC', 'ANV', 'IDI', 'FMC', 'DBC', 'BAF', 'HAG', 'PAN'],
+  },
+  {
+    id: 'rubber_plastic',
+    name: 'Cao su & Nhựa',
+    shortName: 'Cao su',
+    category: 'industry',
+    symbols: ['GVR', 'DRC', 'DPR', 'PHR', 'BMP', 'NTP'],
+  },
+  {
+    id: 'vn30',
+    name: 'VN30 Index (Top 30 Vốn Hóa)',
+    shortName: 'VN30',
+    category: 'index',
+    symbols: [
+      'ACB', 'BCM', 'BID', 'BVH', 'CTG', 'FPT', 'GAS', 'GVR', 'HDB', 'HPG',
+      'MBB', 'MSN', 'MWG', 'PLX', 'POW', 'SAB', 'SHB', 'SSB', 'SSI', 'STB',
+      'TCB', 'TPB', 'VCB', 'VHM', 'VIB', 'VIC', 'VJC', 'VNM', 'VPB', 'VRE'
+    ],
+  },
+];
+
 // 16 Nhóm Ngành chuẩn mực của Thị Trường Chứng Khoán Việt Nam
 export const RRG_SECTOR_CONFIGS: RRGSectorConfig[] = [
   {

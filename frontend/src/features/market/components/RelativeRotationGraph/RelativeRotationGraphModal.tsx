@@ -10,6 +10,8 @@ interface RelativeRotationGraphModalProps {
   isOpen: boolean;
   onClose: () => void;
   dataset: RRGDataset | null;
+  group?: string;
+  onChangeGroup?: (group: string) => void;
   timeframe: '1D' | '1W';
   onChangeTimeframe: (tf: '1D' | '1W') => void;
   tailLength: number;
@@ -26,6 +28,8 @@ export const RelativeRotationGraphModal: React.FC<RelativeRotationGraphModalProp
   isOpen,
   onClose,
   dataset,
+  group = 'all',
+  onChangeGroup,
   timeframe,
   onChangeTimeframe,
   tailLength,
@@ -65,6 +69,8 @@ export const RelativeRotationGraphModal: React.FC<RelativeRotationGraphModalProp
       {/* Top Header / Control Bar */}
       <RRGControlBar
         dataset={dataset}
+        group={group}
+        onChangeGroup={onChangeGroup}
         timeframe={timeframe}
         onChangeTimeframe={onChangeTimeframe}
         tailLength={tailLength}

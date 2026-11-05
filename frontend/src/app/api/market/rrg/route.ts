@@ -9,9 +9,10 @@ export async function GET(request: Request) {
   const timeframe = (searchParams.get('timeframe') || '1D').toUpperCase() === '1W' ? '1W' : '1D';
   const tailLength = Math.max(2, Math.min(16, parseInt(searchParams.get('tail') || '4', 10)));
   const benchmark = (searchParams.get('benchmark') || 'VNINDEX').toUpperCase();
+  const group = searchParams.get('group') || 'all';
 
   try {
-    const dataset = await getLiveRRGDataset(timeframe, tailLength, benchmark);
+    const dataset = await getLiveRRGDataset(timeframe, tailLength, benchmark, group);
     if (!dataset) {
       return NextResponse.json(
         { success: false, error: 'Không thể tải dữ liệu nến chuẩn cho ' + benchmark },

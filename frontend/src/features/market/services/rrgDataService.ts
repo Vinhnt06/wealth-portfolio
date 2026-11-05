@@ -1,7 +1,9 @@
 import {
   RRG_SECTOR_CONFIGS,
+  RRG_GROUP_OPTIONS,
   calculateRRGSeries,
   getQuadrant,
+  getQuadrantInfo,
   RRGSectorData,
   RRGDataset,
   RRGQuadrant,
@@ -59,13 +61,15 @@ async function fetchEntradeCandles(symbol: string, isIndex: boolean, resolution:
 
 /**
  * Lấy bộ dữ liệu RRG tính toán trực tiếp từ dữ liệu thực tế DNSE Entrade (có cache 60s)
+ * Hỗ trợ group = 'all' (16 nhóm ngành tổng thể) hoặc group = mã ngành (ví dụ: 'banking', 'securities', 'vn30'...)
  */
 export async function getLiveRRGDataset(
   timeframe: '1D' | '1W' = '1D',
   tailLength: number = 4,
-  benchmark: string = 'VNINDEX'
+  benchmark: string = 'VNINDEX',
+  group: string = 'all'
 ): Promise<RRGDataset | null> {
-  const cacheKey = `${timeframe}_${tailLength}_${benchmark}`;
+  const cacheKey = `${group}_${timeframe}_${tailLength}_${benchmark}`;
   const now = Date.now();
 
   if (cacheStore[cacheKey] && now - cacheStore[cacheKey].timestamp < CACHE_TTL_MS) {
@@ -77,7 +81,121 @@ export async function getLiveRRGDataset(
     const benchCandles = await fetchEntradeCandles(benchmark, true, timeframe);
     if (!benchCandles.length) return null;
 
-    // 2. Thu thập top 5 cổ phiếu thanh khoản cao nhất mỗi ngành để mở rộng rổ, chống lệch mã đơn lẻ
+    // A. XỬ LÝ THEO TỪNG NHÓM NGÀNH / RỔ CỔ PHIẾU CỤ THỂ
+    const selectedGroupOption = RRG_GROUP_OPTIONS.find((g) => g.id === group);
+    if (selectedGroupOption && selectedGroupOption.symbols && selectedGroupOption.symbols.length > 0) {
+      const symbols = selectedGroupOption.symbols;
+      const symbolCandleMap = new Map<string, CandlePoint[]>();
+      const batchSize = 10;
+      for (let i = 0; i < symbols.length; i += batchSize) {
+        const batch = symbols.slice(i, i + batchSize);
+        const batchPromises = batch.map(async (sym) => {
+          const candles = await fetchEntradeCandles(sym, false, timeframe);
+          return { sym, candles };
+        });
+        const batchRes = await Promise.all(batchPromises);
+        batchRes.forEach(({ sym, candles }) => {
+          if (candles.length) {
+            symbolCandleMap.set(sym, candles);
+          }
+        });
+      }
+
+      const sectorsData: RRGSectorData[] = [];
+      let leadingCount = 0;
+      let weakeningCount = 0;
+      let laggingCount = 0;
+      let improvingCount = 0;
+
+      for (const sym of symbols) {
+        const stockCandles = symbolCandleMap.get(sym);
+        if (!stockCandles || stockCandles.length < 28) continue;
+
+        const points = calculateRRGSeries(stockCandles, benchCandles, 14, 1.8, tailLength);
+        if (!points.length) continue;
+
+        const currentPoint = points[points.length - 1];
+        const prevPoint = points.length >= 2 ? points[points.length - 2] : currentPoint;
+
+        const quadrant = getQuadrant(currentPoint.rsRatio, currentPoint.rsMomentum);
+        if (quadrant === 'leading') leadingCount++;
+        else if (quadrant === 'weakening') weakeningCount++;
+        else if (quadrant === 'lagging') laggingCount++;
+        else if (quadrant === 'improving') improvingCount++;
+
+        const dx = currentPoint.rsRatio - 100;
+        const dy = currentPoint.rsMomentum - 100;
+        const distanceFromCenter = Number(Math.sqrt(dx * dx + dy * dy).toFixed(2));
+        const rawAngle = (Math.atan2(dy, dx) * 180) / Math.PI;
+        const angle = Number(((rawAngle + 360) % 360).toFixed(1));
+
+        const vdx = currentPoint.rsRatio - prevPoint.rsRatio;
+        const vdy = currentPoint.rsMomentum - prevPoint.rsMomentum;
+        const velocity = Number(Math.sqrt(vdx * vdx + vdy * vdy).toFixed(2));
+
+        const lastClose = stockCandles[stockCandles.length - 1]?.close || 1;
+        const prevClose = stockCandles[stockCandles.length - 2]?.close || lastClose;
+        const changePercent = Number((((lastClose - prevClose) / prevClose) * 100).toFixed(2));
+
+        const lookbackPeriods = timeframe === '1W' ? 13 : 63;
+        let relativePerf3M = 0;
+        if (stockCandles.length > lookbackPeriods && benchCandles.length > lookbackPeriods) {
+          const sLast = stockCandles[stockCandles.length - 1].close;
+          const sPast = stockCandles[stockCandles.length - 1 - lookbackPeriods].close;
+          const bLast = benchCandles[benchCandles.length - 1].close;
+          const bPast = benchCandles[benchCandles.length - 1 - lookbackPeriods].close;
+          if (sPast > 0 && bPast > 0) {
+            const sReturn = ((sLast - sPast) / sPast) * 100;
+            const bReturn = ((bLast - bPast) / bPast) * 100;
+            relativePerf3M = Number((sReturn - bReturn).toFixed(2));
+          }
+        }
+
+        sectorsData.push({
+          id: sym,
+          name: sym,
+          shortName: sym,
+          color: getQuadrantInfo(quadrant).color,
+          symbols: [sym],
+          points,
+          currentPoint,
+          quadrant,
+          distanceFromCenter,
+          angle,
+          velocity,
+          changePercent,
+          relativePerf3M,
+        });
+      }
+
+      sectorsData.sort((a, b) => b.distanceFromCenter - a.distanceFromCenter);
+      const dateList = benchCandles.map((c) => c.date);
+
+      const dataset: RRGDataset = {
+        sectors: sectorsData,
+        benchmark,
+        dateRange: {
+          start: dateList[0] || '',
+          end: dateList[dateList.length - 1] || '',
+        },
+        summary: {
+          leading: leadingCount,
+          weakening: weakeningCount,
+          lagging: laggingCount,
+          improving: improvingCount,
+          total: sectorsData.length,
+        },
+      };
+
+      cacheStore[cacheKey] = {
+        timestamp: now,
+        data: dataset,
+      };
+
+      return dataset;
+    }
+
+    // B. XỬ LÝ TOÀN BỘ 16 NHÓM NGÀNH (MẶC ĐỊNH)
     const symbolsToFetch = new Set<string>();
     RRG_SECTOR_CONFIGS.forEach((sector) => {
       sector.symbols.slice(0, 5).forEach((s) => symbolsToFetch.add(s));

@@ -11,10 +11,12 @@ import {
   ArrowsClockwise,
   Compass,
 } from '@phosphor-icons/react';
-import { RRGDataset } from '../../utils/rrgCalculator';
+import { RRGDataset, RRG_GROUP_OPTIONS } from '../../utils/rrgCalculator';
 
 interface RRGControlBarProps {
   dataset: RRGDataset | null;
+  group?: string;
+  onChangeGroup?: (group: string) => void;
   timeframe: '1D' | '1W';
   onChangeTimeframe: (tf: '1D' | '1W') => void;
   tailLength: number;
@@ -31,6 +33,8 @@ interface RRGControlBarProps {
 
 export const RRGControlBar: React.FC<RRGControlBarProps> = ({
   dataset,
+  group = 'all',
+  onChangeGroup,
   timeframe,
   onChangeTimeframe,
   tailLength,
@@ -61,18 +65,48 @@ export const RRGControlBar: React.FC<RRGControlBarProps> = ({
     return dateStr;
   };
 
+  const currentGroupOption = RRG_GROUP_OPTIONS.find((g) => g.id === group) || RRG_GROUP_OPTIONS[0];
+
   return (
     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 px-4 py-3 bg-zinc-950/90 border-b border-zinc-800/80 backdrop-blur-xl">
-      {/* Left: Title, Stats Badges, Date Range */}
+      {/* Left: Title, Sector Dropdown, Stats Badges, Date Range */}
       <div className="flex flex-wrap items-center gap-2.5 text-xs font-mono">
-        {/* Main Title */}
+        {/* Main Title with Sector Group Dropdown */}
         <div className="flex items-center gap-2 pr-2 border-r border-zinc-800">
           <div className="w-6 h-6 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
             <Compass className="w-3.5 h-3.5" weight="bold" />
           </div>
-          <span className="font-bold text-sm text-zinc-100 tracking-tight">
-            RRG — Market Watch
-          </span>
+          <div className="flex items-center gap-1.5">
+            <span className="font-bold text-sm text-zinc-100 tracking-tight">RRG —</span>
+            <select
+              value={group}
+              onChange={(e) => onChangeGroup?.(e.target.value)}
+              aria-label="Chọn nhóm ngành RRG"
+              className="bg-zinc-900 border border-emerald-500/40 text-emerald-400 font-bold text-xs px-2.5 py-1 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer shadow-sm hover:border-emerald-400 transition-colors"
+            >
+              <optgroup label="Thị trường chung">
+                {RRG_GROUP_OPTIONS.filter((g) => g.category === 'sector').map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.name}
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="Từng nhóm ngành (Chi tiết cổ phiếu)">
+                {RRG_GROUP_OPTIONS.filter((g) => g.category === 'industry').map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.name} ({g.symbols?.length || 0} mã)
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="Rổ chỉ số lớn">
+                {RRG_GROUP_OPTIONS.filter((g) => g.category === 'index').map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.name} ({g.symbols?.length || 0} mã)
+                  </option>
+                ))}
+              </optgroup>
+            </select>
+          </div>
         </div>
 
         {/* Timeframe Toggle */}
@@ -85,7 +119,7 @@ export const RRGControlBar: React.FC<RRGControlBarProps> = ({
                 : 'text-zinc-400 hover:text-zinc-200'
             }`}
           >
-            Khung ngày
+            khung ngày
           </button>
           <button
             onClick={() => onChangeTimeframe('1W')}
@@ -95,12 +129,14 @@ export const RRGControlBar: React.FC<RRGControlBarProps> = ({
                 : 'text-zinc-400 hover:text-zinc-200'
             }`}
           >
-            Khung tuần
+            khung tuần
           </button>
         </div>
 
-        {/* Sectors count */}
-        <span className="text-zinc-400 text-[11px]">16 ngành</span>
+        {/* Items count */}
+        <span className="text-zinc-300 text-[11px] font-medium">
+          {dataset?.sectors?.length ? `${dataset.sectors.length} mã` : group === 'all' ? '16 ngành' : 'Đang tải...'}
+        </span>
         <span className="text-zinc-700">·</span>
 
         {/* Tail selector */}
