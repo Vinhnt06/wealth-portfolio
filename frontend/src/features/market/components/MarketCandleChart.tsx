@@ -87,6 +87,7 @@ import {
   SuperTrendSettings,
 } from '../utils/superTrend';
 import { SuperTrendStrategyModal } from './SuperTrendStrategyModal';
+import { RSTemplateSubChart } from './RSTemplateSubChart';
 import stockDatabase from '../data/stockDatabase.json';
 import { getStockPriceColor } from '../utils/priceColors';
 import { VN_MARKET_INDEXES, isMarketIndex, getMarketIndexMeta } from '../constants/marketIndexes';
@@ -601,8 +602,8 @@ export function calculateTrendlinePro(candles: CandlestickData<Time>[]): Trendli
   };
 }
 
-// ── Technical Indicator Calculations (RSI, MACD, MFI, OBV) ──────────
-export type SubIndicatorType = 'none' | 'rsi' | 'macd' | 'mfi' | 'obv';
+// ── Technical Indicator Calculations (RSI, MACD, MFI, OBV, RS Template) ──────────
+export type SubIndicatorType = 'none' | 'rsi' | 'macd' | 'mfi' | 'obv' | 'rs_template';
 
 export interface RSIPoint {
   index: number;
@@ -4535,7 +4536,7 @@ export function MarketCandleChart() {
 
   // ── 5. Sub-Chart Mount and Sync (RSI, MACD, MFI, OBV) ───────────────────
   useEffect(() => {
-    if (activeSubIndicator === 'none') {
+    if (activeSubIndicator === 'none' || activeSubIndicator === 'rs_template') {
       if (subChartRef.current) {
         subChartRef.current.remove();
         subChartRef.current = null;
@@ -5478,7 +5479,7 @@ export function MarketCandleChart() {
               <span>Chỉ báo</span>
               {activeSubIndicator !== 'none' ? (
                 <span className="text-[9px] uppercase font-bold bg-emerald-500/20 text-emerald-300 px-1.5 py-0.2 rounded border border-emerald-500/30">
-                  {activeSubIndicator}
+                  {activeSubIndicator === 'rs_template' ? 'RS TEMPLATE' : activeSubIndicator}
                 </span>
               ) : (
                 <span className="text-[10px] text-zinc-500 font-mono">
@@ -5860,6 +5861,43 @@ export function MarketCandleChart() {
                     <span className="text-zinc-500 text-[9px] font-normal">Khung phụ dưới</span>
                   </div>
                   <div className="flex flex-col gap-1 mb-2.5">
+                    {/* BỘ TEMPLATE RS (3-IN-1) */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveSubIndicator(activeSubIndicator === 'rs_template' ? 'none' : 'rs_template');
+                      }}
+                      className={`flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-mono transition-all border ${
+                        activeSubIndicator === 'rs_template'
+                          ? 'bg-amber-500/15 border-amber-500/40 text-amber-200 shadow-[0_0_15px_rgba(245,158,11,0.15)]'
+                          : 'bg-zinc-900/60 border-amber-500/20 text-zinc-200 hover:bg-zinc-800/80 hover:border-amber-500/40'
+                      }`}
+                    >
+                      <span className="flex items-center gap-2">
+                        <Sparkle className="w-3.5 h-3.5 text-amber-400 shrink-0" weight="fill" />
+                        <div className="text-left">
+                          <span className="font-bold block text-zinc-100 flex items-center gap-1.5">
+                            ⚡ BỘ TEMPLATE RS (3-IN-1)
+                            <span className="text-[9px] font-bold text-amber-400 bg-amber-500/20 px-1.5 py-0.2 rounded border border-amber-500/30">
+                              HOT PRO
+                            </span>
+                          </span>
+                          <span className="text-[9.5px] text-zinc-400">
+                            RS Line vs VNINDEX + Mansfield RS + O'Neil Score (1-99)
+                          </span>
+                        </div>
+                      </span>
+                      <span
+                        className={`text-[10px] px-2 py-0.5 rounded-md font-bold transition-colors ${
+                          activeSubIndicator === 'rs_template'
+                            ? 'bg-amber-500 text-zinc-950 font-black shadow-sm'
+                            : 'bg-zinc-800/60 text-zinc-500'
+                        }`}
+                      >
+                        {activeSubIndicator === 'rs_template' ? 'BẬT' : 'TẮT'}
+                      </span>
+                    </button>
+
                     {/* Reversal Divergences RSI */}
                     <button
                       onClick={(e) => {
@@ -6652,8 +6690,19 @@ export function MarketCandleChart() {
 
           </div>
 
+          {/* RS Template Sub Chart (3-in-1 Suite: RS Line + MA50, Mansfield RS, O'Neil RS Score) */}
+          {activeSubIndicator === 'rs_template' && (
+            <RSTemplateSubChart
+              stockCandles={loadedCandlesRef.current}
+              mainChart={chartRef.current}
+              onClose={() => setActiveSubIndicator('none')}
+              selectedSymbol={selectedSymbol}
+              onSwitchIndicator={(type) => setActiveSubIndicator(type)}
+            />
+          )}
+
           {/* Sub Indicator Pane (RSI, MACD, MFI, OBV) */}
-          {activeSubIndicator !== 'none' && (
+          {activeSubIndicator !== 'none' && activeSubIndicator !== 'rs_template' && (
             <div className="h-[148px] w-full border-t border-zinc-800/80 bg-zinc-950/95 flex flex-col relative shrink-0">
               {/* Header Bar */}
               <div className="flex items-center justify-between px-3 py-1 bg-zinc-900/70 border-b border-zinc-800/60 text-[11px] font-mono select-none">
@@ -6662,6 +6711,7 @@ export function MarketCandleChart() {
                   <span className="text-zinc-500 text-[10px] uppercase font-bold mr-1">Chỉ báo phụ:</span>
                   {(
                     [
+                      { id: 'rs_template', label: '⚡ Template RS' },
                       { id: 'rsi', label: 'Reversal Divergences (RSI)' },
                       { id: 'macd', label: 'MACD (12,26,9)' },
                       { id: 'mfi', label: 'MFI (14) - Dòng tiền' },
