@@ -15,8 +15,10 @@ import {
   Funnel,
   ArrowUpRight,
   ArrowDownRight,
+  DownloadSimple,
 } from '@phosphor-icons/react';
 import { useMarketStore } from '../store/marketStore';
+import { useDnseWebSocket } from '../hooks/useDnseWebSocket';
 
 export interface OrderItem {
   id: string | number;
@@ -72,8 +74,152 @@ interface TradesData {
   timestamp: number;
 }
 
+// ── BỘ LƯU TRỮ VĨNH VIỄN NHẬT KÝ KHỚP LỆNH TRONG NGÀY (KHÔNG XOÁ LỆNH) ──
+function getTodayVnKey(): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' }).format(new Date());
+}
+
+function getLocalTapeStorageKey(symbol: string, dateKey: string): string {
+  return `yf_intraday_tape_${symbol.toUpperCase()}_${dateKey}`;
+}
+
+export function loadLocalTape(symbol: string): OrderItem[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const todayKey = getTodayVnKey();
+    const raw = localStorage.getItem(getLocalTapeStorageKey(symbol, todayKey));
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) return parsed;
+  } catch (e) {
+    console.warn('Cannot load local tape:', e);
+  }
+  return [];
+}
+
+export function saveLocalTape(symbol: string, trades: OrderItem[]) {
+  if (typeof window === 'undefined') return;
+  try {
+    const todayKey = getTodayVnKey();
+    localStorage.setItem(getLocalTapeStorageKey(symbol, todayKey), JSON.stringify(trades));
+    // Dọn dẹp các ngày cũ hơn của mã này để giải phóng bộ nhớ
+    const prefix = `yf_intraday_tape_${symbol.toUpperCase()}_`;
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith(prefix) && k !== getLocalTapeStorageKey(symbol, todayKey)) {
+        localStorage.removeItem(k);
+      }
+    }
+  } catch (e) {
+    console.warn('Cannot save local tape:', e);
+  }
+}
+
+export function getTradeKey(trade: OrderItem): string {
+  return trade.id ? String(trade.id) : `${trade.time}_${trade.volume}_${trade.price}_${trade.type}`;
+}
+
+export function calculateTapeStats(trades: OrderItem[], symbol: string): TradesData {
+  let totalBuyVolume = 0;
+  let totalBuyValue = 0;
+  let totalSellVolume = 0;
+  let totalSellValue = 0;
+
+  let sharkBuyVol = 0, sharkBuyVal = 0, sharkBuyCount = 0;
+  let wolfBuyVol = 0, wolfBuyVal = 0, wolfBuyCount = 0;
+  let sheepBuyVol = 0, sheepBuyVal = 0, sheepBuyCount = 0;
+
+  let sharkSellVol = 0, sharkSellVal = 0, sharkSellCount = 0;
+  let wolfSellVol = 0, wolfSellVal = 0, wolfSellCount = 0;
+  let sheepSellVol = 0, sheepSellVal = 0, sheepSellCount = 0;
+
+  for (const trade of trades) {
+    if (trade.type === 'M') {
+      totalBuyVolume += trade.volume;
+      totalBuyValue += trade.value;
+      if (trade.investorType === 'Cá mập') {
+        sharkBuyVol += trade.volume;
+        sharkBuyVal += trade.value;
+        sharkBuyCount++;
+      } else if (trade.investorType === 'Sói già') {
+        wolfBuyVol += trade.volume;
+        wolfBuyVal += trade.value;
+        wolfBuyCount++;
+      } else {
+        sheepBuyVol += trade.volume;
+        sheepBuyVal += trade.value;
+        sheepBuyCount++;
+      }
+    } else {
+      totalSellVolume += trade.volume;
+      totalSellValue += trade.value;
+      if (trade.investorType === 'Cá mập') {
+        sharkSellVol += trade.volume;
+        sharkSellVal += trade.value;
+        sharkSellCount++;
+      } else if (trade.investorType === 'Sói già') {
+        wolfSellVol += trade.volume;
+        wolfSellVal += trade.value;
+        wolfSellCount++;
+      } else {
+        sheepSellVol += trade.volume;
+        sheepSellVal += trade.value;
+        sheepSellCount++;
+      }
+    }
+  }
+
+  const buyBase = Math.max(1, totalBuyVolume);
+  const sellBase = Math.max(1, totalSellVolume);
+
+  return {
+    symbol,
+    totalTrades: trades.length,
+    totalVolume: totalBuyVolume + totalSellVolume,
+    totalValue: totalBuyValue + totalSellValue,
+    netVolume: totalBuyVolume - totalSellVolume,
+    thresholds: {
+      sharkMin: 1_000_000_000,
+      wolfMin: 500_000_000,
+      megaWhaleMin: 3_000_000_000,
+      description: 'Nhật ký khớp lệnh thật tích lũy 100% trong phiên giao dịch (Không xóa lệnh)',
+    },
+    summary: {
+      netVolume: totalBuyVolume - totalSellVolume,
+      sharkNetVol: sharkBuyVol - sharkSellVol,
+      wolfNetVol: wolfBuyVol - wolfSellVol,
+      sheepNetVol: sheepBuyVol - sheepSellVol,
+      sharkBuyVal,
+      sharkSellVal,
+      sharkNetVal: sharkBuyVal - sharkSellVal,
+      sharkBuyCount,
+      sharkSellCount,
+      wolfBuyVal,
+      wolfSellVal,
+      wolfNetVal: wolfBuyVal - wolfSellVal,
+    },
+    buy: {
+      totalVolume: totalBuyVolume,
+      totalValue: totalBuyValue,
+      shark: { volume: sharkBuyVol, value: sharkBuyVal, count: sharkBuyCount, pct: Number(((sharkBuyVol / buyBase) * 100).toFixed(2)) },
+      wolf: { volume: wolfBuyVol, value: wolfBuyVal, count: wolfBuyCount, pct: Number(((wolfBuyVol / buyBase) * 100).toFixed(2)) },
+      sheep: { volume: sheepBuyVol, value: sheepBuyVal, count: sheepBuyCount, pct: Number(((sheepBuyVol / buyBase) * 100).toFixed(2)) },
+    },
+    sell: {
+      totalVolume: totalSellVolume,
+      totalValue: totalSellValue,
+      shark: { volume: sharkSellVol, value: sharkSellVal, count: sharkSellCount, pct: Number(((sharkSellVol / sellBase) * 100).toFixed(2)) },
+      wolf: { volume: wolfSellVol, value: wolfSellVal, count: wolfSellCount, pct: Number(((wolfSellVol / sellBase) * 100).toFixed(2)) },
+      sheep: { volume: sheepSellVol, value: sheepSellVal, count: sheepSellCount, pct: Number(((sheepSellVol / sellBase) * 100).toFixed(2)) },
+    },
+    trades,
+    timestamp: Date.now(),
+  };
+}
+
 export const InvestorFlowAnalysis: React.FC = () => {
-  const { selectedSymbol } = useMarketStore();
+  const { wsStatus } = useDnseWebSocket();
+  const { selectedSymbol, lastTradeTick } = useMarketStore();
   const [timeframe, setTimeframe] = useState<'60' | '1D' | 'ALL'>('1D');
   const [activePage, setActivePage] = useState<1 | 2 | 3>(1);
   const [filterInvestor, setFilterInvestor] = useState<'shark' | 'wolf_shark' | 'all'>('shark');
@@ -81,15 +227,43 @@ export const InvestorFlowAnalysis: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [tradesData, setTradesData] = useState<TradesData | null>(null);
   const [lastUpdated, setLastUpdated] = useState<string>('');
+  const [recentLiveIds, setRecentLiveIds] = useState<Set<string>>(new Set());
+  const lastProcessedTickRef = React.useRef<string>('');
+
+  const [displayLimit, setDisplayLimit] = useState<number>(100);
+
+  // Nạp log tích lũy từ LocalStorage ngay khi đổi mã để không bị trắng màn hình
+  useEffect(() => {
+    if (!selectedSymbol) return;
+    const cached = loadLocalTape(selectedSymbol);
+    if (cached.length > 0) {
+      setTradesData(calculateTapeStats(cached, selectedSymbol));
+      setLastUpdated(new Date().toLocaleTimeString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh', hour12: false }));
+    }
+  }, [selectedSymbol]);
 
   const fetchRealTrades = useCallback(async () => {
     if (!selectedSymbol) return;
     setLoading(true);
     try {
-      const res = await fetch(`/api/market/trades?symbol=${selectedSymbol}&limit=500`);
+      const res = await fetch(`/api/market/trades?symbol=${selectedSymbol}&limit=1000`);
       const resJson = await res.json();
       if (resJson.success && resJson.data) {
-        setTradesData(resJson.data);
+        const apiTrades: OrderItem[] = resJson.data.trades || [];
+        const localTrades = loadLocalTape(selectedSymbol);
+
+        // Merge liên tục, deduplicate theo ID hoặc fingerprint - tuyệt đối KHÔNG xoá lệnh
+        const tradeMap = new Map<string, OrderItem>();
+        for (const t of localTrades) {
+          tradeMap.set(getTradeKey(t), t);
+        }
+        for (const t of apiTrades) {
+          tradeMap.set(getTradeKey(t), t);
+        }
+
+        const mergedTrades = Array.from(tradeMap.values()).sort((a, b) => b.time.localeCompare(a.time));
+        saveLocalTape(selectedSymbol, mergedTrades);
+        setTradesData(calculateTapeStats(mergedTrades, selectedSymbol));
         setLastUpdated(new Date().toLocaleTimeString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh', hour12: false }));
       }
     } catch (err) {
@@ -99,11 +273,85 @@ export const InvestorFlowAnalysis: React.FC = () => {
     }
   }, [selectedSymbol]);
 
+  // Nạp dữ liệu ban đầu, đồng bộ đối soát nền mỗi 30s
   useEffect(() => {
     fetchRealTrades();
-    const interval = setInterval(fetchRealTrades, 15000); // Tự động làm mới mỗi 15s
+    const interval = setInterval(fetchRealTrades, 30000);
     return () => clearInterval(interval);
   }, [fetchRealTrades]);
+
+  // Lắng nghe tick khớp lệnh thời gian thực từ WebSocket DNSE (Zero Latency Streaming)
+  useEffect(() => {
+    if (!lastTradeTick || !selectedSymbol) return;
+    if (lastTradeTick.symbol.toUpperCase() !== selectedSymbol.toUpperCase()) return;
+    if (lastTradeTick.volume <= 0) return;
+    if (lastTradeTick.id === lastProcessedTickRef.current) return;
+
+    lastProcessedTickRef.current = lastTradeTick.id;
+
+    const rawP = lastTradeTick.price;
+    const priceInVnd = rawP < 500 ? Math.round(rawP * 1000) : Math.round(rawP);
+    const orderValue = priceInVnd * lastTradeTick.volume;
+    const priceDisplay = Number((priceInVnd / 1000).toFixed(2));
+    const isBuy = lastTradeTick.matchType === 'B';
+    const type: 'M' | 'B' = isBuy ? 'M' : 'B';
+
+    let investorType: 'Cá mập' | 'Sói già' | 'Cừu non' = 'Cừu non';
+    if (orderValue >= 1_000_000_000) {
+      investorType = 'Cá mập';
+    } else if (orderValue >= 500_000_000) {
+      investorType = 'Sói già';
+    }
+
+    const timeStr = new Date(lastTradeTick.timestamp).toLocaleTimeString('vi-VN', {
+      timeZone: 'Asia/Ho_Chi_Minh',
+      hour12: false,
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    });
+
+    const newOrder: OrderItem = {
+      id: lastTradeTick.id,
+      time: timeStr,
+      investorType,
+      price: priceDisplay,
+      volume: lastTradeTick.volume,
+      value: orderValue,
+      type,
+    };
+
+    // Đánh dấu tick mới để highlight badge nhấp nháy trên UI
+    setRecentLiveIds((prev) => {
+      const next = new Set(prev);
+      next.add(newOrder.id as string);
+      return next;
+    });
+
+    const timer = setTimeout(() => {
+      setRecentLiveIds((prev) => {
+        const next = new Set(prev);
+        next.delete(newOrder.id as string);
+        return next;
+      });
+    }, 4000);
+
+    setLastUpdated(timeStr);
+
+    setTradesData((prev) => {
+      const currentTrades = prev?.trades || loadLocalTape(selectedSymbol);
+      const newKey = getTradeKey(newOrder);
+      if (currentTrades.some((t) => getTradeKey(t) === newKey)) return prev;
+
+      // TUYỆT ĐỐI KHÔNG CẮT BỚT (KHÔNG SLICE), LƯU TRỌN VẸN 100% CẢ PHIÊN
+      const nextTrades = [newOrder, ...currentTrades];
+      saveLocalTape(selectedSymbol, nextTrades);
+
+      return calculateTapeStats(nextTrades, selectedSymbol);
+    });
+
+    return () => clearTimeout(timer);
+  }, [lastTradeTick, selectedSymbol]);
 
   // Fallback defaults if loading or no trades yet
   const summary = tradesData?.summary || {
@@ -183,6 +431,37 @@ export const InvestorFlowAnalysis: React.FC = () => {
     });
   }, [orders, filterInvestor, filterSide]);
 
+  // Phân đoạn hiển thị DOM mượt mà (Dữ liệu tính toán & lưu trữ vẫn giữ 100% trong bộ nhớ)
+  const visibleOrders = useMemo(() => {
+    return filteredOrders.slice(0, displayLimit);
+  }, [filteredOrders, displayLimit]);
+
+  // Xuất toàn bộ log khớp lệnh 100% trong ngày ra file CSV Excel
+  const exportCsvTape = useCallback(() => {
+    if (!orders.length) return;
+    const todayKey = getTodayVnKey();
+    const headers = ['Thời gian', 'Mã CP', 'Phân khúc', 'Loại lệnh', 'Giá (k VNĐ)', 'Khối lượng (CP)', 'Giá trị (VNĐ)'];
+    const rows = orders.map((o) => [
+      `"${o.time}"`,
+      `"${selectedSymbol}"`,
+      `"${o.investorType}"`,
+      `"${o.type === 'M' ? 'MUA CHỦ ĐỘNG' : 'BÁN CHỦ ĐỘNG'}"`,
+      o.price.toFixed(2),
+      o.volume,
+      o.value,
+    ]);
+    const csvContent = '\uFEFF' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `NhatKy_KhopLenh_${selectedSymbol}_${todayKey}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }, [orders, selectedSymbol]);
+
   return (
     <div className="bg-zinc-950/90 border border-zinc-800/80 rounded-2xl p-4 shadow-xl backdrop-blur-xl space-y-4">
       {/* Top Header & Page Selector */}
@@ -193,13 +472,18 @@ export const InvestorFlowAnalysis: React.FC = () => {
           </div>
           <div>
             <div className="flex items-center gap-1.5">
-              <h3 className="font-mono font-bold text-xs sm:text-sm text-zinc-100 flex items-center gap-2">
+              <h3 className="font-mono font-bold text-xs sm:text-sm text-zinc-100 flex items-center gap-2 flex-wrap">
                 Phân loại nhà đầu tư
                 <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold">
                   {selectedSymbol}
                 </span>
-                <span className="text-[9px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 font-mono">
-                  DỮ LIỆU THẬT 100%
+                <span className={`inline-flex items-center gap-1.5 text-[9px] px-2 py-0.5 rounded-full font-mono font-bold transition-all ${
+                  wsStatus === 'connected'
+                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+                    : 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
+                }`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${wsStatus === 'connected' ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
+                  {wsStatus === 'connected' ? 'REALTIME STREAM' : 'ĐANG KẾT NỐI'}
                 </span>
               </h3>
               <div className="group relative cursor-pointer text-zinc-500 hover:text-zinc-300">
@@ -495,9 +779,12 @@ export const InvestorFlowAnalysis: React.FC = () => {
                   <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
                     &ge; 1 TỶ VNĐ
                   </span>
+                  <span className="px-1.5 py-0.2 rounded text-[9px] font-mono text-zinc-300 bg-zinc-800/80 border border-zinc-700">
+                    Đã lưu {orders.length} lệnh trong ngày
+                  </span>
                 </div>
                 <p className="text-[10px] text-zinc-400">
-                  Lọc độc quyền lệnh tay to trong {orders.length} ticks gần nhất
+                  Nhật ký khớp lệnh tích lũy liên tục không xoá &bull; Tự động đồng bộ và lưu trữ cục bộ
                 </p>
               </div>
             </div>
@@ -620,6 +907,19 @@ export const InvestorFlowAnalysis: React.FC = () => {
                 <span>🔴 Bán C.Động</span>
               </button>
             </div>
+
+            {/* Export Full Day CSV Button */}
+            <button
+              onClick={exportCsvTape}
+              title="Xuất file nhật ký toàn bộ lệnh trong ngày ra Excel CSV"
+              className="px-2.5 py-1 rounded-xl bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-800 hover:border-emerald-500/40 text-zinc-300 hover:text-emerald-400 font-mono text-[11px] font-bold transition-all flex items-center gap-1.5 shadow-sm sm:ml-auto"
+            >
+              <DownloadSimple className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Xuất Log Ngày (.CSV)</span>
+              <span className="px-1.5 py-0.2 rounded-full bg-zinc-800 text-[9px] text-zinc-400">
+                {orders.length}
+              </span>
+            </button>
           </div>
 
           {/* ── Orders Table ── */}
@@ -645,11 +945,11 @@ export const InvestorFlowAnalysis: React.FC = () => {
                         </div>
                         <div className="font-bold text-zinc-300 text-xs">
                           {filterInvestor === 'shark'
-                            ? `Chưa ghi nhận lệnh Cá Mập (≥ 1 Tỷ) trong ${orders.length} ticks gần nhất của ${selectedSymbol}`
+                            ? `Chưa ghi nhận lệnh Cá Mập (≥ 1 Tỷ) trong ${orders.length} lệnh tích lũy ngày của ${selectedSymbol}`
                             : 'Không tìm thấy lệnh khớp phù hợp với bộ lọc'}
                         </div>
                         <p className="text-[10px] text-zinc-500 max-w-sm">
-                          Hệ thống đang tự động cập nhật thời gian thực mỗi 15 giây từ sàn giao dịch.
+                          Hệ thống đang tích lũy 100% nhật ký khớp lệnh thời gian thực và lưu trữ liên tục.
                         </p>
                         {filterInvestor === 'shark' && (
                           <button
@@ -663,12 +963,13 @@ export const InvestorFlowAnalysis: React.FC = () => {
                     </td>
                   </tr>
                 ) : (
-                  filteredOrders.map((order, idx) => {
+                  visibleOrders.map((order, idx) => {
                     const isBuy = order.type === 'M';
                     const isMegaWhale = order.value >= 3_000_000_000;
                     const isShark = order.investorType === 'Cá mập';
                     const isWolf = order.investorType === 'Sói già';
 
+                    const isRecentLive = recentLiveIds.has(String(order.id));
                     const formattedVal =
                       order.value >= 1_000_000_000
                         ? `${(order.value / 1_000_000_000).toFixed(2)} tỷ`
@@ -679,8 +980,10 @@ export const InvestorFlowAnalysis: React.FC = () => {
                     return (
                       <tr
                         key={order.id || idx}
-                        className={`hover:bg-zinc-800/40 transition-colors ${
-                          isMegaWhale
+                        className={`hover:bg-zinc-800/40 transition-all ${
+                          isRecentLive
+                            ? 'bg-emerald-500/20 border-l-2 border-emerald-400 shadow-[0_0_15px_-4px_rgba(16,185,129,0.4)]'
+                            : isMegaWhale
                             ? 'bg-amber-500/5 border-l-2 border-amber-500'
                             : isShark
                             ? 'bg-emerald-500/5'
@@ -690,6 +993,11 @@ export const InvestorFlowAnalysis: React.FC = () => {
                         <td className="py-2 pl-3 text-zinc-400 font-mono text-[11px]">{order.time}</td>
                         <td className="py-2">
                           <div className="flex items-center gap-1.5 flex-wrap">
+                            {isRecentLive && (
+                              <span className="px-1.5 py-0.5 rounded text-[8px] font-black bg-emerald-500/30 text-emerald-200 border border-emerald-500/50 flex items-center gap-0.5 animate-pulse">
+                                <span>⚡ VỪA KHỚP</span>
+                              </span>
+                            )}
                             {isShark ? (
                               <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
                                 <span>🦈</span>
@@ -759,6 +1067,43 @@ export const InvestorFlowAnalysis: React.FC = () => {
                 )}
               </tbody>
             </table>
+          </div>
+
+          {/* ── Display Pagination Controls (Smooth DOM Rendering while Preserving 100% Day Data) ── */}
+          <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-xl bg-zinc-900/60 border border-zinc-800 text-xs font-mono">
+            <div className="flex items-center gap-2 text-zinc-400 text-[11px]">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span>
+                Đang hiển thị <strong className="text-emerald-400">{Math.min(visibleOrders.length, filteredOrders.length)}</strong> / <strong className="text-zinc-200">{filteredOrders.length}</strong> lệnh phù hợp (Đã lưu trữ <strong className="text-zinc-100">{orders.length}</strong> lệnh trọn vẹn cả ngày)
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {filteredOrders.length > displayLimit && (
+                <>
+                  <button
+                    onClick={() => setDisplayLimit((prev) => prev + 100)}
+                    className="px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-[11px] font-bold transition-colors"
+                  >
+                    + Xem thêm 100 lệnh
+                  </button>
+                  <button
+                    onClick={() => setDisplayLimit(filteredOrders.length)}
+                    className="px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-[11px] font-bold transition-colors"
+                  >
+                    Xem toàn bộ ({filteredOrders.length})
+                  </button>
+                </>
+              )}
+              {displayLimit > 100 && (
+                <button
+                  onClick={() => setDisplayLimit(100)}
+                  className="text-[11px] text-zinc-500 hover:text-zinc-300 underline transition-colors"
+                >
+                  Thu gọn 100
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}

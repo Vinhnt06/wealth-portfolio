@@ -52,6 +52,7 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
     updateIndex,
     setLastHeartbeat,
     selectedSymbol,
+    setLastTradeTick,
   } = useMarketStore();
 
   // Helper to parse incoming DNSE message
@@ -91,6 +92,8 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
         const totalVol = Number(data.totalVolumeTraded ?? data.totalVolume ?? 0);
 
         if (data.symbol && price > 0) {
+          const matchSide: 'B' | 'S' = data.side === 'BUY' ? 'B' : data.side === 'SELL' ? 'S' : (data.matchType === 'S' ? 'S' : 'B');
+          
           updateTick({
             symbol: data.symbol,
             price,
@@ -105,8 +108,20 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
             ceilingPrice: ceil,
             floorPrice: floor,
             timestamp: Date.now(),
-            matchType: data.side === 'BUY' ? 'B' : data.side === 'SELL' ? 'S' : (data.matchType || 'B'),
+            matchType: matchSide,
           });
+
+          // Live Trade Tick Stream for InvestorFlow / Whale Tape (realtime Zero Latency)
+          if (vol > 0) {
+            setLastTradeTick({
+              id: `ws-${data.symbol}-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+              symbol: data.symbol,
+              price,
+              volume: vol,
+              matchType: matchSide,
+              timestamp: Date.now(),
+            });
+          }
         }
       }
 
@@ -163,7 +178,7 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
     } catch {
       // Non-JSON frame
     }
-  }, [updateTick, updateQuotes, updateIndex, setLastHeartbeat]);
+  }, [updateTick, updateQuotes, updateIndex, setLastHeartbeat, setLastTradeTick]);
 
   // Seed market state with REAL vnstock data
   const seedInitialState = useCallback(() => {
@@ -252,10 +267,33 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
     });
   }, [updateTick, updateQuotes, updateIndex]);
 
-  // Ensure dynamically selected custom symbols fetch real quote with DNSE failover
+  // Ensure dynamically selected custom symbols fetch real quote with DNSE failover & subscribe WS channels
   useEffect(() => {
     if (!selectedSymbol) return;
     
+    // Dynamic real-time subscription on live WebSocket
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      try {
+        wsRef.current.send(JSON.stringify({
+          action: 'subscribe',
+          channel: 'tick.G1.json',
+          symbols: [selectedSymbol],
+        }));
+        wsRef.current.send(JSON.stringify({
+          action: 'subscribe',
+          channel: 'tick_extra.G1.json',
+          symbols: [selectedSymbol],
+        }));
+        wsRef.current.send(JSON.stringify({
+          action: 'subscribe',
+          channel: 'top_price.G1.json',
+          symbols: [selectedSymbol],
+        }));
+      } catch (err) {
+        console.warn('Could not send dynamic WS subscribe:', err);
+      }
+    }
+
     // Always fetch verified real quote from DNSE for the selected symbol
     fetch(`/api/market/quote?symbol=${selectedSymbol}`)
       .then((res) => res.json())
@@ -345,23 +383,25 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
           setWsStatus('connected');
           openedAt = Date.now();
 
+          const activeSymbols = Array.from(new Set([...symbols, selectedSymbol].filter(Boolean)));
+
           // 1. Trade & Trade Extra Channel (Lô chẵn G1)
           const subTickMsg = {
             action: 'subscribe',
             channel: 'tick.G1.json',
-            symbols: symbols,
+            symbols: activeSymbols,
           };
           const subTickExtraMsg = {
             action: 'subscribe',
             channel: 'tick_extra.G1.json',
-            symbols: symbols,
+            symbols: activeSymbols,
           };
 
           // 2. Market Depth Quotes (top_price.G1.json)
           const subTopPriceMsg = {
             action: 'subscribe',
             channel: 'top_price.G1.json',
-            symbols: symbols,
+            symbols: activeSymbols,
           };
 
           // 3. Market Index Channels (VNINDEX, VN30, HNX, UPCOM)
@@ -386,7 +426,7 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
           const subForeignMsg = {
             action: 'subscribe',
             channel: 'foreign.G1.json',
-            symbols: symbols,
+            symbols: activeSymbols,
           };
 
           // 5. Market Index Influence (Top cổ phiếu ảnh hưởng chỉ số)

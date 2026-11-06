@@ -1,18 +1,33 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useMarketStore } from '../store/marketStore';
-import { Stack, ChartBar, ArrowsClockwise } from '@phosphor-icons/react';
+import { useDnseWebSocket } from '../hooks/useDnseWebSocket';
+import { Stack, ChartBar, ArrowsClockwise, Broadcast } from '@phosphor-icons/react';
 import { getStockPriceColor } from '../utils/priceColors';
 
 export function OrderBook() {
+  const { wsStatus } = useDnseWebSocket();
   const { selectedSymbol, quotes, ticks, updateQuotes, updateTick } = useMarketStore();
   const [loading, setLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<string>('');
+  const prevQuoteTimestampRef = useRef<number>(0);
+  const [flashUpdate, setFlashUpdate] = useState<boolean>(false);
 
   const currentQuotes = quotes[selectedSymbol];
   const currentTick = ticks[selectedSymbol];
+
+  // Theo dõi cập nhật realtime từ WebSocket quotes
+  useEffect(() => {
+    if (currentQuotes?.timestamp && currentQuotes.timestamp !== prevQuoteTimestampRef.current) {
+      prevQuoteTimestampRef.current = currentQuotes.timestamp;
+      setLastUpdated(new Date(currentQuotes.timestamp).toLocaleTimeString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh', hour12: false }));
+      setFlashUpdate(true);
+      const timer = setTimeout(() => setFlashUpdate(false), 600);
+      return () => clearTimeout(timer);
+    }
+  }, [currentQuotes?.timestamp]);
 
   const fetchRealOrderBook = useCallback(async () => {
     if (!selectedSymbol) return;
@@ -59,9 +74,10 @@ export function OrderBook() {
     }
   }, [selectedSymbol, updateQuotes, updateTick]);
 
+  // Nạp snapshot ban đầu, đối soát nền mỗi 30s (dữ liệu chính nhảy theo WebSocket realtime)
   useEffect(() => {
     fetchRealOrderBook();
-    const timer = setInterval(fetchRealOrderBook, 12000); // Tự động làm mới mỗi 12s
+    const timer = setInterval(fetchRealOrderBook, 30000);
     return () => clearInterval(timer);
   }, [fetchRealOrderBook]);
 
@@ -94,14 +110,24 @@ export function OrderBook() {
             <Stack size={16} weight="bold" />
           </div>
           <div>
-            <h3 className="font-semibold text-zinc-100 text-sm tracking-tight flex items-center gap-2">
+            <h3 className="font-semibold text-zinc-100 text-sm tracking-tight flex items-center gap-2 flex-wrap">
               Sổ Lệnh (Order Book)
               <span className="font-mono text-xs px-2 py-0.5 rounded bg-zinc-900 text-emerald-400 border border-zinc-800 font-bold">
                 {selectedSymbol}
               </span>
-              <span className="text-[9px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 font-mono">
-                DỮ LIỆU THẬT 100%
+              <span className={`inline-flex items-center gap-1.5 text-[9px] px-2 py-0.5 rounded-full font-mono font-bold transition-all ${
+                wsStatus === 'connected'
+                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+                  : 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
+              }`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${wsStatus === 'connected' ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
+                {wsStatus === 'connected' ? 'REALTIME STREAM' : 'ĐANG KẾT NỐI'}
               </span>
+              {flashUpdate && (
+                <span className="text-[9px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 font-mono font-bold animate-ping">
+                  ●
+                </span>
+              )}
             </h3>
             <div className="flex items-center gap-2 mt-0.5">
               <p className="text-[11px] text-zinc-400">Độ sâu 3 mức giá &bull; Dò tường lệnh Cá Mập</p>
@@ -318,8 +344,8 @@ export function OrderBook() {
 
           <div className="grid grid-cols-3 gap-2 text-center text-xs">
             <div className="p-2 rounded-xl bg-zinc-900/60 border border-zinc-800/60">
-              <span className="text-[10px] text-purple-400 font-bold block uppercase">Giá Trần</span>
-              <span className="font-black text-purple-400">
+              <span className="text-[10px] text-fuchsia-400 font-bold block uppercase">Giá Trần</span>
+              <span className="font-black text-fuchsia-400">
                 {currentTick.ceilingPrice ? formatPrice(currentTick.ceilingPrice) : '-'}
               </span>
             </div>

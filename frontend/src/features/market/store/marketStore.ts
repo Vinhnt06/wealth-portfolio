@@ -3,6 +3,15 @@ import { persist } from 'zustand/middleware';
 import { TickData, QuotesData, OHLCCandle, MarketIndexData, WsStatus } from '../types/dnse.types';
 import { isMarketTradingSession } from '../utils/marketHours';
 
+export interface LiveTradeTick {
+  id: string;
+  symbol: string;
+  price: number;
+  volume: number;
+  matchType: 'B' | 'S';
+  timestamp: number;
+}
+
 interface MarketState {
   // Connection state
   wsStatus: WsStatus;
@@ -24,6 +33,9 @@ interface MarketState {
   isQuickViewOpen: boolean;
   viewMode: 'overview' | 'detail' | 'screener' | 'rrg' | 'flow';
 
+  // Real-time live trade tick from WebSocket stream
+  lastTradeTick: LiveTradeTick | null;
+
   // Actions
   setWsStatus: (status: WsStatus) => void;
   setSelectedSymbol: (symbol: string) => void;
@@ -38,6 +50,7 @@ interface MarketState {
   toggleChartExpanded: () => void;
   updateTick: (tick: TickData) => void;
   updateTicks: (ticks: TickData[]) => void;
+  setLastTradeTick: (tick: LiveTradeTick | null) => void;
   updateQuotes: (quotes: QuotesData) => void;
   appendOHLC: (symbol: string, resolution: string, candle: OHLCCandle) => void;
   setOHLCHistory: (symbol: string, resolution: string, candles: OHLCCandle[]) => void;
@@ -86,6 +99,9 @@ export const useMarketStore = create<MarketState>()(
   quotes: {},
   ohlc: {},
   indexes: {},
+  lastTradeTick: null,
+
+  setLastTradeTick: (lastTradeTick) => set({ lastTradeTick }),
 
   updateTick: (tick) =>
     set((state) => {

@@ -28,6 +28,7 @@ import {
   Scales,
 } from '@phosphor-icons/react';
 import { useMarketStore } from '../store/marketStore';
+import { useDnseWebSocket } from '../hooks/useDnseWebSocket';
 import { MarketCandleChart } from './MarketCandleChart';
 import { OrderBook } from './OrderBook';
 import { InvestorFlowAnalysis } from './InvestorFlowAnalysis';
@@ -122,6 +123,7 @@ interface StockDetailSectionProps {
 }
 
 export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackToOverview }) => {
+  useDnseWebSocket();
   const { selectedSymbol, setSelectedSymbol, setSelectedIndexSymbol, ticks, watchlistSymbols, toggleWatchlistSymbol, updateTick, setViewMode } = useMarketStore();
   const [activeTab, setActiveTab] = useState<'profile' | 'shareholders' | 'officers' | 'financials' | 'foreign' | 'orderbook'>('profile');
   const [companyData, setCompanyData] = useState<CompanyData | null>(null);
