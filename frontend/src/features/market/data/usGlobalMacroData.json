@@ -1,7 +1,7 @@
 {
   "success": true,
-  "timestamp": "2026-11-06T07:53:57.172Z",
-  "updateTime": "14:53:56",
+  "timestamp": "2026-11-06T14:19:00.581Z",
+  "updateTime": "21:19:00",
   "indices": [
     {
       "symbol": "^GSPC",
@@ -37,9 +37,9 @@
       "symbol": "^TNX",
       "name": "US 10Y Yield",
       "category": "yield",
-      "price": 4.84,
-      "change": -0.06,
-      "changePercent": -1.17,
+      "price": 4.87,
+      "change": 0.03,
+      "changePercent": 0.6,
       "unit": "%",
       "note": "Lợi suất Trái phiếu Chính phủ Mỹ 10 năm"
     },
@@ -47,9 +47,9 @@
       "symbol": "DX-Y.NYB",
       "name": "DXY Index",
       "category": "currency",
-      "price": 101.94,
-      "change": 0.4,
-      "changePercent": 0.39,
+      "price": 102.27,
+      "change": 0.72,
+      "changePercent": 0.71,
       "unit": "pts",
       "note": "Chỉ số đo lường sức mạnh đồng USD"
     },
@@ -57,9 +57,9 @@
       "symbol": "^VIX",
       "name": "CBOE VIX",
       "category": "volatility",
-      "price": 28.18,
-      "change": 11.57,
-      "changePercent": 69.66,
+      "price": 26.75,
+      "change": -1.43,
+      "changePercent": -5.07,
       "unit": "pts",
       "note": "Thước đo mức độ biến động & sợ hãi toàn cầu"
     }
@@ -77,22 +77,22 @@
       "pillar": "Áp Lực Tỷ Giá USD/VND",
       "status": "Tích Cực",
       "statusColor": "emerald",
-      "headline": "DXY biến động quanh mức 101.94 điểm",
-      "detail": "Chỉ số DXY hạ nhiệt quanh 101.94 giúp thu hẹp chênh lệch USD-VND, giảm áp lực bán can thiệp ngoại tệ của NHNN và hạn chế rủi ro tỷ giá nhập khẩu."
+      "headline": "DXY biến động quanh mức 102.27 điểm",
+      "detail": "Chỉ số DXY hạ nhiệt quanh 102.27 giúp thu hẹp chênh lệch USD-VND, giảm áp lực bán can thiệp ngoại tệ của NHNN và hạn chế rủi ro tỷ giá nhập khẩu."
     },
     {
       "pillar": "Không Gian Lãi Suất NHNN",
       "status": "Tích Cực",
       "statusColor": "emerald",
       "headline": "Dư địa duy trì chính sách tiền tệ nới lỏng",
-      "detail": "Lợi suất TPCP Mỹ 10 năm ở mức 4.84% giúp Ngân hàng Nhà nước có thêm điều kiện duy trì mặt bằng lãi suất điều hành thấp (4.5%) nhằm kích cầu tín dụng hỗ trợ tăng trưởng kinh tế."
+      "detail": "Lợi suất TPCP Mỹ 10 năm ở mức 4.87% giúp Ngân hàng Nhà nước có thêm điều kiện duy trì mặt bằng lãi suất điều hành thấp (4.5%) nhằm kích cầu tín dụng hỗ trợ tăng trưởng kinh tế."
     },
     {
       "pillar": "Dòng Vốn Khối Ngoại (FII)",
       "status": "Thận Trọng",
       "statusColor": "rose",
       "headline": "Xu hướng dòng vốn ngoại trên TTCK",
-      "detail": "Lợi suất trái phiếu chính phủ Mỹ 10 năm (4.84%) và chỉ số VIX (28.18 điểm) phản ánh khẩu vị rủi ro toàn cầu đang trong tầm kiểm soát (Rủi ro cao), tạo điều kiện cân bằng dòng vốn ngoại trên HOSE/HNX."
+      "detail": "Lợi suất trái phiếu chính phủ Mỹ 10 năm (4.87%) và chỉ số VIX (26.75 điểm) phản ánh khẩu vị rủi ro toàn cầu đang trong tầm kiểm soát (Rủi ro cao), tạo điều kiện cân bằng dòng vốn ngoại trên HOSE/HNX."
     }
   ]
 }
