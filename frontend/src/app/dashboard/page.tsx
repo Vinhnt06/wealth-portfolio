@@ -103,13 +103,13 @@ export default function DashboardPage() {
               <h1 className="font-mono text-sm font-bold uppercase tracking-wider text-zinc-100">
                 TERMINAL INTELLIGENCE & MARKET VALUATION
               </h1>
-              <span className="px-2 py-0.5 text-[10px] font-mono font-bold text-amber-400 border border-amber-500/30 bg-amber-500/10 rounded flex items-center gap-1">
+              <span className="px-2 py-0.5 text-[10px] font-mono font-bold text-emerald-400 border border-emerald-500/30 bg-emerald-500/10 rounded flex items-center gap-1">
                 <ShieldCheck className="w-3 h-3" />
-                HỆ THỐNG DỮ LIỆU CHÍNH THỨC 100%
+                DỮ LIỆU THỊ TRƯỜNG THỰC TẾ
               </span>
             </div>
             <p className="text-xs text-zinc-400">
-              Hệ thống giám sát dòng tiền thực, định giá P/E, P/B, PEG Peter Lynch, biểu lãi suất ngân hàng và vĩ mô tích hợp.
+              Hệ thống giám sát dòng tiền thực, định giá P/E, P/B, PEG Peter Lynch, biểu lãi suất ngân hàng và vĩ mô tích hợp từ nguồn thị trường.
             </p>
           </div>
 

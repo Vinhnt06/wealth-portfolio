@@ -30,6 +30,7 @@ export interface TradesResponseData {
   thresholds: {
     sharkMin: number;
     wolfMin: number;
+    megaWhaleMin?: number;
     description: string;
   };
   summary: {
@@ -37,6 +38,14 @@ export interface TradesResponseData {
     sharkNetVol: number;
     wolfNetVol: number;
     sheepNetVol: number;
+    sharkBuyVal?: number;
+    sharkSellVal?: number;
+    sharkNetVal?: number;
+    sharkBuyCount?: number;
+    sharkSellCount?: number;
+    wolfBuyVal?: number;
+    wolfSellVal?: number;
+    wolfNetVal?: number;
   };
   buy: {
     totalVolume: number;
@@ -62,7 +71,7 @@ const CACHE_TTL_MS = 5 * 1000; // 5s cache
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const symbol = (searchParams.get('symbol') || 'HPG').toUpperCase().trim();
-  const limitParam = Math.min(500, Math.max(50, Number(searchParams.get('limit') || 300)));
+  const limitParam = Math.min(500, Math.max(50, Number(searchParams.get('limit') || 500)));
 
   // 1. Check cache
   const cached = memoryCache.get(symbol);
@@ -252,6 +261,7 @@ export async function GET(req: NextRequest) {
       thresholds: {
         sharkMin: SHARK_MIN_VALUE,
         wolfMin: WOLF_MIN_VALUE,
+        megaWhaleMin: 3_000_000_000,
         description: 'Cá mập >= 1 Tỷ | Sói già >= 500Tr | Cừu non < 500Tr',
       },
       summary: {
@@ -259,6 +269,14 @@ export async function GET(req: NextRequest) {
         sharkNetVol,
         wolfNetVol,
         sheepNetVol,
+        sharkBuyVal,
+        sharkSellVal,
+        sharkNetVal: sharkBuyVal - sharkSellVal,
+        sharkBuyCount,
+        sharkSellCount,
+        wolfBuyVal,
+        wolfSellVal,
+        wolfNetVal: wolfBuyVal - wolfSellVal,
       },
       buy: {
         totalVolume: totalBuyVolume,
@@ -304,7 +322,7 @@ export async function GET(req: NextRequest) {
           pct: Number(((sheepSellVol / sellBase) * 100).toFixed(2)),
         },
       },
-      trades: trades.slice(0, 100), // top 100 most recent trades
+      trades: trades.slice(0, 300), // top 300 most recent trades for high-depth whale filtering
       timestamp: Date.now(),
     };
 

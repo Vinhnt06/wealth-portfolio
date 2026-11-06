@@ -88,6 +88,8 @@ import {
 } from '../utils/superTrend';
 import { SuperTrendStrategyModal } from './SuperTrendStrategyModal';
 import { RSTemplateSubChart } from './RSTemplateSubChart';
+import { GeneralEvaluationSubChart, SynchronizedCrosshairData } from './GeneralEvaluationSubChart';
+import { calculateKAMA } from '../utils/generalEvaluationIndicators';
 import stockDatabase from '../data/stockDatabase.json';
 import { getStockPriceColor } from '../utils/priceColors';
 import { VN_MARKET_INDEXES, isMarketIndex, getMarketIndexMeta } from '../constants/marketIndexes';
@@ -603,7 +605,7 @@ export function calculateTrendlinePro(candles: CandlestickData<Time>[]): Trendli
 }
 
 // ── Technical Indicator Calculations (RSI, MACD, MFI, OBV, RS Templates) ──────────
-export type SubIndicatorType = 'none' | 'rsi' | 'macd' | 'mfi' | 'obv' | 'rs_template' | 'rs_line' | 'mansfield' | 'oneil';
+export type SubIndicatorType = 'none' | 'rsi' | 'macd' | 'mfi' | 'obv' | 'rs_template' | 'rs_line' | 'mansfield' | 'oneil' | 'general_template' | 'vortex' | 'ao';
 
 export interface RSIPoint {
   index: number;
@@ -1209,6 +1211,7 @@ export function MarketCandleChart() {
   const stUpSeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
   const stDownSeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
   const kamaSeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
+  const generalKamaSeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
   const stMarkersPluginRef = useRef<ISeriesMarkersPluginApi<Time> | null>(null);
   const stPriceLinesRef = useRef<IPriceLine[]>([]);
   const lastCandleRef = useRef<{ time: Time; open: number; high: number; low: number; close: number } | null>(null);
@@ -1224,6 +1227,7 @@ export function MarketCandleChart() {
     ma233: LineData<Time>[];
     bbUpper: LineData<Time>[];
     bbLower: LineData<Time>[];
+    kama3060?: LineData<Time>[];
     proData: TrendlineProResult | null;
     timestamp: number;
   }>>(new Map());
@@ -1257,8 +1261,12 @@ export function MarketCandleChart() {
   const [showMA233, setShowMA233] = useState(true);
   const [showBB, setShowBB] = useState(false);
   const [showVolume, setShowVolume] = useState(true);
+  const [showKAMA3060, setShowKAMA3060] = useState(false);
+  const [activeKAMA3060, setActiveKAMA3060] = useState<number | undefined>(undefined);
+  const [generalCrosshairData, setGeneralCrosshairData] = useState<SynchronizedCrosshairData | null>(null);
+  const [compactMode, setCompactMode] = useState(false);
 
-  // Sub-Chart Indicators (RSI, MACD, MFI, OBV)
+  // Sub-Chart Indicators (RSI, MACD, MFI, OBV, General Template)
   const [activeSubIndicator, setActiveSubIndicator] = useState<SubIndicatorType>('none');
   const [subIndicatorValues, setSubIndicatorValues] = useState<{
     rsi?: number;
@@ -2796,6 +2804,8 @@ export function MarketCandleChart() {
       const fanLabels: FibFanLabelItem[] = [];
 
       allRatios.forEach((r) => {
+        // Compact mode: keep only the key Fib levels to reduce clutter
+        if (compactMode && r !== 0.618 && r !== 1.618) return;
         // Price at current candle and start anchor evaluated directly from linear formula
         const pCurrent = getFibRayPrice(lastCandleIdx, r);
         const pStart = getFibRayPrice(startChannelIdx, r);
@@ -2971,12 +2981,18 @@ export function MarketCandleChart() {
       });
 
       // ── 8. Right Margin Badges (Kháng cự, Hỗ trợ, Fib 0,618, Fib 1,618) as in Reference Image 2 ──
-      const rightBadgeX = w - 75;
+      // Keep pills inside the plot area, left of the price axis, so axis numbers stay readable
+      let priceAxisW = 70;
+      try {
+        const aw = chartRef.current?.priceScale('right').width();
+        if (aw && aw > 0) priceAxisW = aw;
+      } catch {}
       const badgeW = 68;
+      const rightBadgeX = w - priceAxisW - badgeW - 8;
       const badgeH = 18;
 
       // 8a. Kháng cự Pill (Dark Charcoal Pill with White text & subtle border)
-      if (yResEnd !== null && yResEnd >= 15 && yResEnd <= h - 15) {
+      if (!compactMode && yResEnd !== null && yResEnd >= 15 && yResEnd <= h - 15) {
         ctx.fillStyle = 'rgba(19, 23, 34, 0.95)';
         ctx.strokeStyle = 'rgba(132, 204, 22, 0.6)';
         ctx.lineWidth = 1;
@@ -2993,7 +3009,7 @@ export function MarketCandleChart() {
       }
 
       // 8b. Hỗ trợ Pill (Vibrant Red Pill with White Bold text)
-      if (ySupEnd !== null && ySupEnd >= 15 && ySupEnd <= h - 15) {
+      if (!compactMode && ySupEnd !== null && ySupEnd >= 15 && ySupEnd <= h - 15) {
         ctx.fillStyle = '#ef4444';
         ctx.strokeStyle = '#f87171';
         ctx.lineWidth = 1;
@@ -3011,7 +3027,7 @@ export function MarketCandleChart() {
 
       // 8c. Fib 0,618 Pill
       const yFib0618 = series.priceToCoordinate(trendlineProData.fib0618);
-      if (yFib0618 !== null && yFib0618 >= 15 && yFib0618 <= h - 15) {
+      if (!compactMode && yFib0618 !== null && yFib0618 >= 15 && yFib0618 <= h - 15) {
         ctx.fillStyle = 'rgba(19, 23, 34, 0.95)';
         ctx.strokeStyle = 'rgba(250, 204, 21, 0.6)';
         ctx.lineWidth = 1;
@@ -3029,7 +3045,7 @@ export function MarketCandleChart() {
 
       // 8d. Fib 1,618 Pill
       const yFib1618 = series.priceToCoordinate(trendlineProData.fib1618);
-      if (yFib1618 !== null && yFib1618 >= 15 && yFib1618 <= h - 15) {
+      if (!compactMode && yFib1618 !== null && yFib1618 >= 15 && yFib1618 <= h - 15) {
         ctx.fillStyle = 'rgba(19, 23, 34, 0.95)';
         ctx.strokeStyle = 'rgba(56, 189, 248, 0.6)';
         ctx.lineWidth = 1;
@@ -3321,7 +3337,7 @@ export function MarketCandleChart() {
     }
 
     ctx.restore();
-  }, [drawings, draftDrawing, showTrendlinePro, trendlineProData, hideDrawings, isMagnetMode, hoverSnapPoint, activeTool, selectedDrawingId, fiboSettings, fiboPeriods, showVolumeProfile, volumeProfileData, volumeProfileSettings, showSuperTrend, superTrendResult, activeSubIndicator, reversalDivergenceResult]);
+  }, [drawings, draftDrawing, showTrendlinePro, trendlineProData, hideDrawings, isMagnetMode, hoverSnapPoint, activeTool, selectedDrawingId, fiboSettings, fiboPeriods, showVolumeProfile, volumeProfileData, volumeProfileSettings, showSuperTrend, superTrendResult, activeSubIndicator, reversalDivergenceResult, compactMode]);
 
   // Keep decoupled ref for chart and window callbacks
   redrawCanvasRef.current = redrawCanvas;
@@ -3478,7 +3494,7 @@ export function MarketCandleChart() {
       lineWidth: 1,
       priceFormat: { type: 'volume' },
       priceScaleId: 'volume',
-      title: 'Vol MA 20',
+      title: '',
       visible: showVolume,
       priceLineVisible: false,
       lastValueVisible: false,
@@ -3489,7 +3505,7 @@ export function MarketCandleChart() {
       color: '#38bdf8',
       lineWidth: 1,
       priceFormat: { type: 'price', precision: 2, minMove: 0.05 },
-      title: 'MA8',
+      title: '',
       visible: showMA8,
       priceLineVisible: false,
       lastValueVisible: false,
@@ -3500,7 +3516,7 @@ export function MarketCandleChart() {
       color: '#facc15',
       lineWidth: 1,
       priceFormat: { type: 'price', precision: 2, minMove: 0.05 },
-      title: 'MA21',
+      title: '',
       visible: showMA21,
       priceLineVisible: false,
       lastValueVisible: false,
@@ -3511,7 +3527,7 @@ export function MarketCandleChart() {
       color: '#f97316',
       lineWidth: 2,
       priceFormat: { type: 'price', precision: 2, minMove: 0.05 },
-      title: 'MA144',
+      title: '',
       visible: showMA144,
       priceLineVisible: false,
       lastValueVisible: false,
@@ -3522,7 +3538,7 @@ export function MarketCandleChart() {
       color: '#ef4444',
       lineWidth: 2,
       priceFormat: { type: 'price', precision: 2, minMove: 0.05 },
-      title: 'MA233',
+      title: '',
       visible: showMA233,
       priceLineVisible: false,
       lastValueVisible: false,
@@ -3533,7 +3549,7 @@ export function MarketCandleChart() {
       color: 'rgba(168, 85, 247, 0.7)',
       lineWidth: 1,
       priceFormat: { type: 'price', precision: 2, minMove: 0.05 },
-      title: 'BB Upper',
+      title: '',
       visible: showBB,
       priceLineVisible: false,
       lastValueVisible: false,
@@ -3544,7 +3560,7 @@ export function MarketCandleChart() {
       color: 'rgba(168, 85, 247, 0.7)',
       lineWidth: 1,
       priceFormat: { type: 'price', precision: 2, minMove: 0.05 },
-      title: 'BB Lower',
+      title: '',
       visible: showBB,
       priceLineVisible: false,
       lastValueVisible: false,
@@ -3556,7 +3572,7 @@ export function MarketCandleChart() {
       color: '#10b981',
       lineWidth: 2,
       priceFormat: { type: 'price', precision: 2, minMove: 0.05 },
-      title: 'ST Up',
+      title: '',
       visible: showSuperTrend,
       priceLineVisible: false,
       lastValueVisible: false,
@@ -3567,7 +3583,7 @@ export function MarketCandleChart() {
       color: '#f43f5e',
       lineWidth: 2,
       priceFormat: { type: 'price', precision: 2, minMove: 0.05 },
-      title: 'ST Down',
+      title: '',
       visible: showSuperTrend,
       priceLineVisible: false,
       lastValueVisible: false,
@@ -3578,12 +3594,24 @@ export function MarketCandleChart() {
       color: '#eab308',
       lineWidth: 1,
       priceFormat: { type: 'price', precision: 2, minMove: 0.05 },
-      title: 'KAMA',
+      title: '',
       visible: showSuperTrend,
       priceLineVisible: false,
       lastValueVisible: false,
     });
     kamaSeriesRef.current = kamaSeries;
+
+    const generalKamaSeries = chart.addSeries(LineSeries, {
+      color: '#10b981',
+      lineWidth: 2,
+      priceFormat: { type: 'price', precision: 2, minMove: 0.05 },
+      title: '',
+      visible: showKAMA3060 || activeSubIndicator === 'general_template',
+      priceLineVisible: false,
+      lastValueVisible: false,
+      priceLineColor: '#10b981',
+    });
+    generalKamaSeriesRef.current = generalKamaSeries;
 
     try {
       const markersPlugin = createSeriesMarkers(candlestickSeries, []);
@@ -3993,12 +4021,19 @@ export function MarketCandleChart() {
       stUpSeriesRef.current = null;
       stDownSeriesRef.current = null;
       kamaSeriesRef.current = null;
+      generalKamaSeriesRef.current = null;
       stMarkersPluginRef.current = null;
       stPriceLinesRef.current = [];
     };
   }, [updateCanvasSize]);
 
   // ── 2. Toggle Indicators instantly without re-fetching data ──────────────
+  useEffect(() => {
+    generalKamaSeriesRef.current?.applyOptions({
+      visible: showKAMA3060 || activeSubIndicator === 'general_template',
+    });
+  }, [showKAMA3060, activeSubIndicator]);
+
   useEffect(() => {
     ma8SeriesRef.current?.applyOptions({ visible: showMA8 });
   }, [showMA8]);
@@ -4077,6 +4112,7 @@ export function MarketCandleChart() {
     const ma233Series = ma233SeriesRef.current;
     const bbUpperSeries = bbUpperSeriesRef.current;
     const bbLowerSeries = bbLowerSeriesRef.current;
+    const generalKamaSeries = generalKamaSeriesRef.current;
 
     if (!chart || !candlestickSeries || !volumeSeries) return;
 
@@ -4101,6 +4137,11 @@ export function MarketCandleChart() {
       ma233Series?.setData(cached.ma233);
       bbUpperSeries?.setData(cached.bbUpper);
       bbLowerSeries?.setData(cached.bbLower);
+      const cachedKama = cached.kama3060 || calculateKAMA(cached.candles, 30, 2, 60);
+      generalKamaSeries?.setData(cachedKama);
+      if (cachedKama.length > 0) {
+        setActiveKAMA3060(cachedKama[cachedKama.length - 1]?.value);
+      }
       loadedCandlesRef.current = cached.candles;
       loadedVolumesRef.current = cached.volumes;
       setDataVersion((v) => v + 1);
@@ -4217,6 +4258,8 @@ export function MarketCandleChart() {
           }
         }
 
+        const realKama3060 = calculateKAMA(uniqueCandles, 30, 2, 60);
+
         // Cache the processed dataset
         candleCacheRef.current.set(cacheKey, {
           candles: uniqueCandles,
@@ -4228,6 +4271,7 @@ export function MarketCandleChart() {
           ma233: realMa233,
           bbUpper: bbUpperData,
           bbLower: bbLowerData,
+          kama3060: realKama3060,
           proData,
           timestamp: Date.now(),
         });
@@ -4242,6 +4286,10 @@ export function MarketCandleChart() {
           ma233Series?.setData(realMa233);
           bbUpperSeries?.setData(bbUpperData);
           bbLowerSeries?.setData(bbLowerData);
+          generalKamaSeries?.setData(realKama3060);
+          if (realKama3060.length > 0) {
+            setActiveKAMA3060(realKama3060[realKama3060.length - 1]?.value);
+          }
           setLatestMA({
             ma8: realMa8.length > 0 ? realMa8[realMa8.length - 1]?.value : undefined,
             ma21: realMa21.length > 0 ? realMa21[realMa21.length - 1]?.value : undefined,
@@ -4544,7 +4592,10 @@ export function MarketCandleChart() {
       activeSubIndicator === 'rs_template' ||
       activeSubIndicator === 'rs_line' ||
       activeSubIndicator === 'mansfield' ||
-      activeSubIndicator === 'oneil'
+      activeSubIndicator === 'oneil' ||
+      activeSubIndicator === 'general_template' ||
+      activeSubIndicator === 'vortex' ||
+      activeSubIndicator === 'ao'
     ) {
       if (subChartRef.current) {
         subChartRef.current.remove();
@@ -5429,7 +5480,9 @@ export function MarketCandleChart() {
   const activeMA233 = hoveredData?.ma233 !== undefined ? hoveredData.ma233 : latestMA.ma233;
   const activeVolMa20 = hoveredData?.volMa20 !== undefined ? hoveredData.volMa20 : latestMA.volMa20;
 
-  const isFullSuiteActive = activeSubIndicator === 'rs_template' && !isSubChartCollapsed;
+  const isFullSuiteActive =
+    (activeSubIndicator === 'rs_template' || activeSubIndicator === 'general_template') &&
+    !isSubChartCollapsed;
   const isSingleSubActive =
     (activeSubIndicator === 'rsi' ||
       activeSubIndicator === 'macd' ||
@@ -5437,13 +5490,15 @@ export function MarketCandleChart() {
       activeSubIndicator === 'obv' ||
       activeSubIndicator === 'rs_line' ||
       activeSubIndicator === 'mansfield' ||
-      activeSubIndicator === 'oneil') &&
+      activeSubIndicator === 'oneil' ||
+      activeSubIndicator === 'vortex' ||
+      activeSubIndicator === 'ao') &&
     !isSubChartCollapsed;
 
   const containerHeightClass = isExpanded
     ? 'fixed inset-0 z-[999999] w-screen h-screen rounded-none p-2 sm:p-3 shadow-2xl !bg-[#0c0d14]'
     : isFullSuiteActive
-    ? 'bg-zinc-950 w-full h-[780px] lg:h-[830px] rounded-2xl shadow-xl overflow-hidden'
+    ? 'bg-zinc-950 w-full h-[820px] lg:h-[880px] rounded-2xl shadow-xl overflow-hidden'
     : isSingleSubActive
     ? 'bg-zinc-950 w-full h-[680px] lg:h-[720px] rounded-2xl shadow-xl overflow-hidden'
     : 'bg-zinc-950 w-full h-[560px] lg:h-[600px] rounded-2xl shadow-xl overflow-hidden';
@@ -5597,16 +5652,16 @@ export function MarketCandleChart() {
               }}
               title="Danh mục các chỉ báo kỹ thuật (Indicators)"
               className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-mono font-semibold border rounded-lg whitespace-nowrap transition-all shadow-sm ${
-                (activeSubIndicator !== 'none' && activeSubIndicator !== 'rs_template') || showMA8 || showMA21 || showMA144 || showMA233 || showBB || showTrendlinePro || showVolumeProfile
+                (activeSubIndicator !== 'none' && activeSubIndicator !== 'rs_template' && activeSubIndicator !== 'general_template') || showMA8 || showMA21 || showMA144 || showMA233 || showBB || showTrendlinePro || showVolumeProfile
                   ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300 ring-1 ring-emerald-500/20'
                   : 'bg-zinc-900/90 border-zinc-800 hover:border-zinc-700 text-zinc-200'
               }`}
             >
-              <FxIcon size={14} className={(activeSubIndicator !== 'none' && activeSubIndicator !== 'rs_template') || showSuperTrend || showMA8 || showMA21 || showMA144 || showMA233 || showBB || fiboSettings.enabled || showTrendlinePro || showVolumeProfile ? 'text-emerald-400 shrink-0' : 'text-zinc-400 shrink-0'} />
+              <FxIcon size={14} className={(activeSubIndicator !== 'none' && activeSubIndicator !== 'rs_template' && activeSubIndicator !== 'general_template') || showSuperTrend || showMA8 || showMA21 || showMA144 || showMA233 || showBB || fiboSettings.enabled || showTrendlinePro || showVolumeProfile ? 'text-emerald-400 shrink-0' : 'text-zinc-400 shrink-0'} />
               <span>Chỉ báo</span>
-              {(activeSubIndicator !== 'none' && activeSubIndicator !== 'rs_template') ? (
+              {(activeSubIndicator !== 'none' && activeSubIndicator !== 'rs_template' && activeSubIndicator !== 'general_template') ? (
                 <span className="text-[9px] uppercase font-bold bg-emerald-500/20 text-emerald-300 px-1.5 py-0.2 rounded border border-emerald-500/30">
-                  {activeSubIndicator === 'rs_line' ? 'RS Line' : activeSubIndicator === 'mansfield' ? 'Mansfield' : activeSubIndicator === 'oneil' ? 'O\'Neil RS' : activeSubIndicator}
+                  {activeSubIndicator === 'rs_line' ? 'RS Line' : activeSubIndicator === 'mansfield' ? 'Mansfield' : activeSubIndicator === 'oneil' ? 'O\'Neil RS' : activeSubIndicator === 'vortex' ? 'Vortex' : activeSubIndicator === 'ao' ? 'AO' : activeSubIndicator}
                 </span>
               ) : (
                 <span className="text-[10px] text-zinc-500 font-mono">
@@ -6027,6 +6082,36 @@ export function MarketCandleChart() {
                         {activeSubIndicator === 'obv' ? 'BẬT' : 'TẮT'}
                       </span>
                     </button>
+
+                    {/* Vortex Indicator */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveSubIndicator(activeSubIndicator === 'vortex' ? 'none' : 'vortex');
+                        setIsSubChartCollapsed(false);
+                      }}
+                      className="flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-mono text-zinc-200 hover:bg-zinc-800/70 transition-all border border-transparent hover:border-zinc-800"
+                    >
+                      <span className="font-semibold text-zinc-200">Vortex (VI+, VI-)</span>
+                      <span className={`text-[10px] px-2 py-0.5 rounded font-bold transition-colors ${activeSubIndicator === 'vortex' ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'bg-zinc-800/60 text-zinc-500'}`}>
+                        {activeSubIndicator === 'vortex' ? 'BẬT' : 'TẮT'}
+                      </span>
+                    </button>
+
+                    {/* Awesome Oscillator */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveSubIndicator(activeSubIndicator === 'ao' ? 'none' : 'ao');
+                        setIsSubChartCollapsed(false);
+                      }}
+                      className="flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-mono text-zinc-200 hover:bg-zinc-800/70 transition-all border border-transparent hover:border-zinc-800"
+                    >
+                      <span className="font-semibold text-zinc-200">Awesome Oscillator (AO)</span>
+                      <span className={`text-[10px] px-2 py-0.5 rounded font-bold transition-colors ${activeSubIndicator === 'ao' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-zinc-800/60 text-zinc-500'}`}>
+                        {activeSubIndicator === 'ao' ? 'BẬT' : 'TẮT'}
+                      </span>
+                    </button>
                   </div>
                 </div>
               </>
@@ -6045,12 +6130,16 @@ export function MarketCandleChart() {
               className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-mono font-semibold border rounded-lg whitespace-nowrap transition-all shadow-sm ${
                 activeSubIndicator === 'rs_template'
                   ? 'bg-amber-500/15 border-amber-500/40 text-amber-300 ring-1 ring-amber-500/20'
+                  : activeSubIndicator === 'general_template'
+                  ? 'bg-cyan-500/15 border-cyan-500/40 text-cyan-300 ring-1 ring-cyan-500/20'
                   : 'bg-zinc-900/90 border-zinc-800 hover:border-zinc-700 text-zinc-200'
               }`}
             >
               <span>
                 {activeSubIndicator === 'rs_template'
                   ? 'Template RS (3-in-1)'
+                  : activeSubIndicator === 'general_template'
+                  ? 'Template Đánh Giá Chung'
                   : 'Bộ Template'}
               </span>
               <CaretDown size={11} className={`text-zinc-400 transition-transform ${showTemplatesModal ? 'rotate-180' : ''}`} />
@@ -6083,6 +6172,34 @@ export function MarketCandleChart() {
                   </div>
 
                   <div className="flex flex-col gap-1">
+                    {/* Preset 0: Template Đánh Giá Chung (KAMA + Vortex + MACD + AO + RSI) */}
+                    <button
+                      onClick={() => {
+                        const nextState = activeSubIndicator === 'general_template' ? 'none' : 'general_template';
+                        setActiveSubIndicator(nextState);
+                        setShowKAMA3060(nextState === 'general_template');
+                        setIsSubChartCollapsed(false);
+                        setShowTemplatesModal(false);
+                      }}
+                      className={`flex items-center justify-between px-2.5 py-2 rounded-lg text-left font-mono transition-all border ${
+                        activeSubIndicator === 'general_template'
+                          ? 'bg-cyan-500/15 border-cyan-500/50 text-cyan-200 shadow-sm'
+                          : 'bg-zinc-950/60 border-zinc-800 hover:bg-zinc-800/80 hover:border-cyan-500/30 text-zinc-200'
+                      }`}
+                    >
+                      <div className="flex flex-col">
+                        <span className="font-semibold text-xs text-zinc-100 flex items-center gap-1.5">
+                          <Sparkle size={13} className="text-cyan-400" weight="fill" />
+                          Template Đánh Giá Chung (5-in-1)
+                        </span>
+                        <span className="text-[10px] text-zinc-400">KAMA 30,60 + Vortex + MACD + AO + RSI</span>
+                      </div>
+                      <span className={`text-[10px] px-2 py-0.5 rounded font-bold ml-2 shrink-0 ${
+                        activeSubIndicator === 'general_template' ? 'bg-cyan-500 text-zinc-950' : 'bg-zinc-800 text-zinc-500'
+                      }`}>
+                        {activeSubIndicator === 'general_template' ? 'BẬT' : 'TẮT'}
+                      </span>
+                    </button>
                     {/* Preset 1: Full 3-in-1 Suite */}
                     <button
                       onClick={() => {
@@ -6605,6 +6722,84 @@ export function MarketCandleChart() {
               }`}
             />
 
+            {/* ── Synchronized Vertical Crosshair Guideline across Main Candle Chart ── */}
+            {activeSubIndicator === 'general_template' && generalCrosshairData?.x !== null && generalCrosshairData?.x !== undefined && (
+              <svg className="absolute inset-0 w-full h-full pointer-events-none z-20" style={{ overflow: 'visible' }}>
+                <line
+                  x1={generalCrosshairData.x}
+                  y1={0}
+                  x2={generalCrosshairData.x}
+                  y2="100%"
+                  stroke="rgba(255, 255, 255, 0.45)"
+                  strokeWidth={1}
+                  strokeDasharray="3 3"
+                />
+                {generalKamaSeriesRef.current && generalCrosshairData.kamaVal !== undefined && (() => {
+                  try {
+                    const yKama = generalKamaSeriesRef.current.priceToCoordinate(generalCrosshairData.kamaVal);
+                    if (yKama !== null && !isNaN(yKama)) {
+                      return (
+                        <g>
+                          <circle cx={generalCrosshairData.x} cy={yKama} r={5} fill="#10b981" opacity={0.3} />
+                          <circle cx={generalCrosshairData.x} cy={yKama} r={3} fill="#10b981" stroke="#ffffff" strokeWidth={1} />
+                        </g>
+                      );
+                    }
+                  } catch {}
+                  return null;
+                })()}
+              </svg>
+            )}
+
+            {/* ── Compact Mode Toggle (hides minor Fib rays & S/R pills) ── */}
+            {(showTrendlinePro || activeSubIndicator === 'general_template') && (
+              <button
+                id="chart-compact-toggle"
+                type="button"
+                onClick={() => setCompactMode((v) => !v)}
+                title="Chế độ Gọn: chỉ giữ Fib 0.618 / 1.618, ẩn các nhãn S/R"
+                className={`absolute bottom-8 left-3 z-30 px-2 py-0.5 rounded-md border font-mono text-[10px] font-bold select-none transition-colors ${
+                  compactMode
+                    ? 'bg-emerald-500/15 border-emerald-500/50 text-emerald-300'
+                    : 'bg-zinc-900/85 border-zinc-700 text-zinc-400 hover:text-zinc-200'
+                }`}
+              >
+                {compactMode ? '◉ Gọn' : '○ Gọn'}
+              </button>
+            )}
+
+            {/* ── Combined Hover Tooltip: KAMA • Vortex • MACD • AO • RSI at hovered candle ── */}
+            {activeSubIndicator === 'general_template' &&
+              generalCrosshairData?.x !== null &&
+              generalCrosshairData?.x !== undefined && (() => {
+                const g = generalCrosshairData;
+                const gx = g.x as number;
+                const cw = chartContainerRef.current?.clientWidth ?? 0;
+                const left = cw > 0 && gx > cw / 2 ? gx - 204 : gx + 14;
+                const f = (v?: number) => (v === undefined ? '--' : v.toFixed(2));
+                const up = 'text-emerald-400';
+                const down = 'text-rose-400';
+                const viBull = g.viPlusVal !== undefined && g.viMinusVal !== undefined && g.viPlusVal > g.viMinusVal;
+                const macdBull = g.macdVal !== undefined && g.signalVal !== undefined && g.macdVal > g.signalVal;
+                const aoBull = (g.aoVal ?? 0) >= 0;
+                const rsi = g.rsiVal;
+                const rsiZone = rsi === undefined ? '' : rsi >= 70 ? 'Quá mua' : rsi <= 30 ? 'Quá bán' : rsi >= 50 ? 'Mạnh' : 'Yếu';
+                const rsiColor = rsi === undefined ? 'text-zinc-400' : rsi >= 70 ? down : rsi <= 30 ? up : rsi >= 50 ? up : 'text-amber-300';
+                return (
+                  <div
+                    className="absolute top-10 z-30 w-[190px] pointer-events-none rounded-lg border border-zinc-700/80 bg-[#09090b]/92 backdrop-blur-md px-2.5 py-2 font-mono text-[10.5px] shadow-xl"
+                    style={{ left: Math.max(4, left) }}
+                  >
+                    <div className="text-zinc-400 font-bold mb-1">{g.dateStr}</div>
+                    <div className="flex justify-between"><span className="text-emerald-400">KAMA 30,60</span><span className="text-zinc-100">{f(g.kamaVal)}</span></div>
+                    <div className="flex justify-between"><span className={viBull ? up : down}>Vortex {viBull ? '▲' : '▼'}</span><span className="text-zinc-100">{f(g.viPlusVal)} / {f(g.viMinusVal)}</span></div>
+                    <div className="flex justify-between"><span className={macdBull ? up : down}>MACD {macdBull ? '▲' : '▼'}</span><span className="text-zinc-100">{f(g.macdVal)} / {f(g.signalVal)}</span></div>
+                    <div className="flex justify-between"><span className={aoBull ? up : down}>AO {aoBull ? '▲' : '▼'}</span><span className="text-zinc-100">{f(g.aoVal)}</span></div>
+                    <div className="flex justify-between"><span className={rsiColor}>RSI {rsiZone}</span><span className="text-zinc-100">{f(rsi)}</span></div>
+                  </div>
+                );
+              })()}
+
             {/* Loading Overlay */}
             {isLoading && (
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-950/80 backdrop-blur-sm z-30">
@@ -6720,6 +6915,21 @@ export function MarketCandleChart() {
                           MA233: {activeMA233.toFixed(2).replace('.', ',')}
                         </span>
                       )}
+                    </div>
+                  )}
+
+                  {/* Row 3.2: KAMA 30,60 Legend HUD (Matching User Screenshot) */}
+                  {(showKAMA3060 || activeSubIndicator === 'general_template') && (
+                    <div className="flex items-center gap-1.5 flex-wrap text-[11px] font-mono select-none py-0.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block shadow-[0_0_8px_rgba(16,185,129,0.7)]" />
+                      <span className="font-bold text-emerald-400">KAMA 30,60</span>
+                      <span className="text-zinc-100 font-bold">
+                        {generalCrosshairData?.kamaVal !== undefined
+                          ? generalCrosshairData.kamaVal.toFixed(2)
+                          : activeKAMA3060 !== undefined
+                          ? activeKAMA3060.toFixed(2)
+                          : '--'}
+                      </span>
                     </div>
                   )}
 
@@ -6894,6 +7104,27 @@ export function MarketCandleChart() {
                   ? 'oneil'
                   : 'all'
               }
+            />
+          )}
+
+          {/* General Evaluation Sub Chart (Supports 4-in-1 Suite and Single Panes: Vortex, MACD, AO, RSI) */}
+          {(activeSubIndicator === 'general_template' ||
+            activeSubIndicator === 'vortex' ||
+            activeSubIndicator === 'ao') && (
+            <GeneralEvaluationSubChart
+              stockCandles={loadedCandlesRef.current}
+              volumes={loadedVolumesRef.current}
+              mainChart={chartRef.current}
+              onClose={() => setActiveSubIndicator('none')}
+              selectedSymbol={selectedSymbol}
+              initialView={
+                activeSubIndicator === 'vortex'
+                  ? 'vortex'
+                  : activeSubIndicator === 'ao'
+                  ? 'ao'
+                  : 'all'
+              }
+              onCrosshairChange={setGeneralCrosshairData}
             />
           )}
 

@@ -304,6 +304,9 @@ export async function GET(request: Request) {
       actionAdvice = 'chờ quá trình thắt chặt biên độ nền giá VCP';
     }
 
+    const priorLows = lows.slice(Math.max(0, count - 40), Math.max(0, count - 10));
+    const priorBaseLow = priorLows.length > 0 ? Math.min(...priorLows) : null;
+
     const wyckoffCriteria = [
       {
         id: 1,
@@ -337,9 +340,10 @@ export async function GET(request: Request) {
       },
       {
         id: 6,
-        label: 'Không vi phạm đáy rũ bỏ Spring',
-        passed: currentPrice >= last40Low,
-        value: `Đáy ${formatK(last40Low)}`,
+        label: 'Không vi phạm đáy nền (10 phiên gần nhất)',
+        // Đáy nền = đáy thấp nhất của các phiên TRƯỚC 10 phiên gần nhất (không tự so với chính mình)
+        passed: priorBaseLow !== null && closes.slice(count - 10).every((c) => c >= priorBaseLow),
+        value: priorBaseLow !== null ? `Đáy nền ${formatK(priorBaseLow)}` : 'Chưa đủ dữ liệu',
       },
       {
         id: 7,
@@ -358,17 +362,22 @@ export async function GET(request: Request) {
     const wyckoffPassedCount = wyckoffCriteria.filter((c) => c.passed).length;
 
     // ── Indicators for Heat & Extended Analysis (RSI, MACD) ──
-    // 1. RSI(14)
-    let gains = 0;
-    let losses = 0;
+    // 1. RSI(14) - Wilder smoothing (khớp với RSI trên chart)
     const rsiPeriod = 14;
-    for (let i = Math.max(1, count - rsiPeriod); i < count; i++) {
+    let avgGain = 0;
+    let avgLoss = 0;
+    for (let i = 1; i <= rsiPeriod && i < count; i++) {
       const diff = closes[i] - closes[i - 1];
-      if (diff >= 0) gains += diff;
-      else losses += Math.abs(diff);
+      if (diff >= 0) avgGain += diff;
+      else avgLoss += Math.abs(diff);
     }
-    const avgGain = gains / rsiPeriod;
-    const avgLoss = losses / rsiPeriod;
+    avgGain /= rsiPeriod;
+    avgLoss /= rsiPeriod;
+    for (let i = rsiPeriod + 1; i < count; i++) {
+      const diff = closes[i] - closes[i - 1];
+      avgGain = (avgGain * (rsiPeriod - 1) + (diff > 0 ? diff : 0)) / rsiPeriod;
+      avgLoss = (avgLoss * (rsiPeriod - 1) + (diff < 0 ? -diff : 0)) / rsiPeriod;
+    }
     const rsVal = avgLoss === 0 ? 100 : avgGain / avgLoss;
     const rsi14 = Number((100 - (100 / (1 + rsVal))).toFixed(1));
 

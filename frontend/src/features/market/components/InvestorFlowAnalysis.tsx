@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Fish,
   ShieldCheck,
@@ -10,7 +10,11 @@ import {
   Info,
   Clock,
   Sparkle,
-  ArrowsClockwise
+  ArrowsClockwise,
+  Fire,
+  Funnel,
+  ArrowUpRight,
+  ArrowDownRight,
 } from '@phosphor-icons/react';
 import { useMarketStore } from '../store/marketStore';
 
@@ -33,6 +37,7 @@ interface TradesData {
   thresholds: {
     sharkMin: number;
     wolfMin: number;
+    megaWhaleMin?: number;
     description: string;
   };
   summary: {
@@ -40,6 +45,14 @@ interface TradesData {
     sharkNetVol: number;
     wolfNetVol: number;
     sheepNetVol: number;
+    sharkBuyVal?: number;
+    sharkSellVal?: number;
+    sharkNetVal?: number;
+    sharkBuyCount?: number;
+    sharkSellCount?: number;
+    wolfBuyVal?: number;
+    wolfSellVal?: number;
+    wolfNetVal?: number;
   };
   buy: {
     totalVolume: number;
@@ -63,6 +76,8 @@ export const InvestorFlowAnalysis: React.FC = () => {
   const { selectedSymbol } = useMarketStore();
   const [timeframe, setTimeframe] = useState<'60' | '1D' | 'ALL'>('1D');
   const [activePage, setActivePage] = useState<1 | 2 | 3>(1);
+  const [filterInvestor, setFilterInvestor] = useState<'shark' | 'wolf_shark' | 'all'>('shark');
+  const [filterSide, setFilterSide] = useState<'all' | 'buy' | 'sell'>('all');
   const [loading, setLoading] = useState<boolean>(false);
   const [tradesData, setTradesData] = useState<TradesData | null>(null);
   const [lastUpdated, setLastUpdated] = useState<string>('');
@@ -71,7 +86,7 @@ export const InvestorFlowAnalysis: React.FC = () => {
     if (!selectedSymbol) return;
     setLoading(true);
     try {
-      const res = await fetch(`/api/market/trades?symbol=${selectedSymbol}&limit=200`);
+      const res = await fetch(`/api/market/trades?symbol=${selectedSymbol}&limit=500`);
       const resJson = await res.json();
       if (resJson.success && resJson.data) {
         setTradesData(resJson.data);
@@ -115,6 +130,58 @@ export const InvestorFlowAnalysis: React.FC = () => {
   };
 
   const orders: OrderItem[] = tradesData?.trades || [];
+
+  // Shark specific stats
+  const sharkStats = useMemo(() => {
+    const sharkTrades = orders.filter((o) => o.investorType === 'Cá mập');
+    const sharkBuy = sharkTrades.filter((o) => o.type === 'M');
+    const sharkSell = sharkTrades.filter((o) => o.type === 'B');
+
+    const totalBuyVal = sharkBuy.reduce((sum, o) => sum + o.value, 0);
+    const totalSellVal = sharkSell.reduce((sum, o) => sum + o.value, 0);
+    const totalBuyVol = sharkBuy.reduce((sum, o) => sum + o.volume, 0);
+    const totalSellVol = sharkSell.reduce((sum, o) => sum + o.volume, 0);
+    const netVal = totalBuyVal - totalSellVal;
+    const netVol = totalBuyVol - totalSellVol;
+    const totalVal = totalBuyVal + totalSellVal;
+    const buyPct = totalVal > 0 ? (totalBuyVal / totalVal) * 100 : 50;
+
+    return {
+      totalCount: sharkTrades.length,
+      buyCount: sharkBuy.length,
+      sellCount: sharkSell.length,
+      totalBuyVal,
+      totalSellVal,
+      totalBuyVol,
+      totalSellVol,
+      netVal,
+      netVol,
+      buyPct,
+      hasTrades: sharkTrades.length > 0,
+    };
+  }, [orders]);
+
+  const sharkCount = useMemo(() => orders.filter((o) => o.investorType === 'Cá mập').length, [orders]);
+  const wolfSharkCount = useMemo(
+    () => orders.filter((o) => o.investorType === 'Cá mập' || o.investorType === 'Sói già').length,
+    [orders]
+  );
+
+  // Filtered orders
+  const filteredOrders = useMemo(() => {
+    return orders.filter((order) => {
+      if (filterInvestor === 'shark' && order.investorType !== 'Cá mập') return false;
+      if (
+        filterInvestor === 'wolf_shark' &&
+        order.investorType !== 'Cá mập' &&
+        order.investorType !== 'Sói già'
+      )
+        return false;
+      if (filterSide === 'buy' && order.type !== 'M') return false;
+      if (filterSide === 'sell' && order.type !== 'B') return false;
+      return true;
+    });
+  }, [orders, filterInvestor, filterSide]);
 
   return (
     <div className="bg-zinc-950/90 border border-zinc-800/80 rounded-2xl p-4 shadow-xl backdrop-blur-xl space-y-4">
@@ -413,72 +480,286 @@ export const InvestorFlowAnalysis: React.FC = () => {
 
       {/* Page 3 or bottom log: Live Order Feed */}
       {(activePage === 1 || activePage === 3) && (
-        <div className="overflow-x-auto max-h-[260px] overflow-y-auto scrollbar-none rounded-xl border border-zinc-800/80 bg-zinc-900/40">
-          <table className="w-full text-left font-mono text-xs">
-            <thead className="sticky top-0 bg-zinc-900 z-10 text-[10px] text-zinc-500 uppercase tracking-wider border-b border-zinc-800">
-              <tr>
-                <th className="py-2 pl-3">Thời gian</th>
-                <th className="py-2">NĐT</th>
-                <th className="py-2 text-right">Giá (k)</th>
-                <th className="py-2 text-right">KL Khớp</th>
-                <th className="py-2 text-right">Giá trị</th>
-                <th className="py-2 pr-3 text-center">Lệnh</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-800/40 text-[11px]">
-              {orders.length === 0 ? (
+        <div className="space-y-3 pt-1">
+          {/* ── Whale Radar Telemetry Strip ── */}
+          <div className="p-3 rounded-xl bg-zinc-950/80 border border-emerald-500/30 shadow-[0_4px_20px_-8px_rgba(16,185,129,0.2)] flex flex-col md:flex-row md:items-center justify-between gap-3 font-mono">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
+                <Fish className="w-4 h-4 animate-pulse" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xs font-bold text-zinc-100 uppercase tracking-wider">
+                    Radar Lệnh Cá Mập
+                  </span>
+                  <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                    &ge; 1 TỶ VNĐ
+                  </span>
+                </div>
+                <p className="text-[10px] text-zinc-400">
+                  Lọc độc quyền lệnh tay to trong {orders.length} ticks gần nhất
+                </p>
+              </div>
+            </div>
+
+            {/* Live Metrics */}
+            <div className="flex items-center gap-3 text-xs flex-wrap">
+              <div className="text-left md:text-right">
+                <div className="text-[9px] text-zinc-500 uppercase">Cá Mập Mua</div>
+                <div className="font-bold text-emerald-400">
+                  {(sharkStats.totalBuyVal / 1_000_000_000).toFixed(2)} tỷ{' '}
+                  <span className="text-[9px] text-zinc-500 font-normal font-sans">({sharkStats.buyCount} lệnh)</span>
+                </div>
+              </div>
+
+              <div className="h-6 w-px bg-zinc-800 hidden sm:block" />
+
+              <div className="text-left md:text-right">
+                <div className="text-[9px] text-zinc-500 uppercase">Cá Mập Bán</div>
+                <div className="font-bold text-rose-400">
+                  {(sharkStats.totalSellVal / 1_000_000_000).toFixed(2)} tỷ{' '}
+                  <span className="text-[9px] text-zinc-500 font-normal font-sans">({sharkStats.sellCount} lệnh)</span>
+                </div>
+              </div>
+
+              <div className="h-6 w-px bg-zinc-800 hidden sm:block" />
+
+              <div className="text-left md:text-right">
+                <div className="text-[9px] text-zinc-500 uppercase">Ròng Cá Mập</div>
+                <div
+                  className={`font-bold flex items-center gap-1 ${
+                    sharkStats.netVal >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                  }`}
+                >
+                  {sharkStats.netVal >= 0 ? <TrendUp className="w-3.5 h-3.5" /> : <TrendDown className="w-3.5 h-3.5" />}
+                  <span>
+                    {sharkStats.netVal >= 0 ? '+' : ''}
+                    {(sharkStats.netVal / 1_000_000_000).toFixed(2)} tỷ
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Filter Toolbar (Pill Controls) ── */}
+          <div className="flex flex-wrap items-center justify-between gap-2.5 font-mono text-xs py-1">
+            {/* Investor Scale Filter */}
+            <div className="flex items-center gap-1.5 p-1 rounded-xl bg-zinc-900/90 border border-zinc-800 text-[11px] overflow-x-auto">
+              <span className="text-zinc-500 px-1.5 flex items-center gap-1 text-[10px] shrink-0">
+                <Funnel className="w-3 h-3" />
+                <span>Quy mô:</span>
+              </span>
+              <button
+                onClick={() => setFilterInvestor('shark')}
+                className={`px-2.5 py-1 rounded-lg font-bold transition-all flex items-center gap-1.5 shrink-0 ${
+                  filterInvestor === 'shark'
+                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm'
+                    : 'text-zinc-400 hover:text-zinc-200'
+                }`}
+              >
+                <span>🦈 Chỉ Cá Mập (≥ 1 Tỷ)</span>
+                <span className="px-1.5 py-0.2 rounded-full bg-zinc-800 text-[9px] text-zinc-300">
+                  {sharkCount}
+                </span>
+              </button>
+              <button
+                onClick={() => setFilterInvestor('wolf_shark')}
+                className={`px-2.5 py-1 rounded-lg font-medium transition-all flex items-center gap-1.5 shrink-0 ${
+                  filterInvestor === 'wolf_shark'
+                    ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm'
+                    : 'text-zinc-400 hover:text-zinc-200'
+                }`}
+              >
+                <span>🐺 Cá Mập & Sói (≥ 500Tr)</span>
+                <span className="px-1.5 py-0.2 rounded-full bg-zinc-800 text-[9px] text-zinc-300">
+                  {wolfSharkCount}
+                </span>
+              </button>
+              <button
+                onClick={() => setFilterInvestor('all')}
+                className={`px-2 py-1 rounded-lg font-medium transition-all shrink-0 ${
+                  filterInvestor === 'all'
+                    ? 'bg-zinc-800 text-zinc-200 border border-zinc-700'
+                    : 'text-zinc-500 hover:text-zinc-300'
+                }`}
+              >
+                <span>Tất cả ({orders.length})</span>
+              </button>
+            </div>
+
+            {/* Execution Side Filter */}
+            <div className="flex items-center gap-1 p-1 rounded-xl bg-zinc-900/90 border border-zinc-800 text-[11px]">
+              <button
+                onClick={() => setFilterSide('all')}
+                className={`px-2 py-1 rounded-lg font-medium transition-all ${
+                  filterSide === 'all'
+                    ? 'bg-zinc-800 text-zinc-200'
+                    : 'text-zinc-500 hover:text-zinc-300'
+                }`}
+              >
+                Tất cả chiều
+              </button>
+              <button
+                onClick={() => setFilterSide('buy')}
+                className={`px-2 py-1 rounded-lg font-bold transition-all flex items-center gap-1 ${
+                  filterSide === 'buy'
+                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+                    : 'text-emerald-500/70 hover:text-emerald-400'
+                }`}
+              >
+                <span>🟢 Mua C.Động</span>
+              </button>
+              <button
+                onClick={() => setFilterSide('sell')}
+                className={`px-2 py-1 rounded-lg font-bold transition-all flex items-center gap-1 ${
+                  filterSide === 'sell'
+                    ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40'
+                    : 'text-rose-500/70 hover:text-rose-400'
+                }`}
+              >
+                <span>🔴 Bán C.Động</span>
+              </button>
+            </div>
+          </div>
+
+          {/* ── Orders Table ── */}
+          <div className="overflow-x-auto max-h-[300px] overflow-y-auto scrollbar-none rounded-xl border border-zinc-800/80 bg-zinc-900/40">
+            <table className="w-full text-left font-mono text-xs">
+              <thead className="sticky top-0 bg-zinc-900 z-10 text-[10px] text-zinc-400 uppercase tracking-wider border-b border-zinc-800">
                 <tr>
-                  <td colSpan={6} className="py-6 text-center text-zinc-500">
-                    {loading ? 'Đang tải dữ liệu khớp lệnh thật...' : 'Chưa có dữ liệu khớp lệnh.'}
-                  </td>
+                  <th className="py-2.5 pl-3">Thời gian</th>
+                  <th className="py-2.5">Phân khúc</th>
+                  <th className="py-2.5 text-right">Giá (k)</th>
+                  <th className="py-2.5 text-right">Khối lượng</th>
+                  <th className="py-2.5 text-right">Giá trị (VNĐ)</th>
+                  <th className="py-2.5 pr-3 text-center">Chiều lệnh</th>
                 </tr>
-              ) : (
-                orders.map((order, idx) => {
-                  const isBuy = order.type === 'M';
-                  const investorColor =
-                    order.investorType === 'Cá mập'
-                      ? 'text-emerald-400 font-bold'
-                      : order.investorType === 'Sói già'
-                      ? 'text-cyan-400 font-semibold'
-                      : 'text-zinc-400';
+              </thead>
+              <tbody className="divide-y divide-zinc-800/40 text-[11px]">
+                {filteredOrders.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="py-10 text-center text-zinc-400">
+                      <div className="flex flex-col items-center justify-center gap-2">
+                        <div className="w-10 h-10 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-500">
+                          <Fish className="w-5 h-5 text-zinc-500" />
+                        </div>
+                        <div className="font-bold text-zinc-300 text-xs">
+                          {filterInvestor === 'shark'
+                            ? `Chưa ghi nhận lệnh Cá Mập (≥ 1 Tỷ) trong ${orders.length} ticks gần nhất của ${selectedSymbol}`
+                            : 'Không tìm thấy lệnh khớp phù hợp với bộ lọc'}
+                        </div>
+                        <p className="text-[10px] text-zinc-500 max-w-sm">
+                          Hệ thống đang tự động cập nhật thời gian thực mỗi 15 giây từ sàn giao dịch.
+                        </p>
+                        {filterInvestor === 'shark' && (
+                          <button
+                            onClick={() => setFilterInvestor('wolf_shark')}
+                            className="mt-1 px-3 py-1 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 text-[11px] font-bold transition-colors"
+                          >
+                            Xem thêm phân khúc Sói Già (≥ 500Tr)
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  filteredOrders.map((order, idx) => {
+                    const isBuy = order.type === 'M';
+                    const isMegaWhale = order.value >= 3_000_000_000;
+                    const isShark = order.investorType === 'Cá mập';
+                    const isWolf = order.investorType === 'Sói già';
 
-                  const formattedVal =
-                    order.value >= 1_000_000_000
-                      ? `${(order.value / 1_000_000_000).toFixed(2)} tỷ`
-                      : order.value >= 1_000_000
-                      ? `${(order.value / 1_000_000).toFixed(1)} tr`
-                      : `${order.value.toLocaleString('vi-VN')} đ`;
+                    const formattedVal =
+                      order.value >= 1_000_000_000
+                        ? `${(order.value / 1_000_000_000).toFixed(2)} tỷ`
+                        : order.value >= 1_000_000
+                        ? `${(order.value / 1_000_000).toFixed(1)} tr`
+                        : `${order.value.toLocaleString('vi-VN')} đ`;
 
-                  return (
-                    <tr key={order.id || idx} className="hover:bg-zinc-800/30 transition-colors">
-                      <td className="py-1.5 pl-3 text-zinc-400">{order.time}</td>
-                      <td className={`py-1.5 ${investorColor}`}>{order.investorType}</td>
-                      <td className="py-1.5 text-right font-bold text-zinc-200">
-                        {order.price.toFixed(2)}
-                      </td>
-                      <td className="py-1.5 text-right text-zinc-300">
-                        {order.volume.toLocaleString('vi-VN')}
-                      </td>
-                      <td className="py-1.5 text-right font-mono text-[10px] text-zinc-400">
-                        {formattedVal}
-                      </td>
-                      <td className="py-1.5 pr-3 text-center">
-                        <span
-                          className={`inline-block px-1.5 py-0.2 rounded text-[10px] font-bold ${
-                            isBuy
-                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                              : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-                          }`}
-                        >
-                          {order.type}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+                    return (
+                      <tr
+                        key={order.id || idx}
+                        className={`hover:bg-zinc-800/40 transition-colors ${
+                          isMegaWhale
+                            ? 'bg-amber-500/5 border-l-2 border-amber-500'
+                            : isShark
+                            ? 'bg-emerald-500/5'
+                            : ''
+                        }`}
+                      >
+                        <td className="py-2 pl-3 text-zinc-400 font-mono text-[11px]">{order.time}</td>
+                        <td className="py-2">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            {isShark ? (
+                              <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                                <span>🦈</span>
+                                <span>Cá mập</span>
+                              </span>
+                            ) : isWolf ? (
+                              <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 flex items-center gap-1">
+                                <span>🐺</span>
+                                <span>Sói già</span>
+                              </span>
+                            ) : (
+                              <span className="text-zinc-500 text-[10px]">Cừu non</span>
+                            )}
+                            {isMegaWhale && (
+                              <span className="px-1.5 py-0.5 rounded text-[9px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center gap-0.5 animate-pulse">
+                                <Fire className="w-3 h-3 text-amber-400" />
+                                <span>MEGA</span>
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="py-2 text-right font-bold text-zinc-100 text-xs font-mono">
+                          {order.price.toFixed(2)}
+                        </td>
+                        <td className="py-2 text-right text-zinc-200 font-mono font-bold">
+                          {order.volume.toLocaleString('vi-VN')}
+                        </td>
+                        <td className="py-2 text-right font-mono font-black text-xs">
+                          <span
+                            className={
+                              isMegaWhale
+                                ? 'text-amber-300 font-bold'
+                                : isShark
+                                ? isBuy
+                                  ? 'text-emerald-400 font-bold'
+                                  : 'text-rose-400 font-bold'
+                                : 'text-zinc-300'
+                            }
+                          >
+                            {formattedVal}
+                          </span>
+                        </td>
+                        <td className="py-2 pr-3 text-center">
+                          <span
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold ${
+                              isBuy
+                                ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                                : 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
+                            }`}
+                          >
+                            {isBuy ? (
+                              <>
+                                <ArrowUpRight className="w-3 h-3" />
+                                <span>MUA CHỦ ĐỘNG</span>
+                              </>
+                            ) : (
+                              <>
+                                <ArrowDownRight className="w-3 h-3" />
+                                <span>BÁN CHỦ ĐỘNG</span>
+                              </>
+                            )}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>

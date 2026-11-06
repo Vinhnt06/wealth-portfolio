@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, memo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Globe,
   ArrowsClockwise,
@@ -9,8 +9,8 @@ import {
   Scales,
   CaretDown,
   CaretUp,
-  ShieldCheck,
   ChartLineUp,
+  WarningCircle,
 } from '@phosphor-icons/react';
 import dynamic from 'next/dynamic';
 import { MacroChartModal, MacroIndicatorTarget } from './MacroChartModal';
@@ -20,10 +20,11 @@ const EconomicCycleWheel = dynamic(
   { ssr: false }
 );
 
+/* ───────────────────────────── Types ───────────────────────────── */
+
 interface UsMarketItem {
   symbol: string;
   name: string;
-  category: string;
   price: number;
   change: number;
   changePercent: number;
@@ -45,719 +46,755 @@ interface CommodityItem {
 }
 
 interface ExchangeRateItem {
-  code: string;
+  pair: string;
   name: string;
-  buyCash: number;
   sell: number;
-  change?: number;
+  change: number;
+  changePercent: number;
 }
 
-export const UnifiedMacroMatrix: React.FC = memo(() => {
+interface GdpPoint {
+  period: string;
+  growthRate: number;
+  target: number;
+}
+
+interface CpiPoint {
+  period: string;
+  yoy: number;
+  mom: number;
+  target: number;
+}
+
+interface MacroIndicators {
+  gdp?: GdpPoint;
+  cpi?: CpiPoint;
+  refiRate?: number;
+  /** true only when the numbers come from the verified database (not the local baseline file) */
+  verified: boolean;
+  source: string;
+}
+
+type SectionKey = 'us' | 'commodities' | 'rates' | 'indicators' | 'bank';
+
+/* ───────────────────────────── Helpers ───────────────────────────── */
+
+// Which history ids exist in /api/macro/history (used for chart modal + sparklines)
+const US_HISTORY_ID: Record<string, string> = {
+  '^GSPC': 'sp500',
+  '^IXIC': 'nasdaq',
+  '^DJI': 'dow',
+  '^TNX': 'us10y',
+  'DX-Y.NYB': 'dxy',
+  '^VIX': 'vix',
+};
+
+const SPARK_IDS = ['usdvnd', 'us10y', 'vix', 'sp500', 'nasdaq', 'dow', 'dxy', 'gold_world', 'silver', 'brent', 'wti'];
+
+const BIG4_PATTERN = /vietcombank|bidv|vietinbank|agribank/i;
+
+const viNum = (v: number, digits = 2) =>
+  v.toLocaleString('vi-VN', { minimumFractionDigits: digits, maximumFractionDigits: digits });
+
+const enNum = (v: number, digits = 2) =>
+  v.toLocaleString('en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits });
+
+const toMillion = (v?: number) => (v === undefined || v === null ? undefined : v / 1_000_000);
+
+function periodKey(period: string): number {
+  const m = period.match(/(\d{1,2})\s*\/\s*(\d{4})/);
+  return m ? Number(m[2]) * 100 + Number(m[1]) : -1;
+}
+
+function latestByPeriod<T extends { period: string }>(list: T[] | undefined): T | undefined {
+  if (!Array.isArray(list) || list.length === 0) return undefined;
+  return [...list].sort((a, b) => periodKey(b.period) - periodKey(a.period))[0];
+}
+
+function parsePercentText(raw: string | number | undefined): number | undefined {
+  if (raw === undefined || raw === null) return undefined;
+  if (typeof raw === 'number') return raw;
+  const n = parseFloat(raw.replace('%', '').replace(',', '.'));
+  return Number.isFinite(n) ? n : undefined;
+}
+
+function vixSentiment(vix: number): { label: string; tone: 'gain' | 'warn' | 'loss' } {
+  if (vix < 15) return { label: 'Tâm lý lạc quan', tone: 'gain' };
+  if (vix < 20) return { label: 'Tâm lý ổn định', tone: 'gain' };
+  if (vix < 30) return { label: 'Thận trọng', tone: 'warn' };
+  return { label: 'Hoảng loạn', tone: 'loss' };
+}
+
+function assessCycle(gdp?: GdpPoint, cpi?: CpiPoint): string | null {
+  if (!gdp || !cpi) return null;
+  const growthOk = gdp.growthRate >= gdp.target;
+  const inflationOk = cpi.yoy <= cpi.target;
+  if (growthOk && inflationOk) return 'Tăng trưởng vượt mục tiêu, lạm phát trong tầm kiểm soát';
+  if (growthOk) return 'Tăng trưởng vượt mục tiêu, lạm phát vượt trần';
+  if (inflationOk) return 'Tăng trưởng dưới mục tiêu, lạm phát thấp';
+  return 'Tăng trưởng dưới mục tiêu, lạm phát vượt trần';
+}
+
+const TONE_TEXT = { gain: 'text-emerald-400', warn: 'text-amber-300', loss: 'text-rose-400' } as const;
+
+/* ───────────────────────────── Small UI parts ───────────────────────────── */
+
+function Sparkline({ values, width = 72, height = 26 }: { values?: number[]; width?: number; height?: number }) {
+  if (!values || values.length < 2) {
+    return <div style={{ width, height }} aria-hidden="true" />;
+  }
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const span = max - min || 1;
+  const step = width / (values.length - 1);
+  const pts = values
+    .map((v, i) => `${(i * step).toFixed(1)},${(height - 2 - ((v - min) / span) * (height - 4)).toFixed(1)}`)
+    .join(' ');
+  const up = values[values.length - 1] >= values[0];
+  return (
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} aria-hidden="true" className="shrink-0">
+      <polyline
+        points={pts}
+        fill="none"
+        stroke={up ? '#10b981' : '#f43f5e'}
+        strokeWidth={1.5}
+        strokeLinejoin="round"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function Delta({ pct }: { pct?: number | null }) {
+  if (pct === undefined || pct === null || Number.isNaN(pct)) {
+    return <span className="font-mono text-[11px] text-zinc-600">—</span>;
+  }
+  const up = pct >= 0;
+  return (
+    <span
+      className={`inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 font-mono text-[11px] font-semibold tabular-nums ${
+        up ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'
+      }`}
+    >
+      {up ? <CaretUp size={9} weight="fill" /> : <CaretDown size={9} weight="fill" />}
+      {Math.abs(pct).toFixed(2)}%
+    </span>
+  );
+}
+
+function Skeleton({ className = '' }: { className?: string }) {
+  return <div className={`animate-pulse rounded-md bg-zinc-800/60 ${className}`} />;
+}
+
+function PanelHeader({
+  icon,
+  title,
+  right,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  right?: React.ReactNode;
+}) {
+  return (
+    <div className="mb-3 flex items-center justify-between gap-2">
+      <div className="flex items-center gap-2 text-[13px] font-semibold tracking-tight text-zinc-200">
+        <span className="text-zinc-500">{icon}</span>
+        {title}
+      </div>
+      {right}
+    </div>
+  );
+}
+
+function EmptyNote({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex items-center gap-2 rounded-lg border border-dashed border-zinc-800 px-3 py-3 text-xs text-zinc-500">
+      <WarningCircle size={14} className="shrink-0 text-zinc-600" />
+      {children}
+    </div>
+  );
+}
+
+interface KpiTileProps {
+  id: string;
+  label: string;
+  hint: string;
+  value?: string;
+  unit?: string;
+  pct?: number;
+  spark?: number[];
+  loading: boolean;
+  onClick?: () => void;
+  footnote?: React.ReactNode;
+}
+
+function KpiTile({ id, label, hint, value, unit, pct, spark, loading, onClick, footnote }: KpiTileProps) {
+  const body = (
+    <>
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <div className="text-[11px] font-medium uppercase tracking-wide text-zinc-500">{label}</div>
+          <div className="text-[11px] text-zinc-600">{hint}</div>
+        </div>
+        {onClick && (
+          <ChartLineUp size={14} className="text-zinc-700 transition-colors group-hover:text-emerald-400" />
+        )}
+      </div>
+      <div className="mt-3 flex items-end justify-between gap-2">
+        <div>
+          {loading ? (
+            <Skeleton className="h-7 w-28" />
+          ) : (
+            <div className="font-mono text-[22px] font-semibold leading-none tracking-tight text-zinc-50 tabular-nums">
+              {value ?? '—'}
+              {value && unit && <span className="ml-1 text-xs font-normal text-zinc-500">{unit}</span>}
+            </div>
+          )}
+          <div className="mt-2 flex items-center gap-2">
+            {loading ? <Skeleton className="h-5 w-16" /> : <Delta pct={pct} />}
+            {footnote}
+          </div>
+        </div>
+        <Sparkline values={spark} />
+      </div>
+    </>
+  );
+
+  const base =
+    'group w-full rounded-xl border border-white/[0.08] bg-[#111113] p-4 text-left transition-colors';
+
+  return onClick ? (
+    <button id={id} type="button" onClick={onClick} className={`${base} hover:border-emerald-500/30 hover:bg-[#141417]`}>
+      {body}
+    </button>
+  ) : (
+    <div id={id} className={base}>
+      {body}
+    </div>
+  );
+}
+
+function MetricBar({ value, target, tone }: { value: number; target: number; tone: 'gain' | 'warn' | 'loss' }) {
+  const scaleMax = Math.max(value, target) * 1.25 || 1;
+  const fill = Math.max(0, Math.min(100, (value / scaleMax) * 100));
+  const tick = Math.max(0, Math.min(100, (target / scaleMax) * 100));
+  const color = tone === 'gain' ? 'bg-emerald-500' : tone === 'warn' ? 'bg-amber-400' : 'bg-rose-500';
+  return (
+    <div className="relative mt-2 h-1.5 w-full rounded-full bg-zinc-800" aria-hidden="true">
+      <div className={`h-full rounded-full ${color}`} style={{ width: `${fill}%` }} />
+      <div className="absolute -top-1 h-3.5 w-px bg-zinc-300" style={{ left: `${tick}%` }} />
+    </div>
+  );
+}
+
+/* ───────────────────────────── Main component ───────────────────────────── */
+
+export const UnifiedMacroMatrix: React.FC = () => {
   const [usData, setUsData] = useState<UsMarketItem[]>([]);
   const [commodities, setCommodities] = useState<CommodityItem[]>([]);
   const [rates, setRates] = useState<ExchangeRateItem[]>([]);
-  const [macroStats, setMacroStats] = useState<{
-    gdpGrowth: string;
-    cpiYoY: string;
-    refinancingRate: string;
-    cycleStage: string;
-  }>({
-    gdpGrowth: '9.95%',
-    cpiYoY: '3.88%',
-    refinancingRate: '4.50%',
-    cycleStage: 'Mở Rộng Sớm (Early Expansion)',
-  });
+  const [indicators, setIndicators] = useState<MacroIndicators | null>(null);
+  const [big4Range, setBig4Range] = useState<{ min: number; max: number } | null>(null);
+  const [sparks, setSparks] = useState<Record<string, number[]>>({});
+  const [failed, setFailed] = useState<Partial<Record<SectionKey, boolean>>>({});
 
-  const [loading, setLoading] = useState<boolean>(false);
-  const [lastRefreshed, setLastRefreshed] = useState<string>('');
-  const [showCycleDeepDive, setShowCycleDeepDive] = useState<boolean>(false);
+  const [hasLoaded, setHasLoaded] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [lastRefreshed, setLastRefreshed] = useState('');
+  const [showCycleDeepDive, setShowCycleDeepDive] = useState(false);
   const [activeChartIndicator, setActiveChartIndicator] = useState<MacroIndicatorTarget | null>(null);
   const [goldTab, setGoldTab] = useState<'vn_gold' | 'world_comm'>('vn_gold');
 
-  const fetchAllMacro = async () => {
+  const fetchAllMacro = useCallback(async () => {
     setLoading(true);
-    try {
-      const [resUs, resComm, resRates, resInd] = await Promise.all([
-        fetch('/api/macro/us-global', { cache: 'no-store' }),
-        fetch('/api/macro/commodities', { cache: 'no-store' }),
-        fetch('/api/macro/exchange-rate', { cache: 'no-store' }),
-        fetch('/api/macro/indicators', { cache: 'no-store' }),
-      ]);
+    const nextFailed: Partial<Record<SectionKey, boolean>> = {};
 
-      if (resUs.ok) {
-        const json = await resUs.json();
-        if (json.success && Array.isArray(json.indices)) {
-          setUsData(json.indices);
-        }
+    const getJson = async (url: string, key: SectionKey) => {
+      try {
+        const res = await fetch(url, { cache: 'no-store' });
+        if (!res.ok) throw new Error(String(res.status));
+        const json = await res.json();
+        if (!json.success) throw new Error('not-success');
+        return json;
+      } catch {
+        nextFailed[key] = true;
+        return null;
       }
+    };
 
-      if (resComm.ok) {
-        const json = await resComm.json();
-        if (json.success && Array.isArray(json.data)) {
-          setCommodities(json.data);
-        }
-      }
+    const [us, comm, fx, ind, bank] = await Promise.all([
+      getJson('/api/macro/us-global', 'us'),
+      getJson('/api/macro/commodities', 'commodities'),
+      getJson('/api/macro/exchange-rate', 'rates'),
+      getJson('/api/macro/indicators', 'indicators'),
+      getJson('/api/macro/bank-rates', 'bank'),
+    ]);
 
-      if (resRates.ok) {
-        const json = await resRates.json();
-        if (json.success && Array.isArray(json.data)) {
-          setRates(json.data);
-        }
-      }
+    if (us && Array.isArray(us.indices)) setUsData(us.indices);
+    if (comm && Array.isArray(comm.data)) setCommodities(comm.data);
+    if (fx && Array.isArray(fx.data)) setRates(fx.data);
 
-      if (resInd.ok) {
-        const json = await resInd.json();
-        if (json.success && json.data) {
-          const gdp = json.data.gdp?.[json.data.gdp.length - 1]?.growth || '9.95%';
-          const cpi = json.data.cpi?.[json.data.cpi.length - 1]?.cpi || '3.88%';
-          const refRate = json.data.interestRate?.[json.data.interestRate.length - 1]?.refinancing || '4.50%';
-          setMacroStats({
-            gdpGrowth: typeof gdp === 'number' ? `${gdp}%` : gdp,
-            cpiYoY: typeof cpi === 'number' ? `${cpi}%` : cpi,
-            refinancingRate: typeof refRate === 'number' ? `${refRate}%` : refRate,
-            cycleStage: json.data.cycleAssessment || 'Mở Rộng Kinh Tế Mạnh',
-          });
-        }
-      }
-
-      setLastRefreshed(new Date().toLocaleTimeString('vi-VN', { hour12: false }));
-    } catch (err) {
-      console.error('Lỗi nạp ma trận vĩ mô hợp nhất:', err);
-    } finally {
-      setLoading(false);
+    if (ind?.data) {
+      const refi = (ind.data.interestRate as Array<{ bank: string; rate: string }> | undefined)?.find((r) =>
+        /tái cấp vốn/i.test(r.bank)
+      );
+      setIndicators({
+        gdp: latestByPeriod<GdpPoint>(ind.data.gdp),
+        cpi: latestByPeriod<CpiPoint>(ind.data.cpi),
+        refiRate: parsePercentText(refi?.rate),
+        verified: ind.source === 'supabase',
+        source: ind.data.source || 'GSO & SBV',
+      });
     }
-  };
+
+    if (bank?.data?.counter) {
+      const values = (bank.data.counter as Array<{ bank: string; rate12M: string }>)
+        .filter((r) => BIG4_PATTERN.test(r.bank))
+        .map((r) => parsePercentText(r.rate12M))
+        .filter((v): v is number => v !== undefined);
+      setBig4Range(values.length ? { min: Math.min(...values), max: Math.max(...values) } : null);
+    }
+
+    setFailed(nextFailed);
+    setLastRefreshed(new Date().toLocaleTimeString('vi-VN', { hour12: false }));
+    setHasLoaded(true);
+    setLoading(false);
+  }, []);
 
   useEffect(() => {
     fetchAllMacro();
-    const timer = setInterval(fetchAllMacro, 45000); // 45s auto-refresh
+    const timer = setInterval(fetchAllMacro, 45000);
     return () => clearInterval(timer);
+  }, [fetchAllMacro]);
+
+  // Sparklines: real 1-month history from Yahoo via /api/macro/history, loaded once
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      const entries = await Promise.all(
+        SPARK_IDS.map(async (id) => {
+          try {
+            const res = await fetch(`/api/macro/history?id=${id}&range=1mo`);
+            if (!res.ok) return null;
+            const json = await res.json();
+            if (!json.success || !Array.isArray(json.points)) return null;
+            return [id, (json.points as Array<{ value: number }>).map((p) => p.value)] as const;
+          } catch {
+            return null;
+          }
+        })
+      );
+      if (!alive) return;
+      const map: Record<string, number[]> = {};
+      entries.forEach((e) => {
+        if (e) map[e[0]] = e[1];
+      });
+      setSparks(map);
+    })();
+    return () => {
+      alive = false;
+    };
   }, []);
 
-  // Format price helper in Million VNĐ/lượng
-  const formatVnGoldPrice = (raw: number | string | undefined): string => {
-    if (raw === undefined || raw === null) return '---';
-    const num = typeof raw === 'string' ? parseFloat(raw) : raw;
-    if (isNaN(num)) return '---';
-    if (num > 1000000) {
-      return (num / 1000000).toFixed(1);
-    }
-    return num.toFixed(1);
-  };
+  /* ── Derived data (all from live responses; nothing hardcoded) ── */
+  const us = (symbol: string) => usData.find((i) => i.symbol === symbol);
+  const usdVnd = rates.find((r) => r.pair === 'USD/VND');
+  const vixItem = us('^VIX');
+  const us10y = us('^TNX');
+  const vnGold = useMemo(() => commodities.filter((c) => c.category === 'gold_vn'), [commodities]);
+  const sjc = vnGold.find((g) => g.id === 'gold_sjc') ?? vnGold.find((g) => g.brand === 'SJC');
+  const worldRows = ['gold_world', 'silver', 'brent', 'wti']
+    .map((id) => commodities.find((c) => c.id === id))
+    .filter((c): c is CommodityItem => Boolean(c));
+  const cycleText = assessCycle(indicators?.gdp, indicators?.cpi);
 
-  // Primary global indices
-  const keyUs = [
-    usData.find((i) => i.symbol === '^GSPC') || { symbol: '^GSPC', name: 'S&P 500', price: 7720.39, change: -23.59, changePercent: -0.30 },
-    usData.find((i) => i.symbol === '^IXIC') || { symbol: '^IXIC', name: 'Nasdaq 100', price: 26184.72, change: -365.13, changePercent: -1.38 },
-    usData.find((i) => i.symbol === '^VIX') || { symbol: '^VIX', name: 'CBOE VIX', price: 17.2, change: 0.29, changePercent: 1.72 },
-    usData.find((i) => i.symbol === '^TNX') || { symbol: '^TNX', name: 'US 10Y Yield', price: 4.99, change: -0.06, changePercent: -1.11, unit: '%' },
-    usData.find((i) => i.symbol === 'DX-Y.NYB') || { symbol: 'DX-Y.NYB', name: 'USD Index (DXY)', price: 101.75, change: -0.28, changePercent: -0.28 },
-  ];
+  const usTarget = (idx: UsMarketItem): MacroIndicatorTarget => ({
+    id: US_HISTORY_ID[idx.symbol] ?? idx.symbol,
+    symbol: idx.symbol,
+    name: idx.name,
+    category: idx.symbol === 'DX-Y.NYB' ? 'currency' : idx.symbol === '^TNX' ? 'yield' : 'equity',
+    price: idx.price,
+    unit: idx.unit === '%' ? '%' : 'điểm',
+    change: idx.change,
+    changePercent: idx.changePercent,
+  });
 
-  // USD/VND from live rates
-  const usdVndRate = rates.find((r) => r.code === 'USD') || {
-    code: 'USD',
-    name: 'Đô la Mỹ',
-    buyCash: 25150,
-    sell: 25480,
-  };
+  const commodityTarget = (c: CommodityItem): MacroIndicatorTarget => ({
+    id: c.id,
+    name: c.name,
+    category: c.id === 'silver' ? 'metal' : c.id === 'gold_world' ? 'gold_world' : 'oil',
+    price: c.price,
+    unit: c.unit,
+    change: c.change,
+    changePercent: c.changePercent,
+  });
 
-  // Top Vietnam Domestic Gold Brands (Real 24HMoney Data)
-  const vnGoldList = [
-    commodities.find((c) => c.id === 'gold_sjc') || {
-      id: 'gold_sjc',
-      brand: 'SJC',
-      name: 'Vàng Miếng SJC (HN / HCM)',
-      buyPrice: 138400000,
-      sellPrice: 141400000,
-      spread: 3000000,
-      change: -1300000,
-      changePercent: -0.91,
-      unit: 'VNĐ/Lượng',
-    },
-    commodities.find((c) => c.id === 'gold_sjc_nhan') || {
-      id: 'gold_sjc_nhan',
-      brand: 'SJC',
-      name: 'Vàng Nhẫn Trơn SJC 99.99',
-      buyPrice: 134300000,
-      sellPrice: 138300000,
-      spread: 4000000,
-      change: -900000,
-      changePercent: -0.65,
-      unit: 'VNĐ/Lượng',
-    },
-    commodities.find((c) => c.id === 'gold_doji_nhan') || {
-      id: 'gold_doji_nhan',
-      brand: 'DOJI',
-      name: 'Vàng Nhẫn DOJI Hưng Thịnh Vượng',
-      buyPrice: 136000000,
-      sellPrice: 140000000,
-      spread: 4000000,
-      change: -1500000,
-      changePercent: -1.06,
-      unit: 'VNĐ/Lượng',
-    },
-    commodities.find((c) => c.id === 'gold_pnj_nhan') || {
-      id: 'gold_pnj_nhan',
-      brand: 'PNJ',
-      name: 'Vàng Nhẫn Trơn PNJ 24K',
-      buyPrice: 136000000,
-      sellPrice: 140000000,
-      spread: 4000000,
-      change: -1000000,
-      changePercent: -0.71,
-      unit: 'VNĐ/Lượng',
-    },
-    commodities.find((c) => c.id === 'gold_btmc_mieng') || {
-      id: 'gold_btmc_mieng',
-      brand: 'BTMC',
-      name: 'Vàng Rồng Thăng Long BTMC',
-      buyPrice: 136400000,
-      sellPrice: 140400000,
-      spread: 4000000,
-      change: -1000000,
-      changePercent: -0.71,
-      unit: 'VNĐ/Lượng',
-    },
-    commodities.find((c) => c.id === 'gold_mihong_nhan') || {
-      id: 'gold_mihong_nhan',
-      brand: 'Mi Hồng',
-      name: 'Vàng Nhẫn Mi Hồng 999',
-      buyPrice: 139900000,
-      sellPrice: 141400000,
-      spread: 1500000,
-      change: -600000,
-      changePercent: -0.42,
-      unit: 'VNĐ/Lượng',
-    },
-  ];
-
-  // Global Commodities
-  const goldWorld = commodities.find((c) => c.id === 'gold_world') || {
-    id: 'gold_world',
-    name: 'Vàng Thế Giới (XAU/USD)',
-    price: 4005.3,
-    unit: 'USD/oz',
-    change: 14.2,
-    changePercent: 0.52,
-  };
-
-  const brentOil = commodities.find((c) => c.id === 'brent') || {
-    id: 'brent',
-    name: 'Dầu Brent (Thế giới)',
-    price: 112.0,
-    unit: 'USD/thùng',
-    change: -1.82,
-    changePercent: -1.6,
-  };
-
-  const wtiOil = commodities.find((c) => c.id === 'wti') || {
-    id: 'wti',
-    name: 'Dầu WTI (Mỹ)',
-    price: 103.15,
-    unit: 'USD/thùng',
-    change: -1.45,
-    changePercent: -1.38,
-  };
-
-  const silverWorld = commodities.find((c) => c.id === 'silver') || {
-    id: 'silver',
-    name: 'Bạc Thế Giới (XAG/USD)',
-    price: 51.49,
-    unit: 'USD/oz',
-    change: -0.62,
-    changePercent: -1.19,
-  };
+  const sjcSellM = toMillion(sjc?.sellPrice);
+  const sjcChangePct = sjc?.changePercent;
 
   return (
-    <div className="bg-[#111111] border border-[#1a1a1a] rounded-xl overflow-hidden shadow-2xl">
-      {/* ── Subheader Bar ── */}
-      <div className="px-5 py-3 border-b border-[#1a1a1a] flex items-center justify-between bg-[#0d0d0d]">
+    <div className="overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0c0c0e]">
+      {/* ── Header ── */}
+      <div className="flex items-center justify-between gap-3 border-b border-white/[0.06] px-5 py-3.5">
         <div className="flex items-center gap-2.5">
-          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="font-mono text-xs font-bold uppercase tracking-wider text-zinc-300">
-            MA TRẬN VĨ MÔ & TÀI CHÍNH TOÀN CẦU (GLOBAL MACRO MATRIX)
-          </span>
-          <span className="hidden sm:inline-block px-1.5 py-0.5 text-[10px] font-mono text-emerald-400 bg-emerald-950/40 border border-emerald-800/50 rounded">
-            100% REALTIME DATA
-          </span>
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
+          <h2 className="text-sm font-semibold tracking-tight text-zinc-100">Vĩ mô &amp; Thị trường toàn cầu</h2>
         </div>
-
         <div className="flex items-center gap-3 font-mono text-[11px] text-zinc-500">
-          <span>{lastRefreshed ? `Cập nhật: ${lastRefreshed}` : 'Đang đồng bộ...'}</span>
+          <span>{lastRefreshed ? `Cập nhật ${lastRefreshed}` : 'Đang đồng bộ...'}</span>
           <button
+            id="macro-refresh"
+            type="button"
             onClick={fetchAllMacro}
             disabled={loading}
-            className="p-1 hover:text-zinc-200 hover:bg-zinc-800 rounded transition-colors disabled:opacity-40"
-            title="Làm mới ma trận vĩ mô"
+            className="rounded-md p-1.5 transition-colors hover:bg-zinc-800 hover:text-zinc-200 disabled:opacity-40"
+            aria-label="Làm mới dữ liệu vĩ mô"
           >
-            <ArrowsClockwise className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-emerald-400' : ''}`} />
+            <ArrowsClockwise size={14} className={loading ? 'animate-spin text-emerald-400' : ''} />
           </button>
         </div>
       </div>
 
-      {/* ── 3-Column Bento Grid ── */}
-      <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-[#1a1a1a]">
-        
-        {/* ── Pillar 1: Global & US Financial Markets ── */}
-        <div className="p-4 sm:p-5 flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between pb-3 border-b border-[#1a1a1a] mb-3">
-              <div className="flex items-center gap-1.5 font-mono text-xs text-zinc-300 uppercase tracking-wider font-semibold">
-                <Globe className="w-3.5 h-3.5 text-zinc-400" />
-                <span>Thị Trường Quốc Tế & Mỹ</span>
-              </div>
-              <span className="font-mono text-[10px] text-zinc-500 flex items-center gap-1">
-                <span>Click xem chart</span>
-                <ChartLineUp className="w-3 h-3 text-zinc-400" />
-              </span>
-            </div>
+      <div className="space-y-4 p-4 sm:p-5">
+        {/* ── KPI strip ── */}
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <KpiTile
+            id="kpi-usdvnd"
+            label="USD/VND"
+            hint="Tỷ giá thị trường"
+            loading={!hasLoaded}
+            value={usdVnd ? viNum(usdVnd.sell, 0) : undefined}
+            unit="đ"
+            pct={usdVnd?.changePercent}
+            spark={sparks.usdvnd}
+            onClick={
+              usdVnd
+                ? () =>
+                    setActiveChartIndicator({
+                      id: 'usdvnd',
+                      symbol: 'USDVND=X',
+                      name: 'Tỷ giá USD/VND',
+                      category: 'currency',
+                      price: usdVnd.sell,
+                      unit: 'VNĐ',
+                      change: usdVnd.change,
+                      changePercent: usdVnd.changePercent,
+                    })
+                : undefined
+            }
+          />
+          <KpiTile
+            id="kpi-sjc"
+            label="Vàng SJC"
+            hint="Bán ra · triệu đồng/lượng"
+            loading={!hasLoaded}
+            value={sjcSellM !== undefined ? viNum(sjcSellM, 1) : undefined}
+            unit="Tr"
+            pct={sjcChangePct}
+          />
+          <KpiTile
+            id="kpi-vix"
+            label="VIX"
+            hint="Chỉ số sợ hãi"
+            loading={!hasLoaded}
+            value={vixItem ? enNum(vixItem.price) : undefined}
+            pct={vixItem?.changePercent}
+            spark={sparks.vix}
+            onClick={vixItem ? () => setActiveChartIndicator(usTarget(vixItem)) : undefined}
+            footnote={
+              vixItem && (
+                <span className={`text-[11px] font-medium ${TONE_TEXT[vixSentiment(vixItem.price).tone]}`}>
+                  {vixSentiment(vixItem.price).label}
+                </span>
+              )
+            }
+          />
+          <KpiTile
+            id="kpi-us10y"
+            label="US 10Y"
+            hint="Lợi suất trái phiếu Mỹ"
+            loading={!hasLoaded}
+            value={us10y ? enNum(us10y.price) : undefined}
+            unit="%"
+            pct={us10y?.changePercent}
+            spark={sparks.us10y}
+            onClick={us10y ? () => setActiveChartIndicator(usTarget(us10y)) : undefined}
+          />
+        </div>
 
-            <div className="space-y-1.5 font-mono">
-              {keyUs.map((idx) => {
-                const isPos = idx.changePercent >= 0;
-                return (
-                  <div
-                    key={idx.symbol}
-                    onClick={() =>
-                      setActiveChartIndicator({
-                        id: idx.symbol === 'DX-Y.NYB' ? 'dxy' : idx.symbol === '^TNX' ? 'us10y' : idx.symbol === '^GSPC' ? 'sp500' : idx.symbol,
-                        symbol: idx.symbol,
-                        name: idx.name,
-                        category: idx.symbol === 'DX-Y.NYB' ? 'currency' : idx.symbol === '^TNX' ? 'yield' : 'equity',
-                        price: idx.price,
-                        unit: idx.unit || 'điểm',
-                        change: idx.change,
-                        changePercent: idx.changePercent,
-                      })
-                    }
-                    className="flex items-center justify-between text-xs py-1.5 px-2 rounded-lg hover:bg-zinc-800/60 cursor-pointer transition-colors group"
-                    title={`Click xem biểu đồ lịch sử ${idx.name}`}
-                  >
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-zinc-200 font-medium group-hover:text-emerald-400 transition-colors">
-                        {idx.name}
-                      </span>
-                      <span className="text-[10px] text-zinc-600">{idx.symbol}</span>
-                      <ChartLineUp className="w-3 h-3 text-zinc-600 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </div>
-                    <div className="text-right flex items-center gap-2.5">
-                      <span className="text-zinc-100 font-semibold tabular-nums">
-                        {typeof idx.price === 'number'
-                          ? idx.price.toLocaleString('en-US', {
-                              minimumFractionDigits: idx.price < 100 ? 2 : 1,
-                              maximumFractionDigits: 2,
-                            })
-                          : idx.price}
-                        {idx.unit ? ` ${idx.unit}` : ''}
-                      </span>
-                      <span
-                        className={`text-[11px] tabular-nums font-medium flex items-center gap-0.5 min-w-[54px] justify-end ${
-                          isPos ? 'text-emerald-400' : 'text-rose-400'
-                        }`}
+        {/* ── Panels (asymmetric: wide global markets, two narrower columns) ── */}
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
+          {/* Global markets */}
+          <section className="rounded-xl border border-white/[0.06] bg-[#0f0f11] p-4 lg:col-span-5" aria-label="Thị trường quốc tế">
+            <PanelHeader icon={<Globe size={15} />} title="Thị trường quốc tế" />
+            {!hasLoaded ? (
+              <div className="space-y-2">
+                {[0, 1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-11 w-full" />
+                ))}
+              </div>
+            ) : usData.length === 0 ? (
+              <EmptyNote>{failed.us ? 'Không tải được dữ liệu thị trường quốc tế.' : 'Chưa có dữ liệu.'}</EmptyNote>
+            ) : (
+              <ul className="divide-y divide-white/[0.05]">
+                {usData
+                  .filter((i) => i.symbol !== '^VIX' && i.symbol !== '^TNX')
+                  .map((idx) => (
+                    <li key={idx.symbol}>
+                      <button
+                        type="button"
+                        onClick={() => setActiveChartIndicator(usTarget(idx))}
+                        className="group flex w-full items-center justify-between gap-3 rounded-lg px-2 py-2.5 text-left transition-colors hover:bg-white/[0.03]"
+                        aria-label={`Xem biểu đồ ${idx.name}`}
                       >
-                        {isPos ? '+' : ''}
-                        {idx.changePercent?.toFixed(2)}%
+                        <div className="min-w-0">
+                          <div className="truncate text-[13px] font-medium text-zinc-200 group-hover:text-emerald-400">
+                            {idx.name}
+                          </div>
+                          <div className="font-mono text-[10px] text-zinc-600">{idx.symbol}</div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Sparkline values={sparks[US_HISTORY_ID[idx.symbol]]} width={56} height={22} />
+                          <div className="w-[88px] text-right font-mono text-[13px] font-semibold text-zinc-100 tabular-nums">
+                            {enNum(idx.price, idx.price < 1000 ? 2 : 1)}
+                          </div>
+                          <div className="w-[72px] text-right">
+                            <Delta pct={idx.changePercent} />
+                          </div>
+                        </div>
+                      </button>
+                    </li>
+                  ))}
+              </ul>
+            )}
+          </section>
+
+          {/* Vietnam macro */}
+          <section className="rounded-xl border border-white/[0.06] bg-[#0f0f11] p-4 lg:col-span-3" aria-label="Vĩ mô Việt Nam">
+            <PanelHeader
+              icon={<Bank size={15} />}
+              title="Vĩ mô Việt Nam"
+              right={
+                indicators && !indicators.verified ? (
+                  <span
+                    className="rounded-md border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-medium text-amber-300"
+                    title="Số liệu lấy từ file cơ sở nội bộ, chưa được đối chiếu tự động với GSO/NHNN"
+                  >
+                    Chưa đối chiếu
+                  </span>
+                ) : undefined
+              }
+            />
+            {!hasLoaded ? (
+              <div className="space-y-3">
+                <Skeleton className="h-14 w-full" />
+                <Skeleton className="h-14 w-full" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+            ) : !indicators ? (
+              <EmptyNote>{failed.indicators ? 'Không tải được chỉ số vĩ mô.' : 'Chưa có dữ liệu.'}</EmptyNote>
+            ) : (
+              <div className="space-y-4">
+                {indicators.gdp && (
+                  <div>
+                    <div className="flex items-baseline justify-between">
+                      <span className="text-[13px] text-zinc-300">Tăng trưởng GDP</span>
+                      <span className="font-mono text-lg font-semibold text-emerald-400 tabular-nums">
+                        {viNum(indicators.gdp.growthRate)}%
                       </span>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="mt-4 pt-3 border-t border-[#1a1a1a] text-[11px] font-mono text-zinc-500 flex items-center justify-between">
-            <span>Tâm lý toàn cầu (VIX):</span>
-            <span className="text-emerald-400 font-semibold">Khẩu vị rủi ro ổn định</span>
-          </div>
-        </div>
-
-        {/* ── Pillar 2: Vietnam Domestic Macro & SBV Rates (CHÍNH THỨC) ── */}
-        <div className="p-4 sm:p-5 flex flex-col justify-between bg-amber-500/[0.02]">
-          <div>
-            <div className="flex items-center justify-between pb-3 border-b border-[#1a1a1a] mb-3">
-              <div className="flex items-center gap-1.5 font-mono text-xs text-amber-400 uppercase tracking-wider font-bold">
-                <Bank className="w-3.5 h-3.5 text-amber-400" />
-                <span>Vĩ Mô Việt Nam & Tiền Tệ</span>
-              </div>
-              <span className="font-mono text-[9px] px-1.5 py-0.5 rounded font-black bg-amber-500/20 text-amber-300 border border-amber-500/40">
-                🏛️ DỮ LIỆU CHÍNH THỨC
-              </span>
-            </div>
-
-            <div className="space-y-3 font-mono text-xs">
-              {/* USD/VND with Click to Chart */}
-              <div
-                onClick={() =>
-                  setActiveChartIndicator({
-                    id: 'usdvnd',
-                    symbol: 'USDVND=X',
-                    name: 'Tỷ Giá USD/VND (Liên Ngân Hàng & VCB)',
-                    category: 'currency',
-                    price: usdVndRate.sell,
-                    unit: 'VNĐ',
-                    buyPrice: usdVndRate.buyCash,
-                    sellPrice: usdVndRate.sell,
-                  })
-                }
-                className="py-1.5 px-2 rounded-lg hover:bg-zinc-800/60 cursor-pointer transition-colors group flex items-center justify-between border border-transparent hover:border-zinc-800"
-                title="Click xem biểu đồ lịch sử tỷ giá USD/VND"
-              >
-                <div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-zinc-100 font-bold group-hover:text-amber-300 transition-colors">
-                      USD/VND (Vietcombank)
-                    </span>
-                    <ChartLineUp className="w-3 h-3 text-zinc-500 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </div>
-                  <div className="text-[10px] text-zinc-400">
-                    Mua TM: {usdVndRate.buyCash?.toLocaleString('vi-VN')} đ
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-amber-300 font-black tabular-nums text-sm">
-                    {usdVndRate.sell?.toLocaleString('vi-VN')} <span className="text-[10px] text-zinc-500 font-normal">đ</span>
-                  </div>
-                  <span className="text-[10px] text-zinc-400">Tỷ giá bán ra</span>
-                </div>
-              </div>
-
-              {/* GDP Growth */}
-              <div className="flex items-center justify-between py-1 border-b border-[#1a1a1a]/40 pb-1 px-2">
-                <div>
-                  <span className="text-zinc-300 font-medium">Tăng trưởng GDP (Mới nhất)</span>
-                  <div className="text-[9px] text-amber-400/90 font-semibold">🏛️ Tổng Cục Thống Kê (GSO)</div>
-                </div>
-                <span className="text-emerald-400 font-black text-sm tabular-nums">{macroStats.gdpGrowth}</span>
-              </div>
-
-              {/* CPI YoY */}
-              <div className="flex items-center justify-between py-1 border-b border-[#1a1a1a]/40 pb-1 px-2">
-                <div>
-                  <span className="text-zinc-300 font-medium">Lạm phát CPI YoY (Kiểm soát &lt;4.5%)</span>
-                  <div className="text-[9px] text-amber-400/90 font-semibold">🏛️ Tổng Cục Thống Kê (GSO)</div>
-                </div>
-                <span className="text-zinc-100 font-bold tabular-nums">{macroStats.cpiYoY}</span>
-              </div>
-
-              {/* SBV Refinancing */}
-              <div className="flex items-center justify-between py-1 px-2">
-                <div>
-                  <span className="text-zinc-300 font-medium">Lãi suất tái cấp vốn NHNN</span>
-                  <div className="text-[9px] text-amber-400/90 font-semibold">🏛️ Ngân Hàng Nhà Nước (SBV)</div>
-                </div>
-                <span className="text-amber-300 font-black text-sm tabular-nums">{macroStats.refinancingRate}</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-4 pt-3 border-t border-[#1a1a1a] text-[11px] font-mono text-zinc-400 flex items-center justify-between px-2">
-            <span className="flex items-center gap-1">
-              <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
-              <span>Đánh giá chu kỳ vĩ mô:</span>
-            </span>
-            <span className="text-emerald-400 font-bold">{macroStats.cycleStage}</span>
-          </div>
-        </div>
-
-        {/* ── Pillar 3: Commodities, Gold & Savings Yield (UPGRADED WITH GOLD TABS) ── */}
-        <div className="p-4 sm:p-5 flex flex-col justify-between">
-          <div>
-            {/* Header with Switcher Tabs */}
-            <div className="flex items-center justify-between pb-2.5 border-b border-[#1a1a1a] mb-2.5">
-              <div className="flex items-center gap-1.5 font-mono text-xs text-zinc-300 uppercase tracking-wider font-semibold">
-                <Coins className="w-3.5 h-3.5 text-amber-400" />
-                <span>Giá Vàng & Hàng Hóa</span>
-              </div>
-
-              {/* Tab Switcher */}
-              <div className="flex items-center gap-1 bg-[#09090b] p-0.5 rounded-lg border border-[#27272a]">
-                <button
-                  onClick={() => setGoldTab('vn_gold')}
-                  className={`px-2 py-0.5 text-[10px] font-mono rounded font-semibold transition-all ${
-                    goldTab === 'vn_gold'
-                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                      : 'text-zinc-400 hover:text-zinc-200'
-                  }`}
-                >
-                  Vàng VN
-                </button>
-                <button
-                  onClick={() => setGoldTab('world_comm')}
-                  className={`px-2 py-0.5 text-[10px] font-mono rounded font-semibold transition-all ${
-                    goldTab === 'world_comm'
-                      ? 'bg-zinc-800 text-zinc-100 border border-zinc-700'
-                      : 'text-zinc-400 hover:text-zinc-200'
-                  }`}
-                >
-                  Thế Giới / Dầu
-                </button>
-              </div>
-            </div>
-
-            {/* Content for Vietnam Gold Tab */}
-            {goldTab === 'vn_gold' && (
-              <div className="space-y-1.5 font-mono text-xs max-h-[220px] overflow-y-auto pr-0.5">
-                {vnGoldList.map((g) => {
-                  const buyM = formatVnGoldPrice(g.buyPrice);
-                  const sellM = formatVnGoldPrice(g.sellPrice);
-                  const isChangePos = (g.change || 0) >= 0;
-
-                  return (
-                    <div
-                      key={g.id}
-                      onClick={() =>
-                        setActiveChartIndicator({
-                          id: g.id,
-                          name: g.name,
-                          category: 'gold_vn',
-                          price: sellM,
-                          unit: 'Tr.đ/lượng',
-                          change: g.change ? Number((g.change / 1000000).toFixed(2)) : undefined,
-                          changePercent: g.changePercent,
-                          buyPrice: g.buyPrice,
-                          sellPrice: g.sellPrice,
-                          spread: g.spread,
-                        })
-                      }
-                      className="p-1.5 rounded-lg hover:bg-zinc-800/60 cursor-pointer transition-colors border border-transparent hover:border-zinc-800 group"
-                      title={`Bấm xem biểu đồ lịch sử ${g.name}`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1.5">
-                          <span className="px-1 py-0.2 rounded text-[9px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                            {g.brand}
-                          </span>
-                          <span className="text-zinc-200 font-semibold text-[11px] truncate max-w-[135px] group-hover:text-amber-300 transition-colors">
-                            {g.name}
-                          </span>
-                          <ChartLineUp className="w-3 h-3 text-zinc-500 opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </div>
-
-                        <div className="text-right">
-                          <span className="text-amber-300 font-bold tabular-nums text-xs">
-                            {sellM} <span className="text-[10px] text-zinc-500 font-normal">Tr/lượng</span>
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between text-[10px] text-zinc-500 mt-0.5 pl-1">
-                        <span>Mua: {buyM} Tr • Bán: {sellM} Tr</span>
-                        {g.change !== undefined && (
-                          <span className={`font-medium ${isChangePos ? 'text-emerald-400' : 'text-rose-400'}`}>
-                            {isChangePos ? '▲ +' : '▼ '}
-                            {Math.abs(g.change / 1000000).toFixed(1)} Tr ({g.changePercent || 0}%)
-                          </span>
-                        )}
-                      </div>
+                    <MetricBar
+                      value={indicators.gdp.growthRate}
+                      target={indicators.gdp.target}
+                      tone={indicators.gdp.growthRate >= indicators.gdp.target ? 'gain' : 'warn'}
+                    />
+                    <div className="mt-1.5 flex justify-between text-[10px] text-zinc-500">
+                      <span>Kỳ {indicators.gdp.period}</span>
+                      <span>Mục tiêu {viNum(indicators.gdp.target, 1)}%</span>
                     </div>
-                  );
-                })}
-              </div>
-            )}
+                  </div>
+                )}
 
-            {/* Content for World Commodities Tab */}
-            {goldTab === 'world_comm' && (
-              <div className="space-y-2 font-mono text-xs">
-                {/* World Gold Spot */}
-                <div
-                  onClick={() =>
-                    setActiveChartIndicator({
-                      id: 'gold_world',
-                      symbol: 'GC=F',
-                      name: 'Vàng Thế Giới Spot (XAU/USD)',
-                      category: 'gold_world',
-                      price: goldWorld.price,
-                      unit: goldWorld.unit,
-                      change: goldWorld.change,
-                      changePercent: goldWorld.changePercent,
-                    })
-                  }
-                  className="p-1.5 rounded-lg hover:bg-zinc-800/60 cursor-pointer transition-colors group flex items-center justify-between"
-                  title="Bấm xem biểu đồ vàng thế giới"
-                >
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-zinc-200 font-medium group-hover:text-amber-300 transition-colors">
-                      {goldWorld.name}
-                    </span>
-                    <ChartLineUp className="w-3 h-3 text-zinc-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                {indicators.cpi && (
+                  <div>
+                    <div className="flex items-baseline justify-between">
+                      <span className="text-[13px] text-zinc-300">Lạm phát CPI (YoY)</span>
+                      <span className="font-mono text-lg font-semibold text-zinc-100 tabular-nums">
+                        {viNum(indicators.cpi.yoy)}%
+                      </span>
+                    </div>
+                    <MetricBar
+                      value={indicators.cpi.yoy}
+                      target={indicators.cpi.target}
+                      tone={indicators.cpi.yoy <= indicators.cpi.target ? 'gain' : 'loss'}
+                    />
+                    <div className="mt-1.5 flex justify-between text-[10px] text-zinc-500">
+                      <span>Kỳ {indicators.cpi.period}</span>
+                      <span>Trần {viNum(indicators.cpi.target, 1)}%</span>
+                    </div>
                   </div>
-                  <div className="text-right flex items-center gap-2">
-                    <span className="text-zinc-100 font-semibold tabular-nums">
-                      ${Number(goldWorld.price).toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
-                    </span>
-                    <span
-                      className={`text-[11px] tabular-nums font-medium ${
-                        Number(goldWorld.changePercent || 0) >= 0 ? 'text-emerald-400' : 'text-rose-400'
-                      }`}
-                    >
-                      {Number(goldWorld.changePercent || 0) >= 0 ? '+' : ''}
-                      {Number(goldWorld.changePercent || 0).toFixed(2)}%
-                    </span>
-                  </div>
-                </div>
+                )}
 
-                {/* Brent Oil */}
-                <div
-                  onClick={() =>
-                    setActiveChartIndicator({
-                      id: 'brent',
-                      symbol: 'BZ=F',
-                      name: 'Dầu Brent (Thế Giới)',
-                      category: 'oil',
-                      price: brentOil.price,
-                      unit: brentOil.unit,
-                      change: brentOil.change,
-                      changePercent: brentOil.changePercent,
-                    })
-                  }
-                  className="p-1.5 rounded-lg hover:bg-zinc-800/60 cursor-pointer transition-colors group flex items-center justify-between"
-                  title="Bấm xem biểu đồ dầu Brent"
-                >
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-zinc-200 font-medium group-hover:text-emerald-400 transition-colors">
-                      {brentOil.name}
-                    </span>
-                    <ChartLineUp className="w-3 h-3 text-zinc-500 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </div>
-                  <div className="text-right flex items-center gap-2">
-                    <span className="text-zinc-100 font-semibold tabular-nums">
-                      ${Number(brentOil.price).toFixed(2)}
-                    </span>
-                    <span
-                      className={`text-[11px] tabular-nums font-medium ${
-                        Number(brentOil.changePercent || 0) >= 0 ? 'text-emerald-400' : 'text-rose-400'
-                      }`}
-                    >
-                      {Number(brentOil.changePercent || 0) >= 0 ? '+' : ''}
-                      {Number(brentOil.changePercent || 0).toFixed(2)}%
+                {indicators.refiRate !== undefined && (
+                  <div className="flex items-baseline justify-between border-t border-white/[0.05] pt-3">
+                    <span className="text-[13px] text-zinc-300">Lãi suất tái cấp vốn</span>
+                    <span className="font-mono text-lg font-semibold text-amber-300 tabular-nums">
+                      {viNum(indicators.refiRate)}%
                     </span>
                   </div>
-                </div>
+                )}
 
-                {/* WTI Oil */}
-                <div
-                  onClick={() =>
-                    setActiveChartIndicator({
-                      id: 'wti',
-                      symbol: 'CL=F',
-                      name: 'Dầu WTI (Mỹ)',
-                      category: 'oil',
-                      price: wtiOil.price,
-                      unit: wtiOil.unit,
-                      change: wtiOil.change,
-                      changePercent: wtiOil.changePercent,
-                    })
-                  }
-                  className="p-1.5 rounded-lg hover:bg-zinc-800/60 cursor-pointer transition-colors group flex items-center justify-between"
-                  title="Bấm xem biểu đồ dầu WTI"
-                >
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-zinc-200 font-medium group-hover:text-emerald-400 transition-colors">
-                      {wtiOil.name}
-                    </span>
-                    <ChartLineUp className="w-3 h-3 text-zinc-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="border-t border-white/[0.05] pt-3">
+                  <div className="text-[10px] uppercase tracking-wide text-zinc-600">Đánh giá nhanh</div>
+                  <div className="mt-1 text-xs leading-relaxed text-zinc-300">
+                    {cycleText ?? 'Chưa đủ dữ liệu để đánh giá.'}
                   </div>
-                  <div className="text-right flex items-center gap-2">
-                    <span className="text-zinc-100 font-semibold tabular-nums">
-                      ${Number(wtiOil.price).toFixed(2)}
-                    </span>
-                    <span
-                      className={`text-[11px] tabular-nums font-medium ${
-                        Number(wtiOil.changePercent || 0) >= 0 ? 'text-emerald-400' : 'text-rose-400'
-                      }`}
-                    >
-                      {Number(wtiOil.changePercent || 0) >= 0 ? '+' : ''}
-                      {Number(wtiOil.changePercent || 0).toFixed(2)}%
-                    </span>
-                  </div>
-                </div>
-
-                {/* Silver */}
-                <div
-                  onClick={() =>
-                    setActiveChartIndicator({
-                      id: 'silver',
-                      symbol: 'SI=F',
-                      name: 'Bạc Thế Giới (XAG/USD)',
-                      category: 'metal',
-                      price: silverWorld.price,
-                      unit: silverWorld.unit,
-                      change: silverWorld.change,
-                      changePercent: silverWorld.changePercent,
-                    })
-                  }
-                  className="p-1.5 rounded-lg hover:bg-zinc-800/60 cursor-pointer transition-colors group flex items-center justify-between"
-                  title="Bấm xem biểu đồ bạc thế giới"
-                >
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-zinc-200 font-medium group-hover:text-zinc-100 transition-colors">
-                      {silverWorld.name}
-                    </span>
-                    <ChartLineUp className="w-3 h-3 text-zinc-500 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </div>
-                  <div className="text-right flex items-center gap-2">
-                    <span className="text-zinc-100 font-semibold tabular-nums">
-                      ${Number(silverWorld.price).toFixed(2)}
-                    </span>
-                    <span
-                      className={`text-[11px] tabular-nums font-medium ${
-                        Number(silverWorld.changePercent || 0) >= 0 ? 'text-emerald-400' : 'text-rose-400'
-                      }`}
-                    >
-                      {Number(silverWorld.changePercent || 0) >= 0 ? '+' : ''}
-                      {Number(silverWorld.changePercent || 0).toFixed(2)}%
-                    </span>
-                  </div>
+                  <div className="mt-1 text-[10px] text-zinc-600">Nguồn: {indicators.source}</div>
                 </div>
               </div>
             )}
-          </div>
+          </section>
 
-          {/* Savings Rate benchmark */}
-          <div className="mt-4 pt-3 border-t border-[#1a1a1a] text-[11px] font-mono text-zinc-400 flex items-center justify-between">
-            <span className="flex items-center gap-1.5">
-              <span className="px-1 py-0.2 rounded text-[9px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
-                CHÍNH THỨC
+          {/* Gold & commodities */}
+          <section className="rounded-xl border border-white/[0.06] bg-[#0f0f11] p-4 lg:col-span-4" aria-label="Vàng và hàng hóa">
+            <PanelHeader
+              icon={<Coins size={15} />}
+              title="Vàng & hàng hóa"
+              right={
+                <div className="flex items-center gap-0.5 rounded-lg border border-zinc-800 bg-[#09090b] p-0.5">
+                  {([
+                    ['vn_gold', 'Vàng VN'],
+                    ['world_comm', 'Thế giới'],
+                  ] as const).map(([key, label]) => (
+                    <button
+                      key={key}
+                      id={`gold-tab-${key}`}
+                      type="button"
+                      onClick={() => setGoldTab(key)}
+                      className={`rounded-md px-2.5 py-1 text-[11px] font-medium transition-colors ${
+                        goldTab === key ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              }
+            />
+
+            {!hasLoaded ? (
+              <div className="space-y-2">
+                {[0, 1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-11 w-full" />
+                ))}
+              </div>
+            ) : goldTab === 'vn_gold' ? (
+              vnGold.length === 0 ? (
+                <EmptyNote>{failed.commodities ? 'Không tải được giá vàng trong nước.' : 'Chưa có dữ liệu giá vàng.'}</EmptyNote>
+              ) : (
+                <ul className="max-h-[264px] divide-y divide-white/[0.05] overflow-y-auto pr-1">
+                  {vnGold.slice(0, 8).map((g) => {
+                    const sell = toMillion(g.sellPrice);
+                    const buy = toMillion(g.buyPrice);
+                    return (
+                      <li key={g.id} className="px-1 py-2.5">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex min-w-0 items-center gap-2">
+                            <span className="shrink-0 rounded bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-bold text-amber-300">
+                              {g.brand}
+                            </span>
+                            <span className="truncate text-[13px] text-zinc-200">{g.name}</span>
+                          </div>
+                          <span className="shrink-0 font-mono text-[13px] font-semibold text-amber-300 tabular-nums">
+                            {sell !== undefined ? viNum(sell, 1) : '—'}
+                            <span className="ml-1 text-[10px] font-normal text-zinc-500">Tr</span>
+                          </span>
+                        </div>
+                        <div className="mt-1 flex items-center justify-between pl-1 font-mono text-[10px] text-zinc-500">
+                          <span>
+                            Mua {buy !== undefined ? viNum(buy, 1) : '—'} · Bán {sell !== undefined ? viNum(sell, 1) : '—'}
+                          </span>
+                          <Delta pct={g.changePercent} />
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )
+            ) : worldRows.length === 0 ? (
+              <EmptyNote>{failed.commodities ? 'Không tải được giá hàng hóa thế giới.' : 'Chưa có dữ liệu.'}</EmptyNote>
+            ) : (
+              <ul className="divide-y divide-white/[0.05]">
+                {worldRows.map((c) => (
+                  <li key={c.id}>
+                    <button
+                      type="button"
+                      onClick={() => setActiveChartIndicator(commodityTarget(c))}
+                      className="group flex w-full items-center justify-between gap-3 rounded-lg px-2 py-2.5 text-left transition-colors hover:bg-white/[0.03]"
+                      aria-label={`Xem biểu đồ ${c.name}`}
+                    >
+                      <div className="min-w-0">
+                        <div className="truncate text-[13px] font-medium text-zinc-200 group-hover:text-amber-300">
+                          {c.name}
+                        </div>
+                        <div className="text-[10px] text-zinc-600">{c.unit}</div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Sparkline values={sparks[c.id]} width={48} height={22} />
+                        <div className="w-[72px] text-right font-mono text-[13px] font-semibold text-zinc-100 tabular-nums">
+                          {enNum(Number(c.price))}
+                        </div>
+                        <div className="w-[66px] text-right">
+                          <Delta pct={c.changePercent} />
+                        </div>
+                      </div>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <div className="mt-3 flex items-center justify-between border-t border-white/[0.05] pt-3 text-[11px] text-zinc-500">
+              <span>Lãi suất tiền gửi 12T (Big 4)</span>
+              <span className="font-mono font-semibold text-amber-300 tabular-nums">
+                {big4Range
+                  ? big4Range.min === big4Range.max
+                    ? `${viNum(big4Range.min)}%`
+                    : `${viNum(big4Range.min)}% – ${viNum(big4Range.max)}%`
+                  : '—'}
               </span>
-              <span>Lãi suất 12M Big 4:</span>
-            </span>
-            <span className="text-amber-300 font-bold tabular-nums">4.70% - 4.80% / năm</span>
-          </div>
+            </div>
+          </section>
         </div>
-
       </div>
 
-      {/* ── Collapsible Macro Deep-Dive Section (Cycle Wheel & Transmission) ── */}
-      <div className="border-t border-[#1a1a1a] bg-[#0c0c0c]">
+      {/* ── Collapsible deep dive: Economic cycle wheel ── */}
+      <div className="border-t border-white/[0.06] bg-[#0a0a0c]">
         <button
+          id="macro-cycle-toggle"
+          type="button"
           onClick={() => setShowCycleDeepDive((prev) => !prev)}
-          className="w-full px-5 py-2.5 flex items-center justify-between text-xs font-mono text-zinc-400 hover:text-zinc-200 transition-colors"
+          className="flex w-full items-center justify-between px-5 py-3 text-xs text-zinc-400 transition-colors hover:text-zinc-200"
         >
           <span className="flex items-center gap-2">
-            <Scales className="w-4 h-4 text-emerald-400" />
-            <span>MÔ HÌNH VÒNG QUAY CHU KỲ KINH TẾ (ECONOMIC CYCLE WHEEL & ALLOCATION)</span>
+            <Scales size={15} className="text-emerald-400" />
+            Mô hình chu kỳ kinh tế &amp; phân bổ tài sản
           </span>
           <span className="flex items-center gap-1 text-[11px] text-zinc-500">
             {showCycleDeepDive ? 'Thu gọn' : 'Xem chi tiết'}
-            {showCycleDeepDive ? <CaretUp className="w-3.5 h-3.5" /> : <CaretDown className="w-3.5 h-3.5" />}
+            {showCycleDeepDive ? <CaretUp size={13} /> : <CaretDown size={13} />}
           </span>
         </button>
-
         {showCycleDeepDive && (
-          <div className="p-5 border-t border-[#1a1a1a] animate-in fade-in duration-200">
+          <div className="animate-in fade-in border-t border-white/[0.06] p-5 duration-200">
             <EconomicCycleWheel />
           </div>
         )}
       </div>
 
-      {/* ── Interactive Macro Chart Modal ── */}
-      <MacroChartModal
-        indicator={activeChartIndicator}
-        onClose={() => setActiveChartIndicator(null)}
-      />
+      <MacroChartModal indicator={activeChartIndicator} onClose={() => setActiveChartIndicator(null)} />
     </div>
   );
-});
+};
 
 UnifiedMacroMatrix.displayName = 'UnifiedMacroMatrix';

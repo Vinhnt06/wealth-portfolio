@@ -118,6 +118,48 @@ const SYMBOL_MAP: Record<string, IndicatorMeta> = {
     category: 'currency',
     macroContext: 'Áp lực can thiệp ngoại hối của Ngân hàng Nhà nước và dư địa chính sách tiền tệ.',
   },
+  'nasdaq': {
+    symbol: '^IXIC',
+    name: 'Nasdaq Composite',
+    unit: 'điểm',
+    category: 'equity',
+    macroContext: 'Nhóm cổ phiếu công nghệ Mỹ, nhạy với lãi suất và khẩu vị rủi ro.',
+  },
+  '^IXIC': {
+    symbol: '^IXIC',
+    name: 'Nasdaq Composite',
+    unit: 'điểm',
+    category: 'equity',
+    macroContext: 'Nhóm cổ phiếu công nghệ Mỹ, nhạy với lãi suất và khẩu vị rủi ro.',
+  },
+  'dow': {
+    symbol: '^DJI',
+    name: 'Dow Jones',
+    unit: 'điểm',
+    category: 'equity',
+    macroContext: '30 cổ phiếu bluechip lớn nhất sàn New York.',
+  },
+  '^DJI': {
+    symbol: '^DJI',
+    name: 'Dow Jones',
+    unit: 'điểm',
+    category: 'equity',
+    macroContext: '30 cổ phiếu bluechip lớn nhất sàn New York.',
+  },
+  'vix': {
+    symbol: '^VIX',
+    name: 'CBOE VIX',
+    unit: 'điểm',
+    category: 'equity',
+    macroContext: 'Thước đo mức độ biến động và tâm lý sợ hãi của thị trường toàn cầu.',
+  },
+  '^VIX': {
+    symbol: '^VIX',
+    name: 'CBOE VIX',
+    unit: 'điểm',
+    category: 'equity',
+    macroContext: 'Thước đo mức độ biến động và tâm lý sợ hãi của thị trường toàn cầu.',
+  },
   'silver': {
     symbol: 'SI=F',
     name: 'Bạc Thế Giới (XAG/USD)',
@@ -172,7 +214,7 @@ const SYMBOL_MAP: Record<string, IndicatorMeta> = {
 };
 
 // Cache map: key -> { timestamp, data }
-const historyCache = new Map<string, { timestamp: number; data: any }>();
+const historyCache = new Map<string, { timestamp: number; data: Record<string, unknown> }>();
 const CACHE_TTL_MS = 60 * 1000; // 1 minute
 
 export const dynamic = 'force-dynamic';
@@ -183,7 +225,20 @@ export async function GET(request: NextRequest) {
   const rawId = searchParams.get('id') || searchParams.get('symbol') || 'gold_world';
   const range = searchParams.get('range') || '1mo'; // 7d, 1mo, 3mo, 6mo, 1y, 5y
 
-  const meta = SYMBOL_MAP[rawId] || SYMBOL_MAP['gold_world'];
+  const meta = SYMBOL_MAP[rawId];
+  if (!meta) {
+    return NextResponse.json(
+      { success: false, error: `Chưa hỗ trợ lịch sử cho chỉ báo "${rawId}".` },
+      { status: 404 }
+    );
+  }
+  if (meta.category === 'gold_vn') {
+    // Không có nguồn lịch sử giá vàng trong nước đã xác thực -> không tự suy diễn từ vàng thế giới
+    return NextResponse.json(
+      { success: false, error: 'Chưa có nguồn lịch sử giá vàng trong nước đã xác thực.' },
+      { status: 404 }
+    );
+  }
   const cacheKey = `${rawId}_${range}`;
 
   const cached = historyCache.get(cacheKey);
@@ -237,7 +292,7 @@ export async function GET(request: NextRequest) {
     const lows: (number | null)[] = quotes.low || [];
 
     // Filter valid non-null points
-    let points: HistoryPoint[] = [];
+    const points: HistoryPoint[] = [];
     for (let i = 0; i < timestamps.length; i++) {
       const c = closes[i];
       if (c !== null && c !== undefined && !isNaN(c)) {
@@ -260,34 +315,6 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Special Domestic Vietnam Gold transformation (Millions VNĐ per Lượng)
-    if (meta.category === 'gold_vn') {
-      // 1 Lượng = 1.20565 Troy Ounce.
-      // We retrieve live Vietnam gold prices from internal commodities endpoint or fallback to known spot
-      let liveTargetPriceMillion = 141.4; // Default SJC Miếng selling price
-      if (rawId === 'gold_sjc_nhan') liveTargetPriceMillion = 138.3;
-      else if (rawId === 'gold_doji_nhan') liveTargetPriceMillion = 140.0;
-      else if (rawId === 'gold_pnj_nhan') liveTargetPriceMillion = 140.0;
-      else if (rawId === 'gold_btmc_mieng') liveTargetPriceMillion = 140.4;
-      else if (rawId === 'gold_mihong_nhan') liveTargetPriceMillion = 141.4;
-
-      // Scale factor so latest point aligns with real live price
-      const latestPoint = points[points.length - 1];
-      const baseSpot = latestPoint?.value || 4000;
-      const scaleMultiplier = liveTargetPriceMillion / baseSpot;
-
-      points = points.map((p) => {
-        const vnGoldPrice = Number((p.value * scaleMultiplier).toFixed(2));
-        return {
-          ...p,
-          value: vnGoldPrice,
-          close: vnGoldPrice,
-          high: p.high ? Number((p.high * scaleMultiplier).toFixed(2)) : undefined,
-          low: p.low ? Number((p.low * scaleMultiplier).toFixed(2)) : undefined,
-          open: p.open ? Number((p.open * scaleMultiplier).toFixed(2)) : undefined,
-        };
-      });
-    }
 
     if (points.length === 0) {
       throw new Error('Không có điểm dữ liệu hợp lệ.');
@@ -331,12 +358,13 @@ export async function GET(request: NextRequest) {
       success: true,
       ...responseData,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(`Lỗi fetch lịch sử vĩ mô (${rawId}):`, error);
+    const message = error instanceof Error ? error.message : 'Không thể tải dữ liệu lịch sử vĩ mô.';
     return NextResponse.json(
       {
         success: false,
-        error: error.message || 'Không thể tải dữ liệu lịch sử vĩ mô.',
+        error: message,
       },
       { status: 500 }
     );

@@ -490,7 +490,7 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
       (typeof e.pair === 'string' && e.pair.includes('USD')) ||
       (typeof e.symbol === 'string' && e.symbol.includes('USDVND'))
   );
-  const usdSell = usdItem?.sell || 25420;
+  const usdSell = Number(usdItem?.rate ?? usdItem?.sell ?? 0);
   const usdChangePct = Math.abs(usdItem?.changePercent || 0.05);
 
   // 3. Quantitative Yield Curve & Term Spread Engine
@@ -921,7 +921,7 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                 <span className="text-zinc-600">•</span>
                 <span>Lãi suất {refRate}% (HĐ {depositRate}%)</span>
                 <span className="text-zinc-600">•</span>
-                <span>USD {usdSell.toLocaleString('vi-VN')}đ</span>
+                <span>USD {usdSell > 0 ? `${usdSell.toLocaleString('vi-VN')}đ` : 'Đang tải...'}</span>
               </div>
             </div>
 
@@ -982,7 +982,7 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                     <span>2. Mỏ Neo Vĩ Mô Thực Tế</span>
                   </div>
                   <p className="text-[11px] text-zinc-400 leading-relaxed font-sans">
-                    Để <strong className="text-emerald-300">không bị đổi vòng tròn theo từng ngày</strong>, thuật toán dành 70% điểm số cho số liệu cấu trúc: <strong className="text-zinc-200">GDP (+{gdpGrowth}%)</strong>, <strong className="text-zinc-200">CPI ({cpiYoy}%)</strong>, <strong className="text-zinc-200">Lãi suất SBV ({refRate}%)</strong> và <strong className="text-zinc-200">Tỷ giá USD/VND ({usdSell.toLocaleString('vi-VN')}đ)</strong>.
+                    Để <strong className="text-emerald-300">không bị đổi vòng tròn theo từng ngày</strong>, thuật toán dành 70% điểm số cho số liệu cấu trúc: <strong className="text-zinc-200">GDP (+{gdpGrowth}%)</strong>, <strong className="text-zinc-200">CPI ({cpiYoy}%)</strong>, <strong className="text-zinc-200">Lãi suất SBV ({refRate}%)</strong> và <strong className="text-zinc-200">Tỷ giá USD/VND ({usdSell > 0 ? `${usdSell.toLocaleString('vi-VN')}đ` : 'Đang cập nhật'})</strong>.
                   </p>
                   <p className="text-[10px] text-zinc-400 leading-relaxed font-sans">
                     Đây là mỏ neo nền tảng, đảm bảo vòng tròn phản ánh đúng bức tranh dài hạn của nền kinh tế.
@@ -1379,7 +1379,7 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                       <CurrencyCircleDollar className="w-3 h-3 text-emerald-400" />
                       <span>Tỷ giá USD/VND</span>
                     </span>
-                    <span className="text-zinc-200 font-bold">{usdSell.toLocaleString('vi-VN')}</span>
+                    <span className="text-zinc-200 font-bold">{usdSell > 0 ? usdSell.toLocaleString('vi-VN') : '--'}</span>
                   </div>
                   <div className="text-[9px] text-zinc-400 mt-1 flex justify-between">
                     <span>Biến động</span>
@@ -1590,7 +1590,7 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                       <span>Tỷ giá USD/VND</span>
                     </div>
                     <span className="text-zinc-200 font-medium block truncate mt-0.5">{activeCfg.exchangeRateStatus}</span>
-                    <span className="text-[9px] font-mono text-zinc-300 block mt-0.5">{usdSell.toLocaleString('vi-VN')} đ</span>
+                    <span className="text-[9px] font-mono text-zinc-300 block mt-0.5">{usdSell > 0 ? `${usdSell.toLocaleString('vi-VN')} đ` : '--'}</span>
                   </div>
                 </div>
 

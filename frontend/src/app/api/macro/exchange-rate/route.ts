@@ -3,11 +3,13 @@ import { NextResponse } from 'next/server';
 export interface ExchangeRateItem {
   pair: string;
   name: string;
+  rate: number;
   buy: number;
   sell: number;
   change: number;
   changePercent: number;
   updatedAt: string;
+  sourceNote?: string;
 }
 
 interface CacheData {
@@ -31,11 +33,11 @@ export async function GET() {
   }
 
   const pairs = [
-    { symbol: 'USDVND=X', pair: 'USD/VND', name: 'Đô la Mỹ', spreadBuy: 180 },
-    { symbol: 'EURVND=X', pair: 'EUR/VND', name: 'Euro', spreadBuy: 220 },
-    { symbol: 'JPYVND=X', pair: 'JPY/VND', name: 'Yên Nhật', spreadBuy: 1.5 },
-    { symbol: 'GBPVND=X', pair: 'GBP/VND', name: 'Bảng Anh', spreadBuy: 260 },
-    { symbol: 'CNYVND=X', pair: 'CNY/VND', name: 'Nhân dân tệ', spreadBuy: 25 },
+    { symbol: 'USDVND=X', pair: 'USD/VND', name: 'Đô la Mỹ' },
+    { symbol: 'EURVND=X', pair: 'EUR/VND', name: 'Euro' },
+    { symbol: 'JPYVND=X', pair: 'JPY/VND', name: 'Yên Nhật' },
+    { symbol: 'GBPVND=X', pair: 'GBP/VND', name: 'Bảng Anh' },
+    { symbol: 'CNYVND=X', pair: 'CNY/VND', name: 'Nhân dân tệ' },
   ];
 
   const results: ExchangeRateItem[] = [];
@@ -67,17 +69,18 @@ export async function GET() {
             const changePercent = meta.regularMarketChangePercent ?? meta.fulldayChangePercent ?? 0;
 
             if (rawPrice > 0) {
-              const sell = Math.round(rawPrice * 10) / 10;
-              const buy = Math.round((rawPrice - p.spreadBuy) * 10) / 10;
+              const roundedPrice = Math.round(rawPrice * 10) / 10;
 
               results.push({
                 pair: p.pair,
                 name: p.name,
-                buy,
-                sell,
+                rate: roundedPrice,
+                buy: roundedPrice,
+                sell: roundedPrice,
                 change: Math.round(change * 10) / 10,
                 changePercent: Math.round(changePercent * 100) / 100,
                 updatedAt: updateTime,
+                sourceNote: 'Tỷ giá liên ngân hàng (Interbank Spot Rate)',
               });
             }
           }
@@ -88,14 +91,11 @@ export async function GET() {
     })
   );
 
-  // If any pairs failed, fallback to defaults
+  // Không có tỷ giá thực -> báo lỗi, tuyệt đối không trả số liệu dựng sẵn
   if (results.length === 0) {
-    results.push(
-      { pair: 'USD/VND', name: 'Đô la Mỹ', buy: 25680, sell: 25879, change: 15, changePercent: 0.06, updatedAt: updateTime },
-      { pair: 'EUR/VND', name: 'Euro', buy: 28770, sell: 28994, change: 24, changePercent: 0.08, updatedAt: updateTime },
-      { pair: 'JPY/VND', name: 'Yên Nhật', buy: 167.5, sell: 171.2, change: 0.3, changePercent: 0.18, updatedAt: updateTime },
-      { pair: 'GBP/VND', name: 'Bảng Anh', buy: 33450, sell: 33710, change: -12, changePercent: -0.04, updatedAt: updateTime },
-      { pair: 'CNY/VND', name: 'Nhân dân tệ', buy: 3620, sell: 3655, change: 2, changePercent: 0.05, updatedAt: updateTime }
+    return NextResponse.json(
+      { success: false, error: 'Không lấy được tỷ giá từ nguồn thị trường.' },
+      { status: 502 }
     );
   }
 

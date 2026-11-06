@@ -323,8 +323,8 @@ export const MacroDataSection: React.FC = () => {
                 {Number(currentUsd.sell).toLocaleString('vi-VN')} <span className="text-xs text-zinc-400 font-normal">đ</span>
               </div>
               <div className="text-[10px] text-zinc-400 font-mono flex justify-between">
-                <span>Mua vào:</span>
-                <span className="text-zinc-300 font-medium">{Number(currentUsd.buy).toLocaleString('vi-VN')} đ</span>
+                <span>Nguồn tham chiếu:</span>
+                <span className="text-zinc-300 font-medium">Liên ngân hàng (Spot)</span>
               </div>
             </div>
 
