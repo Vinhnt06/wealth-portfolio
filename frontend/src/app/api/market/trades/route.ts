@@ -71,11 +71,20 @@ interface DailyTapeSession {
   dateKey: string;
   tradesMap: Map<string, RealTradeItem>;
   dbLoaded?: boolean;
+  whaleCount: number;
 }
 const intradayTapeStore = new Map<string, DailyTapeSession>();
 
 const memoryCache = new Map<string, { data: TradesResponseData; expiry: number }>();
 const CACHE_TTL_MS = 3 * 1000; // 3s cache
+
+// ── BỘ ÁO GIÁP BẢO VỆ SUPABASE GÓI FREE (ZERO RISK PROTECTION) ──
+// 1. Circuit breaker: Tự ngắt kết nối DB trong 5 phút nếu Supabase trả lỗi hoặc chậm
+let supabaseCircuitBreakerUntil = 0;
+// 2. Debounce: Mỗi mã cổ phiếu chỉ được phép ghi DB tối đa 1 lần mỗi 15 giây (chống spam request)
+const lastDbWriteTimeMap = new Map<string, number>();
+// 3. Hard Cap: Mỗi mã chỉ lưu tối đa 50 lệnh cá mập lớn nhất trong ngày (~6 KB / mã)
+const MAX_WHALE_TRADES_PER_SYMBOL = 50;
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -91,12 +100,13 @@ export async function GET(req: NextRequest) {
       dateKey: todayKey,
       tradesMap: new Map<string, RealTradeItem>(),
       dbLoaded: false,
+      whaleCount: 0,
     };
     intradayTapeStore.set(symbol, dailySession);
   }
 
-  // 1. Tự động nạp dữ liệu từ Database Supabase nếu phiên RAM vừa khởi tạo
-  if (!dailySession.dbLoaded) {
+  // 1. Tự động nạp dữ liệu từ Database Supabase nếu phiên RAM vừa khởi tạo (Chỉ nạp nếu Circuit Breaker an toàn)
+  if (!dailySession.dbLoaded && Date.now() >= supabaseCircuitBreakerUntil) {
     dailySession.dbLoaded = true;
     try {
       const { data: dbTrades, error: dbErr } = await supabase
@@ -104,9 +114,11 @@ export async function GET(req: NextRequest) {
         .select('id, trade_time, price, volume, value, investor_type, match_type')
         .eq('symbol', symbol)
         .eq('trading_date', todayKey)
-        .order('trade_time', { ascending: false });
+        .order('trade_time', { ascending: false })
+        .limit(MAX_WHALE_TRADES_PER_SYMBOL);
 
       if (!dbErr && Array.isArray(dbTrades) && dbTrades.length > 0) {
+        dailySession.whaleCount = dbTrades.length;
         for (const r of dbTrades) {
           dailySession.tradesMap.set(r.id, {
             id: r.id,
@@ -120,7 +132,8 @@ export async function GET(req: NextRequest) {
         }
       }
     } catch {
-      // Bỏ qua nếu bảng chưa được tạo trên Supabase, fallback sang In-memory
+      // Tự ngắt kết nối DB trong 5 phút nếu có lỗi
+      supabaseCircuitBreakerUntil = Date.now() + 5 * 60 * 1000;
     }
   }
 
@@ -225,7 +238,12 @@ export async function GET(req: NextRequest) {
         // CHỈ LƯU VÀO DATABASE CÁC LỆNH TAY TO (CÁ MẬP >= 1 TỶ & SÓI GIÀ >= 500TR)
         // LOẠI BỎ 100% LỆNH NHỎ LẺ CỪU NON (< 500TR) ĐỂ DATABASE SIÊU NHẸ
         const isWhaleTrade = investorType === 'Cá mập' || investorType === 'Sói già';
-        if (isWhaleTrade && !dailySession.tradesMap.has(uniqueKey)) {
+        if (
+          isWhaleTrade &&
+          !dailySession.tradesMap.has(uniqueKey) &&
+          dailySession.whaleCount < MAX_WHALE_TRADES_PER_SYMBOL
+        ) {
+          dailySession.whaleCount++;
           newRowsToUpsert.push({
             id: uniqueKey,
             symbol,
@@ -241,17 +259,31 @@ export async function GET(req: NextRequest) {
         dailySession.tradesMap.set(uniqueKey, tradeItem);
       }
 
-      // Batch persist vào Supabase trong nền (non-blocking)
-      if (newRowsToUpsert.length > 0) {
+      // Batch persist vào Supabase trong nền (Có Debounce 15s và Circuit Breaker bảo vệ Free tier)
+      const now = Date.now();
+      const lastWriteTime = lastDbWriteTimeMap.get(symbol) || 0;
+
+      if (
+        newRowsToUpsert.length > 0 &&
+        now - lastWriteTime >= 15000 &&
+        now >= supabaseCircuitBreakerUntil
+      ) {
+        lastDbWriteTimeMap.set(symbol, now);
         Promise.resolve(
           supabase.from('intraday_trades').upsert(newRowsToUpsert, { onConflict: 'id', ignoreDuplicates: true })
         )
           .then(({ error }: any) => {
-            if (error && error.code !== 'PGRST205') {
-              console.warn('[Supabase intraday_trades sync]', error.message);
+            if (error) {
+              if (error.code !== 'PGRST205') {
+                console.warn('[Supabase Circuit Breaker Activated]', error.message);
+                // Ngắt kết nối Supabase trong 5 phút để bảo vệ tài khoản Free
+                supabaseCircuitBreakerUntil = Date.now() + 5 * 60 * 1000;
+              }
             }
           })
-          .catch(() => {});
+          .catch(() => {
+            supabaseCircuitBreakerUntil = Date.now() + 5 * 60 * 1000;
+          });
       }
     }
 
