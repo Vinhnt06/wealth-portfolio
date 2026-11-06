@@ -4,8 +4,9 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useMarketStore } from '../store/marketStore';
 import { useDnseWebSocket } from '../hooks/useDnseWebSocket';
-import { Stack, ChartBar, ArrowsClockwise, Broadcast } from '@phosphor-icons/react';
+import { Stack, ChartBar, ArrowsClockwise, Broadcast, Clock } from '@phosphor-icons/react';
 import { getStockPriceColor } from '../utils/priceColors';
+import { getMarketSessionInfo } from '../utils/marketHours';
 
 export function OrderBook() {
   const { wsStatus } = useDnseWebSocket();
@@ -74,10 +75,12 @@ export function OrderBook() {
     }
   }, [selectedSymbol, updateQuotes, updateTick]);
 
-  // Nạp snapshot ban đầu, đối soát nền mỗi 30s (dữ liệu chính nhảy theo WebSocket realtime)
+  const sessionInfo = getMarketSessionInfo();
+
+  // Nạp snapshot ban đầu, đối soát nền mỗi 15s (dữ liệu chính nhảy theo Realtime Stream 2s)
   useEffect(() => {
     fetchRealOrderBook();
-    const timer = setInterval(fetchRealOrderBook, 30000);
+    const timer = setInterval(fetchRealOrderBook, 15000);
     return () => clearInterval(timer);
   }, [fetchRealOrderBook]);
 
@@ -116,12 +119,24 @@ export function OrderBook() {
                 {selectedSymbol}
               </span>
               <span className={`inline-flex items-center gap-1.5 text-[9px] px-2 py-0.5 rounded-full font-mono font-bold transition-all ${
-                wsStatus === 'connected'
+                sessionInfo.sessionBadge === 'PHIÊN ATC'
+                  ? 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
+                  : wsStatus === 'connected'
                   ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
-                  : 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
+                  : 'bg-zinc-800 text-zinc-400 border border-zinc-700'
               }`}>
-                <span className={`w-1.5 h-1.5 rounded-full ${wsStatus === 'connected' ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
-                {wsStatus === 'connected' ? 'REALTIME STREAM' : 'ĐANG KẾT NỐI'}
+                <span className={`w-1.5 h-1.5 rounded-full ${
+                  sessionInfo.sessionBadge === 'PHIÊN ATC'
+                    ? 'bg-amber-400 animate-pulse'
+                    : wsStatus === 'connected'
+                    ? 'bg-emerald-400 animate-pulse'
+                    : 'bg-zinc-500'
+                }`} />
+                {sessionInfo.sessionBadge === 'PHIÊN ATC'
+                  ? 'PHIÊN ĐỊNH KỲ ATC'
+                  : wsStatus === 'connected'
+                  ? 'REALTIME STREAM'
+                  : 'ĐANG KẾT NỐI'}
               </span>
               {flashUpdate && (
                 <span className="text-[9px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 font-mono font-bold animate-ping">

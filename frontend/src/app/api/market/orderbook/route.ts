@@ -30,7 +30,7 @@ interface OrderBookResponse {
 }
 
 const memoryCache = new Map<string, { data: OrderBookResponse; expiry: number }>();
-const CACHE_TTL_MS = 5 * 1000; // 5 seconds cache
+const CACHE_TTL_MS = 1500; // 1.5s cache for fast real-time depth updates
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);

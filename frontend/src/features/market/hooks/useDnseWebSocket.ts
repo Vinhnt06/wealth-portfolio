@@ -40,11 +40,146 @@ interface RealTickEntry {
 
 const REAL_TICKS: Record<string, RealTickEntry> = realTicksData as unknown as Record<string, RealTickEntry>;
 
-export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
-  const wsRef = useRef<WebSocket | null>(null);
-  const heartbeatTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const reconnectAttemptRef = useRef(0);
+// Global Singleton Streaming Manager across all hook instances
+let activeHookCount = 0;
+let liveStreamInterval: NodeJS.Timeout | null = null;
+let currentTrackedSymbol = '';
+let seenTradeFingerprints = new Set<string>();
+let isWsConnected = false;
+let globalWs: WebSocket | null = null;
+let globalHeartbeatTimer: NodeJS.Timeout | null = null;
+let globalReconnectTimer: NodeJS.Timeout | null = null;
+let reconnectAttempt = 0;
 
+async function executeStreamCycle() {
+  const state = useMarketStore.getState();
+  const symbol = state.selectedSymbol;
+  if (!symbol) return;
+
+  // Giảm tải khi người dùng đang chuyển sang tab khác
+  if (typeof document !== 'undefined' && document.hidden) {
+    return;
+  }
+
+  // 1. Cập nhật Sổ Lệnh (Order Book Depth) 3 mức giá thật từ sàn Vietcap
+  try {
+    const obRes = await fetch(`/api/market/orderbook?symbol=${symbol}`);
+    const obJson = await obRes.json();
+    if (obJson.success && obJson.data) {
+      const d = obJson.data;
+      state.updateQuotes({
+        symbol: d.symbol,
+        bids: d.bids || [],
+        asks: d.asks || [],
+        totalBidVol: d.totalBidVol || 0,
+        totalAskVol: d.totalAskVol || 0,
+        timestamp: d.timestamp || Date.now(),
+      });
+
+      if (d.price) {
+        state.updateTick({
+          symbol: d.symbol,
+          price: d.price,
+          change: d.change,
+          changePercent: d.changePercent,
+          volume: d.totalVolume,
+          totalVolume: d.totalVolume,
+          high: d.high,
+          low: d.low,
+          open: d.open,
+          referencePrice: d.referencePrice,
+          ceilingPrice: d.ceilingPrice,
+          floorPrice: d.floorPrice,
+          timestamp: d.timestamp || Date.now(),
+          matchType: 'B',
+        });
+      }
+
+      // Đánh dấu trạng thái kết nối thành công để mọi badge trên UI chuyển màu xanh Realtime
+      if (state.wsStatus !== 'connected') {
+        state.setWsStatus('connected');
+      }
+      state.setLastHeartbeat(Date.now());
+    }
+  } catch {
+    // Bỏ qua lỗi mạng tạm thời
+  }
+
+  // 2. Cập nhật Khớp Lệnh Real-time & Bắn Tick cho Radar Cá Mập
+  try {
+    const trRes = await fetch(`/api/market/trades?symbol=${symbol}&limit=50`);
+    const trJson = await trRes.json();
+    if (trJson.success && trJson.data?.trades) {
+      const trades = trJson.data.trades;
+
+      // Khi đổi mã cổ phiếu mới: reset danh sách đã xem & emit tick đầu tiên
+      if (currentTrackedSymbol !== symbol) {
+        currentTrackedSymbol = symbol;
+        seenTradeFingerprints = new Set(
+          trades.slice(0, 40).map((t: any) => `${t.time}_${t.volume}_${t.price}_${t.type}`)
+        );
+
+        if (trades.length > 0) {
+          const latest = trades[0];
+          const rawP = latest.price;
+          const priceInVnd = rawP < 500 ? Math.round(rawP * 1000) : Math.round(rawP);
+          state.setLastTradeTick({
+            id: `stream-${symbol}-${latest.time}-${latest.volume}`,
+            symbol,
+            price: priceInVnd,
+            volume: latest.volume,
+            matchType: latest.type === 'M' ? 'B' : 'S',
+            timestamp: Date.now(),
+          });
+        }
+      } else {
+        // Phát hiện các lệnh khớp MỚI xuất hiện trên sàn
+        const newTrades: any[] = [];
+        for (const t of trades) {
+          const fp = `${t.time}_${t.volume}_${t.price}_${t.type}`;
+          if (!seenTradeFingerprints.has(fp)) {
+            newTrades.push(t);
+            seenTradeFingerprints.add(fp);
+          }
+        }
+
+        // Nếu có lệnh mới, emit lệnh mới nhất để kích hoạt badge 'VỪA KHỚP'
+        if (newTrades.length > 0) {
+          const newest = newTrades[0];
+          const rawP = newest.price;
+          const priceInVnd = rawP < 500 ? Math.round(rawP * 1000) : Math.round(rawP);
+          state.setLastTradeTick({
+            id: `stream-${symbol}-${newest.time}-${newest.volume}-${Date.now()}`,
+            symbol,
+            price: priceInVnd,
+            volume: newest.volume,
+            matchType: newest.type === 'M' ? 'B' : 'S',
+            timestamp: Date.now(),
+          });
+        }
+      }
+    }
+  } catch {
+    // Bỏ qua lỗi mạng tạm thời
+  }
+}
+
+function startGlobalStreaming() {
+  if (liveStreamInterval) return;
+  // Thực hiện ngay chu kỳ đầu tiên
+  executeStreamCycle();
+  // Lặp lại mỗi 2 giây (Zero Lag Realtime)
+  liveStreamInterval = setInterval(executeStreamCycle, 2000);
+}
+
+function stopGlobalStreaming() {
+  if (liveStreamInterval) {
+    clearInterval(liveStreamInterval);
+    liveStreamInterval = null;
+  }
+}
+
+export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
   const {
     setWsStatus,
     updateTick,
@@ -63,8 +198,8 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
       // 1. PING from Server -> Respond with PONG immediately
       if (data.action === 'ping' || data.type === 'ping' || data === 'ping' || data.event === 'ping') {
         setLastHeartbeat(Date.now());
-        if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-          wsRef.current.send(JSON.stringify({ action: 'pong' }));
+        if (globalWs && globalWs.readyState === WebSocket.OPEN) {
+          globalWs.send(JSON.stringify({ action: 'pong' }));
         }
         return;
       }
@@ -267,173 +402,50 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
     });
   }, [updateTick, updateQuotes, updateIndex]);
 
-  // Ensure dynamically selected custom symbols fetch real quote with DNSE failover & subscribe WS channels
-  useEffect(() => {
-    if (!selectedSymbol) return;
-    
-    // Dynamic real-time subscription on live WebSocket
-    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      try {
-        wsRef.current.send(JSON.stringify({
-          action: 'subscribe',
-          channel: 'tick.G1.json',
-          symbols: [selectedSymbol],
-        }));
-        wsRef.current.send(JSON.stringify({
-          action: 'subscribe',
-          channel: 'tick_extra.G1.json',
-          symbols: [selectedSymbol],
-        }));
-        wsRef.current.send(JSON.stringify({
-          action: 'subscribe',
-          channel: 'top_price.G1.json',
-          symbols: [selectedSymbol],
-        }));
-      } catch (err) {
-        console.warn('Could not send dynamic WS subscribe:', err);
-      }
-    }
-
-    // Always fetch verified real quote from DNSE for the selected symbol
-    fetch(`/api/market/quote?symbol=${selectedSymbol}`)
-      .then((res) => res.json())
-      .then((resData) => {
-        if (resData.success && resData.data) {
-          const d = resData.data;
-          updateTick({
-            symbol: d.symbol,
-            price: d.price,
-            change: d.change,
-            changePercent: d.changePercent,
-            volume: Math.floor(d.volume / 10),
-            totalVolume: d.volume,
-            high: d.high,
-            low: d.low,
-            open: d.open,
-            referencePrice: d.referencePrice,
-            ceilingPrice: d.ceilingPrice,
-            floorPrice: d.floorPrice,
-            timestamp: d.timestamp,
-            matchType: 'B',
-          });
-        }
-      })
-      .catch(() => {
-        // Fallback to real snapshot if available
-        const real = REAL_TICKS[selectedSymbol];
-        if (real?.price) {
-          const ref = real.ref || real.price;
-          updateTick({
-            symbol: selectedSymbol,
-            price: real.price,
-            change: real.price - ref,
-            changePercent: ref ? ((real.price - ref) / ref) * 100 : 0,
-            volume: 15000,
-            totalVolume: real.volume || 1200000,
-            high: real.high || Math.round(ref * 1.02),
-            low: real.low || Math.round(ref * 0.98),
-            open: real.open || ref,
-            referencePrice: ref,
-            ceilingPrice: Math.round(ref * 1.07),
-            floorPrice: Math.round(ref * 0.93),
-            timestamp: Date.now(),
-            matchType: 'B',
-          });
-        }
-      });
-  }, [selectedSymbol, updateTick]);
-
-
-
-  // Seed 1 lần khi mount — không seed lại khi reconnect để không ghi đè dữ liệu live
+  // Seed 1 lần khi mount
   useEffect(() => {
     seedInitialState();
   }, [seedInitialState]);
 
-  // Main Connection logic: tự nối lại với backoff nếu WS bị ngắt
+  // Khi selectedSymbol thay đổi, kích hoạt ngay 1 chu kỳ stream để cập nhật ngay lập tức
   useEffect(() => {
+    if (!selectedSymbol) return;
+    executeStreamCycle();
+  }, [selectedSymbol]);
+
+  // Main Singleton Connection & Streaming Engine
+  useEffect(() => {
+    activeHookCount++;
+
+    // Khởi động High-Frequency Streaming Engine
+    startGlobalStreaming();
+
+    // Đồng thời thử kết nối WebSocket DNSE (nếu khả dụng)
     const apiKey = process.env.NEXT_PUBLIC_DNSE_API_KEY;
-    let stopped = false;
-    let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
-    let openedAt = 0;
+    const targetUrl = apiKey ? `${WS_URL}?token=${encodeURIComponent(apiKey)}` : WS_URL;
 
-    function scheduleReconnect() {
-      if (stopped || reconnectTimer) return;
-      const attempt = reconnectAttemptRef.current;
-      // 1s → 2s → 4s → 8s → 16s → 30s (capped)
-      const delay = Math.min(30000, 1000 * 2 ** Math.min(attempt, 5));
-      reconnectAttemptRef.current = attempt + 1;
-      reconnectTimer = setTimeout(() => {
-        reconnectTimer = null;
-        connect();
-      }, delay);
-    }
-
-    function connect() {
-      if (stopped) return;
-      setWsStatus('connecting');
-
-      const targetUrl = apiKey ? `${WS_URL}?token=${encodeURIComponent(apiKey)}` : WS_URL;
+    function connectWs() {
+      if (globalWs && (globalWs.readyState === WebSocket.OPEN || globalWs.readyState === WebSocket.CONNECTING)) {
+        return;
+      }
 
       try {
         const ws = new WebSocket(targetUrl);
-        wsRef.current = ws;
+        globalWs = ws;
 
         ws.onopen = () => {
+          isWsConnected = true;
           setWsStatus('connected');
-          openedAt = Date.now();
+          reconnectAttempt = 0;
 
           const activeSymbols = Array.from(new Set([...symbols, selectedSymbol].filter(Boolean)));
-
-          // 1. Trade & Trade Extra Channel (Lô chẵn G1)
-          const subTickMsg = {
-            action: 'subscribe',
-            channel: 'tick.G1.json',
-            symbols: activeSymbols,
-          };
-          const subTickExtraMsg = {
-            action: 'subscribe',
-            channel: 'tick_extra.G1.json',
-            symbols: activeSymbols,
-          };
-
-          // 2. Market Depth Quotes (top_price.G1.json)
-          const subTopPriceMsg = {
-            action: 'subscribe',
-            channel: 'top_price.G1.json',
-            symbols: activeSymbols,
-          };
-
-          // 3. Market Index Channels (VNINDEX, VN30, HNX, UPCOM)
-          const subVnIndexMsg = {
-            action: 'subscribe',
-            channel: 'market_index.VNINDEX.json',
-          };
-          const subVn30Msg = {
-            action: 'subscribe',
-            channel: 'market_index.VN30.json',
-          };
-          const subHnxMsg = {
-            action: 'subscribe',
-            channel: 'market_index.HNX.json',
-          };
-          const subUpcomMsg = {
-            action: 'subscribe',
-            channel: 'market_index.UPCOM.json',
-          };
-
-          // 4. Foreign Investor Flow (foreign.G1.json)
-          const subForeignMsg = {
-            action: 'subscribe',
-            channel: 'foreign.G1.json',
-            symbols: activeSymbols,
-          };
-
-          // 5. Market Index Influence (Top cổ phiếu ảnh hưởng chỉ số)
-          const subInfluenceMsg = {
-            action: 'subscribe',
-            channel: 'market_index_influence.VNINDEX.1.json',
-          };
+          const subTickMsg = { action: 'subscribe', channel: 'tick.G1.json', symbols: activeSymbols };
+          const subTickExtraMsg = { action: 'subscribe', channel: 'tick_extra.G1.json', symbols: activeSymbols };
+          const subTopPriceMsg = { action: 'subscribe', channel: 'top_price.G1.json', symbols: activeSymbols };
+          const subVnIndexMsg = { action: 'subscribe', channel: 'market_index.VNINDEX.json' };
+          const subVn30Msg = { action: 'subscribe', channel: 'market_index.VN30.json' };
+          const subHnxMsg = { action: 'subscribe', channel: 'market_index.HNX.json' };
+          const subUpcomMsg = { action: 'subscribe', channel: 'market_index.UPCOM.json' };
 
           ws.send(JSON.stringify(subTickMsg));
           ws.send(JSON.stringify(subTickExtraMsg));
@@ -442,55 +454,62 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
           ws.send(JSON.stringify(subVn30Msg));
           ws.send(JSON.stringify(subHnxMsg));
           ws.send(JSON.stringify(subUpcomMsg));
-          ws.send(JSON.stringify(subForeignMsg));
-          ws.send(JSON.stringify(subInfluenceMsg));
 
-          // Client-initiated keepalive: send PONG every 2 minutes (tối đa 3 phút theo tài liệu DNSE)
-          heartbeatTimerRef.current = setInterval(() => {
+          if (globalHeartbeatTimer) clearInterval(globalHeartbeatTimer);
+          globalHeartbeatTimer = setInterval(() => {
             if (ws.readyState === WebSocket.OPEN) {
               ws.send(JSON.stringify({ action: 'pong' }));
             }
           }, 120000);
         };
 
-      ws.onmessage = handleMessage;
+        ws.onmessage = handleMessage;
 
-      ws.onerror = () => {
-        if (!stopped) setWsStatus('error');
-      };
+        ws.onerror = () => {
+          isWsConnected = false;
+        };
 
-      ws.onclose = () => {
-        if (heartbeatTimerRef.current) clearInterval(heartbeatTimerRef.current);
-        if (stopped) return;
-        setWsStatus('disconnected');
-        // Kết nối sống được >10s thì coi như ổn định, reset bộ đếm backoff
-        if (openedAt && Date.now() - openedAt > 10000) reconnectAttemptRef.current = 0;
-        scheduleReconnect();
-      };
+        ws.onclose = () => {
+          isWsConnected = false;
+          if (globalHeartbeatTimer) clearInterval(globalHeartbeatTimer);
+          // Tự nối lại sau delay
+          if (!globalReconnectTimer && activeHookCount > 0) {
+            const delay = Math.min(30000, 1000 * 2 ** Math.min(reconnectAttempt, 5));
+            reconnectAttempt++;
+            globalReconnectTimer = setTimeout(() => {
+              globalReconnectTimer = null;
+              connectWs();
+            }, delay);
+          }
+        };
       } catch {
-        if (stopped) return;
-        setWsStatus('error');
-        scheduleReconnect();
+        isWsConnected = false;
       }
     }
 
-    connect();
+    connectWs();
 
     return () => {
-      stopped = true;
-      if (reconnectTimer) {
-        clearTimeout(reconnectTimer);
-        reconnectTimer = null;
-      }
-      if (wsRef.current) {
-        wsRef.current.close();
-      }
-      if (heartbeatTimerRef.current) {
-        clearInterval(heartbeatTimerRef.current);
+      activeHookCount = Math.max(0, activeHookCount - 1);
+      if (activeHookCount === 0) {
+        stopGlobalStreaming();
+        if (globalReconnectTimer) {
+          clearTimeout(globalReconnectTimer);
+          globalReconnectTimer = null;
+        }
+        if (globalHeartbeatTimer) {
+          clearInterval(globalHeartbeatTimer);
+          globalHeartbeatTimer = null;
+        }
+        if (globalWs) {
+          globalWs.close();
+          globalWs = null;
+        }
       }
     };
-  }, [symbols, handleMessage, setWsStatus]);
+  }, [symbols, handleMessage, setWsStatus, selectedSymbol]);
 
   const { wsStatus } = useMarketStore();
   return { wsStatus, selectedSymbol };
 }
+

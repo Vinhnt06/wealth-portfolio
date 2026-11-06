@@ -76,7 +76,7 @@ interface DailyTapeSession {
 const intradayTapeStore = new Map<string, DailyTapeSession>();
 
 const memoryCache = new Map<string, { data: TradesResponseData; expiry: number }>();
-const CACHE_TTL_MS = 3 * 1000; // 3s cache
+const CACHE_TTL_MS = 1500; // 1.5s cache for high-frequency streaming
 
 // ── BỘ ÁO GIÁP BẢO VỆ SUPABASE GÓI FREE (ZERO RISK PROTECTION) ──
 // 1. Circuit breaker: Tự ngắt kết nối DB trong 5 phút nếu Supabase trả lỗi hoặc chậm

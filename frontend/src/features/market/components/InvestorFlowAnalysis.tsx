@@ -19,6 +19,7 @@ import {
 } from '@phosphor-icons/react';
 import { useMarketStore } from '../store/marketStore';
 import { useDnseWebSocket } from '../hooks/useDnseWebSocket';
+import { getMarketSessionInfo } from '../utils/marketHours';
 
 export interface OrderItem {
   id: string | number;
@@ -220,6 +221,7 @@ export function calculateTapeStats(trades: OrderItem[], symbol: string): TradesD
 export const InvestorFlowAnalysis: React.FC = () => {
   const { wsStatus } = useDnseWebSocket();
   const { selectedSymbol, lastTradeTick } = useMarketStore();
+  const sessionInfo = getMarketSessionInfo();
   const [timeframe, setTimeframe] = useState<'60' | '1D' | 'ALL'>('1D');
   const [activePage, setActivePage] = useState<1 | 2 | 3>(1);
   const [filterInvestor, setFilterInvestor] = useState<'shark' | 'wolf_shark' | 'all'>('shark');
@@ -273,10 +275,10 @@ export const InvestorFlowAnalysis: React.FC = () => {
     }
   }, [selectedSymbol]);
 
-  // Nạp dữ liệu ban đầu, đồng bộ đối soát nền mỗi 30s
+  // Nạp dữ liệu ban đầu, đồng bộ đối soát nền mỗi 15s (dữ liệu chính nhảy theo Realtime Stream 2s)
   useEffect(() => {
     fetchRealTrades();
-    const interval = setInterval(fetchRealTrades, 30000);
+    const interval = setInterval(fetchRealTrades, 15000);
     return () => clearInterval(interval);
   }, [fetchRealTrades]);
 
@@ -478,12 +480,24 @@ export const InvestorFlowAnalysis: React.FC = () => {
                   {selectedSymbol}
                 </span>
                 <span className={`inline-flex items-center gap-1.5 text-[9px] px-2 py-0.5 rounded-full font-mono font-bold transition-all ${
-                  wsStatus === 'connected'
+                  sessionInfo.sessionBadge === 'PHIÊN ATC'
+                    ? 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
+                    : wsStatus === 'connected'
                     ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
-                    : 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
+                    : 'bg-zinc-800 text-zinc-400 border border-zinc-700'
                 }`}>
-                  <span className={`w-1.5 h-1.5 rounded-full ${wsStatus === 'connected' ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
-                  {wsStatus === 'connected' ? 'REALTIME STREAM' : 'ĐANG KẾT NỐI'}
+                  <span className={`w-1.5 h-1.5 rounded-full ${
+                    sessionInfo.sessionBadge === 'PHIÊN ATC'
+                      ? 'bg-amber-400 animate-pulse'
+                      : wsStatus === 'connected'
+                      ? 'bg-emerald-400 animate-pulse'
+                      : 'bg-zinc-500'
+                  }`} />
+                  {sessionInfo.sessionBadge === 'PHIÊN ATC'
+                    ? 'PHIÊN ĐỊNH KỲ ATC'
+                    : wsStatus === 'connected'
+                    ? 'REALTIME STREAM'
+                    : 'ĐANG KẾT NỐI'}
                 </span>
               </h3>
               <div className="group relative cursor-pointer text-zinc-500 hover:text-zinc-300">
