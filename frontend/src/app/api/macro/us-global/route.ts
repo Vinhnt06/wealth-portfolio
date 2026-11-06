@@ -8,7 +8,8 @@ export const revalidate = 0;
 export interface MarketIndexItem {
   symbol: string;
   name: string;
-  category: 'equity' | 'yield' | 'volatility' | 'currency';
+  category: 'equity' | 'yield' | 'volatility' | 'currency' | 'commodity' | 'crypto';
+  region?: 'us' | 'asia' | 'europe' | 'global';
   price: number;
   change: number;
   changePercent: number;
@@ -60,12 +61,35 @@ export async function GET() {
   // 1. Fetch 100% Realtime Data from Official Yahoo Finance Chart API
   // All symbols here have official free public live endpoints
   const symbolConfigs = [
-    { symbol: '^GSPC', name: 'S&P 500', cat: 'equity' as const, unit: 'pts', note: 'Phong vũ biểu CK Mỹ (Top 500 CP)' },
-    { symbol: '^IXIC', name: 'Nasdaq Comp', cat: 'equity' as const, unit: 'pts', note: 'Chỉ số nhóm cổ phiếu công nghệ Mỹ' },
-    { symbol: '^DJI', name: 'Dow Jones', cat: 'equity' as const, unit: 'pts', note: '30 Bluechip lớn nhất sàn New York' },
-    { symbol: '^TNX', name: 'US 10Y Yield', cat: 'yield' as const, unit: '%', note: 'Lợi suất Trái phiếu Chính phủ Mỹ 10 năm' },
-    { symbol: 'DX-Y.NYB', name: 'DXY Index', cat: 'currency' as const, unit: 'pts', note: 'Chỉ số đo lường sức mạnh đồng USD' },
-    { symbol: '^VIX', name: 'CBOE VIX', cat: 'volatility' as const, unit: 'pts', note: 'Thước đo mức độ biến động & sợ hãi toàn cầu' },
+    // Mỹ (Wall Street)
+    { symbol: '^GSPC', name: 'S&P 500', cat: 'equity' as const, region: 'us' as const, unit: 'pts', note: 'Top 500 CP vốn hóa lớn nhất Mỹ' },
+    { symbol: '^IXIC', name: 'Nasdaq Comp', cat: 'equity' as const, region: 'us' as const, unit: 'pts', note: 'Chỉ số nhóm cổ phiếu công nghệ Mỹ' },
+    { symbol: '^DJI', name: 'Dow Jones', cat: 'equity' as const, region: 'us' as const, unit: 'pts', note: '30 Bluechip lớn nhất sàn New York' },
+
+    // Châu Á (Asia)
+    { symbol: '^N225', name: 'Nikkei 225', cat: 'equity' as const, region: 'asia' as const, unit: 'pts', note: 'Chỉ số chứng khoán Nhật Bản (Tokyo)' },
+    { symbol: '^HSI', name: 'Hang Seng', cat: 'equity' as const, region: 'asia' as const, unit: 'pts', note: 'Chỉ số chứng khoán Hồng Kông' },
+    { symbol: '000001.SS', name: 'Shanghai Comp', cat: 'equity' as const, region: 'asia' as const, unit: 'pts', note: 'Chỉ số sàn Thượng Hải (Trung Quốc)' },
+    { symbol: '^KS11', name: 'KOSPI', cat: 'equity' as const, region: 'asia' as const, unit: 'pts', note: 'Chỉ số chứng khoán Hàn Quốc' },
+
+    // Châu Âu (Europe)
+    { symbol: '^FTSE', name: 'FTSE 100', cat: 'equity' as const, region: 'europe' as const, unit: 'pts', note: 'Chỉ số 100 Bluechip sàn London (Anh)' },
+    { symbol: '^GDAXI', name: 'DAX 40', cat: 'equity' as const, region: 'europe' as const, unit: 'pts', note: 'Chỉ số 40 cổ phiếu hàng đầu nước Đức' },
+
+    // Hàng Hóa & Năng Lượng (Commodities)
+    { symbol: 'GC=F', name: 'Vàng Thế Giới', cat: 'commodity' as const, region: 'global' as const, unit: 'USD/oz', note: 'Giá vàng giao ngay quốc tế' },
+    { symbol: 'BZ=F', name: 'Dầu Brent', cat: 'commodity' as const, region: 'global' as const, unit: 'USD/thùng', note: 'Dầu thô tiêu chuẩn toàn cầu' },
+    { symbol: 'CL=F', name: 'Dầu WTI', cat: 'commodity' as const, region: 'global' as const, unit: 'USD/thùng', note: 'Dầu thô ngọt nhẹ giao dịch tại NYMEX' },
+    { symbol: 'SI=F', name: 'Bạc Thế Giới', cat: 'commodity' as const, region: 'global' as const, unit: 'USD/oz', note: 'Giá kim loại bạc thế giới' },
+
+    // Vĩ Mô & Tiền Tệ
+    { symbol: 'DX-Y.NYB', name: 'DXY Index', cat: 'currency' as const, region: 'global' as const, unit: 'pts', note: 'Chỉ số đo lường sức mạnh đồng USD' },
+    { symbol: '^TNX', name: 'US 10Y Yield', cat: 'yield' as const, region: 'us' as const, unit: '%', note: 'Lợi suất Trái phiếu Chính phủ Mỹ 10 năm' },
+    { symbol: '^VIX', name: 'CBOE VIX', cat: 'volatility' as const, region: 'global' as const, unit: 'pts', note: 'Thước đo mức độ biến động & sợ hãi toàn cầu' },
+
+    // Tiền Kỹ Thuật Số (Crypto)
+    { symbol: 'BTC-USD', name: 'Bitcoin (BTC)', cat: 'crypto' as const, region: 'global' as const, unit: 'USD', note: 'Đồng tiền mã hóa vốn hóa lớn nhất' },
+    { symbol: 'ETH-USD', name: 'Ethereum (ETH)', cat: 'crypto' as const, region: 'global' as const, unit: 'USD', note: 'Nền tảng smart contract hàng đầu' },
   ];
 
   const fetchedIndices: MarketIndexItem[] = [];
@@ -95,6 +119,7 @@ export async function GET() {
               symbol: cfg.symbol,
               name: cfg.name,
               category: cfg.cat,
+              region: cfg.region,
               price: Number(price.toFixed(2)),
               change: Number(change.toFixed(2)),
               changePercent: Number(changePercent.toFixed(2)),

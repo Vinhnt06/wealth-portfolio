@@ -19,7 +19,8 @@ import {
 interface MarketIndexItem {
   symbol: string;
   name: string;
-  category: 'equity' | 'yield' | 'volatility' | 'currency';
+  category: 'equity' | 'yield' | 'volatility' | 'currency' | 'commodity' | 'crypto';
+  region?: 'us' | 'asia' | 'europe' | 'global';
   price: number;
   change: number;
   changePercent: number;
@@ -51,11 +52,14 @@ interface USGlobalMacroData {
   updateTime: string;
 }
 
+type MarketCategoryTab = 'all' | 'us' | 'asia' | 'europe' | 'commodity' | 'macro_crypto';
+
 export const USGlobalMacroSection: React.FC = memo(() => {
   const [data, setData] = useState<USGlobalMacroData | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [lastRefreshed, setLastRefreshed] = useState<string>('');
   const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<MarketCategoryTab>('all');
 
   const fetchData = async (isManual = false) => {
     if (isManual) setLoading(true);
@@ -69,7 +73,7 @@ export const USGlobalMacroSection: React.FC = memo(() => {
         }
       }
     } catch (err) {
-      console.error('Lỗi fetch dữ liệu thị trường Mỹ realtime:', err);
+      console.error('Lỗi fetch dữ liệu thị trường toàn cầu realtime:', err);
     } finally {
       if (isManual) setLoading(false);
     }
@@ -77,7 +81,7 @@ export const USGlobalMacroSection: React.FC = memo(() => {
 
   useEffect(() => {
     fetchData(false);
-    const timer = setInterval(() => fetchData(false), 30000); // 30s auto-refresh
+    const timer = setInterval(() => fetchData(false), 15000); // 15s auto-refresh
     return () => clearInterval(timer);
   }, []);
 
@@ -98,10 +102,34 @@ export const USGlobalMacroSection: React.FC = memo(() => {
   }
 
   const { indices, usInflation, vietnamImpact } = data;
-  const equityIndices = indices.filter((i) => i.category === 'equity');
   const tnxItem = indices.find((m) => m.symbol === '^TNX');
   const dxyItem = indices.find((m) => m.symbol === 'DX-Y.NYB');
   const vixItem = indices.find((m) => m.symbol === '^VIX');
+
+  // Filter indices based on active tab
+  const filteredIndices = indices.filter((item) => {
+    if (activeTab === 'all') return true;
+    if (activeTab === 'us') return item.region === 'us' && item.category === 'equity';
+    if (activeTab === 'asia') return item.region === 'asia';
+    if (activeTab === 'europe') return item.region === 'europe';
+    if (activeTab === 'commodity') return item.category === 'commodity';
+    if (activeTab === 'macro_crypto') return item.category === 'currency' || item.category === 'yield' || item.category === 'volatility' || item.category === 'crypto';
+    return true;
+  });
+
+  const getRegionBadge = (item: MarketIndexItem) => {
+    if (item.symbol === '^GSPC' || item.symbol === '^IXIC' || item.symbol === '^DJI') return '🇺🇸 Mỹ';
+    if (item.symbol === '^N225') return '🇯🇵 Nhật Bản';
+    if (item.symbol === '^HSI') return '🇭🇰 Hồng Kông';
+    if (item.symbol === '000001.SS') return '🇨🇳 Thượng Hải';
+    if (item.symbol === '^KS11') return '🇰🇷 Hàn Quốc';
+    if (item.symbol === '^FTSE') return '🇬🇧 Anh';
+    if (item.symbol === '^GDAXI') return '🇩🇪 Đức';
+    if (item.category === 'commodity') return '🛢️ Hàng Hóa';
+    if (item.category === 'crypto') return '🪙 Tiền Số';
+    if (item.category === 'currency' || item.category === 'yield' || item.category === 'volatility') return '🌐 Vĩ Mô';
+    return '🌍 Quốc Tế';
+  };
 
   return (
     <div suppressHydrationWarning className="relative overflow-hidden p-6 md:p-8 bg-zinc-950/90 border border-zinc-800/80 rounded-3xl backdrop-blur-2xl space-y-6 shadow-2xl transition-all">
@@ -118,17 +146,17 @@ export const USGlobalMacroSection: React.FC = memo(() => {
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <h2 className="font-mono font-black text-base sm:text-lg text-zinc-100 tracking-tight whitespace-nowrap">
-                THỊ TRƯỜNG MỸ & CHỈ SỐ QUỐC TẾ TÁC ĐỘNG VIỆT NAM
+                TRUNG TÂM DỮ LIỆU THỊ TRƯỜNG TOÀN CẦU & VĨ MÔ QUỐC TẾ
               </h2>
               <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 shrink-0">
-                YAHOO FINANCE LIVE API
+                YAHOO FINANCE LIVE FEED
               </span>
               <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 shrink-0">
-                REALTIME NY & CBOE
+                STREAMING 15S
               </span>
             </div>
             <p className="text-xs text-zinc-400 mt-1 truncate">
-              Dữ liệu trực tiếp S&P 500, Nasdaq, Dow Jones, Lợi suất US 10Y, DXY, VIX & Ma trận tương quan TTCK Việt Nam
+              Cập nhật trực tiếp TTCK Mỹ, Châu Á, Châu Âu, Vàng thế giới, Dầu thô, DXY, US 10Y, VIX & Ma trận tác động Việt Nam
             </p>
           </div>
         </div>
@@ -164,7 +192,7 @@ export const USGlobalMacroSection: React.FC = memo(() => {
       {isCollapsed && (
         <div className="p-3.5 rounded-2xl bg-zinc-900/60 border border-zinc-800/80 flex flex-wrap items-center justify-between gap-3 font-mono text-xs transition-opacity duration-200">
           <div className="flex flex-wrap items-center gap-4">
-            {equityIndices.map((idx) => (
+            {indices.slice(0, 7).map((idx) => (
               <div key={idx.symbol} className="flex items-center gap-1">
                 <span className="text-zinc-500">{idx.name}:</span>
                 <span className="font-bold text-zinc-200">{idx.price.toLocaleString('en-US')}</span>
@@ -173,33 +201,6 @@ export const USGlobalMacroSection: React.FC = memo(() => {
                 </span>
               </div>
             ))}
-
-            {tnxItem && (
-              <div className="flex items-center gap-1">
-                <span className="text-zinc-500">US10Y:</span>
-                <span className="font-bold text-amber-400">{tnxItem.price.toFixed(2)}%</span>
-                <span className={`text-[10px] font-bold ${tnxItem.change >= 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
-                  {tnxItem.change >= 0 ? '+' : ''}{tnxItem.changePercent}%
-                </span>
-              </div>
-            )}
-
-            {dxyItem && (
-              <div className="flex items-center gap-1">
-                <span className="text-zinc-500">DXY:</span>
-                <span className="font-bold text-cyan-400">{dxyItem.price.toFixed(2)}</span>
-                <span className={`text-[10px] font-bold ${dxyItem.change >= 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
-                  {dxyItem.change >= 0 ? '+' : ''}{dxyItem.changePercent}%
-                </span>
-              </div>
-            )}
-
-            {vixItem && (
-              <div className="flex items-center gap-1">
-                <span className="text-zinc-500">VIX:</span>
-                <span className="font-bold text-white">{vixItem.price.toFixed(2)}</span>
-              </div>
-            )}
           </div>
 
           <div className="text-[10px] text-emerald-400 font-semibold bg-emerald-500/10 px-2 py-1 rounded-lg border border-emerald-500/20">
@@ -211,56 +212,86 @@ export const USGlobalMacroSection: React.FC = memo(() => {
       {/* ── 2. Full Content (Chỉ hiển thị khi !isCollapsed) ── */}
       {!isCollapsed && (
         <div className="space-y-6 transition-opacity duration-200">
-          {/* ── Bento 2.0 Asymmetric Macro Hub (3 Cards: 4 cols - 4 cols - 4 cols) ── */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
-            
-            {/* ── CARD 1: CHỨNG KHOÁN MỸ - WALL STREET (4 Cột) ── */}
-            <div className="lg:col-span-4 p-5 rounded-2xl bg-zinc-900/60 border border-zinc-800/80 hover:border-zinc-700/80 transition-all hover:-translate-y-0.5 flex flex-col justify-between space-y-4">
-              <div className="flex items-center justify-between border-b border-zinc-800/60 pb-3">
-                <div className="flex items-center gap-2 text-emerald-400">
-                  <ChartLineUp className="w-5 h-5" weight="bold" />
-                  <span className="font-mono text-xs font-bold uppercase tracking-wider">Chứng Khoán Mỹ (Live)</span>
-                </div>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold">
-                  NYSE / NASDAQ
-                </span>
-              </div>
+          
+          {/* Category Filter Pills */}
+          <div className="flex flex-wrap items-center gap-2">
+            {[
+              { id: 'all' as const, label: `Tất Cả (${indices.length})` },
+              { id: 'us' as const, label: '🇺🇸 Mỹ (Wall Street)' },
+              { id: 'asia' as const, label: '🇯🇵/🇨🇳 Châu Á' },
+              { id: 'europe' as const, label: '🇪🇺 Châu Âu' },
+              { id: 'commodity' as const, label: '🛢️ Hàng Hóa & Vàng' },
+              { id: 'macro_crypto' as const, label: '🌐 Vĩ Mô & Crypto' },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`px-3 py-1.5 rounded-xl font-mono text-xs font-bold transition-all ${
+                  activeTab === tab.id
+                    ? 'bg-cyan-500 text-zinc-950 shadow-md shadow-cyan-500/20'
+                    : 'bg-zinc-900/80 text-zinc-400 hover:text-white border border-zinc-800 hover:bg-zinc-800'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
 
-              {/* 3 Main US Indices */}
-              <div className="space-y-2.5 font-mono">
-                {equityIndices.map((idx) => {
-                  const isUp = idx.change >= 0;
-                  return (
-                    <div
-                      key={idx.symbol}
-                      className="p-3 rounded-xl bg-zinc-950/80 border border-zinc-800/80 hover:border-zinc-700 transition-colors flex items-center justify-between"
-                    >
-                      <div>
-                        <span className="text-xs font-bold text-zinc-100 block">{idx.name}</span>
-                        <span className="text-[10px] text-zinc-500">{idx.note}</span>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-sm font-black text-white block">
-                          {idx.price.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                        </span>
-                        <span className={`text-[10px] font-bold flex items-center justify-end gap-0.5 ${isUp ? 'text-emerald-400' : 'text-rose-400'}`}>
-                          {isUp ? <TrendUp size={11} weight="bold" /> : <TrendDown size={11} weight="bold" />}
-                          {isUp ? '+' : ''}{idx.changePercent}%
-                        </span>
-                      </div>
+          {/* ── Global Market Indices Grid ── */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5 font-mono">
+            {filteredIndices.map((idx) => {
+              const isUp = idx.change >= 0;
+              const isZero = idx.change === 0;
+              return (
+                <div
+                  key={idx.symbol}
+                  className="p-3.5 rounded-2xl bg-zinc-900/60 border border-zinc-800/80 hover:border-zinc-700/80 transition-all hover:-translate-y-0.5 flex flex-col justify-between space-y-2 group"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-bold text-zinc-100 group-hover:text-cyan-400 transition-colors">
+                        {idx.name}
+                      </span>
                     </div>
-                  );
-                })}
-              </div>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800/80 border border-zinc-700/60 text-zinc-400">
+                      {getRegionBadge(idx)}
+                    </span>
+                  </div>
 
-              <div className="pt-2 border-t border-zinc-800/60 flex items-center justify-between text-[11px] font-mono text-zinc-500">
-                <span>Nguồn dữ liệu:</span>
-                <span className="text-zinc-300 font-bold">Yahoo Finance Live API</span>
-              </div>
-            </div>
+                  <div className="flex items-baseline justify-between gap-2">
+                    <span className="text-lg font-black text-white tracking-tight">
+                      {idx.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      <span className="text-[10px] text-zinc-400 font-normal ml-1">{idx.unit || ''}</span>
+                    </span>
+                    <span
+                      className={`text-xs font-bold flex items-center gap-0.5 px-2 py-0.5 rounded-lg ${
+                        isZero
+                          ? 'bg-zinc-800 text-zinc-400'
+                          : isUp
+                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                          : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                      }`}
+                    >
+                      {isZero ? null : isUp ? <TrendUp size={11} weight="bold" /> : <TrendDown size={11} weight="bold" />}
+                      {isUp ? '+' : ''}{idx.changePercent}%
+                    </span>
+                  </div>
 
-            {/* ── CARD 2: DXY & US 10Y TREASURY YIELD (4 Cột) ── */}
-            <div className="lg:col-span-4 p-5 rounded-2xl bg-zinc-900/60 border border-zinc-800/80 hover:border-zinc-700/80 transition-all hover:-translate-y-0.5 flex flex-col justify-between space-y-4">
+                  <div className="pt-2 border-t border-zinc-800/60 flex items-center justify-between text-[10px] text-zinc-500">
+                    <span className="truncate max-w-[160px]">{idx.note || idx.symbol}</span>
+                    <span className="text-zinc-400 font-medium">
+                      {isUp ? '+' : ''}{idx.change.toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* ── CARD 2 & CARD 3: DXY/US10Y & VIX Risk Appetite (12 Cột) ── */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+            {/* ── CARD 2: DXY & US 10Y TREASURY YIELD (6 Cột) ── */}
+            <div className="lg:col-span-6 p-5 rounded-2xl bg-zinc-900/60 border border-zinc-800/80 hover:border-zinc-700/80 transition-all hover:-translate-y-0.5 flex flex-col justify-between space-y-4">
               <div className="flex items-center justify-between border-b border-zinc-800/60 pb-3">
                 <div className="flex items-center gap-2 text-cyan-400">
                   <CurrencyDollar className="w-5 h-5" weight="bold" />
@@ -322,8 +353,8 @@ export const USGlobalMacroSection: React.FC = memo(() => {
               </div>
             </div>
 
-            {/* ── CARD 3: VIX & GLOBAL RISK APPETITE (4 Cột) ── */}
-            <div className="lg:col-span-4 p-5 rounded-2xl bg-zinc-900/60 border border-zinc-800/80 hover:border-zinc-700/80 transition-all hover:-translate-y-0.5 flex flex-col justify-between space-y-4">
+            {/* ── CARD 3: VIX & GLOBAL RISK APPETITE (6 Cột) ── */}
+            <div className="lg:col-span-6 p-5 rounded-2xl bg-zinc-900/60 border border-zinc-800/80 hover:border-zinc-700/80 transition-all hover:-translate-y-0.5 flex flex-col justify-between space-y-4">
               <div className="flex items-center justify-between border-b border-zinc-800/60 pb-3">
                 <div className="flex items-center gap-2 text-amber-400">
                   <Lightning className="w-5 h-5" weight="bold" />
