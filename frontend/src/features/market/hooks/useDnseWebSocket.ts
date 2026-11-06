@@ -47,6 +47,7 @@ let currentTrackedSymbol = '';
 let seenTradeFingerprints = new Set<string>();
 let isWsConnected = false;
 let globalWs: WebSocket | null = null;
+let globalMqttClient: any = null;
 let globalHeartbeatTimer: NodeJS.Timeout | null = null;
 let globalReconnectTimer: NodeJS.Timeout | null = null;
 let reconnectAttempt = 0;
@@ -407,10 +408,20 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
     seedInitialState();
   }, [seedInitialState]);
 
-  // Khi selectedSymbol thay đổi, kích hoạt ngay 1 chu kỳ stream để cập nhật ngay lập tức
+  // Khi selectedSymbol thay đổi, kích hoạt ngay 1 chu kỳ stream để cập nhật ngay lập tức & subscribe MQTT topic
   useEffect(() => {
     if (!selectedSymbol) return;
     executeStreamCycle();
+
+    if (globalMqttClient && globalMqttClient.connected) {
+      try {
+        globalMqttClient.subscribe([
+          `plaintext/quotes/stock/TP/${selectedSymbol}`,
+          `plaintext/quotes/stock/SI/${selectedSymbol}`,
+          `plaintext/quotes/stock/tick/${selectedSymbol}`,
+        ]);
+      } catch {}
+    }
   }, [selectedSymbol]);
 
   // Main Singleton Connection & Streaming Engine
@@ -419,6 +430,58 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
 
     // Khởi động High-Frequency Streaming Engine
     startGlobalStreaming();
+
+    // 1. Thử kết nối trực tiếp DNSE MQTT WebSocket (chuẩn broker EMQX datafeed-lts của DNSE)
+    async function initDnseMqtt() {
+      if (globalMqttClient && globalMqttClient.connected) return;
+      try {
+        const sessionRes = await fetch('/api/market/dnse-session');
+        const sessionJson = await sessionRes.json();
+        if (sessionJson.success && sessionJson.investorId && sessionJson.token) {
+          const mqttModule = await import('mqtt');
+          const mqtt = (mqttModule as any).default || mqttModule;
+          const clientId = `dnse-price-json-mqtt-ws-sub-${sessionJson.investorId}-${Math.random().toString(36).substring(2, 8)}`;
+
+          const client = mqtt.connect('wss://datafeed-lts.dnse.com.vn/wss', {
+            clientId,
+            username: sessionJson.investorId,
+            password: sessionJson.token,
+            protocolVersion: 4,
+            reconnectPeriod: 5000,
+            connectTimeout: 10000,
+          });
+
+          globalMqttClient = client;
+
+          client.on('connect', () => {
+            isWsConnected = true;
+            setWsStatus('connected');
+            const sym = selectedSymbol || 'HPG';
+            client.subscribe([
+              `plaintext/quotes/stock/TP/${sym}`,
+              `plaintext/quotes/stock/SI/${sym}`,
+              `plaintext/quotes/stock/tick/${sym}`,
+              'plaintext/quotes/index/MI/VNINDEX',
+            ]);
+          });
+
+          client.on('message', (_topic: string, message: any) => {
+            try {
+              const str = message.toString();
+              handleMessage({ data: str });
+            } catch {}
+          });
+
+          client.on('error', () => {
+            // Broker lỗi auth hoặc network -> Fallback vẫn duy trì bởi startGlobalStreaming()
+          });
+        }
+      } catch {
+        // Fallback transparently
+      }
+    }
+
+    initDnseMqtt();
 
     // Đồng thời thử kết nối WebSocket DNSE (nếu khả dụng)
     const apiKey = process.env.NEXT_PUBLIC_DNSE_API_KEY;
@@ -504,6 +567,12 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
         if (globalWs) {
           globalWs.close();
           globalWs = null;
+        }
+        if (globalMqttClient) {
+          try {
+            globalMqttClient.end(true);
+          } catch {}
+          globalMqttClient = null;
         }
       }
     };
