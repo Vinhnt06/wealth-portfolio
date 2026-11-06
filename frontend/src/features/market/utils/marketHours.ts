@@ -110,3 +110,31 @@ export function isMarketTradingSession(): boolean {
   return timeVal >= 8 * 60 + 30 && timeVal <= 15 * 60 + 5;
 }
 
+/**
+ * Kiểm tra xem hiện tại có đang trong khung giờ chờ mở phiên / Pre-Market Reset (08:30 - 09:00, Thứ 2 - Thứ 6)
+ * hoặc trước khi kết thúc ATO sàn HOSE (08:30 - 09:15 với HOSE / VNINDEX / VN30) hay không.
+ * Trong khung giờ này, các chỉ số và bảng giá được reset đồng loạt về Giá Tham Chiếu (0.00% / 0.00 điểm).
+ */
+export function isPreMarketResetWindow(exchangeOrSymbol?: string): boolean {
+  const now = new Date();
+  const vnTimeStr = now.toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' });
+  const vnDate = new Date(vnTimeStr);
+  const day = vnDate.getDay(); // 0: Chủ Nhật, 6: Thứ Bảy
+  if (day === 0 || day === 6) return false;
+
+  const hours = vnDate.getHours();
+  const minutes = vnDate.getMinutes();
+  const timeVal = hours * 60 + minutes;
+
+  const sym = (exchangeOrSymbol || '').toUpperCase();
+  const isHose = sym === 'HOSE' || sym === 'VNINDEX' || sym === 'VN30';
+
+  // Với HOSE: từ 08:30 đến 09:15 (09:00 - 09:15 là phiên ATO chưa khớp lệnh chính thức)
+  if (isHose) {
+    return timeVal >= 8 * 60 + 30 && timeVal < 9 * 60 + 15;
+  }
+
+  // Với HNX / UPCOM hoặc chung: từ 08:30 đến 09:00
+  return timeVal >= 8 * 60 + 30 && timeVal < 9 * 60;
+}
+

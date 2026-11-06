@@ -92,10 +92,12 @@ export const IndexBanner: React.FC = () => {
         const volume = liveIndex?.totalVolume ?? 0;
         const sparkline = liveIndex?.sparkline;
 
-        const isPositive = chg >= 0;
+        const isPositive = chg > 0;
+        const isNegative = chg < 0;
+        const isZero = chg === 0;
         const isSelected = selectedIndexSymbol === cfg.symbol;
         const { pathD, areaD } = getRealSparklinePath(sparkline);
-        const strokeColor = isPositive ? '#10b981' : '#f43f5e';
+        const strokeColor = isZero ? '#eab308' : isPositive ? '#10b981' : '#f43f5e';
 
         // Calculate progress percentage of current value in day's High-Low range
         let rangePct = 50;
@@ -116,7 +118,7 @@ export const IndexBanner: React.FC = () => {
             {/* Background Glow */}
             <div
               className={`absolute -right-8 -top-8 w-24 h-24 rounded-full blur-3xl opacity-20 pointer-events-none transition-colors ${
-                isPositive ? 'bg-emerald-500' : 'bg-rose-500'
+                isZero ? 'bg-amber-500' : isPositive ? 'bg-emerald-500' : 'bg-rose-500'
               }`}
             />
 
@@ -132,16 +134,24 @@ export const IndexBanner: React.FC = () => {
               </div>
               <div
                 className={`flex items-center gap-1 text-[11px] font-mono font-bold px-2 py-0.5 rounded-full ${
-                  isPositive
+                  isZero
+                    ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                    : isPositive
                     ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                     : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
                 }`}
               >
-                {isPositive ? <TrendUp className="w-3 h-3" /> : <TrendDown className="w-3 h-3" />}
+                {isZero ? (
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block mr-0.5" />
+                ) : isPositive ? (
+                  <TrendUp className="w-3 h-3" />
+                ) : (
+                  <TrendDown className="w-3 h-3" />
+                )}
                 <span>
-                  {isPositive ? '+' : ''}
-                  {chg.toFixed(2)} ({isPositive ? '+' : ''}
-                  {pct.toFixed(2)}%)
+                  {isZero
+                    ? '0.00 (0.00%)'
+                    : `${isPositive ? '+' : ''}${chg.toFixed(2)} (${isPositive ? '+' : ''}${pct.toFixed(2)}%)`}
                 </span>
               </div>
             </div>
@@ -155,8 +165,14 @@ export const IndexBanner: React.FC = () => {
                   </span>
                 </div>
                 <div className="text-[10px] font-mono text-zinc-400 mt-0.5 flex items-center gap-1.5 flex-wrap">
-                  <span>KL: <span className="text-cyan-400 font-semibold">{volume > 0 ? `${(volume / 1_000_000).toFixed(2)}M cp` : '--'}</span></span>
-                  {liveIndex?.totalValue ? (
+                  {isZero && volume === 0 ? (
+                    <span className="text-amber-400/90 font-medium px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20">
+                      Chờ mở phiên
+                    </span>
+                  ) : (
+                    <span>KL: <span className="text-cyan-400 font-semibold">{volume > 0 ? `${(volume / 1_000_000).toFixed(2)}M cp` : '--'}</span></span>
+                  )}
+                  {liveIndex?.totalValue && !isZero ? (
                     <>
                       <span className="text-zinc-600">•</span>
                       <span className="text-amber-400/90 font-medium">{(liveIndex.totalValue / 1_000_000_000).toLocaleString('vi-VN', { maximumFractionDigits: 0 })} tỷ</span>

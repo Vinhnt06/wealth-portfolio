@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import realTicksData from '../../../../features/market/data/realTicks.json';
 import stockDatabase from '../../../../features/market/data/stockDatabase.json';
 import { calculateExchangeCeilFloor } from '../../../../features/market/utils/priceColors';
-import { isMarketTradingSession } from '../../../../features/market/utils/marketHours';
+import { isMarketTradingSession, isPreMarketResetWindow } from '../../../../features/market/utils/marketHours';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -130,12 +130,15 @@ async function fetchIndexFromVietcap(symbol: string): Promise<any | null> {
         const len = item.c.length;
         const currentClose = item.c[len - 1];
         const refClose = len > 1 ? item.c[len - 2] : currentClose;
-        const currentOpen = item.o?.[len - 1] ?? currentClose;
-        const currentHigh = item.h?.[len - 1] ?? currentClose;
-        const currentLow = item.l?.[len - 1] ?? currentClose;
-        const currentVol = item.v?.[len - 1] ?? 0;
-        const chg = currentClose - refClose;
-        const chgPct = refClose > 0 ? (chg / refClose) * 100 : 0;
+        const isPreMarket = isPreMarketResetWindow(symbol);
+
+        const currentOpen = isPreMarket ? currentClose : (item.o?.[len - 1] ?? currentClose);
+        const currentHigh = isPreMarket ? currentClose : (item.h?.[len - 1] ?? currentClose);
+        const currentLow = isPreMarket ? currentClose : (item.l?.[len - 1] ?? currentClose);
+        const currentVol = isPreMarket ? 0 : (item.v?.[len - 1] || 0);
+        const chg = isPreMarket ? 0 : currentClose - refClose;
+        const chgPct = isPreMarket ? 0 : (refClose > 0 ? (chg / refClose) * 100 : 0);
+        const totalValue = isPreMarket ? 0 : (item.accumulatedValue?.[len - 1] || 0) * 1_000_000;
 
         return {
           price: Number(currentClose.toFixed(2)),
@@ -149,7 +152,7 @@ async function fetchIndexFromVietcap(symbol: string): Promise<any | null> {
           changePercent: Number(chgPct.toFixed(2)),
           volume: currentVol,
           totalVolume: currentVol,
-          totalValue: (item.accumulatedValue?.[len - 1] || 0) * 1_000_000,
+          totalValue: totalValue,
           dataSource: 'vietcap_live',
         };
       }
@@ -219,20 +222,22 @@ async function fetchFromEntrade(symbol: string): Promise<any | null> {
           }
         }
 
-        const chg = livePrice - ref;
-        const chgPct = ref > 0 ? (chg / ref) * 100 : 0;
+        const isPreMarket = isPreMarketResetWindow(symbol);
+        const chg = isPreMarket ? 0 : livePrice - ref;
+        const chgPct = isPreMarket ? 0 : (ref > 0 ? (chg / ref) * 100 : 0);
+        const finalVol = isPreMarket ? 0 : liveVol;
 
         return {
           price: livePrice,
           referencePrice: ref,
-          open: liveOpen,
-          high: liveHigh,
-          low: liveLow,
+          open: isPreMarket ? livePrice : liveOpen,
+          high: isPreMarket ? livePrice : liveHigh,
+          low: isPreMarket ? livePrice : liveLow,
           change: Number(chg.toFixed(2)),
           changePercent: Number(chgPct.toFixed(2)),
-          volume: liveVol,
-          totalVolume: liveVol,
-          totalValue: livePrice * liveVol,
+          volume: finalVol,
+          totalVolume: finalVol,
+          totalValue: isPreMarket ? 0 : livePrice * finalVol,
           dataSource: 'entrade',
         };
       }

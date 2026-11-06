@@ -4,6 +4,7 @@ import { useEffect, useRef, useCallback } from 'react';
 import { useMarketStore } from '../store/marketStore';
 import { TickData, QuotesData, MarketIndexData } from '../types/dnse.types';
 import realTicksData from '../data/realTicks.json';
+import { isPreMarketResetWindow } from '../utils/marketHours';
 
 const WS_URL = 'wss://ws-openapi.dnse.com.vn';
 
@@ -190,18 +191,21 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
       });
     });
 
-    // Seed Real Market Indexes from vnstock
+    const isPreMarketVN = isPreMarketResetWindow('VNINDEX');
+    const isPreMarketHNX = isPreMarketResetWindow('HNX');
+
+    // Seed Real Market Indexes
     updateIndex({
       symbol: 'VNINDEX',
       name: 'VN-INDEX',
-      value: 1735.09,
-      change: -3.88,
-      changePercent: -0.22,
-      totalVolume: 911324549,
-      totalValue: 22450000000000,
-      advances: 168,
-      declines: 242,
-      noChanges: 74,
+      value: 1740.73,
+      change: isPreMarketVN ? 0 : 7.71,
+      changePercent: isPreMarketVN ? 0 : 0.44,
+      totalVolume: isPreMarketVN ? 0 : 911324549,
+      totalValue: isPreMarketVN ? 0 : 22450000000000,
+      advances: isPreMarketVN ? 0 : 168,
+      declines: isPreMarketVN ? 0 : 242,
+      noChanges: isPreMarketVN ? 0 : 74,
       timestamp: Date.now(),
     });
 
@@ -209,13 +213,13 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
       symbol: 'VN30',
       name: 'VN30-INDEX',
       value: 1873.43,
-      change: -3.57,
-      changePercent: -0.19,
-      totalVolume: 468198975,
-      totalValue: 13200000000000,
-      advances: 11,
-      declines: 16,
-      noChanges: 3,
+      change: isPreMarketVN ? 0 : -3.57,
+      changePercent: isPreMarketVN ? 0 : -0.19,
+      totalVolume: isPreMarketVN ? 0 : 468198975,
+      totalValue: isPreMarketVN ? 0 : 13200000000000,
+      advances: isPreMarketVN ? 0 : 11,
+      declines: isPreMarketVN ? 0 : 16,
+      noChanges: isPreMarketVN ? 0 : 3,
       timestamp: Date.now(),
     });
 
@@ -223,13 +227,13 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
       symbol: 'HNX',
       name: 'HNX-INDEX',
       value: 261.60,
-      change: 1.15,
-      changePercent: 0.44,
-      totalVolume: 70117939,
-      totalValue: 1620000000000,
-      advances: 92,
-      declines: 81,
-      noChanges: 55,
+      change: isPreMarketHNX ? 0 : 1.15,
+      changePercent: isPreMarketHNX ? 0 : 0.44,
+      totalVolume: isPreMarketHNX ? 0 : 70117939,
+      totalValue: isPreMarketHNX ? 0 : 1620000000000,
+      advances: isPreMarketHNX ? 0 : 92,
+      declines: isPreMarketHNX ? 0 : 81,
+      noChanges: isPreMarketHNX ? 0 : 55,
       timestamp: Date.now(),
     });
 
@@ -237,13 +241,13 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
       symbol: 'UPCOM',
       name: 'UPCOM-INDEX',
       value: 124.24,
-      change: -0.97,
-      changePercent: -0.77,
-      totalVolume: 37646708,
-      totalValue: 650000000000,
-      advances: 145,
-      declines: 120,
-      noChanges: 88,
+      change: isPreMarketHNX ? 0 : -0.97,
+      changePercent: isPreMarketHNX ? 0 : -0.77,
+      totalVolume: isPreMarketHNX ? 0 : 37646708,
+      totalValue: isPreMarketHNX ? 0 : 650000000000,
+      advances: isPreMarketHNX ? 0 : 145,
+      declines: isPreMarketHNX ? 0 : 120,
+      noChanges: isPreMarketHNX ? 0 : 88,
       timestamp: Date.now(),
     });
   }, [updateTick, updateQuotes, updateIndex]);

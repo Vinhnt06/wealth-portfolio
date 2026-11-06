@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import realTicks from '../../../../features/market/data/realTicks.json';
+import { isPreMarketResetWindow } from '../../../../features/market/utils/marketHours';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -48,11 +49,17 @@ async function fetchVietcapIndex(cfg: IndexMeta): Promise<any | null> {
         const len = item.c.length;
         const currentClose = item.c[len - 1];
         const prevClose = len > 1 ? item.c[len - 2] : currentClose;
-        const chg = currentClose - prevClose;
-        const pct = prevClose ? (chg / prevClose) * 100 : 0;
-        const vol = item.v?.[len - 1] || 0;
-        const rawVal = item.accumulatedValue?.[len - 1] || 0;
-        const totalValue = rawVal * 1_000_000; // Vietcap accumulatedValue is in thousand VND -> convert to VND
+
+        const isPreMarket = isPreMarketResetWindow(cfg.exchange || cfg.symbol);
+
+        // Trong khung giờ Pre-market (08:30 - 09:00, HOSE đến 09:15):
+        // Giá đóng cửa hôm trước (currentClose) trở thành Giá tham chiếu cho phiên hôm nay.
+        // Biến động điểm và % phải được reset về 0.00%, khối lượng = 0.
+        const chg = isPreMarket ? 0 : currentClose - prevClose;
+        const pct = isPreMarket ? 0 : (prevClose ? (chg / prevClose) * 100 : 0);
+        const vol = isPreMarket ? 0 : (item.v?.[len - 1] || 0);
+        const rawVal = isPreMarket ? 0 : (item.accumulatedValue?.[len - 1] || 0);
+        const totalValue = isPreMarket ? 0 : rawVal * 1_000_000;
 
         return {
           symbol: cfg.symbol,
@@ -69,6 +76,7 @@ async function fetchVietcapIndex(cfg: IndexMeta): Promise<any | null> {
           totalVolume: vol,
           totalValue: totalValue > 0 ? totalValue : 0,
           sparkline: item.c.slice(-15),
+          isPreMarket,
         };
       }
     }
@@ -98,9 +106,12 @@ async function fetchEntradeIndex(cfg: IndexMeta): Promise<any | null> {
     const prev = last > 0 ? last - 1 : last;
     const close = j.c[last];
     const ref = j.c[prev];
-    const chg = close - ref;
-    const pct = ref ? (chg / ref) * 100 : 0;
-    const vol = j.v[last] || 0;
+
+    const isPreMarket = isPreMarketResetWindow(cfg.exchange || cfg.symbol);
+
+    const chg = isPreMarket ? 0 : close - ref;
+    const pct = isPreMarket ? 0 : (ref ? (chg / ref) * 100 : 0);
+    const vol = isPreMarket ? 0 : (j.v[last] || 0);
 
     return {
       symbol: cfg.symbol,
@@ -109,14 +120,15 @@ async function fetchEntradeIndex(cfg: IndexMeta): Promise<any | null> {
       value: Number(close.toFixed(2)),
       change: Number(chg.toFixed(2)),
       percentChange: Number(pct.toFixed(2)),
-      open: j.o[last],
-      high: j.h[last],
-      low: j.l[last],
+      open: Number((isPreMarket ? close : j.o[last]).toFixed(2)),
+      high: Number((isPreMarket ? close : j.h[last]).toFixed(2)),
+      low: Number((isPreMarket ? close : j.l[last]).toFixed(2)),
       volume: vol,
       matchedVolume: vol,
       totalVolume: vol,
       totalValue: 0,
       sparkline: j.c.slice(-15),
+      isPreMarket,
     };
   } catch {
     return null;
