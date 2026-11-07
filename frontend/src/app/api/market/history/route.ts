@@ -151,6 +151,13 @@ async function fetchVietcapGapChart(
  */
 async function fetchTodayFromSsi(symbol: string): Promise<CandleItem | null> {
   try {
+    const nowVn = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }));
+    const dayOfWeek = nowVn.getDay();
+    // Weekends (Saturday=6, Sunday=0) have no trading sessions
+    if (dayOfWeek === 0 || dayOfWeek === 6) {
+      return null;
+    }
+
     for (const ex of ['hose', 'hnx', 'upcom']) {
       const board = await getSsiBoard(ex);
       const stock = board.get(symbol);
@@ -299,9 +306,14 @@ export async function GET(request: Request) {
 
     // 3. INTRADAY STITCHING FOR DAILY CANDLES:
     // If resolution is 1D (or aggregated), check whether today's trading candle is present.
-    // Entrade daily batch runs after market hours, so during the trading day (or before EOD run)
-    // Entrade does NOT contain today's candle. We stitch today's real live candle from Vietcap/SSI.
-    if (dnseRes === '1D' && candles.length > 0) {
+    // NOTE: Intraday stitching ONLY applies on active trading days (Monday to Friday, 9:00 - 15:00+).
+    // On weekends (Saturday & Sunday), the exchange is closed. Never stitch or create weekend candles!
+    const nowVn = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }));
+    const dayOfWeek = nowVn.getDay();
+    const isTradingDay = dayOfWeek >= 1 && dayOfWeek <= 5;
+    const isTradingHour = nowVn.getHours() >= 9;
+
+    if (isTradingDay && isTradingHour && dnseRes === '1D' && candles.length > 0) {
       const todayDateVn = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' });
       const lastCandle = candles[candles.length - 1];
       const lastCandleDateVn = new Date(lastCandle.time * 1000).toLocaleDateString('en-CA', {
@@ -333,6 +345,15 @@ export async function GET(request: Request) {
           candles.push(todayCandle);
         }
       }
+    }
+
+    // Safety guard: For daily/sub-daily resolution, strictly exclude any non-trading weekend days (Saturday & Sunday)
+    if (dnseRes === '1D' || dnseRes === '1' || dnseRes === '5' || dnseRes === '15' || dnseRes === '1H') {
+      candles = candles.filter((c) => {
+        const cd = new Date(c.time * 1000);
+        const vnDay = new Date(cd.toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' })).getDay();
+        return vnDay !== 0 && vnDay !== 6;
+      });
     }
 
     // 4. Handle Aggregation (1M, 3M, 6M)

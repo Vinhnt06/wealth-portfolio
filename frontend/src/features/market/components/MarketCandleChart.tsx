@@ -4515,6 +4515,15 @@ export function MarketCandleChart() {
       }
 
       const isDaily = resolution === '1D' || resolution === '1W' || resolution === '1M' || resolution === '3M' || resolution === '6M';
+      const nowVn = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }));
+      const dayOfWeek = nowVn.getDay();
+      const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+
+      // Weekend guard: Stock exchange is closed on Saturday and Sunday. Never create weekend candles!
+      if (isWeekend) {
+        return;
+      }
+
       const todayDateStr = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' });
       const lastCandleTime = String(lastCandleRef.current.time);
 
