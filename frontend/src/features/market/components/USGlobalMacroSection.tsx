@@ -2,18 +2,11 @@
 
 import React, { useState, useEffect, memo } from 'react';
 import {
-  GlobeHemisphereWest,
   TrendUp,
   TrendDown,
   ArrowsClockwise,
-  Scales,
-  ChartLineUp,
-  ShieldCheck,
-  Lightning,
   CaretDown,
-  CaretUp,
-  CurrencyDollar,
-  Bank
+  CaretUp
 } from '@phosphor-icons/react';
 
 interface MarketIndexItem {
@@ -118,17 +111,17 @@ export const USGlobalMacroSection: React.FC = memo(() => {
   });
 
   const getRegionBadge = (item: MarketIndexItem) => {
-    if (item.symbol === '^GSPC' || item.symbol === '^IXIC' || item.symbol === '^DJI') return '🇺🇸 Mỹ';
-    if (item.symbol === '^N225') return '🇯🇵 Nhật Bản';
-    if (item.symbol === '^HSI') return '🇭🇰 Hồng Kông';
-    if (item.symbol === '000001.SS') return '🇨🇳 Thượng Hải';
-    if (item.symbol === '^KS11') return '🇰🇷 Hàn Quốc';
-    if (item.symbol === '^FTSE') return '🇬🇧 Anh';
-    if (item.symbol === '^GDAXI') return '🇩🇪 Đức';
-    if (item.category === 'commodity') return '🛢️ Hàng Hóa';
-    if (item.category === 'crypto') return '🪙 Tiền Số';
-    if (item.category === 'currency' || item.category === 'yield' || item.category === 'volatility') return '🌐 Vĩ Mô';
-    return '🌍 Quốc Tế';
+    if (item.symbol === '^GSPC' || item.symbol === '^IXIC' || item.symbol === '^DJI') return 'Mỹ';
+    if (item.symbol === '^N225') return 'Nhật Bản';
+    if (item.symbol === '^HSI') return 'Hồng Kông';
+    if (item.symbol === '000001.SS') return 'Thượng Hải';
+    if (item.symbol === '^KS11') return 'Hàn Quốc';
+    if (item.symbol === '^FTSE') return 'Anh';
+    if (item.symbol === '^GDAXI') return 'Đức';
+    if (item.category === 'commodity') return 'Hàng Hóa';
+    if (item.category === 'crypto') return 'Tiền Số';
+    if (item.category === 'currency' || item.category === 'yield' || item.category === 'volatility') return 'Vĩ Mô';
+    return 'Quốc Tế';
   };
 
   return (
@@ -140,9 +133,7 @@ export const USGlobalMacroSection: React.FC = memo(() => {
       {/* ── 1. Header Bar ── */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-zinc-800/80 pb-5">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-10 h-10 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 shrink-0">
-            <GlobeHemisphereWest className="w-5 h-5" weight="duotone" />
-          </div>
+          <div className="w-1.5 h-8 bg-cyan-400 rounded-full shrink-0 shadow-[0_0_12px_rgba(34,211,238,0.5)]" />
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <h2 className="font-mono font-black text-base sm:text-lg text-zinc-100 tracking-tight whitespace-nowrap">
@@ -217,11 +208,11 @@ export const USGlobalMacroSection: React.FC = memo(() => {
           <div className="flex flex-wrap items-center gap-2">
             {[
               { id: 'all' as const, label: `Tất Cả (${indices.length})` },
-              { id: 'us' as const, label: '🇺🇸 Mỹ (Wall Street)' },
-              { id: 'asia' as const, label: '🇯🇵/🇨🇳 Châu Á' },
-              { id: 'europe' as const, label: '🇪🇺 Châu Âu' },
-              { id: 'commodity' as const, label: '🛢️ Hàng Hóa & Vàng' },
-              { id: 'macro_crypto' as const, label: '🌐 Vĩ Mô & Crypto' },
+              { id: 'us' as const, label: 'Mỹ (Wall Street)' },
+              { id: 'asia' as const, label: 'Châu Á' },
+              { id: 'europe' as const, label: 'Châu Âu' },
+              { id: 'commodity' as const, label: 'Hàng Hóa & Vàng' },
+              { id: 'macro_crypto' as const, label: 'Vĩ Mô & Crypto' },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -293,9 +284,9 @@ export const USGlobalMacroSection: React.FC = memo(() => {
             {/* ── CARD 2: DXY & US 10Y TREASURY YIELD (6 Cột) ── */}
             <div className="lg:col-span-6 p-5 rounded-2xl bg-zinc-900/60 border border-zinc-800/80 hover:border-zinc-700/80 transition-all hover:-translate-y-0.5 flex flex-col justify-between space-y-4">
               <div className="flex items-center justify-between border-b border-zinc-800/60 pb-3">
-                <div className="flex items-center gap-2 text-cyan-400">
-                  <CurrencyDollar className="w-5 h-5" weight="bold" />
-                  <span className="font-mono text-xs font-bold uppercase tracking-wider">Tỷ Giá DXY & Lợi Suất US 10Y</span>
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-cyan-400" />
+                  <span className="font-mono text-xs font-bold uppercase tracking-wider text-cyan-400">Tỷ Giá DXY & Lợi Suất US 10Y</span>
                 </div>
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 font-bold">
                   BOND & FX
@@ -356,9 +347,9 @@ export const USGlobalMacroSection: React.FC = memo(() => {
             {/* ── CARD 3: VIX & GLOBAL RISK APPETITE (6 Cột) ── */}
             <div className="lg:col-span-6 p-5 rounded-2xl bg-zinc-900/60 border border-zinc-800/80 hover:border-zinc-700/80 transition-all hover:-translate-y-0.5 flex flex-col justify-between space-y-4">
               <div className="flex items-center justify-between border-b border-zinc-800/60 pb-3">
-                <div className="flex items-center gap-2 text-amber-400">
-                  <Lightning className="w-5 h-5" weight="bold" />
-                  <span className="font-mono text-xs font-bold uppercase tracking-wider">Chỉ Số Sợ Hãi VIX & Rủi Ro</span>
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-amber-400" />
+                  <span className="font-mono text-xs font-bold uppercase tracking-wider text-amber-400">Chỉ Số Biến Động VIX & Rủi Ro</span>
                 </div>
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 font-bold">
                   CBOE VOLATILITY
@@ -419,7 +410,7 @@ export const USGlobalMacroSection: React.FC = memo(() => {
           {/* ── 3. Vietnam Macro Impact Barometer (Ma trận Tác động Việt Nam) ── */}
           <div className="space-y-3 pt-2">
             <div className="flex items-center gap-2 text-xs font-mono font-bold text-zinc-300">
-              <ShieldCheck className="w-4 h-4 text-emerald-400" weight="fill" />
+              <span className="w-2 h-2 rounded-full bg-emerald-400" />
               <span>MA TRẬN ĐÁNH GIÁ TÁC ĐỘNG VĨ MÔ QUỐC TẾ ĐẾN KINH TẾ & TTCK VIỆT NAM</span>
             </div>
 

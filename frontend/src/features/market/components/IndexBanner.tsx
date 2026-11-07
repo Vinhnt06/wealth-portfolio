@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Globe, TrendUp, TrendDown } from '@phosphor-icons/react';
+import { TrendUp, TrendDown } from '@phosphor-icons/react';
 import { useMarketStore } from '../store/marketStore';
 import { MarketIndexData } from '../types/dnse.types';
 
@@ -25,10 +25,10 @@ interface GlobalIndexItem {
 }
 
 const GLOBAL_HERO_CONFIG: { symbol: string; name: string; exchange: string; region: string }[] = [
-  { symbol: '^GSPC', name: 'S&P 500', exchange: 'NYSE/NASDAQ', region: '🇺🇸 Mỹ' },
-  { symbol: '^N225', name: 'Nikkei 225', exchange: 'TSE TOKYO', region: '🇯🇵 Nhật Bản' },
-  { symbol: '^HSI', name: 'Hang Seng', exchange: 'HKEX', region: '🇭🇰 Hồng Kông' },
-  { symbol: 'GC=F', name: 'Vàng Thế Giới', exchange: 'COMEX/XAU', region: '🌍 Toàn Cầu' },
+  { symbol: '^GSPC', name: 'S&P 500', exchange: 'NYSE/NASDAQ', region: 'Mỹ' },
+  { symbol: '^N225', name: 'Nikkei 225', exchange: 'TSE TOKYO', region: 'Nhật Bản' },
+  { symbol: '^HSI', name: 'Hang Seng', exchange: 'HKEX', region: 'Hồng Kông' },
+  { symbol: 'GC=F', name: 'Vàng Thế Giới', exchange: 'COMEX/XAU', region: 'Toàn Cầu' },
 ];
 
 export const IndexBanner: React.FC = () => {
@@ -136,7 +136,7 @@ export const IndexBanner: React.FC = () => {
                 : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
             }`}
           >
-            <span>🇻🇳 Chỉ Số Việt Nam (HOSE/HNX)</span>
+            <span>Chỉ Số Việt Nam (HOSE/HNX)</span>
           </button>
           <button
             onClick={() => setMarketScope('global')}
@@ -146,8 +146,7 @@ export const IndexBanner: React.FC = () => {
                 : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
             }`}
           >
-            <Globe className="w-3.5 h-3.5" />
-            <span>🌐 Thị Trường Toàn Cầu (Global Live)</span>
+            <span>Thị Trường Toàn Cầu (Global Live)</span>
           </button>
         </div>
 
@@ -376,9 +375,8 @@ export const IndexBanner: React.FC = () => {
       {globalData.length > 0 && (
         <div className="relative overflow-hidden p-2.5 rounded-xl bg-zinc-950/80 border border-zinc-800/80 text-xs font-mono backdrop-blur-md">
           <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 shrink-0 uppercase tracking-wider flex items-center gap-1.5">
-              <Globe className="w-3 h-3" />
-              <span>Toàn Cầu:</span>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 shrink-0 uppercase tracking-wider">
+              Toàn Cầu:
             </span>
 
             <div className="flex items-center gap-5 shrink-0">

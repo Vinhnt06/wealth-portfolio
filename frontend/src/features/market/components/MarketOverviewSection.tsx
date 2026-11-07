@@ -6,17 +6,6 @@ import { MarketIndexChart } from './MarketIndexChart';
 import { WatchlistTable } from './WatchlistTable';
 import { MarketSummaryBar } from './MarketSummaryBar';
 import { MarketHeatmap } from './MarketHeatmap';
-import {
-  CurrencyCircleDollar,
-  Lightning,
-  ArrowsLeftRight,
-  ChartPieSlice,
-  ShieldCheck,
-  TrendUp,
-  TrendDown,
-  Flame,
-  ChartLineUp
-} from '@phosphor-icons/react';
 import { EconomicCycleWheel } from './EconomicCycleWheel';
 import { USGlobalMacroSection } from './USGlobalMacroSection';
 
@@ -58,7 +47,6 @@ export const MarketOverviewSection: React.FC<MarketOverviewSectionProps> = React
                 : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
             }`}
           >
-            <Flame className="w-3.5 h-3.5" weight="fill" />
             <span>Bản Đồ Nhiệt (Heatmap)</span>
           </button>
 
@@ -70,7 +58,6 @@ export const MarketOverviewSection: React.FC<MarketOverviewSectionProps> = React
                 : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
             }`}
           >
-            <ChartLineUp className="w-3.5 h-3.5" />
             <span>Biểu Đồ & Độ Rộng</span>
           </button>
         </div>
@@ -92,7 +79,7 @@ export const MarketOverviewSection: React.FC<MarketOverviewSectionProps> = React
           <div className="p-5 rounded-2xl bg-zinc-950/90 border border-zinc-800/80 shadow-xl backdrop-blur-xl">
             <div className="flex items-center justify-between pb-3 border-b border-zinc-800/80 mb-3">
               <div className="flex items-center gap-2">
-                <ChartPieSlice className="w-4 h-4 text-emerald-400" />
+                <span className="w-2 h-2 rounded-full bg-emerald-400" />
                 <h4 className="text-xs font-mono font-bold text-zinc-200">ĐỘ RỘNG THỊ TRƯỜNG (HOSE)</h4>
               </div>
               <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-400">
@@ -133,7 +120,7 @@ export const MarketOverviewSection: React.FC<MarketOverviewSectionProps> = React
           <div className="p-5 rounded-2xl bg-zinc-950/90 border border-zinc-800/80 shadow-xl backdrop-blur-xl">
             <div className="flex items-center justify-between pb-3 border-b border-zinc-800/80 mb-3">
               <div className="flex items-center gap-2">
-                <Lightning className="w-4 h-4 text-amber-400" />
+                <span className="w-2 h-2 rounded-full bg-amber-400" />
                 <h4 className="text-xs font-mono font-bold text-zinc-200">THANH KHOẢN TOÀN THỊ TRƯỜNG</h4>
               </div>
               <span className="text-[10px] font-mono text-emerald-400 font-bold">+18.5% so với TB</span>
