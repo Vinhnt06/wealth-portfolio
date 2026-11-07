@@ -43,6 +43,8 @@ export interface TotalShareholdersSnapshot {
   totalShareholders: number;
   changeFromPrev: number;
   changePercent: number;
+  recordDate?: string;
+  sourceDoc?: string;
 }
 
 export interface ShareholderStructure {

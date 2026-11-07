@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useMarketStore } from '../store/marketStore';
 import { useDnseWebSocket } from '../hooks/useDnseWebSocket';
-import { Stack, ChartBar, ArrowsClockwise, Broadcast, Clock } from '@phosphor-icons/react';
+import { ArrowsClockwise } from '@phosphor-icons/react';
 import { getStockPriceColor } from '../utils/priceColors';
 import { getMarketSessionInfo } from '../utils/marketHours';
 
@@ -108,48 +108,38 @@ export function OrderBook() {
     <div suppressHydrationWarning className="bg-zinc-950/90 border border-zinc-800/80 rounded-2xl p-5 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] backdrop-blur-xl flex flex-col h-full">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-zinc-800/80 pb-3 mb-4">
-        <div className="flex items-center gap-2">
-          <div className="p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-emerald-400">
-            <Stack size={16} weight="bold" />
-          </div>
-          <div>
-            <h3 className="font-semibold text-zinc-100 text-sm tracking-tight flex items-center gap-2 flex-wrap">
-              Sổ Lệnh (Order Book)
-              <span className="font-mono text-xs px-2 py-0.5 rounded bg-zinc-900 text-emerald-400 border border-zinc-800 font-bold">
-                {selectedSymbol}
-              </span>
-              <span className={`inline-flex items-center gap-1.5 text-[9px] px-2 py-0.5 rounded-full font-mono font-bold transition-all ${
+        <div>
+          <h3 className="font-semibold text-zinc-100 text-sm tracking-tight flex items-center gap-2 flex-wrap">
+            Sổ Lệnh (Order Book)
+            <span className="font-mono text-xs px-2 py-0.5 rounded bg-zinc-900 text-emerald-400 border border-zinc-800 font-bold">
+              {selectedSymbol}
+            </span>
+            <span className={`inline-flex items-center gap-1.5 text-[9px] px-2 py-0.5 rounded-full font-mono font-bold transition-all ${
+              sessionInfo.sessionBadge === 'PHIÊN ATC'
+                ? 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
+                : wsStatus === 'connected'
+                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+                : 'bg-zinc-800 text-zinc-400 border border-zinc-700'
+            }`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${
                 sessionInfo.sessionBadge === 'PHIÊN ATC'
-                  ? 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
+                  ? 'bg-amber-400 animate-pulse'
                   : wsStatus === 'connected'
-                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
-                  : 'bg-zinc-800 text-zinc-400 border border-zinc-700'
-              }`}>
-                <span className={`w-1.5 h-1.5 rounded-full ${
-                  sessionInfo.sessionBadge === 'PHIÊN ATC'
-                    ? 'bg-amber-400 animate-pulse'
-                    : wsStatus === 'connected'
-                    ? 'bg-emerald-400 animate-pulse'
-                    : 'bg-zinc-500'
-                }`} />
-                {sessionInfo.sessionBadge === 'PHIÊN ATC'
-                  ? 'PHIÊN ĐỊNH KỲ ATC'
-                  : wsStatus === 'connected'
-                  ? 'REALTIME STREAM'
-                  : 'ĐANG KẾT NỐI'}
-              </span>
-              {flashUpdate && (
-                <span className="text-[9px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 font-mono font-bold animate-ping">
-                  ●
-                </span>
-              )}
-            </h3>
-            <div className="flex items-center gap-2 mt-0.5">
-              <p className="text-[11px] text-zinc-400">Độ sâu 3 mức giá &bull; Dò tường lệnh Cá Mập</p>
-              {lastUpdated && (
-                <span className="text-[9px] text-zinc-500 font-mono">({lastUpdated})</span>
-              )}
-            </div>
+                  ? 'bg-emerald-400 animate-pulse'
+                  : 'bg-zinc-500'
+              }`} />
+              {sessionInfo.sessionBadge === 'PHIÊN ATC'
+                ? 'PHIÊN ĐỊNH KỲ ATC'
+                : wsStatus === 'connected'
+                ? 'REALTIME STREAM'
+                : 'ĐANG KẾT NỐI'}
+            </span>
+          </h3>
+          <div className="flex items-center gap-2 mt-0.5">
+            <p className="text-[11px] text-zinc-400">Độ sâu 3 mức giá</p>
+            {lastUpdated && (
+              <span className="text-[9px] text-zinc-500 font-mono">({lastUpdated})</span>
+            )}
           </div>
         </div>
 
@@ -226,15 +216,6 @@ export function OrderBook() {
           const bidPct = bid && bid.volume > 0 ? Math.min(100, (bid.volume / maxVolume) * 100) : 0;
           const askPct = ask && ask.volume > 0 ? Math.min(100, (ask.volume / maxVolume) * 100) : 0;
 
-          // Whale Wall Check (Khối lượng >= 150.000 CP hoặc Trị giá >= 3 Tỷ VNĐ)
-          const bidVal = (bid?.volume || 0) * (bid?.price || 0);
-          const isBidWhaleWall = (bid?.volume || 0) >= 150000 || bidVal >= 3_000_000_000;
-
-          const askVal = (ask?.volume || 0) * (ask?.price || 0);
-          const isAskWhaleWall = (ask?.volume || 0) >= 150000 || askVal >= 3_000_000_000;
-
-          const hasWhaleWall = isBidWhaleWall || isAskWhaleWall;
-
           const bidPriceColor = bid && bid.price > 0 ? getStockPriceColor({
             price: bid.price,
             refPrice: currentTick?.referencePrice,
@@ -252,13 +233,7 @@ export function OrderBook() {
           return (
             <div 
               key={idx} 
-              className={`grid grid-cols-12 gap-1 text-xs font-mono py-1.5 px-1.5 rounded-lg transition-all items-center relative overflow-hidden ${
-                hasWhaleWall
-                  ? isBidWhaleWall
-                    ? 'bg-zinc-900/80 border border-emerald-500/40 shadow-[0_0_15px_-4px_rgba(16,185,129,0.3)]'
-                    : 'bg-zinc-900/80 border border-rose-500/40 shadow-[0_0_15px_-4px_rgba(244,63,94,0.3)]'
-                  : 'bg-zinc-900/40 hover:bg-zinc-900/80 border border-zinc-800/40'
-              }`}
+              className="grid grid-cols-12 gap-1 text-xs font-mono py-1.5 px-1.5 rounded-lg transition-all items-center relative overflow-hidden bg-zinc-900/40 hover:bg-zinc-900/80 border border-zinc-800/40"
             >
               {/* Bên Dư Mua (5 Cột) */}
               <div className="col-span-5 relative flex items-center justify-between pr-2 overflow-hidden rounded">
@@ -266,16 +241,9 @@ export function OrderBook() {
                   className="absolute right-0 top-0 bottom-0 bg-emerald-500/15 border-r-2 border-emerald-500/50 transition-all duration-500 pointer-events-none rounded-l"
                   style={{ width: `${bidPct}%` }}
                 />
-                <div className="flex items-center gap-1 z-10">
-                  <span className="text-zinc-300 font-mono text-[11px] font-medium">
-                    {bid && bid.volume > 0 ? formatVol(bid.volume) : '-'}
-                  </span>
-                  {isBidWhaleWall && (
-                    <span className="text-[8px] px-1 py-0.2 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold font-sans">
-                      TƯỜNG GOM
-                    </span>
-                  )}
-                </div>
+                <span className="text-zinc-300 font-mono text-[11px] font-medium z-10">
+                  {bid && bid.volume > 0 ? formatVol(bid.volume) : '-'}
+                </span>
                 <span className={`font-black z-10 font-mono text-sm ${bidPriceColor}`}>
                   {bid && bid.price > 0 ? formatPrice(bid.price) : '-'}
                 </span>
@@ -283,13 +251,7 @@ export function OrderBook() {
 
               {/* Nhãn Mức Giá (Giá 1, 2, 3) (2 Cột ở Giữa) */}
               <div className="col-span-2 flex items-center justify-center">
-                <span className={`w-5 h-5 rounded-md text-[10px] font-mono font-bold flex items-center justify-center ${
-                  hasWhaleWall
-                    ? isBidWhaleWall
-                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-                      : 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
-                    : 'bg-zinc-800/80 border border-zinc-700/60 text-zinc-400'
-                }`}>
+                <span className="text-[11px] font-mono text-zinc-500 font-bold">
                   #{idx + 1}
                 </span>
               </div>
@@ -303,16 +265,9 @@ export function OrderBook() {
                 <span className={`font-black z-10 font-mono text-sm ${askPriceColor}`}>
                   {ask && ask.price > 0 ? formatPrice(ask.price) : '-'}
                 </span>
-                <div className="flex items-center gap-1 z-10">
-                  {isAskWhaleWall && (
-                    <span className="text-[8px] px-1 py-0.2 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40 font-bold font-sans">
-                      TƯỜNG CHẶN
-                    </span>
-                  )}
-                  <span className="text-zinc-300 font-mono text-[11px] font-medium">
-                    {ask && ask.volume > 0 ? formatVol(ask.volume) : '-'}
-                  </span>
-                </div>
+                <span className="text-zinc-300 font-mono text-[11px] font-medium z-10">
+                  {ask && ask.volume > 0 ? formatVol(ask.volume) : '-'}
+                </span>
               </div>
             </div>
           );

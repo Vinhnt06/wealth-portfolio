@@ -2,20 +2,9 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
-  Fish,
-  ShieldCheck,
-  Users,
   TrendUp,
   TrendDown,
-  Info,
-  Clock,
-  Sparkle,
   ArrowsClockwise,
-  Fire,
-  Funnel,
-  ArrowUpRight,
-  ArrowDownRight,
-  DownloadSimple,
 } from '@phosphor-icons/react';
 import { useMarketStore } from '../store/marketStore';
 import { useDnseWebSocket } from '../hooks/useDnseWebSocket';
@@ -468,61 +457,56 @@ export const InvestorFlowAnalysis: React.FC = () => {
     <div className="bg-zinc-950/90 border border-zinc-800/80 rounded-2xl p-4 shadow-xl backdrop-blur-xl space-y-4">
       {/* Top Header & Page Selector */}
       <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-zinc-800/80">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-            <Fish className="w-4 h-4" />
-          </div>
-          <div>
-            <div className="flex items-center gap-1.5">
-              <h3 className="font-mono font-bold text-xs sm:text-sm text-zinc-100 flex items-center gap-2 flex-wrap">
-                Phân loại nhà đầu tư
-                <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold">
-                  {selectedSymbol}
-                </span>
-                <span className={`inline-flex items-center gap-1.5 text-[9px] px-2 py-0.5 rounded-full font-mono font-bold transition-all ${
+        <div>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <h3 className="font-mono font-bold text-xs sm:text-sm text-zinc-100 flex items-center gap-2 flex-wrap">
+              Phân loại nhà đầu tư
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold">
+                {selectedSymbol}
+              </span>
+              <span className={`inline-flex items-center gap-1.5 text-[9px] px-2 py-0.5 rounded-full font-mono font-bold transition-all ${
+                sessionInfo.sessionBadge === 'PHIÊN ATC'
+                  ? 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
+                  : wsStatus === 'connected'
+                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+                  : 'bg-zinc-800 text-zinc-400 border border-zinc-700'
+              }`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${
                   sessionInfo.sessionBadge === 'PHIÊN ATC'
-                    ? 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
+                    ? 'bg-amber-400 animate-pulse'
                     : wsStatus === 'connected'
-                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
-                    : 'bg-zinc-800 text-zinc-400 border border-zinc-700'
-                }`}>
-                  <span className={`w-1.5 h-1.5 rounded-full ${
-                    sessionInfo.sessionBadge === 'PHIÊN ATC'
-                      ? 'bg-amber-400 animate-pulse'
-                      : wsStatus === 'connected'
-                      ? 'bg-emerald-400 animate-pulse'
-                      : 'bg-zinc-500'
-                  }`} />
-                  {sessionInfo.sessionBadge === 'PHIÊN ATC'
-                    ? 'PHIÊN ĐỊNH KỲ ATC'
-                    : wsStatus === 'connected'
-                    ? 'REALTIME STREAM'
-                    : 'ĐANG KẾT NỐI'}
-                </span>
-              </h3>
-              <div className="group relative cursor-pointer text-zinc-500 hover:text-zinc-300">
-                <Info className="w-3.5 h-3.5" />
-                <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-1 hidden group-hover:block w-64 p-2.5 rounded-lg bg-zinc-900 border border-zinc-700 text-[10px] text-zinc-200 shadow-2xl z-50 leading-relaxed">
-                  <div className="font-bold text-emerald-400 mb-1 border-b border-zinc-700 pb-1">
-                    Tiêu chuẩn phân loại theo quy mô lệnh:
-                  </div>
-                  • <strong className="text-emerald-400">Cá mập</strong>: Lệnh &ge; 1 Tỷ VNĐ
-                  <br />• <strong className="text-cyan-400">Sói già</strong>: Lệnh 500 Triệu &ndash; 1 Tỷ VNĐ
-                  <br />• <strong className="text-amber-400">Cừu non</strong>: Lệnh &lt; 500 Triệu VNĐ
-                  <div className="mt-1.5 pt-1 border-t border-zinc-800 text-[9px] text-zinc-400">
-                    Phân tích từ sổ khớp lệnh chi tiết từng tick trong ngày.
-                  </div>
+                    ? 'bg-emerald-400 animate-pulse'
+                    : 'bg-zinc-500'
+                }`} />
+                {sessionInfo.sessionBadge === 'PHIÊN ATC'
+                  ? 'PHIÊN ĐỊNH KỲ ATC'
+                  : wsStatus === 'connected'
+                  ? 'REALTIME STREAM'
+                  : 'ĐANG KẾT NỐI'}
+              </span>
+            </h3>
+            <div className="group relative cursor-pointer text-[10px] font-mono px-1.5 py-0.2 rounded bg-zinc-800 text-zinc-400 hover:text-zinc-200">
+              Quy ước
+              <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-1 hidden group-hover:block w-64 p-2.5 rounded-lg bg-zinc-900 border border-zinc-700 text-[10px] text-zinc-200 shadow-2xl z-50 leading-relaxed">
+                <div className="font-bold text-emerald-400 mb-1 border-b border-zinc-700 pb-1">
+                  Tiêu chuẩn phân loại theo quy mô lệnh:
+                </div>
+                • <strong className="text-emerald-400">Cá mập</strong>: Lệnh &ge; 1 Tỷ VNĐ
+                <br />• <strong className="text-cyan-400">Sói già</strong>: Lệnh 500 Triệu &ndash; 1 Tỷ VNĐ
+                <br />• <strong className="text-amber-400">Cừu non</strong>: Lệnh &lt; 500 Triệu VNĐ
+                <div className="mt-1.5 pt-1 border-t border-zinc-800 text-[9px] text-zinc-400">
+                  Phân tích từ sổ khớp lệnh chi tiết từng tick trong ngày.
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-2 mt-0.5">
-              <span className="text-[10px] text-zinc-400 font-mono">Dòng tiền thông minh (Real Order Flow)</span>
-              {lastUpdated && (
-                <span className="text-[9px] text-zinc-500 font-mono flex items-center gap-1">
-                  <Clock className="w-2.5 h-2.5" /> {lastUpdated}
-                </span>
-              )}
-            </div>
+          </div>
+          <div className="flex items-center gap-2 mt-0.5">
+            <span className="text-[10px] text-zinc-400 font-mono">Dòng tiền thông minh (Real Order Flow)</span>
+            {lastUpdated && (
+              <span className="text-[9px] text-zinc-500 font-mono">
+                {lastUpdated}
+              </span>
+            )}
           </div>
         </div>
 
@@ -584,30 +568,30 @@ export const InvestorFlowAnalysis: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-3 gap-2 text-center text-[10px] font-mono">
-              <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+              <div className="p-2 rounded-lg bg-zinc-900/60 border border-zinc-800/60">
                 <span className="text-zinc-400 block font-semibold">Cá mập (&ge;1 Tỷ)</span>
                 <span className={`text-xs font-bold mt-0.5 block ${summary.sharkNetVol >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                   {summary.sharkNetVol >= 0 ? '+' : ''}{summary.sharkNetVol.toLocaleString('vi-VN')}
                 </span>
-                <span className="text-[9px] text-emerald-500/80">
+                <span className={`text-[9px] ${summary.sharkNetVol >= 0 ? 'text-emerald-500/80' : 'text-rose-500/80'}`}>
                   {summary.sharkNetVol >= 0 ? 'Mua ròng' : 'Bán ròng'}
                 </span>
               </div>
-              <div className="p-2 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
+              <div className="p-2 rounded-lg bg-zinc-900/60 border border-zinc-800/60">
                 <span className="text-zinc-400 block font-semibold">Sói già (500Tr-1 Tỷ)</span>
                 <span className={`text-xs font-bold mt-0.5 block ${summary.wolfNetVol >= 0 ? 'text-cyan-400' : 'text-orange-400'}`}>
                   {summary.wolfNetVol >= 0 ? '+' : ''}{summary.wolfNetVol.toLocaleString('vi-VN')}
                 </span>
-                <span className="text-[9px] text-cyan-500/80">
+                <span className={`text-[9px] ${summary.wolfNetVol >= 0 ? 'text-cyan-500/80' : 'text-orange-500/80'}`}>
                   {summary.wolfNetVol >= 0 ? 'Mua ròng' : 'Bán ròng'}
                 </span>
               </div>
-              <div className="p-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
+              <div className="p-2 rounded-lg bg-zinc-900/60 border border-zinc-800/60">
                 <span className="text-zinc-400 block font-semibold">Cừu non (&lt;500Tr)</span>
                 <span className={`text-xs font-bold mt-0.5 block ${summary.sheepNetVol >= 0 ? 'text-amber-400' : 'text-rose-400'}`}>
                   {summary.sheepNetVol >= 0 ? '+' : ''}{summary.sheepNetVol.toLocaleString('vi-VN')}
                 </span>
-                <span className="text-[9px] text-amber-500/80">
+                <span className={`text-[9px] ${summary.sheepNetVol >= 0 ? 'text-amber-500/80' : 'text-rose-500/80'}`}>
                   {summary.sheepNetVol >= 0 ? 'Nhỏ lẻ mua' : 'Nhỏ lẻ bán'}
                 </span>
               </div>
@@ -619,8 +603,7 @@ export const InvestorFlowAnalysis: React.FC = () => {
             {/* Mua Side Breakdown */}
             <div className="p-3.5 bg-zinc-900/60 border border-zinc-800/80 rounded-xl">
               <div className="flex items-center justify-between pb-2 border-b border-zinc-800 mb-2.5">
-                <span className="text-xs font-mono font-bold text-emerald-400 flex items-center gap-1.5">
-                  <TrendUp className="w-3.5 h-3.5" />
+                <span className="text-xs font-mono font-bold text-emerald-400">
                   Tỷ lệ MUA Chủ Động
                 </span>
                 <span className="text-[10px] font-mono text-zinc-400">
@@ -674,8 +657,7 @@ export const InvestorFlowAnalysis: React.FC = () => {
             {/* Bán Side Breakdown */}
             <div className="p-3.5 bg-zinc-900/60 border border-zinc-800/80 rounded-xl">
               <div className="flex items-center justify-between pb-2 border-b border-zinc-800 mb-2.5">
-                <span className="text-xs font-mono font-bold text-rose-400 flex items-center gap-1.5">
-                  <TrendDown className="w-3.5 h-3.5" />
+                <span className="text-xs font-mono font-bold text-rose-400">
                   Tỷ lệ BÁN Chủ Động
                 </span>
                 <span className="text-[10px] font-mono text-zinc-400">
@@ -734,7 +716,6 @@ export const InvestorFlowAnalysis: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 font-mono text-xs">
           <div className="p-3.5 rounded-xl bg-zinc-900 border border-zinc-800">
             <div className="flex items-center gap-1.5 text-emerald-400 mb-2 font-bold">
-              <Fish className="w-4 h-4" />
               <span>Cá mập (&ge; 1 Tỷ)</span>
             </div>
             <p className="text-[11px] text-zinc-400 leading-relaxed">
@@ -748,7 +729,6 @@ export const InvestorFlowAnalysis: React.FC = () => {
 
           <div className="p-3.5 rounded-xl bg-zinc-900 border border-zinc-800">
             <div className="flex items-center gap-1.5 text-cyan-400 mb-2 font-bold">
-              <Users className="w-4 h-4" />
               <span>Sói già (500Tr &ndash; 1 Tỷ)</span>
             </div>
             <p className="text-[11px] text-zinc-400 leading-relaxed">
@@ -762,7 +742,6 @@ export const InvestorFlowAnalysis: React.FC = () => {
 
           <div className="p-3.5 rounded-xl bg-zinc-900 border border-zinc-800">
             <div className="flex items-center gap-1.5 text-amber-400 mb-2 font-bold">
-              <Sparkle className="w-4 h-4" />
               <span>Cừu non (&lt; 500Tr)</span>
             </div>
             <p className="text-[11px] text-zinc-400 leading-relaxed">
@@ -780,25 +759,15 @@ export const InvestorFlowAnalysis: React.FC = () => {
       {(activePage === 1 || activePage === 3) && (
         <div className="space-y-3 pt-1">
           {/* ── Whale Radar Telemetry Strip ── */}
-          <div className="p-3 rounded-xl bg-zinc-950/80 border border-emerald-500/30 shadow-[0_4px_20px_-8px_rgba(16,185,129,0.2)] flex flex-col md:flex-row md:items-center justify-between gap-3 font-mono">
+          <div className="p-3 rounded-xl bg-zinc-900/60 border border-zinc-800 flex flex-col md:flex-row md:items-center justify-between gap-3 font-mono">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
-                <Fish className="w-4 h-4 animate-pulse" />
-              </div>
+              <div className="w-1.5 h-6 rounded-full bg-emerald-400 shrink-0" />
               <div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-xs font-bold text-zinc-100 uppercase tracking-wider">
-                    Radar Lệnh Cá Mập
-                  </span>
-                  <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                    &ge; 1 TỶ VNĐ
-                  </span>
-                  <span className="px-1.5 py-0.2 rounded text-[9px] font-mono text-zinc-300 bg-zinc-800/80 border border-zinc-700">
-                    Đã lưu {orders.length} lệnh trong ngày
-                  </span>
-                </div>
+                <span className="text-xs font-bold text-zinc-100 uppercase tracking-wider block">
+                  Radar Lệnh Cá Mập
+                </span>
                 <p className="text-[10px] text-zinc-400">
-                  Nhật ký khớp lệnh tích lũy liên tục không xoá &bull; Tự động đồng bộ và lưu trữ cục bộ
+                  Nhật ký khớp lệnh tích lũy trong ngày ({orders.length} lệnh)
                 </p>
               </div>
             </div>
@@ -832,7 +801,6 @@ export const InvestorFlowAnalysis: React.FC = () => {
                     sharkStats.netVal >= 0 ? 'text-emerald-400' : 'text-rose-400'
                   }`}
                 >
-                  {sharkStats.netVal >= 0 ? <TrendUp className="w-3.5 h-3.5" /> : <TrendDown className="w-3.5 h-3.5" />}
                   <span>
                     {sharkStats.netVal >= 0 ? '+' : ''}
                     {(sharkStats.netVal / 1_000_000_000).toFixed(2)} tỷ
@@ -845,46 +813,39 @@ export const InvestorFlowAnalysis: React.FC = () => {
           {/* ── Filter Toolbar (Pill Controls) ── */}
           <div className="flex flex-wrap items-center justify-between gap-2.5 font-mono text-xs py-1">
             {/* Investor Scale Filter */}
-            <div className="flex items-center gap-1.5 p-1 rounded-xl bg-zinc-900/90 border border-zinc-800 text-[11px] overflow-x-auto">
-              <span className="text-zinc-500 px-1.5 flex items-center gap-1 text-[10px] shrink-0">
-                <Funnel className="w-3 h-3" />
-                <span>Quy mô:</span>
+            <div className="flex items-center gap-1 p-1 rounded-xl bg-zinc-900/90 border border-zinc-800 text-[11px] overflow-x-auto">
+              <span className="text-zinc-500 px-1 text-[10px] shrink-0 font-semibold">
+                Quy mô:
               </span>
               <button
                 onClick={() => setFilterInvestor('shark')}
-                className={`px-2.5 py-1 rounded-lg font-bold transition-all flex items-center gap-1.5 shrink-0 ${
+                className={`px-2.5 py-1 rounded-lg font-bold transition-all shrink-0 ${
                   filterInvestor === 'shark'
-                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm'
+                    ? 'bg-emerald-500 text-zinc-950 shadow-sm'
                     : 'text-zinc-400 hover:text-zinc-200'
                 }`}
               >
-                <span>🦈 Chỉ Cá Mập (≥ 1 Tỷ)</span>
-                <span className="px-1.5 py-0.2 rounded-full bg-zinc-800 text-[9px] text-zinc-300">
-                  {sharkCount}
-                </span>
+                Chỉ Cá Mập ({sharkCount})
               </button>
               <button
                 onClick={() => setFilterInvestor('wolf_shark')}
-                className={`px-2.5 py-1 rounded-lg font-medium transition-all flex items-center gap-1.5 shrink-0 ${
+                className={`px-2.5 py-1 rounded-lg font-medium transition-all shrink-0 ${
                   filterInvestor === 'wolf_shark'
-                    ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm'
+                    ? 'bg-emerald-500 text-zinc-950 shadow-sm'
                     : 'text-zinc-400 hover:text-zinc-200'
                 }`}
               >
-                <span>🐺 Cá Mập & Sói (≥ 500Tr)</span>
-                <span className="px-1.5 py-0.2 rounded-full bg-zinc-800 text-[9px] text-zinc-300">
-                  {wolfSharkCount}
-                </span>
+                Cá Mập & Sói ({wolfSharkCount})
               </button>
               <button
                 onClick={() => setFilterInvestor('all')}
-                className={`px-2 py-1 rounded-lg font-medium transition-all shrink-0 ${
+                className={`px-2.5 py-1 rounded-lg font-medium transition-all shrink-0 ${
                   filterInvestor === 'all'
                     ? 'bg-zinc-800 text-zinc-200 border border-zinc-700'
                     : 'text-zinc-500 hover:text-zinc-300'
                 }`}
               >
-                <span>Tất cả ({orders.length})</span>
+                Tất cả ({orders.length})
               </button>
             </div>
 
@@ -892,7 +853,7 @@ export const InvestorFlowAnalysis: React.FC = () => {
             <div className="flex items-center gap-1 p-1 rounded-xl bg-zinc-900/90 border border-zinc-800 text-[11px]">
               <button
                 onClick={() => setFilterSide('all')}
-                className={`px-2 py-1 rounded-lg font-medium transition-all ${
+                className={`px-2.5 py-1 rounded-lg font-medium transition-all ${
                   filterSide === 'all'
                     ? 'bg-zinc-800 text-zinc-200'
                     : 'text-zinc-500 hover:text-zinc-300'
@@ -902,23 +863,23 @@ export const InvestorFlowAnalysis: React.FC = () => {
               </button>
               <button
                 onClick={() => setFilterSide('buy')}
-                className={`px-2 py-1 rounded-lg font-bold transition-all flex items-center gap-1 ${
+                className={`px-2.5 py-1 rounded-lg font-bold transition-all ${
                   filterSide === 'buy'
                     ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
                     : 'text-emerald-500/70 hover:text-emerald-400'
                 }`}
               >
-                <span>🟢 Mua C.Động</span>
+                Mua C.Động
               </button>
               <button
                 onClick={() => setFilterSide('sell')}
-                className={`px-2 py-1 rounded-lg font-bold transition-all flex items-center gap-1 ${
+                className={`px-2.5 py-1 rounded-lg font-bold transition-all ${
                   filterSide === 'sell'
                     ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40'
                     : 'text-rose-500/70 hover:text-rose-400'
                 }`}
               >
-                <span>🔴 Bán C.Động</span>
+                Bán C.Động
               </button>
             </div>
 
@@ -926,13 +887,9 @@ export const InvestorFlowAnalysis: React.FC = () => {
             <button
               onClick={exportCsvTape}
               title="Xuất file nhật ký toàn bộ lệnh trong ngày ra Excel CSV"
-              className="px-2.5 py-1 rounded-xl bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-800 hover:border-emerald-500/40 text-zinc-300 hover:text-emerald-400 font-mono text-[11px] font-bold transition-all flex items-center gap-1.5 shadow-sm sm:ml-auto"
+              className="px-2.5 py-1 rounded-xl bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-800 hover:border-emerald-500/40 text-zinc-300 hover:text-emerald-400 font-mono text-[11px] font-bold transition-all shadow-sm sm:ml-auto"
             >
-              <DownloadSimple className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Xuất Log Ngày (.CSV)</span>
-              <span className="px-1.5 py-0.2 rounded-full bg-zinc-800 text-[9px] text-zinc-400">
-                {orders.length}
-              </span>
+              Xuất Log Ngày (.CSV)
             </button>
           </div>
 
@@ -954,9 +911,6 @@ export const InvestorFlowAnalysis: React.FC = () => {
                   <tr>
                     <td colSpan={6} className="py-10 text-center text-zinc-400">
                       <div className="flex flex-col items-center justify-center gap-2">
-                        <div className="w-10 h-10 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-500">
-                          <Fish className="w-5 h-5 text-zinc-500" />
-                        </div>
                         <div className="font-bold text-zinc-300 text-xs">
                           {filterInvestor === 'shark'
                             ? `Chưa ghi nhận lệnh Cá Mập (≥ 1 Tỷ) trong ${orders.length} lệnh tích lũy ngày của ${selectedSymbol}`
@@ -979,11 +933,8 @@ export const InvestorFlowAnalysis: React.FC = () => {
                 ) : (
                   visibleOrders.map((order, idx) => {
                     const isBuy = order.type === 'M';
-                    const isMegaWhale = order.value >= 3_000_000_000;
                     const isShark = order.investorType === 'Cá mập';
                     const isWolf = order.investorType === 'Sói già';
-
-                    const isRecentLive = recentLiveIds.has(String(order.id));
                     const formattedVal =
                       order.value >= 1_000_000_000
                         ? `${(order.value / 1_000_000_000).toFixed(2)} tỷ`
@@ -994,44 +945,21 @@ export const InvestorFlowAnalysis: React.FC = () => {
                     return (
                       <tr
                         key={order.id || idx}
-                        className={`hover:bg-zinc-800/40 transition-all ${
-                          isRecentLive
-                            ? 'bg-emerald-500/20 border-l-2 border-emerald-400 shadow-[0_0_15px_-4px_rgba(16,185,129,0.4)]'
-                            : isMegaWhale
-                            ? 'bg-amber-500/5 border-l-2 border-amber-500'
-                            : isShark
-                            ? 'bg-emerald-500/5'
-                            : ''
-                        }`}
+                        className="hover:bg-zinc-800/30 transition-colors border-b border-zinc-800/40"
                       >
                         <td className="py-2 pl-3 text-zinc-400 font-mono text-[11px]">{order.time}</td>
                         <td className="py-2">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            {isRecentLive && (
-                              <span className="px-1.5 py-0.5 rounded text-[8px] font-black bg-emerald-500/30 text-emerald-200 border border-emerald-500/50 flex items-center gap-0.5 animate-pulse">
-                                <span>⚡ VỪA KHỚP</span>
-                              </span>
-                            )}
-                            {isShark ? (
-                              <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
-                                <span>🦈</span>
-                                <span>Cá mập</span>
-                              </span>
-                            ) : isWolf ? (
-                              <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 flex items-center gap-1">
-                                <span>🐺</span>
-                                <span>Sói già</span>
-                              </span>
-                            ) : (
-                              <span className="text-zinc-500 text-[10px]">Cừu non</span>
-                            )}
-                            {isMegaWhale && (
-                              <span className="px-1.5 py-0.5 rounded text-[9px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center gap-0.5 animate-pulse">
-                                <Fire className="w-3 h-3 text-amber-400" />
-                                <span>MEGA</span>
-                              </span>
-                            )}
-                          </div>
+                          <span
+                            className={`text-[11px] font-mono ${
+                              isShark
+                                ? 'text-emerald-400 font-bold'
+                                : isWolf
+                                ? 'text-cyan-400 font-medium'
+                                : 'text-zinc-500'
+                            }`}
+                          >
+                            {order.investorType}
+                          </span>
                         </td>
                         <td className="py-2 text-right font-bold text-zinc-100 text-xs font-mono">
                           {order.price.toFixed(2)}
@@ -1042,9 +970,7 @@ export const InvestorFlowAnalysis: React.FC = () => {
                         <td className="py-2 text-right font-mono font-black text-xs">
                           <span
                             className={
-                              isMegaWhale
-                                ? 'text-amber-300 font-bold'
-                                : isShark
+                              isShark
                                 ? isBuy
                                   ? 'text-emerald-400 font-bold'
                                   : 'text-rose-400 font-bold'
@@ -1056,23 +982,11 @@ export const InvestorFlowAnalysis: React.FC = () => {
                         </td>
                         <td className="py-2 pr-3 text-center">
                           <span
-                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold ${
-                              isBuy
-                                ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
-                                : 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
+                            className={`text-[10px] font-mono font-bold ${
+                              isBuy ? 'text-emerald-400' : 'text-rose-400'
                             }`}
                           >
-                            {isBuy ? (
-                              <>
-                                <ArrowUpRight className="w-3 h-3" />
-                                <span>MUA CHỦ ĐỘNG</span>
-                              </>
-                            ) : (
-                              <>
-                                <ArrowDownRight className="w-3 h-3" />
-                                <span>BÁN CHỦ ĐỘNG</span>
-                              </>
-                            )}
+                            {isBuy ? 'MUA C.ĐỘNG' : 'BÁN C.ĐỘNG'}
                           </span>
                         </td>
                       </tr>

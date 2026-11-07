@@ -503,8 +503,15 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
             } catch {}
           });
 
-          client.on('error', () => {
-            // Broker lỗi auth hoặc network -> Fallback vẫn duy trì bởi startGlobalStreaming()
+          client.on('error', (err: any) => {
+            // Nếu token hết hạn hoặc lỗi xác thực (Not authorized / code 4, 5)
+            const errMsg = String(err?.message || '');
+            if (errMsg.includes('Not authorized') || errMsg.includes('connack') || err?.code === 4 || err?.code === 5) {
+              console.warn('[DNSE MQTT] Token hết hạn hoặc phiên đăng nhập cần gia hạn. Đang tự động cấp mới...');
+              try { client.end(true); } catch {}
+              globalMqttClient = null;
+              setTimeout(initDnseMqtt, 3000);
+            }
           });
         }
       } catch {
@@ -513,6 +520,16 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
     }
 
     initDnseMqtt();
+
+    // Lắng nghe sự kiện chuyển tab: Khi người dùng quay lại tab trình duyệt, lập tức đồng bộ ngay
+    const handleVisibilityChange = () => {
+      if (typeof document !== 'undefined' && !document.hidden) {
+        executeStreamCycle();
+      }
+    };
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+    }
 
     // Đồng thời thử kết nối WebSocket DNSE (nếu khả dụng)
     const apiKey = process.env.NEXT_PUBLIC_DNSE_API_KEY;
@@ -585,6 +602,9 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
 
     return () => {
       activeHookCount = Math.max(0, activeHookCount - 1);
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+      }
       if (activeHookCount === 0) {
         stopGlobalStreaming();
         if (globalReconnectTimer) {

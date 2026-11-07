@@ -2,25 +2,14 @@
 
 import React, { useState, useMemo } from 'react';
 import {
-  Users,
-  User,
-  Buildings,
-  ChartPie,
+  MagnifyingGlass,
   TrendUp,
   TrendDown,
-  Globe,
-  ShieldCheck,
-  Funnel,
-  MagnifyingGlass,
-  ArrowLeft,
-  ArrowRight,
   Info,
-  Calendar,
-  CurrencyCircleDollar,
   CheckCircle,
-  Eye,
-  ChartLineUp,
+  Sparkle,
 } from '@phosphor-icons/react';
+import { AgmIngestionModal } from './AgmIngestionModal';
 
 export interface Shareholder {
   name: string;
@@ -54,6 +43,8 @@ export interface TotalShareholdersSnapshot {
   totalShareholders: number;
   changeFromPrev: number;
   changePercent: number;
+  recordDate?: string;
+  sourceDoc?: string;
 }
 
 export interface ShareholderStructure {
@@ -89,12 +80,11 @@ export const ShareholderStructureView: React.FC<ShareholderStructureViewProps> =
   companyData,
   livePrice = 0,
 }) => {
-  // Modes: 'overview' (Biểu đồ đường xu hướng tăng giảm & cơ cấu) vs 'detail' (Cơ cấu chi tiết từng cổ đông)
-  const [viewMode, setViewMode] = useState<'overview' | 'detail'>('overview');
   const [filterCategory, setFilterCategory] = useState<'ALL' | 'MAJOR' | 'INSIDER' | 'CORPORATE' | 'INDIVIDUAL'>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [hoveredSlice, setHoveredSlice] = useState<string | null>(null);
   const [hoveredPointIndex, setHoveredPointIndex] = useState<number | null>(null);
+  const [isAgmModalOpen, setIsAgmModalOpen] = useState(false);
 
   const symbol = companyData?.symbol || 'CP';
   const rawShareholders = useMemo(() => companyData?.shareholders || [], [companyData]);
@@ -117,97 +107,7 @@ export const ShareholderStructureView: React.FC<ShareholderStructureViewProps> =
     return `${valueBillion.toLocaleString('vi-VN', { maximumFractionDigits: 1 })} tỷ`;
   };
 
-  // Filtered individual shareholders for detail view
-  const filteredShareholders = useMemo(() => {
-    let list = [...rawShareholders];
-
-    if (filterCategory === 'MAJOR') {
-      list = list.filter((s) => (s.ownership_percentage || 0) >= 5.0 || s.is_major);
-    } else if (filterCategory === 'INSIDER') {
-      list = list.filter((s) => s.is_insider || Boolean(s.position));
-    } else if (filterCategory === 'CORPORATE') {
-      list = list.filter((s) => s.owner_type === 'CORPORATE');
-    } else if (filterCategory === 'INDIVIDUAL') {
-      list = list.filter((s) => s.owner_type === 'INDIVIDUAL');
-    }
-
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase().trim();
-      list = list.filter((s) => s.name.toLowerCase().includes(q) || (s.position && s.position.toLowerCase().includes(q)));
-    }
-
-    return list;
-  }, [rawShareholders, filterCategory, searchQuery]);
-
-  // Top 10 shareholders for bar chart comparison in detail view
-  const top10Shareholders = useMemo(() => {
-    return [...rawShareholders]
-      .sort((a, b) => (b.ownership_percentage || 0) - (a.ownership_percentage || 0))
-      .slice(0, 10);
-  }, [rawShareholders]);
-
-  // Breakdown items with safe defaults if API hasn't loaded structure yet
-  const breakdownItems = useMemo(() => {
-    if (structure?.breakdown && structure.breakdown.length > 0) {
-      return structure.breakdown;
-    }
-    const majorTotal = rawShareholders.reduce((sum, s) => sum + (s.ownership_percentage || 0), 0);
-    const freeFloat = Math.max(0, 100 - majorTotal);
-    return [
-      { id: 'major', label: 'Cổ đông lớn & Nội bộ', percentage: Number(majorTotal.toFixed(2)), volume: 0, color: '#10b981' },
-      { id: 'freefloat', label: 'Cổ đông nhỏ lẻ (Trôi nổi)', percentage: Number(freeFloat.toFixed(2)), volume: 0, color: '#71717a' },
-    ];
-  }, [structure, rawShareholders]);
-
-  // Calculate SVG Donut Coordinates
-  const donutData = useMemo(() => {
-    const total = breakdownItems.reduce((acc, curr) => acc + curr.percentage, 0);
-    if (total <= 0) return [];
-
-    let accumulatedAngle = 0;
-    const radius = 80;
-    const innerRadius = 54;
-    const center = 100;
-
-    return breakdownItems.map((item) => {
-      const sliceAngle = (item.percentage / total) * 360;
-      const startAngle = accumulatedAngle;
-      const endAngle = accumulatedAngle + sliceAngle;
-      accumulatedAngle += sliceAngle;
-
-      const startRad = ((startAngle - 90) * Math.PI) / 180.0;
-      const endRad = ((endAngle - 90) * Math.PI) / 180.0;
-
-      const x1 = center + radius * Math.cos(startRad);
-      const y1 = center + radius * Math.sin(startRad);
-      const x2 = center + radius * Math.cos(endRad);
-      const y2 = center + radius * Math.sin(endRad);
-
-      const ix1 = center + innerRadius * Math.cos(endRad);
-      const iy1 = center + innerRadius * Math.sin(endRad);
-      const ix2 = center + innerRadius * Math.cos(startRad);
-      const iy2 = center + innerRadius * Math.sin(startRad);
-
-      const largeArc = sliceAngle > 180 ? 1 : 0;
-
-      const pathData = `
-        M ${x1} ${y1}
-        A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2}
-        L ${ix1} ${iy1}
-        A ${innerRadius} ${innerRadius} 0 ${largeArc} 0 ${ix2} ${iy2}
-        Z
-      `;
-
-      return {
-        ...item,
-        pathData,
-        startAngle,
-        endAngle,
-      };
-    });
-  }, [breakdownItems]);
-
-  // Comprehensive Timeline Data for Total Shareholders (100% Real Data from ĐHĐCĐ & VSDC)
+  // Timeline Data for Total Shareholders (100% Real Data from ĐHĐCĐ & VSDC, empty if unverified)
   const timelineData = useMemo(() => {
     const rawTotalHistory = structure?.totalShareholdersHistory || [];
 
@@ -227,27 +127,14 @@ export const ShareholderStructureView: React.FC<ShareholderStructureViewProps> =
           changePercent,
           isIncrease: changeFromPrev > 0,
           isDecrease: changeFromPrev < 0,
+          recordDate: d.recordDate,
+          sourceDoc: d.sourceDoc,
         };
       });
     }
 
-    // Fallback: If company has no historical ĐHĐCĐ total records, use recorded count if any
-    if (rawShareholders.length > 0) {
-      return [
-        {
-          year: '2025',
-          period: 'Hiện Tại',
-          totalShareholders: rawShareholders.length,
-          changeFromPrev: 0,
-          changePercent: 0,
-          isIncrease: false,
-          isDecrease: false,
-        },
-      ];
-    }
-
     return [];
-  }, [structure?.totalShareholdersHistory, rawShareholders]);
+  }, [structure?.totalShareholdersHistory]);
 
   // SVG Line Chart Coordinate Mapping for Total Shareholders
   const chartWidth = 640;
@@ -331,15 +218,106 @@ export const ShareholderStructureView: React.FC<ShareholderStructureViewProps> =
   // Active hover point
   const activePoint = hoveredPointIndex !== null ? chartPoints[hoveredPointIndex] : chartPoints[chartPoints.length - 1];
 
+  // Filtered individual shareholders for detail table
+  const filteredShareholders = useMemo(() => {
+    let list = [...rawShareholders];
+
+    if (filterCategory === 'MAJOR') {
+      list = list.filter((s) => (s.ownership_percentage || 0) >= 5.0 || s.is_major);
+    } else if (filterCategory === 'INSIDER') {
+      list = list.filter((s) => s.is_insider || Boolean(s.position));
+    } else if (filterCategory === 'CORPORATE') {
+      list = list.filter((s) => s.owner_type === 'CORPORATE');
+    } else if (filterCategory === 'INDIVIDUAL') {
+      list = list.filter((s) => s.owner_type === 'INDIVIDUAL');
+    }
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      list = list.filter((s) => s.name.toLowerCase().includes(q) || (s.position && s.position.toLowerCase().includes(q)));
+    }
+
+    return list;
+  }, [rawShareholders, filterCategory, searchQuery]);
+
+  // Top 10 shareholders for bar chart comparison (sorted descending)
+  const top10Shareholders = useMemo(() => {
+    return [...rawShareholders]
+      .sort((a, b) => (b.ownership_percentage || 0) - (a.ownership_percentage || 0))
+      .slice(0, 10);
+  }, [rawShareholders]);
+
+  // Breakdown items with verified data from exchange API
+  const breakdownItems = useMemo(() => {
+    if (structure?.breakdown && structure.breakdown.length > 0) {
+      return structure.breakdown;
+    }
+    const majorTotal = rawShareholders.reduce((sum, s) => sum + (s.ownership_percentage || 0), 0);
+    const freeFloat = Math.max(0, 100 - majorTotal);
+    return [
+      { id: 'major', label: 'Cổ đông lớn & Nội bộ', percentage: Number(majorTotal.toFixed(2)), volume: 0, color: '#10b981' },
+      { id: 'freefloat', label: 'Cổ đông nhỏ lẻ (Trôi nổi)', percentage: Number(freeFloat.toFixed(2)), volume: 0, color: '#71717a' },
+    ];
+  }, [structure, rawShareholders]);
+
+  // Calculate SVG Donut Coordinates
+  const donutData = useMemo(() => {
+    const total = breakdownItems.reduce((acc, curr) => acc + curr.percentage, 0);
+    if (total <= 0) return [];
+
+    let accumulatedAngle = 0;
+    const radius = 80;
+    const innerRadius = 54;
+    const center = 100;
+
+    return breakdownItems.map((item) => {
+      const sliceAngle = (item.percentage / total) * 360;
+      const startAngle = accumulatedAngle;
+      const endAngle = accumulatedAngle + sliceAngle;
+      accumulatedAngle += sliceAngle;
+
+      const startRad = ((startAngle - 90) * Math.PI) / 180.0;
+      const endRad = ((endAngle - 90) * Math.PI) / 180.0;
+
+      const x1 = center + radius * Math.cos(startRad);
+      const y1 = center + radius * Math.sin(startRad);
+      const x2 = center + radius * Math.cos(endRad);
+      const y2 = center + radius * Math.sin(endRad);
+
+      const ix1 = center + innerRadius * Math.cos(endRad);
+      const iy1 = center + innerRadius * Math.sin(endRad);
+      const ix2 = center + innerRadius * Math.cos(startRad);
+      const iy2 = center + innerRadius * Math.sin(startRad);
+
+      const largeArc = sliceAngle > 180 ? 1 : 0;
+
+      const pathData = `
+        M ${x1} ${y1}
+        A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2}
+        L ${ix1} ${iy1}
+        A ${innerRadius} ${innerRadius} 0 ${largeArc} 0 ${ix2} ${iy2}
+        Z
+      `;
+
+      return {
+        ...item,
+        pathData,
+        startAngle,
+        endAngle,
+      };
+    });
+  }, [breakdownItems]);
+
+  const latestShareholderSnapshot = timelineData.length > 0 ? timelineData[timelineData.length - 1] : null;
+
   return (
     <div className="space-y-6">
-      {/* Top Header & Sub-navigation Switcher */}
+      {/* Top Header */}
       <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-zinc-800/80">
         <div className="space-y-1">
-          <div className="flex items-center gap-2.5">
-            <h2 className="text-base font-bold text-zinc-100 flex items-center gap-2 tracking-tight">
-              <ChartLineUp className="w-5 h-5 text-emerald-400" />
-              <span>Biểu Đồ Xu Hướng & Cơ Cấu Cổ Đông</span>
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <h2 className="text-base font-bold text-zinc-100 tracking-tight">
+              Biểu Đồ Xu Hướng & Cơ Cấu Cổ Đông
             </h2>
             <span className="px-2 py-0.5 rounded-md bg-zinc-800 text-[11px] font-mono font-bold text-zinc-300">
               {symbol}
@@ -357,177 +335,197 @@ export const ShareholderStructureView: React.FC<ShareholderStructureViewProps> =
                 {structure.concentrationLevel}
               </span>
             )}
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-mono">
+              <CheckCircle className="w-3 h-3 text-emerald-400" />
+              <span>Dữ liệu thực tế từ Biên bản ĐHĐCĐ & BCTC</span>
+            </span>
           </div>
           <p className="text-xs text-zinc-400">
-            Biểu đồ đường biến động tỷ lệ sở hữu qua các thời kỳ và chi tiết danh sách cổ đông thực tế.
+            Biểu đồ biến động số lượng cổ đông theo từng năm (ĐHĐCĐ) và chi tiết danh sách cổ đông công bố.
           </p>
         </div>
 
-        {/* View Mode Toggle Switcher */}
-        <div className="inline-flex items-center p-1 rounded-xl bg-zinc-900 border border-zinc-800">
+        <div className="flex items-center gap-3">
+          <div className="text-right hidden sm:block">
+            <span className="text-[11px] font-mono text-zinc-400 block">
+              Ghi nhận <span className="text-zinc-200 font-bold">{rawShareholders.length}</span> cổ đông nắm giữ
+            </span>
+            <span className="text-[10px] text-zinc-500 font-mono">
+              {structure ? `${(100 - structure.freeFloatPercentage).toFixed(2)}% nắm giữ trực tiếp` : ''}
+            </span>
+          </div>
+
           <button
-            onClick={() => setViewMode('overview')}
-            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold transition-all ${
-              viewMode === 'overview'
-                ? 'bg-emerald-500 text-zinc-950 shadow-sm'
-                : 'text-zinc-400 hover:text-zinc-200'
-            }`}
+            onClick={() => setIsAgmModalOpen(true)}
+            className="px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-emerald-500 hover:text-zinc-950 text-emerald-400 border border-emerald-500/30 text-xs font-mono font-bold transition-all shadow-sm cursor-pointer"
           >
-            <ChartLineUp className="w-4 h-4" />
-            <span>Biểu Đồ Xu Hướng</span>
-          </button>
-          <button
-            onClick={() => setViewMode('detail')}
-            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold transition-all ${
-              viewMode === 'detail'
-                ? 'bg-emerald-500 text-zinc-950 shadow-sm'
-                : 'text-zinc-400 hover:text-zinc-200'
-            }`}
-          >
-            <Eye className="w-4 h-4" />
-            <span>Chi Tiết Từng Cổ Đông ({rawShareholders.length})</span>
+            Bóc Tách ĐHĐCĐ
           </button>
         </div>
       </div>
 
-      {/* ========================================================================= */}
-      {/* VIEW 1: BIỂU ĐỒ ĐƯỜNG TĂNG GIẢM CỔ ĐÔNG & CƠ CẤU TỔNG THỂ (FIRST) */}
-      {/* ========================================================================= */}
-      {viewMode === 'overview' && (
-        <div className="space-y-6">
-          {/* Bento KPI Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5">
-            {/* Card 1: Khối Ngoại */}
-            <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/70 hover:border-zinc-700/80 transition-all">
-              <div className="flex items-center justify-between text-zinc-400 mb-1.5">
-                <span className="text-[11px] font-mono font-medium uppercase tracking-wider">Khối Ngoại</span>
-                <Globe className="w-4 h-4 text-emerald-400" />
-              </div>
-              <div className="text-xl font-mono font-bold text-emerald-400">
-                {structure ? `${structure.foreignPercentage.toFixed(2)}%` : '--%'}
-              </div>
-              <div className="text-[11px] font-mono text-zinc-400 mt-1 flex items-center justify-between">
-                <span>{structure ? formatShares(structure.foreignerVolume) : '--'}</span>
-                {structure?.maximumForeignPercentage && (
-                  <span className="text-zinc-500 text-[10px]">Max: {structure.maximumForeignPercentage}%</span>
+      {/* 4 Summary Cards (Bento 2.0 Row) */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {/* Card 1: Khối Ngoại (Foreign) */}
+        <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/70 hover:border-zinc-700/80 transition-all">
+          <div className="flex items-center justify-between text-zinc-400 mb-1.5">
+            <span className="text-[11px] font-mono font-medium uppercase tracking-wider">Khối Ngoại</span>
+            <span className="text-[10px] font-mono text-zinc-500">
+              {structure && structure.maximumForeignPercentage > 0
+                ? `Max ${structure.maximumForeignPercentage.toFixed(1)}%`
+                : ''}
+            </span>
+          </div>
+          <div className="text-xl font-mono font-bold text-emerald-400">
+            {structure ? `${structure.foreignPercentage.toFixed(2)}%` : '--%'}
+          </div>
+          <div className="text-[11px] font-mono text-zinc-400 mt-1">
+            {structure && structure.foreignerVolume > 0 ? (
+              formatShares(structure.foreignerVolume)
+            ) : structure ? (
+              formatShares(Math.round((structure.totalShares * structure.foreignPercentage) / 100))
+            ) : (
+              '--'
+            )}
+          </div>
+          {structure && structure.maximumForeignPercentage > 0 && (
+            <div className="w-full bg-zinc-800 h-1.5 rounded-full mt-2 overflow-hidden">
+              <div
+                className="bg-emerald-500 h-full rounded-full transition-all duration-500"
+                style={{
+                  width: `${Math.min(100, (structure.foreignPercentage / structure.maximumForeignPercentage) * 100)}%`,
+                }}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Card 2: Nhà Nước / Ban Lãnh Đạo */}
+        <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/70 hover:border-zinc-700/80 transition-all">
+          <div className="flex items-center justify-between text-zinc-400 mb-1.5">
+            <span className="text-[11px] font-mono font-medium uppercase tracking-wider">
+              {structure && structure.statePercentage > 0 ? 'Nhà Nước' : 'Ban Lãnh Đạo & HĐQT'}
+            </span>
+          </div>
+          <div className="text-xl font-mono font-bold text-sky-400">
+            {structure
+              ? structure.statePercentage > 0
+                ? `${structure.statePercentage.toFixed(2)}%`
+                : `${structure.bodPercentage.toFixed(2)}%`
+              : '--%'}
+          </div>
+          <div className="text-[11px] font-mono text-zinc-400 mt-1">
+            {structure
+              ? structure.statePercentage > 0
+                ? formatShares(structure.stateVolume)
+                : formatShares(Math.round((structure.totalShares * structure.bodPercentage) / 100))
+              : '--'}
+          </div>
+          <div className="text-[10px] text-zinc-500 mt-1 truncate">
+            {structure && structure.statePercentage > 0 ? 'Đại diện vốn sở hữu nhà nước' : 'Thành viên HĐQT & BĐH'}
+          </div>
+        </div>
+
+        {/* Card 3: Free Float / Trôi Nổi */}
+        <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/70 hover:border-zinc-700/80 transition-all">
+          <div className="flex items-center justify-between text-zinc-400 mb-1.5">
+            <span className="text-[11px] font-mono font-medium uppercase tracking-wider">Trôi Nổi (Free-Float)</span>
+          </div>
+          <div className="text-xl font-mono font-bold text-amber-400">
+            {structure ? `${structure.freeFloatPercentage.toFixed(2)}%` : '--%'}
+          </div>
+          <div className="text-[11px] font-mono text-zinc-400 mt-1">
+            {structure ? formatShares(structure.freeFloat) : '--'}
+          </div>
+          <div className="text-[10px] text-zinc-500 mt-1 truncate">
+            Lưu hành tự do ngoài thị trường
+          </div>
+        </div>
+
+        {/* Card 4: Tổng Số Cổ Đông (ĐHĐCĐ) hoặc Cổ Phiếu Lưu Hành */}
+        <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/70 hover:border-zinc-700/80 transition-all">
+          <div className="flex items-center justify-between text-zinc-400 mb-1.5">
+            <span className="text-[11px] font-mono font-medium uppercase tracking-wider">
+              {latestShareholderSnapshot ? 'Tổng Số Cổ Đông' : 'Cổ Phiếu Lưu Hành'}
+            </span>
+          </div>
+          <div className="text-xl font-mono font-bold text-zinc-100">
+            {latestShareholderSnapshot ? (
+              `${latestShareholderSnapshot.totalShareholders.toLocaleString('vi-VN')} CĐ`
+            ) : structure?.totalShares ? (
+              formatShares(structure.totalShares)
+            ) : (
+              'Chưa có dữ liệu'
+            )}
+          </div>
+          <div className="text-[11px] font-mono text-emerald-400 mt-1 flex items-center justify-between">
+            {latestShareholderSnapshot ? (
+              <>
+                <span>{latestShareholderSnapshot.period}</span>
+                {latestShareholderSnapshot.changePercent !== 0 && (
+                  <span className={latestShareholderSnapshot.changeFromPrev >= 0 ? 'text-emerald-400' : 'text-rose-400'}>
+                    {latestShareholderSnapshot.changeFromPrev >= 0 ? '+' : ''}{latestShareholderSnapshot.changePercent.toFixed(1)}%
+                  </span>
                 )}
-              </div>
-              {structure && structure.maximumForeignPercentage > 0 && (
-                <div className="w-full bg-zinc-800 h-1.5 rounded-full mt-2 overflow-hidden">
-                  <div
-                    className="bg-emerald-500 h-full rounded-full transition-all duration-500"
-                    style={{
-                      width: `${Math.min(100, (structure.foreignPercentage / structure.maximumForeignPercentage) * 100)}%`,
-                    }}
-                  />
+              </>
+            ) : (
+              <span>Vốn ĐL: ~{structure?.totalShares ? `${((structure.totalShares * 10) / 1e9).toFixed(1)}k tỷ` : '--'}</span>
+            )}
+          </div>
+          <div className="text-[10px] text-zinc-500 mt-1 truncate">
+            {latestShareholderSnapshot ? 'Chốt tại kỳ ĐHĐCĐ & VSDC' : 'Chưa có biên bản ĐHĐCĐ chốt số'}
+          </div>
+        </div>
+      </div>
+
+      {/* 2 Main Visual Panels Grid (Left 7 cols: Historical Shareholder Count Line Chart | Right 5 cols: Donut Chart Breakdown) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        {/* Left (7 cols): BIỂU ĐỒ BIẾN ĐỘNG SỐ LƯỢNG CỔ ĐÔNG QUA CÁC NĂM */}
+        <div className="lg:col-span-7 p-5 rounded-2xl bg-zinc-900/40 border border-zinc-800/70 space-y-4">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div className="space-y-0.5">
+              <h3 className="text-sm font-bold text-zinc-200">
+                Biến Động Số Lượng Cổ Đông Theo Từng Năm
+              </h3>
+              <span className="text-[11px] text-zinc-500 block">
+                Số liệu thực tế trích xuất từ Biên bản kiểm tra tư cách cổ đông ĐHĐCĐ & VSDC
+              </span>
+            </div>
+            {timelineData.length > 0 && (
+              <div className="flex items-center gap-3 text-[11px] font-mono">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-0.5 bg-emerald-400 inline-block" />
+                  <span className="text-zinc-300">Tổng cổ đông (Nhà đầu tư)</span>
                 </div>
-              )}
-            </div>
-
-            {/* Card 2: Nhà Nước / Ban Lãnh Đạo */}
-            <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/70 hover:border-zinc-700/80 transition-all">
-              <div className="flex items-center justify-between text-zinc-400 mb-1.5">
-                <span className="text-[11px] font-mono font-medium uppercase tracking-wider">
-                  {structure && structure.statePercentage > 0 ? 'Nhà Nước' : 'Ban Lãnh Đạo & HĐQT'}
-                </span>
-                <ShieldCheck className="w-4 h-4 text-sky-400" />
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500/30 border border-emerald-400 inline-block" />
+                  <span className="text-zinc-400">Kỳ ĐHĐCĐ</span>
+                </div>
               </div>
-              <div className="text-xl font-mono font-bold text-sky-400">
-                {structure
-                  ? structure.statePercentage > 0
-                    ? `${structure.statePercentage.toFixed(2)}%`
-                    : `${structure.bodPercentage.toFixed(2)}%`
-                  : '--%'}
-              </div>
-              <div className="text-[11px] font-mono text-zinc-400 mt-1">
-                {structure
-                  ? structure.statePercentage > 0
-                    ? formatShares(structure.stateVolume)
-                    : formatShares(Math.round((structure.totalShares * structure.bodPercentage) / 100))
-                  : '--'}
-              </div>
-              <div className="text-[10px] text-zinc-500 mt-1 truncate">
-                {structure && structure.statePercentage > 0 ? 'Đại diện vốn sở hữu nhà nước' : 'Thành viên HĐQT & BĐH'}
-              </div>
-            </div>
-
-            {/* Card 3: Free Float / Cổ Đông Nhỏ Lẻ */}
-            <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/70 hover:border-zinc-700/80 transition-all">
-              <div className="flex items-center justify-between text-zinc-400 mb-1.5">
-                <span className="text-[11px] font-mono font-medium uppercase tracking-wider">Trôi Nổi (Free-Float)</span>
-                <Users className="w-4 h-4 text-amber-400" />
-              </div>
-              <div className="text-xl font-mono font-bold text-amber-400">
-                {structure ? `${structure.freeFloatPercentage.toFixed(2)}%` : '--%'}
-              </div>
-              <div className="text-[11px] font-mono text-zinc-400 mt-1">
-                {structure ? formatShares(structure.freeFloat) : '--'}
-              </div>
-              <div className="text-[10px] text-zinc-500 mt-1 truncate">
-                Lưu hành tự do ngoài thị trường
-              </div>
-            </div>
-
-            {/* Card 4: Tổng Số Lượng Cổ Đông Toàn Công Ty */}
-            <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/70 hover:border-zinc-700/80 transition-all">
-              <div className="flex items-center justify-between text-zinc-400 mb-1.5">
-                <span className="text-[11px] font-mono font-medium uppercase tracking-wider">Tổng Số Cổ Đông</span>
-                <Users className="w-4 h-4 text-emerald-400" />
-              </div>
-              <div className="text-xl font-mono font-bold text-zinc-100">
-                {structure?.totalShareholdersCurrent
-                  ? `${structure.totalShareholdersCurrent.toLocaleString('vi-VN')} CĐ`
-                  : structure?.totalShares
-                  ? formatShares(structure.totalShares)
-                  : '--'}
-              </div>
-              <div className="text-[11px] font-mono text-emerald-400 mt-1 flex items-center justify-between">
-                <span>{timelineData.length > 0 ? timelineData[timelineData.length - 1].period : 'ĐHĐCĐ mới nhất'}</span>
-                {structure?.totalShares && (
-                  <span className="text-zinc-500 text-[10px]">{formatShares(structure.totalShares)}</span>
-                )}
-              </div>
-              <div className="text-[10px] text-zinc-500 mt-1 truncate">
-                Toàn bộ cổ đông theo biên bản ĐHĐCĐ & VSDC
-              </div>
-            </div>
+            )}
           </div>
 
-          {/* 2 Main Charts Grid: LINE CHART (Toàn Bộ Số Lượng Cổ Đông) & Donut Breakdown (Tách Biệt Free-Float) */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-            {/* Chart 1 (Left 7 cols): BIỂU ĐỒ ĐƯỜNG BIẾN ĐỘNG TOÀN BỘ SỐ LƯỢNG CỔ ĐÔNG */}
-            <div className="lg:col-span-7 p-5 rounded-2xl bg-zinc-900/40 border border-zinc-800/70 space-y-4">
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <div className="space-y-0.5">
-                  <h3 className="text-sm font-bold text-zinc-200 flex items-center gap-2">
-                    <ChartLineUp className="w-4 h-4 text-emerald-400" />
-                    Biểu Đồ Biến Động Toàn Bộ Số Lượng Cổ Đông
-                  </h3>
-                  <span className="text-[11px] text-zinc-500 block">
-                    Số liệu thực tế trích xuất từ Biên bản ĐHĐCĐ thường niên & Báo cáo thường niên VSDC
-                  </span>
+          {/* Conditional Line Chart Rendering: "Cái nào có thì vẽ, cái nào không có thì ghi là chưa có" */}
+          {timelineData.length === 0 ? (
+            <div className="py-14 px-6 flex flex-col items-center justify-center text-center rounded-xl bg-zinc-950/40 border border-dashed border-zinc-800/80 space-y-3">
+              <Info className="w-8 h-8 text-zinc-500" />
+              <div className="space-y-1">
+                <div className="text-zinc-300 text-xs font-mono font-semibold">
+                  Chưa có dữ liệu chuỗi lịch sử ĐHĐCĐ cho mã {symbol}
                 </div>
-                {/* Legend badges */}
-                <div className="flex items-center gap-3 text-[11px] font-mono">
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2.5 h-0.5 bg-emerald-400 inline-block" />
-                    <span className="text-zinc-300">Tổng số lượng cổ đông (Người/Tổ chức)</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500/30 border border-emerald-400 inline-block" />
-                    <span className="text-zinc-400">ĐHĐCĐ từng năm</span>
-                  </div>
-                </div>
+                <p className="text-zinc-500 text-[11px] max-w-md leading-relaxed">
+                  Tổng số lượng cổ đông toàn công ty chỉ được VSDC chốt tại các kỳ họp ĐHĐCĐ thường niên. Dữ liệu biên bản ĐHĐCĐ của mã này chưa được ghi nhận trong kho lưu trữ đã kiểm chứng.
+                </p>
               </div>
-
-              {/* Real SVG Interactive Line Chart */}
+            </div>
+          ) : (
+            <div className="space-y-3">
               <div className="relative w-full overflow-hidden pt-1">
                 <svg
                   viewBox={`0 0 ${chartWidth} ${chartHeight}`}
                   className="w-full h-auto overflow-visible select-none"
                 >
                   <defs>
-                    {/* Emerald glowing gradient fill under curve */}
                     <linearGradient id="emeraldGradientArea" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stopColor="#10b981" stopOpacity="0.35" />
                       <stop offset="70%" stopColor="#10b981" stopOpacity="0.05" />
@@ -598,10 +596,8 @@ export const ShareholderStructureView: React.FC<ShareholderStructureViewProps> =
                         onMouseEnter={() => setHoveredPointIndex(idx)}
                         onMouseLeave={() => setHoveredPointIndex(null)}
                       >
-                        {/* Invisible large touch target */}
                         <circle cx={pt.x} cy={pt.y} r={14} fill="transparent" />
 
-                        {/* Outer Pulse Ring */}
                         {isHovered && (
                           <circle
                             cx={pt.x}
@@ -615,7 +611,6 @@ export const ShareholderStructureView: React.FC<ShareholderStructureViewProps> =
                           />
                         )}
 
-                        {/* Node circle */}
                         <circle
                           cx={pt.x}
                           cy={pt.y}
@@ -667,17 +662,14 @@ export const ShareholderStructureView: React.FC<ShareholderStructureViewProps> =
               {/* Active Milestone Telemetry Card */}
               {activePoint && (
                 <div className="p-3.5 rounded-xl bg-zinc-950/70 border border-zinc-800/80 flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-emerald-400 shrink-0" />
-                    <div>
-                      <span className="text-zinc-400 text-[11px] block">Mốc báo cáo</span>
-                      <span className="font-bold text-zinc-100 text-sm">{activePoint.period}</span>
-                    </div>
+                  <div>
+                    <span className="text-zinc-400 text-[11px] block">Mốc báo cáo</span>
+                    <span className="font-bold text-zinc-100 text-sm">{activePoint.period}</span>
                   </div>
 
                   <div className="flex items-center gap-5 flex-wrap">
                     <div>
-                      <span className="text-zinc-500 text-[10px] block">Toàn bộ số lượng cổ đông</span>
+                      <span className="text-zinc-500 text-[10px] block">Số lượng cổ đông</span>
                       <span className="font-bold text-emerald-400 text-base">
                         {activePoint.totalShareholders.toLocaleString('vi-VN')} nhà đầu tư
                       </span>
@@ -704,322 +696,325 @@ export const ShareholderStructureView: React.FC<ShareholderStructureViewProps> =
                       </span>
                     </div>
                   </div>
-                </div>
-              )}
 
-              {/* Informative Note */}
-              <div className="p-3 rounded-xl bg-zinc-950/60 border border-zinc-800/60 text-[11px] text-zinc-400 flex items-start gap-2 leading-relaxed">
-                <Info className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                <span>
-                  <strong>Ý nghĩa đầu tư & Tính cô đặc vs Đại chúng:</strong> Khi số lượng cổ đông tăng vọt (hàng chục nghìn cổ đông mới), cổ phiếu có tính đại chúng rất cao nhưng nhỏ lẻ đu bám nhiều, lượng cung trôi nổi lớn. Ngược lại, khi số lượng cổ đông sụt giảm dần qua các kỳ, đó là chỉ báo "Smart Money" và tổ chức đang âm thầm gom hàng cô đặc lại. Free-Float trôi nổi được phân tách riêng biệt tại biểu đồ Donut bên phải.
-                </span>
-              </div>
-            </div>
-
-            {/* Chart 2 (Right 5 cols): Cơ Cấu Sở Hữu & Free Float (Pie/Donut Chart Riêng Biệt) */}
-            <div className="lg:col-span-5 p-5 rounded-2xl bg-zinc-900/40 border border-zinc-800/70 flex flex-col justify-between space-y-4">
-              <div>
-                <h3 className="text-sm font-bold text-zinc-200 flex items-center gap-2">
-                  <ChartPie className="w-4 h-4 text-emerald-400" />
-                  Cơ Cấu Sở Hữu & Free Float (Riêng Biệt)
-                </h3>
-                <span className="text-[11px] text-zinc-500 block">
-                  Tỷ trọng trôi nổi tự do (Free Float) và các nhóm sở hữu chính thức
-                </span>
-              </div>
-
-              {/* SVG Donut Chart */}
-              <div className="flex items-center justify-center py-2 relative">
-                <svg width="200" height="200" viewBox="0 0 200 200" className="transform -rotate-90">
-                  {donutData.map((slice) => {
-                    const isHovered = hoveredSlice === slice.id;
-                    return (
-                      <path
-                        key={slice.id}
-                        d={slice.pathData}
-                        fill={slice.color}
-                        className="transition-all duration-200 cursor-pointer"
-                        style={{
-                          opacity: hoveredSlice ? (isHovered ? 1 : 0.4) : 0.9,
-                          transformOrigin: 'center',
-                          transform: isHovered ? 'scale(1.04)' : 'scale(1)',
-                        }}
-                        onMouseEnter={() => setHoveredSlice(slice.id)}
-                        onMouseLeave={() => setHoveredSlice(null)}
-                      />
-                    );
-                  })}
-                </svg>
-
-                {/* Donut Center Display */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
-                  <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">Free Float</span>
-                  <span className="text-xl font-mono font-bold text-zinc-100">
-                    {structure ? `${structure.freeFloatPercentage.toFixed(1)}%` : '--'}
-                  </span>
-                  <span className="text-[10px] font-mono text-emerald-400">Trôi nổi tự do</span>
-                </div>
-              </div>
-
-              {/* Legend with Interactive Hover Details */}
-              <div className="space-y-2 pt-2 border-t border-zinc-800/60">
-                {breakdownItems.map((item) => (
-                  <div
-                    key={item.id}
-                    className={`flex items-center justify-between p-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer ${
-                      hoveredSlice === item.id ? 'bg-zinc-800/80 text-zinc-100' : 'text-zinc-300 hover:bg-zinc-800/40'
-                    }`}
-                    onMouseEnter={() => setHoveredSlice(item.id)}
-                    onMouseLeave={() => setHoveredSlice(null)}
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
-                      <span className="truncate max-w-[150px]">{item.label}</span>
-                    </div>
-                    <div className="text-right flex items-center gap-2 shrink-0">
-                      {item.volume > 0 && (
-                        <span className="text-zinc-500 text-[11px] hidden sm:inline">
-                          {formatShares(item.volume)}
+                  {activePoint.sourceDoc && (
+                    <div className="w-full pt-2 mt-1 border-t border-zinc-800/80 flex items-center justify-between flex-wrap gap-2 text-[10px]">
+                      <div className="flex items-center gap-1.5 truncate max-w-[70%]">
+                        <span className="text-zinc-500 font-semibold uppercase tracking-wider shrink-0">Nguồn đối chứng:</span>
+                        <span className="text-emerald-400/90 truncate font-sans font-medium">{activePoint.sourceDoc}</span>
+                      </div>
+                      {activePoint.recordDate && (
+                        <span className="text-zinc-500 font-mono shrink-0">
+                          Chốt sổ VSDC: <span className="text-zinc-300">{activePoint.recordDate}</span>
                         </span>
                       )}
-                      <span className="font-bold text-zinc-100">{item.percentage.toFixed(2)}%</span>
                     </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Prominent CTA Button to Drill Down into Details */}
-              <button
-                onClick={() => setViewMode('detail')}
-                className="w-full py-2.5 px-4 rounded-xl bg-zinc-800/80 hover:bg-emerald-500 hover:text-zinc-950 text-zinc-200 font-mono font-bold text-xs transition-all flex items-center justify-center gap-2 group cursor-pointer shadow-md"
-              >
-                <span>XEM CHI TIẾT DANH SÁCH TỪNG CỔ ĐÔNG ({rawShareholders.length})</span>
-                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-              </button>
+                  )}
+                </div>
+              )}
             </div>
-          </div>
+          )}
         </div>
-      )}
 
-      {/* ========================================================================= */}
-      {/* VIEW 2: CHI TIẾT TỪNG CỔ ĐÔNG (TOP 10 BAR CHART & BẢNG BỘ LỌC TOÀN DIỆN) */}
-      {/* ========================================================================= */}
-      {viewMode === 'detail' && (
-        <div className="space-y-6">
-          {/* Back button & Title */}
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <button
-              onClick={() => setViewMode('overview')}
-              className="flex items-center gap-1.5 text-xs font-mono font-bold text-emerald-400 hover:text-emerald-300 transition-colors cursor-pointer"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              <span>Quay Lại Biểu Đồ Xu Hướng Tổng Quan</span>
-            </button>
-            <span className="text-xs font-mono text-zinc-500">
-              Đang hiển thị {filteredShareholders.length} / {rawShareholders.length} cổ đông ghi nhận
+        {/* Right (5 cols): DONUT BREAKDOWN & FREE-FLOAT */}
+        <div className="lg:col-span-5 p-5 rounded-2xl bg-zinc-900/40 border border-zinc-800/70 space-y-4 flex flex-col justify-between">
+          <div className="space-y-0.5">
+            <h3 className="text-sm font-bold text-zinc-200">
+              Cơ Cấu Sở Hữu & Tỷ Lệ Trôi Nổi
+            </h3>
+            <span className="text-[11px] text-zinc-500 block">
+              Phân bổ giữa Nhà Nước, Khối Ngoại, Nội Bộ và Cổ đông nhỏ lẻ (Free-Float)
             </span>
           </div>
 
-          {/* Top 10 Major Shareholders Bar Chart Comparison */}
-          {top10Shareholders.length > 0 && (
-            <div className="p-5 rounded-2xl bg-zinc-900/40 border border-zinc-800/70 space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-sm font-bold text-zinc-200 flex items-center gap-2">
-                    <Users className="w-4 h-4 text-emerald-400" />
-                    So Sánh Tỷ Lệ Sở Hữu Top 10 Cổ Đông Lớn Nhất
-                  </h3>
-                  <span className="text-[11px] text-zinc-500 block">
-                    Xếp hạng theo tỷ lệ % cổ phần nắm giữ và giá trị vốn hóa tương ứng
-                  </span>
-                </div>
-              </div>
+          {/* SVG Donut Chart */}
+          <div className="flex items-center justify-center py-2 relative">
+            <svg width="200" height="200" viewBox="0 0 200 200" className="transform -rotate-90">
+              {donutData.map((slice) => {
+                const isHovered = hoveredSlice === slice.id;
+                return (
+                  <path
+                    key={slice.id}
+                    d={slice.pathData}
+                    fill={slice.color}
+                    className="transition-all duration-200 cursor-pointer"
+                    style={{
+                      opacity: hoveredSlice ? (isHovered ? 1 : 0.4) : 0.9,
+                      transformOrigin: 'center',
+                      transform: isHovered ? 'scale(1.04)' : 'scale(1)',
+                    }}
+                    onMouseEnter={() => setHoveredSlice(slice.id)}
+                    onMouseLeave={() => setHoveredSlice(null)}
+                  />
+                );
+              })}
+            </svg>
 
-              <div className="space-y-3 pt-2">
-                {top10Shareholders.map((sh, idx) => {
-                  const maxPct = top10Shareholders[0]?.ownership_percentage || 1;
-                  const barWidth = Math.max(4, ((sh.ownership_percentage || 0) / maxPct) * 100);
-
-                  return (
-                    <div key={idx} className="space-y-1">
-                      <div className="flex items-center justify-between text-xs font-mono">
-                        <div className="flex items-center gap-2 truncate max-w-[65%]">
-                          <span className="w-5 text-zinc-500 font-bold text-[11px]">#{idx + 1}</span>
-                          {sh.owner_type === 'CORPORATE' ? (
-                            <Buildings className="w-3.5 h-3.5 text-sky-400 shrink-0" />
-                          ) : (
-                            <User className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                          )}
-                          <span className="font-sans font-medium text-zinc-200 truncate">{sh.name}</span>
-                          {sh.is_major && (
-                            <span className="px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[9px] font-bold">
-                              ≥5%
-                            </span>
-                          )}
-                          {sh.position && (
-                            <span className="text-[10px] text-zinc-400 truncate hidden sm:inline">
-                              • {sh.position}
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-3 shrink-0">
-                          {livePrice > 0 && (
-                            <span className="text-zinc-400 text-[11px] hidden md:inline">
-                              {formatMarketValue(sh.shares_owned)}
-                            </span>
-                          )}
-                          <span className="font-bold text-emerald-400 w-16 text-right">
-                            {sh.ownership_percentage ? `${sh.ownership_percentage.toFixed(2)}%` : '--'}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Bar comparison indicator */}
-                      <div className="w-full bg-zinc-800/80 h-2 rounded-full overflow-hidden flex">
-                        <div
-                          className="h-full rounded-full transition-all duration-500 bg-gradient-to-r from-emerald-500 to-teal-400"
-                          style={{ width: `${barWidth}%` }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Filter Bar & Search Input */}
-          <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-            {/* Category Filter Tabs */}
-            <div className="flex items-center flex-wrap gap-1.5">
-              <button
-                onClick={() => setFilterCategory('ALL')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all ${
-                  filterCategory === 'ALL'
-                    ? 'bg-emerald-500 text-zinc-950'
-                    : 'bg-zinc-900 text-zinc-400 hover:text-zinc-200 border border-zinc-800'
-                }`}
-              >
-                Tất Cả ({rawShareholders.length})
-              </button>
-              <button
-                onClick={() => setFilterCategory('MAJOR')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all ${
-                  filterCategory === 'MAJOR'
-                    ? 'bg-emerald-500 text-zinc-950'
-                    : 'bg-zinc-900 text-zinc-400 hover:text-zinc-200 border border-zinc-800'
-                }`}
-              >
-                Cổ Đông Lớn (≥5%)
-              </button>
-              <button
-                onClick={() => setFilterCategory('INSIDER')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all ${
-                  filterCategory === 'INSIDER'
-                    ? 'bg-emerald-500 text-zinc-950'
-                    : 'bg-zinc-900 text-zinc-400 hover:text-zinc-200 border border-zinc-800'
-                }`}
-              >
-                Ban Lãnh Đạo & Nội Bộ
-              </button>
-              <button
-                onClick={() => setFilterCategory('CORPORATE')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all ${
-                  filterCategory === 'CORPORATE'
-                    ? 'bg-emerald-500 text-zinc-950'
-                    : 'bg-zinc-900 text-zinc-400 hover:text-zinc-200 border border-zinc-800'
-                }`}
-              >
-                Tổ Chức / Pháp Nhân
-              </button>
-              <button
-                onClick={() => setFilterCategory('INDIVIDUAL')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all ${
-                  filterCategory === 'INDIVIDUAL'
-                    ? 'bg-emerald-500 text-zinc-950'
-                    : 'bg-zinc-900 text-zinc-400 hover:text-zinc-200 border border-zinc-800'
-                }`}
-              >
-                Cá Nhân
-              </button>
-            </div>
-
-            {/* Search Input */}
-            <div className="relative w-full sm:w-64">
-              <MagnifyingGlass className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Tìm tên cổ đông..."
-                className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-xs font-sans text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-emerald-500/60"
-              />
+            {/* Donut Center Display */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
+              <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">Free Float</span>
+              <span className="text-xl font-mono font-bold text-zinc-100">
+                {structure ? `${structure.freeFloatPercentage.toFixed(1)}%` : '--'}
+              </span>
+              <span className="text-[10px] font-mono text-emerald-400">Trôi nổi tự do</span>
             </div>
           </div>
 
-          {/* Detailed Shareholders Table */}
-          {filteredShareholders.length === 0 ? (
-            <div className="py-12 text-center text-xs font-mono text-zinc-500">
-              Không tìm thấy cổ đông phù hợp với bộ lọc đã chọn.
+          {/* Legend with Details */}
+          <div className="space-y-2 pt-2 border-t border-zinc-800/60">
+            {breakdownItems.map((item) => (
+              <div
+                key={item.id}
+                className={`flex items-center justify-between p-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer ${
+                  hoveredSlice === item.id ? 'bg-zinc-800/80 text-zinc-100' : 'text-zinc-300 hover:bg-zinc-800/40'
+                }`}
+                onMouseEnter={() => setHoveredSlice(item.id)}
+                onMouseLeave={() => setHoveredSlice(null)}
+              >
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
+                  <span className="truncate max-w-[150px]">{item.label}</span>
+                </div>
+                <div className="text-right flex items-center gap-2 shrink-0">
+                  {item.volume > 0 && (
+                    <span className="text-zinc-500 text-[11px] hidden sm:inline">
+                      {formatShares(item.volume)}
+                    </span>
+                  )}
+                  <span className="font-bold text-zinc-100">{item.percentage.toFixed(2)}%</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Middle Section: TOP CỔ ĐÔNG LỚN & BAN LÃNH ĐẠO (BAR CHART) */}
+      {top10Shareholders.length > 0 && (
+        <div className="p-5 rounded-2xl bg-zinc-900/40 border border-zinc-800/70 space-y-4">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div className="space-y-0.5">
+              <h3 className="text-sm font-bold text-zinc-200">
+                So Sánh Tỷ Lệ Sở Hữu Top Cổ Đông Lớn & Ban Lãnh Đạo
+              </h3>
+              <span className="text-[11px] text-zinc-500 block">
+                Xếp hạng theo % cổ phần sở hữu và giá trị vốn hóa thị trường tương ứng
+              </span>
             </div>
-          ) : (
-            <div className="overflow-x-auto rounded-xl border border-zinc-800/80 bg-zinc-900/30">
-              <table className="w-full text-xs font-mono">
-                <thead className="bg-zinc-900/90 text-zinc-400 border-b border-zinc-800">
-                  <tr>
-                    <th className="py-3 px-4 text-center font-semibold w-12">#</th>
-                    <th className="py-3 px-4 text-left font-semibold">Tên Cổ Đông</th>
-                    <th className="py-3 px-4 text-left font-semibold">Chức Vụ / Quan Hệ</th>
-                    <th className="py-3 px-4 text-right font-semibold">Số Lượng Cổ Phiếu</th>
-                    <th className="py-3 px-4 text-right font-semibold">Tỷ Lệ Sở Hữu</th>
-                    <th className="py-3 px-4 text-right font-semibold">Giá Trị Thị Trường</th>
-                    <th className="py-3 px-4 text-right font-semibold">Ngày Cập Nhật</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-800/60">
-                  {filteredShareholders.map((sh, idx) => (
-                    <tr key={idx} className="hover:bg-zinc-900/60 transition-colors">
-                      <td className="py-3 px-4 text-center text-zinc-500 font-bold">
-                        {idx + 1}
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="flex items-center gap-2">
-                          {sh.owner_type === 'CORPORATE' ? (
-                            <Buildings className="w-3.5 h-3.5 text-sky-400 shrink-0" />
-                          ) : (
-                            <User className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                          )}
-                          <span className="font-sans font-medium text-zinc-100">{sh.name}</span>
-                          {sh.is_major && (
-                            <span className="px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[9px] font-bold">
-                              ≥5%
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="py-3 px-4 text-zinc-400 font-sans">
-                        {sh.position || '--'}
-                      </td>
-                      <td className="py-3 px-4 text-right font-bold text-zinc-100">
-                        {sh.shares_owned ? sh.shares_owned.toLocaleString('vi-VN') : '--'}
-                      </td>
-                      <td className="py-3 px-4 text-right font-bold text-emerald-400">
+            <div className="flex items-center gap-2 text-[10px] font-mono text-zinc-400">
+              <span className="px-1.5 py-0.5 rounded bg-sky-500/10 text-sky-400 border border-sky-500/20">TC: Tổ chức</span>
+              <span className="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">CN: Cá nhân</span>
+            </div>
+          </div>
+
+          <div className="space-y-3 pt-1">
+            {top10Shareholders.map((sh, idx) => {
+              const maxPct = top10Shareholders[0]?.ownership_percentage || 1;
+              const barWidth = Math.max(4, ((sh.ownership_percentage || 0) / maxPct) * 100);
+
+              return (
+                <div key={idx} className="space-y-1">
+                  <div className="flex items-center justify-between text-xs font-mono">
+                    <div className="flex items-center gap-2 truncate max-w-[65%]">
+                      <span className="w-5 text-zinc-500 font-bold text-[11px]">#{idx + 1}</span>
+                      <span
+                        className={`px-1 py-0.2 rounded text-[9px] font-mono font-bold shrink-0 ${
+                          sh.owner_type === 'CORPORATE'
+                            ? 'bg-sky-500/10 text-sky-400 border border-sky-500/30'
+                            : 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
+                        }`}
+                      >
+                        {sh.owner_type === 'CORPORATE' ? 'TC' : 'CN'}
+                      </span>
+                      <span className="font-sans font-medium text-zinc-200 truncate">{sh.name}</span>
+                      {sh.is_major && (
+                        <span className="px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[9px] font-bold">
+                          ≥5%
+                        </span>
+                      )}
+                      {sh.position && (
+                        <span className="text-[10px] text-zinc-400 truncate hidden sm:inline">
+                          • {sh.position}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0">
+                      {livePrice > 0 && (
+                        <span className="text-zinc-400 text-[11px] hidden md:inline">
+                          {formatMarketValue(sh.shares_owned)}
+                        </span>
+                      )}
+                      <span className="font-bold text-emerald-400 w-16 text-right">
                         {sh.ownership_percentage ? `${sh.ownership_percentage.toFixed(2)}%` : '--'}
-                      </td>
-                      <td className="py-3 px-4 text-right font-mono text-zinc-300">
-                        {formatMarketValue(sh.shares_owned)}
-                      </td>
-                      <td className="py-3 px-4 text-right text-zinc-500 text-[11px]">
-                        {sh.update_date ? sh.update_date.split('T')[0] : '--'}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="w-full bg-zinc-800/80 h-2 rounded-full overflow-hidden flex">
+                    <div
+                      className="h-full rounded-full transition-all duration-500 bg-gradient-to-r from-emerald-500 to-teal-400"
+                      style={{ width: `${barWidth}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
+
+      {/* Bottom Section: DANH SÁCH CHI TIẾT TỪNG CỔ ĐÔNG ĐÃ CÔNG BỐ (VỚI BỘ LỌC & TÌM KIẾM) */}
+      <div className="p-5 rounded-2xl bg-zinc-900/40 border border-zinc-800/70 space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-bold text-zinc-200">
+              Danh Sách Toàn Bộ Cổ Đông Đã Công Bố
+            </h3>
+            <span className="text-[11px] text-zinc-500 block">
+              Hiển thị {filteredShareholders.length} / {rawShareholders.length} cổ đông đã công bố thông tin theo luật chứng khoán
+            </span>
+          </div>
+
+          {/* Search Input */}
+          <div className="relative w-full sm:w-64">
+            <MagnifyingGlass className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Tìm tên cổ đông..."
+              className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-xs font-sans text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-emerald-500/60"
+            />
+          </div>
+        </div>
+
+        {/* Filter Category Tabs */}
+        <div className="flex items-center flex-wrap gap-1.5 pt-1">
+          <button
+            onClick={() => setFilterCategory('ALL')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all ${
+              filterCategory === 'ALL'
+                ? 'bg-emerald-500 text-zinc-950'
+                : 'bg-zinc-900 text-zinc-400 hover:text-zinc-200 border border-zinc-800'
+            }`}
+          >
+            Tất Cả ({rawShareholders.length})
+          </button>
+          <button
+            onClick={() => setFilterCategory('MAJOR')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all ${
+              filterCategory === 'MAJOR'
+                ? 'bg-emerald-500 text-zinc-950'
+                : 'bg-zinc-900 text-zinc-400 hover:text-zinc-200 border border-zinc-800'
+            }`}
+          >
+            Cổ Đông Lớn (≥5%)
+          </button>
+          <button
+            onClick={() => setFilterCategory('INSIDER')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all ${
+              filterCategory === 'INSIDER'
+                ? 'bg-emerald-500 text-zinc-950'
+                : 'bg-zinc-900 text-zinc-400 hover:text-zinc-200 border border-zinc-800'
+            }`}
+          >
+            Ban Lãnh Đạo & Nội Bộ
+          </button>
+          <button
+            onClick={() => setFilterCategory('CORPORATE')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all ${
+              filterCategory === 'CORPORATE'
+                ? 'bg-emerald-500 text-zinc-950'
+                : 'bg-zinc-900 text-zinc-400 hover:text-zinc-200 border border-zinc-800'
+            }`}
+          >
+            Tổ Chức / Pháp Nhân
+          </button>
+          <button
+            onClick={() => setFilterCategory('INDIVIDUAL')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all ${
+              filterCategory === 'INDIVIDUAL'
+                ? 'bg-emerald-500 text-zinc-950'
+                : 'bg-zinc-900 text-zinc-400 hover:text-zinc-200 border border-zinc-800'
+            }`}
+          >
+            Cá Nhân
+          </button>
+        </div>
+
+        {/* Detailed Shareholders Table */}
+        {filteredShareholders.length === 0 ? (
+          <div className="py-12 text-center text-xs font-mono text-zinc-500">
+            Không tìm thấy cổ đông phù hợp với bộ lọc đã chọn.
+          </div>
+        ) : (
+          <div className="overflow-x-auto rounded-xl border border-zinc-800/80 bg-zinc-900/30">
+            <table className="w-full text-xs font-mono">
+              <thead className="bg-zinc-900/90 text-zinc-400 border-b border-zinc-800">
+                <tr>
+                  <th className="py-3 px-4 text-center font-semibold w-12">#</th>
+                  <th className="py-3 px-4 text-left font-semibold">Tên Cổ Đông</th>
+                  <th className="py-3 px-4 text-left font-semibold">Chức Vụ / Quan Hệ</th>
+                  <th className="py-3 px-4 text-right font-semibold">Số Lượng Cổ Phiếu</th>
+                  <th className="py-3 px-4 text-right font-semibold">Tỷ Lệ Sở Hữu</th>
+                  <th className="py-3 px-4 text-right font-semibold">Giá Trị Thị Trường</th>
+                  <th className="py-3 px-4 text-right font-semibold">Ngày Cập Nhật</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-800/60">
+                {filteredShareholders.map((sh, idx) => (
+                  <tr key={idx} className="hover:bg-zinc-900/60 transition-colors">
+                    <td className="py-3 px-4 text-center text-zinc-500 font-bold">
+                      {idx + 1}
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`px-1 py-0.2 rounded text-[9px] font-mono font-bold shrink-0 ${
+                            sh.owner_type === 'CORPORATE'
+                              ? 'bg-sky-500/10 text-sky-400 border border-sky-500/30'
+                              : 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
+                          }`}
+                        >
+                          {sh.owner_type === 'CORPORATE' ? 'TC' : 'CN'}
+                        </span>
+                        <span className="font-sans font-medium text-zinc-100">{sh.name}</span>
+                        {sh.is_major && (
+                          <span className="px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[9px] font-bold">
+                            ≥5%
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="py-3 px-4 text-zinc-400 font-sans">
+                      {sh.position || '--'}
+                    </td>
+                    <td className="py-3 px-4 text-right font-bold text-zinc-100">
+                      {sh.shares_owned ? sh.shares_owned.toLocaleString('vi-VN') : '--'}
+                    </td>
+                    <td className="py-3 px-4 text-right font-bold text-emerald-400">
+                      {sh.ownership_percentage ? `${sh.ownership_percentage.toFixed(2)}%` : '--'}
+                    </td>
+                    <td className="py-3 px-4 text-right font-mono text-zinc-300">
+                      {formatMarketValue(sh.shares_owned)}
+                    </td>
+                    <td className="py-3 px-4 text-right text-zinc-500 text-[11px]">
+                      {sh.update_date ? sh.update_date.split('T')[0] : '--'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+      {/* AI AGM Ingestion Modal */}
+      <AgmIngestionModal
+        isOpen={isAgmModalOpen}
+        onClose={() => setIsAgmModalOpen(false)}
+        currentSymbol={symbol}
+        onDataSaved={() => window.location.reload()}
+      />
     </div>
   );
 };
