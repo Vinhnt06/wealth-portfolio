@@ -51,6 +51,8 @@ VN_MARKET_INDEXES.forEach((idx) => {
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const symbol = (searchParams.get('symbol') || 'PVP').toUpperCase().trim();
+  const livePriceParam = parseFloat(searchParams.get('livePrice') || '0');
+  const liveVolParam = parseInt(searchParams.get('liveVol') || '0', 10);
 
   const isIndex = isMarketIndex(symbol);
   const indexMeta = getMarketIndexMeta(symbol);
@@ -62,7 +64,7 @@ export async function GET(request: Request) {
 
   try {
     const nowSec = Math.floor(Date.now() / 1000);
-    // Fetch 2 years of daily OHLC candles from DNSE
+    // Fetch 2 years of daily OHLC candles from DNSE (no-store for realtime accuracy)
     const fromSec = nowSec - 730 * 24 * 3600;
     const endpointType = isIndex ? 'index' : 'stock';
     const dnseUrl = `https://services.entrade.com.vn/chart-api/v2/ohlcs/${endpointType}?from=${fromSec}&to=${nowSec}&symbol=${encodeURIComponent(
@@ -74,7 +76,7 @@ export async function GET(request: Request) {
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
         Accept: 'application/json',
       },
-      next: { revalidate: 60 },
+      cache: 'no-store',
     });
 
     if (!res.ok) {
@@ -91,10 +93,24 @@ export async function GET(request: Request) {
     }
 
     const count = data.t.length;
-    const closes: number[] = data.c;
-    const highs: number[] = data.h;
-    const lows: number[] = data.l;
-    const volumes: number[] = data.v;
+    const closes: number[] = [...data.c];
+    const highs: number[] = [...data.h];
+    const lows: number[] = [...data.l];
+    const volumes: number[] = [...data.v];
+
+    // Đồng bộ giá & khối lượng khớp lệnh Realtime (nếu truyền từ WebSocket tick trên Frontend)
+    if (livePriceParam > 0) {
+      const normalizedLivePrice =
+        !isIndex && closes[count - 1] < 500 && livePriceParam >= 1000
+          ? Math.round((livePriceParam / 1000) * 100) / 100
+          : livePriceParam;
+      closes[count - 1] = normalizedLivePrice;
+      if (normalizedLivePrice > highs[count - 1]) highs[count - 1] = normalizedLivePrice;
+      if (normalizedLivePrice < lows[count - 1]) lows[count - 1] = normalizedLivePrice;
+    }
+    if (liveVolParam > 0 && liveVolParam > (volumes[count - 1] || 0)) {
+      volumes[count - 1] = liveVolParam;
+    }
 
     const currentPrice = closes[count - 1];
     const prevPrice = count > 1 ? closes[count - 2] : currentPrice;
@@ -576,12 +592,20 @@ export async function GET(request: Request) {
 
     const wyckoffPassedCount = wyckoffCriteria.filter((c) => c.passed).length;
 
-    // 5. Phân loại Pha Wyckoff (Phase A - E) đồng nhất với 8 tiêu chí & cấu trúc nền giá thực tế
+    // 5. Phân loại Pha Wyckoff (Phase A - E) & Xác định Điểm Mua Chuẩn Wyckoff từ cấu trúc nền giá thực tế
     // Lưu ý học thuật Wyckoff: Nền tích lũy (Phase B, C, D) thường hình thành ở đáy sau nhịp giảm (khi giá còn dưới MA200),
     // do đó KHÔNG dùng điều kiện "Giá < MA200" để ép về Phase A nếu cổ phiếu đã tạo nền đi ngang ổn định 40 phiên.
     let wyckoffPhase: 'Phase A' | 'Phase B' | 'Phase C' | 'Phase D' | 'Phase E' = 'Phase B';
     let wyckoffPhaseName = 'Phase B — Tích lũy xây dựng nguyên nhân';
     let actionAdvice = 'chờ quá trình thắt chặt biên độ nền giá VCP và cạn kiệt nguồn cung';
+    let isBuyPhase = false;
+    let buyPointCode: 'NONE' | 'BUY_1_SPRING' | 'BUY_2_LPS' | 'BUY_3_BREAKOUT_BU' | 'HOLD_MARKUP' = 'NONE';
+    let buyPointLabel = '⏳ CHƯA CÓ ĐIỂM MUA CHUẨN (ĐỨNG NGOÀI / QUAN SÁT)';
+    let buyPointDetail =
+      'Cổ phiếu đang trong giai đoạn gom hàng đi ngang (Phase B) hoặc chưa hoàn tất rũ bỏ. Tuyệt đối không mua sớm tránh chôn vốn.';
+    const supportBaseRef = priorBaseLow !== null ? priorBaseLow : last20Low;
+    let wyckoffBuyZone = `Chờ tín hiệu quanh ${formatPrice(sma20)} - ${formatPrice(last20High)}`;
+    let wyckoffStopLoss = `${formatPrice(supportBaseRef * 0.97)} (-3% dưới đáy nền)`;
 
     const isActiveBreakdownOrPanic =
       !supportHeldPassed ||
@@ -590,8 +614,14 @@ export async function GET(request: Request) {
 
     if (isActiveBreakdownOrPanic) {
       wyckoffPhase = 'Phase A';
-      wyckoffPhaseName = 'Phase A — Hãm đà giảm (SC / AR) hoặc Suy yếu';
-      actionAdvice = 'đứng ngoài quan sát, chờ xác nhận đáy Selling Climax và cân bằng cung cầu';
+      wyckoffPhaseName = 'Phase A — Hãm đà giảm (SC / AR)';
+      actionAdvice = 'Đứng ngoài quan sát, chưa tạo đáy xong';
+      isBuyPhase = false;
+      buyPointCode = 'NONE';
+      buyPointLabel = '🚫 KHÔNG MUA (Phase A — Đang rơi)';
+      buyPointDetail = '';
+      wyckoffBuyZone = 'Đứng ngoài';
+      wyckoffStopLoss = `${formatPrice(last40Low * 0.96)}`;
     } else if (
       wyckoffPassedCount >= 6 &&
       posInBasePct >= 75 &&
@@ -601,8 +631,25 @@ export async function GET(request: Request) {
       currentPrice > sma200
     ) {
       wyckoffPhase = 'Phase E';
-      wyckoffPhaseName = 'Phase E — Markup / Đẩy giá thoát nền';
-      actionAdvice = 'nắm giữ tỷ trọng cao theo xu hướng, trailing stop theo MA20';
+      wyckoffPhaseName = 'Phase E — Đẩy giá thoát nền (Markup)';
+      const isEarlyBreakoutOrBu = distFromSMA20Pct <= 6.0 && posInBasePct <= 95;
+      if (isEarlyBreakoutOrBu) {
+        isBuyPhase = true;
+        buyPointCode = 'BUY_3_BREAKOUT_BU';
+        buyPointLabel = '🚀 ĐIỂM MUA #3: Vượt đỉnh nền JAC / BU (Gia tăng 20-30%)';
+        buyPointDetail = '';
+        actionAdvice = 'Mua gia tăng 20–30% quanh đỉnh nền vừa vượt (BU)';
+        wyckoffBuyZone = `${formatPrice(Math.min(currentPrice, last20High * 0.985))} – ${formatPrice(currentPrice * 1.01)}`;
+        wyckoffStopLoss = `${formatPrice(Math.max(sma20 * 0.97, last20Low))}`;
+      } else {
+        isBuyPhase = false;
+        buyPointCode = 'HOLD_MARKUP';
+        buyPointLabel = '🔒 NẮM GIỮ GỒNG LÃI (Phase E đã chạy xa nền — Cấm mua đuổi)';
+        buyPointDetail = '';
+        actionAdvice = 'Giữ hàng gồng lãi, chặn lãi theo MA20';
+        wyckoffBuyZone = `Chờ chỉnh về MA20 (${formatPrice(sma20)})`;
+        wyckoffStopLoss = `${formatPrice(sma20 * 0.97)} (MA20)`;
+      }
     } else if (
       wyckoffPassedCount >= 5 &&
       posInBasePct >= 55 &&
@@ -610,19 +657,39 @@ export async function GET(request: Request) {
       (sosPassed || absorptionPassed)
     ) {
       wyckoffPhase = 'Phase D';
-      wyckoffPhaseName = 'Phase D — SOS / LPS (Dòng tiền đẩy giá trong nền)';
-      actionAdvice = 'canh giải ngân ở nhịp lùi LPS biên độ hẹp giữ trên hỗ trợ MA20/MA50';
+      wyckoffPhaseName = 'Phase D — SOS / LPS (Quan trọng nhất ⭐)';
+      isBuyPhase = true;
+      buyPointCode = 'BUY_2_LPS';
+      buyPointLabel = '⭐ ĐIỂM MUA CHUẨN #2: Phase D — SOS / LPS (Mua chủ lực 40-50%)';
+      buyPointDetail = '';
+      actionAdvice = 'Giải ngân chủ lực 40–50% ở nhịp chỉnh cạn cung LPS trên MA20/MA50';
+      const lpsLow = Math.min(currentPrice, sma20 > 0 ? sma20 : currentPrice);
+      const lpsHigh = Math.max(currentPrice, sma20 > 0 ? sma20 * 1.02 : currentPrice * 1.01);
+      wyckoffBuyZone = `${formatPrice(lpsLow * 0.99)} – ${formatPrice(lpsHigh)}`;
+      wyckoffStopLoss = `${formatPrice(Math.max(last20Low * 0.98, currentPrice * 0.93))}`;
     } else if (
       hasSpringAction ||
       (supportHeldPassed && vduPassed && posInBasePct >= 12 && posInBasePct < 55 && upDownVolRatio >= 0.9)
     ) {
       wyckoffPhase = 'Phase C';
-      wyckoffPhaseName = 'Phase C — Spring / Test rũ bỏ cạn cung';
-      actionAdvice = 'thăm dò điểm mua Spring/Test khi xuất hiện nến đảo chiều có dòng tiền';
+      wyckoffPhaseName = 'Phase C — Spring / Test cạn cung';
+      isBuyPhase = true;
+      buyPointCode = 'BUY_1_SPRING';
+      buyPointLabel = '🎯 ĐIỂM MUA #1: Phase C — Test Spring cạn cung (Thăm dò 20-30%)';
+      buyPointDetail = '';
+      actionAdvice = 'Mua thăm dò 20–30% khi nến rút chân và Test lại đáy nền Vol thấp';
+      wyckoffBuyZone = `${formatPrice(supportBaseRef)} – ${formatPrice(supportBaseRef * 1.03)}`;
+      wyckoffStopLoss = `${formatPrice(minLowLast10 * 0.975)}`;
     } else {
       wyckoffPhase = 'Phase B';
-      wyckoffPhaseName = 'Phase B — Tích lũy xây dựng nguyên nhân';
-      actionAdvice = 'chờ quá trình thắt chặt biên độ nền giá VCP và tín hiệu SOS xác nhận';
+      wyckoffPhaseName = 'Phase B — Gom hàng đi ngang';
+      isBuyPhase = false;
+      buyPointCode = 'NONE';
+      buyPointLabel = '⏳ CHƯA MUA (Phase B — Đi ngang gom hàng, chờ sang Phase C/D)';
+      buyPointDetail = '';
+      actionAdvice = 'Chờ rũ bỏ Spring (Phase C) hoặc nổ Vol SOS (Phase D)';
+      wyckoffBuyZone = `Chờ quanh ${formatPrice(supportBaseRef)}`;
+      wyckoffStopLoss = `${formatPrice(supportBaseRef * 0.96)}`;
     }
 
     // ── Indicators for Heat & Extended Analysis (RSI, MACD) ──
@@ -1081,6 +1148,12 @@ export async function GET(request: Request) {
         passedCount: wyckoffPassedCount,
         totalCount: 8,
         actionAdvice,
+        isBuyPhase,
+        buyPointCode,
+        buyPointLabel,
+        buyPointDetail,
+        buyZonePrice: wyckoffBuyZone,
+        stopLossPrice: wyckoffStopLoss,
         criteria: wyckoffCriteria,
       },
       aiRecommendation,

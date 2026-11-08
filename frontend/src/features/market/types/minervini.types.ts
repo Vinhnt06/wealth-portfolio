@@ -20,6 +20,12 @@ export interface WyckoffDiagnosis {
   passedCount: number;
   totalCount: number;
   actionAdvice: string;
+  isBuyPhase?: boolean;
+  buyPointCode?: 'NONE' | 'BUY_1_SPRING' | 'BUY_2_LPS' | 'BUY_3_BREAKOUT_BU' | 'HOLD_MARKUP';
+  buyPointLabel?: string;
+  buyPointDetail?: string;
+  buyZonePrice?: string;
+  stopLossPrice?: string;
   criteria: WyckoffCriterion[];
 }
 

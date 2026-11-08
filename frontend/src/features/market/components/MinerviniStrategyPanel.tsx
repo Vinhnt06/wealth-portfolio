@@ -37,6 +37,8 @@ interface MinerviniStrategyPanelProps {
 
 export const MinerviniStrategyPanel: React.FC<MinerviniStrategyPanelProps> = ({ symbol }) => {
   const { setSelectedSymbol } = useMarketStore();
+  const liveTick = useMarketStore((state) => state.ticks[symbol?.toUpperCase()]);
+  const wsStatus = useMarketStore((state) => state.wsStatus);
   const [activeTab, setActiveTab] = useState<'strategies' | 'indicators' | 'screener' | 'leaderboard' | 'ai'>('strategies');
   const [data, setData] = useState<MinerviniAnalysisResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -73,32 +75,59 @@ export const MinerviniStrategyPanel: React.FC<MinerviniStrategyPanelProps> = ({ 
     }
   }, [activeTab, leaderboard.length, fetchLeaderboard]);
 
-  const fetchAnalysis = useCallback(() => {
-    if (!symbol) return;
-    setIsLoading(true);
-    fetch(`/api/market/minervini/analysis?symbol=${symbol}`)
-      .then((res) => res.json())
-      .then((resData) => {
-        setIsLoading(false);
-        if (resData.success && resData.data) {
-          setData(resData.data);
-        }
-      })
-      .catch(() => {
-        setIsLoading(false);
-      });
-  }, [symbol]);
+  const fetchAnalysis = useCallback(
+    (isBackground = false, tickPrice?: number, tickVol?: number) => {
+      if (!symbol) return;
+      if (!isBackground) {
+        setIsLoading(true);
+      }
+      const query = new URLSearchParams({ symbol });
+      if (tickPrice && tickPrice > 0) query.set('livePrice', String(tickPrice));
+      if (tickVol && tickVol > 0) query.set('liveVol', String(tickVol));
+
+      fetch(`/api/market/minervini/analysis?${query.toString()}`, { cache: 'no-store' })
+        .then((res) => res.json())
+        .then((resData) => {
+          if (!isBackground) setIsLoading(false);
+          if (resData.success && resData.data) {
+            setData(resData.data);
+          }
+        })
+        .catch(() => {
+          if (!isBackground) setIsLoading(false);
+        });
+    },
+    [symbol]
+  );
+
+  // Load ngay khi đổi mã cổ phiếu
+  useEffect(() => {
+    fetchAnalysis(false, liveTick?.price, liveTick?.totalVolume || liveTick?.volume);
+  }, [symbol, fetchAnalysis]);
+
+  // Tự động đồng bộ Realtime mỗi khi có Tick giá mới từ WebSocket (debounce 1.5s) & định kỳ 12s/lần trong phiên
+  useEffect(() => {
+    if (!symbol || !liveTick?.price) return;
+    const timer = setTimeout(() => {
+      fetchAnalysis(true, liveTick.price, liveTick.totalVolume || liveTick.volume);
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, [symbol, liveTick?.price, liveTick?.totalVolume, fetchAnalysis]);
 
   useEffect(() => {
-    fetchAnalysis();
-  }, [fetchAnalysis]);
+    if (!symbol) return;
+    const interval = setInterval(() => {
+      fetchAnalysis(true, liveTick?.price, liveTick?.totalVolume || liveTick?.volume);
+    }, 12000);
+    return () => clearInterval(interval);
+  }, [symbol, liveTick?.price, liveTick?.totalVolume, fetchAnalysis]);
 
   const handleScan = () => {
     setIsScanning(true);
     setTimeout(() => {
-      fetchAnalysis();
+      fetchAnalysis(false, liveTick?.price, liveTick?.totalVolume || liveTick?.volume);
       setIsScanning(false);
-    }, 500);
+    }, 400);
   };
 
   const isStage2 = data?.passedCount === 8;
@@ -114,8 +143,9 @@ export const MinerviniStrategyPanel: React.FC<MinerviniStrategyPanelProps> = ({ 
           <span className="text-xs font-mono font-bold text-zinc-100 tracking-tight truncate">
             Chiến Lược Minervini
           </span>
-          <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-zinc-800/80 border border-zinc-700/60 text-zinc-400 font-semibold uppercase tracking-wider hidden sm:inline shrink-0">
-            Trend Template
+          <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-bold uppercase tracking-wider inline-flex items-center gap-1 shrink-0">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            {wsStatus === 'connected' ? 'LIVE' : 'SYNC'}
           </span>
         </div>
 
@@ -271,52 +301,114 @@ export const MinerviniStrategyPanel: React.FC<MinerviniStrategyPanelProps> = ({ 
                 onClick={() => setOpenWyckoff((prev) => !prev)}
                 className="p-3 bg-[#0d1622]/90 border-b border-zinc-800/60 cursor-pointer"
               >
-                <div className="text-[11px] text-amber-400 font-extrabold flex items-center gap-1.5 uppercase tracking-wide">
-                  {openWyckoff ? <CaretDown size={13} weight="bold" /> : <CaretRight size={13} weight="bold" />}
-                  <span>CHẨN ĐOÁN WYCKOFF & PRICE ACTION</span>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="text-[11px] text-amber-400 font-extrabold flex items-center gap-1.5 uppercase tracking-wide">
+                    {openWyckoff ? <CaretDown size={13} weight="bold" /> : <CaretRight size={13} weight="bold" />}
+                    <span>CHẨN ĐOÁN WYCKOFF &amp; ĐIỂM MUA CHUẨN</span>
+                  </div>
+                  {wyckoff && (
+                    <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 border border-zinc-700 shrink-0">
+                      {wyckoff.passedCount}/8 tiêu chí
+                    </span>
+                  )}
                 </div>
 
-                <div className="mt-1.5 pl-4">
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-amber-400 text-xs">
-                      {wyckoff?.phaseName || 'Đang phân tích cấu trúc nền giá...'}
-                    </span>
-                    {wyckoff && (
-                      <span className="text-[10px] px-1.5 py-0.2 rounded bg-zinc-800 text-zinc-400 border border-zinc-700">
-                        {wyckoff.passedCount}/8 tiêu chí
-                      </span>
-                    )}
+                <div className="mt-1.5 pl-4 space-y-1.5">
+                  <div className="font-bold text-amber-400 text-xs">
+                    {wyckoff?.phaseName || 'Đang phân tích cấu trúc nền giá...'}
                   </div>
-                  {wyckoff?.actionAdvice && (
-                    <p className="text-[11px] text-zinc-400 mt-0.5 italic">
-                      {wyckoff.actionAdvice}
-                    </p>
+
+                  {/* Badge Điểm Mua Chuẩn Wyckoff (Ngắn gọn, trực diện) */}
+                  {wyckoff?.buyPointLabel && (
+                    <div
+                      className={`px-2.5 py-1.5 rounded-lg border text-[11px] font-mono font-bold ${
+                        wyckoff.buyPointCode === 'BUY_2_LPS'
+                          ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40'
+                          : wyckoff.buyPointCode === 'BUY_1_SPRING' || wyckoff.buyPointCode === 'BUY_3_BREAKOUT_BU'
+                          ? 'bg-cyan-500/15 text-cyan-300 border-cyan-500/40'
+                          : wyckoff.buyPointCode === 'HOLD_MARKUP'
+                          ? 'bg-amber-500/15 text-amber-300 border-amber-500/40'
+                          : 'bg-rose-500/10 text-rose-300 border-rose-500/30'
+                      }`}
+                    >
+                      <div>{wyckoff.buyPointLabel}</div>
+                      {(wyckoff.buyZonePrice || wyckoff.stopLossPrice) && (
+                        <div className="mt-1 pt-1 border-t border-zinc-700/50 flex items-center justify-between gap-2 text-[10px]">
+                          {wyckoff.buyZonePrice && (
+                            <span className="text-emerald-300">🎯 Vùng mua: {wyckoff.buyZonePrice}</span>
+                          )}
+                          {wyckoff.stopLossPrice && (
+                            <span className="text-rose-400">🛡️ Cắt lỗ: {wyckoff.stopLossPrice}</span>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>
 
-              {/* Wyckoff Criteria Checklist */}
-              {openWyckoff && wyckoff?.criteria && (
-                <div className="divide-y divide-zinc-800/40 text-xs">
-                  {wyckoff.criteria.map((w) => (
-                    <div
-                      key={w.id}
-                      className="flex items-center justify-between py-2 px-3 hover:bg-zinc-900/40 transition-colors"
-                    >
-                      <div className="flex items-center gap-2.5 text-zinc-200">
-                        {w.passed ? (
-                          <Check size={14} weight="bold" className="text-cyan-400 shrink-0" />
-                        ) : (
-                          <X size={14} weight="bold" className="text-rose-500 shrink-0" />
-                        )}
-                        <span className="text-[11px] font-medium text-zinc-200">{w.label}</span>
-                      </div>
-
-                      <div className="font-mono text-xs font-bold text-zinc-400 text-right shrink-0">
-                        {w.value}
-                      </div>
+              {/* Sơ đồ 5 Phase Wyckoff ngắn gọn + Checklist 8 tiêu chí */}
+              {openWyckoff && (
+                <div className="divide-y divide-zinc-800/60">
+                  <div className="p-2.5 bg-zinc-950/60 space-y-1.5">
+                    <div className="grid grid-cols-5 gap-1 text-center font-mono text-[10px]">
+                      {[
+                        { p: 'Phase A', tag: 'Hãm rơi', role: 'Cấm mua', isBuy: false },
+                        { p: 'Phase B', tag: 'Gom hàng', role: 'Chờ đợi', isBuy: false },
+                        { p: 'Phase C', tag: 'Spring/Test', role: 'Mua #1 (30%)', isBuy: true },
+                        { p: 'Phase D', tag: 'SOS / LPS', role: '⭐Mua #2 (50%)', isBuy: true },
+                        { p: 'Phase E', tag: 'Breakout', role: 'Mua #3 / Giữ', isBuy: true },
+                      ].map((item) => {
+                        const isActive = wyckoff?.phase === item.p;
+                        return (
+                          <div
+                            key={item.p}
+                            className={`p-1 rounded-lg border ${
+                              isActive
+                                ? item.isBuy
+                                  ? 'bg-emerald-500/20 border-emerald-400 text-emerald-200 ring-1 ring-emerald-400/40'
+                                  : 'bg-amber-500/20 border-amber-400 text-amber-200 ring-1 ring-amber-400/40'
+                                : 'bg-zinc-900/70 border-zinc-800 text-zinc-500'
+                            }`}
+                          >
+                            <div className="font-black text-[10px]">{item.p.replace('Phase ', 'P.')}</div>
+                            <div className="text-[9px] truncate">{item.tag}</div>
+                            <div className="text-[8px] font-bold text-amber-300 mt-0.5">{item.role}</div>
+                          </div>
+                        );
+                      })}
                     </div>
-                  ))}
+                    <div className="text-[10px] font-mono text-zinc-400 flex flex-wrap justify-between gap-1 px-0.5">
+                      <span>🎯 <strong className="text-cyan-400">P.C (Test Spring):</strong> Thăm dò 30%</span>
+                      <span>⭐ <strong className="text-emerald-400">P.D (LPS sau SOS):</strong> Chủ lực 50% (Chuẩn nhất)</span>
+                      <span>🚀 <strong className="text-amber-400">Đầu P.E (Breakout):</strong> Gia tăng 20%</span>
+                    </div>
+                  </div>
+
+                  {/* Wyckoff Criteria Checklist */}
+                  {wyckoff?.criteria && (
+                    <div className="divide-y divide-zinc-800/40 text-xs">
+                      {wyckoff.criteria.map((w) => (
+                        <div
+                          key={w.id}
+                          className="flex items-center justify-between py-2 px-3 hover:bg-zinc-900/40 transition-colors"
+                        >
+                          <div className="flex items-center gap-2.5 text-zinc-200">
+                            {w.passed ? (
+                              <Check size={14} weight="bold" className="text-cyan-400 shrink-0" />
+                            ) : (
+                              <X size={14} weight="bold" className="text-rose-500 shrink-0" />
+                            )}
+                            <span className="text-[11px] font-medium text-zinc-200">{w.label}</span>
+                          </div>
+
+                          <div className="font-mono text-xs font-bold text-zinc-400 text-right shrink-0">
+                            {w.value}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
