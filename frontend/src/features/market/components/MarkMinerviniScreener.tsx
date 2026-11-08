@@ -30,6 +30,11 @@ import {
 import { useMarketStore } from '../store/marketStore';
 import { useDnseWebSocket } from '../hooks/useDnseWebSocket';
 import { MinerviniScreenerItem } from '../types/minervini.types';
+import {
+  evaluateMinerviniCriteria,
+  calcMarketCapT,
+  MINERVINI_8_CRITERIA_META,
+} from '../utils/minerviniEvaluator';
 import { getStockPriceColor } from '../utils/priceColors';
 import { SECTOR_MAPPING, ICB_20_SECTORS } from '../data/sectorMapping';
 import { EconomicCycleWheel } from './EconomicCycleWheel';
@@ -55,28 +60,21 @@ export const MarkMinerviniScreener: React.FC = () => {
   const [mainViewMode, setMainViewMode] = useState<ViewMode>('table');
   const [sectorSortBy, setSectorSortBy] = useState<SectorSortOption>('rs');
 
-  // Filter states
+  // Filter states (Mặc định chống thao túng TTCK Việt Nam: KL TB 20N >= 100.000 CP & Vốn hóa thực tế >= 1.000 Tỷ VNĐ)
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSector, setSelectedSector] = useState<string>('all');
+  const [selectedExchange, setSelectedExchange] = useState<string>('all');
+  const [minAvgVol20, setMinAvgVol20] = useState<number>(100000);
+  const [minMktCapT, setMinMktCapT] = useState<number>(1000);
+  const [volSignalFilter, setVolSignalFilter] = useState<string>('all');
   const [minRs, setMinRs] = useState<number>(70);
+  const [minScore, setMinScore] = useState<number>(7);
   const [onlyStage2, setOnlyStage2] = useState<boolean>(false);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState<boolean>(false);
 
   // Sorting state (Auto-sorts dynamically when clicked)
-  const [sortKey, setSortKey] = useState<string>('rsRating');
+  const [sortKey, setSortKey] = useState<string>('score');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
-
-  // Active filter chips (matching Image 1)
-  const [activeChips] = useState<string[]>([
-    'Vốn hóa >= 1.000 Tỷ VNĐ',
-    'Khối lượng TB 10N >= 300K',
-    'Giá > SMA 50',
-    'Giá > SMA 150',
-    'Giá > SMA 200',
-    'SMA 50 > SMA 150',
-    'SMA 150 > SMA 200',
-    'Hiệu suất 1Y >= 20%',
-    'RS Rating >= 70',
-  ]);
 
   const [scanFeedback, setScanFeedback] = useState<{
     symbol: string;
@@ -113,7 +111,7 @@ export const MarkMinerviniScreener: React.FC = () => {
           sector: SECTOR_MAPPING[it.symbol] || it.sector || 'Khác',
         }));
 
-        // Restore and merge custom scanned symbols from localStorage
+        // Restore and merge custom scanned symbols from localStorage (chỉ giữ các mã đạt chuẩn KL >= 100K & Vốn hóa >= 1.000 Tỷ)
         try {
           if (typeof window !== 'undefined') {
             const saved: string[] = JSON.parse(localStorage.getItem('yourfin_minervini_custom_scans') || '[]');
@@ -123,11 +121,20 @@ export const MarkMinerviniScreener: React.FC = () => {
                 const customRes = await fetch(`/api/market/minervini/screener?symbols=${missing.join(',')}`);
                 const customData = await customRes.json();
                 if (customData.success && Array.isArray(customData.data)) {
-                  const extraItems = customData.data.map((it: MinerviniScreenerItem) => ({
-                    ...it,
-                    sector: SECTOR_MAPPING[it.symbol] || it.sector || 'Khác',
-                  }));
+                  const extraItems = customData.data
+                    .map((it: MinerviniScreenerItem) => ({
+                      ...it,
+                      sector: SECTOR_MAPPING[it.symbol] || it.sector || 'Khác',
+                    }))
+                    .filter(
+                      (it: MinerviniScreenerItem) =>
+                        it.isVnLiquidStandard && (it.avgVol20 ?? 0) >= 100000 && (it.mktCapT ?? 0) >= 1000
+                    );
                   enrichedItems = [...extraItems, ...enrichedItems];
+                  const validSavedSymbols = saved.filter((s) =>
+                    enrichedItems.some((it: any) => it.symbol === s && (it.avgVol20 ?? 0) >= 100000 && (it.mktCapT ?? 0) >= 1000)
+                  );
+                  localStorage.setItem('yourfin_minervini_custom_scans', JSON.stringify(validSavedSymbols));
                 }
               }
             }
@@ -186,39 +193,60 @@ export const MarkMinerviniScreener: React.FC = () => {
           ...raw,
           sector: SECTOR_MAPPING[sym] || raw.sector || 'Khác',
         };
-        setItems((prev) => {
-          const without = prev.filter((p) => p.symbol !== sym);
-          return [newItem, ...without];
-        });
-        setSearchQuery(sym);
+        const passesLiquidityAndCap =
+          Boolean(newItem.isVnLiquidStandard) &&
+          (newItem.avgVol20 ?? 0) >= 100000 &&
+          (newItem.mktCapT ?? 0) >= 1000;
 
-        // Persist scanned symbol into browser localStorage
-        try {
-          if (typeof window !== 'undefined') {
-            const saved: string[] = JSON.parse(localStorage.getItem('yourfin_minervini_custom_scans') || '[]');
-            if (!saved.includes(sym)) {
-              localStorage.setItem('yourfin_minervini_custom_scans', JSON.stringify([...saved, sym]));
-            }
-          }
-        } catch {}
-
-        if (newItem.isStage2Eligible) {
-          setScanFeedback({
-            symbol: sym,
-            type: 'success',
-            score: newItem.criteriaPassed,
-            rsRating: newItem.rsRating,
-            isStage2: true,
-            message: `🎉 ĐÃ TỰ ĐỘNG LƯU VÀO BỘ LỌC & XẾP VÀO NHÓM NGÀNH [${newItem.sector}]: Cổ phiếu [${sym}] đạt ${newItem.criteriaPassed}/8 tiêu chí Trend Template (Stage 2 Tăng trưởng), RS Rating: ${newItem.rsRating}/99.`,
+        if (passesLiquidityAndCap) {
+          setItems((prev) => {
+            const without = prev.filter((p) => p.symbol !== sym);
+            return [newItem, ...without];
           });
-        } else {
+          setSearchQuery(sym);
+
+          // Chỉ lưu vào bộ lọc đối với cổ phiếu đạt chuẩn KL TB >= 100K & Vốn hóa >= 1.000 Tỷ
+          try {
+            if (typeof window !== 'undefined') {
+              const saved: string[] = JSON.parse(localStorage.getItem('yourfin_minervini_custom_scans') || '[]');
+              if (!saved.includes(sym)) {
+                localStorage.setItem('yourfin_minervini_custom_scans', JSON.stringify([...saved, sym]));
+              }
+            }
+          } catch {}
+        }
+
+        if (!passesLiquidityAndCap) {
+          const avgVolK = Math.round(((newItem.avgVol20 ?? newItem.volume ?? 0) / 1000) * 10) / 10;
           setScanFeedback({
             symbol: sym,
             type: 'warning',
             score: newItem.criteriaPassed,
             rsRating: newItem.rsRating,
             isStage2: false,
-            message: `⚠️ ĐÃ TỰ ĐỘNG LƯU VÀO BỘ LỌC & XẾP VÀO NHÓM NGÀNH [${newItem.sector}]: Cổ phiếu [${sym}] đạt ${newItem.criteriaPassed}/8 tiêu chí Trend Template (Chưa đạt Stage 2), RS Rating: ${newItem.rsRating}/99.`,
+            message: `🚫 LOẠI KHỎI BỘ LỌC CHỐNG THAO TÚNG — Mã [${sym}] có KL TB 20N = ${avgVolK}K CP (Hôm nay: ${(newItem.volume || 0).toLocaleString('vi-VN')} CP) và Vốn hóa = ${(newItem.mktCapT || 0).toLocaleString('vi-VN')} Tỷ VNĐ. Yêu cầu tối thiểu: KL TB >= 100.000 CP duy trì đều & Vốn hóa >= 1.000 Tỷ VNĐ (Điểm kỹ thuật tham khảo: ${newItem.criteriaPassed}/8, RS ${newItem.rsRating}).`,
+          });
+        } else if (newItem.isStage2Eligible) {
+          setScanFeedback({
+            symbol: sym,
+            type: 'success',
+            score: newItem.criteriaPassed,
+            rsRating: newItem.rsRating,
+            isStage2: true,
+            message: `🎉 ĐẠT CHUẨN STAGE 2 (8/8) — Nhóm ngành [${newItem.sector}]: Cổ phiếu [${sym}] đạt 8/8 tiêu chí Trend Template, RS Rating: ${newItem.rsRating}/99, KL TB 20N: ${Math.round((newItem.avgVol20 || 0) / 1000)}K CP, Vốn hóa: ${(newItem.mktCapT || 0).toLocaleString('vi-VN')} Tỷ.`,
+          });
+        } else {
+          const failedText =
+            Array.isArray(newItem.failedCriteria) && newItem.failedCriteria.length > 0
+              ? ` | Thiếu: ${newItem.failedCriteria.join(', ')}`
+              : '';
+          setScanFeedback({
+            symbol: sym,
+            type: 'warning',
+            score: newItem.criteriaPassed,
+            rsRating: newItem.rsRating,
+            isStage2: false,
+            message: `⚠️ CHƯA ĐẠT STAGE 2 (${newItem.criteriaPassed}/8) — Nhóm ngành [${newItem.sector}]: Cổ phiếu [${sym}] đạt ${newItem.criteriaPassed}/8 tiêu chí, RS Rating: ${newItem.rsRating}/99${failedText}.`,
           });
         }
       } else {
@@ -255,9 +283,12 @@ export const MarkMinerviniScreener: React.FC = () => {
     return Array.from(ICB_20_SECTORS);
   }, []);
 
-  // Realtime subscription for all stocks in the screener table via DNSE WebSocket
+  // Realtime subscription for top active stocks in the screener table via DNSE WebSocket (capped at 120 to avoid socket flood across 1,290 symbols)
   const screenerSymbols = useMemo(() => {
-    return items.map((it) => it.symbol);
+    return items
+      .filter((it) => (it.criteriaPassed ?? it.score ?? 0) >= 7 || it.rsRating >= 85)
+      .slice(0, 120)
+      .map((it) => it.symbol);
   }, [items]);
 
   useDnseWebSocket(screenerSymbols.length > 0 ? screenerSymbols : undefined);
@@ -283,29 +314,62 @@ export const MarkMinerviniScreener: React.FC = () => {
           ? live.totalVolume || live.volume
           : item.volume;
 
-      // Dynamic criteria adjustment with live price
-      let criteriaPassed: number = typeof item.criteriaPassed === 'number'
-        ? item.criteriaPassed
-        : (typeof item.score === 'number' ? item.score : 0);
+      // Deterministic re-evaluation of all 8 Mark Minervini Trend Template criteria with live price
       const livePriceK = currentPrice / 1000;
-      const oldPriceK = (item.price || 0) / 1000;
-      if (item.sma50 && item.sma150 && item.sma200 && oldPriceK > 0) {
-        const oldC1 = oldPriceK > item.sma150 && oldPriceK > item.sma200;
-        const liveC1 = livePriceK > item.sma150 && livePriceK > item.sma200;
-        if (oldC1 !== liveC1) criteriaPassed += liveC1 ? 1 : -1;
+      let criteriaPassed: number =
+        typeof item.criteriaPassed === 'number'
+          ? item.criteriaPassed
+          : typeof item.score === 'number'
+          ? item.score
+          : 0;
+      let failedCriteria = item.failedCriteria || [];
+      let distHigh = item.distHigh;
+      let distLow = item.distLow;
+      let pctFrom52WHigh = item.pctFrom52WHigh;
+      let pctAbove52WLow = item.pctAbove52WLow;
 
-        const oldC5 = oldPriceK > item.sma50;
-        const liveC5 = livePriceK > item.sma50;
-        if (oldC5 !== liveC5) criteriaPassed += liveC5 ? 1 : -1;
+      if (item.sma50 && item.sma150 && item.sma200 && livePriceK > 0) {
+        const sma200SlopeUp =
+          typeof item.sma200SlopeUp === 'boolean'
+            ? item.sma200SlopeUp
+            : item.sma200Past
+            ? item.sma200 > item.sma200Past
+            : item.sma150 > item.sma200;
 
-        criteriaPassed = Math.max(0, Math.min(8, criteriaPassed));
+        const evalResult = evaluateMinerviniCriteria({
+          priceK: livePriceK,
+          sma50: item.sma50,
+          sma150: item.sma150,
+          sma200: item.sma200,
+          sma200SlopeUp,
+          high52W: item.high52W,
+          low52W: item.low52W,
+          distHigh: item.distHigh,
+          distLow: item.distLow,
+          rsRating: item.rsRating,
+        });
+
+        criteriaPassed = evalResult.criteriaPassed;
+        failedCriteria = evalResult.failedCriteria;
+        distHigh = evalResult.distHigh;
+        distLow = evalResult.distLow;
+        pctFrom52WHigh = evalResult.pctFrom52WHigh;
+        pctAbove52WLow = evalResult.pctAbove52WLow;
       }
+
+      const mktCapT = calcMarketCapT(sym, livePriceK);
 
       return {
         ...item,
         price: currentPrice,
         changePct: currentChangePct,
         volume: currentVolume,
+        mktCapT,
+        failedCriteria,
+        distHigh,
+        distLow,
+        pctFrom52WHigh,
+        pctAbove52WLow,
         criteriaPassed,
         score: criteriaPassed,
         isStage2: criteriaPassed === 8,
@@ -313,8 +377,14 @@ export const MarkMinerviniScreener: React.FC = () => {
         pe: item.pe ?? fin?.pe ?? null,
         epsGrowthYoY: item.epsGrowthYoY ?? fin?.earningsGrowthYoY ?? null,
       };
+    }).filter((item) => {
+      // Loại bỏ triệt để cổ phiếu thanh khoản thấp (< 100K CP) hoặc vốn hóa nhỏ (< 1.000 Tỷ VNĐ) khỏi toàn bộ Bộ lọc, Top Leaders & Top Ngành (ngay cả khi RS = 99)
+      const avgVol = item.avgVol20 !== undefined ? item.avgVol20 : item.volume;
+      if (minAvgVol20 > 0 && avgVol < minAvgVol20) return false;
+      if (minMktCapT > 0 && (item.mktCapT || 0) < minMktCapT) return false;
+      return true;
     });
-  }, [items, ticks]);
+  }, [items, ticks, minAvgVol20, minMktCapT]);
 
   // Handle column header click to auto-sort
   const handleSort = (key: string) => {
@@ -348,18 +418,41 @@ export const MarkMinerviniScreener: React.FC = () => {
         }
       }
 
+      if (selectedExchange !== 'all') {
+        if ((item.exchange || 'HOSE').toUpperCase() !== selectedExchange.toUpperCase()) {
+          return false;
+        }
+      }
+
+      if (volSignalFilter !== 'all') {
+        if (volSignalFilter === 'BREAKOUT_OR_PIVOT') {
+          if (item.volSignal !== 'BREAKOUT' && item.volSignal !== 'POCKET_PIVOT' && item.relVol < 1.3) {
+            return false;
+          }
+        } else if (volSignalFilter === 'ACCUMULATION') {
+          if ((item.upDownVolRatio ?? 1) < 1.2) {
+            return false;
+          }
+        } else if (volSignalFilter === 'VCP_DRYUP') {
+          if (item.volSignal !== 'VCP_DRYUP' && item.relVol > 0.75) {
+            return false;
+          }
+        }
+      }
+
       if (item.rsRating < minRs) {
         return false;
       }
 
-      if (onlyStage2 && item.criteriaPassed !== 8) {
+      const effectiveMinScore = onlyStage2 ? 8 : minScore;
+      if ((item.criteriaPassed ?? 0) < effectiveMinScore) {
         return false;
       }
 
       return true;
     });
 
-    // 2. Sort dynamically
+    // 2. Sort dynamically (with intelligent tie-breaker between score and rsRating)
     return filtered.sort((a: any, b: any) => {
       let valA = a[sortKey];
       let valB = b[sortKey];
@@ -371,9 +464,16 @@ export const MarkMinerviniScreener: React.FC = () => {
         return sortDir === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
       }
 
-      return sortDir === 'asc' ? Number(valA) - Number(valB) : Number(valB) - Number(valA);
+      const diff = sortDir === 'asc' ? Number(valA) - Number(valB) : Number(valB) - Number(valA);
+      if (diff !== 0) return diff;
+
+      // Tie-breaker: if sorting by score, tie-break by rsRating desc; otherwise tie-break by score desc
+      if (sortKey === 'score') {
+        return (b.rsRating || 0) - (a.rsRating || 0);
+      }
+      return (b.score || 0) - (a.score || 0);
     });
-  }, [liveEnrichedItems, searchQuery, selectedSector, minRs, onlyStage2, sortKey, sortDir]);
+  }, [liveEnrichedItems, searchQuery, selectedSector, selectedExchange, volSignalFilter, minRs, minScore, onlyStage2, sortKey, sortDir]);
 
   // Sector groups for "Top cổ phiếu theo nhóm ngành"
   const sectorGroups = useMemo(() => {
@@ -426,10 +526,27 @@ export const MarkMinerviniScreener: React.FC = () => {
 
   // Summary counts
   const stage2Count = useMemo(() => liveEnrichedItems.filter((x) => x.criteriaPassed === 8).length, [liveEnrichedItems]);
+  const nearStage2Count = useMemo(() => liveEnrichedItems.filter((x) => x.criteriaPassed === 7).length, [liveEnrichedItems]);
   const leadersCount = useMemo(() => liveEnrichedItems.filter((x) => x.rsRating >= 90).length, [liveEnrichedItems]);
   const topSectors = useMemo(() => {
     return sectorGroups.slice(0, 3).map((g) => g.sector);
   }, [sectorGroups]);
+
+  // Real-time pass statistics for each of the 8 official Mark Minervini Trend Template criteria
+  const criteriaPassStats = useMemo(() => {
+    const total = liveEnrichedItems.length || 1;
+    return MINERVINI_8_CRITERIA_META.map((meta) => {
+      const passedCount = liveEnrichedItems.filter(
+        (it) => !it.failedCriteria?.includes(meta.shortLabel)
+      ).length;
+      return {
+        ...meta,
+        passedCount,
+        total: liveEnrichedItems.length,
+        pct: Math.round((passedCount / total) * 100),
+      };
+    });
+  }, [liveEnrichedItems]);
 
   const handleSelectStock = (symbol: string) => {
     setSelectedSymbol(symbol);
@@ -534,7 +651,8 @@ export const MarkMinerviniScreener: React.FC = () => {
             </div>
             <div className="flex items-baseline gap-2">
               <span className="text-2xl font-mono font-black text-emerald-400">{stage2Count}</span>
-              <span className="text-xs font-mono text-zinc-500">/ {items.length} mã quét</span>
+              <span className="text-xs font-mono text-amber-400 font-bold">(+{nearStage2Count} mã 7/8)</span>
+              <span className="text-xs font-mono text-zinc-500">/ {items.length} mã</span>
             </div>
           </div>
 
@@ -575,23 +693,36 @@ export const MarkMinerviniScreener: React.FC = () => {
           </div>
         </div>
 
-        {/* ── Active Preset Filter Chips ─────────────────────────────── */}
+        {/* ── Active 8 Official Trend Template Criteria Chips ─────────────────── */}
         <div className="mt-4 pt-4 border-t border-zinc-800/80">
-          <div className="flex items-center gap-2 mb-2">
-            <Funnel className="w-3.5 h-3.5 text-amber-400" />
-            <span className="text-xs font-mono font-bold text-zinc-400 uppercase tracking-wider">
-              Tiêu chí bộ lọc Mark Minervini (Trend Template 8/8):
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+            <div className="flex items-center gap-2">
+              <Funnel className="w-3.5 h-3.5 text-amber-400" />
+              <span className="text-xs font-mono font-bold text-zinc-300 uppercase tracking-wider">
+                8 Tiêu Chí Chuẩn Mark Minervini SEPA Trend Template (Stage 2 Uptrend):
+              </span>
+            </div>
+            <span className="text-[11px] font-mono text-zinc-400">
+              Đang hiển thị: <strong className="text-amber-400">{filteredAndSortedItems.length}</strong> / {liveEnrichedItems.length} mã quét thực tế
             </span>
           </div>
-          <div className="flex flex-wrap items-center gap-1.5">
-            {activeChips.map((chip, idx) => (
-              <span
-                key={idx}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-zinc-900 border border-amber-500/30 text-amber-300 text-[11px] font-mono font-medium shadow-sm hover:border-amber-400 transition-all cursor-default"
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+            {criteriaPassStats.map((stat) => (
+              <div
+                key={stat.id}
+                title={stat.fullLabel}
+                className="flex items-center justify-between gap-2 px-3 py-1.5 rounded-xl bg-zinc-900/90 border border-amber-500/25 text-[11px] font-mono shadow-sm hover:border-amber-400/60 transition-all"
               >
-                <span>{chip}</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-              </span>
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className="px-1.5 py-0.5 rounded bg-amber-400/15 text-amber-300 font-black text-[10px] shrink-0">
+                    C{stat.id}
+                  </span>
+                  <span className="text-zinc-200 font-semibold truncate">{stat.shortLabel}</span>
+                </div>
+                <span className="text-[10px] text-emerald-400 font-bold shrink-0">
+                  {stat.passedCount}/{stat.total} ({stat.pct}%)
+                </span>
+              </div>
             ))}
           </div>
         </div>
@@ -1060,36 +1191,164 @@ export const MarkMinerviniScreener: React.FC = () => {
                 )}
               </div>
 
-              {/* Min RS rating */}
-              <div className="flex items-center gap-1.5 bg-zinc-900 border border-zinc-800 px-2.5 py-1 rounded-xl text-xs font-mono">
-                <span className="text-zinc-500">RS &gt;=</span>
-                <select
-                  value={minRs}
-                  onChange={(e) => setMinRs(Number(e.target.value))}
-                  className="bg-transparent text-amber-400 font-bold focus:outline-none cursor-pointer"
-                >
-                  <option value="70">70 (Mặc định)</option>
-                  <option value="80">80 (Mạnh)</option>
-                  <option value="90">90 (Siêu sao)</option>
-                  <option value="50">50</option>
-                  <option value="0">Tất cả (&gt;= 0)</option>
-                </select>
-              </div>
-
               {/* Only Stage 2 toggle */}
               <button
-                onClick={() => setOnlyStage2(!onlyStage2)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-bold transition-all border ${
+                onClick={() => {
+                  const next = !onlyStage2;
+                  setOnlyStage2(next);
+                  setMinScore(next ? 8 : 7);
+                }}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-bold transition-all border cursor-pointer ${
                   onlyStage2
-                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                    : 'bg-zinc-900 text-zinc-500 border-zinc-800 hover:text-zinc-300'
+                    ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/40 shadow-sm'
+                    : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-zinc-200'
                 }`}
               >
                 <ShieldCheck className="w-4 h-4" />
                 <span>Chỉ Stage 2 (8/8)</span>
               </button>
+
+              {/* Compact Toggle Button for Advanced Filter Customization */}
+              <button
+                onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-bold transition-all border cursor-pointer ${
+                  showAdvancedFilters || selectedExchange !== 'all' || minAvgVol20 !== 100000 || minMktCapT !== 1000 || volSignalFilter !== 'all' || minRs !== 70 || (!onlyStage2 && minScore !== 7)
+                    ? 'bg-amber-400/15 text-amber-300 border-amber-400/40 shadow-sm'
+                    : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-zinc-200'
+                }`}
+                title="Mở tuỳ chỉnh nâng cao (Khối lượng, Vốn hóa, RS, Điểm tiêu chí, Sàn, Dòng tiền)"
+              >
+                <Funnel className="w-3.5 h-3.5" />
+                <span>Tuỳ chỉnh lọc</span>
+                <span className="text-[10px] opacity-75">
+                  ({onlyStage2 ? '8/8' : `≥${minScore}/8`} · RS≥{minRs} · KL≥{Math.round(minAvgVol20 / 1000)}K · V.Hoá≥{(minMktCapT / 1000).toFixed(0)}kTỷ)
+                </span>
+              </button>
             </div>
           </div>
+
+          {/* Collapsible Advanced Filters Drawer (Chỉ hiện khi người dùng bấm nút "Tuỳ chỉnh lọc") */}
+          {showAdvancedFilters && (
+            <div className="p-3.5 rounded-2xl bg-zinc-950/90 border border-amber-500/30 flex flex-wrap items-center justify-between gap-3 text-xs font-mono animate-in fade-in">
+              <div className="flex flex-wrap items-center gap-2.5">
+                <span className="text-[11px] font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1">
+                  <Funnel className="w-3.5 h-3.5" />
+                  Tuỳ chỉnh nâng cao:
+                </span>
+
+                {/* Minimum 20-Day Average Liquidity Filter */}
+                <div className="flex items-center gap-1.5 bg-zinc-900 border border-zinc-800 px-2.5 py-1 rounded-xl">
+                  <span className="text-zinc-500">KL TB &gt;=</span>
+                  <select
+                    value={minAvgVol20}
+                    onChange={(e) => setMinAvgVol20(Number(e.target.value))}
+                    className="bg-transparent text-cyan-400 font-bold focus:outline-none cursor-pointer"
+                  >
+                    <option value="100000">100.000 CP (Mặc định)</option>
+                    <option value="200000">200.000 CP</option>
+                    <option value="300000">300.000 CP</option>
+                    <option value="500000">500.000 CP</option>
+                    <option value="1000000">1.000.000 CP</option>
+                  </select>
+                </div>
+
+                {/* Minimum Market Cap Filter (Chống thao túng vốn hóa nhỏ) */}
+                <div className="flex items-center gap-1.5 bg-zinc-900 border border-zinc-800 px-2.5 py-1 rounded-xl">
+                  <span className="text-zinc-500">Vốn hóa &gt;=</span>
+                  <select
+                    value={minMktCapT}
+                    onChange={(e) => setMinMktCapT(Number(e.target.value))}
+                    className="bg-transparent text-emerald-400 font-bold focus:outline-none cursor-pointer"
+                  >
+                    <option value="1000">1.000 Tỷ (Mặc định)</option>
+                    <option value="3000">3.000 Tỷ (Midcap+)</option>
+                    <option value="5000">5.000 Tỷ</option>
+                    <option value="10000">10.000 Tỷ (LargeCap)</option>
+                  </select>
+                </div>
+
+                {/* Min RS rating */}
+                <div className="flex items-center gap-1.5 bg-zinc-900 border border-zinc-800 px-2.5 py-1 rounded-xl">
+                  <span className="text-zinc-500">RS &gt;=</span>
+                  <select
+                    value={minRs}
+                    onChange={(e) => setMinRs(Number(e.target.value))}
+                    className="bg-transparent text-amber-400 font-bold focus:outline-none cursor-pointer"
+                  >
+                    <option value="70">70 (Mặc định SEPA)</option>
+                    <option value="80">80 (Leader)</option>
+                    <option value="90">90 (Siêu sao)</option>
+                    <option value="50">50</option>
+                    <option value="0">Tất cả (&gt;= 0)</option>
+                  </select>
+                </div>
+
+                {/* Min Trend Template Score selector */}
+                <div className="flex items-center gap-1.5 bg-zinc-900 border border-zinc-800 px-2.5 py-1 rounded-xl">
+                  <span className="text-zinc-500">Điểm &gt;=</span>
+                  <select
+                    value={onlyStage2 ? 8 : minScore}
+                    onChange={(e) => {
+                      const val = Number(e.target.value);
+                      setMinScore(val);
+                      setOnlyStage2(val === 8);
+                    }}
+                    className="bg-transparent text-emerald-400 font-bold focus:outline-none cursor-pointer"
+                  >
+                    <option value="8">8/8 (Chuẩn Stage 2)</option>
+                    <option value="7">7/8 (Stage 2 &amp; Tiệm cận)</option>
+                    <option value="6">6/8 (Tích lũy khỏe)</option>
+                    <option value="0">0/8 (Tất cả mã quét)</option>
+                  </select>
+                </div>
+
+                {/* Exchange Selector */}
+                <div className="flex items-center gap-1.5 bg-zinc-900 border border-zinc-800 px-2.5 py-1 rounded-xl">
+                  <span className="text-zinc-500">Sàn:</span>
+                  <select
+                    value={selectedExchange}
+                    onChange={(e) => setSelectedExchange(e.target.value)}
+                    className="bg-transparent text-zinc-200 font-bold focus:outline-none cursor-pointer"
+                  >
+                    <option value="all">Tất cả 3 Sàn</option>
+                    <option value="HOSE">HOSE</option>
+                    <option value="HNX">HNX</option>
+                    <option value="UPCOM">UPCoM</option>
+                  </select>
+                </div>
+
+                {/* Volume Action / Institutional Flow Signal Filter */}
+                <div className="flex items-center gap-1.5 bg-zinc-900 border border-zinc-800 px-2.5 py-1 rounded-xl">
+                  <span className="text-zinc-500">Tín hiệu Vol:</span>
+                  <select
+                    value={volSignalFilter}
+                    onChange={(e) => setVolSignalFilter(e.target.value)}
+                    className="bg-transparent text-amber-300 font-bold focus:outline-none cursor-pointer"
+                  >
+                    <option value="all">Tất cả</option>
+                    <option value="BREAKOUT_OR_PIVOT">🔥 Nổ Vol / Pocket Pivot</option>
+                    <option value="ACCUMULATION">📈 Gom hàng (U/D Vol &gt;= 1.2x)</option>
+                    <option value="VCP_DRYUP">💧 Cạn cung VCP (Vol &lt;= 0.75x)</option>
+                  </select>
+                </div>
+              </div>
+
+              <button
+                onClick={() => {
+                  setSelectedExchange('all');
+                  setMinAvgVol20(100000);
+                  setMinMktCapT(1000);
+                  setVolSignalFilter('all');
+                  setMinRs(70);
+                  setMinScore(7);
+                  setOnlyStage2(false);
+                }}
+                className="px-2.5 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 hover:text-amber-300 transition-colors text-[11px] cursor-pointer"
+              >
+                Khôi phục mặc định
+              </button>
+            </div>
+          )}
 
           {/* Feedback kết quả quét cho Bảng Lọc */}
           {scanFeedback && (
@@ -1374,18 +1633,39 @@ export const MarkMinerviniScreener: React.FC = () => {
                                 <span>Bấm vào đây để Quét & Xét chuẩn Minervini cho mã [{searchQuery.toUpperCase()}] ngay ⚡</span>
                               </button>
                             )}
-                            {(selectedSector !== 'all' || minRs !== 70 || onlyStage2 || searchQuery) && (
-                              <button
-                                onClick={() => {
-                                  setSelectedSector('all');
-                                  setMinRs(70);
-                                  setOnlyStage2(false);
-                                  setSearchQuery('');
-                                }}
-                                className="px-3.5 py-1.5 rounded-xl bg-amber-400/10 border border-amber-400/30 text-amber-300 text-xs font-bold hover:bg-amber-400/20 transition-all inline-flex items-center gap-1.5 cursor-pointer"
-                              >
-                                <span>Đặt lại bộ lọc (RS &gt;= 70)</span>
-                              </button>
+                            {(selectedSector !== 'all' || selectedExchange !== 'all' || minAvgVol20 !== 50000 || volSignalFilter !== 'all' || minRs !== 70 || minScore !== 7 || onlyStage2 || searchQuery) && (
+                              <div className="flex flex-wrap items-center justify-center gap-2">
+                                <button
+                                  onClick={() => {
+                                    setSelectedSector('all');
+                                    setSelectedExchange('all');
+                                    setMinAvgVol20(50000);
+                                    setVolSignalFilter('all');
+                                    setMinRs(70);
+                                    setMinScore(7);
+                                    setOnlyStage2(false);
+                                    setSearchQuery('');
+                                  }}
+                                  className="px-3.5 py-1.5 rounded-xl bg-amber-400/10 border border-amber-400/30 text-amber-300 text-xs font-bold hover:bg-amber-400/20 transition-all inline-flex items-center gap-1.5 cursor-pointer"
+                                >
+                                  <span>Đặt lại mặc định (Điểm &gt;= 7/8, RS &gt;= 70, KL &gt;= 50K)</span>
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setSelectedSector('all');
+                                    setSelectedExchange('all');
+                                    setMinAvgVol20(30000);
+                                    setVolSignalFilter('all');
+                                    setMinRs(0);
+                                    setMinScore(0);
+                                    setOnlyStage2(false);
+                                    setSearchQuery('');
+                                  }}
+                                  className="px-3.5 py-1.5 rounded-xl bg-zinc-800 border border-zinc-700 text-zinc-300 text-xs font-bold hover:bg-zinc-700 transition-all inline-flex items-center gap-1.5 cursor-pointer"
+                                >
+                                  <span>Xem toàn bộ {liveEnrichedItems.length} mã đủ thanh khoản</span>
+                                </button>
+                              </div>
                             )}
                           </div>
                         )}
@@ -1447,24 +1727,60 @@ export const MarkMinerviniScreener: React.FC = () => {
                             </span>
                           </td>
 
-                          {/* Volume */}
-                          <td className="py-3 px-3 text-right text-zinc-300">
-                            {item.volume.toLocaleString('vi-VN')}
+                          {/* Volume & 20D Average Liquidity */}
+                          <td className="py-3 px-3 text-right">
+                            <div className="flex flex-col items-end gap-0.5">
+                              <span className="text-zinc-200 font-mono">
+                                {item.volume.toLocaleString('vi-VN')}
+                              </span>
+                              {item.avgVol20 !== undefined && (
+                                <span className="text-[9px] text-zinc-500 font-mono">
+                                  TB20: {(item.avgVol20 / 1000).toFixed(0)}K{item.avgVal20B ? ` (${item.avgVal20B}Tỷ)` : ''}
+                                </span>
+                              )}
+                            </div>
                           </td>
 
-                          {/* Relative Volume */}
+                          {/* Relative Volume & VCP / Pocket Pivot Signal */}
                           <td className="py-3 px-3 text-right">
-                            <span
-                              className={`font-mono font-bold ${
-                                item.relVol >= 1.5
-                                  ? 'text-amber-400'
-                                  : item.relVol >= 1.0
-                                  ? 'text-emerald-400'
-                                  : 'text-zinc-400'
-                              }`}
-                            >
-                              {item.relVol.toFixed(2)}x
-                            </span>
+                            <div className="flex flex-col items-end gap-0.5">
+                              <span
+                                className={`font-mono font-bold ${
+                                  item.relVol >= 1.5
+                                    ? 'text-amber-400'
+                                    : item.relVol >= 1.0
+                                    ? 'text-emerald-400'
+                                    : 'text-zinc-400'
+                                }`}
+                              >
+                                {item.relVol.toFixed(2)}x
+                                {item.upDownVolRatio !== undefined && (
+                                  <span
+                                    title="Tỷ lệ Tổng Khối lượng Phiên Tăng / Phiên Giảm trong 20 phiên (Chuẩn tích lũy >= 1.2)"
+                                    className={`ml-1 text-[9px] ${
+                                      item.upDownVolRatio >= 1.2 ? 'text-emerald-400' : 'text-zinc-500'
+                                    }`}
+                                  >
+                                    (U/D:{item.upDownVolRatio}x)
+                                  </span>
+                                )}
+                              </span>
+                              {item.volSignal === 'BREAKOUT' && (
+                                <span className="px-1.5 py-0.2 rounded bg-amber-400/20 text-amber-300 border border-amber-400/40 text-[9px] font-bold">
+                                  🔥 NỔ VOL
+                                </span>
+                              )}
+                              {item.volSignal === 'POCKET_PIVOT' && (
+                                <span className="px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[9px] font-bold">
+                                  ⚡ POCKET PIVOT
+                                </span>
+                              )}
+                              {item.volSignal === 'VCP_DRYUP' && (
+                                <span className="px-1.5 py-0.2 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 text-[9px] font-bold">
+                                  💧 CẠN CUNG VCP
+                                </span>
+                              )}
+                            </div>
                           </td>
 
                           {/* Tab-dependent columns */}
@@ -1564,26 +1880,59 @@ export const MarkMinerviniScreener: React.FC = () => {
 
                           {/* Large Prominent RS Rating */}
                           <td className="py-3 px-3 text-center">
-                            <span className={`inline-block px-3 py-1 rounded-xl text-sm font-mono font-black border ${rsBadgeColor}`}>
-                              {item.rsRating}
-                            </span>
+                            <div className="flex flex-col items-center gap-0.5">
+                              <span className={`inline-block px-3 py-1 rounded-xl text-sm font-mono font-black border ${rsBadgeColor}`}>
+                                {item.rsRating}
+                              </span>
+                              {item.rsRank && item.rsUniverseTotal && (
+                                <span className="text-[9px] text-zinc-500 font-mono">
+                                  #{item.rsRank}/{item.rsUniverseTotal}
+                                </span>
+                              )}
+                            </div>
                           </td>
 
                           {/* Stage 2 Pass / Fail */}
                           <td className="py-3 px-3 text-center">
                             {item.criteriaPassed === 8 ? (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold shadow-sm">
+                              <span
+                                title="Đạt tuyệt đối 8/8 tiêu chí Mark Minervini SEPA Trend Template (Stage 2 Uptrend)"
+                                className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold shadow-sm"
+                              >
                                 <CheckCircle className="w-3.5 h-3.5" weight="fill" />
-                                <span>8/8 ĐẠT</span>
+                                <span>8/8 CHUẨN STAGE 2</span>
                               </span>
                             ) : item.criteriaPassed === 7 ? (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30 text-[10px] font-bold">
-                                <span>7/8 GẦN ĐẠT</span>
-                              </span>
+                              <div className="flex flex-col items-center gap-0.5">
+                                <span
+                                  title={
+                                    item.failedCriteria?.length
+                                      ? `Thiếu 1 tiêu chí: ${item.failedCriteria.join(', ')}`
+                                      : 'Đạt 7/8 tiêu chí Trend Template'
+                                  }
+                                  className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30 text-[10px] font-bold"
+                                >
+                                  <span>7/8 TIỆM CẬN</span>
+                                </span>
+                                {item.failedCriteria && item.failedCriteria.length > 0 && (
+                                  <span className="text-[9px] text-zinc-500 font-mono truncate max-w-[125px]">
+                                    Thiếu: {item.failedCriteria[0].replace(/^C\d:\s*/, '')}
+                                  </span>
+                                )}
+                              </div>
                             ) : (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400 border border-zinc-700 text-[10px] font-mono">
-                                <span>{item.criteriaPassed}/8</span>
-                              </span>
+                              <div className="flex flex-col items-center gap-0.5">
+                                <span
+                                  title={
+                                    item.failedCriteria?.length
+                                      ? `Chưa đạt: ${item.failedCriteria.join(' | ')}`
+                                      : `Đạt ${item.criteriaPassed}/8 tiêu chí`
+                                  }
+                                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400 border border-zinc-700 text-[10px] font-mono"
+                                >
+                                  <span>{item.criteriaPassed}/8</span>
+                                </span>
+                              </div>
                             )}
                           </td>
 

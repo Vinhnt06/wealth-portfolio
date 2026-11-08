@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import fs from 'fs';
+import path from 'path';
 import stockDatabase from '../../../../../features/market/data/stockDatabase.json';
 import {
   MinerviniAnalysisResult,
@@ -14,6 +16,11 @@ import {
 
 import { isMarketIndex, getMarketIndexMeta, VN_MARKET_INDEXES } from '../../../../../features/market/constants/marketIndexes';
 import { getLiveRRGDataset, findMatchingRRGSector } from '@/features/market/services/rrgDataService';
+import {
+  calcRawIbdRs,
+  calcStrictSMA,
+  computePercentileRsAgainstUniverse,
+} from '../../../../../features/market/utils/minerviniEvaluator';
 
 export const runtime = 'nodejs';
 export const preferredRegion = 'sin1';
@@ -95,74 +102,103 @@ export async function GET(request: Request) {
     const currentChangePct = prevPrice > 0 ? (currentChange / prevPrice) * 100 : 0;
     const currentVol = volumes[count - 1] || 0;
 
-    // Moving Averages: SMA50, SMA150, SMA200
-    const calcSMA = (period: number, endIdx: number = count - 1) => {
-      if (endIdx < period - 1) return 0;
-      const slice = closes.slice(endIdx - period + 1, endIdx + 1);
-      const sum = slice.reduce((a, b) => a + b, 0);
-      return Math.round((sum / period) * 100) / 100;
-    };
+    // Moving Averages: SMA50, SMA150, SMA200 (Strict period requirement)
+    const rawSma20 = count >= 20 ? calcStrictSMA(closes, 20, count - 1) : 0;
+    const rawSma50 = count >= 50 ? calcStrictSMA(closes, 50, count - 1) : 0;
+    const rawSma150 = count >= 150 ? calcStrictSMA(closes, 150, count - 1) : 0;
+    const rawSma200 = count >= 200 ? calcStrictSMA(closes, 200, count - 1) : 0;
 
-    const sma20 = calcSMA(20);
-    const sma50 = calcSMA(50);
-    const sma150 = calcSMA(150);
-    const sma200 = calcSMA(200);
+    const sma20 = Math.round(rawSma20 * 100) / 100;
+    const sma50 = Math.round(rawSma50 * 100) / 100;
+    const sma150 = Math.round(rawSma150 * 100) / 100;
+    const sma200 = Math.round(rawSma200 * 100) / 100;
 
     const distFromSMA20Pct = sma20 > 0 ? Math.round(((currentPrice - sma20) / sma20) * 1000) / 10 : 0;
     const distFromSMA50Pct = sma50 > 0 ? Math.round(((currentPrice - sma50) / sma50) * 1000) / 10 : 0;
 
-    // SMA200 22-sessions ago (1 month slope check)
-    const hasEnoughDataForSMA200Slope = count >= 222 && sma200 > 0;
-    const sma200Past = hasEnoughDataForSMA200Slope ? calcSMA(200, count - 22) : 0;
-    const sma200SlopeUp = hasEnoughDataForSMA200Slope && sma200Past > 0 ? sma200 >= sma200Past : false;
+    // SMA200 22-sessions ago (1 month slope check) & 11-sessions ago (2 weeks check)
+    const hasEnoughDataForSMA200Slope = count >= 222 && rawSma200 > 0;
+    const rawSma200Past = hasEnoughDataForSMA200Slope ? calcStrictSMA(closes, 200, count - 1 - 22) : 0;
+    const rawSma200Mid = count >= 211 && rawSma200 > 0 ? calcStrictSMA(closes, 200, count - 1 - 11) : 0;
+    const sma200Past = Math.round(rawSma200Past * 100) / 100;
+    const sma200SlopeUp =
+      hasEnoughDataForSMA200Slope &&
+      rawSma200Past > 0 &&
+      rawSma200 > rawSma200Past &&
+      (rawSma200Mid === 0 || rawSma200 >= rawSma200Mid * 0.999);
 
-    // 52-week High and Low (last 250 sessions)
-    const lookback52W = Math.min(250, count);
-    const high52W = Math.max(...highs.slice(count - lookback52W));
-    const low52W = Math.min(...lows.slice(count - lookback52W));
+    // 52-week High and Low (last 252 trading sessions)
+    const lookback52W = Math.min(252, count);
+    const high52W = Math.round(Math.max(...highs.slice(count - lookback52W)) * 100) / 100;
+    const low52W = Math.round(Math.min(...lows.slice(count - lookback52W)) * 100) / 100;
 
     const distFrom52WHighPct = high52W > 0 ? Math.round(((currentPrice - high52W) / high52W) * 1000) / 10 : 0;
     const distFrom52WLowPct = low52W > 0 ? Math.round(((currentPrice - low52W) / low52W) * 1000) / 10 : 0;
 
-    // RS Rating Calculation (IBD / Minervini formula)
-    // 40% Q1 (last 63 bars) + 20% Q2 (63-126) + 20% Q3 (126-189) + 20% Q4 (189-252)
-    const getPerf = (bars: number) => {
-      if (count <= bars) return 0;
-      const p = closes[count - bars];
-      return p > 0 ? (currentPrice - p) / p : 0;
-    };
+    // RS Rating Calculation (IBD / Minervini formula: 40% Q1 + 20% Q2 + 20% Q3 + 20% Q4)
+    const { rawRsScore } = calcRawIbdRs(closes);
 
-    const q1 = getPerf(63);
-    const q2 = getPerf(126);
-    const q3 = getPerf(189);
-    const q4 = getPerf(Math.min(250, count));
-    const rawRsScore = 0.4 * q1 + 0.2 * q2 + 0.2 * q3 + 0.2 * q4;
-
-    // Default formula-based fallback
-    let rsRating = Math.min(99, Math.max(1, Math.round(50 + rawRsScore * 75)));
+    let rsRating = Math.min(99, Math.max(1, Math.round(55 + rawRsScore * 90)));
     let rsRank: number | undefined;
     let rsUniverseTotal: number | undefined;
 
-    // Fetch True Percentile RS Rating from Spring Boot Backend Service (95 Liquid VN Universe)
-    try {
-      const backendRsRes = await fetch(`http://localhost:8080/api/market/rs-rating/${symbol}`, {
-        signal: AbortSignal.timeout(1500),
-        next: { revalidate: 300 }
-      });
-      if (backendRsRes.ok) {
-        const rsJson = await backendRsRes.json();
-        if (rsJson.success && rsJson.data?.rsRating) {
-          rsRating = rsJson.data.rsRating;
-          rsRank = rsJson.data.rank;
-          rsUniverseTotal = rsJson.data.totalStocks;
-        }
+    // 1. First priority: Rank directly against the full 206+ stock universe in lastMinerviniScan.json
+    const scanPaths = [
+      path.resolve(process.cwd(), 'src/features/market/data/lastMinerviniScan.json'),
+      path.resolve(process.cwd(), 'frontend/src/features/market/data/lastMinerviniScan.json'),
+    ];
+    let resolvedFromScan = false;
+    for (const p of scanPaths) {
+      if (fs.existsSync(p)) {
+        try {
+          const parsed = JSON.parse(fs.readFileSync(p, 'utf8'));
+          if (Array.isArray(parsed.data) && parsed.data.length > 0) {
+            const matched = parsed.data.find((it: any) => it.symbol?.toUpperCase() === symbol);
+            if (matched && typeof matched.rsRating === 'number' && typeof matched.rsRank === 'number') {
+              rsRating = matched.rsRating;
+              rsRank = matched.rsRank;
+              rsUniverseTotal = matched.rsUniverseTotal || parsed.data.length;
+              resolvedFromScan = true;
+              break;
+            }
+            const universeScores = parsed.data
+              .map((it: any) => it.rawRsScore)
+              .filter((v: any): v is number => typeof v === 'number');
+            if (universeScores.length > 0) {
+              const pctRes = computePercentileRsAgainstUniverse(rawRsScore, universeScores);
+              rsRating = pctRes.rsRating;
+              rsRank = pctRes.rank;
+              rsUniverseTotal = pctRes.total;
+              resolvedFromScan = true;
+              break;
+            }
+          }
+        } catch {}
       }
-    } catch {
-      // Backend offline or timeout -> fallback gracefully to calculated rawRsScore
+    }
+
+    // 2. Fallback: Fetch True Percentile RS Rating from Spring Boot Backend Service
+    if (!resolvedFromScan) {
+      try {
+        const backendRsRes = await fetch(`http://localhost:8080/api/market/rs-rating/${symbol}`, {
+          signal: AbortSignal.timeout(1500),
+          next: { revalidate: 300 },
+        });
+        if (backendRsRes.ok) {
+          const rsJson = await backendRsRes.json();
+          if (rsJson.success && rsJson.data?.rsRating) {
+            rsRating = rsJson.data.rsRating;
+            rsRank = rsJson.data.rank;
+            rsUniverseTotal = rsJson.data.totalStocks;
+          }
+        }
+      } catch {
+        // Backend offline -> use formula-based fallback
+      }
     }
 
     // Evaluate 8 Minervini Trend Template Criteria matching exact VN TERMINAL Pro format
-    const formatK = (val: number) => (val > 1000 ? (val / 1000).toFixed(0) : val.toFixed(0));
+    const formatK = (val: number) => (val > 1000 ? (val / 1000).toFixed(1) : Number(val.toFixed(1)).toString());
 
     const criteria: MinerviniCriterion[] = [
       {

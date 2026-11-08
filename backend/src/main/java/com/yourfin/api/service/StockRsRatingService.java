@@ -172,9 +172,9 @@ public class StockRsRatingService {
                         double currentPrice = closesNode.get(count - 1).asDouble();
 
                         double q1 = getPerf(closesNode, count, 63, currentPrice);
-                        double q2 = getPerf(closesNode, count, 126, currentPrice);
-                        double q3 = getPerf(closesNode, count, 189, currentPrice);
-                        double q4 = getPerf(closesNode, count, Math.min(252, count), currentPrice);
+                        double q2 = count > 126 ? getPerf(closesNode, count, 126, currentPrice) : q1;
+                        double q3 = count > 189 ? getPerf(closesNode, count, 189, currentPrice) : q2;
+                        double q4 = count > 220 ? getPerf(closesNode, count, Math.min(252, count - 1), currentPrice) : q3;
 
                         // Trọng số IBD Minervini chuẩn: 40% Q1 + 20% Q2 + 20% Q3 + 20% Q4
                         double rawScore = 0.4 * q1 + 0.2 * q2 + 0.2 * q3 + 0.2 * q4;
@@ -246,8 +246,9 @@ public class StockRsRatingService {
     }
 
     private double getPerf(JsonNode closes, int count, int barsAgo, double currentPrice) {
-        if (count <= barsAgo) return 0.0;
-        double pastPrice = closes.get(count - barsAgo).asDouble();
+        if (count <= 1) return 0.0;
+        int idx = Math.max(0, count - 1 - barsAgo);
+        double pastPrice = closes.get(idx).asDouble();
         return pastPrice > 0 ? (currentPrice - pastPrice) / pastPrice : 0.0;
     }
 

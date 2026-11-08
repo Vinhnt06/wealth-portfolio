@@ -178,6 +178,11 @@ export interface MinerviniScreenerItem {
   price: number;
   changePct: number;
   volume: number;
+  avgVol20?: number;
+  avgVal20B?: number;         // Giá trị giao dịch TB 20 phiên (Tỷ VNĐ/phiên)
+  upDownVolRatio?: number;    // Tỷ lệ Tổng Vol phiên tăng / Tổng Vol phiên giảm (20 phiên)
+  volSignal?: 'BREAKOUT' | 'POCKET_PIVOT' | 'VCP_DRYUP' | 'NORMAL' | 'DISTRIBUTION';
+  isVnLiquidStandard?: boolean; // Đạt chuẩn chất lượng & thanh khoản TTCK Việt Nam
   relVol: number;
   mktCapT: number;
   pe: number | null;
@@ -186,13 +191,25 @@ export interface MinerviniScreenerItem {
   divYieldPct: number | null;
   analystRating?: 'Strong buy' | 'Buy' | 'Hold' | 'Sell' | 'No rating';
   rsRating: number;
+  rsRank?: number;
+  rsUniverseTotal?: number;
+  rawRsScore?: number;
+  q1Perf?: number;
+  q2Perf?: number;
+  q3Perf?: number;
+  q4Perf?: number;
   score: number; // 0 to 8
   isStage2: boolean;
   isStage2Eligible?: boolean;
   criteriaPassed?: number;
+  failedCriteria?: string[];
   sma50?: number;
   sma150?: number;
   sma200?: number;
+  sma200Past?: number;
+  sma200SlopeUp?: boolean;
+  high52W?: number;
+  low52W?: number;
   distHigh?: number;
   distLow?: number;
   pctFrom52WHigh?: number;
