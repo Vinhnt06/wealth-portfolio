@@ -1,5 +1,19 @@
 import { CandlestickData, LineData, HistogramData, Time } from 'lightweight-charts';
 
+export interface GeneralEvaluationConfluence {
+  bullishCount: number;
+  totalCount: number;
+  verdict: 'MUA MẠNH' | 'TÍCH CỰC' | 'TRUNG LẬP' | 'THẬN TRỌNG' | 'ÁP LỰC BÁN';
+  summaryText: string;
+  factors: {
+    kamaBull: boolean;
+    vortexBull: boolean;
+    macdBull: boolean;
+    aoBull: boolean;
+    rsiBull: boolean;
+  };
+}
+
 export interface GeneralEvaluationDataset {
   kamaPoints: LineData<Time>[];
   volumeMAPoints: LineData<Time>[];
@@ -11,6 +25,7 @@ export interface GeneralEvaluationDataset {
   aoPoints: HistogramData<Time>[];
   rsiPoints: LineData<Time>[];
   // Telemetry latest values
+  currentClose?: number;
   currentKAMA?: number;
   currentVIPlus?: number;
   currentVIMinus?: number;
@@ -18,8 +33,65 @@ export interface GeneralEvaluationDataset {
   currentSignal?: number;
   currentHist?: number;
   currentAO?: number;
+  currentAORising?: boolean;
   currentRSI?: number;
   currentVolumeMA?: number;
+  confluence?: GeneralEvaluationConfluence;
+}
+
+export function evaluateConfluenceState(params: {
+  close?: number;
+  kama?: number;
+  viPlus?: number;
+  viMinus?: number;
+  macd?: number;
+  signal?: number;
+  hist?: number;
+  ao?: number;
+  aoRising?: boolean;
+  rsi?: number;
+}): GeneralEvaluationConfluence {
+  const kamaBull =
+    params.close !== undefined && params.kama !== undefined ? params.close >= params.kama : false;
+  const vortexBull =
+    params.viPlus !== undefined && params.viMinus !== undefined ? params.viPlus > params.viMinus : false;
+  const macdBull =
+    params.macd !== undefined && params.signal !== undefined ? params.macd > params.signal : false;
+  const aoBull =
+    params.ao !== undefined ? params.ao > 0 || Boolean(params.aoRising && params.ao > -0.5) : false;
+  const rsiBull = params.rsi !== undefined ? params.rsi >= 50 && params.rsi < 78 : false;
+
+  const factors = { kamaBull, vortexBull, macdBull, aoBull, rsiBull };
+  const bullishCount = [kamaBull, vortexBull, macdBull, aoBull, rsiBull].filter(Boolean).length;
+  const totalCount = 5;
+
+  let verdict: GeneralEvaluationConfluence['verdict'] = 'TRUNG LẬP';
+  let summaryText = 'Tín hiệu phân hóa, ưu tiên quan sát';
+
+  if (bullishCount === 5) {
+    verdict = 'MUA MẠNH';
+    summaryText = 'Đồng thuận tăng 5/5 chỉ báo';
+  } else if (bullishCount === 4) {
+    verdict = 'TÍCH CỰC';
+    summaryText = 'Xu hướng & động lượng ủng hộ chiều tăng (4/5)';
+  } else if (bullishCount === 3) {
+    verdict = 'TRUNG LẬP';
+    summaryText = 'Nghiêng tích cực (3/5), chờ xác nhận đồng thuận';
+  } else if (bullishCount === 2) {
+    verdict = 'THẬN TRỌNG';
+    summaryText = 'Động lượng suy yếu (2/5), hạn chế mua đuổi';
+  } else {
+    verdict = 'ÁP LỰC BÁN';
+    summaryText = `Áp lực giảm chiếm ưu thế (${bullishCount}/5 tăng)`;
+  }
+
+  return {
+    bullishCount,
+    totalCount,
+    verdict,
+    summaryText,
+    factors,
+  };
 }
 
 /**
@@ -123,8 +195,8 @@ export function calculateVortex(
     // index in candles is i + 1
     const candleTime = candles[i + 1].time;
 
-    viPlus.push({ time: candleTime, value: Math.round(vp * 100) / 100 });
-    viMinus.push({ time: candleTime, value: Math.round(vm * 100) / 100 });
+    viPlus.push({ time: candleTime, value: Math.round(vp * 10000) / 10000 });
+    viMinus.push({ time: candleTime, value: Math.round(vm * 10000) / 10000 });
   }
 
   return { viPlus, viMinus };
@@ -140,7 +212,7 @@ export function calculateAwesomeOscillator(
   fast = 5,
   slow = 34
 ): HistogramData<Time>[] {
-  if (!candles || candles.length <= slow) return [];
+  if (!candles || candles.length < slow) return [];
 
   const medianPrices = candles.map((c) => (c.high + c.low) / 2);
   const aoPoints: HistogramData<Time>[] = [];
@@ -159,15 +231,16 @@ export function calculateAwesomeOscillator(
     }
     const smaSlow = sumSlow / slow;
 
-    const ao = Math.round((smaFast - smaSlow) * 100) / 100;
+    const rawAO = smaFast - smaSlow;
+    const ao = Math.round(rawAO * 1000) / 1000;
     // Green if current AO >= prev AO, red if current AO < prev AO
-    const isIncreasing = prevAO === null ? ao >= 0 : ao >= prevAO;
-    prevAO = ao;
+    const isIncreasing = prevAO === null ? rawAO >= 0 : rawAO >= prevAO;
+    prevAO = rawAO;
 
     aoPoints.push({
       time: candles[i].time,
       value: ao,
-      color: isIncreasing ? 'rgba(16, 185, 129, 0.85)' : 'rgba(244, 63, 94, 0.85)',
+      color: isIncreasing ? 'rgba(16, 185, 129, 0.88)' : 'rgba(244, 63, 94, 0.88)',
     });
   }
 
@@ -184,7 +257,7 @@ export function calculateMACDData(
   slow = 26,
   signal = 9
 ): { macd: LineData<Time>[]; signal: LineData<Time>[]; hist: HistogramData<Time>[] } {
-  if (!candles || candles.length <= slow + signal) return { macd: [], signal: [], hist: [] };
+  if (!candles || candles.length < slow + signal) return { macd: [], signal: [], hist: [] };
 
   const closes = candles.map((c) => c.close);
   const kFast = 2 / (fast + 1);
@@ -198,8 +271,8 @@ export function calculateMACDData(
   }
   let emaSlow = closes.slice(0, slow).reduce((a, b) => a + b, 0) / slow;
 
-  const macdValues: number[] = [];
-  const times: Time[] = [];
+  const macdValues: number[] = [emaFast - emaSlow];
+  const times: Time[] = [candles[slow - 1].time];
 
   for (let i = slow; i < candles.length; i++) {
     emaFast = closes[i] * kFast + emaFast * (1 - kFast);
@@ -212,22 +285,42 @@ export function calculateMACDData(
   const macdSeries: LineData<Time>[] = [];
   const signalSeries: LineData<Time>[] = [];
   const histSeries: HistogramData<Time>[] = [];
+  let prevHist: number | null = null;
 
   for (let i = signal - 1; i < macdValues.length; i++) {
     if (i >= signal) {
       signalEma = macdValues[i] * kSignal + signalEma * (1 - kSignal);
     }
-    const m = Math.round(macdValues[i] * 100) / 100;
-    const s = Math.round(signalEma * 100) / 100;
-    const h = Math.round((m - s) * 100) / 100;
+    const rawM = macdValues[i];
+    const rawS = signalEma;
+    const rawH = rawM - rawS;
+
+    const m = Math.round(rawM * 1000) / 1000;
+    const s = Math.round(rawS * 1000) / 1000;
+    const h = Math.round(rawH * 1000) / 1000;
     const t = times[i];
+
+    // 4-phase TradingView Histogram coloring (Growing vs Fading Momentum)
+    let histColor = 'rgba(16, 185, 129, 0.88)';
+    if (rawH >= 0) {
+      histColor =
+        prevHist === null || rawH >= prevHist
+          ? 'rgba(16, 185, 129, 0.90)'
+          : 'rgba(16, 185, 129, 0.42)';
+    } else {
+      histColor =
+        prevHist === null || rawH <= prevHist
+          ? 'rgba(244, 63, 94, 0.90)'
+          : 'rgba(244, 63, 94, 0.42)';
+    }
+    prevHist = rawH;
 
     macdSeries.push({ time: t, value: m });
     signalSeries.push({ time: t, value: s });
     histSeries.push({
       time: t,
       value: h,
-      color: h >= 0 ? 'rgba(59, 130, 246, 0.85)' : 'rgba(239, 68, 68, 0.85)',
+      color: histColor,
     });
   }
 
@@ -332,6 +425,7 @@ export function calculateGeneralEvaluationDataset(
   const rsiPoints = calculateRSIData(candles, 14);
   const volumeMAPoints = volumes.length >= 20 ? calculateVolumeMA(volumes, 20) : [];
 
+  const lastClose = candles[candles.length - 1]?.close;
   const lastKama = kamaPoints[kamaPoints.length - 1]?.value;
   const lastVIPlus = vortexRes.viPlus[vortexRes.viPlus.length - 1]?.value;
   const lastVIMinus = vortexRes.viMinus[vortexRes.viMinus.length - 1]?.value;
@@ -339,8 +433,23 @@ export function calculateGeneralEvaluationDataset(
   const lastSignal = macdRes.signal[macdRes.signal.length - 1]?.value;
   const lastHist = macdRes.hist[macdRes.hist.length - 1]?.value;
   const lastAO = aoPoints[aoPoints.length - 1]?.value;
+  const prevAO = aoPoints.length >= 2 ? aoPoints[aoPoints.length - 2]?.value : undefined;
+  const lastAORising = lastAO !== undefined && (prevAO === undefined || lastAO >= prevAO);
   const lastRSI = rsiPoints[rsiPoints.length - 1]?.value;
   const lastVolMA = volumeMAPoints[volumeMAPoints.length - 1]?.value;
+
+  const confluence = evaluateConfluenceState({
+    close: lastClose,
+    kama: lastKama,
+    viPlus: lastVIPlus,
+    viMinus: lastVIMinus,
+    macd: lastMACD,
+    signal: lastSignal,
+    hist: lastHist,
+    ao: lastAO,
+    aoRising: lastAORising,
+    rsi: lastRSI,
+  });
 
   return {
     kamaPoints,
@@ -352,6 +461,7 @@ export function calculateGeneralEvaluationDataset(
     histPoints: macdRes.hist,
     aoPoints,
     rsiPoints,
+    currentClose: lastClose,
     currentKAMA: lastKama,
     currentVIPlus: lastVIPlus,
     currentVIMinus: lastVIMinus,
@@ -359,7 +469,9 @@ export function calculateGeneralEvaluationDataset(
     currentSignal: lastSignal,
     currentHist: lastHist,
     currentAO: lastAO,
+    currentAORising: lastAORising,
     currentRSI: lastRSI,
     currentVolumeMA: lastVolMA,
+    confluence,
   };
 }

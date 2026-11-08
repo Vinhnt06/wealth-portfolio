@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   createChart,
   ColorType,
@@ -8,14 +8,15 @@ import {
   LineSeries,
   HistogramSeries,
   CandlestickData,
-  LineData,
   HistogramData,
   Time,
   LineStyle,
 } from 'lightweight-charts';
-import { X, Sparkle, CaretDown, Minus, ChartLine } from '@phosphor-icons/react';
+import { X, CaretDown, Minus } from '@phosphor-icons/react';
 import {
   calculateGeneralEvaluationDataset,
+  evaluateConfluenceState,
+  GeneralEvaluationConfluence,
   GeneralEvaluationDataset,
 } from '../utils/generalEvaluationIndicators';
 
@@ -25,6 +26,7 @@ export interface SynchronizedCrosshairData {
   x: number | null;
   time: Time | null;
   dateStr: string | null;
+  closeVal?: number;
   kamaVal?: number;
   viPlusVal?: number;
   viMinusVal?: number;
@@ -32,7 +34,9 @@ export interface SynchronizedCrosshairData {
   signalVal?: number;
   histVal?: number;
   aoVal?: number;
+  aoRising?: boolean;
   rsiVal?: number;
+  confluence?: GeneralEvaluationConfluence;
 }
 
 interface GeneralEvaluationSubChartProps {
@@ -45,9 +49,23 @@ interface GeneralEvaluationSubChartProps {
   onCrosshairChange?: (data: SynchronizedCrosshairData | null) => void;
 }
 
+function getTimeKey(t: Time | null | undefined): string {
+  if (t === null || t === undefined) return '';
+  if (typeof t === 'string' || typeof t === 'number') return String(t);
+  if (typeof t === 'object' && 'year' in t) {
+    const bd = t as { year: number; month: number; day: number };
+    return `${bd.year}-${String(bd.month).padStart(2, '0')}-${String(bd.day).padStart(2, '0')}`;
+  }
+  return String(t);
+}
+
 function formatDate(t: Time | null): string {
   if (!t) return '';
-  if (typeof t === 'string') return t;
+  if (typeof t === 'string') {
+    const parts = t.split('-');
+    if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    return t;
+  }
   if (typeof t === 'number') {
     return new Date(t * 1000).toLocaleDateString('vi-VN', {
       day: '2-digit',
@@ -100,15 +118,28 @@ export const GeneralEvaluationSubChart: React.FC<GeneralEvaluationSubChartProps>
   const [activeView, setActiveView] = useState<GeneralEvaluationViewMode>(initialView);
   const [isCollapsed, setIsCollapsed] = useState(false);
 
+  const lastCandleTimeKey =
+    stockCandles && stockCandles.length > 0
+      ? getTimeKey(stockCandles[stockCandles.length - 1].time)
+      : '';
+  const lastCandleClose =
+    stockCandles && stockCandles.length > 0
+      ? stockCandles[stockCandles.length - 1].close
+      : 0;
+
   // Live Hover Telemetry Values
   const [hoverValues, setHoverValues] = useState<{
+    close?: number;
+    kama?: number;
     viPlus?: number;
     viMinus?: number;
     macd?: number;
     signal?: number;
     hist?: number;
     ao?: number;
+    aoRising?: boolean;
     rsi?: number;
+    confluence?: GeneralEvaluationConfluence;
   }>({});
 
   // Overlay state for Synchronized Crosshair Guide Line & Marker Dots
@@ -124,15 +155,59 @@ export const GeneralEvaluationSubChart: React.FC<GeneralEvaluationSubChartProps>
     const ds = calculateGeneralEvaluationDataset(stockCandles, volumes);
     setDataset(ds);
     setHoverValues({
+      close: ds.currentClose,
+      kama: ds.currentKAMA,
       viPlus: ds.currentVIPlus,
       viMinus: ds.currentVIMinus,
       macd: ds.currentMACD,
       signal: ds.currentSignal,
       hist: ds.currentHist,
       ao: ds.currentAO,
+      aoRising: ds.currentAORising,
       rsi: ds.currentRSI,
+      confluence: ds.confluence,
     });
-  }, [stockCandles, volumes, selectedSymbol]);
+  }, [stockCandles, stockCandles.length, lastCandleTimeKey, lastCandleClose, volumes, selectedSymbol]);
+
+  // O(1) Lookup Maps keyed by normalized timeKey
+  const lookupMaps = useMemo(() => {
+    const closeMap = new Map<string, number>();
+    const kamaMap = new Map<string, number>();
+    const viPlusMap = new Map<string, number>();
+    const viMinusMap = new Map<string, number>();
+    const macdMap = new Map<string, number>();
+    const signalMap = new Map<string, number>();
+    const histMap = new Map<string, number>();
+    const aoMap = new Map<string, { value: number; isRising: boolean }>();
+    const rsiMap = new Map<string, number>();
+
+    stockCandles.forEach((c) => closeMap.set(getTimeKey(c.time), c.close));
+    if (dataset) {
+      dataset.kamaPoints.forEach((p) => kamaMap.set(getTimeKey(p.time), p.value));
+      dataset.viPlusPoints.forEach((p) => viPlusMap.set(getTimeKey(p.time), p.value));
+      dataset.viMinusPoints.forEach((p) => viMinusMap.set(getTimeKey(p.time), p.value));
+      dataset.macdPoints.forEach((p) => macdMap.set(getTimeKey(p.time), p.value));
+      dataset.signalPoints.forEach((p) => signalMap.set(getTimeKey(p.time), p.value));
+      dataset.histPoints.forEach((p) => histMap.set(getTimeKey(p.time), p.value));
+      dataset.aoPoints.forEach((p, idx) => {
+        const prev = idx > 0 ? dataset.aoPoints[idx - 1].value : p.value;
+        aoMap.set(getTimeKey(p.time), { value: p.value, isRising: p.value >= prev });
+      });
+      dataset.rsiPoints.forEach((p) => rsiMap.set(getTimeKey(p.time), p.value));
+    }
+
+    return {
+      closeMap,
+      kamaMap,
+      viPlusMap,
+      viMinusMap,
+      macdMap,
+      signalMap,
+      histMap,
+      aoMap,
+      rsiMap,
+    };
+  }, [dataset, stockCandles]);
 
   // Sync activeView with initialView prop changes
   useEffect(() => {
@@ -168,16 +243,16 @@ export const GeneralEvaluationSubChart: React.FC<GeneralEvaluationSubChartProps>
         attributionLogo: false,
       },
       grid: {
-        vertLines: { color: 'rgba(255, 255, 255, 0.03)' },
-        horzLines: { color: 'rgba(255, 255, 255, 0.03)' },
+        vertLines: { color: 'rgba(255, 255, 255, 0.025)' },
+        horzLines: { color: 'rgba(255, 255, 255, 0.035)' },
       },
       crosshair: {
         vertLine: {
-          color: 'rgba(255, 255, 255, 0.25)',
+          color: 'rgba(255, 255, 255, 0.22)',
           labelBackgroundColor: '#18181b',
         },
         horzLine: {
-          color: 'rgba(255, 255, 255, 0.25)',
+          color: 'rgba(255, 255, 255, 0.22)',
           labelBackgroundColor: '#18181b',
         },
       },
@@ -188,26 +263,54 @@ export const GeneralEvaluationSubChart: React.FC<GeneralEvaluationSubChartProps>
       rightPriceScale: {
         borderColor: 'rgba(255, 255, 255, 0.08)',
         alignLabels: true,
-        scaleMargins: { top: 0.12, bottom: 0.12 },
+        minimumWidth: 68,
+        scaleMargins: { top: 0.14, bottom: 0.14 },
       },
     };
 
     const subCharts: IChartApi[] = [];
     const isSingle = activeView !== 'all';
-    const paneHeight = isSingle ? 140 : 66;
+    const basePaneHeight = isSingle ? 132 : 64;
+    const timeAxisHeight = 22;
+
+    // Pad warmup bars with WhitespaceData ({ time }) so every sub-chart has the exact
+    // same logical bar count (0 .. stockCandles.length - 1) as mainChart for 1:1 parallel sync.
+    const padLineSeries = (points: { time: Time; value: number }[]) => {
+      const map = new Map<string, number>();
+      points.forEach((p) => map.set(getTimeKey(p.time), p.value));
+      return stockCandles.map((c) => {
+        const val = map.get(getTimeKey(c.time));
+        return val !== undefined ? { time: c.time as Time, value: val } : { time: c.time as Time };
+      });
+    };
+
+    const padHistogramSeries = (points: { time: Time; value: number; color?: string }[]) => {
+      const map = new Map<string, { value: number; color?: string }>();
+      points.forEach((p) => map.set(getTimeKey(p.time), { value: p.value, color: p.color }));
+      return stockCandles.map((c) => {
+        const entry = map.get(getTimeKey(c.time));
+        return entry !== undefined
+          ? { time: c.time as Time, value: entry.value, color: entry.color }
+          : { time: c.time as Time };
+      });
+    };
+
+    const padConstantLine = (constantValue: number) =>
+      stockCandles.map((c) => ({ time: c.time as Time, value: constantValue }));
 
     // ── PANE 1: VORTEX INDICATOR (VI+, VI-) ────────────────────────────
     if (activeView === 'all' || activeView === 'vortex') {
       const c = containerVortexRef.current;
       if (c) {
+        const showTimeAxis = activeView === 'vortex';
         const width = c.clientWidth || 600;
         const chart = createChart(c, {
           ...commonOptions,
           width,
-          height: paneHeight,
+          height: basePaneHeight + (showTimeAxis ? timeAxisHeight : 0),
           timeScale: {
             ...commonOptions.timeScale,
-            visible: activeView === 'vortex',
+            visible: showTimeAxis,
           },
         });
         chartVortexRef.current = chart;
@@ -215,38 +318,34 @@ export const GeneralEvaluationSubChart: React.FC<GeneralEvaluationSubChartProps>
 
         // Baseline 1.0
         const line1 = chart.addSeries(LineSeries, {
-          color: 'rgba(255, 255, 255, 0.18)',
+          color: 'rgba(255, 255, 255, 0.16)',
           lineWidth: 1,
           lineStyle: LineStyle.Dashed,
           priceLineVisible: false,
           lastValueVisible: false,
         });
-        line1.setData(dataset.viPlusPoints.map((d) => ({ time: d.time, value: 1.0 })));
+        line1.setData(padConstantLine(1.0));
 
-        // VI- (Red / Rose)
+        // VI- (Rose)
         const viMinusSeries = chart.addSeries(LineSeries, {
           color: '#f43f5e',
           lineWidth: 2,
-          priceLineVisible: true,
+          priceLineVisible: false,
           lastValueVisible: true,
-          priceLineColor: '#f43f5e',
           priceFormat: { type: 'custom', formatter: (v: number) => v.toFixed(2) },
-          title: 'VI-',
         });
-        viMinusSeries.setData(dataset.viMinusPoints);
+        viMinusSeries.setData(padLineSeries(dataset.viMinusPoints));
         seriesVortexMinusRef.current = viMinusSeries;
 
-        // VI+ (Cyan / Teal)
+        // VI+ (Cyan)
         const viPlusSeries = chart.addSeries(LineSeries, {
           color: '#06b6d4',
           lineWidth: 2,
-          priceLineVisible: true,
+          priceLineVisible: false,
           lastValueVisible: true,
-          priceLineColor: '#06b6d4',
           priceFormat: { type: 'custom', formatter: (v: number) => v.toFixed(2) },
-          title: 'VI+',
         });
-        viPlusSeries.setData(dataset.viPlusPoints);
+        viPlusSeries.setData(padLineSeries(dataset.viPlusPoints));
         seriesVortexPlusRef.current = viPlusSeries;
       }
     }
@@ -255,14 +354,15 @@ export const GeneralEvaluationSubChart: React.FC<GeneralEvaluationSubChartProps>
     if (activeView === 'all' || activeView === 'macd') {
       const c = containerMacdRef.current;
       if (c) {
+        const showTimeAxis = activeView === 'macd';
         const width = c.clientWidth || 600;
         const chart = createChart(c, {
           ...commonOptions,
           width,
-          height: paneHeight,
+          height: basePaneHeight + (showTimeAxis ? timeAxisHeight : 0),
           timeScale: {
             ...commonOptions.timeScale,
-            visible: activeView === 'macd',
+            visible: showTimeAxis,
           },
         });
         chartMacdRef.current = chart;
@@ -270,45 +370,42 @@ export const GeneralEvaluationSubChart: React.FC<GeneralEvaluationSubChartProps>
 
         // Baseline 0.0
         const lineZero = chart.addSeries(LineSeries, {
-          color: 'rgba(255, 255, 255, 0.18)',
+          color: 'rgba(255, 255, 255, 0.16)',
           lineWidth: 1,
           lineStyle: LineStyle.Dashed,
           priceLineVisible: false,
           lastValueVisible: false,
         });
-        lineZero.setData(dataset.macdPoints.map((d) => ({ time: d.time, value: 0 })));
+        lineZero.setData(padConstantLine(0));
 
-        // Histogram
+        // Histogram (4-phase momentum colors)
         const histSeries = chart.addSeries(HistogramSeries, {
           priceFormat: { type: 'custom', formatter: (v: number) => v.toFixed(2) },
           priceLineVisible: false,
           lastValueVisible: false,
         });
-        histSeries.setData(dataset.histPoints);
+        histSeries.setData(padHistogramSeries(dataset.histPoints));
 
         // Signal Line (Orange)
         const signalSeries = chart.addSeries(LineSeries, {
-          color: '#fb923c',
+          color: '#f59e0b',
           lineWidth: 1,
           priceLineVisible: false,
           lastValueVisible: true,
           priceFormat: { type: 'custom', formatter: (v: number) => v.toFixed(2) },
-          title: 'Sig',
         });
-        signalSeries.setData(dataset.signalPoints);
+        signalSeries.setData(padLineSeries(dataset.signalPoints));
         seriesSignalRef.current = signalSeries;
 
         // MACD Line (Blue)
         const macdSeries = chart.addSeries(LineSeries, {
-          color: '#3b82f6',
+          color: '#38bdf8',
           lineWidth: 2,
-          priceLineVisible: true,
+          priceLineVisible: false,
           lastValueVisible: true,
-          priceLineColor: '#3b82f6',
           priceFormat: { type: 'custom', formatter: (v: number) => v.toFixed(2) },
-          title: 'MACD',
         });
-        macdSeries.setData(dataset.macdPoints);
+        macdSeries.setData(padLineSeries(dataset.macdPoints));
         seriesMacdRef.current = macdSeries;
       }
     }
@@ -317,14 +414,15 @@ export const GeneralEvaluationSubChart: React.FC<GeneralEvaluationSubChartProps>
     if (activeView === 'all' || activeView === 'ao') {
       const c = containerAoRef.current;
       if (c) {
+        const showTimeAxis = activeView === 'ao';
         const width = c.clientWidth || 600;
         const chart = createChart(c, {
           ...commonOptions,
           width,
-          height: paneHeight,
+          height: basePaneHeight + (showTimeAxis ? timeAxisHeight : 0),
           timeScale: {
             ...commonOptions.timeScale,
-            visible: activeView === 'ao',
+            visible: showTimeAxis,
           },
         });
         chartAoRef.current = chart;
@@ -332,22 +430,21 @@ export const GeneralEvaluationSubChart: React.FC<GeneralEvaluationSubChartProps>
 
         // Baseline 0.0
         const lineZero = chart.addSeries(LineSeries, {
-          color: 'rgba(255, 255, 255, 0.18)',
+          color: 'rgba(255, 255, 255, 0.16)',
           lineWidth: 1,
           lineStyle: LineStyle.Dashed,
           priceLineVisible: false,
           lastValueVisible: false,
         });
-        lineZero.setData(dataset.aoPoints.map((d) => ({ time: d.time, value: 0 })));
+        lineZero.setData(padConstantLine(0));
 
         // AO Histogram
         const aoSeries = chart.addSeries(HistogramSeries, {
           priceFormat: { type: 'custom', formatter: (v: number) => v.toFixed(2) },
-          priceLineVisible: true,
+          priceLineVisible: false,
           lastValueVisible: true,
-          title: 'AO',
         });
-        aoSeries.setData(dataset.aoPoints);
+        aoSeries.setData(padHistogramSeries(dataset.aoPoints));
         seriesAoRef.current = aoSeries;
       }
     }
@@ -360,7 +457,7 @@ export const GeneralEvaluationSubChart: React.FC<GeneralEvaluationSubChartProps>
         const chart = createChart(c, {
           ...commonOptions,
           width,
-          height: paneHeight,
+          height: basePaneHeight + timeAxisHeight,
           timeScale: {
             visible: true,
             borderColor: 'rgba(255, 255, 255, 0.08)',
@@ -380,7 +477,7 @@ export const GeneralEvaluationSubChart: React.FC<GeneralEvaluationSubChartProps>
 
         // Line 50 (Midline)
         const line50 = chart.addSeries(LineSeries, {
-          color: 'rgba(255, 255, 255, 0.12)',
+          color: 'rgba(255, 255, 255, 0.14)',
           lineWidth: 1,
           lineStyle: LineStyle.Dotted,
           priceLineVisible: false,
@@ -396,21 +493,19 @@ export const GeneralEvaluationSubChart: React.FC<GeneralEvaluationSubChartProps>
           lastValueVisible: false,
         });
 
-        // RSI Line (Pink / Magenta)
+        // RSI Line (Amber/Gold instead of cliché magenta, high contrast on dark ground)
         const rsiSeries = chart.addSeries(LineSeries, {
-          color: '#ec4899',
+          color: '#eab308',
           lineWidth: 2,
           priceFormat: { type: 'custom', formatter: (v: number) => v.toFixed(2) },
-          priceLineVisible: true,
+          priceLineVisible: false,
           lastValueVisible: true,
-          priceLineColor: '#ec4899',
-          title: 'RSI',
         });
 
-        line70.setData(dataset.rsiPoints.map((d) => ({ time: d.time, value: 70 })));
-        line50.setData(dataset.rsiPoints.map((d) => ({ time: d.time, value: 50 })));
-        line30.setData(dataset.rsiPoints.map((d) => ({ time: d.time, value: 30 })));
-        rsiSeries.setData(dataset.rsiPoints);
+        line70.setData(padConstantLine(70));
+        line50.setData(padConstantLine(50));
+        line30.setData(padConstantLine(30));
+        rsiSeries.setData(padLineSeries(dataset.rsiPoints));
 
         seriesRsiRef.current = rsiSeries;
       }
@@ -439,7 +534,6 @@ export const GeneralEvaluationSubChart: React.FC<GeneralEvaluationSubChartProps>
       syncTimeScale(mainChart, subCharts);
       subCharts.forEach((sc) => syncTimeScale(sc, [mainChart, ...subCharts]));
 
-      // Align initial logical range immediately
       requestAnimationFrame(() => {
         const mainRange = mainChart.timeScale().getVisibleLogicalRange();
         if (mainRange) {
@@ -452,25 +546,40 @@ export const GeneralEvaluationSubChart: React.FC<GeneralEvaluationSubChartProps>
       });
     }
 
-    // ── Synchronization: Crosshair Move with Coordinate Dots ───────────
+    // ── Synchronization: Crosshair Move with O(1) Coordinate Dots ──────
     const handleCrosshairMove = (param: any) => {
       if (!param || !param.time || !containerWrapperRef.current) {
         setCrosshairPos(null);
+        setHoverValues({
+          close: dataset.currentClose,
+          kama: dataset.currentKAMA,
+          viPlus: dataset.currentVIPlus,
+          viMinus: dataset.currentVIMinus,
+          macd: dataset.currentMACD,
+          signal: dataset.currentSignal,
+          hist: dataset.currentHist,
+          ao: dataset.currentAO,
+          aoRising: dataset.currentAORising,
+          rsi: dataset.currentRSI,
+          confluence: dataset.confluence,
+        });
         if (onCrosshairChange) onCrosshairChange(null);
         return;
       }
 
-      // 1. Get pixel X
+      // 1. Get exact snapped bar-center pixel X so marker dots sit squarely on the indicator curve
       let pixelX: number | null = null;
-      if (param.point && typeof param.point.x === 'number') {
+      const refChart = subCharts[0] || mainChart;
+      if (refChart) {
+        try {
+          const snappedX = refChart.timeScale().timeToCoordinate(param.time);
+          if (snappedX !== null && !isNaN(snappedX)) {
+            pixelX = snappedX;
+          }
+        } catch {}
+      }
+      if (pixelX === null && param.point && typeof param.point.x === 'number') {
         pixelX = param.point.x;
-      } else {
-        const refChart = subCharts[0] || mainChart;
-        if (refChart) {
-          try {
-            pixelX = refChart.timeScale().timeToCoordinate(param.time);
-          } catch {}
-        }
       }
 
       if (pixelX === null || pixelX < 0) {
@@ -479,34 +588,45 @@ export const GeneralEvaluationSubChart: React.FC<GeneralEvaluationSubChartProps>
         return;
       }
 
-      // 2. Extract values for this time
-      const timeStr = String(param.time);
-      const viPlusPoint = dataset.viPlusPoints.find((p) => String(p.time) === timeStr);
-      const viMinusPoint = dataset.viMinusPoints.find((p) => String(p.time) === timeStr);
-      const macdPoint = dataset.macdPoints.find((p) => String(p.time) === timeStr);
-      const signalPoint = dataset.signalPoints.find((p) => String(p.time) === timeStr);
-      const histPoint = dataset.histPoints.find((p) => String(p.time) === timeStr);
-      const aoPoint = dataset.aoPoints.find((p) => String(p.time) === timeStr);
-      const rsiPoint = dataset.rsiPoints.find((p) => String(p.time) === timeStr);
-      const kamaPoint = dataset.kamaPoints.find((p) => String(p.time) === timeStr);
+      // 2. Extract values in O(1) using normalized time key
+      const tKey = getTimeKey(param.time);
+      const closeVal = lookupMaps.closeMap.get(tKey) ?? dataset.currentClose;
+      const kamaVal = lookupMaps.kamaMap.get(tKey);
+      const viPlusVal = lookupMaps.viPlusMap.get(tKey);
+      const viMinusVal = lookupMaps.viMinusMap.get(tKey);
+      const macdVal = lookupMaps.macdMap.get(tKey);
+      const signalVal = lookupMaps.signalMap.get(tKey);
+      const histVal = lookupMaps.histMap.get(tKey);
+      const aoEntry = lookupMaps.aoMap.get(tKey);
+      const aoVal = aoEntry?.value;
+      const aoRising = aoEntry?.isRising;
+      const rsiVal = lookupMaps.rsiMap.get(tKey);
 
-      const viPlusVal = viPlusPoint?.value;
-      const viMinusVal = viMinusPoint?.value;
-      const macdVal = macdPoint?.value;
-      const signalVal = signalPoint?.value;
-      const histVal = histPoint?.value;
-      const aoVal = aoPoint?.value;
-      const rsiVal = rsiPoint?.value;
-      const kamaVal = kamaPoint?.value;
-
-      setHoverValues({
+      const hoveredConfluence = evaluateConfluenceState({
+        close: closeVal,
+        kama: kamaVal ?? dataset.currentKAMA,
         viPlus: viPlusVal ?? dataset.currentVIPlus,
         viMinus: viMinusVal ?? dataset.currentVIMinus,
         macd: macdVal ?? dataset.currentMACD,
         signal: signalVal ?? dataset.currentSignal,
         hist: histVal ?? dataset.currentHist,
         ao: aoVal ?? dataset.currentAO,
+        aoRising: aoRising ?? dataset.currentAORising,
         rsi: rsiVal ?? dataset.currentRSI,
+      });
+
+      setHoverValues({
+        close: closeVal,
+        kama: kamaVal ?? dataset.currentKAMA,
+        viPlus: viPlusVal ?? dataset.currentVIPlus,
+        viMinus: viMinusVal ?? dataset.currentVIMinus,
+        macd: macdVal ?? dataset.currentMACD,
+        signal: signalVal ?? dataset.currentSignal,
+        hist: histVal ?? dataset.currentHist,
+        ao: aoVal ?? dataset.currentAO,
+        aoRising: aoRising ?? dataset.currentAORising,
+        rsi: rsiVal ?? dataset.currentRSI,
+        confluence: hoveredConfluence,
       });
 
       // 3. Compute Y coordinates for all indicator marker dots
@@ -533,10 +653,16 @@ export const GeneralEvaluationSubChart: React.FC<GeneralEvaluationSubChartProps>
 
       computeDot(containerVortexRef.current, seriesVortexPlusRef.current, viPlusVal, 'vi_plus', '#06b6d4');
       computeDot(containerVortexRef.current, seriesVortexMinusRef.current, viMinusVal, 'vi_minus', '#f43f5e');
-      computeDot(containerMacdRef.current, seriesMacdRef.current, macdVal, 'macd', '#3b82f6');
-      computeDot(containerMacdRef.current, seriesSignalRef.current, signalVal, 'signal', '#fb923c');
-      computeDot(containerAoRef.current, seriesAoRef.current, aoVal, 'ao', '#10b981');
-      computeDot(containerRsiRef.current, seriesRsiRef.current, rsiVal, 'rsi', '#ec4899');
+      computeDot(containerMacdRef.current, seriesMacdRef.current, macdVal, 'macd', '#38bdf8');
+      computeDot(containerMacdRef.current, seriesSignalRef.current, signalVal, 'signal', '#f59e0b');
+      computeDot(
+        containerAoRef.current,
+        seriesAoRef.current,
+        aoVal,
+        'ao',
+        aoRising ? '#10b981' : '#f43f5e'
+      );
+      computeDot(containerRsiRef.current, seriesRsiRef.current, rsiVal, 'rsi', '#eab308');
 
       const dateStr = formatDate(param.time);
       setCrosshairPos({
@@ -550,6 +676,7 @@ export const GeneralEvaluationSubChart: React.FC<GeneralEvaluationSubChartProps>
           x: pixelX,
           time: param.time,
           dateStr,
+          closeVal,
           kamaVal,
           viPlusVal,
           viMinusVal,
@@ -557,7 +684,9 @@ export const GeneralEvaluationSubChart: React.FC<GeneralEvaluationSubChartProps>
           signalVal,
           histVal,
           aoVal,
+          aoRising,
           rsiVal,
+          confluence: hoveredConfluence,
         });
       }
     };
@@ -599,176 +728,257 @@ export const GeneralEvaluationSubChart: React.FC<GeneralEvaluationSubChartProps>
 
     return () => {
       if (resizeObserver) resizeObserver.disconnect();
+      if (mainChart) {
+        try {
+          mainChart.unsubscribeCrosshairMove(handleCrosshairMove);
+        } catch {}
+      }
       subCharts.forEach((sc) => sc.remove());
       chartVortexRef.current = null;
       chartMacdRef.current = null;
       chartAoRef.current = null;
       chartRsiRef.current = null;
     };
-  }, [dataset, mainChart, activeView, isCollapsed]);
+  }, [dataset, lookupMaps, mainChart, activeView, isCollapsed, onCrosshairChange]);
+
+  const activeConfluence = hoverValues.confluence ?? dataset?.confluence;
+  const viBull =
+    hoverValues.viPlus !== undefined &&
+    hoverValues.viMinus !== undefined &&
+    hoverValues.viPlus > hoverValues.viMinus;
+  const macdBull =
+    hoverValues.macd !== undefined &&
+    hoverValues.signal !== undefined &&
+    hoverValues.macd > hoverValues.signal;
+  const aoBull = (hoverValues.ao ?? 0) >= 0;
+  const rsiVal = hoverValues.rsi ?? 50;
+
+  const verdictBadgeClass =
+    activeConfluence?.verdict === 'MUA MẠNH' || activeConfluence?.verdict === 'TÍCH CỰC'
+      ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40'
+      : activeConfluence?.verdict === 'ÁP LỰC BÁN'
+      ? 'bg-rose-500/15 text-rose-300 border-rose-500/40'
+      : activeConfluence?.verdict === 'THẬN TRỌNG'
+      ? 'bg-amber-500/15 text-amber-300 border-amber-500/40'
+      : 'bg-zinc-800 text-zinc-300 border-zinc-700';
 
   return (
     <div
       ref={containerWrapperRef}
-      className="w-full border-t border-zinc-800/80 bg-zinc-950 flex flex-col relative shrink-0 select-none"
+      className="w-full border-t border-zinc-800 bg-[#09090b] flex flex-col relative shrink-0 select-none"
     >
-      {/* ── Top Header Toolbar ────────────────────────────────────────── */}
-      <div className="flex items-center justify-between px-3 py-1 bg-zinc-900/90 border-b border-zinc-800/80 text-[11px] font-mono">
-        {/* Left: Title + Current Values */}
-        <div className="flex items-center gap-2">
-          <Sparkle className="w-3.5 h-3.5 text-cyan-400 shrink-0" weight="fill" />
-          <span className="font-bold text-zinc-100 uppercase tracking-wider text-xs">
-            {activeView === 'all'
-              ? '⚡ TEMPLATE ĐÁNH GIÁ CHUNG (4-IN-1)'
-              : activeView === 'vortex'
-              ? '⚡ VORTEX INDICATOR (VI+, VI-)'
-              : activeView === 'macd'
-              ? '⚡ MACD OSCILLATOR'
-              : activeView === 'ao'
-              ? '⚡ AWESOME OSCILLATOR (AO)'
-              : '⚡ RELATIVE STRENGTH INDEX (RSI)'}
-          </span>
-          <span className="text-[10px] text-zinc-500 hidden sm:inline">| {selectedSymbol}</span>
-        </div>
-
-        {/* Right: View Switcher Tabs + Minimize + Close */}
-        <div className="flex items-center gap-1.5">
-          <div className="flex items-center bg-zinc-950/80 p-0.5 rounded-lg border border-zinc-800/80">
-            <button
-              onClick={() => setActiveView('all')}
-              className={`px-2 py-0.5 rounded text-[10px] font-medium transition-colors ${
-                activeView === 'all'
-                  ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/30'
-                  : 'text-zinc-400 hover:text-zinc-200'
-              }`}
-            >
-              Tất cả (4-in-1)
-            </button>
-            <button
-              onClick={() => setActiveView('vortex')}
-              className={`px-2 py-0.5 rounded text-[10px] font-medium transition-colors ${
-                activeView === 'vortex'
-                  ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/30'
-                  : 'text-zinc-400 hover:text-zinc-200'
-              }`}
-            >
-              Vortex
-            </button>
-            <button
-              onClick={() => setActiveView('macd')}
-              className={`px-2 py-0.5 rounded text-[10px] font-medium transition-colors ${
-                activeView === 'macd'
-                  ? 'bg-blue-500/20 text-blue-300 font-bold border border-blue-500/30'
-                  : 'text-zinc-400 hover:text-zinc-200'
-              }`}
-            >
-              MACD
-            </button>
-            <button
-              onClick={() => setActiveView('ao')}
-              className={`px-2 py-0.5 rounded text-[10px] font-medium transition-colors ${
-                activeView === 'ao'
-                  ? 'bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30'
-                  : 'text-zinc-400 hover:text-zinc-200'
-              }`}
-            >
-              AO
-            </button>
-            <button
-              onClick={() => setActiveView('rsi')}
-              className={`px-2 py-0.5 rounded text-[10px] font-medium transition-colors ${
-                activeView === 'rsi'
-                  ? 'bg-pink-500/20 text-pink-300 font-bold border border-pink-500/30'
-                  : 'text-zinc-400 hover:text-zinc-200'
-              }`}
-            >
-              RSI
-            </button>
+      {/* ── Data-Terminal Unified Confluence Header Bar ───────────────────── */}
+      <div className="flex items-center justify-between gap-2 px-3 py-1 bg-[#111113] border-b border-zinc-800/90 text-[11px] font-mono">
+        {/* Left: Title + 5-Factor Confluence Verdict + Quick Factor Matrix */}
+        <div className="flex items-center gap-2 flex-wrap min-w-0">
+          <div className="flex items-center gap-1.5 shrink-0">
+            <span className="w-1.5 h-3.5 bg-cyan-400 inline-block" />
+            <span className="font-bold text-zinc-100 tracking-tight text-[11px]">
+              {activeView === 'all'
+                ? 'ĐÁNH GIÁ CHUNG (4-IN-1)'
+                : activeView === 'vortex'
+                ? 'VORTEX (14)'
+                : activeView === 'macd'
+                ? 'MACD (12,26,9)'
+                : activeView === 'ao'
+                ? 'AWESOME OSC (5,34)'
+                : 'RSI (14)'}
+            </span>
           </div>
 
-          {/* Minimize / Expand Button */}
+          {activeConfluence && (
+            <div className="flex items-center gap-1.5 shrink-0">
+              <span
+                className={`px-1.5 py-0.5 rounded-sm text-[10px] font-bold border tabular-nums ${verdictBadgeClass}`}
+                title={activeConfluence.summaryText}
+              >
+                {activeConfluence.bullishCount}/{activeConfluence.totalCount} • {activeConfluence.verdict}
+              </span>
+
+              {/* 5-Factor Signal Matrix Strip (Visible on Desktop) */}
+              <div className="hidden lg:flex items-center divide-x divide-zinc-800 border border-zinc-800 bg-zinc-950 rounded-sm text-[9.5px] tabular-nums">
+                <span
+                  className={`px-1.5 py-0.5 font-semibold ${
+                    activeConfluence.factors.kamaBull ? 'text-emerald-400' : 'text-rose-400'
+                  }`}
+                  title="Xu hướng giá so với KAMA (30, 60)"
+                >
+                  KAMA {activeConfluence.factors.kamaBull ? '▲' : '▼'}
+                </span>
+                <span
+                  className={`px-1.5 py-0.5 font-semibold ${
+                    activeConfluence.factors.vortexBull ? 'text-emerald-400' : 'text-rose-400'
+                  }`}
+                  title="Vortex Indicator (VI+ so với VI-)"
+                >
+                  VI {activeConfluence.factors.vortexBull ? '▲' : '▼'}
+                </span>
+                <span
+                  className={`px-1.5 py-0.5 font-semibold ${
+                    activeConfluence.factors.macdBull ? 'text-emerald-400' : 'text-rose-400'
+                  }`}
+                  title="MACD so với đường tín hiệu Signal"
+                >
+                  MACD {activeConfluence.factors.macdBull ? '▲' : '▼'}
+                </span>
+                <span
+                  className={`px-1.5 py-0.5 font-semibold ${
+                    activeConfluence.factors.aoBull ? 'text-emerald-400' : 'text-rose-400'
+                  }`}
+                  title="Awesome Oscillator (Gia tốc động lượng)"
+                >
+                  AO {activeConfluence.factors.aoBull ? '▲' : '▼'}
+                </span>
+                <span
+                  className={`px-1.5 py-0.5 font-semibold ${
+                    activeConfluence.factors.rsiBull ? 'text-emerald-400' : 'text-amber-400'
+                  }`}
+                  title="Sức mạnh tương đối RSI(14)"
+                >
+                  RSI {hoverValues.rsi !== undefined ? hoverValues.rsi.toFixed(1) : '--'}
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Right: Segmented View Switcher + Collapse + Close */}
+        <div className="flex items-center gap-1.5 shrink-0">
+          <div className="flex items-center bg-zinc-950 p-0.5 rounded-sm border border-zinc-800">
+            {(
+              [
+                { id: 'all', label: '4-in-1' },
+                { id: 'vortex', label: 'Vortex' },
+                { id: 'macd', label: 'MACD' },
+                { id: 'ao', label: 'AO' },
+                { id: 'rsi', label: 'RSI' },
+              ] as { id: GeneralEvaluationViewMode; label: string }[]
+            ).map((tab) => {
+              const isActive = activeView === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setActiveView(tab.id)}
+                  className={`px-2 py-0.5 rounded-sm text-[10px] font-semibold transition-colors cursor-pointer ${
+                    isActive
+                      ? 'bg-zinc-800 text-zinc-100 border-b border-cyan-400'
+                      : 'text-zinc-400 hover:text-zinc-200'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+
           <button
+            type="button"
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="p-1 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded transition-colors"
+            className="p-1 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded-sm transition-colors cursor-pointer"
             title={isCollapsed ? 'Mở rộng' : 'Thu nhỏ'}
           >
-            {isCollapsed ? <CaretDown size={14} /> : <Minus size={14} />}
+            {isCollapsed ? <CaretDown size={13} /> : <Minus size={13} />}
           </button>
 
-          {/* Close Button */}
           <button
+            type="button"
             onClick={onClose}
-            className="p-1 text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 rounded transition-colors"
+            className="p-1 text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-sm transition-colors cursor-pointer"
             title="Đóng Template Đánh Giá Chung"
           >
-            <X size={14} />
+            <X size={13} />
           </button>
         </div>
       </div>
 
       {/* ── Sub-Chart Panes Container ─────────────────────────────────── */}
       {!isCollapsed && (
-        <div className="flex flex-col relative w-full bg-zinc-950 overflow-hidden">
+        <div className="flex flex-col relative w-full bg-[#09090b] overflow-hidden">
           {/* ── PANE 1: VORTEX INDICATOR ──────────────────────────────── */}
           {(activeView === 'all' || activeView === 'vortex') && (
-            <div className="w-full flex flex-col relative border-b border-zinc-900">
-              <div className="absolute top-1.5 left-2 z-10 pointer-events-none flex items-center gap-2 text-[10px] font-mono select-none px-2 py-0.5 rounded bg-zinc-950/85 backdrop-blur-md border border-zinc-800/60 shadow-sm">
-                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 inline-block" />
-                <span className="font-bold text-zinc-400">Vortex</span>
-                <span className="text-cyan-400 font-bold">
-                  VI+ {hoverValues.viPlus !== undefined ? hoverValues.viPlus.toFixed(2) : '--'}
+            <div className="w-full flex flex-col relative border-b border-zinc-800/80">
+              <div className="absolute top-1 left-2 z-10 pointer-events-none flex items-center gap-2 text-[10px] font-mono tabular-nums select-none px-1.5 py-0.5 rounded-sm bg-[#09090b]/90 border border-zinc-800">
+                <span className="font-bold text-zinc-300">VORTEX(14)</span>
+                <span className="text-cyan-400 font-semibold">
+                  VI+ {hoverValues.viPlus !== undefined ? hoverValues.viPlus.toFixed(3) : '--'}
                 </span>
-                <span className="text-rose-400 font-bold">
-                  VI- {hoverValues.viMinus !== undefined ? hoverValues.viMinus.toFixed(2) : '--'}
+                <span className="text-rose-400 font-semibold">
+                  VI- {hoverValues.viMinus !== undefined ? hoverValues.viMinus.toFixed(3) : '--'}
+                </span>
+                <span
+                  className={`px-1 rounded-sm text-[9px] font-bold ${
+                    viBull ? 'text-emerald-400 bg-emerald-500/10' : 'text-rose-400 bg-rose-500/10'
+                  }`}
+                >
+                  {viBull ? 'XU HƯỚNG TĂNG' : 'XU HƯỚNG GIẢM'}
                 </span>
               </div>
               <div
                 ref={containerVortexRef}
-                className={`w-full ${activeView === 'vortex' ? 'h-[140px]' : 'h-[66px]'}`}
+                className={`w-full ${activeView === 'vortex' ? 'h-[154px]' : 'h-[64px]'}`}
               />
             </div>
           )}
 
           {/* ── PANE 2: MACD ──────────────────────────────────────────── */}
           {(activeView === 'all' || activeView === 'macd') && (
-            <div className="w-full flex flex-col relative border-b border-zinc-900">
-              <div className="absolute top-1.5 left-2 z-10 pointer-events-none flex items-center gap-2 text-[10px] font-mono select-none px-2 py-0.5 rounded bg-zinc-950/85 backdrop-blur-md border border-zinc-800/60 shadow-sm">
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-400 inline-block" />
-                <span className="font-bold text-zinc-400">MACD</span>
-                <span className="text-zinc-300 font-bold">
-                  hist {hoverValues.hist !== undefined ? hoverValues.hist.toFixed(2) : '--'}
+            <div className="w-full flex flex-col relative border-b border-zinc-800/80">
+              <div className="absolute top-1 left-2 z-10 pointer-events-none flex items-center gap-2 text-[10px] font-mono tabular-nums select-none px-1.5 py-0.5 rounded-sm bg-[#09090b]/90 border border-zinc-800">
+                <span className="font-bold text-zinc-300">MACD(12,26,9)</span>
+                <span
+                  className={`font-semibold ${
+                    (hoverValues.hist ?? 0) >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                  }`}
+                >
+                  Hist {hoverValues.hist !== undefined ? (hoverValues.hist >= 0 ? `+${hoverValues.hist.toFixed(2)}` : hoverValues.hist.toFixed(2)) : '--'}
                 </span>
-                <span className="text-blue-400 font-bold">
+                <span className="text-sky-400 font-semibold">
                   MACD {hoverValues.macd !== undefined ? hoverValues.macd.toFixed(2) : '--'}
                 </span>
-                <span className="text-amber-400 font-bold">
-                  sig {hoverValues.signal !== undefined ? hoverValues.signal.toFixed(2) : '--'}
+                <span className="text-amber-400 font-semibold">
+                  Sig {hoverValues.signal !== undefined ? hoverValues.signal.toFixed(2) : '--'}
+                </span>
+                <span
+                  className={`px-1 rounded-sm text-[9px] font-bold ${
+                    macdBull ? 'text-emerald-400 bg-emerald-500/10' : 'text-rose-400 bg-rose-500/10'
+                  }`}
+                >
+                  {macdBull ? 'CẮT LÊN' : 'CẮT XUỐNG'}
                 </span>
               </div>
               <div
                 ref={containerMacdRef}
-                className={`w-full ${activeView === 'macd' ? 'h-[140px]' : 'h-[66px]'}`}
+                className={`w-full ${activeView === 'macd' ? 'h-[154px]' : 'h-[64px]'}`}
               />
             </div>
           )}
 
           {/* ── PANE 3: AWESOME OSCILLATOR (AO) ───────────────────────── */}
           {(activeView === 'all' || activeView === 'ao') && (
-            <div className="w-full flex flex-col relative border-b border-zinc-900">
-              <div className="absolute top-1.5 left-2 z-10 pointer-events-none flex items-center gap-2 text-[10px] font-mono select-none px-2 py-0.5 rounded bg-zinc-950/85 backdrop-blur-md border border-zinc-800/60 shadow-sm">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
-                <span className="font-bold text-zinc-400">Awesome Osc</span>
+            <div className="w-full flex flex-col relative border-b border-zinc-800/80">
+              <div className="absolute top-1 left-2 z-10 pointer-events-none flex items-center gap-2 text-[10px] font-mono tabular-nums select-none px-1.5 py-0.5 rounded-sm bg-[#09090b]/90 border border-zinc-800">
+                <span className="font-bold text-zinc-300">AO(5,34)</span>
                 <span
-                  className={`font-bold ${
-                    (hoverValues.ao ?? 0) >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                  className={`font-semibold ${
+                    aoBull ? 'text-emerald-400' : 'text-rose-400'
                   }`}
                 >
-                  AO {hoverValues.ao !== undefined ? hoverValues.ao.toFixed(2) : '--'}
+                  {hoverValues.ao !== undefined ? (hoverValues.ao >= 0 ? `+${hoverValues.ao.toFixed(2)}` : hoverValues.ao.toFixed(2)) : '--'}
+                </span>
+                <span
+                  className={`px-1 rounded-sm text-[9px] font-bold ${
+                    hoverValues.aoRising
+                      ? 'text-emerald-400 bg-emerald-500/10'
+                      : 'text-rose-400 bg-rose-500/10'
+                  }`}
+                >
+                  {hoverValues.aoRising ? 'ĐỘNG LƯỢNG TĂNG ▲' : 'ĐỘNG LƯỢNG GIẢM ▼'}
                 </span>
               </div>
               <div
                 ref={containerAoRef}
-                className={`w-full ${activeView === 'ao' ? 'h-[140px]' : 'h-[66px]'}`}
+                className={`w-full ${activeView === 'ao' ? 'h-[154px]' : 'h-[64px]'}`}
               />
             </div>
           )}
@@ -776,102 +986,88 @@ export const GeneralEvaluationSubChart: React.FC<GeneralEvaluationSubChartProps>
           {/* ── PANE 4: RSI ───────────────────────────────────────────── */}
           {(activeView === 'all' || activeView === 'rsi') && (
             <div className="w-full flex flex-col relative">
-              <div className="absolute top-1.5 left-2 z-10 pointer-events-none flex items-center gap-2 text-[10px] font-mono select-none px-2 py-0.5 rounded bg-zinc-950/85 backdrop-blur-md border border-zinc-800/60 shadow-sm">
-                <span className="w-1.5 h-1.5 rounded-full bg-pink-400 inline-block" />
-                <span className="font-bold text-zinc-400">RSI</span>
-                <span className="text-pink-400 font-bold">
+              <div className="absolute top-1 left-2 z-10 pointer-events-none flex items-center gap-2 text-[10px] font-mono tabular-nums select-none px-1.5 py-0.5 rounded-sm bg-[#09090b]/90 border border-zinc-800">
+                <span className="font-bold text-zinc-300">RSI(14)</span>
+                <span className="text-yellow-400 font-bold">
                   {hoverValues.rsi !== undefined ? hoverValues.rsi.toFixed(2) : '--'}
                 </span>
                 <span
-                  className={`text-[9px] px-1 py-0.2 rounded font-bold border ${
-                    (hoverValues.rsi ?? 50) >= 70
-                      ? 'bg-rose-500/20 text-rose-400 border-rose-500/30'
-                      : (hoverValues.rsi ?? 50) <= 30
-                      ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
-                      : 'bg-zinc-800 text-zinc-400 border-zinc-700/50'
+                  className={`text-[9px] px-1 rounded-sm font-bold ${
+                    rsiVal >= 70
+                      ? 'bg-rose-500/15 text-rose-400'
+                      : rsiVal <= 30
+                      ? 'bg-emerald-500/15 text-emerald-400'
+                      : rsiVal >= 50
+                      ? 'bg-emerald-500/10 text-emerald-300'
+                      : 'bg-amber-500/10 text-amber-300'
                   }`}
                 >
-                  {(hoverValues.rsi ?? 50) >= 70
-                    ? 'Quá mua (>70)'
-                    : (hoverValues.rsi ?? 50) <= 30
-                    ? 'Quá bán (<30)'
-                    : 'Cân bằng'}
+                  {rsiVal >= 70
+                    ? 'QUÁ MUA (>70)'
+                    : rsiVal <= 30
+                    ? 'QUÁ BÁN (<30)'
+                    : rsiVal >= 50
+                    ? 'VÙNG MẠNH (≥50)'
+                    : 'VÙNG YẾU (<50)'}
                 </span>
               </div>
               <div
                 ref={containerRsiRef}
-                className={`w-full ${activeView === 'rsi' ? 'h-[140px]' : 'h-[72px]'}`}
+                className={`w-full ${activeView === 'rsi' ? 'h-[154px]' : 'h-[86px]'}`}
               />
             </div>
           )}
 
           {/* ── SYNCHRONIZED SVG OVERLAY: VERTICAL GUIDELINE & MARKER DOTS ── */}
           {crosshairPos && (
-            <svg
-              className="absolute inset-0 w-full h-full pointer-events-none z-30"
-              style={{ overflow: 'visible' }}
-            >
-              {/* Vertical Dashed Guideline */}
-              <line
-                x1={crosshairPos.x}
-                y1={0}
-                x2={crosshairPos.x}
-                y2="100%"
-                stroke="rgba(255, 255, 255, 0.45)"
-                strokeWidth={1}
-                strokeDasharray="3 3"
-              />
+            <>
+              <svg
+                className="absolute inset-0 w-full h-full pointer-events-none z-30"
+                style={{ overflow: 'visible' }}
+              >
+                {/* Vertical Dashed Guideline */}
+                <line
+                  x1={crosshairPos.x}
+                  y1={0}
+                  x2={crosshairPos.x}
+                  y2="100%"
+                  stroke="rgba(255, 255, 255, 0.38)"
+                  strokeWidth={1}
+                  strokeDasharray="3 3"
+                />
 
-              {/* Marker Dots on each Indicator */}
-              {crosshairPos.dots.map((dot) => (
-                <g key={dot.id}>
-                  {/* Outer pulse glow */}
-                  <circle
-                    cx={crosshairPos.x}
-                    cy={dot.y}
-                    r={5}
-                    fill={dot.color}
-                    opacity={0.3}
-                  />
-                  {/* Solid center dot */}
-                  <circle
-                    cx={crosshairPos.x}
-                    cy={dot.y}
-                    r={3}
-                    fill={dot.color}
-                    stroke="#ffffff"
-                    strokeWidth={1}
-                  />
-                </g>
-              ))}
+                {/* Marker Dots on each Indicator */}
+                {crosshairPos.dots.map((dot) => (
+                  <g key={dot.id}>
+                    <circle
+                      cx={crosshairPos.x}
+                      cy={dot.y}
+                      r={4.5}
+                      fill={dot.color}
+                      opacity={0.28}
+                    />
+                    <circle
+                      cx={crosshairPos.x}
+                      cy={dot.y}
+                      r={2.75}
+                      fill={dot.color}
+                      stroke="#ffffff"
+                      strokeWidth={1}
+                    />
+                  </g>
+                ))}
+              </svg>
 
-              {/* Bottom Date Badge at foot of vertical crosshair line */}
+              {/* Bottom Date Pill anchored cleanly on the Time Axis Bar */}
               {crosshairPos.dateStr && (
-                <g transform={`translate(${crosshairPos.x}, ${activeView === 'all' ? 260 : 130})`}>
-                  <rect
-                    x={-38}
-                    y={-14}
-                    width={76}
-                    height={16}
-                    rx={3}
-                    fill="#18181b"
-                    stroke="rgba(255, 255, 255, 0.35)"
-                    strokeWidth={1}
-                  />
-                  <text
-                    x={0}
-                    y={-3}
-                    textAnchor="middle"
-                    fill="#f8fafc"
-                    fontSize={9.5}
-                    fontWeight={600}
-                    fontFamily="JetBrains Mono, monospace"
-                  >
-                    {crosshairPos.dateStr}
-                  </text>
-                </g>
+                <div
+                  className="absolute bottom-0.5 z-30 pointer-events-none -translate-x-1/2 px-1.5 py-0.5 rounded-sm bg-[#18181b] border border-zinc-600 text-[9.5px] font-mono font-semibold text-zinc-100 tabular-nums whitespace-nowrap"
+                  style={{ left: crosshairPos.x }}
+                >
+                  {crosshairPos.dateStr}
+                </div>
               )}
-            </svg>
+            </>
           )}
         </div>
       )}

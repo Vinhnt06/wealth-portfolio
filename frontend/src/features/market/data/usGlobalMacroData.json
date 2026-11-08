@@ -1,7 +1,7 @@
 {
   "success": true,
-  "timestamp": "2026-11-07T15:23:51.532Z",
-  "updateTime": "22:23:51",
+  "timestamp": "2026-11-08T04:33:49.055Z",
+  "updateTime": "11:33:48",
   "indices": [
     {
       "symbol": "^GSPC",
@@ -184,9 +184,9 @@
       "name": "Bitcoin (BTC)",
       "category": "crypto",
       "region": "global",
-      "price": 75773.55,
-      "change": 19.98,
-      "changePercent": 0.03,
+      "price": 75839.07,
+      "change": 34.67,
+      "changePercent": 0.05,
       "unit": "USD",
       "note": "Đồng tiền mã hóa vốn hóa lớn nhất"
     },
@@ -195,9 +195,9 @@
       "name": "Ethereum (ETH)",
       "category": "crypto",
       "region": "global",
-      "price": 2240.58,
-      "change": 13.24,
-      "changePercent": 0.59,
+      "price": 2234.66,
+      "change": -6.23,
+      "changePercent": -0.28,
       "unit": "USD",
       "note": "Nền tảng smart contract hàng đầu"
     }

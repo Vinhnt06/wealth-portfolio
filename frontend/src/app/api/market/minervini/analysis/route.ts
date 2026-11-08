@@ -271,95 +271,323 @@ export async function GET(request: Request) {
     const sectorRS = rrgSectorInfo?.sectorRS;
     const sectorStatus = rrgSectorInfo?.sectorStatus;
 
-    // Wyckoff & Price Action Diagnosis (Phase A - E)
-    const last40High = Math.max(...highs.slice(Math.max(0, count - 40)));
-    const last40Low = Math.min(...lows.slice(Math.max(0, count - 40)));
+    // Wyckoff & VSA (Volume Spread Analysis) Diagnosis (Phase A - E)
+    const opens: number[] = Array.isArray(data.o) && data.o.length === count ? data.o : closes;
+    const formatPrice = (val: number) =>
+      !isIndex && val > 2000 ? (val / 1000).toFixed(1) : Number(val.toFixed(2)).toString();
+
+    const baseWindow = Math.min(40, count);
+    const halfWindow = Math.max(5, Math.floor(baseWindow / 2));
+    const baseStartIdx = count - baseWindow;
+    const midBaseIdx = count - halfWindow;
+
+    const last40High = Math.max(...highs.slice(baseStartIdx));
+    const last40Low = Math.min(...lows.slice(baseStartIdx));
     const baseRangePct = last40Low > 0 ? Math.round(((last40High - last40Low) / last40Low) * 1000) / 10 : 25;
     const baseHeight = last40High - last40Low;
-    const posInBasePct = baseHeight > 0 ? Math.round(((currentPrice - last40Low) / baseHeight) * 100) : 75;
+    const posInBasePct = baseHeight > 0 ? Math.round(((currentPrice - last40Low) / baseHeight) * 100) : 50;
 
-    // SMA50 Volume for volume depletion / SOS surge check
-    const sma50Vol = Math.round((volumes.slice(Math.max(0, count - 50)).reduce((a, b) => a + b, 0) / Math.min(50, count)));
+    // 1. Cấu trúc Swing nửa đầu vs nửa sau nền 40 phiên (HH-HL & Độ co hẹp VCP)
+    const firstHalfHighs = highs.slice(baseStartIdx, midBaseIdx);
+    const firstHalfLows = lows.slice(baseStartIdx, midBaseIdx);
+    const secondHalfHighs = highs.slice(midBaseIdx);
+    const secondHalfLows = lows.slice(midBaseIdx);
+
+    const first20High = firstHalfHighs.length > 0 ? Math.max(...firstHalfHighs) : last40High;
+    const first20Low = firstHalfLows.length > 0 ? Math.min(...firstHalfLows) : last40Low;
+    const last20High = secondHalfHighs.length > 0 ? Math.max(...secondHalfHighs) : last40High;
+    const last20Low = secondHalfLows.length > 0 ? Math.min(...secondHalfLows) : last40Low;
+
+    const firstHalfRangePct = first20Low > 0 ? ((first20High - first20Low) / first20Low) * 100 : baseRangePct;
+    const secondHalfRangePct = last20Low > 0 ? ((last20High - last20Low) / last20Low) * 100 : baseRangePct;
+
+    // Đáy sau cao hơn đáy trước (HL) & Đỉnh sau cao hơn (HH) hoặc thu hẹp VCP giữ trên MA20/MA50
+    const isHigherLow = last20Low >= first20Low * 0.99;
+    const isHigherHighOrTightVcp =
+      last20High >= first20High * 0.985 ||
+      (secondHalfRangePct < firstHalfRangePct && currentPrice >= sma20 && posInBasePct >= 55);
+    const hhHlPassed =
+      isHigherLow && isHigherHighOrTightVcp && currentPrice >= last20Low * 1.015 && currentPrice > sma50;
+
+    // 2. Phân tích VSA (Volume & Spread) trên chuỗi 20 phiên gần nhất
+    const sma50Vol = Math.round(
+      volumes.slice(Math.max(0, count - 50)).reduce((a, b) => a + b, 0) / Math.min(50, count)
+    );
     const volRatio = sma50Vol > 0 ? Math.round((currentVol / sma50Vol) * 10) / 10 : 1;
 
-    let wyckoffPhase: 'Phase A' | 'Phase B' | 'Phase C' | 'Phase D' | 'Phase E' = 'Phase D';
-    let wyckoffPhaseName = 'Phase D — SOS / Jump Across the Creek';
-    let actionAdvice = 'canh mua ở nhịp lùi LPS giữ trên trần nền';
+    const vsaLookback = Math.min(20, count - 1);
+    const vsaStartIdx = count - vsaLookback;
 
-    if (distFrom52WHighPct >= -5 && currentPrice > sma50) {
-      wyckoffPhase = 'Phase E';
-      wyckoffPhaseName = 'Phase E — Markup / Đẩy giá mạnh';
-      actionAdvice = 'giữ tỷ trọng cao, trailing stop theo MA20';
-    } else if (posInBasePct >= 65 && currentPrice > sma50 && sma50 > sma150) {
-      wyckoffPhase = 'Phase D';
-      wyckoffPhaseName = 'Phase D — SOS / Jump Across the Creek';
-      actionAdvice = 'canh mua ở nhịp lùi LPS giữ trên trần nền';
-    } else if (currentPrice < sma50 && currentPrice >= last40Low * 1.02) {
-      wyckoffPhase = 'Phase C';
-      wyckoffPhaseName = 'Phase C — Spring / Test rũ bỏ cạn cung';
-      actionAdvice = 'thăm dò điểm mua Spring khi nến đảo chiều có thanh khoản';
-    } else {
-      wyckoffPhase = 'Phase B';
-      wyckoffPhaseName = 'Phase B — Tích lũy xây dựng nguyên nhân';
-      actionAdvice = 'chờ quá trình thắt chặt biên độ nền giá VCP';
+    let demandDays = 0;
+    let supplyDays = 0;
+    let demandVolSum = 0;
+    let supplyVolSum = 0;
+    let demandSpreadSum = 0;
+    let supplySpreadSum = 0;
+    let totalSpreadSum = 0;
+    let vduCount = 0; // Số phiên cạn cung (Volume Dry-Up < 0.78x SMA50 Vol)
+    let recent15DownVolSum = 0;
+    let recent15DownDays = 0;
+    let sosCount = 0;
+    let sowCount = 0;
+    let lastSosIdx = -1;
+    let lastSosLow = 0;
+    let lastSowIdx = -1;
+    let recentUpthrust = false;
+
+    for (let i = vsaStartIdx; i < count; i++) {
+      const o = opens[i];
+      const c = closes[i];
+      const prevC = i > 0 ? closes[i - 1] : c;
+      const h = highs[i];
+      const l = lows[i];
+      const v = volumes[i] || 0;
+      const spread = Math.max(0, h - l);
+      const spreadPct = prevC > 0 ? (spread / prevC) * 100 : 0;
+      const closePos = spread > 0 ? (c - l) / spread : 0.5;
+      const barChgPct = prevC > 0 ? ((c - prevC) / prevC) * 100 : 0;
+
+      totalSpreadSum += spreadPct;
+
+      // Phân loại Nến Cầu (Demand) vs Nến Cung (Supply) theo chuẩn VSA:
+      // - Nến Upthrust (tăng nhẹ nhưng bị xả ngược đóng cửa <= 35% biên độ nến kèm Vol lớn) là Nến Cung ẩn
+      // - Nến Shakeout rút chân (đóng cửa >= 65% biên độ nến và c > o) là Nến Cầu hấp thụ
+      const isUpthrustBar = sma50Vol > 0 && v >= sma50Vol * 1.25 && closePos <= 0.35 && barChgPct < 1.0;
+      const isBullishShakeout = barChgPct >= -0.5 && closePos >= 0.65 && c > o;
+
+      if ((c > prevC && !isUpthrustBar) || isBullishShakeout) {
+        demandDays++;
+        demandVolSum += v;
+        demandSpreadSum += spreadPct;
+      } else if (c < prevC || isUpthrustBar) {
+        supplyDays++;
+        supplyVolSum += v;
+        supplySpreadSum += spreadPct;
+      }
+
+      // Thống kê 15 phiên gần nhất cho VDU (Cạn cung) & SOS (Sign of Strength)
+      if (i >= count - Math.min(15, vsaLookback)) {
+        if (c < prevC || (c === prevC && closePos < 0.45)) {
+          recent15DownDays++;
+          recent15DownVolSum += v;
+        }
+        // Phiên cạn cung VDU / No Supply: Volume <= 78% TB 50 phiên và không bán tháo
+        if (sma50Vol > 0 && v <= sma50Vol * 0.78 && barChgPct > -1.8) {
+          vduCount++;
+        }
+
+        // Kiểm tra Pocket Pivot (Volume lớn hơn mọi phiên giảm trong 10 phiên trước đó)
+        let maxPrior10DownVol = 0;
+        for (let j = Math.max(1, i - 10); j < i; j++) {
+          if (closes[j] < closes[j - 1] && volumes[j] > maxPrior10DownVol) {
+            maxPrior10DownVol = volumes[j];
+          }
+        }
+        const isPocketPivotVol = maxPrior10DownVol > 0 && v > maxPrior10DownVol;
+
+        // Nến SOS / Pocket Pivot: Tăng >= 1.8%, đóng cửa nửa trên nến (>= 55%), thân nến xanh, kèm Vol >= 1.15x TB50 hoặc Pocket Pivot
+        if (
+          barChgPct >= 1.8 &&
+          closePos >= 0.55 &&
+          c >= o &&
+          ((sma50Vol > 0 && v >= sma50Vol * 1.15) || isPocketPivotVol)
+        ) {
+          sosCount++;
+          lastSosIdx = i;
+          lastSosLow = l;
+        }
+
+        // Nến SOW (Sign of Weakness): Giảm <= -2.0%, đóng cửa nửa dưới (<= 45%), kèm Vol >= 1.2x TB50
+        if (barChgPct <= -2.0 && closePos <= 0.45 && sma50Vol > 0 && v >= sma50Vol * 1.2) {
+          sowCount++;
+          lastSowIdx = i;
+        }
+      }
+
+      // Kiểm tra Upthrust (bán cụt đầu khối lượng lớn) trong 3 phiên cuối
+      if (i >= count - 3 && sma50Vol > 0 && v >= sma50Vol * 1.3 && closePos <= 0.35 && barChgPct < 1.0) {
+        recentUpthrust = true;
+      }
     }
 
-    const priorLows = lows.slice(Math.max(0, count - 40), Math.max(0, count - 10));
+    const avgSpread20Pct = vsaLookback > 0 ? totalSpreadSum / vsaLookback : 2.0;
+    const avgDemandSpreadPct = demandDays > 0 ? demandSpreadSum / demandDays : avgSpread20Pct;
+    const avgSupplySpreadPct = supplyDays > 0 ? supplySpreadSum / supplyDays : avgSpread20Pct;
+    const spreadRatio = avgSupplySpreadPct > 0 ? avgDemandSpreadPct / avgSupplySpreadPct : 1.0;
+
+    const avgDemandVol = demandDays > 0 ? demandVolSum / demandDays : sma50Vol;
+    const avgSupplyVol = supplyDays > 0 ? supplyVolSum / supplyDays : sma50Vol;
+    const upDownVolRatio = avgSupplyVol > 0 ? avgDemandVol / avgSupplyVol : 1.0;
+
+    const avgRecentDownVol = recent15DownDays > 0 ? recent15DownVolSum / recent15DownDays : currentVol * 0.8;
+    const downVolAvgRatio = sma50Vol > 0 ? avgRecentDownVol / sma50Vol : 1.0;
+
+    // Đặc tính cây nến hiện tại (Current Bar VSA)
+    const currentOpen = opens[count - 1];
+    const currentSpread = Math.max(0, highs[count - 1] - lows[count - 1]);
+    const currentSpreadPct = prevPrice > 0 ? (currentSpread / prevPrice) * 100 : 0;
+    const currentClosePos = currentSpread > 0 ? (currentPrice - lows[count - 1]) / currentSpread : 0.5;
+    const lastSosBarsAgo = lastSosIdx >= 0 ? count - 1 - lastSosIdx : null;
+
+    // 3. Hỗ trợ đáy nền & phát hiện hành vi Spring / Shakeout
+    const priorLows = lows.slice(baseStartIdx, Math.max(baseStartIdx + 1, count - 10));
     const priorBaseLow = priorLows.length > 0 ? Math.min(...priorLows) : null;
+    const recent10Closes = closes.slice(Math.max(0, count - 10));
+    const recent10Lows = lows.slice(Math.max(0, count - 10));
+    const minCloseLast10 = Math.min(...recent10Closes);
+    const minLowLast10 = Math.min(...recent10Lows);
+
+    // Không vi phạm đáy nền: Đóng cửa 10 phiên gần nhất giữ trên vùng hỗ trợ đáy nền (cho phép sai số rũ bỏ rút chân 1%)
+    const supportHeldPassed =
+      priorBaseLow !== null &&
+      minCloseLast10 >= priorBaseLow * 0.99 &&
+      currentPrice >= priorBaseLow;
+
+    // Phát hiện Spring / Test thành công trong 10 phiên qua: Giá thấp nhất chạm sát hoặc nhúng nhẹ dưới priorBaseLow rồi rút chân lên
+    const hasSpringAction =
+      priorBaseLow !== null &&
+      minLowLast10 <= priorBaseLow * 1.02 &&
+      minLowLast10 >= priorBaseLow * 0.95 &&
+      currentPrice >= priorBaseLow * 1.01 &&
+      currentClosePos >= 0.45;
+
+    // 4. Đánh giá 8 tiêu chí Wyckoff & VSA chuẩn xác
+    const vcpBasePassed = baseRangePct < 30 && secondHalfRangePct <= Math.max(18, firstHalfRangePct * 1.15);
+    const upperHalfPassed = posInBasePct >= 50;
+    // Cạn cung nhịp chỉnh: Khối lượng TB các phiên giảm KHÔNG ĐƯỢC lớn hơn TB50 (<= 1.0x), kèm < 0.92x hoặc >= 3 phiên VDU
+    const vduPassed = downVolAvgRatio <= 1.0 && (downVolAvgRatio <= 0.92 || vduCount >= 3);
+    // Tín hiệu SOS hợp lệ: Có SOS, số SOS > SOW (hoặc SOS gần nhất xuất hiện sau SOW cuối cùng), và giá hiện tại không thủng đáy cây nến SOS
+    const sosStructureIntact =
+      lastSosIdx >= 0 &&
+      currentPrice >= lastSosLow * 0.99 &&
+      (sosCount > sowCount || lastSosIdx > lastSowIdx);
+    const sosPassed = sosCount >= 1 && sosStructureIntact;
+
+    // Spread VSA mở rộng chiều tăng:
+    // - Biên độ TB nến Cầu >= nến Cung (spreadRatio >= 0.95)
+    // - Phiên hiện tại: Nếu tăng thì đóng cửa >= 48% nến; nếu giảm/đi ngang LPS thì hoặc rút chân (closePos >= 45% hoặc c >= o), hoặc chỉnh nhẹ biên độ hẹp kèm Vol thấp
+    const isHealthyCurrentBar =
+      (currentChangePct > 0 && currentClosePos >= 0.48) ||
+      (currentChangePct <= 0 &&
+        currentChangePct >= -1.5 &&
+        (currentClosePos >= 0.45 ||
+          currentPrice >= currentOpen ||
+          (currentChangePct >= -1.2 && currentSpreadPct <= avgSpread20Pct && volRatio <= 0.95)));
+    const spreadVsaPassed = spreadRatio >= 0.95 && isHealthyCurrentBar;
+
+    // Hấp thụ nguồn cung tại kháng cự: Khối lượng Cầu > Cung (>= 1.05x), giữ nửa trên nền, không xuất hiện Upthrust xả hàng
+    const absorptionPassed =
+      upDownVolRatio >= 1.05 && posInBasePct >= 55 && distFrom52WHighPct >= -22 && !recentUpthrust;
 
     const wyckoffCriteria = [
       {
         id: 1,
         label: 'Cấu trúc đỉnh & đáy sau cao hơn (HH-HL)',
-        passed: currentPrice > sma50 && sma50 > sma200,
-        value: `đỉnh ${formatK(last40High)} · đáy ${formatK(last40Low)}`,
+        passed: hhHlPassed,
+        value: `Đáy ${formatPrice(first20Low)}→${formatPrice(last20Low)} · Đỉnh ${formatPrice(first20High)}→${formatPrice(last20High)}`,
       },
       {
         id: 2,
-        label: 'Nền 40 phiên đi ngang (biên độ < 30%)',
-        passed: baseRangePct < 30,
-        value: `${baseRangePct}%`,
+        label: 'Nền 40 phiên thu hẹp (biên độ < 30%)',
+        passed: vcpBasePassed,
+        value: `${baseRangePct}% (Nửa sau ${secondHalfRangePct.toFixed(1)}%)`,
       },
       {
         id: 3,
-        label: 'Giá nằm nửa trên của nền',
-        passed: posInBasePct >= 50,
+        label: 'Giá nằm nửa trên của nền (Trading Range)',
+        passed: upperHalfPassed,
         value: `${posInBasePct}% chiều cao nền`,
       },
       {
         id: 4,
-        label: 'Khối lượng cạn kiệt trong nền',
-        passed: currentVol <= sma50Vol * 1.3,
-        value: currentVol < sma50Vol ? `Vol -${Math.round((1 - currentVol / (sma50Vol || 1)) * 100)}% vs TB` : `Vol +${Math.round((currentVol / (sma50Vol || 1) - 1) * 100)}%`,
+        label: 'Cạn kiệt cung nhịp chỉnh (No Supply / VDU)',
+        passed: vduPassed,
+        value: `Vol giảm ${Math.round(downVolAvgRatio * 100)}% TB50 · ${vduCount} phiên VDU`,
       },
       {
         id: 5,
-        label: 'Cây nến SOS dòng tiền vào',
-        passed: volRatio >= 1.2 || currentChangePct >= 2,
-        value: `Vol x${volRatio} lần TB`,
+        label: 'Cây nến SOS / Pocket Pivot dòng tiền vào',
+        passed: sosPassed,
+        value:
+          lastSosBarsAgo === 0
+            ? `Hôm nay SOS (Vol x${volRatio} TB)`
+            : sosCount > 0
+            ? `${sosCount} nến SOS / 15p (${lastSosBarsAgo}p trước)`
+            : `Chưa có SOS (Vol x${volRatio} TB)`,
       },
       {
         id: 6,
         label: 'Không vi phạm đáy nền (10 phiên gần nhất)',
-        // Đáy nền = đáy thấp nhất của các phiên TRƯỚC 10 phiên gần nhất (không tự so với chính mình)
-        passed: priorBaseLow !== null && closes.slice(count - 10).every((c) => c >= priorBaseLow),
-        value: priorBaseLow !== null ? `Đáy nền ${formatK(priorBaseLow)}` : 'Chưa đủ dữ liệu',
+        passed: supportHeldPassed,
+        value:
+          priorBaseLow !== null
+            ? `Đáy nền ${formatPrice(priorBaseLow)} (Min 10p: ${formatPrice(minCloseLast10)})`
+            : 'Chưa đủ dữ liệu',
       },
       {
         id: 7,
-        label: 'Spread nến mở rộng chiều tăng',
-        passed: currentChangePct >= 0,
-        value: `Spread ${currentChangePct >= 0 ? '+' : ''}${currentChangePct.toFixed(1)}%`,
+        label: 'Spread nến mở rộng chiều tăng (VSA)',
+        passed: spreadVsaPassed,
+        value: `Spread T/G ${spreadRatio.toFixed(2)}x · Đóng nến ${Math.round(currentClosePos * 100)}%`,
       },
       {
         id: 8,
-        label: 'Hấp thụ nguồn cung tại đỉnh cũ',
-        passed: distFrom52WHighPct >= -18,
-        value: `${distFrom52WHighPct}% đỉnh`,
+        label: 'Hấp thụ nguồn cung tại kháng cự',
+        passed: absorptionPassed,
+        value: `Vol T/G ${upDownVolRatio.toFixed(2)}x · ${distFrom52WHighPct}% đỉnh`,
       },
     ];
 
     const wyckoffPassedCount = wyckoffCriteria.filter((c) => c.passed).length;
+
+    // 5. Phân loại Pha Wyckoff (Phase A - E) đồng nhất với 8 tiêu chí & cấu trúc nền giá thực tế
+    // Lưu ý học thuật Wyckoff: Nền tích lũy (Phase B, C, D) thường hình thành ở đáy sau nhịp giảm (khi giá còn dưới MA200),
+    // do đó KHÔNG dùng điều kiện "Giá < MA200" để ép về Phase A nếu cổ phiếu đã tạo nền đi ngang ổn định 40 phiên.
+    let wyckoffPhase: 'Phase A' | 'Phase B' | 'Phase C' | 'Phase D' | 'Phase E' = 'Phase B';
+    let wyckoffPhaseName = 'Phase B — Tích lũy xây dựng nguyên nhân';
+    let actionAdvice = 'chờ quá trình thắt chặt biên độ nền giá VCP và cạn kiệt nguồn cung';
+
+    const isActiveBreakdownOrPanic =
+      !supportHeldPassed ||
+      (baseRangePct >= 30 && posInBasePct < 45) ||
+      (wyckoffPassedCount <= 2 && posInBasePct < 35 && downVolAvgRatio > 1.05);
+
+    if (isActiveBreakdownOrPanic) {
+      wyckoffPhase = 'Phase A';
+      wyckoffPhaseName = 'Phase A — Hãm đà giảm (SC / AR) hoặc Suy yếu';
+      actionAdvice = 'đứng ngoài quan sát, chờ xác nhận đáy Selling Climax và cân bằng cung cầu';
+    } else if (
+      wyckoffPassedCount >= 6 &&
+      posInBasePct >= 75 &&
+      distFrom52WHighPct >= -10 &&
+      currentPrice > sma50 &&
+      sma50 > sma150 &&
+      currentPrice > sma200
+    ) {
+      wyckoffPhase = 'Phase E';
+      wyckoffPhaseName = 'Phase E — Markup / Đẩy giá thoát nền';
+      actionAdvice = 'nắm giữ tỷ trọng cao theo xu hướng, trailing stop theo MA20';
+    } else if (
+      wyckoffPassedCount >= 5 &&
+      posInBasePct >= 55 &&
+      currentPrice > sma50 &&
+      (sosPassed || absorptionPassed)
+    ) {
+      wyckoffPhase = 'Phase D';
+      wyckoffPhaseName = 'Phase D — SOS / LPS (Dòng tiền đẩy giá trong nền)';
+      actionAdvice = 'canh giải ngân ở nhịp lùi LPS biên độ hẹp giữ trên hỗ trợ MA20/MA50';
+    } else if (
+      hasSpringAction ||
+      (supportHeldPassed && vduPassed && posInBasePct >= 12 && posInBasePct < 55 && upDownVolRatio >= 0.9)
+    ) {
+      wyckoffPhase = 'Phase C';
+      wyckoffPhaseName = 'Phase C — Spring / Test rũ bỏ cạn cung';
+      actionAdvice = 'thăm dò điểm mua Spring/Test khi xuất hiện nến đảo chiều có dòng tiền';
+    } else {
+      wyckoffPhase = 'Phase B';
+      wyckoffPhaseName = 'Phase B — Tích lũy xây dựng nguyên nhân';
+      actionAdvice = 'chờ quá trình thắt chặt biên độ nền giá VCP và tín hiệu SOS xác nhận';
+    }
 
     // ── Indicators for Heat & Extended Analysis (RSI, MACD) ──
     // 1. RSI(14) - Wilder smoothing (khớp với RSI trên chart)
