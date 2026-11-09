@@ -222,6 +222,10 @@ export const InvestorFlowAnalysis: React.FC = () => {
   const lastProcessedTickRef = React.useRef<string>('');
 
   const [displayLimit, setDisplayLimit] = useState<number>(100);
+  const [autoScroll, setAutoScroll] = useState<boolean>(true);
+  const [isScrolledDown, setIsScrolledDown] = useState<boolean>(false);
+  const tableContainerRef = React.useRef<HTMLDivElement>(null);
+  const prevFirstTradeIdRef = React.useRef<string | number>('');
 
   // Nạp log tích lũy từ LocalStorage ngay khi đổi mã để không bị trắng màn hình
   useEffect(() => {
@@ -426,6 +430,27 @@ export const InvestorFlowAnalysis: React.FC = () => {
   const visibleOrders = useMemo(() => {
     return filteredOrders.slice(0, displayLimit);
   }, [filteredOrders, displayLimit]);
+
+  // Tự động cuộn lên đầu (Auto-scroll UP) mượt mà khi có lệnh mới đẩy vào sổ lệnh
+  useEffect(() => {
+    if (!autoScroll || !tableContainerRef.current) return;
+    const firstTrade = visibleOrders[0];
+    if (firstTrade && firstTrade.id !== prevFirstTradeIdRef.current) {
+      prevFirstTradeIdRef.current = firstTrade.id;
+      tableContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [visibleOrders, autoScroll]);
+
+  const handleTableScroll = useCallback(() => {
+    if (!tableContainerRef.current) return;
+    const isDown = tableContainerRef.current.scrollTop > 50;
+    setIsScrolledDown(isDown);
+  }, []);
+
+  const scrollToTop = useCallback(() => {
+    tableContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+    setIsScrolledDown(false);
+  }, []);
 
   // Xuất toàn bộ log khớp lệnh 100% trong ngày ra file CSV Excel
   const exportCsvTape = useCallback(() => {
@@ -883,118 +908,175 @@ export const InvestorFlowAnalysis: React.FC = () => {
               </button>
             </div>
 
-            {/* Export Full Day CSV Button */}
-            <button
-              onClick={exportCsvTape}
-              title="Xuất file nhật ký toàn bộ lệnh trong ngày ra Excel CSV"
-              className="px-2.5 py-1 rounded-xl bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-800 hover:border-emerald-500/40 text-zinc-300 hover:text-emerald-400 font-mono text-[11px] font-bold transition-all shadow-sm sm:ml-auto"
-            >
-              Xuất Log Ngày (.CSV)
-            </button>
+            <div className="flex items-center gap-2 sm:ml-auto flex-wrap">
+              {/* Auto-Scroll Toggle */}
+              <button
+                onClick={() => {
+                  const next = !autoScroll;
+                  setAutoScroll(next);
+                  if (next) scrollToTop();
+                }}
+                className={`px-2.5 py-1 rounded-xl border font-mono text-[11px] font-bold transition-all flex items-center gap-1.5 shrink-0 ${
+                  autoScroll
+                    ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.15)]'
+                    : 'bg-zinc-900/90 border-zinc-800 text-zinc-500 hover:text-zinc-300'
+                }`}
+                title={autoScroll ? 'Đang BẬT tự động cuộn lên khi có lệnh mới (Bấm để Tắt)' : 'Đang TẮT tự động cuộn (Bấm để Bật)'}
+              >
+                <span className={`w-1.5 h-1.5 rounded-full ${autoScroll ? 'bg-emerald-400 animate-pulse' : 'bg-zinc-600'}`} />
+                <span>Auto-Scroll: {autoScroll ? 'BẬT' : 'TẮT'}</span>
+              </button>
+
+              {/* Export Full Day CSV Button */}
+              <button
+                onClick={exportCsvTape}
+                title="Xuất file nhật ký toàn bộ lệnh trong ngày ra Excel CSV"
+                className="px-2.5 py-1 rounded-xl bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-800 hover:border-emerald-500/40 text-zinc-300 hover:text-emerald-400 font-mono text-[11px] font-bold transition-all shadow-sm"
+              >
+                Xuất Log (.CSV)
+              </button>
+            </div>
           </div>
 
           {/* ── Orders Table ── */}
-          <div className="overflow-x-auto max-h-[300px] overflow-y-auto scrollbar-none rounded-xl border border-zinc-800/80 bg-zinc-900/40">
-            <table className="w-full text-left font-mono text-xs">
-              <thead className="sticky top-0 bg-zinc-900 z-10 text-[10px] text-zinc-400 uppercase tracking-wider border-b border-zinc-800">
-                <tr>
-                  <th className="py-2.5 pl-3">Thời gian</th>
-                  <th className="py-2.5">Phân khúc</th>
-                  <th className="py-2.5 text-right">Giá (k)</th>
-                  <th className="py-2.5 text-right">Khối lượng</th>
-                  <th className="py-2.5 text-right">Giá trị (VNĐ)</th>
-                  <th className="py-2.5 pr-3 text-center">Chiều lệnh</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-800/40 text-[11px]">
-                {filteredOrders.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="py-10 text-center text-zinc-400">
-                      <div className="flex flex-col items-center justify-center gap-2">
-                        <div className="font-bold text-zinc-300 text-xs">
-                          {filterInvestor === 'shark'
-                            ? `Chưa ghi nhận lệnh Cá Mập (≥ 1 Tỷ) trong ${orders.length} lệnh tích lũy ngày của ${selectedSymbol}`
-                            : 'Không tìm thấy lệnh khớp phù hợp với bộ lọc'}
-                        </div>
-                        <p className="text-[10px] text-zinc-500 max-w-sm">
-                          Hệ thống đang tích lũy 100% nhật ký khớp lệnh thời gian thực và lưu trữ liên tục.
-                        </p>
-                        {filterInvestor === 'shark' && (
-                          <button
-                            onClick={() => setFilterInvestor('wolf_shark')}
-                            className="mt-1 px-3 py-1 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 text-[11px] font-bold transition-colors"
-                          >
-                            Xem thêm phân khúc Sói Già (≥ 500Tr)
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ) : (
-                  visibleOrders.map((order, idx) => {
-                    const isBuy = order.type === 'M';
-                    const isShark = order.investorType === 'Cá mập';
-                    const isWolf = order.investorType === 'Sói già';
-                    const formattedVal =
-                      order.value >= 1_000_000_000
-                        ? `${(order.value / 1_000_000_000).toFixed(2)} tỷ`
-                        : order.value >= 1_000_000
-                        ? `${(order.value / 1_000_000).toFixed(1)} tr`
-                        : `${order.value.toLocaleString('vi-VN')} đ`;
+          <div className="relative">
+            {/* Floating Quick Scroll to Top Button */}
+            {isScrolledDown && (
+              <div className="absolute top-2 right-4 z-20">
+                <button
+                  onClick={scrollToTop}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-mono text-[11px] font-black shadow-lg shadow-emerald-500/30 transition-all active:scale-95 cursor-pointer animate-in fade-in"
+                >
+                  <span>↑ Cuộn lên lệnh mới nhất</span>
+                </button>
+              </div>
+            )}
 
-                    return (
-                      <tr
-                        key={order.id || idx}
-                        className="hover:bg-zinc-800/30 transition-colors border-b border-zinc-800/40"
-                      >
-                        <td className="py-2 pl-3 text-zinc-400 font-mono text-[11px]">{order.time}</td>
-                        <td className="py-2">
-                          <span
-                            className={`text-[11px] font-mono ${
-                              isShark
-                                ? 'text-emerald-400 font-bold'
-                                : isWolf
-                                ? 'text-cyan-400 font-medium'
-                                : 'text-zinc-500'
-                            }`}
-                          >
-                            {order.investorType}
-                          </span>
-                        </td>
-                        <td className="py-2 text-right font-bold text-zinc-100 text-xs font-mono">
-                          {order.price.toFixed(2)}
-                        </td>
-                        <td className="py-2 text-right text-zinc-200 font-mono font-bold">
-                          {order.volume.toLocaleString('vi-VN')}
-                        </td>
-                        <td className="py-2 text-right font-mono font-black text-xs">
-                          <span
-                            className={
-                              isShark
-                                ? isBuy
+            <div
+              ref={tableContainerRef}
+              onScroll={handleTableScroll}
+              className="overflow-x-auto max-h-[340px] overflow-y-auto scrollbar-none rounded-xl border border-zinc-800/80 bg-zinc-900/40 scroll-smooth"
+            >
+              <table className="w-full text-left font-mono text-xs">
+                <thead className="sticky top-0 bg-zinc-900 z-10 text-[10px] text-zinc-400 uppercase tracking-wider border-b border-zinc-800">
+                  <tr>
+                    <th className="py-2.5 pl-3">Thời gian</th>
+                    <th className="py-2.5">Phân khúc</th>
+                    <th className="py-2.5 text-right">Giá (k)</th>
+                    <th className="py-2.5 text-right">Khối lượng</th>
+                    <th className="py-2.5 text-right">Giá trị (VNĐ)</th>
+                    <th className="py-2.5 pr-3 text-center">Chiều lệnh</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-800/40 text-[11px]">
+                  {filteredOrders.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="py-10 text-center text-zinc-400">
+                        <div className="flex flex-col items-center justify-center gap-2">
+                          <div className="font-bold text-zinc-300 text-xs">
+                            {filterInvestor === 'shark'
+                              ? `Chưa ghi nhận lệnh Cá Mập (≥ 1 Tỷ) trong ${orders.length} lệnh tích lũy ngày của ${selectedSymbol}`
+                              : 'Không tìm thấy lệnh khớp phù hợp với bộ lọc'}
+                          </div>
+                          <p className="text-[10px] text-zinc-500 max-w-sm">
+                            Hệ thống đang tích lũy 100% nhật ký khớp lệnh thời gian thực và lưu trữ liên tục.
+                          </p>
+                          {filterInvestor === 'shark' && (
+                            <button
+                              onClick={() => setFilterInvestor('wolf_shark')}
+                              className="mt-1 px-3 py-1 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 text-[11px] font-bold transition-colors"
+                            >
+                              Xem thêm phân khúc Sói Già (≥ 500Tr)
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
+                    visibleOrders.map((order, idx) => {
+                      const isBuy = order.type === 'M';
+                      const isShark = order.investorType === 'Cá mập';
+                      const isWolf = order.investorType === 'Sói già';
+                      const isRecentlyMatched = recentLiveIds.has(String(order.id));
+                      const formattedVal =
+                        order.value >= 1_000_000_000
+                          ? `${(order.value / 1_000_000_000).toFixed(2)} tỷ`
+                          : order.value >= 1_000_000
+                          ? `${(order.value / 1_000_000).toFixed(1)} tr`
+                          : `${order.value.toLocaleString('vi-VN')} đ`;
+
+                      return (
+                        <tr
+                          key={order.id || idx}
+                          className={`transition-colors border-b border-zinc-800/40 ${
+                            isRecentlyMatched
+                              ? isBuy
+                                ? 'bg-emerald-500/15 animate-pulse'
+                                : 'bg-rose-500/15 animate-pulse'
+                              : 'hover:bg-zinc-800/30'
+                          }`}
+                        >
+                          <td className="py-2 pl-3 text-zinc-400 font-mono text-[11px] whitespace-nowrap">
+                            <div className="flex items-center gap-1.5">
+                              {isRecentlyMatched && (
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping shrink-0" />
+                              )}
+                              <span>{order.time}</span>
+                              {isRecentlyMatched && (
+                                <span className="text-[9px] px-1 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30">
+                                  VỪA KHỚP
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="py-2">
+                            <span
+                              className={`text-[11px] font-mono ${
+                                isShark
                                   ? 'text-emerald-400 font-bold'
-                                  : 'text-rose-400 font-bold'
-                                : 'text-zinc-300'
-                            }
-                          >
-                            {formattedVal}
-                          </span>
-                        </td>
-                        <td className="py-2 pr-3 text-center">
-                          <span
-                            className={`text-[10px] font-mono font-bold ${
-                              isBuy ? 'text-emerald-400' : 'text-rose-400'
-                            }`}
-                          >
-                            {isBuy ? 'MUA C.ĐỘNG' : 'BÁN C.ĐỘNG'}
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
+                                  : isWolf
+                                  ? 'text-cyan-400 font-medium'
+                                  : 'text-zinc-500'
+                              }`}
+                            >
+                              {order.investorType}
+                            </span>
+                          </td>
+                          <td className="py-2 text-right font-bold text-zinc-100 text-xs font-mono">
+                            {order.price.toFixed(2)}
+                          </td>
+                          <td className="py-2 text-right text-zinc-200 font-mono font-bold">
+                            {order.volume.toLocaleString('vi-VN')}
+                          </td>
+                          <td className="py-2 text-right font-mono font-black text-xs">
+                            <span
+                              className={
+                                isShark
+                                  ? isBuy
+                                    ? 'text-emerald-400 font-bold'
+                                    : 'text-rose-400 font-bold'
+                                  : 'text-zinc-300'
+                              }
+                            >
+                              {formattedVal}
+                            </span>
+                          </td>
+                          <td className="py-2 pr-3 text-center">
+                            <span
+                              className={`text-[10px] font-mono font-bold ${
+                                isBuy ? 'text-emerald-400' : 'text-rose-400'
+                              }`}
+                            >
+                              {isBuy ? 'MUA C.ĐỘNG' : 'BÁN C.ĐỘNG'}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
 
           {/* ── Display Pagination Controls (Smooth DOM Rendering while Preserving 100% Day Data) ── */}

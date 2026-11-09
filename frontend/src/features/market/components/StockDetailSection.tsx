@@ -395,6 +395,21 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
               <span>{isStarred ? 'Đang theo dõi' : 'Theo dõi'}</span>
             </button>
 
+            {/* Nút Nhảy Nhanh Đến Sổ Lệnh & Khớp Lệnh */}
+            <button
+              onClick={() => {
+                setActiveTab('orderbook');
+                setTimeout(() => {
+                  document.getElementById('stock-orderbook-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 50);
+              }}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 font-mono text-xs font-bold transition-all active:scale-95 shadow-sm cursor-pointer"
+              title={`Mở nhanh Sổ Lệnh & Nhật Ký Khớp Lệnh của ${selectedSymbol}`}
+            >
+              <ListNumbers className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Sổ Lệnh & Khớp Lệnh</span>
+            </button>
+
             <span className="hidden lg:inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-mono text-zinc-500">
               <Database className="w-3 h-3 text-emerald-500" />
               <span>Verified</span>
@@ -611,8 +626,8 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
         </div>
       </div>
 
-      {/* Corporate Deep Dive Workspace (Tabs: Hồ Sơ, Cổ Đông, Lãnh Đạo, Chỉ Số TC, Khối Ngoại) */}
-      <div className="bg-zinc-950/90 border border-zinc-800/80 rounded-2xl overflow-hidden shadow-xl">
+      {/* Corporate Deep Dive Workspace (Tabs: Sổ Lệnh, Hồ Sơ, Cổ Đông, Lãnh Đạo, Chỉ Số TC, Khối Ngoại) */}
+      <div id="stock-orderbook-section" className="bg-zinc-950/90 border border-zinc-800/80 rounded-2xl overflow-hidden shadow-xl scroll-mt-6">
         {/* Tab Navigation */}
         <div className="flex flex-wrap items-center gap-2 p-3 bg-zinc-900/60 border-b border-zinc-800/80">
           <button
@@ -625,6 +640,20 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
           >
             <Buildings className="w-4 h-4" />
             <span>{isIndex ? 'Thông Tin Chỉ Số' : 'Hồ Sơ Doanh Nghiệp'}</span>
+          </button>
+
+          {/* Đưa Tab Sổ Lệnh & Dòng Tiền lên vị trí ưu tiên ngay cạnh Hồ Sơ */}
+          <button
+            onClick={() => setActiveTab('orderbook')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all ${
+              activeTab === 'orderbook'
+                ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20'
+                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
+            }`}
+          >
+            <ListNumbers className="w-4 h-4" />
+            <span>Sổ Lệnh & Dòng Tiền (Order Book)</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
           </button>
 
           {!isIndex && (
@@ -677,18 +706,6 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
           >
             <CurrencyCircleDollar className="w-4 h-4" />
             <span>Khối Ngoại Giao Dịch</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('orderbook')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all ${
-              activeTab === 'orderbook'
-                ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20'
-                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
-            }`}
-          >
-            <ListNumbers className="w-4 h-4" />
-            <span>Sổ Lệnh & Dòng Tiền (Order Book & Trades)</span>
           </button>
         </div>
 
