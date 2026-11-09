@@ -243,7 +243,7 @@
     "q2Perf": 6.5,
     "q3Perf": 22.7,
     "q4Perf": 18.9,
-    "currentPrice": 60,
+    "currentPrice": 54.55,
     "calculatedDate": "2026-11-09"
   },
   "DHC": {
@@ -584,10 +584,23 @@
     "currentPrice": 13.25,
     "calculatedDate": "2026-11-09"
   },
+  "TNG": {
+    "symbol": "TNG",
+    "rsRating": 75,
+    "rank": 46,
+    "totalStocks": 196,
+    "rawScore": -0.003,
+    "q1Perf": 4.7,
+    "q2Perf": -2.4,
+    "q3Perf": -14.6,
+    "q4Perf": 5.9,
+    "currentPrice": 17.3,
+    "calculatedDate": "2026-11-09"
+  },
   "VHM": {
     "symbol": "VHM",
     "rsRating": 75,
-    "rank": 46,
+    "rank": 47,
     "totalStocks": 196,
     "rawScore": -0.003,
     "q1Perf": -17.3,
@@ -595,19 +608,6 @@
     "q3Perf": 27.2,
     "q4Perf": 27.3,
     "currentPrice": 60.4,
-    "calculatedDate": "2026-11-09"
-  },
-  "TNG": {
-    "symbol": "TNG",
-    "rsRating": 75,
-    "rank": 47,
-    "totalStocks": 196,
-    "rawScore": -0.003,
-    "q1Perf": 4.7,
-    "q2Perf": -2.4,
-    "q3Perf": -14.6,
-    "q4Perf": 5.9,
-    "currentPrice": 17.8,
     "calculatedDate": "2026-11-09"
   },
   "SHI": {
@@ -1270,7 +1270,7 @@
     "q2Perf": -19.6,
     "q3Perf": -30.1,
     "q4Perf": 4.5,
-    "currentPrice": 29.2,
+    "currentPrice": 28.8,
     "calculatedDate": "2026-11-09"
   },
   "VGS": {
