@@ -89,6 +89,7 @@ import {
 import { SuperTrendStrategyModal } from './SuperTrendStrategyModal';
 import { RSTemplateSubChart } from './RSTemplateSubChart';
 import { GeneralEvaluationSubChart, SynchronizedCrosshairData } from './GeneralEvaluationSubChart';
+import { MCDXSubChart } from './MCDXSubChart';
 import { calculateKAMA } from '../utils/generalEvaluationIndicators';
 import stockDatabase from '../data/stockDatabase.json';
 import { getStockPriceColor } from '../utils/priceColors';
@@ -686,7 +687,7 @@ export function calculateTrendlinePro(candles: CandlestickData<Time>[]): Trendli
 }
 
 // ── Technical Indicator Calculations (RSI, MACD, MFI, OBV, RS Templates) ──────────
-export type SubIndicatorType = 'none' | 'rsi' | 'macd' | 'mfi' | 'obv' | 'rs_template' | 'rs_line' | 'mansfield' | 'oneil' | 'general_template' | 'vortex' | 'ao';
+export type SubIndicatorType = 'none' | 'rsi' | 'macd' | 'mfi' | 'obv' | 'rs_template' | 'rs_line' | 'mansfield' | 'oneil' | 'general_template' | 'vortex' | 'ao' | 'mcdx';
 
 export interface RSIPoint {
   index: number;
@@ -4691,7 +4692,8 @@ export function MarketCandleChart() {
       activeSubIndicator === 'oneil' ||
       activeSubIndicator === 'general_template' ||
       activeSubIndicator === 'vortex' ||
-      activeSubIndicator === 'ao'
+      activeSubIndicator === 'ao' ||
+      activeSubIndicator === 'mcdx'
     ) {
       if (subChartRef.current) {
         subChartRef.current.remove();
@@ -5609,7 +5611,8 @@ export function MarketCandleChart() {
       activeSubIndicator === 'mansfield' ||
       activeSubIndicator === 'oneil' ||
       activeSubIndicator === 'vortex' ||
-      activeSubIndicator === 'ao') &&
+      activeSubIndicator === 'ao' ||
+      activeSubIndicator === 'mcdx') &&
     !isSubChartCollapsed;
 
   const containerHeightClass = isExpanded
@@ -5778,7 +5781,7 @@ export function MarketCandleChart() {
               <span>Chỉ báo</span>
               {(activeSubIndicator !== 'none' && activeSubIndicator !== 'rs_template' && activeSubIndicator !== 'general_template') ? (
                 <span className="text-[9px] uppercase font-bold bg-emerald-500/20 text-emerald-300 px-1.5 py-0.2 rounded border border-emerald-500/30">
-                  {activeSubIndicator === 'rs_line' ? 'RS Line' : activeSubIndicator === 'mansfield' ? 'Mansfield' : activeSubIndicator === 'oneil' ? 'O\'Neil RS' : activeSubIndicator === 'vortex' ? 'Vortex' : activeSubIndicator === 'ao' ? 'AO' : activeSubIndicator}
+                  {activeSubIndicator === 'rs_line' ? 'RS Line' : activeSubIndicator === 'mansfield' ? 'Mansfield' : activeSubIndicator === 'oneil' ? 'O\'Neil RS' : activeSubIndicator === 'vortex' ? 'Vortex' : activeSubIndicator === 'ao' ? 'AO' : activeSubIndicator === 'mcdx' ? 'MCDX' : activeSubIndicator}
                 </span>
               ) : (
                 <span className="text-[10px] text-zinc-500 font-mono">
@@ -6227,6 +6230,24 @@ export function MarketCandleChart() {
                       <span className="font-semibold text-zinc-200">Awesome Oscillator (AO)</span>
                       <span className={`text-[10px] px-2 py-0.5 rounded font-bold transition-colors ${activeSubIndicator === 'ao' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-zinc-800/60 text-zinc-500'}`}>
                         {activeSubIndicator === 'ao' ? 'BẬT' : 'TẮT'}
+                      </span>
+                    </button>
+
+                    {/* MCDX (Dòng Tiền Tạo Lập - Multi-Color Dragon) */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveSubIndicator(activeSubIndicator === 'mcdx' ? 'none' : 'mcdx');
+                        setIsSubChartCollapsed(false);
+                      }}
+                      className="flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-mono text-zinc-200 hover:bg-zinc-800/70 transition-all border border-transparent hover:border-zinc-800"
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-semibold text-amber-400">MCDX</span>
+                        <span className="text-[10px] text-zinc-400 font-normal">Dòng Tiền Tạo Lập (24HMoney)</span>
+                      </div>
+                      <span className={`text-[10px] px-2 py-0.5 rounded font-bold transition-colors ${activeSubIndicator === 'mcdx' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-zinc-800/60 text-zinc-500'}`}>
+                        {activeSubIndicator === 'mcdx' ? 'BẬT' : 'TẮT'}
                       </span>
                     </button>
                   </div>
@@ -7287,6 +7308,16 @@ export function MarketCandleChart() {
                   : 'all'
               }
               onCrosshairChange={setGeneralCrosshairData}
+            />
+          )}
+
+          {/* MCDX (Multi-Color Dragon Extended - 24HMoney) Sub Chart */}
+          {activeSubIndicator === 'mcdx' && (
+            <MCDXSubChart
+              stockCandles={loadedCandlesRef.current}
+              mainChart={chartRef.current}
+              onClose={() => setActiveSubIndicator('none')}
+              selectedSymbol={selectedSymbol}
             />
           )}
 
