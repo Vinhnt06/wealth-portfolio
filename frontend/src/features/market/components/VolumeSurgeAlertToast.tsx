@@ -32,7 +32,6 @@ export interface AlertNotificationItem {
 const STORAGE_KEY_ENABLED = 'yourfin_vol_alert_enabled';
 const STORAGE_KEY_THRESHOLD = 'yourfin_vol_alert_threshold';
 const STORAGE_KEY_MIN_VAL = 'yourfin_vol_alert_min_val';
-const STORAGE_KEY_ONLY_SESSION = 'yourfin_vol_alert_only_session';
 
 // Anti-spam configuration
 const COOLDOWN_MS = 60 * 60 * 1000; // 60 minutes cooldown per stock
@@ -40,10 +39,10 @@ const RVOL_UPGRADE_DELTA = 1.0; // Must surge by at least +1.0x higher to re-ale
 const TOAST_DURATION_MS = 8000; // Auto-dismiss after 8 seconds
 
 /**
- * Check if the current time is within Vietnam Stock Market trading hours (HOSE/HNX):
- * - Monday to Friday
- * - Morning: 09:00 - 11:30 (GMT+7)
- * - Afternoon: 13:00 - 15:00 (GMT+7)
+ * Check with 100% precision if current time is within Vietnam Stock Market trading hours:
+ * - Monday to Friday (No weekends)
+ * - Morning continuous matching: 09:00:00 - 11:30:00 (GMT+7)
+ * - Afternoon continuous matching & ATC: 13:00:00 - 14:45:00 (GMT+7)
  */
 export function isVietnamMarketTradingSession(date = new Date()): boolean {
   try {
@@ -56,14 +55,13 @@ export function isVietnamMarketTradingSession(date = new Date()): boolean {
     const minutes = vnDate.getMinutes();
     const totalMinutes = hours * 60 + minutes;
 
-    // Morning Session: 09:00 (540 mins) - 11:30 (690 mins)
+    // Morning Session: 09:00 (540 mins) to 11:30 (690 mins)
     const isMorning = totalMinutes >= 540 && totalMinutes <= 690;
-    // Afternoon Session: 13:00 (780 mins) - 15:00 (900 mins)
-    const isAfternoon = totalMinutes >= 780 && totalMinutes <= 900;
+    // Afternoon Session: 13:00 (780 mins) to 14:45 (885 mins - close of ATC)
+    const isAfternoon = totalMinutes >= 780 && totalMinutes <= 885;
 
     return isMorning || isAfternoon;
   } catch {
-    // Fallback if timezone conversion fails
     return false;
   }
 }
@@ -73,11 +71,9 @@ export const VolumeSurgeAlertToast: React.FC = () => {
 
   // Settings
   const [isEnabled, setIsEnabled] = useState<boolean>(true);
-  const [onlyInTradingHours, setOnlyInTradingHours] = useState<boolean>(true);
   const [thresholdRVol, setThresholdRVol] = useState<number>(2.2); // Default 2.2x SMA20
   const [minValueBillion, setMinValueBillion] = useState<number>(3.0); // Min 3 Billion VND to filter penny noise
   const [showSettings, setShowSettings] = useState<boolean>(false);
-  const [isCurrentlyTrading, setIsCurrentlyTrading] = useState<boolean>(() => isVietnamMarketTradingSession());
 
   // Active Toast Item
   const [activeAlert, setActiveAlert] = useState<AlertNotificationItem | null>(null);
@@ -88,23 +84,12 @@ export const VolumeSurgeAlertToast: React.FC = () => {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Keep trading session status updated every minute
-  useEffect(() => {
-    const checkSession = () => setIsCurrentlyTrading(isVietnamMarketTradingSession());
-    checkSession();
-    const interval = setInterval(checkSession, 30000);
-    return () => clearInterval(interval);
-  }, []);
-
   // Load saved preferences
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
       const savedEnabled = localStorage.getItem(STORAGE_KEY_ENABLED);
       if (savedEnabled !== null) setIsEnabled(savedEnabled === 'true');
-
-      const savedOnlySession = localStorage.getItem(STORAGE_KEY_ONLY_SESSION);
-      if (savedOnlySession !== null) setOnlyInTradingHours(savedOnlySession === 'true');
 
       const savedThreshold = localStorage.getItem(STORAGE_KEY_THRESHOLD);
       if (savedThreshold !== null) {
@@ -120,16 +105,14 @@ export const VolumeSurgeAlertToast: React.FC = () => {
     } catch {}
   }, []);
 
-  const saveSettings = (enabled: boolean, threshold: number, minVal: number, onlySession = onlyInTradingHours) => {
+  const saveSettings = (enabled: boolean, threshold: number, minVal: number) => {
     setIsEnabled(enabled);
     setThresholdRVol(threshold);
     setMinValueBillion(minVal);
-    setOnlyInTradingHours(onlySession);
     try {
       localStorage.setItem(STORAGE_KEY_ENABLED, String(enabled));
       localStorage.setItem(STORAGE_KEY_THRESHOLD, String(threshold));
       localStorage.setItem(STORAGE_KEY_MIN_VAL, String(minVal));
-      localStorage.setItem(STORAGE_KEY_ONLY_SESSION, String(onlySession));
     } catch {}
   };
 
@@ -143,8 +126,8 @@ export const VolumeSurgeAlertToast: React.FC = () => {
 
   // Display a qualified alert with auto-dismiss progress bar
   const triggerAlert = useCallback((item: AlertNotificationItem) => {
-    // Session Guard: Do not display toast outside trading hours if setting is on
-    if (onlyInTradingHours && !isVietnamMarketTradingSession()) {
+    // 100% Precision Guard: Strictly reject any toast outside Vietnam trading sessions
+    if (!isVietnamMarketTradingSession()) {
       return;
     }
 
@@ -165,14 +148,12 @@ export const VolumeSurgeAlertToast: React.FC = () => {
     timerRef.current = setTimeout(() => {
       dismissToast();
     }, TOAST_DURATION_MS);
-  }, [dismissToast, onlyInTradingHours]);
+  }, [dismissToast]);
 
   // Polling scanner: inspect market volume surge
   const scanForSurges = useCallback(async () => {
-    if (!isEnabled) return;
-
-    // Hard Stop: Do not poll or trigger alerts outside trading hours
-    if (onlyInTradingHours && !isVietnamMarketTradingSession()) {
+    // 100% Precision Guard: Only scan when enabled and during live Vietnam trading hours
+    if (!isEnabled || !isVietnamMarketTradingSession()) {
       if (activeAlert) dismissToast();
       return;
     }
@@ -387,26 +368,11 @@ export const VolumeSurgeAlertToast: React.FC = () => {
           </div>
 
           <div className="space-y-3.5">
-            {/* Session Status Banner */}
-            <div className={`p-2 rounded-lg border text-[11px] flex items-center justify-between ${
-              isCurrentlyTrading
-                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
-                : 'bg-zinc-900 border-zinc-800 text-zinc-400'
-            }`}>
-              <span className="font-bold flex items-center gap-1.5">
-                <span className={`w-2 h-2 rounded-full ${isCurrentlyTrading ? 'bg-emerald-400 animate-pulse' : 'bg-zinc-500'}`} />
-                {isCurrentlyTrading ? 'ĐANG TRONG PHIÊN' : 'NGOÀI PHIÊN (ĐÃ NGHỈ)'}
-              </span>
-              <span className="text-[10px] text-zinc-400">
-                {isCurrentlyTrading ? '09:00 - 15:00' : 'Tạm dừng nhắc'}
-              </span>
-            </div>
-
             {/* Toggle On/Off */}
             <div className="flex items-center justify-between">
               <span className="text-zinc-300">Bật nhắc nhở nổ Vol:</span>
               <button
-                onClick={() => saveSettings(!isEnabled, thresholdRVol, minValueBillion, onlyInTradingHours)}
+                onClick={() => saveSettings(!isEnabled, thresholdRVol, minValueBillion)}
                 className={`px-2.5 py-1 rounded font-bold transition-all ${
                   isEnabled
                     ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
@@ -414,24 +380,6 @@ export const VolumeSurgeAlertToast: React.FC = () => {
                 }`}
               >
                 {isEnabled ? 'ĐANG BẬT' : 'ĐÃ TẮT'}
-              </button>
-            </div>
-
-            {/* Toggle Only In Session */}
-            <div className="flex items-center justify-between">
-              <div>
-                <span className="text-zinc-300 block">Chỉ báo trong phiên:</span>
-                <span className="text-[10px] text-zinc-500">Tắt âm & toast ngoài giờ sàn</span>
-              </div>
-              <button
-                onClick={() => saveSettings(isEnabled, thresholdRVol, minValueBillion, !onlyInTradingHours)}
-                className={`px-2.5 py-1 rounded font-bold transition-all ${
-                  onlyInTradingHours
-                    ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
-                    : 'bg-zinc-800 text-zinc-400 border border-zinc-700'
-                }`}
-              >
-                {onlyInTradingHours ? 'CHỈ TRONG PHIÊN' : '24/7 (CẢ NGOÀI GIỜ)'}
               </button>
             </div>
 
@@ -445,7 +393,7 @@ export const VolumeSurgeAlertToast: React.FC = () => {
                 {[1.8, 2.0, 2.2, 2.5].map((val) => (
                   <button
                     key={val}
-                    onClick={() => saveSettings(isEnabled, val, minValueBillion, onlyInTradingHours)}
+                    onClick={() => saveSettings(isEnabled, val, minValueBillion)}
                     className={`py-1 rounded font-bold transition-all border ${
                       thresholdRVol === val
                         ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-sm'
@@ -468,7 +416,7 @@ export const VolumeSurgeAlertToast: React.FC = () => {
                 {[1.0, 3.0, 5.0].map((val) => (
                   <button
                     key={val}
-                    onClick={() => saveSettings(isEnabled, thresholdRVol, val, onlyInTradingHours)}
+                    onClick={() => saveSettings(isEnabled, thresholdRVol, val)}
                     className={`py-1 rounded font-bold transition-all border ${
                       minValueBillion === val
                         ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50 shadow-sm'
