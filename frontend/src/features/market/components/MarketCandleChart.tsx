@@ -6234,9 +6234,9 @@ export function MarketCandleChart() {
             >
               <span>
                 {activeSubIndicator === 'rs_template'
-                  ? 'Template RS (3-in-1)'
+                  ? 'Sức Mạnh Giá RS'
                   : activeSubIndicator === 'general_template'
-                  ? 'Template Đánh Giá Chung'
+                  ? 'Đánh Giá Kỹ Thuật'
                   : 'Bộ Template'}
               </span>
               <CaretDown size={11} className={`text-zinc-400 transition-transform ${showTemplatesModal ? 'rotate-180' : ''}`} />
@@ -6269,7 +6269,7 @@ export function MarketCandleChart() {
                   </div>
 
                   <div className="flex flex-col gap-1">
-                    {/* Preset 0: Template Đánh Giá Chung (KAMA + Vortex + MACD + AO + RSI) */}
+                    {/* Preset 0: Hệ Thống Đánh Giá Kỹ Thuật */}
                     <button
                       onClick={() => {
                         const nextState = activeSubIndicator === 'general_template' ? 'none' : 'general_template';
@@ -6287,9 +6287,9 @@ export function MarketCandleChart() {
                       <div className="flex flex-col">
                         <span className="font-semibold text-xs text-zinc-100 flex items-center gap-1.5">
                           <Sparkle size={13} className="text-cyan-400" weight="fill" />
-                          Template Đánh Giá Chung (5-in-1)
+                          Hệ Thống Đánh Giá Kỹ Thuật
                         </span>
-                        <span className="text-[10px] text-zinc-400">KAMA 30,60 + Vortex + MACD + AO + RSI</span>
+                        <span className="text-[10px] text-zinc-400">Đồng thuận KAMA 30,60 + Vortex + MACD + AO + RSI</span>
                       </div>
                       <span className={`text-[10px] px-2 py-0.5 rounded font-bold ml-2 shrink-0 ${
                         activeSubIndicator === 'general_template' ? 'bg-cyan-500 text-zinc-950' : 'bg-zinc-800 text-zinc-500'
@@ -6297,7 +6297,7 @@ export function MarketCandleChart() {
                         {activeSubIndicator === 'general_template' ? 'BẬT' : 'TẮT'}
                       </span>
                     </button>
-                    {/* Preset 1: Full 3-in-1 Suite */}
+                    {/* Preset 1: Bộ Chỉ Báo Sức Mạnh Giá RS */}
                     <button
                       onClick={() => {
                         setActiveSubIndicator(activeSubIndicator === 'rs_template' ? 'none' : 'rs_template');
@@ -6310,7 +6310,13 @@ export function MarketCandleChart() {
                           : 'bg-zinc-950/60 border-zinc-800 hover:bg-zinc-800/80 hover:border-amber-500/30 text-zinc-200'
                       }`}
                     >
-                      <span className="font-semibold text-xs text-zinc-100">Bộ Template RS (3-in-1)</span>
+                      <div className="flex flex-col">
+                        <span className="font-semibold text-xs text-zinc-100 flex items-center gap-1.5">
+                          <Sparkle size={13} className="text-amber-400" weight="fill" />
+                          Sức Mạnh Giá RS
+                        </span>
+                        <span className="text-[10px] text-zinc-400">Đồng thuận RS Line vs VNI + Mansfield + O'Neil Score</span>
+                      </div>
                       <span className={`text-[10px] px-2 py-0.5 rounded font-bold ml-2 shrink-0 ${
                         activeSubIndicator === 'rs_template' ? 'bg-amber-500 text-zinc-950' : 'bg-zinc-800 text-zinc-500'
                       }`}>

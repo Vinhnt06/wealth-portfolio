@@ -775,7 +775,7 @@ export const GeneralEvaluationSubChart: React.FC<GeneralEvaluationSubChartProps>
             <span className="w-1.5 h-3.5 bg-cyan-400 inline-block" />
             <span className="font-bold text-zinc-100 tracking-tight text-[11px]">
               {activeView === 'all'
-                ? 'ĐÁNH GIÁ CHUNG (4-IN-1)'
+                ? 'HỆ THỐNG ĐÁNH GIÁ KỸ THUẬT'
                 : activeView === 'vortex'
                 ? 'VORTEX (14)'
                 : activeView === 'macd'
@@ -789,10 +789,10 @@ export const GeneralEvaluationSubChart: React.FC<GeneralEvaluationSubChartProps>
           {activeConfluence && (
             <div className="flex items-center gap-1.5 shrink-0">
               <span
-                className={`px-1.5 py-0.5 rounded-sm text-[10px] font-bold border tabular-nums ${verdictBadgeClass}`}
+                className={`px-2 py-0.5 rounded text-[10px] font-bold border tabular-nums ${verdictBadgeClass}`}
                 title={activeConfluence.summaryText}
               >
-                {activeConfluence.bullishCount}/{activeConfluence.totalCount} • {activeConfluence.verdict}
+                ĐỒNG THUẬN: {activeConfluence.bullishCount}/{activeConfluence.totalCount} CHỈ BÁO TĂNG • {activeConfluence.verdict}
               </span>
 
               {/* 5-Factor Signal Matrix Strip (Visible on Desktop) */}
@@ -847,7 +847,7 @@ export const GeneralEvaluationSubChart: React.FC<GeneralEvaluationSubChartProps>
           <div className="flex items-center bg-zinc-950 p-0.5 rounded-sm border border-zinc-800">
             {(
               [
-                { id: 'all', label: '4-in-1' },
+                { id: 'all', label: 'Tất cả' },
                 { id: 'vortex', label: 'Vortex' },
                 { id: 'macd', label: 'MACD' },
                 { id: 'ao', label: 'AO' },

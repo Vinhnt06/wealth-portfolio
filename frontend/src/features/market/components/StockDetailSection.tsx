@@ -26,13 +26,16 @@ import {
   Funnel,
   MagnifyingGlass,
   Scales,
+  Lightning,
 } from '@phosphor-icons/react';
 import { useMarketStore } from '../store/marketStore';
 import { useDnseWebSocket } from '../hooks/useDnseWebSocket';
 import { MarketCandleChart } from './MarketCandleChart';
 import { OrderBook } from './OrderBook';
 import { InvestorFlowAnalysis } from './InvestorFlowAnalysis';
+import { VolumeSurgeTracker } from './VolumeSurgeTracker';
 import { MinerviniStrategyPanel } from './MinerviniStrategyPanel';
+import { MinerviniExpectancyCalculator } from './MinerviniExpectancyCalculator';
 import { FinancialValuationTab } from './FinancialValuationTab';
 import { ShareholderStructureView } from './ShareholderStructureView';
 import { MinerviniAnalysisResult } from '../types/minervini.types';
@@ -125,7 +128,7 @@ interface StockDetailSectionProps {
 export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackToOverview }) => {
   useDnseWebSocket();
   const { selectedSymbol, setSelectedSymbol, setSelectedIndexSymbol, ticks, watchlistSymbols, toggleWatchlistSymbol, updateTick, setViewMode } = useMarketStore();
-  const [activeTab, setActiveTab] = useState<'profile' | 'shareholders' | 'officers' | 'financials' | 'foreign' | 'orderbook'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'volume-surge' | 'orderbook' | 'shareholders' | 'officers' | 'financials' | 'foreign' | 'minervini-expectancy'>('profile');
   const [companyData, setCompanyData] = useState<CompanyData | null>(null);
   const [foreignData, setForeignData] = useState<ForeignTradingData | null>(null);
   const [minerviniData, setMinerviniData] = useState<MinerviniAnalysisResult | null>(null);
@@ -395,6 +398,34 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
               <span>{isStarred ? 'Đang theo dõi' : 'Theo dõi'}</span>
             </button>
 
+            {/* Nút Nhảy Nhanh Đến So Sánh Nổ Vol */}
+            <button
+              onClick={() => {
+                setActiveTab('volume-surge');
+                setTimeout(() => {
+                  document.getElementById('stock-orderbook-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 50);
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-800 bg-zinc-900/90 hover:bg-zinc-800 text-zinc-300 font-mono text-xs font-bold transition-all active:scale-95 shadow-sm cursor-pointer"
+              title={`So sánh đường cong thanh khoản & Nổ Vol của ${selectedSymbol}`}
+            >
+              <span>So Sánh Nổ Vol</span>
+            </button>
+
+            {/* Nút Nhảy Nhanh Đến Điểm Mua & Kỳ Vọng R:R Minervini */}
+            <button
+              onClick={() => {
+                setActiveTab('minervini-expectancy');
+                setTimeout(() => {
+                  document.getElementById('stock-orderbook-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 50);
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 font-mono text-xs font-bold transition-all active:scale-95 shadow-sm cursor-pointer"
+              title={`Hàm kỳ vọng toán học & Cắt lỗ tối ưu theo Mark Minervini cho ${selectedSymbol}`}
+            >
+              <span>Kỳ Vọng R:R Minervini</span>
+            </button>
+
             {/* Nút Nhảy Nhanh Đến Sổ Lệnh & Khớp Lệnh */}
             <button
               onClick={() => {
@@ -403,10 +434,9 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
                   document.getElementById('stock-orderbook-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }, 50);
               }}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 font-mono text-xs font-bold transition-all active:scale-95 shadow-sm cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-800 bg-zinc-900/90 hover:bg-zinc-800 text-zinc-300 font-mono text-xs font-bold transition-all active:scale-95 shadow-sm cursor-pointer"
               title={`Mở nhanh Sổ Lệnh & Nhật Ký Khớp Lệnh của ${selectedSymbol}`}
             >
-              <ListNumbers className="w-3.5 h-3.5 text-emerald-400" />
               <span>Sổ Lệnh & Khớp Lệnh</span>
             </button>
 
@@ -642,6 +672,32 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
             <span>{isIndex ? 'Thông Tin Chỉ Số' : 'Hồ Sơ Doanh Nghiệp'}</span>
           </button>
 
+          {/* Tab So Sánh Nổ Vol (Volume Surge) */}
+          <button
+            onClick={() => setActiveTab('volume-surge')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all ${
+              activeTab === 'volume-surge'
+                ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20'
+                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
+            }`}
+          >
+            <span>So Sánh Nổ Vol</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+          </button>
+
+          {/* Tab Kỳ Vọng & Cắt Lỗ Minervini */}
+          <button
+            onClick={() => setActiveTab('minervini-expectancy')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all ${
+              activeTab === 'minervini-expectancy'
+                ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20'
+                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
+            }`}
+          >
+            <span>Kỳ Vọng & Cắt Lỗ (Minervini)</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+          </button>
+
           {/* Đưa Tab Sổ Lệnh & Dòng Tiền lên vị trí ưu tiên ngay cạnh Hồ Sơ */}
           <button
             onClick={() => setActiveTab('orderbook')}
@@ -653,7 +709,6 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
           >
             <ListNumbers className="w-4 h-4" />
             <span>Sổ Lệnh & Dòng Tiền (Order Book)</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
           </button>
 
           {!isIndex && (
@@ -1007,6 +1062,16 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
                   Đang tải dữ liệu giao dịch khối ngoại thời gian thực từ sàn...
                 </div>
               )}
+            </div>
+          )}
+
+          {!isLoading && activeTab === 'volume-surge' && (
+            <VolumeSurgeTracker symbol={selectedSymbol} />
+          )}
+
+          {!isLoading && activeTab === 'minervini-expectancy' && (
+            <div className="p-4 sm:p-6">
+              <MinerviniExpectancyCalculator initialSymbol={selectedSymbol} initialPrice={price} />
             </div>
           )}
 

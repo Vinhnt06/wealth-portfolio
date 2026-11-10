@@ -431,30 +431,82 @@ export const RSTemplateSubChart: React.FC<RSTemplateSubChartProps> = ({
     };
   }, [dataset, isLoading, mainChart, activeView, isCollapsed]);
 
-  // Status badges
+  // Status badges & Consensus Calculation
   const isAboveMA50 = (hoverValues.rs ?? 0) >= (hoverValues.ma50 ?? 0);
   const isMansfieldPositive = (hoverValues.mansfield ?? 0) >= 0;
   const isLeaderOneil = (hoverValues.oneil ?? 50) >= 80;
+  const isStrongOneil = (hoverValues.oneil ?? 50) >= 70;
+  const isOneilBull = (hoverValues.oneil ?? 50) >= 70;
+
+  const rsFactors = [
+    { id: 'rs_line', name: 'RS > MA50', bull: isAboveMA50, desc: isAboveMA50 ? 'VƯỢT MA50' : 'DƯỚI MA50' },
+    { id: 'mansfield', name: 'MANSFIELD RS', bull: isMansfieldPositive, desc: isMansfieldPositive ? 'OUTPERFORM' : 'UNDERPERFORM' },
+    { id: 'oneil', name: "O'NEIL SCORE", bull: isOneilBull, desc: isLeaderOneil ? 'RS ≥ 80' : isStrongOneil ? 'RS ≥ 70' : 'RS < 70' },
+  ];
+  const rsBullCount = rsFactors.filter((f) => f.bull).length;
+
+  const rsVerdictText =
+    rsBullCount === 3
+      ? 'SIÊU DẪN DẮT'
+      : rsBullCount === 2
+      ? 'MẠNH HƠN THỊ TRƯỜNG'
+      : rsBullCount === 1
+      ? 'PHÂN HOÁ'
+      : 'YẾU HƠN THỊ TRƯỜNG';
+
+  const rsVerdictClass =
+    rsBullCount === 3
+      ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40 shadow-[0_0_10px_rgba(16,185,129,0.2)]'
+      : rsBullCount === 2
+      ? 'bg-teal-500/15 text-teal-300 border-teal-500/40'
+      : rsBullCount === 1
+      ? 'bg-amber-500/15 text-amber-300 border-amber-500/40'
+      : 'bg-rose-500/15 text-rose-300 border-rose-500/40';
 
   return (
     <div className="w-full border-t border-zinc-800/80 bg-zinc-950 flex flex-col relative shrink-0 select-none">
       {/* ── Top Header Toolbar ────────────────────────────────────────── */}
       <div className="flex items-center justify-between px-3 py-1 bg-zinc-900/90 border-b border-zinc-800/80 text-[11px] font-mono">
-        {/* Left: Title + Current Values */}
-        <div className="flex items-center gap-2">
-          <Sparkle className="w-3.5 h-3.5 text-amber-400 shrink-0" weight="fill" />
-          <span className="font-bold text-zinc-100 uppercase tracking-wider text-xs">
-            {activeView === 'all'
-              ? '⚡ BỘ TEMPLATE RS (3-IN-1)'
-              : activeView === 'rs_line'
-              ? '⚡ RS LINE VS VNINDEX'
-              : activeView === 'mansfield'
-              ? '⚡ MANSFIELD RS HISTOGRAM'
-              : '⚡ O\'NEIL RS SCORE (1-99)'}
-          </span>
+        {/* Left: Title + Consensus Badge + Telemetry */}
+        <div className="flex items-center gap-2 flex-wrap min-w-0">
+          <div className="flex items-center gap-1.5 shrink-0">
+            <Sparkle className="w-3.5 h-3.5 text-amber-400 shrink-0" weight="fill" />
+            <span className="font-bold text-zinc-100 uppercase tracking-wider text-xs">
+              {activeView === 'all'
+                ? '⚡ SỨC MẠNH GIÁ RS'
+                : activeView === 'rs_line'
+                ? '⚡ RS LINE VS VNINDEX'
+                : activeView === 'mansfield'
+                ? '⚡ MANSFIELD RS HISTOGRAM'
+                : '⚡ O\'NEIL RS SCORE (1-99)'}
+            </span>
+          </div>
+
+          {/* Consensus Count Badge */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            <span
+              className={`px-2 py-0.5 rounded text-[10px] font-bold border tabular-nums ${rsVerdictClass}`}
+              title="Đánh giá tổng quan độ đồng thuận của 3 chỉ báo sức mạnh giá RS (RS Line, Mansfield RS, O'Neil Score)"
+            >
+              ĐỒNG THUẬN: {rsBullCount}/3 CHỈ BÁO TĂNG • {rsVerdictText}
+            </span>
+
+            {/* 3-Factor Signal Matrix Strip (Desktop) */}
+            <div className="hidden xl:flex items-center divide-x divide-zinc-800 border border-zinc-800 bg-zinc-950 rounded text-[9.5px] tabular-nums">
+              {rsFactors.map((f) => (
+                <span
+                  key={f.id}
+                  className={`px-1.5 py-0.5 font-semibold ${f.bull ? 'text-emerald-400' : 'text-rose-400'}`}
+                  title={`${f.name}: ${f.desc}`}
+                >
+                  {f.name} {f.bull ? '▲' : '▼'}
+                </span>
+              ))}
+            </div>
+          </div>
 
           {/* Quick Telemetry Summary when in single-pane or collapsed */}
-          <div className="hidden lg:flex items-center gap-2 ml-2 text-[10.5px]">
+          <div className="hidden 2xl:flex items-center gap-2 ml-1 text-[10.5px]">
             {(activeView === 'all' || activeView === 'rs_line') && (
               <span className="text-amber-400 font-bold">
                 RS: {hoverValues.rs !== undefined ? hoverValues.rs.toFixed(1) : '--'}
@@ -481,7 +533,7 @@ export const RSTemplateSubChart: React.FC<RSTemplateSubChartProps> = ({
           <span className="text-zinc-500 text-[9.5px] uppercase font-bold mr-1 hidden md:inline">Chế độ:</span>
           {(
             [
-              { id: 'all', label: 'Tất cả (3-in-1)' },
+              { id: 'all', label: 'Tất cả' },
               { id: 'rs_line', label: 'RS Line' },
               { id: 'mansfield', label: 'Mansfield' },
               { id: 'oneil', label: 'RS Score' },

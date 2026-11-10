@@ -10,7 +10,11 @@ import { StockDetailSection } from '../../features/market/components/StockDetail
 import { MarkMinerviniScreener } from '../../features/market/components/MarkMinerviniScreener';
 import { RelativeRotationGraphCard } from '../../features/market/components/RelativeRotationGraph';
 import { SectorMoneyFlowSection } from '../../features/market/components/SectorMoneyFlowSection';
-import { ArrowLeft } from '@phosphor-icons/react';
+import { VolumeSurgeLiveTicker } from '../../features/market/components/VolumeSurgeLiveTicker';
+import { RealtimeVolumeSurgeRadar } from '../../features/market/components/RealtimeVolumeSurgeRadar';
+import { MinerviniExpectancyCalculator } from '../../features/market/components/MinerviniExpectancyCalculator';
+import { VolumeSurgeAlertToast } from '../../features/market/components/VolumeSurgeAlertToast';
+import { ArrowLeft, Lightning } from '@phosphor-icons/react';
 import { getMarketSessionInfo } from '../../features/market/utils/marketHours';
 
 function MarketTerminalContent() {
@@ -39,7 +43,7 @@ function MarketTerminalContent() {
   // Sync tab search param with viewMode
   React.useEffect(() => {
     const tab = searchParams?.get('tab');
-    if (tab === 'flow' || tab === 'screener' || tab === 'rrg' || tab === 'overview') {
+    if (tab === 'flow' || tab === 'screener' || tab === 'rrg' || tab === 'overview' || tab === 'radar') {
       setViewMode(tab);
     }
   }, [searchParams, setViewMode]);
@@ -58,6 +62,18 @@ function MarketTerminalContent() {
           title: 'Bộ Lọc Minervini SEPA',
           subtitle: 'Mô hình Trend Template & Tiêu chuẩn tăng trưởng đà giá Mark Minervini',
           accentColor: 'bg-amber-400',
+        };
+      case 'radar':
+        return {
+          title: 'Radar Bùng Nổ Khối Lượng Realtime',
+          subtitle: 'Phát hiện sớm các điểm bùng nổ thanh khoản và bứt phá dòng tiền trên toàn thị trường',
+          accentColor: 'bg-amber-400',
+        };
+      case 'expectancy':
+        return {
+          title: 'Hàm Kỳ Vọng Toán Học & Điểm Mua / Cắt Lỗ Tối Ưu',
+          subtitle: 'Mô hình định lượng Mark Minervini — Quản trị rủi ro, xác định mức cắt lỗ & tỷ lệ R:R để không thua lỗ',
+          accentColor: 'bg-emerald-400',
         };
       case 'rrg':
         return {
@@ -99,15 +115,43 @@ function MarketTerminalContent() {
           </div>
         </div>
 
-        {/* Right Tools: Back button (if inside a sub-tool) + Live Market Session Pill */}
-        <div className="flex items-center gap-3">
+        {/* Right Tools: Radar Button + Expectancy Button + Back button + Live Market Session Pill */}
+        <div className="flex items-center gap-2.5">
+          {/* Nút Mở Radar Nổ Vol Realtime */}
+          <button
+            onClick={() => setViewMode(viewMode === 'radar' ? 'overview' : 'radar')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-mono font-bold transition-all active:scale-[0.98] ${
+              viewMode === 'radar'
+                ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-md shadow-amber-500/10'
+                : 'border-zinc-800 bg-zinc-900 text-zinc-300 hover:text-white hover:border-zinc-700'
+            }`}
+            title="Mở Radar Bùng Nổ Khối Lượng Realtime Toàn Thị Trường"
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+            <span>Radar Nổ Vol</span>
+          </button>
+
+          {/* Nút Mở Hàm Kỳ Vọng & Quản Trị Rủi Ro Minervini */}
+          <button
+            onClick={() => setViewMode(viewMode === 'expectancy' ? 'overview' : 'expectancy')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-mono font-bold transition-all active:scale-[0.98] ${
+              viewMode === 'expectancy'
+                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-md shadow-emerald-500/10'
+                : 'border-zinc-800 bg-zinc-900 text-zinc-300 hover:text-white hover:border-zinc-700'
+            }`}
+            title="Hàm Kỳ Vọng Toán Học & Điểm Mua / Cắt Lỗ Tối Ưu (Mark Minervini)"
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+            <span>Kỳ Vọng R:R Minervini</span>
+          </button>
+
           {viewMode !== 'overview' && (
             <button
               onClick={() => setViewMode('overview')}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-zinc-800 bg-zinc-900 text-xs font-mono font-bold text-zinc-300 hover:text-white hover:border-zinc-700 hover:bg-zinc-800/60 transition-all active:scale-[0.98]"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-800 bg-zinc-900 text-xs font-mono font-bold text-zinc-300 hover:text-white hover:border-zinc-700 transition-all active:scale-[0.98]"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Về Tổng Quan</span>
+              <span>Tổng Quan</span>
             </button>
           )}
 
@@ -152,7 +196,10 @@ function MarketTerminalContent() {
         </div>
       </div>
 
-      {/* Dynamic Context View: Macro Overview vs Minervini Screener vs Sector Flow vs RRG vs Stock Deep-Dive */}
+      {/* Live Streaming Realtime Volume Surge Ticker Bar */}
+      <VolumeSurgeLiveTicker onOpenRadar={() => setViewMode('radar')} />
+
+      {/* Dynamic Context View: Macro Overview vs Minervini Screener vs Sector Flow vs RRG vs Radar vs Stock Deep-Dive */}
       {viewMode === 'overview' ? (
         <MarketOverviewSection onSelectSector={() => setViewMode('screener')} />
       ) : viewMode === 'screener' ? (
@@ -163,9 +210,16 @@ function MarketTerminalContent() {
         <div className="space-y-6">
           <RelativeRotationGraphCard defaultHeight={700} />
         </div>
+      ) : viewMode === 'radar' ? (
+        <RealtimeVolumeSurgeRadar />
+      ) : viewMode === 'expectancy' ? (
+        <MinerviniExpectancyCalculator />
       ) : (
         <StockDetailSection onBackToOverview={() => setViewMode('overview')} />
       )}
+
+      {/* Floating Volume Surge In-App Alert Reminder (Anti-Spam Filtered) */}
+      <VolumeSurgeAlertToast />
     </div>
   );
 }

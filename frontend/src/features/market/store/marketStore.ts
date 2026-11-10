@@ -31,7 +31,7 @@ interface MarketState {
   isChartExpanded: boolean;
   activeTab: 'orderbook' | 'info' | 'foreign';
   isQuickViewOpen: boolean;
-  viewMode: 'overview' | 'detail' | 'screener' | 'rrg' | 'flow';
+  viewMode: 'overview' | 'detail' | 'screener' | 'rrg' | 'flow' | 'radar' | 'expectancy';
 
   // Real-time live trade tick from WebSocket stream
   lastTradeTick: LiveTradeTick | null;
@@ -40,7 +40,7 @@ interface MarketState {
   setWsStatus: (status: WsStatus) => void;
   setSelectedSymbol: (symbol: string) => void;
   setSelectedIndexSymbol: (symbol: string) => void;
-  setViewMode: (viewMode: 'overview' | 'detail' | 'screener' | 'rrg' | 'flow') => void;
+  setViewMode: (viewMode: 'overview' | 'detail' | 'screener' | 'rrg' | 'flow' | 'radar' | 'expectancy') => void;
   setActiveTab: (tab: 'orderbook' | 'info' | 'foreign') => void;
   openQuickView: (symbol?: string) => void;
   closeQuickView: () => void;
