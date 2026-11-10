@@ -133,7 +133,11 @@ export function TradingViewChart({
         window.addEventListener('resize', handleResize);
         return () => {
             window.removeEventListener('resize', handleResize);
-            chartRef.current?.remove();
+            try {
+                chartRef.current?.remove();
+            } catch {}
+            chartRef.current = null;
+            seriesRef.current = null;
         };
     }, [data, chartType, height, showGrid, candleColors]);
 

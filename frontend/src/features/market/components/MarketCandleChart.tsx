@@ -5108,7 +5108,11 @@ export function MarketCandleChart() {
 
     // Bidirectional timeScale synchronization between main chart and subChart
     const mainChart = chartRef.current;
+    let isDisposed = false;
     let isSyncing = false;
+    let handleMainRangeChange: ((range: any) => void) | null = null;
+    let handleSubRangeChange: ((range: any) => void) | null = null;
+    let rafId: number | null = null;
 
     if (mainChart) {
       const initialRange = mainChart.timeScale().getVisibleLogicalRange();
@@ -5118,8 +5122,8 @@ export function MarketCandleChart() {
         } catch {}
       }
 
-      const handleMainRangeChange = (range: any) => {
-        if (isSyncing || !range) return;
+      handleMainRangeChange = (range: any) => {
+        if (isDisposed || isSyncing || !range || !subChartRef.current) return;
         isSyncing = true;
         try {
           subChart.timeScale().setVisibleLogicalRange(range);
@@ -5128,8 +5132,8 @@ export function MarketCandleChart() {
         renderSubChartCanvas?.();
       };
 
-      const handleSubRangeChange = (range: any) => {
-        if (isSyncing || !range) return;
+      handleSubRangeChange = (range: any) => {
+        if (isDisposed || isSyncing || !range || !chartRef.current) return;
         isSyncing = true;
         try {
           mainChart.timeScale().setVisibleLogicalRange(range);
@@ -5143,36 +5147,52 @@ export function MarketCandleChart() {
     }
 
     const resizeObserver = new ResizeObserver((entries) => {
+      if (isDisposed) return;
       for (const entry of entries) {
         const { width, height } = entry.contentRect;
         if (width > 0 && height > 0) {
-          subChart.applyOptions({ width, height });
-          const mainRange = mainChart?.timeScale().getVisibleLogicalRange();
-          if (mainRange) {
-            try {
+          try {
+            subChart.applyOptions({ width, height });
+            const mainRange = mainChart?.timeScale().getVisibleLogicalRange();
+            if (mainRange) {
               subChart.timeScale().setVisibleLogicalRange(mainRange);
-            } catch {}
-          }
+            }
+          } catch {}
           renderSubChartCanvas?.();
         }
       }
     });
     resizeObserver.observe(container);
 
-    requestAnimationFrame(() => {
+    rafId = requestAnimationFrame(() => {
+      if (isDisposed) return;
       if (mainChart) {
-        const initialRange = mainChart.timeScale().getVisibleLogicalRange();
-        if (initialRange) {
-          try {
+        try {
+          const initialRange = mainChart.timeScale().getVisibleLogicalRange();
+          if (initialRange) {
             subChart.timeScale().setVisibleLogicalRange(initialRange);
-          } catch {}
-        }
+          }
+        } catch {}
       }
     });
 
     return () => {
+      isDisposed = true;
+      if (rafId !== null) cancelAnimationFrame(rafId);
       resizeObserver.disconnect();
-      subChart.remove();
+      if (mainChart && handleMainRangeChange) {
+        try {
+          mainChart.timeScale().unsubscribeVisibleLogicalRangeChange(handleMainRangeChange);
+        } catch {}
+      }
+      if (handleSubRangeChange) {
+        try {
+          subChart.timeScale().unsubscribeVisibleLogicalRangeChange(handleSubRangeChange);
+        } catch {}
+      }
+      try {
+        subChart.remove();
+      } catch {}
       subChartRef.current = null;
     };
   }, [activeSubIndicator, dataVersion, selectedSymbol, resolution]);

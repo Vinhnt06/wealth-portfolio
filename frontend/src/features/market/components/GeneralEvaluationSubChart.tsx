@@ -513,36 +513,52 @@ export const GeneralEvaluationSubChart: React.FC<GeneralEvaluationSubChartProps>
 
     if (subCharts.length === 0) return;
 
+    let isDisposed = false;
+    let rafId: number | null = null;
+    const cleanups: Array<() => void> = [];
+
     // ── Synchronization: Bidirectional TimeScale with Main Chart ───────
     let isSyncing = false;
     const syncTimeScale = (sourceChart: IChartApi, targets: (IChartApi | null)[]) => {
-      sourceChart.timeScale().subscribeVisibleLogicalRangeChange((range) => {
-        if (isSyncing || !range) return;
+      const handler = (range: any) => {
+        if (isDisposed || isSyncing || !range) return;
         isSyncing = true;
         targets.forEach((target) => {
-          if (target && target !== sourceChart) {
+          if (target && target !== sourceChart && !isDisposed) {
             try {
               target.timeScale().setVisibleLogicalRange(range);
             } catch {}
           }
         });
         isSyncing = false;
-      });
+      };
+
+      try {
+        sourceChart.timeScale().subscribeVisibleLogicalRangeChange(handler);
+        cleanups.push(() => {
+          try {
+            sourceChart.timeScale().unsubscribeVisibleLogicalRangeChange(handler);
+          } catch {}
+        });
+      } catch {}
     };
 
     if (mainChart) {
       syncTimeScale(mainChart, subCharts);
       subCharts.forEach((sc) => syncTimeScale(sc, [mainChart, ...subCharts]));
 
-      requestAnimationFrame(() => {
-        const mainRange = mainChart.timeScale().getVisibleLogicalRange();
-        if (mainRange) {
-          subCharts.forEach((sc) => {
-            try {
-              sc.timeScale().setVisibleLogicalRange(mainRange);
-            } catch {}
-          });
-        }
+      rafId = requestAnimationFrame(() => {
+        if (isDisposed) return;
+        try {
+          const mainRange = mainChart.timeScale().getVisibleLogicalRange();
+          if (mainRange) {
+            subCharts.forEach((sc) => {
+              try {
+                sc.timeScale().setVisibleLogicalRange(mainRange);
+              } catch {}
+            });
+          }
+        } catch {}
       });
     }
 
@@ -691,9 +707,26 @@ export const GeneralEvaluationSubChart: React.FC<GeneralEvaluationSubChartProps>
       }
     };
 
-    subCharts.forEach((sc) => sc.subscribeCrosshairMove(handleCrosshairMove));
+    subCharts.forEach((sc) => {
+      try {
+        sc.subscribeCrosshairMove(handleCrosshairMove);
+        cleanups.push(() => {
+          try {
+            sc.unsubscribeCrosshairMove(handleCrosshairMove);
+          } catch {}
+        });
+      } catch {}
+    });
+
     if (mainChart) {
-      mainChart.subscribeCrosshairMove(handleCrosshairMove);
+      try {
+        mainChart.subscribeCrosshairMove(handleCrosshairMove);
+        cleanups.push(() => {
+          try {
+            mainChart.unsubscribeCrosshairMove(handleCrosshairMove);
+          } catch {}
+        });
+      } catch {}
     }
 
     // Resize Observer for mounted panes
@@ -706,19 +739,28 @@ export const GeneralEvaluationSubChart: React.FC<GeneralEvaluationSubChartProps>
     let resizeObserver: ResizeObserver | null = null;
     if (firstContainer) {
       resizeObserver = new ResizeObserver((entries) => {
+        if (isDisposed) return;
         for (const entry of entries) {
           const w = entry.contentRect.width;
           if (w > 0) {
-            subCharts.forEach((sc) => sc.applyOptions({ width: w }));
-            if (mainChart) {
-              const range = mainChart.timeScale().getVisibleLogicalRange();
-              if (range) {
-                subCharts.forEach((sc) => {
-                  try {
-                    sc.timeScale().setVisibleLogicalRange(range);
-                  } catch {}
-                });
+            subCharts.forEach((sc) => {
+              if (!isDisposed) {
+                try {
+                  sc.applyOptions({ width: w });
+                } catch {}
               }
+            });
+            if (mainChart && !isDisposed) {
+              try {
+                const range = mainChart.timeScale().getVisibleLogicalRange();
+                if (range) {
+                  subCharts.forEach((sc) => {
+                    try {
+                      sc.timeScale().setVisibleLogicalRange(range);
+                    } catch {}
+                  });
+                }
+              } catch {}
             }
           }
         }
@@ -727,13 +769,15 @@ export const GeneralEvaluationSubChart: React.FC<GeneralEvaluationSubChartProps>
     }
 
     return () => {
+      isDisposed = true;
+      if (rafId !== null) cancelAnimationFrame(rafId);
       if (resizeObserver) resizeObserver.disconnect();
-      if (mainChart) {
+      cleanups.forEach((cleanup) => cleanup());
+      subCharts.forEach((sc) => {
         try {
-          mainChart.unsubscribeCrosshairMove(handleCrosshairMove);
+          sc.remove();
         } catch {}
-      }
-      subCharts.forEach((sc) => sc.remove());
+      });
       chartVortexRef.current = null;
       chartMacdRef.current = null;
       chartAoRef.current = null;
