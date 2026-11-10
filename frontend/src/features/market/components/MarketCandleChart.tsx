@@ -5839,38 +5839,6 @@ export function MarketCandleChart() {
                     )}
                   </div>
 
-                  {/* Spotlight Banner: MCDX (24HMoney) - Always at the TOP of the popover */}
-                  {(!indicatorSearchQuery || 'mcdx dong tien tao lap banker 24hmoney'.includes(indicatorSearchQuery.toLowerCase())) && (
-                    <div className="mb-3 p-2.5 rounded-xl bg-gradient-to-r from-amber-500/15 via-rose-500/10 to-transparent border border-amber-500/35 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/25 text-amber-300 border border-amber-500/40 uppercase">
-                          NỔI BẬT
-                        </span>
-                        <div>
-                          <div className="text-xs font-bold text-amber-300 font-mono flex items-center gap-1.5">
-                            MCDX (24HMoney)
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                          </div>
-                          <div className="text-[10px] text-zinc-400 font-mono">Dòng tiền Tạo Lập & Đầu Cơ</div>
-                        </div>
-                      </div>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setActiveSubIndicator(activeSubIndicator === 'mcdx' ? 'none' : 'mcdx');
-                          setIsSubChartCollapsed(false);
-                        }}
-                        className={`text-[10px] px-2.5 py-1 rounded-lg font-bold font-mono transition-all ${
-                          activeSubIndicator === 'mcdx'
-                            ? 'bg-amber-500 text-zinc-950 shadow-md shadow-amber-500/20'
-                            : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700'
-                        }`}
-                      >
-                        {activeSubIndicator === 'mcdx' ? 'ĐANG BẬT' : 'BẬT NGAY'}
-                      </button>
-                    </div>
-                  )}
-
                   {/* Section 1: Xu Hướng & Lớp Phủ */}
                   <div className="text-[10px] font-mono uppercase tracking-wider text-emerald-400 font-bold mb-1 px-1">
                     1. Xu Hướng & Lớp Phủ
@@ -6197,7 +6165,7 @@ export function MarketCandleChart() {
                     4. Động Lượng & Dòng Tiền
                   </div>
                   <div className="flex flex-col gap-1">
-                    {/* MCDX (Dòng Tiền Tạo Lập - Multi-Color Dragon) - TOP OF SECTION 4 */}
+                    {/* MCDX */}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -6206,11 +6174,8 @@ export function MarketCandleChart() {
                       }}
                       className="flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-mono text-zinc-200 hover:bg-zinc-800/70 transition-all border border-transparent hover:border-zinc-800"
                     >
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-semibold text-amber-400">MCDX</span>
-                        <span className="text-[10px] text-zinc-400 font-normal">Dòng Tiền Tạo Lập (24HMoney)</span>
-                      </div>
-                      <span className={`text-[10px] px-2 py-0.5 rounded font-bold transition-colors ${activeSubIndicator === 'mcdx' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-zinc-800/60 text-zinc-500'}`}>
+                      <span className="font-semibold text-zinc-200">MCDX (Dòng Tiền Tạo Lập)</span>
+                      <span className={`text-[10px] px-2 py-0.5 rounded font-bold transition-colors ${activeSubIndicator === 'mcdx' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-zinc-800/60 text-zinc-500'}`}>
                         {activeSubIndicator === 'mcdx' ? 'BẬT' : 'TẮT'}
                       </span>
                     </button>
