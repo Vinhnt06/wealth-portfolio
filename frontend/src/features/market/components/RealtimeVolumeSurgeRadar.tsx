@@ -43,6 +43,7 @@ interface SurgingStock {
 interface RadarData {
   success: boolean;
   updatedAt: string;
+  isTradingSession?: boolean;
   sessionProgressPct: number;
   stats: {
     total: number;

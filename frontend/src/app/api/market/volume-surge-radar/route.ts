@@ -102,6 +102,12 @@ export async function GET(req: NextRequest) {
     const minutes = vnDate.getMinutes();
     const currentMins = hours * 60 + minutes;
 
+    const dayOfWeek = vnDate.getDay(); // 0 = Sun, 6 = Sat
+    const isWeekday = dayOfWeek >= 1 && dayOfWeek <= 5;
+    const isMorning = currentMins >= 540 && currentMins <= 690;
+    const isAfternoon = currentMins >= 780 && currentMins <= 900;
+    const isTradingSession = isWeekday && (isMorning || isAfternoon);
+
     // Trading minutes count:
     // Morning: 09:00 - 11:30 (150 mins)
     // Afternoon: 13:00 - 14:45 (105 mins) -> Total: 255 mins
@@ -224,6 +230,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       success: true,
       updatedAt: vnTimeText,
+      isTradingSession,
       sessionProgressPct: Number((sessionProgressRatio * 100).toFixed(0)),
       stats,
       data: limitedSurges,
