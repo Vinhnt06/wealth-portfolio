@@ -64,6 +64,7 @@ import {
   ChartBarHorizontal,
   CaretUp,
   CaretDown,
+  MagnifyingGlass,
 } from '@phosphor-icons/react';
 import {
   calculateFibonacciPivots,
@@ -1335,6 +1336,7 @@ export function MarketCandleChart() {
   const [showResolutionDropdown, setShowResolutionDropdown] = useState(false);
   const [showIndicatorsModal, setShowIndicatorsModal] = useState(false);
   const [showTemplatesModal, setShowTemplatesModal] = useState(false);
+  const [indicatorSearchQuery, setIndicatorSearchQuery] = useState('');
   const [isSubChartCollapsed, setIsSubChartCollapsed] = useState(false);
   const [maType, setMaType] = useState<'EMA' | 'SMA'>('EMA');
   const [showMA8, setShowMA8] = useState(true);
@@ -5791,6 +5793,26 @@ export function MarketCandleChart() {
               <CaretDown size={11} className={`text-zinc-400 transition-transform ${showIndicatorsModal ? 'rotate-180' : ''}`} />
             </button>
 
+            {/* Quick Direct Button: MCDX (24HMoney Dòng Tiền Tạo Lập) */}
+            <button
+              onClick={() => {
+                setActiveSubIndicator(activeSubIndicator === 'mcdx' ? 'none' : 'mcdx');
+                setIsSubChartCollapsed(false);
+              }}
+              title="Bật/Tắt nhanh Dòng Tiền Tạo Lập MCDX (24HMoney)"
+              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-mono font-bold border rounded-lg whitespace-nowrap transition-all shadow-sm ${
+                activeSubIndicator === 'mcdx'
+                  ? 'bg-amber-500/20 border-amber-500/40 text-amber-300 ring-1 ring-amber-500/30'
+                  : 'bg-zinc-900/90 border-zinc-800 hover:border-zinc-700 text-zinc-300 hover:text-white'
+              }`}
+            >
+              <span className={`w-1.5 h-1.5 rounded-full ${activeSubIndicator === 'mcdx' ? 'bg-amber-400 animate-pulse' : 'bg-zinc-600'}`} />
+              <span>MCDX</span>
+              {activeSubIndicator === 'mcdx' && (
+                <span className="text-[9px] bg-amber-500/30 text-amber-200 px-1 rounded font-bold">ON</span>
+              )}
+            </button>
+
             {/* Indicators Popover */}
             {showIndicatorsModal && (
               <>
@@ -5816,6 +5838,58 @@ export function MarketCandleChart() {
                       <X size={14} />
                     </button>
                   </div>
+
+                  {/* Search Input */}
+                  <div className="relative mb-2.5">
+                    <MagnifyingGlass size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400" />
+                    <input
+                      type="text"
+                      value={indicatorSearchQuery}
+                      onChange={(e) => setIndicatorSearchQuery(e.target.value)}
+                      placeholder="Tìm chỉ báo (MCDX, RSI, MA...)"
+                      className="w-full bg-zinc-950/80 border border-zinc-800 focus:border-amber-500/60 rounded-xl pl-8 pr-7 py-1.5 text-xs text-zinc-100 placeholder-zinc-500 font-mono outline-none transition-all"
+                    />
+                    {indicatorSearchQuery && (
+                      <button
+                        onClick={() => setIndicatorSearchQuery('')}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300"
+                      >
+                        <X size={12} />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Spotlight Banner: MCDX (24HMoney) - Always at the TOP of the popover */}
+                  {(!indicatorSearchQuery || 'mcdx dong tien tao lap banker 24hmoney'.includes(indicatorSearchQuery.toLowerCase())) && (
+                    <div className="mb-3 p-2.5 rounded-xl bg-gradient-to-r from-amber-500/15 via-rose-500/10 to-transparent border border-amber-500/35 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/25 text-amber-300 border border-amber-500/40 uppercase">
+                          NỔI BẬT
+                        </span>
+                        <div>
+                          <div className="text-xs font-bold text-amber-300 font-mono flex items-center gap-1.5">
+                            MCDX (24HMoney)
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                          </div>
+                          <div className="text-[10px] text-zinc-400 font-mono">Dòng tiền Tạo Lập & Đầu Cơ</div>
+                        </div>
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActiveSubIndicator(activeSubIndicator === 'mcdx' ? 'none' : 'mcdx');
+                          setIsSubChartCollapsed(false);
+                        }}
+                        className={`text-[10px] px-2.5 py-1 rounded-lg font-bold font-mono transition-all ${
+                          activeSubIndicator === 'mcdx'
+                            ? 'bg-amber-500 text-zinc-950 shadow-md shadow-amber-500/20'
+                            : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700'
+                        }`}
+                      >
+                        {activeSubIndicator === 'mcdx' ? 'ĐANG BẬT' : 'BẬT NGAY'}
+                      </button>
+                    </div>
+                  )}
 
                   {/* Section 1: Xu Hướng & Lớp Phủ */}
                   <div className="text-[10px] font-mono uppercase tracking-wider text-emerald-400 font-bold mb-1 px-1">
@@ -6143,6 +6217,24 @@ export function MarketCandleChart() {
                     4. Động Lượng & Dòng Tiền
                   </div>
                   <div className="flex flex-col gap-1">
+                    {/* MCDX (Dòng Tiền Tạo Lập - Multi-Color Dragon) - TOP OF SECTION 4 */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveSubIndicator(activeSubIndicator === 'mcdx' ? 'none' : 'mcdx');
+                        setIsSubChartCollapsed(false);
+                      }}
+                      className="flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-mono text-zinc-200 hover:bg-zinc-800/70 transition-all border border-transparent hover:border-zinc-800"
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-semibold text-amber-400">MCDX</span>
+                        <span className="text-[10px] text-zinc-400 font-normal">Dòng Tiền Tạo Lập (24HMoney)</span>
+                      </div>
+                      <span className={`text-[10px] px-2 py-0.5 rounded font-bold transition-colors ${activeSubIndicator === 'mcdx' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-zinc-800/60 text-zinc-500'}`}>
+                        {activeSubIndicator === 'mcdx' ? 'BẬT' : 'TẮT'}
+                      </span>
+                    </button>
+
                     {/* RSI */}
                     <button
                       onClick={(e) => {
@@ -6230,24 +6322,6 @@ export function MarketCandleChart() {
                       <span className="font-semibold text-zinc-200">Awesome Oscillator (AO)</span>
                       <span className={`text-[10px] px-2 py-0.5 rounded font-bold transition-colors ${activeSubIndicator === 'ao' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-zinc-800/60 text-zinc-500'}`}>
                         {activeSubIndicator === 'ao' ? 'BẬT' : 'TẮT'}
-                      </span>
-                    </button>
-
-                    {/* MCDX (Dòng Tiền Tạo Lập - Multi-Color Dragon) */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setActiveSubIndicator(activeSubIndicator === 'mcdx' ? 'none' : 'mcdx');
-                        setIsSubChartCollapsed(false);
-                      }}
-                      className="flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-mono text-zinc-200 hover:bg-zinc-800/70 transition-all border border-transparent hover:border-zinc-800"
-                    >
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-semibold text-amber-400">MCDX</span>
-                        <span className="text-[10px] text-zinc-400 font-normal">Dòng Tiền Tạo Lập (24HMoney)</span>
-                      </div>
-                      <span className={`text-[10px] px-2 py-0.5 rounded font-bold transition-colors ${activeSubIndicator === 'mcdx' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-zinc-800/60 text-zinc-500'}`}>
-                        {activeSubIndicator === 'mcdx' ? 'BẬT' : 'TẮT'}
                       </span>
                     </button>
                   </div>
