@@ -51,6 +51,9 @@ interface VolumePaceData {
     statusBadge: string;
     statusDesc: string;
     breakoutTime: string | null;
+    sma20CrossTime?: string | null;
+    paceSurgeTime?: string | null;
+    sma20ProgressPct?: number;
     peakSlot: { time: string; vol: number };
   };
   timeline: Array<{
@@ -349,24 +352,38 @@ export const VolumeSurgeTracker: React.FC<VolumeSurgeTrackerProps> = ({ symbol }
           </div>
         </div>
 
-        {/* Card 4: Breakout Timing & Peak Burst */}
+        {/* Card 4: Breakout Timing & SMA20 Milestone */}
         <div className="p-4 rounded-2xl bg-zinc-950/80 border border-zinc-800/80 relative overflow-hidden group hover:border-zinc-700/80 transition-all">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-mono text-zinc-400 uppercase tracking-wider">Thời Điểm Bứt Phá</span>
+            <span className="text-[11px] font-mono text-zinc-400 uppercase tracking-wider">Thời Điểm Vượt SMA20</span>
             <Clock className="w-4 h-4 text-amber-400" />
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-xl sm:text-2xl font-mono font-black text-amber-400">
-              {metrics.breakoutTime ? `${metrics.breakoutTime}` : 'Chưa Vượt'}
+            <span
+              className={`text-xl sm:text-2xl font-mono font-black ${
+                metrics.isAboveSma20 ? 'text-emerald-400' : 'text-zinc-200'
+              }`}
+            >
+              {metrics.sma20CrossTime || (metrics.isAboveSma20 && metrics.breakoutTime)
+                ? `${metrics.sma20CrossTime || metrics.breakoutTime}`
+                : 'Chưa Vượt'}
             </span>
-            {metrics.breakoutTime && (
-              <span className="text-[11px] font-mono text-emerald-400 font-bold">VƯỢT ĐƯỜNG TB</span>
+            {metrics.isAboveSma20 ? (
+              <span className="text-[11px] font-mono text-emerald-400 font-bold">
+                VƯỢT SMA20 ({metrics.rVol}x)
+              </span>
+            ) : (
+              <span className="text-[11px] font-mono text-amber-400/90 font-bold">
+                ĐẠT {metrics.sma20ProgressPct ?? Math.round((metrics.todayTotalVol / (metrics.sma20Vol || 1)) * 100)}%
+              </span>
             )}
           </div>
           <p className="text-[10px] text-zinc-400 font-mono mt-2.5 truncate">
-            Cao điểm khớp lệnh:{' '}
-            <span className="text-zinc-200 font-bold">{metrics.peakSlot?.time}</span> (
-            {formatNumber(metrics.peakSlot?.vol)} CP/5P)
+            {metrics.isAboveSma20 ? (
+              <>Chính thức vượt mốc {formatNumber(metrics.sma20Vol)} CP cả ngày</>
+            ) : (
+              <>Cần thêm {formatNumber(Math.max(0, metrics.sma20Vol - metrics.todayTotalVol))} CP để đạt mốc TB 20 phiên</>
+            )}
           </p>
         </div>
       </div>

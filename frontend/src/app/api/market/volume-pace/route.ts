@@ -173,8 +173,8 @@ export async function GET(req: NextRequest) {
 
     // 4. Build Real-time Cumulative Progression for Active Session ("Thanh khoản đến đâu tăng đến đó")
     let todayRunning = 0;
-    let breakoutTime: string | null = null;
-    let firstCrossFound = false;
+    let sma20CrossTime: string | null = null;
+    let paceSurgeTime: string | null = null;
 
     // Timeline array for AreaChart
     const timeline = [];
@@ -215,9 +215,14 @@ export async function GET(req: NextRequest) {
         const diffPct = avgCum > 0 ? Number((((todayRunning - avgCum) / avgCum) * 100).toFixed(1)) : 0;
         const isAbove = todayRunning >= avgCum;
 
-        if (isAbove && !firstCrossFound && todayRunning > 0) {
-          breakoutTime = tm;
-          firstCrossFound = true;
+        // Check exact time when today's cumulative volume crossed 100% of 20-day average volume (SMA20)
+        if (!sma20CrossTime && todayRunning >= sma20Vol && sma20Vol > 0) {
+          sma20CrossTime = tm;
+        }
+
+        // Check genuine pace surge: after market open (> 09:30) and volume pacing surges >= +25% above average curve
+        if (!paceSurgeTime && tm >= '09:30' && diffPct >= 25 && todayRunning >= 50000) {
+          paceSurgeTime = tm;
         }
 
         timeline.push({
@@ -309,11 +314,14 @@ export async function GET(req: NextRequest) {
         paceDeltaPct,
         isAboveAvg: todayTotalVol >= latestAvgCum,
         isAboveSma20: todayTotalVol >= sma20Vol,
+        sma20ProgressPct: Math.round((todayTotalVol / (sma20Vol || 1)) * 100),
         status,
         statusLabel,
         statusBadge,
         statusDesc,
-        breakoutTime,
+        breakoutTime: sma20CrossTime,
+        sma20CrossTime,
+        paceSurgeTime,
         peakSlot: sessionSlotMax[activeDate] || { time: '14:15', vol: 0 },
       },
       timeline,
