@@ -222,7 +222,10 @@ export async function GET(request: Request) {
       }).then((r) => r.json()).catch(() => null);
 
       if (paceRes?.success && paceRes.metrics) {
-        const rVol = paceRes.metrics.rVol || 1.0;
+        // During a live session the raw rVol is partial; use the projected full-day rVol instead.
+        const rawRVol = paceRes.metrics.rVol || 1.0;
+        const projRVol = paceRes.metrics.projectedRVol || 0;
+        const rVol = paceRes.isTodayLive && projRVol > 0 ? projRVol : rawRVol;
         const changePct = stockData.changePct || 0;
 
         if (rVol >= 1.5 && changePct > 0) {
@@ -256,7 +259,7 @@ export async function GET(request: Request) {
       details: volDetails,
     });
 
-    // Compute Net Empirical Win Rate
+    // Rule-based win-rate estimate (NOT a backtested probability): base rate + sum of factor deltas
     const totalDelta = marketDelta + wyckoffDelta + trendDelta + rsDelta + volDelta;
     let calculatedWinRate = Math.round(baseWinRate + totalDelta);
 
@@ -288,48 +291,68 @@ export async function GET(request: Request) {
     }
 
     // ── 7. OPTIMAL SETUP PARAMETERS (WYCKOFF & MINERVINI CRITERIA) ──
-    const currentPrice = stockData.price || 0;
+    // Analysis API reports stock prices in thousand VND (e.g. 20.9); normalize everything to full VND
+    const rawPrice = stockData.price || 0;
+    const priceUnit = rawPrice > 0 && rawPrice < 1000 ? 1000 : 1;
+    const currentPrice = Math.round(rawPrice * priceUnit);
     let optimalStopLossPct = 6.0;
     let optimalStopPrice = currentPrice > 0 ? Math.round(currentPrice * 0.94) : 0;
     let optimalStopLossReason = 'Cắt lỗ chuẩn Minervini (tối đa 6-7%)';
+    let setupQuality: 'OK' | 'STOP_TOO_WIDE' | 'STRUCTURE_BROKEN' = 'OK';
+    let setupWarning: string | null = null;
 
-    const wyckoffStopStr = stockData.wyckoff?.stopLossPrice;
-    if (wyckoffStopStr && currentPrice > 0) {
-      const stopVal = parseFloat(wyckoffStopStr.replace(/[^0-9.]/g, ''));
-      if (stopVal > 0) {
-        const normStop = stopVal < 1000 ? Math.round(stopVal * 1000) : Math.round(stopVal);
-        if (currentPrice > normStop) {
-          const rawStopPct = Number((((currentPrice - normStop) / currentPrice) * 100).toFixed(1));
-          if (rawStopPct >= 2.5 && rawStopPct <= 8.0) {
-            optimalStopLossPct = rawStopPct;
-            optimalStopPrice = normStop;
-            optimalStopLossReason = `Cắt lỗ -${rawStopPct}% (${normStop.toLocaleString('vi-VN')} đ) dưới đáy nhịp Spring / LPS chuẩn Wyckoff`;
-          } else if (rawStopPct > 8.0) {
-            optimalStopLossPct = 7.0;
-            optimalStopPrice = Math.round(currentPrice * 0.93);
-            optimalStopLossReason = `Đáy nền Wyckoff cách -${rawStopPct}%, nhưng Mark Minervini tuyệt đối khống chế tối đa 7%`;
-          } else {
-            optimalStopLossPct = 3.5;
-            optimalStopPrice = Math.round(currentPrice * 0.965);
-            optimalStopLossReason = `Cắt lỗ chặt chẽ -3.5% theo điểm pivot`;
-          }
+    // Parse first numeric token (handles "28.5", "28,5", "28.5 (-3% ...)", "28,500")
+    const parseStopValue = (raw: unknown): number => {
+      if (typeof raw === 'number') return raw;
+      if (typeof raw !== 'string') return 0;
+      const m = raw.match(/\d[\d.,]*/);
+      if (!m) return 0;
+      let tok = m[0].replace(/[.,]+$/, '');
+      // Thousands separators like "28,500" or "28.500" (3 digits after the separator, no other separator)
+      if (/^\d{1,3}([.,]\d{3})+$/.test(tok)) tok = tok.replace(/[.,]/g, '');
+      else tok = tok.replace(',', '.');
+      const v = parseFloat(tok);
+      return Number.isFinite(v) ? v : 0;
+    };
+
+    const stopVal = parseStopValue(stockData.wyckoff?.stopLossPrice);
+    if (stopVal > 0 && currentPrice > 0) {
+      const normStop = stopVal < 1000 ? Math.round(stopVal * 1000) : Math.round(stopVal);
+      if (currentPrice <= normStop) {
+        setupQuality = 'STRUCTURE_BROKEN';
+        setupWarning = `Giá hiện tại đã nằm dưới/ngang mốc cắt lỗ cấu trúc (${normStop.toLocaleString('vi-VN')} đ): cấu trúc nền đã gãy, KHÔNG nên mua mới.`;
+        optimalStopLossReason = 'Cấu trúc đã gãy — dùng mốc tham chiếu -6%, không khuyến nghị vào lệnh';
+      } else {
+        const rawStopPct = Number((((currentPrice - normStop) / currentPrice) * 100).toFixed(1));
+        if (rawStopPct >= 2.5 && rawStopPct <= 8.0) {
+          optimalStopLossPct = rawStopPct;
+          optimalStopPrice = normStop;
+          optimalStopLossReason = `Cắt lỗ -${rawStopPct}% (${normStop.toLocaleString('vi-VN')} đ) dưới đáy nhịp Spring / LPS chuẩn Wyckoff`;
+        } else if (rawStopPct > 8.0) {
+          setupQuality = 'STOP_TOO_WIDE';
+          setupWarning = `Đáy cấu trúc Wyckoff cách giá -${rawStopPct}% (> 8%). Điểm vào hiện tại quá xa nền: giảm khối lượng mua hoặc chờ nhịp thu hẹp.`;
+          optimalStopLossPct = 7.0;
+          optimalStopPrice = Math.round(currentPrice * 0.93);
+          optimalStopLossReason = `Đáy nền cách -${rawStopPct}%; dùng trần Minervini -7% (cấu trúc KHÔNG được bảo vệ)`;
+        } else {
+          optimalStopLossPct = 3.5;
+          optimalStopPrice = Math.round(currentPrice * 0.965);
+          optimalStopLossReason = `Cắt lỗ chặt chẽ -3.5% theo điểm pivot`;
         }
       }
     }
 
-    // Target Gain based on Wyckoff Cause & Effect / 52-week High
-    let optimalTargetGainPct = Number((optimalStopLossPct * 2.5).toFixed(1));
-    let optimalTargetPrice = currentPrice > 0 ? Math.round(currentPrice * (1 + optimalTargetGainPct / 100)) : 0;
-    let optimalTargetReason = `Mục tiêu R:R 2.5:1 (+${optimalTargetGainPct}%)`;
+    // Target: capped at 3R and +25% so that "A" stays an average-winner estimate, independent of the 52W high
+    const MAX_TARGET_R = 3;
+    const MAX_TARGET_PCT = 25;
+    let optimalTargetGainPct = Number(Math.min(optimalStopLossPct * 2.5, optimalStopLossPct * MAX_TARGET_R, MAX_TARGET_PCT).toFixed(1));
+    const optimalTargetPrice = currentPrice > 0 ? Math.round(currentPrice * (1 + optimalTargetGainPct / 100)) : 0;
+    const optimalTargetReason = `Mục tiêu R:R ${(optimalTargetGainPct / optimalStopLossPct).toFixed(1)}:1 (+${optimalTargetGainPct}%) — giới hạn ≤ 3R để kỳ vọng không bị thổi phồng`;
 
-    if (stockData.high52W && currentPrice > 0) {
-      const distToHighPct = Number((((stockData.high52W - currentPrice) / currentPrice) * 100).toFixed(1));
-      if (distToHighPct >= optimalStopLossPct * 2.0 && distToHighPct <= 60) {
-        optimalTargetGainPct = distToHighPct;
-        optimalTargetPrice = stockData.high52W;
-        optimalTargetReason = `Mục tiêu +${distToHighPct}% hướng về đỉnh 52 tuần (${stockData.high52W.toLocaleString('vi-VN')} đ)`;
-      }
-    }
+    // 52-week high is shown for reference only (never used as the target)
+    const high52W = Math.round((stockData.high52W || 0) * priceUnit);
+    const distToHigh52WPct =
+      high52W > 0 && currentPrice > 0 ? Number((((high52W - currentPrice) / currentPrice) * 100).toFixed(1)) : null;
 
     // Minervini Practical Action Advice
     let advice = '';
@@ -347,6 +370,7 @@ export async function GET(request: Request) {
       autoWinRate: calculatedWinRate,
       baseWinRate,
       totalDelta,
+      winRateNote: 'Ước lượng theo quy tắc (điểm các trụ cột), không phải xác suất đã backtest',
       confidence,
       confidenceReason,
       recommendedRiskNav,
@@ -368,6 +392,10 @@ export async function GET(request: Request) {
         targetPrice: optimalTargetPrice,
         targetReason: optimalTargetReason,
         rrRatio: Number((optimalTargetGainPct / optimalStopLossPct).toFixed(2)),
+        setupQuality,
+        setupWarning,
+        high52W,
+        distToHigh52WPct,
       },
       factors,
     });

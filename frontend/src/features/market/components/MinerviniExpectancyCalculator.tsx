@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
   Target,
   ShieldCheck,
@@ -78,6 +78,10 @@ interface AutoWinRateData {
     targetPrice: number;
     targetReason: string;
     rrRatio: number;
+    setupQuality?: 'OK' | 'STOP_TOO_WIDE' | 'STRUCTURE_BROKEN';
+    setupWarning?: string | null;
+    high52W?: number;
+    distToHigh52WPct?: number | null;
   };
   factors: WinRateFactor[];
 }
@@ -106,16 +110,32 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
   const liveTick = ticks[activeSymbol.toUpperCase()];
   const livePrice = liveTick?.price || (activeSymbol === selectedSymbol ? initialPrice : 0) || 0;
 
-  // Form Inputs
-  const [entryPrice, setEntryPrice] = useState<number>(() => (livePrice > 0 ? livePrice : 28500));
-  const [targetGainPct, setTargetGainPct] = useState<number>(15); // +15%
-  const [stopLossPct, setStopLossPct] = useState<number>(6); // -6%
+  // Form Inputs (entry stays 0 until a real price arrives — no mock fallback)
+  const [entryPrice, setEntryPrice] = useState<number>(() => (livePrice > 0 ? livePrice : 0));
+  const [targetGainPct, setTargetGainPctRaw] = useState<number>(15); // +15% until recommendation arrives
+  const [stopLossPct, setStopLossPctRaw] = useState<number>(6); // -6% until recommendation arrives
   const [winRatePct, setWinRatePct] = useState<number>(45); // 45% default
   const [totalCapital, setTotalCapital] = useState<number>(100000000); // 100M VND
   const [riskPerTradePct, setRiskPerTradePct] = useState<number>(1.5); // 1.5% NAV risk
 
+  // Track manual edits so auto-recommendations never overwrite what the user typed
+  const stopTouchedRef = useRef(false);
+  const targetTouchedRef = useRef(false);
+  const setStopLossPct = (v: number) => {
+    stopTouchedRef.current = true;
+    setStopLossPctRaw(v);
+  };
+  const setTargetGainPct = (v: number) => {
+    targetTouchedRef.current = true;
+    setTargetGainPctRaw(v);
+  };
+
   // Auto Win Rate Engine States
   const [isAutoWinRate, setIsAutoWinRate] = useState<boolean>(true);
+  const isAutoWinRateRef = useRef(true);
+  useEffect(() => {
+    isAutoWinRateRef.current = isAutoWinRate;
+  }, [isAutoWinRate]);
   const [autoWinRateLoading, setAutoWinRateLoading] = useState<boolean>(false);
   const [autoWinRateData, setAutoWinRateData] = useState<AutoWinRateData | null>(null);
   const [showFactorBreakdown, setShowFactorBreakdown] = useState<boolean>(true);
@@ -131,9 +151,30 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
     }
   }, [activeSymbol, livePrice]);
 
+  // Fallback: fetch a real quote when no live tick/price is available for the active symbol
+  useEffect(() => {
+    if (livePrice > 0) return;
+    let isCancelled = false;
+    fetch(`/api/market/quote?symbol=${encodeURIComponent(activeSymbol)}`)
+      .then((res) => res.json())
+      .then((json) => {
+        if (!isCancelled && json.success && json.data?.price > 0) {
+          setEntryPrice(json.data.price);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      isCancelled = true;
+    };
+  }, [activeSymbol, livePrice]);
+
   // Fetch quantitative Win Rate dynamically based on Market + Stock Trend + RS + Volume
   useEffect(() => {
     let isCancelled = false;
+    // New symbol → allow auto recommendations again
+    stopTouchedRef.current = false;
+    targetTouchedRef.current = false;
+    setAutoWinRateData(null);
     setAutoWinRateLoading(true);
 
     fetch(`/api/market/minervini/win-rate?symbol=${encodeURIComponent(activeSymbol)}`)
@@ -141,8 +182,13 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
       .then((json: AutoWinRateData) => {
         if (!isCancelled && json.success) {
           setAutoWinRateData(json);
-          // If in AUTO mode, apply the calculated empirical win rate
-          setWinRatePct(json.autoWinRate);
+          // Only overwrite win rate while in AUTO mode
+          if (isAutoWinRateRef.current) setWinRatePct(json.autoWinRate);
+          // Auto-fill stop / target unless the user already edited them
+          if (json.optimalSetup) {
+            if (!stopTouchedRef.current) setStopLossPctRaw(json.optimalSetup.stopLossPct);
+            if (!targetTouchedRef.current) setTargetGainPctRaw(json.optimalSetup.targetGainPct);
+          }
         }
       })
       .catch((err) => {
@@ -173,8 +219,10 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
 
   const applyOptimalSetup = () => {
     if (autoWinRateData?.optimalSetup) {
-      setStopLossPct(autoWinRateData.optimalSetup.stopLossPct);
-      setTargetGainPct(autoWinRateData.optimalSetup.targetGainPct);
+      stopTouchedRef.current = false;
+      targetTouchedRef.current = false;
+      setStopLossPctRaw(autoWinRateData.optimalSetup.stopLossPct);
+      setTargetGainPctRaw(autoWinRateData.optimalSetup.targetGainPct);
       setWinRatePct(autoWinRateData.autoWinRate);
       setIsAutoWinRate(true);
     }
@@ -453,204 +501,201 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
 
   return (
     <div className="w-full max-w-full space-y-6">
-      {/* ── TOP HEADER TOOLBAR & QUICK STOCK SELECTOR ── */}
-      <div className="p-5 sm:p-6 rounded-2xl bg-zinc-950/95 border border-zinc-800/80 shadow-2xl backdrop-blur-xl">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 shrink-0">
-              <Calculator className="w-6 h-6" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-base sm:text-xl font-bold text-zinc-100 flex items-center gap-2">
-                  <span>Hàm Kỳ Vọng & Quản Trị Cắt Lỗ Tối Ưu</span>
-                  <span className="font-mono text-emerald-400 font-black">MARK MINERVINI</span>
-                </h2>
-                <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold border ${math.verdictColor}`}>
-                  {math.verdict}
-                </span>
-              </div>
-              <p className="text-xs text-zinc-400 mt-1 font-mono">
-                Mô hình định lượng từ cuốn <i>"Think & Trade Like a Champion"</i> • Giữ lợi nhuận trung bình gấp 2-3 lần mức thua lỗ trung bình.
-              </p>
-            </div>
-          </div>
+      {/* ── HEADER: TITLE + SYMBOL SELECTOR ── */}
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h2 className="text-lg sm:text-xl font-semibold text-zinc-100 tracking-tight">
+            Kỳ Vọng &amp; Cắt Lỗ Tối Ưu
+            <span className="ml-2 font-mono text-emerald-400">{activeSymbol}</span>
+          </h2>
+          <p className="text-xs text-zinc-500 mt-1">
+            Mô hình Mark Minervini: lãi trung bình phải gấp 2–3 lần lỗ trung bình.
+          </p>
+        </div>
 
-          {/* Quick Stock Selector */}
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center gap-1.5 p-1 rounded-xl bg-zinc-900 border border-zinc-800">
-              <span className="text-[11px] font-mono text-zinc-400 px-2">Mã:</span>
-              <div className="flex items-center gap-1">
-                {POPULAR_SYMBOLS.slice(0, 6).map((sym) => (
-                  <button
-                    key={sym}
-                    onClick={() => handleSelectSymbol(sym)}
-                    className={`px-2 py-1 rounded-lg text-xs font-mono font-bold transition-all ${
-                      activeSymbol === sym
-                        ? 'bg-zinc-800 text-emerald-400 border border-emerald-500/40'
-                        : 'text-zinc-400 hover:text-zinc-200'
-                    }`}
-                  >
-                    {sym}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Input custom symbol */}
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleSelectSymbol(symbolInput);
-              }}
-              className="flex items-center gap-1"
-            >
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Mã CP..."
-                  value={symbolInput}
-                  onChange={(e) => setSymbolInput(e.target.value.toUpperCase())}
-                  className="w-24 px-3 py-1.5 rounded-xl bg-zinc-900 border border-zinc-800 text-xs font-mono text-zinc-100 focus:outline-none focus:border-emerald-500/50"
-                />
-              </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-0.5 p-1 rounded-lg bg-zinc-900 border border-zinc-800">
+            {POPULAR_SYMBOLS.slice(0, 6).map((sym) => (
               <button
-                type="submit"
-                className="p-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition-colors"
-                title="Đổi mã cổ phiếu"
+                key={sym}
+                onClick={() => handleSelectSymbol(sym)}
+                className={`px-2.5 py-1 rounded-md text-xs font-mono font-semibold transition-colors ${
+                  activeSymbol === sym
+                    ? 'bg-zinc-800 text-emerald-400'
+                    : 'text-zinc-500 hover:text-zinc-200'
+                }`}
               >
-                <MagnifyingGlass className="w-4 h-4" />
+                {sym}
               </button>
-            </form>
+            ))}
           </div>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSelectSymbol(symbolInput);
+            }}
+            className="flex items-center gap-1"
+          >
+            <input
+              type="text"
+              placeholder="Mã khác…"
+              value={symbolInput}
+              onChange={(e) => setSymbolInput(e.target.value.toUpperCase())}
+              className="w-24 px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-xs font-mono text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50"
+            />
+            <button
+              type="submit"
+              className="p-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition-colors"
+              title="Đổi mã cổ phiếu"
+            >
+              <MagnifyingGlass className="w-4 h-4" />
+            </button>
+          </form>
         </div>
       </div>
 
-      {/* ── 4 EXPANSIVE BENTO METRIC CARDS ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        {/* Metric 1: Expectancy Per Trade */}
-        <div className="p-4 sm:p-5 rounded-2xl bg-zinc-950/90 border border-zinc-800/80 shadow-lg relative overflow-hidden group hover:border-zinc-700 transition-all">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-mono text-zinc-400 uppercase tracking-wider">Hàm Kỳ Vọng (E)</span>
-            <div className="flex items-center gap-1.5">
-              {isAutoWinRate && (
-                <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 font-bold flex items-center gap-1">
-                  <Lightning className="w-2.5 h-2.5" />
-                  WR {winRatePct}%
-                </span>
-              )}
-              <Scales className="w-4 h-4 text-emerald-400" />
+      {/* ── VERDICT: ONE ANSWER FIRST ── */}
+      {(() => {
+        const setup = autoWinRateData?.optimalSetup;
+        const structureBroken = setup?.setupQuality === 'STRUCTURE_BROKEN';
+        const hasPrice = entryPrice > 0;
+        const tone = structureBroken || math.verdictColor.includes('rose')
+          ? 'rose'
+          : math.verdictColor.includes('amber')
+            ? 'amber'
+            : 'emerald';
+        const toneText = { rose: 'text-rose-400', amber: 'text-amber-400', emerald: 'text-emerald-400' }[tone];
+        const toneBar = { rose: 'bg-rose-500', amber: 'bg-amber-400', emerald: 'bg-emerald-400' }[tone];
+        const verdictLabel = structureBroken ? 'KHÔNG NÊN MUA — CẤU TRÚC ĐÃ GÃY' : math.verdict;
+        const verdictNote = structureBroken ? setup?.setupWarning : math.verdictNote;
+
+        return (
+          <section className="rounded-xl bg-zinc-950 border border-zinc-800 overflow-hidden">
+            <div className="flex">
+              <div className={`w-1 shrink-0 ${toneBar}`} />
+              <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 p-5 sm:p-6">
+                {/* Answer */}
+                <div className="lg:col-span-5">
+                  <span className={`text-xs font-mono font-semibold tracking-wide ${toneText}`}>{verdictLabel}</span>
+                  <div className="flex items-baseline gap-2 mt-2">
+                    <span className={`text-5xl sm:text-6xl font-mono font-bold tabular-nums ${toneText}`}>
+                      {math.expectancyPct > 0 ? '+' : ''}
+                      {math.expectancyPct}%
+                    </span>
+                    <span className="text-sm text-zinc-500">kỳ vọng / lệnh</span>
+                  </div>
+                  <p className="text-sm text-zinc-400 mt-3 leading-relaxed max-w-md">{verdictNote}</p>
+                </div>
+
+                {/* Trade plan */}
+                <div className="lg:col-span-7">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs text-zinc-500">Kế hoạch giao dịch đề xuất</span>
+                    <span className="text-[11px] text-zinc-500 font-mono">
+                      Tỷ lệ thắng {winRatePct}% · {isAutoWinRate ? 'ước lượng theo quy tắc' : 'nhập tay'}
+                    </span>
+                  </div>
+                  {hasPrice ? (
+                    <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-y sm:divide-y-0 divide-zinc-800 border border-zinc-800 rounded-lg">
+                      <div className="p-3">
+                        <div className="text-[11px] text-zinc-500">Giá vào</div>
+                        <div className="text-lg font-mono font-semibold text-zinc-100 tabular-nums mt-1">
+                          {formatVND(entryPrice)}
+                        </div>
+                      </div>
+                      <div className="p-3">
+                        <div className="text-[11px] text-zinc-500">Cắt lỗ −{stopLossPct}%</div>
+                        <div className="text-lg font-mono font-semibold text-rose-400 tabular-nums mt-1">
+                          {formatVND(math.stopLossPrice)}
+                        </div>
+                      </div>
+                      <div className="p-3">
+                        <div className="text-[11px] text-zinc-500">Mục tiêu +{targetGainPct}%</div>
+                        <div className="text-lg font-mono font-semibold text-emerald-400 tabular-nums mt-1">
+                          {formatVND(math.targetPrice)}
+                        </div>
+                      </div>
+                      <div className="p-3">
+                        <div className="text-[11px] text-zinc-500">Khối lượng tối đa</div>
+                        <div className="text-lg font-mono font-semibold text-zinc-100 tabular-nums mt-1">
+                          {formatVND(math.maxShares)}
+                          <span className="text-xs text-zinc-500 ml-1">cp</span>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="border border-dashed border-zinc-700 rounded-lg p-4 text-sm text-zinc-400">
+                      Chưa có giá thị trường của {activeSymbol} — nhập giá vào lệnh ở bảng bên dưới để tính toán.
+                    </div>
+                  )}
+
+                  {setup && (
+                    <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-zinc-500 font-mono">
+                      <span>Đề xuất: cắt lỗ −{setup.stopLossPct}% · mục tiêu +{setup.targetGainPct}% · R:R {setup.rrRatio}:1</span>
+                      {typeof setup.distToHigh52WPct === 'number' && (
+                        <span>Cách đỉnh 52 tuần: {setup.distToHigh52WPct}% (tham khảo)</span>
+                      )}
+                      <button
+                        onClick={applyOptimalSetup}
+                        className="text-emerald-400 hover:text-emerald-300 underline underline-offset-2"
+                      >
+                        Áp dụng đề xuất
+                      </button>
+                    </div>
+                  )}
+
+                  {setup?.setupWarning && !structureBroken && (
+                    <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-xs text-amber-300">
+                      <WarningCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                      <span>{setup.setupWarning}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
+          </section>
+        );
+      })()}
+
+      {/* ── SUPPORTING METRICS: ONE CONTAINER, 1px DIVIDERS ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-zinc-800 rounded-xl bg-zinc-950 border border-zinc-800">
+        <div className="p-5">
+          <div className="text-xs text-zinc-500">Tỷ lệ Lãi/Lỗ (R:R)</div>
+          <div
+            className={`text-3xl font-mono font-bold tabular-nums mt-1 ${
+              math.rrRatio >= 2.0 ? 'text-emerald-400' : math.rrRatio >= 1.5 ? 'text-amber-400' : 'text-rose-400'
+            }`}
+          >
+            {math.rrRatio}:1
           </div>
-          <div className="flex items-baseline gap-2">
-            <span
-              className={`text-2xl sm:text-4xl font-mono font-black ${
-                math.expectancyPct > 0 ? 'text-emerald-400' : 'text-rose-400'
-              }`}
-            >
-              {math.expectancyPct > 0 ? `+${math.expectancyPct}%` : `${math.expectancyPct}%`}
-            </span>
-            <span className="text-xs font-mono text-zinc-400">/lệnh</span>
-          </div>
-          <div className="mt-2.5">
-            <div className="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-              <div
-                className={`h-full rounded-full transition-all duration-500 ${
-                  math.expectancyPct > 0 ? 'bg-emerald-400' : 'bg-rose-500'
-                }`}
-                style={{ width: `${Math.min(100, Math.max(10, (math.expectancyPct + 5) * 8))}%` }}
-              />
-            </div>
-            <span className="text-[10px] text-zinc-400 font-mono mt-1.5 block">
-              {math.expectancyPct > 0 ? 'Lợi thế thống kê dương (Math Edge)' : 'Kỳ vọng âm: Tài khoản bị bào mòn'}
-            </span>
+          <div className="text-[11px] text-zinc-500 mt-1">
+            +{targetGainPct}% so với −{stopLossPct}% · chuẩn ≥ 2:1
           </div>
         </div>
-
-        {/* Metric 2: R:R Ratio */}
-        <div className="p-4 sm:p-5 rounded-2xl bg-zinc-950/90 border border-zinc-800/80 shadow-lg relative overflow-hidden group hover:border-zinc-700 transition-all">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-mono text-zinc-400 uppercase tracking-wider">Tỷ Lệ Lãi/Lỗ (R:R)</span>
-            <Target className="w-4 h-4 text-amber-400" />
+        <div className="p-5">
+          <div className="text-xs text-zinc-500">Tỷ lệ thắng hòa vốn</div>
+          <div
+            className={`text-3xl font-mono font-bold tabular-nums mt-1 ${
+              winRatePct >= math.breakevenWinRatePct ? 'text-zinc-100' : 'text-rose-400'
+            }`}
+          >
+            {math.breakevenWinRatePct}%
           </div>
-          <div className="flex items-baseline gap-2">
-            <span
-              className={`text-2xl sm:text-4xl font-mono font-black ${
-                math.rrRatio >= 2.0 ? 'text-emerald-400' : math.rrRatio >= 1.5 ? 'text-amber-400' : 'text-rose-400'
-              }`}
-            >
-              {math.rrRatio}:1
-            </span>
-            <span className="text-xs font-mono text-zinc-400">Chuẩn &ge; 2:1</span>
-          </div>
-          <div className="mt-2.5">
-            <div className="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-              <div
-                className={`h-full rounded-full transition-all duration-500 ${
-                  math.rrRatio >= 2.0 ? 'bg-emerald-400' : 'bg-amber-400'
-                }`}
-                style={{ width: `${Math.min(100, (math.rrRatio / 3.5) * 100)}%` }}
-              />
-            </div>
-            <span className="text-[10px] text-zinc-400 font-mono mt-1.5 block">
-              Mục tiêu +{targetGainPct}% vs Cắt lỗ -{stopLossPct}%
-            </span>
+          <div className="text-[11px] text-zinc-500 mt-1">
+            Hiện tại {winRatePct}% — {winRatePct >= math.breakevenWinRatePct ? 'trên' : 'dưới'} ngưỡng hòa vốn
           </div>
         </div>
-
-        {/* Metric 3: Breakeven Win Rate */}
-        <div className="p-4 sm:p-5 rounded-2xl bg-zinc-950/90 border border-zinc-800/80 shadow-lg relative overflow-hidden group hover:border-zinc-700 transition-all">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-mono text-zinc-400 uppercase tracking-wider">Win Rate Hòa Vốn</span>
-            <ShieldCheck className="w-4 h-4 text-sky-400" />
+        <div className="p-5">
+          <div className="text-xs text-zinc-500">Cắt lỗ tối đa để còn hòa vốn</div>
+          <div
+            className={`text-3xl font-mono font-bold tabular-nums mt-1 ${
+              stopLossPct <= math.maxBreakevenStopLossPct ? 'text-zinc-100' : 'text-rose-400'
+            }`}
+          >
+            {math.maxBreakevenStopLossPct}%
           </div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl sm:text-4xl font-mono font-black text-sky-300">
-              {math.breakevenWinRatePct}%
-            </span>
-            <span className="text-xs font-mono text-zinc-400">Tối thiểu</span>
-          </div>
-          <div className="mt-2.5">
-            <div className="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-              <div
-                className="h-full rounded-full bg-sky-400 transition-all duration-500"
-                style={{ width: `${Math.min(100, math.breakevenWinRatePct)}%` }}
-              />
-            </div>
-            <span className="text-[10px] text-zinc-400 font-mono mt-1.5 block">
-              Chỉ cần đúng &gt; {math.breakevenWinRatePct}% là tài khoản sinh lời
-            </span>
-          </div>
-        </div>
-
-        {/* Metric 4: Max Breakeven Stop Loss */}
-        <div className="p-4 sm:p-5 rounded-2xl bg-zinc-950/90 border border-zinc-800/80 shadow-lg relative overflow-hidden group hover:border-zinc-700 transition-all">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-mono text-zinc-400 uppercase tracking-wider">Cắt Lỗ Tối Đa Cho Phép</span>
-            <WarningCircle className="w-4 h-4 text-rose-400" />
-          </div>
-          <div className="flex items-baseline gap-2">
-            <span
-              className={`text-2xl sm:text-4xl font-mono font-black ${
-                stopLossPct <= math.maxBreakevenStopLossPct ? 'text-zinc-100' : 'text-rose-400'
-              }`}
-            >
-              {math.maxBreakevenStopLossPct}%
-            </span>
-            <span className="text-xs font-mono text-zinc-400">Giới hạn hòa vốn</span>
-          </div>
-          <div className="mt-2.5">
-            <div className="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-              <div
-                className={`h-full rounded-full transition-all duration-500 ${
-                  stopLossPct <= math.maxBreakevenStopLossPct ? 'bg-amber-400' : 'bg-rose-500'
-                }`}
-                style={{ width: `${Math.min(100, (stopLossPct / (math.maxBreakevenStopLossPct || 1)) * 100)}%` }}
-              />
-            </div>
-            <span className="text-[10px] text-zinc-400 font-mono mt-1.5 block">
-              Nếu cắt lỗ &gt; {math.maxBreakevenStopLossPct}%, kỳ vọng sẽ lập tức bị âm
-            </span>
+          <div className="text-[11px] text-zinc-500 mt-1">
+            Cắt lỗ đang đặt −{stopLossPct}% — {stopLossPct <= math.maxBreakevenStopLossPct ? 'an toàn' : 'vượt giới hạn'}
           </div>
         </div>
       </div>
@@ -669,47 +714,26 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
             </div>
 
             <div className="space-y-4">
-              {/* Smart Wyckoff & Minervini Setup Banner */}
-              {autoWinRateData?.optimalSetup && (
-                <div className="p-3 rounded-xl bg-cyan-950/40 border border-cyan-800/60 flex items-center justify-between text-xs font-mono">
-                  <div className="space-y-0.5">
-                    <div className="flex items-center gap-1.5 text-cyan-300 font-bold text-[11px]">
-                      <Sparkle className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                      <span>Cài đặt chuẩn Wyckoff & Minervini ({activeSymbol}):</span>
-                    </div>
-                    <div className="text-[10px] text-zinc-300">
-                      Mục tiêu: <span className="text-emerald-400 font-bold">+{autoWinRateData.optimalSetup.targetGainPct}%</span> • Cắt lỗ: <span className="text-rose-400 font-bold">-{autoWinRateData.optimalSetup.stopLossPct}%</span> (R:R {autoWinRateData.optimalSetup.rrRatio}:1)
-                    </div>
-                    {autoWinRateData.summary.wyckoffPhase && (
-                      <div className="text-[9px] text-zinc-400">
-                        {autoWinRateData.summary.wyckoffPhase} • {autoWinRateData.summary.wyckoffBuyPoint}
-                      </div>
-                    )}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={applyOptimalSetup}
-                    className="px-2.5 py-1.5 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 font-bold text-[10px] transition-all shrink-0 flex items-center gap-1 shadow-sm ml-2"
-                    title="Tự động áp dụng mức Cắt lỗ và Chốt lời tối ưu theo đáy nền Wyckoff và đỉnh 52 tuần"
-                  >
-                    <Check className="w-3 h-3" />
-                    <span>Áp dụng</span>
-                  </button>
-                </div>
+              {/* Recommendation lives in the verdict block above; stop/target auto-fill from it unless edited */}
+              {autoWinRateData?.optimalSetup && !stopTouchedRef.current && !targetTouchedRef.current && (
+                <p className="text-[11px] text-zinc-500">
+                  Cắt lỗ &amp; mục tiêu đang tự điền theo đề xuất ({autoWinRateData.summary.wyckoffPhase || 'Wyckoff'}). Sửa tay để ghi đè.
+                </p>
               )}
 
               {/* 1. Điểm mua dự kiến (Entry Price) */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between text-xs font-mono">
                   <span className="text-zinc-400">Giá Mua Dự Kiến (Entry):</span>
-                  <span className="font-bold text-zinc-100">{formatVND(entryPrice)} VNĐ</span>
+                  <span className="font-bold text-zinc-100">{entryPrice > 0 ? `${formatVND(entryPrice)} VNĐ` : 'Chưa có giá'}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <input
                     type="number"
                     step="50"
-                    value={entryPrice}
-                    onChange={(e) => setEntryPrice(Math.max(100, Number(e.target.value)))}
+                    value={entryPrice > 0 ? entryPrice : ''}
+                    placeholder="Nhập giá vào lệnh"
+                    onChange={(e) => setEntryPrice(Math.max(0, Number(e.target.value)))}
                     className="w-full px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-xs font-mono text-zinc-100 focus:outline-none focus:border-emerald-500/50"
                   />
                   {livePrice > 0 && (
@@ -895,7 +919,7 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
                       {isAutoWinRate ? (
                         <span className="flex items-center gap-1 text-cyan-400 font-bold">
                           <Lightning className="w-3 h-3" />
-                          Định lượng thực tế: {activeSymbol} & VN-Index
+                          Ước lượng theo quy tắc (không phải xác suất backtest)
                         </span>
                       ) : (
                         <span className="text-amber-400 font-bold">Tự điều chỉnh thủ công</span>
