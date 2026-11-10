@@ -5793,26 +5793,6 @@ export function MarketCandleChart() {
               <CaretDown size={11} className={`text-zinc-400 transition-transform ${showIndicatorsModal ? 'rotate-180' : ''}`} />
             </button>
 
-            {/* Quick Direct Button: MCDX (24HMoney Dòng Tiền Tạo Lập) */}
-            <button
-              onClick={() => {
-                setActiveSubIndicator(activeSubIndicator === 'mcdx' ? 'none' : 'mcdx');
-                setIsSubChartCollapsed(false);
-              }}
-              title="Bật/Tắt nhanh Dòng Tiền Tạo Lập MCDX (24HMoney)"
-              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-mono font-bold border rounded-lg whitespace-nowrap transition-all shadow-sm ${
-                activeSubIndicator === 'mcdx'
-                  ? 'bg-amber-500/20 border-amber-500/40 text-amber-300 ring-1 ring-amber-500/30'
-                  : 'bg-zinc-900/90 border-zinc-800 hover:border-zinc-700 text-zinc-300 hover:text-white'
-              }`}
-            >
-              <span className={`w-1.5 h-1.5 rounded-full ${activeSubIndicator === 'mcdx' ? 'bg-amber-400 animate-pulse' : 'bg-zinc-600'}`} />
-              <span>MCDX</span>
-              {activeSubIndicator === 'mcdx' && (
-                <span className="text-[9px] bg-amber-500/30 text-amber-200 px-1 rounded font-bold">ON</span>
-              )}
-            </button>
-
             {/* Indicators Popover */}
             {showIndicatorsModal && (
               <>
