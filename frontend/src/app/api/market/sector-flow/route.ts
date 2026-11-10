@@ -159,14 +159,21 @@ export async function GET(req: NextRequest) {
 
     const history: SessionSectorFlow[] = JSON.parse(JSON.stringify(sectorFlowHistory));
 
-    // Try fetching today's live session from SSI iBoard
-    const liveSession = await fetchLiveFromSsi();
-    if (liveSession) {
-      const existingIdx = history.findIndex((h) => h.date === liveSession.date);
-      if (existingIdx !== -1) {
-        history[existingIdx] = { ...liveSession, isLive: true };
-      } else {
-        history.unshift(liveSession);
+    const todayDateStr = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' });
+    const vnHour = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' })).getHours();
+    
+    // Only attempt live SSI fetch if market is open (9:00 - 15:00) OR if history doesn't have today's session yet
+    const shouldFetchLive = (vnHour >= 9 && vnHour < 15) || (history[0]?.date !== todayDateStr && vnHour >= 9);
+
+    if (shouldFetchLive) {
+      const liveSession = await fetchLiveFromSsi();
+      if (liveSession) {
+        const existingIdx = history.findIndex((h) => h.date === liveSession.date);
+        if (existingIdx !== -1) {
+          history[existingIdx] = { ...liveSession, isLive: true };
+        } else {
+          history.unshift(liveSession);
+        }
       }
     }
 

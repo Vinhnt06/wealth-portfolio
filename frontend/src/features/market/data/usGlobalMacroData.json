@@ -1,16 +1,16 @@
 {
   "success": true,
-  "timestamp": "2026-11-10T07:32:28.232Z",
-  "updateTime": "14:32:27",
+  "timestamp": "2026-11-10T14:34:03.790Z",
+  "updateTime": "21:34:03",
   "indices": [
     {
       "symbol": "^GSPC",
       "name": "S&P 500",
       "category": "equity",
       "region": "us",
-      "price": 7549.94,
-      "change": 173.08,
-      "changePercent": 2.35,
+      "price": 7501,
+      "change": -48.94,
+      "changePercent": -0.65,
       "unit": "pts",
       "note": "Top 500 CP vốn hóa lớn nhất Mỹ"
     },
@@ -19,9 +19,9 @@
       "name": "Nasdaq Comp",
       "category": "equity",
       "region": "us",
-      "price": 25253.14,
-      "change": 673.74,
-      "changePercent": 2.74,
+      "price": 25019.93,
+      "change": -233.21,
+      "changePercent": -0.92,
       "unit": "pts",
       "note": "Chỉ số nhóm cổ phiếu công nghệ Mỹ"
     },
@@ -30,9 +30,9 @@
       "name": "Dow Jones",
       "category": "equity",
       "region": "us",
-      "price": 52389.75,
-      "change": 1104.02,
-      "changePercent": 2.15,
+      "price": 52201.62,
+      "change": -188.13,
+      "changePercent": -0.36,
       "unit": "pts",
       "note": "30 Bluechip lớn nhất sàn New York"
     },
@@ -52,9 +52,9 @@
       "name": "Hang Seng",
       "category": "equity",
       "region": "asia",
-      "price": 24537.51,
-      "change": 88.56,
-      "changePercent": 0.36,
+      "price": 24557.04,
+      "change": 108.09,
+      "changePercent": 0.44,
       "unit": "pts",
       "note": "Chỉ số chứng khoán Hồng Kông"
     },
@@ -85,9 +85,9 @@
       "name": "FTSE 100",
       "category": "equity",
       "region": "europe",
-      "price": 10782.87,
-      "change": 108.93,
-      "changePercent": 1.02,
+      "price": 10806.65,
+      "change": 23.78,
+      "changePercent": 0.22,
       "unit": "pts",
       "note": "Chỉ số 100 Bluechip sàn London (Anh)"
     },
@@ -96,9 +96,9 @@
       "name": "DAX 40",
       "category": "equity",
       "region": "europe",
-      "price": 26267.19,
-      "change": 446.79,
-      "changePercent": 1.73,
+      "price": 26526.03,
+      "change": 258.84,
+      "changePercent": 0.98,
       "unit": "pts",
       "note": "Chỉ số 40 cổ phiếu hàng đầu nước Đức"
     },
@@ -107,9 +107,9 @@
       "name": "Vàng Thế Giới",
       "category": "commodity",
       "region": "global",
-      "price": 4127.1,
-      "change": 12.6,
-      "changePercent": 0.31,
+      "price": 4063.8,
+      "change": -50.7,
+      "changePercent": -1.23,
       "unit": "USD/oz",
       "note": "Giá vàng giao ngay quốc tế"
     },
@@ -118,9 +118,9 @@
       "name": "Dầu Brent",
       "category": "commodity",
       "region": "global",
-      "price": 91.34,
-      "change": -1.23,
-      "changePercent": -1.33,
+      "price": 89.65,
+      "change": -2.92,
+      "changePercent": -3.15,
       "unit": "USD/thùng",
       "note": "Dầu thô tiêu chuẩn toàn cầu"
     },
@@ -129,9 +129,9 @@
       "name": "Dầu WTI",
       "category": "commodity",
       "region": "global",
-      "price": 85.63,
-      "change": -1.22,
-      "changePercent": -1.41,
+      "price": 84.45,
+      "change": -2.4,
+      "changePercent": -2.76,
       "unit": "USD/thùng",
       "note": "Dầu thô ngọt nhẹ giao dịch tại NYMEX"
     },
@@ -140,9 +140,9 @@
       "name": "Bạc Thế Giới",
       "category": "commodity",
       "region": "global",
-      "price": 52.95,
-      "change": 0.26,
-      "changePercent": 0.49,
+      "price": 51.89,
+      "change": -0.8,
+      "changePercent": -1.52,
       "unit": "USD/oz",
       "note": "Giá kim loại bạc thế giới"
     },
@@ -151,9 +151,9 @@
       "name": "DXY Index",
       "category": "currency",
       "region": "global",
-      "price": 101.58,
-      "change": -0.08,
-      "changePercent": -0.08,
+      "price": 101.98,
+      "change": 0.33,
+      "changePercent": 0.32,
       "unit": "pts",
       "note": "Chỉ số đo lường sức mạnh đồng USD"
     },
@@ -162,9 +162,9 @@
       "name": "US 10Y Yield",
       "category": "yield",
       "region": "us",
-      "price": 4.86,
-      "change": 0.01,
-      "changePercent": 0.1,
+      "price": 4.96,
+      "change": 0.09,
+      "changePercent": 1.93,
       "unit": "%",
       "note": "Lợi suất Trái phiếu Chính phủ Mỹ 10 năm"
     },
@@ -173,9 +173,9 @@
       "name": "CBOE VIX",
       "category": "volatility",
       "region": "global",
-      "price": 19.92,
-      "change": -5.72,
-      "changePercent": -22.31,
+      "price": 21.07,
+      "change": 1.15,
+      "changePercent": 5.78,
       "unit": "pts",
       "note": "Thước đo mức độ biến động & sợ hãi toàn cầu"
     },
@@ -184,9 +184,9 @@
       "name": "Bitcoin (BTC)",
       "category": "crypto",
       "region": "global",
-      "price": 74765.35,
-      "change": 994.43,
-      "changePercent": 1.35,
+      "price": 73730.11,
+      "change": -1057.39,
+      "changePercent": -1.41,
       "unit": "USD",
       "note": "Đồng tiền mã hóa vốn hóa lớn nhất"
     },
@@ -195,9 +195,9 @@
       "name": "Ethereum (ETH)",
       "category": "crypto",
       "region": "global",
-      "price": 2121.03,
-      "change": 29.89,
-      "changePercent": 1.43,
+      "price": 2062.81,
+      "change": -63.67,
+      "changePercent": -2.99,
       "unit": "USD",
       "note": "Nền tảng smart contract hàng đầu"
     }
@@ -215,22 +215,22 @@
       "pillar": "Áp Lực Tỷ Giá USD/VND",
       "status": "Tích Cực",
       "statusColor": "emerald",
-      "headline": "DXY biến động quanh mức 101.58 điểm",
-      "detail": "Chỉ số DXY hạ nhiệt quanh 101.58 giúp thu hẹp chênh lệch USD-VND, giảm áp lực bán can thiệp ngoại tệ của NHNN và hạn chế rủi ro tỷ giá nhập khẩu."
+      "headline": "DXY biến động quanh mức 101.98 điểm",
+      "detail": "Chỉ số DXY hạ nhiệt quanh 101.98 giúp thu hẹp chênh lệch USD-VND, giảm áp lực bán can thiệp ngoại tệ của NHNN và hạn chế rủi ro tỷ giá nhập khẩu."
     },
     {
       "pillar": "Không Gian Lãi Suất NHNN",
       "status": "Tích Cực",
       "statusColor": "emerald",
       "headline": "Dư địa duy trì chính sách tiền tệ nới lỏng",
-      "detail": "Lợi suất TPCP Mỹ 10 năm ở mức 4.86% giúp Ngân hàng Nhà nước có thêm điều kiện duy trì mặt bằng lãi suất điều hành thấp (4.5%) nhằm kích cầu tín dụng hỗ trợ tăng trưởng kinh tế."
+      "detail": "Lợi suất TPCP Mỹ 10 năm ở mức 4.96% giúp Ngân hàng Nhà nước có thêm điều kiện duy trì mặt bằng lãi suất điều hành thấp (4.5%) nhằm kích cầu tín dụng hỗ trợ tăng trưởng kinh tế."
     },
     {
       "pillar": "Dòng Vốn Khối Ngoại (FII)",
       "status": "Trung Lập",
       "statusColor": "amber",
       "headline": "Xu hướng dòng vốn ngoại trên TTCK",
-      "detail": "Lợi suất trái phiếu chính phủ Mỹ 10 năm (4.86%) và chỉ số VIX (19.92 điểm) phản ánh khẩu vị rủi ro toàn cầu đang trong tầm kiểm soát (Tâm lý ổn định), tạo điều kiện cân bằng dòng vốn ngoại trên HOSE/HNX."
+      "detail": "Lợi suất trái phiếu chính phủ Mỹ 10 năm (4.96%) và chỉ số VIX (21.07 điểm) phản ánh khẩu vị rủi ro toàn cầu đang trong tầm kiểm soát (Tâm lý ổn định), tạo điều kiện cân bằng dòng vốn ngoại trên HOSE/HNX."
     }
   ]
 }
