@@ -2,12 +2,12 @@
   {
     "date": "2026-11-10",
     "displayDate": "26-11-10",
-    "totalMarket": 13042,
+    "totalMarket": 13033,
     "bds": {
       "total": 2023.5,
       "buy": 1305.97,
       "sell": 717.53,
-      "ratioPct": 15.52,
+      "ratioPct": 15.53,
       "isClimax": false,
       "isTrough": false
     },
@@ -15,7 +15,7 @@
       "total": 3055.62,
       "buy": 1695.02,
       "sell": 1360.59,
-      "ratioPct": 23.43,
+      "ratioPct": 23.45,
       "isClimax": false,
       "isTrough": false
     },
@@ -23,7 +23,7 @@
       "total": 2670.1,
       "buy": 1560.36,
       "sell": 1109.74,
-      "ratioPct": 20.47,
+      "ratioPct": 20.49,
       "isClimax": true,
       "isTrough": false
     },
@@ -36,10 +36,10 @@
       "isTrough": true
     },
     "thuc_pham": {
-      "total": 623.77,
-      "buy": 343.91,
-      "sell": 279.86,
-      "ratioPct": 4.78,
+      "total": 615.54,
+      "buy": 339.21,
+      "sell": 276.33,
+      "ratioPct": 4.72,
       "isClimax": false,
       "isTrough": false
     },
@@ -63,7 +63,7 @@
       "total": 720.28,
       "buy": 278.16,
       "sell": 442.12,
-      "ratioPct": 5.52,
+      "ratioPct": 5.53,
       "isClimax": false,
       "isTrough": false
     },
@@ -87,7 +87,7 @@
       "total": 921.04,
       "buy": 606.58,
       "sell": 314.46,
-      "ratioPct": 7.06,
+      "ratioPct": 7.07,
       "isClimax": false,
       "isTrough": false
     }
@@ -95,12 +95,12 @@
   {
     "date": "2026-11-09",
     "displayDate": "26-11-09",
-    "totalMarket": 9676,
+    "totalMarket": 9669,
     "bds": {
       "total": 1358.58,
       "buy": 552.35,
       "sell": 806.23,
-      "ratioPct": 14.04,
+      "ratioPct": 14.05,
       "isClimax": false,
       "isTrough": false
     },
@@ -108,7 +108,7 @@
       "total": 2418.17,
       "buy": 1123.55,
       "sell": 1294.62,
-      "ratioPct": 24.99,
+      "ratioPct": 25.01,
       "isClimax": false,
       "isTrough": false
     },
@@ -116,7 +116,7 @@
       "total": 1696.97,
       "buy": 557.46,
       "sell": 1139.51,
-      "ratioPct": 17.54,
+      "ratioPct": 17.55,
       "isClimax": false,
       "isTrough": false
     },
@@ -129,10 +129,10 @@
       "isTrough": false
     },
     "thuc_pham": {
-      "total": 546.17,
-      "buy": 237.88,
-      "sell": 308.29,
-      "ratioPct": 5.64,
+      "total": 540.1,
+      "buy": 235.63,
+      "sell": 304.47,
+      "ratioPct": 5.59,
       "isClimax": false,
       "isTrough": false
     },
@@ -140,7 +140,7 @@
       "total": 590.67,
       "buy": 238.61,
       "sell": 352.06,
-      "ratioPct": 6.1,
+      "ratioPct": 6.11,
       "isClimax": false,
       "isTrough": false
     },
@@ -148,7 +148,7 @@
       "total": 448.27,
       "buy": 156.7,
       "sell": 291.57,
-      "ratioPct": 4.63,
+      "ratioPct": 4.64,
       "isClimax": false,
       "isTrough": false
     },
@@ -156,7 +156,7 @@
       "total": 432.98,
       "buy": 169.37,
       "sell": 263.61,
-      "ratioPct": 4.47,
+      "ratioPct": 4.48,
       "isClimax": false,
       "isTrough": false
     },
@@ -180,7 +180,7 @@
       "total": 852.69,
       "buy": 335.6,
       "sell": 517.09,
-      "ratioPct": 8.81,
+      "ratioPct": 8.82,
       "isClimax": false,
       "isTrough": false
     }
@@ -188,12 +188,12 @@
   {
     "date": "2026-11-06",
     "displayDate": "26-11-06",
-    "totalMarket": 15192,
+    "totalMarket": 15183,
     "bds": {
       "total": 2367.37,
       "buy": 1495.3,
       "sell": 872.07,
-      "ratioPct": 15.58,
+      "ratioPct": 15.59,
       "isClimax": false,
       "isTrough": false
     },
@@ -201,7 +201,7 @@
       "total": 3518.8,
       "buy": 2146.44,
       "sell": 1372.36,
-      "ratioPct": 23.16,
+      "ratioPct": 23.18,
       "isClimax": false,
       "isTrough": false
     },
@@ -209,7 +209,7 @@
       "total": 3597.42,
       "buy": 2431.96,
       "sell": 1165.47,
-      "ratioPct": 23.68,
+      "ratioPct": 23.69,
       "isClimax": true,
       "isTrough": false
     },
@@ -222,10 +222,10 @@
       "isTrough": false
     },
     "thuc_pham": {
-      "total": 882.08,
-      "buy": 572.5,
-      "sell": 309.58,
-      "ratioPct": 5.81,
+      "total": 873.76,
+      "buy": 567.42,
+      "sell": 306.34,
+      "ratioPct": 5.75,
       "isClimax": false,
       "isTrough": false
     },
@@ -281,12 +281,12 @@
   {
     "date": "2026-11-05",
     "displayDate": "26-11-05",
-    "totalMarket": 13595,
+    "totalMarket": 13588,
     "bds": {
       "total": 1619.03,
       "buy": 805.84,
       "sell": 813.19,
-      "ratioPct": 11.91,
+      "ratioPct": 11.92,
       "isClimax": false,
       "isTrough": false
     },
@@ -294,7 +294,7 @@
       "total": 3524.75,
       "buy": 1719.86,
       "sell": 1804.89,
-      "ratioPct": 25.93,
+      "ratioPct": 25.94,
       "isClimax": false,
       "isTrough": false
     },
@@ -302,7 +302,7 @@
       "total": 3162.6,
       "buy": 1176.72,
       "sell": 1985.89,
-      "ratioPct": 23.26,
+      "ratioPct": 23.27,
       "isClimax": true,
       "isTrough": false
     },
@@ -315,10 +315,10 @@
       "isTrough": false
     },
     "thuc_pham": {
-      "total": 631.9,
-      "buy": 257.41,
-      "sell": 374.49,
-      "ratioPct": 4.65,
+      "total": 625.28,
+      "buy": 254.57,
+      "sell": 370.71,
+      "ratioPct": 4.6,
       "isClimax": false,
       "isTrough": false
     },
@@ -334,7 +334,7 @@
       "total": 591.76,
       "buy": 292.55,
       "sell": 299.21,
-      "ratioPct": 4.35,
+      "ratioPct": 4.36,
       "isClimax": false,
       "isTrough": false
     },
@@ -374,7 +374,7 @@
   {
     "date": "2026-11-04",
     "displayDate": "26-11-04",
-    "totalMarket": 15513,
+    "totalMarket": 15503,
     "bds": {
       "total": 1926.13,
       "buy": 1329.27,
@@ -387,7 +387,7 @@
       "total": 3794.42,
       "buy": 2495.95,
       "sell": 1298.47,
-      "ratioPct": 24.46,
+      "ratioPct": 24.48,
       "isClimax": false,
       "isTrough": false
     },
@@ -395,7 +395,7 @@
       "total": 3412.15,
       "buy": 2388.51,
       "sell": 1023.65,
-      "ratioPct": 22,
+      "ratioPct": 22.01,
       "isClimax": true,
       "isTrough": false
     },
@@ -403,15 +403,15 @@
       "total": 988.95,
       "buy": 674.84,
       "sell": 314.1,
-      "ratioPct": 6.37,
+      "ratioPct": 6.38,
       "isClimax": false,
       "isTrough": false
     },
     "thuc_pham": {
-      "total": 753.74,
-      "buy": 488.21,
-      "sell": 265.53,
-      "ratioPct": 4.86,
+      "total": 745.23,
+      "buy": 482.83,
+      "sell": 262.4,
+      "ratioPct": 4.81,
       "isClimax": false,
       "isTrough": false
     },
@@ -419,7 +419,7 @@
       "total": 841.07,
       "buy": 580.29,
       "sell": 260.78,
-      "ratioPct": 5.42,
+      "ratioPct": 5.43,
       "isClimax": false,
       "isTrough": false
     },
@@ -467,12 +467,12 @@
   {
     "date": "2026-11-03",
     "displayDate": "26-11-03",
-    "totalMarket": 9901,
+    "totalMarket": 9896,
     "bds": {
       "total": 947.96,
       "buy": 468.48,
       "sell": 479.48,
-      "ratioPct": 9.57,
+      "ratioPct": 9.58,
       "isClimax": false,
       "isTrough": false
     },
@@ -480,7 +480,7 @@
       "total": 3475.62,
       "buy": 1721.54,
       "sell": 1754.08,
-      "ratioPct": 35.1,
+      "ratioPct": 35.12,
       "isClimax": true,
       "isTrough": false
     },
@@ -488,7 +488,7 @@
       "total": 1135.61,
       "buy": 612.9,
       "sell": 522.72,
-      "ratioPct": 11.47,
+      "ratioPct": 11.48,
       "isClimax": false,
       "isTrough": false
     },
@@ -501,10 +501,10 @@
       "isTrough": false
     },
     "thuc_pham": {
-      "total": 410.22,
-      "buy": 223.03,
-      "sell": 187.19,
-      "ratioPct": 4.14,
+      "total": 405.59,
+      "buy": 221.04,
+      "sell": 184.55,
+      "ratioPct": 4.1,
       "isClimax": false,
       "isTrough": false
     },
@@ -512,7 +512,7 @@
       "total": 506.28,
       "buy": 202.76,
       "sell": 303.51,
-      "ratioPct": 5.11,
+      "ratioPct": 5.12,
       "isClimax": false,
       "isTrough": false
     },
@@ -552,7 +552,7 @@
       "total": 841.79,
       "buy": 375.33,
       "sell": 466.46,
-      "ratioPct": 8.5,
+      "ratioPct": 8.51,
       "isClimax": false,
       "isTrough": false
     }
@@ -560,7 +560,7 @@
   {
     "date": "2026-11-02",
     "displayDate": "26-11-02",
-    "totalMarket": 15223,
+    "totalMarket": 15211,
     "bds": {
       "total": 1375.57,
       "buy": 568.43,
@@ -573,7 +573,7 @@
       "total": 5266.76,
       "buy": 1872.96,
       "sell": 3393.8,
-      "ratioPct": 34.6,
+      "ratioPct": 34.62,
       "isClimax": true,
       "isTrough": false
     },
@@ -581,7 +581,7 @@
       "total": 1822.06,
       "buy": 795.04,
       "sell": 1027.02,
-      "ratioPct": 11.97,
+      "ratioPct": 11.98,
       "isClimax": false,
       "isTrough": false
     },
@@ -594,10 +594,10 @@
       "isTrough": false
     },
     "thuc_pham": {
-      "total": 1014.8,
-      "buy": 424.8,
-      "sell": 590,
-      "ratioPct": 6.67,
+      "total": 1004.31,
+      "buy": 420.93,
+      "sell": 583.37,
+      "ratioPct": 6.6,
       "isClimax": false,
       "isTrough": false
     },
@@ -605,7 +605,7 @@
       "total": 693.06,
       "buy": 268.32,
       "sell": 424.73,
-      "ratioPct": 4.55,
+      "ratioPct": 4.56,
       "isClimax": false,
       "isTrough": false
     },
@@ -621,7 +621,7 @@
       "total": 754.14,
       "buy": 248.12,
       "sell": 506.02,
-      "ratioPct": 4.95,
+      "ratioPct": 4.96,
       "isClimax": false,
       "isTrough": false
     },
@@ -645,7 +645,7 @@
       "total": 1238.94,
       "buy": 616.35,
       "sell": 622.6,
-      "ratioPct": 8.14,
+      "ratioPct": 8.15,
       "isClimax": false,
       "isTrough": false
     }
@@ -653,12 +653,12 @@
   {
     "date": "2026-10-30",
     "displayDate": "26-10-30",
-    "totalMarket": 10078,
+    "totalMarket": 10070,
     "bds": {
       "total": 1646.7,
       "buy": 900.61,
       "sell": 746.09,
-      "ratioPct": 16.34,
+      "ratioPct": 16.35,
       "isClimax": false,
       "isTrough": false
     },
@@ -666,7 +666,7 @@
       "total": 2792.38,
       "buy": 1160.48,
       "sell": 1631.9,
-      "ratioPct": 27.71,
+      "ratioPct": 27.73,
       "isClimax": false,
       "isTrough": false
     },
@@ -674,7 +674,7 @@
       "total": 1146.13,
       "buy": 405.84,
       "sell": 740.29,
-      "ratioPct": 11.37,
+      "ratioPct": 11.38,
       "isClimax": false,
       "isTrough": false
     },
@@ -682,15 +682,15 @@
       "total": 629.06,
       "buy": 247.55,
       "sell": 381.51,
-      "ratioPct": 6.24,
+      "ratioPct": 6.25,
       "isClimax": false,
       "isTrough": false
     },
     "thuc_pham": {
-      "total": 705.64,
-      "buy": 261.58,
-      "sell": 444.07,
-      "ratioPct": 7,
+      "total": 698.31,
+      "buy": 258.72,
+      "sell": 439.59,
+      "ratioPct": 6.93,
       "isClimax": false,
       "isTrough": false
     },
@@ -706,7 +706,7 @@
       "total": 516.45,
       "buy": 190.11,
       "sell": 326.35,
-      "ratioPct": 5.12,
+      "ratioPct": 5.13,
       "isClimax": false,
       "isTrough": false
     },
@@ -738,7 +738,7 @@
       "total": 2126.9,
       "buy": 1303.14,
       "sell": 823.75,
-      "ratioPct": 21.1,
+      "ratioPct": 21.12,
       "isClimax": true,
       "isTrough": false
     }
@@ -746,7 +746,7 @@
   {
     "date": "2026-10-29",
     "displayDate": "26-10-29",
-    "totalMarket": 11699,
+    "totalMarket": 11695,
     "bds": {
       "total": 907.99,
       "buy": 346.42,
@@ -759,7 +759,7 @@
       "total": 3171.63,
       "buy": 1364.35,
       "sell": 1807.27,
-      "ratioPct": 27.11,
+      "ratioPct": 27.12,
       "isClimax": false,
       "isTrough": false
     },
@@ -775,15 +775,15 @@
       "total": 972.51,
       "buy": 595.22,
       "sell": 377.29,
-      "ratioPct": 8.31,
+      "ratioPct": 8.32,
       "isClimax": false,
       "isTrough": false
     },
     "thuc_pham": {
-      "total": 640.62,
-      "buy": 224.5,
-      "sell": 416.12,
-      "ratioPct": 5.48,
+      "total": 637.29,
+      "buy": 223.2,
+      "sell": 414.09,
+      "ratioPct": 5.45,
       "isClimax": false,
       "isTrough": false
     },
@@ -839,12 +839,12 @@
   {
     "date": "2026-10-28",
     "displayDate": "26-10-28",
-    "totalMarket": 10972,
+    "totalMarket": 10965,
     "bds": {
       "total": 1081.15,
       "buy": 453.88,
       "sell": 627.27,
-      "ratioPct": 9.85,
+      "ratioPct": 9.86,
       "isClimax": false,
       "isTrough": false
     },
@@ -852,7 +852,7 @@
       "total": 3893.8,
       "buy": 2197.43,
       "sell": 1696.37,
-      "ratioPct": 35.49,
+      "ratioPct": 35.51,
       "isClimax": true,
       "isTrough": false
     },
@@ -860,7 +860,7 @@
       "total": 934.06,
       "buy": 442.62,
       "sell": 491.44,
-      "ratioPct": 8.51,
+      "ratioPct": 8.52,
       "isClimax": false,
       "isTrough": false
     },
@@ -873,10 +873,10 @@
       "isTrough": true
     },
     "thuc_pham": {
-      "total": 656.86,
-      "buy": 371.31,
-      "sell": 285.55,
-      "ratioPct": 5.99,
+      "total": 650.93,
+      "buy": 367.81,
+      "sell": 283.12,
+      "ratioPct": 5.94,
       "isClimax": false,
       "isTrough": false
     },
@@ -892,7 +892,7 @@
       "total": 880.12,
       "buy": 384.73,
       "sell": 495.39,
-      "ratioPct": 8.02,
+      "ratioPct": 8.03,
       "isClimax": false,
       "isTrough": false
     },
@@ -932,12 +932,12 @@
   {
     "date": "2026-10-27",
     "displayDate": "26-10-27",
-    "totalMarket": 9095,
+    "totalMarket": 9092,
     "bds": {
       "total": 917.84,
       "buy": 430.14,
       "sell": 487.71,
-      "ratioPct": 10.09,
+      "ratioPct": 10.1,
       "isClimax": false,
       "isTrough": false
     },
@@ -945,7 +945,7 @@
       "total": 2804.54,
       "buy": 1303.13,
       "sell": 1501.41,
-      "ratioPct": 30.84,
+      "ratioPct": 30.85,
       "isClimax": true,
       "isTrough": false
     },
@@ -953,7 +953,7 @@
       "total": 1086.95,
       "buy": 459.87,
       "sell": 627.09,
-      "ratioPct": 11.95,
+      "ratioPct": 11.96,
       "isClimax": false,
       "isTrough": false
     },
@@ -966,10 +966,10 @@
       "isTrough": false
     },
     "thuc_pham": {
-      "total": 466.66,
-      "buy": 245.51,
-      "sell": 221.16,
-      "ratioPct": 5.13,
+      "total": 463.92,
+      "buy": 244.13,
+      "sell": 219.78,
+      "ratioPct": 5.1,
       "isClimax": false,
       "isTrough": false
     },
@@ -977,7 +977,7 @@
       "total": 687.02,
       "buy": 298.66,
       "sell": 388.36,
-      "ratioPct": 7.55,
+      "ratioPct": 7.56,
       "isClimax": false,
       "isTrough": false
     },
@@ -993,7 +993,7 @@
       "total": 465.18,
       "buy": 170,
       "sell": 295.19,
-      "ratioPct": 5.11,
+      "ratioPct": 5.12,
       "isClimax": false,
       "isTrough": false
     },
@@ -1017,7 +1017,7 @@
       "total": 710.56,
       "buy": 387.5,
       "sell": 323.06,
-      "ratioPct": 7.81,
+      "ratioPct": 7.82,
       "isClimax": false,
       "isTrough": false
     }
@@ -1025,12 +1025,12 @@
   {
     "date": "2026-10-26",
     "displayDate": "26-10-26",
-    "totalMarket": 10654,
+    "totalMarket": 10651,
     "bds": {
       "total": 1436.43,
       "buy": 568.64,
       "sell": 867.79,
-      "ratioPct": 13.48,
+      "ratioPct": 13.49,
       "isClimax": false,
       "isTrough": false
     },
@@ -1059,10 +1059,10 @@
       "isTrough": true
     },
     "thuc_pham": {
-      "total": 650.27,
-      "buy": 289.38,
-      "sell": 360.9,
-      "ratioPct": 6.1,
+      "total": 647.09,
+      "buy": 287.78,
+      "sell": 359.3,
+      "ratioPct": 6.08,
       "isClimax": false,
       "isTrough": false
     },
@@ -1110,7 +1110,7 @@
       "total": 1076.45,
       "buy": 516.07,
       "sell": 560.38,
-      "ratioPct": 10.1,
+      "ratioPct": 10.11,
       "isClimax": false,
       "isTrough": false
     }
@@ -1118,7 +1118,7 @@
   {
     "date": "2026-10-23",
     "displayDate": "26-10-23",
-    "totalMarket": 13276,
+    "totalMarket": 13271,
     "bds": {
       "total": 1264.57,
       "buy": 734.21,
@@ -1131,7 +1131,7 @@
       "total": 4850.12,
       "buy": 3125.87,
       "sell": 1724.25,
-      "ratioPct": 36.53,
+      "ratioPct": 36.55,
       "isClimax": true,
       "isTrough": false
     },
@@ -1139,7 +1139,7 @@
       "total": 1718.3,
       "buy": 924.68,
       "sell": 793.62,
-      "ratioPct": 12.94,
+      "ratioPct": 12.95,
       "isClimax": false,
       "isTrough": false
     },
@@ -1152,10 +1152,10 @@
       "isTrough": true
     },
     "thuc_pham": {
-      "total": 710.46,
-      "buy": 390.61,
-      "sell": 319.85,
-      "ratioPct": 5.35,
+      "total": 705.99,
+      "buy": 388.69,
+      "sell": 317.3,
+      "ratioPct": 5.32,
       "isClimax": false,
       "isTrough": false
     },
@@ -1187,7 +1187,7 @@
       "total": 425.4,
       "buy": 182.42,
       "sell": 242.98,
-      "ratioPct": 3.2,
+      "ratioPct": 3.21,
       "isClimax": false,
       "isTrough": false
     },
@@ -1211,7 +1211,7 @@
   {
     "date": "2026-10-22",
     "displayDate": "26-10-22",
-    "totalMarket": 12126,
+    "totalMarket": 12122,
     "bds": {
       "total": 1750.97,
       "buy": 994.57,
@@ -1224,7 +1224,7 @@
       "total": 3251.22,
       "buy": 1586.15,
       "sell": 1665.07,
-      "ratioPct": 26.81,
+      "ratioPct": 26.82,
       "isClimax": false,
       "isTrough": false
     },
@@ -1245,10 +1245,10 @@
       "isTrough": true
     },
     "thuc_pham": {
-      "total": 721.21,
-      "buy": 326.18,
-      "sell": 395.03,
-      "ratioPct": 5.95,
+      "total": 718.12,
+      "buy": 324.85,
+      "sell": 393.27,
+      "ratioPct": 5.92,
       "isClimax": false,
       "isTrough": false
     },
@@ -1296,7 +1296,7 @@
       "total": 1628.7,
       "buy": 1093.67,
       "sell": 535.02,
-      "ratioPct": 13.43,
+      "ratioPct": 13.44,
       "isClimax": false,
       "isTrough": false
     }
@@ -1304,7 +1304,7 @@
   {
     "date": "2026-10-21",
     "displayDate": "26-10-21",
-    "totalMarket": 16216,
+    "totalMarket": 16208,
     "bds": {
       "total": 2380.06,
       "buy": 1561.27,
@@ -1317,7 +1317,7 @@
       "total": 4133.8,
       "buy": 2527.58,
       "sell": 1606.22,
-      "ratioPct": 25.49,
+      "ratioPct": 25.5,
       "isClimax": false,
       "isTrough": false
     },
@@ -1338,10 +1338,10 @@
       "isTrough": false
     },
     "thuc_pham": {
-      "total": 961.66,
-      "buy": 535.09,
-      "sell": 426.57,
-      "ratioPct": 5.93,
+      "total": 954.64,
+      "buy": 530.95,
+      "sell": 423.7,
+      "ratioPct": 5.89,
       "isClimax": false,
       "isTrough": false
     },
@@ -1349,7 +1349,7 @@
       "total": 932.82,
       "buy": 603.14,
       "sell": 329.68,
-      "ratioPct": 5.75,
+      "ratioPct": 5.76,
       "isClimax": false,
       "isTrough": false
     },
@@ -1389,7 +1389,7 @@
       "total": 1586.61,
       "buy": 1110.63,
       "sell": 475.98,
-      "ratioPct": 9.78,
+      "ratioPct": 9.79,
       "isClimax": false,
       "isTrough": false
     }
@@ -1397,7 +1397,7 @@
   {
     "date": "2026-10-20",
     "displayDate": "26-10-20",
-    "totalMarket": 10204,
+    "totalMarket": 10202,
     "bds": {
       "total": 1334.45,
       "buy": 554.91,
@@ -1431,10 +1431,10 @@
       "isTrough": false
     },
     "thuc_pham": {
-      "total": 593.05,
-      "buy": 350.66,
-      "sell": 242.39,
-      "ratioPct": 5.81,
+      "total": 590.91,
+      "buy": 349.44,
+      "sell": 241.47,
+      "ratioPct": 5.79,
       "isClimax": false,
       "isTrough": false
     },
@@ -1458,7 +1458,7 @@
       "total": 394.38,
       "buy": 199.16,
       "sell": 195.23,
-      "ratioPct": 3.86,
+      "ratioPct": 3.87,
       "isClimax": false,
       "isTrough": false
     },
@@ -1490,7 +1490,7 @@
   {
     "date": "2026-10-19",
     "displayDate": "26-10-19",
-    "totalMarket": 10628,
+    "totalMarket": 10624,
     "bds": {
       "total": 1202.88,
       "buy": 459.83,
@@ -1503,7 +1503,7 @@
       "total": 3702.7,
       "buy": 1442.71,
       "sell": 2259.99,
-      "ratioPct": 34.84,
+      "ratioPct": 34.85,
       "isClimax": true,
       "isTrough": false
     },
@@ -1511,7 +1511,7 @@
       "total": 1847.14,
       "buy": 933.11,
       "sell": 914.02,
-      "ratioPct": 17.38,
+      "ratioPct": 17.39,
       "isClimax": false,
       "isTrough": false
     },
@@ -1524,10 +1524,10 @@
       "isTrough": true
     },
     "thuc_pham": {
-      "total": 540.12,
-      "buy": 299.96,
-      "sell": 240.16,
-      "ratioPct": 5.08,
+      "total": 536.52,
+      "buy": 298.49,
+      "sell": 238.03,
+      "ratioPct": 5.05,
       "isClimax": false,
       "isTrough": false
     },
@@ -1583,7 +1583,7 @@
   {
     "date": "2026-10-16",
     "displayDate": "26-10-16",
-    "totalMarket": 9234,
+    "totalMarket": 9230,
     "bds": {
       "total": 1124.41,
       "buy": 663.02,
@@ -1596,7 +1596,7 @@
       "total": 3280.84,
       "buy": 1883.13,
       "sell": 1397.72,
-      "ratioPct": 35.53,
+      "ratioPct": 35.55,
       "isClimax": true,
       "isTrough": false
     },
@@ -1604,7 +1604,7 @@
       "total": 1132.55,
       "buy": 579.56,
       "sell": 552.99,
-      "ratioPct": 12.26,
+      "ratioPct": 12.27,
       "isClimax": false,
       "isTrough": false
     },
@@ -1617,10 +1617,10 @@
       "isTrough": true
     },
     "thuc_pham": {
-      "total": 427,
-      "buy": 240.44,
-      "sell": 186.56,
-      "ratioPct": 4.62,
+      "total": 422.95,
+      "buy": 238.05,
+      "sell": 184.9,
+      "ratioPct": 4.58,
       "isClimax": false,
       "isTrough": false
     },
@@ -1628,7 +1628,7 @@
       "total": 462.05,
       "buy": 241.84,
       "sell": 220.21,
-      "ratioPct": 5,
+      "ratioPct": 5.01,
       "isClimax": false,
       "isTrough": false
     },
@@ -1636,7 +1636,7 @@
       "total": 329.15,
       "buy": 191.74,
       "sell": 137.42,
-      "ratioPct": 3.56,
+      "ratioPct": 3.57,
       "isClimax": false,
       "isTrough": false
     },
@@ -1644,7 +1644,7 @@
       "total": 709.43,
       "buy": 287.51,
       "sell": 421.92,
-      "ratioPct": 7.68,
+      "ratioPct": 7.69,
       "isClimax": false,
       "isTrough": false
     },
@@ -1652,7 +1652,7 @@
       "total": 238.69,
       "buy": 99.4,
       "sell": 139.29,
-      "ratioPct": 2.58,
+      "ratioPct": 2.59,
       "isClimax": false,
       "isTrough": false
     },
@@ -1668,7 +1668,7 @@
       "total": 1097.38,
       "buy": 587.79,
       "sell": 509.6,
-      "ratioPct": 11.88,
+      "ratioPct": 11.89,
       "isClimax": false,
       "isTrough": false
     }
@@ -1676,7 +1676,7 @@
   {
     "date": "2026-10-15",
     "displayDate": "26-10-15",
-    "totalMarket": 13183,
+    "totalMarket": 13177,
     "bds": {
       "total": 1602.84,
       "buy": 763.81,
@@ -1689,7 +1689,7 @@
       "total": 4055.87,
       "buy": 2198.62,
       "sell": 1857.25,
-      "ratioPct": 30.77,
+      "ratioPct": 30.78,
       "isClimax": true,
       "isTrough": false
     },
@@ -1705,15 +1705,15 @@
       "total": 535.76,
       "buy": 305.28,
       "sell": 230.49,
-      "ratioPct": 4.06,
+      "ratioPct": 4.07,
       "isClimax": false,
       "isTrough": false
     },
     "thuc_pham": {
-      "total": 534.99,
-      "buy": 225.97,
-      "sell": 309.02,
-      "ratioPct": 4.06,
+      "total": 530.09,
+      "buy": 223.86,
+      "sell": 306.23,
+      "ratioPct": 4.02,
       "isClimax": false,
       "isTrough": false
     },
@@ -1745,7 +1745,7 @@
       "total": 309.11,
       "buy": 183.3,
       "sell": 125.82,
-      "ratioPct": 2.34,
+      "ratioPct": 2.35,
       "isClimax": false,
       "isTrough": false
     },
@@ -1761,7 +1761,7 @@
       "total": 1687.58,
       "buy": 660.62,
       "sell": 1026.96,
-      "ratioPct": 12.8,
+      "ratioPct": 12.81,
       "isClimax": false,
       "isTrough": false
     }
@@ -1769,12 +1769,12 @@
   {
     "date": "2026-10-14",
     "displayDate": "26-10-14",
-    "totalMarket": 9466,
+    "totalMarket": 9462,
     "bds": {
       "total": 1270.47,
       "buy": 446.77,
       "sell": 823.7,
-      "ratioPct": 13.42,
+      "ratioPct": 13.43,
       "isClimax": false,
       "isTrough": false
     },
@@ -1782,7 +1782,7 @@
       "total": 3033.44,
       "buy": 1427.41,
       "sell": 1606.03,
-      "ratioPct": 32.05,
+      "ratioPct": 32.06,
       "isClimax": true,
       "isTrough": false
     },
@@ -1803,10 +1803,10 @@
       "isTrough": false
     },
     "thuc_pham": {
-      "total": 432.12,
-      "buy": 245.04,
-      "sell": 187.08,
-      "ratioPct": 4.56,
+      "total": 429.17,
+      "buy": 243.71,
+      "sell": 185.46,
+      "ratioPct": 4.54,
       "isClimax": false,
       "isTrough": false
     },
@@ -1854,7 +1854,7 @@
       "total": 1429.36,
       "buy": 477.28,
       "sell": 952.07,
-      "ratioPct": 15.1,
+      "ratioPct": 15.11,
       "isClimax": true,
       "isTrough": false
     }
@@ -1862,12 +1862,12 @@
   {
     "date": "2026-10-13",
     "displayDate": "26-10-13",
-    "totalMarket": 9863,
+    "totalMarket": 9858,
     "bds": {
       "total": 986.53,
       "buy": 565.08,
       "sell": 421.44,
-      "ratioPct": 10,
+      "ratioPct": 10.01,
       "isClimax": false,
       "isTrough": false
     },
@@ -1875,7 +1875,7 @@
       "total": 3360.98,
       "buy": 1922.38,
       "sell": 1438.6,
-      "ratioPct": 34.08,
+      "ratioPct": 34.09,
       "isClimax": true,
       "isTrough": false
     },
@@ -1896,10 +1896,10 @@
       "isTrough": true
     },
     "thuc_pham": {
-      "total": 763.07,
-      "buy": 273.2,
-      "sell": 489.86,
-      "ratioPct": 7.74,
+      "total": 758.93,
+      "buy": 271.43,
+      "sell": 487.51,
+      "ratioPct": 7.7,
       "isClimax": false,
       "isTrough": false
     },
@@ -1915,7 +1915,7 @@
       "total": 744.07,
       "buy": 368.77,
       "sell": 375.3,
-      "ratioPct": 7.54,
+      "ratioPct": 7.55,
       "isClimax": false,
       "isTrough": false
     },
@@ -1955,12 +1955,12 @@
   {
     "date": "2026-10-12",
     "displayDate": "26-10-12",
-    "totalMarket": 9765,
+    "totalMarket": 9762,
     "bds": {
       "total": 920.11,
       "buy": 435.77,
       "sell": 484.34,
-      "ratioPct": 9.42,
+      "ratioPct": 9.43,
       "isClimax": false,
       "isTrough": false
     },
@@ -1968,7 +1968,7 @@
       "total": 3188.5,
       "buy": 1849.83,
       "sell": 1338.66,
-      "ratioPct": 32.65,
+      "ratioPct": 32.66,
       "isClimax": true,
       "isTrough": false
     },
@@ -1989,10 +1989,10 @@
       "isTrough": false
     },
     "thuc_pham": {
-      "total": 519.37,
-      "buy": 215.21,
-      "sell": 304.16,
-      "ratioPct": 5.32,
+      "total": 516.31,
+      "buy": 213.34,
+      "sell": 302.96,
+      "ratioPct": 5.29,
       "isClimax": false,
       "isTrough": false
     },
@@ -2040,7 +2040,7 @@
       "total": 953.34,
       "buy": 298.29,
       "sell": 655.05,
-      "ratioPct": 9.76,
+      "ratioPct": 9.77,
       "isClimax": false,
       "isTrough": false
     }
@@ -2048,7 +2048,7 @@
   {
     "date": "2026-10-09",
     "displayDate": "26-10-09",
-    "totalMarket": 14476,
+    "totalMarket": 14473,
     "bds": {
       "total": 1959.91,
       "buy": 1285.75,
@@ -2061,7 +2061,7 @@
       "total": 4731.01,
       "buy": 2903.06,
       "sell": 1827.96,
-      "ratioPct": 32.68,
+      "ratioPct": 32.69,
       "isClimax": true,
       "isTrough": false
     },
@@ -2082,10 +2082,10 @@
       "isTrough": true
     },
     "thuc_pham": {
-      "total": 641.73,
-      "buy": 325.33,
-      "sell": 316.4,
-      "ratioPct": 4.43,
+      "total": 638.35,
+      "buy": 323.88,
+      "sell": 314.48,
+      "ratioPct": 4.41,
       "isClimax": false,
       "isTrough": false
     },
@@ -2141,7 +2141,7 @@
   {
     "date": "2026-10-08",
     "displayDate": "26-10-08",
-    "totalMarket": 11647,
+    "totalMarket": 11642,
     "bds": {
       "total": 1313.38,
       "buy": 498.64,
@@ -2154,7 +2154,7 @@
       "total": 3024.82,
       "buy": 1339.73,
       "sell": 1685.09,
-      "ratioPct": 25.97,
+      "ratioPct": 25.98,
       "isClimax": false,
       "isTrough": false
     },
@@ -2175,10 +2175,10 @@
       "isTrough": true
     },
     "thuc_pham": {
-      "total": 847.84,
-      "buy": 390.69,
-      "sell": 457.15,
-      "ratioPct": 7.28,
+      "total": 843.42,
+      "buy": 388.7,
+      "sell": 454.72,
+      "ratioPct": 7.24,
       "isClimax": false,
       "isTrough": false
     },
@@ -2226,7 +2226,7 @@
       "total": 1532.87,
       "buy": 582.17,
       "sell": 950.7,
-      "ratioPct": 13.16,
+      "ratioPct": 13.17,
       "isClimax": false,
       "isTrough": false
     }
@@ -2234,12 +2234,12 @@
   {
     "date": "2026-10-07",
     "displayDate": "26-10-07",
-    "totalMarket": 11255,
+    "totalMarket": 11249,
     "bds": {
       "total": 1010.81,
       "buy": 455.85,
       "sell": 554.96,
-      "ratioPct": 8.98,
+      "ratioPct": 8.99,
       "isClimax": false,
       "isTrough": false
     },
@@ -2247,7 +2247,7 @@
       "total": 2873.84,
       "buy": 1419.47,
       "sell": 1454.37,
-      "ratioPct": 25.53,
+      "ratioPct": 25.55,
       "isClimax": false,
       "isTrough": false
     },
@@ -2255,7 +2255,7 @@
       "total": 723.92,
       "buy": 263.92,
       "sell": 460,
-      "ratioPct": 6.43,
+      "ratioPct": 6.44,
       "isClimax": false,
       "isTrough": true
     },
@@ -2268,10 +2268,10 @@
       "isTrough": true
     },
     "thuc_pham": {
-      "total": 1419.86,
-      "buy": 949.33,
-      "sell": 470.54,
-      "ratioPct": 12.62,
+      "total": 1415.21,
+      "buy": 947.42,
+      "sell": 467.79,
+      "ratioPct": 12.58,
       "isClimax": false,
       "isTrough": false
     },
@@ -2287,7 +2287,7 @@
       "total": 1658.81,
       "buy": 727.18,
       "sell": 931.63,
-      "ratioPct": 14.74,
+      "ratioPct": 14.75,
       "isClimax": false,
       "isTrough": false
     },
@@ -2295,7 +2295,7 @@
       "total": 774.55,
       "buy": 389.58,
       "sell": 384.98,
-      "ratioPct": 6.88,
+      "ratioPct": 6.89,
       "isClimax": false,
       "isTrough": false
     },
@@ -2319,7 +2319,7 @@
       "total": 1299.15,
       "buy": 513.78,
       "sell": 785.37,
-      "ratioPct": 11.54,
+      "ratioPct": 11.55,
       "isClimax": false,
       "isTrough": false
     }
@@ -2327,12 +2327,12 @@
   {
     "date": "2026-10-06",
     "displayDate": "26-10-06",
-    "totalMarket": 13691,
+    "totalMarket": 13681,
     "bds": {
       "total": 1564.71,
       "buy": 840.85,
       "sell": 723.87,
-      "ratioPct": 11.43,
+      "ratioPct": 11.44,
       "isClimax": false,
       "isTrough": false
     },
@@ -2340,7 +2340,7 @@
       "total": 3938.53,
       "buy": 1999.15,
       "sell": 1939.38,
-      "ratioPct": 28.77,
+      "ratioPct": 28.79,
       "isClimax": false,
       "isTrough": false
     },
@@ -2348,7 +2348,7 @@
       "total": 2041.53,
       "buy": 1193.5,
       "sell": 848.04,
-      "ratioPct": 14.91,
+      "ratioPct": 14.92,
       "isClimax": false,
       "isTrough": false
     },
@@ -2356,15 +2356,15 @@
       "total": 383.79,
       "buy": 189.62,
       "sell": 194.17,
-      "ratioPct": 2.8,
+      "ratioPct": 2.81,
       "isClimax": false,
       "isTrough": true
     },
     "thuc_pham": {
-      "total": 815.83,
-      "buy": 474.28,
-      "sell": 341.55,
-      "ratioPct": 5.96,
+      "total": 807.64,
+      "buy": 469.12,
+      "sell": 338.52,
+      "ratioPct": 5.9,
       "isClimax": false,
       "isTrough": false
     },
@@ -2372,7 +2372,7 @@
       "total": 515.46,
       "buy": 270.03,
       "sell": 245.43,
-      "ratioPct": 3.76,
+      "ratioPct": 3.77,
       "isClimax": false,
       "isTrough": false
     },
@@ -2412,7 +2412,7 @@
       "total": 1552.23,
       "buy": 831.52,
       "sell": 720.71,
-      "ratioPct": 11.34,
+      "ratioPct": 11.35,
       "isClimax": false,
       "isTrough": false
     }
@@ -2420,12 +2420,12 @@
   {
     "date": "2026-10-05",
     "displayDate": "26-10-05",
-    "totalMarket": 9085,
+    "totalMarket": 9077,
     "bds": {
       "total": 1097.95,
       "buy": 620.36,
       "sell": 477.59,
-      "ratioPct": 12.09,
+      "ratioPct": 12.1,
       "isClimax": false,
       "isTrough": false
     },
@@ -2433,7 +2433,7 @@
       "total": 2447.25,
       "buy": 1219.82,
       "sell": 1227.43,
-      "ratioPct": 26.94,
+      "ratioPct": 26.96,
       "isClimax": false,
       "isTrough": false
     },
@@ -2441,7 +2441,7 @@
       "total": 956.15,
       "buy": 432.27,
       "sell": 523.88,
-      "ratioPct": 10.52,
+      "ratioPct": 10.53,
       "isClimax": false,
       "isTrough": false
     },
@@ -2454,10 +2454,10 @@
       "isTrough": false
     },
     "thuc_pham": {
-      "total": 670.58,
-      "buy": 353.67,
-      "sell": 316.9,
-      "ratioPct": 7.38,
+      "total": 663.34,
+      "buy": 350.85,
+      "sell": 312.49,
+      "ratioPct": 7.31,
       "isClimax": false,
       "isTrough": false
     },
@@ -2473,7 +2473,7 @@
       "total": 858.04,
       "buy": 473.38,
       "sell": 384.65,
-      "ratioPct": 9.44,
+      "ratioPct": 9.45,
       "isClimax": false,
       "isTrough": false
     },
@@ -2481,7 +2481,7 @@
       "total": 539.76,
       "buy": 285.64,
       "sell": 254.12,
-      "ratioPct": 5.94,
+      "ratioPct": 5.95,
       "isClimax": false,
       "isTrough": false
     },
@@ -2489,7 +2489,7 @@
       "total": 178.49,
       "buy": 75.88,
       "sell": 102.61,
-      "ratioPct": 1.96,
+      "ratioPct": 1.97,
       "isClimax": false,
       "isTrough": false
     },
@@ -2505,7 +2505,7 @@
       "total": 977.26,
       "buy": 628.62,
       "sell": 348.64,
-      "ratioPct": 10.76,
+      "ratioPct": 10.77,
       "isClimax": false,
       "isTrough": false
     }
@@ -2513,12 +2513,12 @@
   {
     "date": "2026-10-02",
     "displayDate": "26-10-02",
-    "totalMarket": 13422,
+    "totalMarket": 13412,
     "bds": {
       "total": 1276.4,
       "buy": 602.52,
       "sell": 673.88,
-      "ratioPct": 9.51,
+      "ratioPct": 9.52,
       "isClimax": false,
       "isTrough": false
     },
@@ -2526,7 +2526,7 @@
       "total": 3038.92,
       "buy": 1213,
       "sell": 1825.92,
-      "ratioPct": 22.64,
+      "ratioPct": 22.66,
       "isClimax": false,
       "isTrough": false
     },
@@ -2547,10 +2547,10 @@
       "isTrough": false
     },
     "thuc_pham": {
-      "total": 1073.41,
-      "buy": 452.72,
-      "sell": 620.69,
-      "ratioPct": 8,
+      "total": 1064.57,
+      "buy": 450.13,
+      "sell": 614.44,
+      "ratioPct": 7.94,
       "isClimax": false,
       "isTrough": false
     },
@@ -2566,7 +2566,7 @@
       "total": 2138.23,
       "buy": 1083.94,
       "sell": 1054.3,
-      "ratioPct": 15.93,
+      "ratioPct": 15.94,
       "isClimax": false,
       "isTrough": false
     },
@@ -2598,7 +2598,7 @@
       "total": 1214.82,
       "buy": 689.81,
       "sell": 525.01,
-      "ratioPct": 9.05,
+      "ratioPct": 9.06,
       "isClimax": false,
       "isTrough": false
     }
@@ -2606,12 +2606,12 @@
   {
     "date": "2026-10-01",
     "displayDate": "26-10-01",
-    "totalMarket": 9932,
+    "totalMarket": 9921,
     "bds": {
       "total": 1001.49,
       "buy": 500.41,
       "sell": 501.08,
-      "ratioPct": 10.08,
+      "ratioPct": 10.09,
       "isClimax": false,
       "isTrough": false
     },
@@ -2619,7 +2619,7 @@
       "total": 2969.58,
       "buy": 1293.15,
       "sell": 1676.42,
-      "ratioPct": 29.9,
+      "ratioPct": 29.93,
       "isClimax": false,
       "isTrough": false
     },
@@ -2627,7 +2627,7 @@
       "total": 1281.06,
       "buy": 619.1,
       "sell": 661.96,
-      "ratioPct": 12.9,
+      "ratioPct": 12.91,
       "isClimax": false,
       "isTrough": false
     },
@@ -2640,10 +2640,10 @@
       "isTrough": true
     },
     "thuc_pham": {
-      "total": 888.62,
-      "buy": 511.41,
-      "sell": 377.21,
-      "ratioPct": 8.95,
+      "total": 879.28,
+      "buy": 507.76,
+      "sell": 371.53,
+      "ratioPct": 8.86,
       "isClimax": false,
       "isTrough": false
     },
@@ -2651,7 +2651,7 @@
       "total": 434.37,
       "buy": 181.04,
       "sell": 253.33,
-      "ratioPct": 4.37,
+      "ratioPct": 4.38,
       "isClimax": false,
       "isTrough": false
     },
@@ -2659,7 +2659,7 @@
       "total": 437.1,
       "buy": 223.41,
       "sell": 213.68,
-      "ratioPct": 4.4,
+      "ratioPct": 4.41,
       "isClimax": false,
       "isTrough": false
     },
@@ -2667,7 +2667,7 @@
       "total": 964.9,
       "buy": 515.56,
       "sell": 449.34,
-      "ratioPct": 9.72,
+      "ratioPct": 9.73,
       "isClimax": false,
       "isTrough": false
     },
@@ -2683,7 +2683,7 @@
       "total": 260.54,
       "buy": 119.32,
       "sell": 141.22,
-      "ratioPct": 2.62,
+      "ratioPct": 2.63,
       "isClimax": false,
       "isTrough": false
     },
@@ -2691,7 +2691,7 @@
       "total": 1358.67,
       "buy": 481.84,
       "sell": 876.83,
-      "ratioPct": 13.68,
+      "ratioPct": 13.69,
       "isClimax": false,
       "isTrough": false
     }
@@ -2699,12 +2699,12 @@
   {
     "date": "2026-09-30",
     "displayDate": "26-09-30",
-    "totalMarket": 9992,
+    "totalMarket": 9987,
     "bds": {
       "total": 1845.33,
       "buy": 1044.43,
       "sell": 800.9,
-      "ratioPct": 18.47,
+      "ratioPct": 18.48,
       "isClimax": false,
       "isTrough": false
     },
@@ -2712,7 +2712,7 @@
       "total": 2507.26,
       "buy": 1248.44,
       "sell": 1258.81,
-      "ratioPct": 25.09,
+      "ratioPct": 25.11,
       "isClimax": false,
       "isTrough": false
     },
@@ -2733,10 +2733,10 @@
       "isTrough": true
     },
     "thuc_pham": {
-      "total": 510.77,
-      "buy": 205.68,
-      "sell": 305.09,
-      "ratioPct": 5.11,
+      "total": 506.23,
+      "buy": 204.24,
+      "sell": 301.99,
+      "ratioPct": 5.07,
       "isClimax": false,
       "isTrough": false
     },
@@ -2744,7 +2744,7 @@
       "total": 474.03,
       "buy": 231.34,
       "sell": 242.69,
-      "ratioPct": 4.74,
+      "ratioPct": 4.75,
       "isClimax": false,
       "isTrough": false
     },
@@ -2768,7 +2768,7 @@
       "total": 224.23,
       "buy": 95.84,
       "sell": 128.39,
-      "ratioPct": 2.24,
+      "ratioPct": 2.25,
       "isClimax": false,
       "isTrough": false
     },
@@ -2792,7 +2792,7 @@
   {
     "date": "2026-09-29",
     "displayDate": "26-09-29",
-    "totalMarket": 9757,
+    "totalMarket": 9753,
     "bds": {
       "total": 1179.61,
       "buy": 639.37,
@@ -2805,7 +2805,7 @@
       "total": 2757.81,
       "buy": 1245.05,
       "sell": 1512.76,
-      "ratioPct": 28.26,
+      "ratioPct": 28.28,
       "isClimax": false,
       "isTrough": false
     },
@@ -2813,7 +2813,7 @@
       "total": 1047.98,
       "buy": 572.11,
       "sell": 475.86,
-      "ratioPct": 10.74,
+      "ratioPct": 10.75,
       "isClimax": false,
       "isTrough": false
     },
@@ -2826,10 +2826,10 @@
       "isTrough": false
     },
     "thuc_pham": {
-      "total": 341.36,
-      "buy": 182.67,
-      "sell": 158.69,
-      "ratioPct": 3.5,
+      "total": 338.07,
+      "buy": 181.25,
+      "sell": 156.81,
+      "ratioPct": 3.47,
       "isClimax": false,
       "isTrough": false
     },
@@ -2853,7 +2853,7 @@
       "total": 1518.58,
       "buy": 903.96,
       "sell": 614.62,
-      "ratioPct": 15.56,
+      "ratioPct": 15.57,
       "isClimax": false,
       "isTrough": false
     },
@@ -2877,7 +2877,7 @@
       "total": 835.48,
       "buy": 420.14,
       "sell": 415.34,
-      "ratioPct": 8.56,
+      "ratioPct": 8.57,
       "isClimax": false,
       "isTrough": false
     }
@@ -2885,12 +2885,12 @@
   {
     "date": "2026-09-28",
     "displayDate": "26-09-28",
-    "totalMarket": 11908,
+    "totalMarket": 11903,
     "bds": {
       "total": 1499.33,
       "buy": 727.8,
       "sell": 771.53,
-      "ratioPct": 12.59,
+      "ratioPct": 12.6,
       "isClimax": false,
       "isTrough": false
     },
@@ -2898,7 +2898,7 @@
       "total": 3441.82,
       "buy": 1502.21,
       "sell": 1939.61,
-      "ratioPct": 28.9,
+      "ratioPct": 28.92,
       "isClimax": false,
       "isTrough": false
     },
@@ -2906,7 +2906,7 @@
       "total": 1732.48,
       "buy": 561.79,
       "sell": 1170.7,
-      "ratioPct": 14.55,
+      "ratioPct": 14.56,
       "isClimax": false,
       "isTrough": false
     },
@@ -2919,10 +2919,10 @@
       "isTrough": false
     },
     "thuc_pham": {
-      "total": 559.67,
-      "buy": 238.4,
-      "sell": 321.27,
-      "ratioPct": 4.7,
+      "total": 555.19,
+      "buy": 235.77,
+      "sell": 319.42,
+      "ratioPct": 4.66,
       "isClimax": false,
       "isTrough": false
     },
@@ -2946,7 +2946,7 @@
       "total": 1019.89,
       "buy": 687.57,
       "sell": 332.32,
-      "ratioPct": 8.56,
+      "ratioPct": 8.57,
       "isClimax": false,
       "isTrough": false
     },
@@ -2970,7 +2970,7 @@
       "total": 852.96,
       "buy": 457.64,
       "sell": 395.32,
-      "ratioPct": 7.16,
+      "ratioPct": 7.17,
       "isClimax": false,
       "isTrough": false
     }
@@ -2978,12 +2978,12 @@
   {
     "date": "2026-09-25",
     "displayDate": "26-09-25",
-    "totalMarket": 10724,
+    "totalMarket": 10718,
     "bds": {
       "total": 1390.17,
       "buy": 781.93,
       "sell": 608.24,
-      "ratioPct": 12.96,
+      "ratioPct": 12.97,
       "isClimax": false,
       "isTrough": false
     },
@@ -2991,7 +2991,7 @@
       "total": 3831.07,
       "buy": 2121.34,
       "sell": 1709.73,
-      "ratioPct": 35.72,
+      "ratioPct": 35.74,
       "isClimax": true,
       "isTrough": false
     },
@@ -2999,7 +2999,7 @@
       "total": 916.95,
       "buy": 372.73,
       "sell": 544.23,
-      "ratioPct": 8.55,
+      "ratioPct": 8.56,
       "isClimax": false,
       "isTrough": false
     },
@@ -3012,10 +3012,10 @@
       "isTrough": true
     },
     "thuc_pham": {
-      "total": 527.66,
-      "buy": 217.68,
-      "sell": 309.98,
-      "ratioPct": 4.92,
+      "total": 522.5,
+      "buy": 215.75,
+      "sell": 306.75,
+      "ratioPct": 4.88,
       "isClimax": false,
       "isTrough": false
     },
@@ -3023,7 +3023,7 @@
       "total": 383.35,
       "buy": 205.02,
       "sell": 178.33,
-      "ratioPct": 3.57,
+      "ratioPct": 3.58,
       "isClimax": false,
       "isTrough": false
     },
@@ -3031,7 +3031,7 @@
       "total": 556.9,
       "buy": 285.3,
       "sell": 271.6,
-      "ratioPct": 5.19,
+      "ratioPct": 5.2,
       "isClimax": false,
       "isTrough": false
     },
@@ -3039,7 +3039,7 @@
       "total": 925.52,
       "buy": 468.04,
       "sell": 457.48,
-      "ratioPct": 8.63,
+      "ratioPct": 8.64,
       "isClimax": false,
       "isTrough": false
     },
@@ -3071,12 +3071,12 @@
   {
     "date": "2026-09-24",
     "displayDate": "26-09-24",
-    "totalMarket": 12171,
+    "totalMarket": 12167,
     "bds": {
       "total": 1915.71,
       "buy": 673.21,
       "sell": 1242.5,
-      "ratioPct": 15.74,
+      "ratioPct": 15.75,
       "isClimax": false,
       "isTrough": false
     },
@@ -3092,7 +3092,7 @@
       "total": 1370.62,
       "buy": 596.09,
       "sell": 774.54,
-      "ratioPct": 11.26,
+      "ratioPct": 11.27,
       "isClimax": false,
       "isTrough": false
     },
@@ -3105,10 +3105,10 @@
       "isTrough": true
     },
     "thuc_pham": {
-      "total": 864.07,
-      "buy": 522.8,
-      "sell": 341.27,
-      "ratioPct": 7.1,
+      "total": 860.44,
+      "buy": 520.74,
+      "sell": 339.7,
+      "ratioPct": 7.07,
       "isClimax": false,
       "isTrough": false
     },
@@ -3156,7 +3156,7 @@
       "total": 2018.45,
       "buy": 626.62,
       "sell": 1391.84,
-      "ratioPct": 16.58,
+      "ratioPct": 16.59,
       "isClimax": true,
       "isTrough": false
     }
@@ -3164,7 +3164,7 @@
   {
     "date": "2026-09-23",
     "displayDate": "26-09-23",
-    "totalMarket": 10814,
+    "totalMarket": 10810,
     "bds": {
       "total": 912.77,
       "buy": 354.44,
@@ -3177,7 +3177,7 @@
       "total": 4274.53,
       "buy": 2434.97,
       "sell": 1839.57,
-      "ratioPct": 39.53,
+      "ratioPct": 39.54,
       "isClimax": true,
       "isTrough": false
     },
@@ -3185,7 +3185,7 @@
       "total": 1025.67,
       "buy": 442.27,
       "sell": 583.4,
-      "ratioPct": 9.48,
+      "ratioPct": 9.49,
       "isClimax": false,
       "isTrough": false
     },
@@ -3198,10 +3198,10 @@
       "isTrough": true
     },
     "thuc_pham": {
-      "total": 438.75,
-      "buy": 188.13,
-      "sell": 250.62,
-      "ratioPct": 4.06,
+      "total": 435.54,
+      "buy": 186.93,
+      "sell": 248.62,
+      "ratioPct": 4.03,
       "isClimax": false,
       "isTrough": false
     },
@@ -3249,7 +3249,7 @@
       "total": 1259.17,
       "buy": 410.88,
       "sell": 848.29,
-      "ratioPct": 11.64,
+      "ratioPct": 11.65,
       "isClimax": false,
       "isTrough": false
     }
@@ -3257,12 +3257,12 @@
   {
     "date": "2026-09-22",
     "displayDate": "26-09-22",
-    "totalMarket": 9065,
+    "totalMarket": 9059,
     "bds": {
       "total": 998.98,
       "buy": 575.39,
       "sell": 423.59,
-      "ratioPct": 11.02,
+      "ratioPct": 11.03,
       "isClimax": false,
       "isTrough": false
     },
@@ -3270,7 +3270,7 @@
       "total": 2486.66,
       "buy": 1275.64,
       "sell": 1211.02,
-      "ratioPct": 27.43,
+      "ratioPct": 27.45,
       "isClimax": false,
       "isTrough": false
     },
@@ -3291,10 +3291,10 @@
       "isTrough": true
     },
     "thuc_pham": {
-      "total": 880.61,
-      "buy": 574.54,
-      "sell": 306.06,
-      "ratioPct": 9.71,
+      "total": 875.92,
+      "buy": 571.7,
+      "sell": 304.22,
+      "ratioPct": 9.67,
       "isClimax": false,
       "isTrough": false
     },
@@ -3318,7 +3318,7 @@
       "total": 1089.81,
       "buy": 530.49,
       "sell": 559.33,
-      "ratioPct": 12.02,
+      "ratioPct": 12.03,
       "isClimax": false,
       "isTrough": false
     },
@@ -3326,7 +3326,7 @@
       "total": 339.38,
       "buy": 168.08,
       "sell": 171.3,
-      "ratioPct": 3.74,
+      "ratioPct": 3.75,
       "isClimax": false,
       "isTrough": false
     },
@@ -3342,7 +3342,7 @@
       "total": 943.16,
       "buy": 614.09,
       "sell": 329.07,
-      "ratioPct": 10.4,
+      "ratioPct": 10.41,
       "isClimax": false,
       "isTrough": false
     }
@@ -3350,12 +3350,12 @@
   {
     "date": "2026-09-21",
     "displayDate": "26-09-21",
-    "totalMarket": 12100,
+    "totalMarket": 12092,
     "bds": {
       "total": 1843.24,
       "buy": 635.45,
       "sell": 1207.79,
-      "ratioPct": 15.23,
+      "ratioPct": 15.24,
       "isClimax": false,
       "isTrough": false
     },
@@ -3363,7 +3363,7 @@
       "total": 3669.09,
       "buy": 1796.95,
       "sell": 1872.14,
-      "ratioPct": 30.32,
+      "ratioPct": 30.34,
       "isClimax": true,
       "isTrough": false
     },
@@ -3384,10 +3384,10 @@
       "isTrough": true
     },
     "thuc_pham": {
-      "total": 511.41,
-      "buy": 188.07,
-      "sell": 323.34,
-      "ratioPct": 4.23,
+      "total": 504.85,
+      "buy": 185.61,
+      "sell": 319.24,
+      "ratioPct": 4.18,
       "isClimax": false,
       "isTrough": false
     },
@@ -3411,7 +3411,7 @@
       "total": 1097.35,
       "buy": 663.85,
       "sell": 433.51,
-      "ratioPct": 9.07,
+      "ratioPct": 9.08,
       "isClimax": false,
       "isTrough": false
     },
@@ -3435,7 +3435,7 @@
       "total": 2213.46,
       "buy": 664.04,
       "sell": 1549.42,
-      "ratioPct": 18.29,
+      "ratioPct": 18.31,
       "isClimax": true,
       "isTrough": false
     }
@@ -3443,12 +3443,12 @@
   {
     "date": "2026-09-18",
     "displayDate": "26-09-18",
-    "totalMarket": 17585,
+    "totalMarket": 17572,
     "bds": {
       "total": 2210.72,
       "buy": 948.43,
       "sell": 1262.29,
-      "ratioPct": 12.57,
+      "ratioPct": 12.58,
       "isClimax": false,
       "isTrough": false
     },
@@ -3456,7 +3456,7 @@
       "total": 5776.43,
       "buy": 2404.61,
       "sell": 3371.82,
-      "ratioPct": 32.85,
+      "ratioPct": 32.87,
       "isClimax": true,
       "isTrough": false
     },
@@ -3464,7 +3464,7 @@
       "total": 2223.88,
       "buy": 1106.72,
       "sell": 1117.15,
-      "ratioPct": 12.65,
+      "ratioPct": 12.66,
       "isClimax": false,
       "isTrough": false
     },
@@ -3477,10 +3477,10 @@
       "isTrough": false
     },
     "thuc_pham": {
-      "total": 925.72,
-      "buy": 530.01,
-      "sell": 395.7,
-      "ratioPct": 5.26,
+      "total": 913.79,
+      "buy": 522.77,
+      "sell": 391.02,
+      "ratioPct": 5.2,
       "isClimax": false,
       "isTrough": false
     },
@@ -3504,7 +3504,7 @@
       "total": 1143.17,
       "buy": 459.4,
       "sell": 683.77,
-      "ratioPct": 6.5,
+      "ratioPct": 6.51,
       "isClimax": false,
       "isTrough": false
     },
@@ -3528,7 +3528,7 @@
       "total": 4722.24,
       "buy": 1787.31,
       "sell": 2934.92,
-      "ratioPct": 26.85,
+      "ratioPct": 26.87,
       "isClimax": true,
       "isTrough": false
     }
@@ -3536,7 +3536,7 @@
   {
     "date": "2026-09-17",
     "displayDate": "26-09-17",
-    "totalMarket": 13828,
+    "totalMarket": 13821,
     "bds": {
       "total": 1382.46,
       "buy": 895.32,
@@ -3549,7 +3549,7 @@
       "total": 3992.03,
       "buy": 2564.72,
       "sell": 1427.32,
-      "ratioPct": 28.87,
+      "ratioPct": 28.88,
       "isClimax": false,
       "isTrough": false
     },
@@ -3557,7 +3557,7 @@
       "total": 2419.58,
       "buy": 1660.74,
       "sell": 758.84,
-      "ratioPct": 17.5,
+      "ratioPct": 17.51,
       "isClimax": false,
       "isTrough": false
     },
@@ -3570,10 +3570,10 @@
       "isTrough": true
     },
     "thuc_pham": {
-      "total": 488.52,
-      "buy": 292.68,
-      "sell": 195.84,
-      "ratioPct": 3.53,
+      "total": 482.18,
+      "buy": 288.7,
+      "sell": 193.48,
+      "ratioPct": 3.49,
       "isClimax": false,
       "isTrough": false
     },
@@ -3597,7 +3597,7 @@
       "total": 1697,
       "buy": 826.44,
       "sell": 870.57,
-      "ratioPct": 12.27,
+      "ratioPct": 12.28,
       "isClimax": false,
       "isTrough": false
     },
@@ -3605,7 +3605,7 @@
       "total": 465.12,
       "buy": 287.63,
       "sell": 177.5,
-      "ratioPct": 3.36,
+      "ratioPct": 3.37,
       "isClimax": false,
       "isTrough": false
     },
@@ -3621,7 +3621,7 @@
       "total": 1653.03,
       "buy": 956.21,
       "sell": 696.82,
-      "ratioPct": 11.95,
+      "ratioPct": 11.96,
       "isClimax": false,
       "isTrough": false
     }
@@ -3629,7 +3629,7 @@
   {
     "date": "2026-09-16",
     "displayDate": "26-09-16",
-    "totalMarket": 10336,
+    "totalMarket": 10331,
     "bds": {
       "total": 1166.72,
       "buy": 560.69,
@@ -3642,7 +3642,7 @@
       "total": 2601.9,
       "buy": 1322.74,
       "sell": 1279.16,
-      "ratioPct": 25.17,
+      "ratioPct": 25.19,
       "isClimax": false,
       "isTrough": false
     },
@@ -3650,7 +3650,7 @@
       "total": 1106.23,
       "buy": 394.57,
       "sell": 711.66,
-      "ratioPct": 10.7,
+      "ratioPct": 10.71,
       "isClimax": false,
       "isTrough": false
     },
@@ -3663,10 +3663,10 @@
       "isTrough": true
     },
     "thuc_pham": {
-      "total": 367.84,
-      "buy": 172.03,
-      "sell": 195.81,
-      "ratioPct": 3.56,
+      "total": 363.37,
+      "buy": 170.11,
+      "sell": 193.26,
+      "ratioPct": 3.52,
       "isClimax": false,
       "isTrough": false
     },
@@ -3690,7 +3690,7 @@
       "total": 1803.31,
       "buy": 881.33,
       "sell": 921.98,
-      "ratioPct": 17.45,
+      "ratioPct": 17.46,
       "isClimax": false,
       "isTrough": false
     },
@@ -3706,7 +3706,7 @@
       "total": 454.26,
       "buy": 223.09,
       "sell": 231.17,
-      "ratioPct": 4.39,
+      "ratioPct": 4.4,
       "isClimax": false,
       "isTrough": false
     },
@@ -3714,7 +3714,7 @@
       "total": 1541.08,
       "buy": 799.7,
       "sell": 741.38,
-      "ratioPct": 14.91,
+      "ratioPct": 14.92,
       "isClimax": false,
       "isTrough": false
     }
@@ -3722,7 +3722,7 @@
   {
     "date": "2026-09-15",
     "displayDate": "26-09-15",
-    "totalMarket": 12085,
+    "totalMarket": 12080,
     "bds": {
       "total": 1067.73,
       "buy": 516.77,
@@ -3735,7 +3735,7 @@
       "total": 3806.45,
       "buy": 2309.58,
       "sell": 1496.87,
-      "ratioPct": 31.5,
+      "ratioPct": 31.51,
       "isClimax": true,
       "isTrough": false
     },
@@ -3743,7 +3743,7 @@
       "total": 1318.55,
       "buy": 801.95,
       "sell": 516.6,
-      "ratioPct": 10.91,
+      "ratioPct": 10.92,
       "isClimax": false,
       "isTrough": false
     },
@@ -3756,10 +3756,10 @@
       "isTrough": true
     },
     "thuc_pham": {
-      "total": 391.08,
-      "buy": 228.88,
-      "sell": 162.21,
-      "ratioPct": 3.24,
+      "total": 386.35,
+      "buy": 226.18,
+      "sell": 160.17,
+      "ratioPct": 3.2,
       "isClimax": false,
       "isTrough": false
     },
@@ -3807,7 +3807,7 @@
       "total": 1664.57,
       "buy": 705.29,
       "sell": 959.28,
-      "ratioPct": 13.77,
+      "ratioPct": 13.78,
       "isClimax": false,
       "isTrough": false
     }
@@ -3815,7 +3815,7 @@
   {
     "date": "2026-09-14",
     "displayDate": "26-09-14",
-    "totalMarket": 13708,
+    "totalMarket": 13697,
     "bds": {
       "total": 1547,
       "buy": 790.2,
@@ -3828,7 +3828,7 @@
       "total": 3473.22,
       "buy": 1706.05,
       "sell": 1767.17,
-      "ratioPct": 25.34,
+      "ratioPct": 25.36,
       "isClimax": false,
       "isTrough": false
     },
@@ -3836,7 +3836,7 @@
       "total": 2456.85,
       "buy": 925.9,
       "sell": 1530.95,
-      "ratioPct": 17.92,
+      "ratioPct": 17.94,
       "isClimax": false,
       "isTrough": false
     },
@@ -3849,10 +3849,10 @@
       "isTrough": false
     },
     "thuc_pham": {
-      "total": 668.48,
-      "buy": 302.95,
-      "sell": 365.53,
-      "ratioPct": 4.88,
+      "total": 658.61,
+      "buy": 298.89,
+      "sell": 359.72,
+      "ratioPct": 4.81,
       "isClimax": false,
       "isTrough": false
     },
@@ -3868,7 +3868,7 @@
       "total": 728.1,
       "buy": 284.63,
       "sell": 443.47,
-      "ratioPct": 5.31,
+      "ratioPct": 5.32,
       "isClimax": false,
       "isTrough": false
     },
@@ -3900,7 +3900,7 @@
       "total": 1880.99,
       "buy": 963.9,
       "sell": 917.08,
-      "ratioPct": 13.72,
+      "ratioPct": 13.73,
       "isClimax": false,
       "isTrough": false
     }
