@@ -1572,23 +1572,10 @@
     "currentPrice": 12.3,
     "calculatedDate": "2026-11-11"
   },
-  "VND": {
-    "symbol": "VND",
-    "rsRating": 36,
-    "rank": 122,
-    "totalStocks": 198,
-    "rawScore": -0.141,
-    "q1Perf": -11.8,
-    "q2Perf": -6.5,
-    "q3Perf": -17.4,
-    "q4Perf": -23.2,
-    "currentPrice": 14.9,
-    "calculatedDate": "2026-11-11"
-  },
   "SZC": {
     "symbol": "SZC",
     "rsRating": 36,
-    "rank": 123,
+    "rank": 122,
     "totalStocks": 198,
     "rawScore": -0.141,
     "q1Perf": 8.3,
@@ -1596,6 +1583,19 @@
     "q3Perf": -41.1,
     "q4Perf": -29.6,
     "currentPrice": 20.6,
+    "calculatedDate": "2026-11-11"
+  },
+  "VND": {
+    "symbol": "VND",
+    "rsRating": 36,
+    "rank": 123,
+    "totalStocks": 198,
+    "rawScore": -0.141,
+    "q1Perf": -11.8,
+    "q2Perf": -6.5,
+    "q3Perf": -17.4,
+    "q4Perf": -23.2,
+    "currentPrice": 14.9,
     "calculatedDate": "2026-11-11"
   },
   "AGR": {
