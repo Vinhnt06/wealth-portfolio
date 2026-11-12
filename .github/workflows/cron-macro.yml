@@ -2,8 +2,8 @@ name: 🔄 YourFin Macro & Interest Rates Auto-Sync
 
 on:
   schedule:
-    # Chạy 2 lần mỗi ngày trên Cloud GitHub: 00:00 UTC (07:00 VN) và 11:00 UTC (18:00 VN sau giờ giao dịch)
-    - cron: '0 0,11 * * *'
+    # Chạy đồng bộ vĩ mô: 07:12 VN (00:12 UTC), 18:12 VN (11:12 UTC) và dự phòng tối 20:12 VN (13:12 UTC)
+    - cron: '12 0,11,13 * * *'
   workflow_dispatch: # Cho phép trigger thủ công từ GitHub UI
 
 jobs:
