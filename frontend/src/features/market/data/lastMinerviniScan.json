@@ -1,9 +1,9 @@
 {
   "success": true,
-  "scannedAt": 1794502086039,
-  "scannedAtText": "23:47:52 12/11/2026",
-  "session": "AFTERNOON",
-  "sessionLabel": "Phiên Chiều (15:00)",
+  "scannedAt": 1794502974171,
+  "scannedAtText": "00:02:38 13/11/2026",
+  "session": "MORNING",
+  "sessionLabel": "Phiên Sáng (11:30)",
   "totalScanned": 197,
   "stage2Count": 12,
   "nearStage2Count": 10,
