@@ -16,6 +16,7 @@ export interface WyckoffCriterion {
 
 export interface WyckoffDiagnosis {
   phase: 'Phase A' | 'Phase B' | 'Phase C' | 'Phase D' | 'Phase E';
+  phaseIndex: number; // 0..4
   phaseName: string;
   passedCount: number;
   totalCount: number;
@@ -26,6 +27,9 @@ export interface WyckoffDiagnosis {
   buyPointDetail?: string;
   buyZonePrice?: string;
   stopLossPrice?: string;
+  completedPhases?: string[]; // Danh sách các Phase đã hoàn thành tuần tự
+  nextMilestone?: string;     // Mục tiêu / Cột mốc tiếp theo để chuyển sang Phase sau
+  phaseProgressPct?: number;  // % tiến trình hoàn thành chu kỳ tích lũy (0 - 100%)
   criteria: WyckoffCriterion[];
 }
 

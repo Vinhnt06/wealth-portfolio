@@ -592,52 +592,101 @@ export async function GET(request: Request) {
 
     const wyckoffPassedCount = wyckoffCriteria.filter((c) => c.passed).length;
 
-    // 5. Phân loại Pha Wyckoff (Phase A - E) & Xác định Điểm Mua Chuẩn Wyckoff từ cấu trúc nền giá thực tế
-    // Lưu ý học thuật Wyckoff: Nền tích lũy (Phase B, C, D) thường hình thành ở đáy sau nhịp giảm (khi giá còn dưới MA200),
-    // do đó KHÔNG dùng điều kiện "Giá < MA200" để ép về Phase A nếu cổ phiếu đã tạo nền đi ngang ổn định 40 phiên.
+    // 5. CỖ MÁY CHUYỂN TRẠNG THÁI TUẦN TỰ THEO CHU KỲ WYCKOFF (SEQUENTIAL WYCKOFF STATE MACHINE)
+    // Nguyên tắc học thuật Wyckoff: Chu kỳ tích lũy diễn ra tuần tự bắt buộc:
+    // Phase A (Hãm rơi) ➔ Phase B (Tích lũy gom hàng) ➔ Phase C (Rũ bỏ Spring / Test) ➔ Phase D (SOS / LPS trong nền) ➔ Phase E (Bứt phá Markup)
+    // TUYỆT ĐỐI KHÔNG NHẢY CÓC, VÀ KHÔNG BỊ TỤT LÙI BỪA BÃI KHI CHỈ CÓ RUNG LẮC NGẮN HẠN.
+
     let wyckoffPhase: 'Phase A' | 'Phase B' | 'Phase C' | 'Phase D' | 'Phase E' = 'Phase B';
+    let phaseIndex = 1;
     let wyckoffPhaseName = 'Phase B — Tích lũy xây dựng nguyên nhân';
-    let actionAdvice = 'chờ quá trình thắt chặt biên độ nền giá VCP và cạn kiệt nguồn cung';
+    let actionAdvice = 'Chờ quá trình thắt chặt biên độ nền giá VCP và cạn kiệt nguồn cung';
     let isBuyPhase = false;
     let buyPointCode: 'NONE' | 'BUY_1_SPRING' | 'BUY_2_LPS' | 'BUY_3_BREAKOUT_BU' | 'HOLD_MARKUP' = 'NONE';
     let buyPointLabel = '⏳ CHƯA CÓ ĐIỂM MUA CHUẨN (ĐỨNG NGOÀI / QUAN SÁT)';
     let buyPointDetail =
-      'Cổ phiếu đang trong giai đoạn gom hàng đi ngang (Phase B) hoặc chưa hoàn tất rũ bỏ. Tuyệt đối không mua sớm tránh chôn vốn.';
+      'Cổ phiếu đang trong giai đoạn gom hàng đi ngang (Phase B). Tuyệt đối không mua sớm tránh chôn vốn.';
     const supportBaseRef = priorBaseLow !== null ? priorBaseLow : last20Low;
     let wyckoffBuyZone = `Chờ tín hiệu quanh ${formatPrice(sma20)} - ${formatPrice(last20High)}`;
     let wyckoffStopLoss = `${formatPrice(supportBaseRef * 0.97)} (-3% dưới đáy nền)`;
+    let completedPhases: string[] = ['Phase A'];
+    let nextMilestone =
+      'Cạn kiệt nguồn cung và xuất hiện nhịp rũ bỏ Spring (Phase C) hoặc nổ Vol SOS vượt nửa trên nền (Phase D)';
+    let phaseProgressPct = 35;
 
-    const isActiveBreakdownOrPanic =
-      !supportHeldPassed ||
-      (baseRangePct >= 30 && posInBasePct < 45) ||
-      (wyckoffPassedCount <= 2 && posInBasePct < 35 && downVolAvgRatio > 1.05);
+    // A. Kiểm tra vi phạm gãy xu hướng / hoảng loạn thực sự (Active Severe Breakdown)
+    // Chỉ xem là Phase A khi giá THỰC SỰ bị bán tháo thủng đáy hỗ trợ hoặc đang trong downtrend rơi tự do
+    const isSevereDowntrendOrBreakdown =
+      (priorBaseLow !== null && currentPrice < priorBaseLow * 0.96 && minCloseLast10 < priorBaseLow * 0.97) ||
+      (distFrom52WHighPct < -32 && currentPrice < sma50 && sma50 < sma200 && posInBasePct < 25 && downVolAvgRatio > 1.15) ||
+      (wyckoffPassedCount <= 1 && posInBasePct < 20 && currentPrice < sma20 && currentPrice < sma50);
 
-    if (isActiveBreakdownOrPanic) {
+    // B. Kiểm tra ĐIỀU KIỆN TIÊN QUYẾT ĐỂ ĐẠT PHASE E (Markup ngoài nền):
+    // Phải hoàn tất Phase D (đã có SOS tích lũy nâng đáy), giá bứt phá vượt hoặc áp sát trần nền kháng cự,
+    // nằm trên các đường MA chủ chốt (MA20, MA50, MA150, MA200) và tiệm cận đỉnh 52 tuần.
+    const isPhaseEEligible =
+      !isSevereDowntrendOrBreakdown &&
+      wyckoffPassedCount >= 6 &&
+      posInBasePct >= 75 &&
+      distFrom52WHighPct >= -12 &&
+      currentPrice > sma50 &&
+      sma50 > sma150 &&
+      currentPrice > sma200 &&
+      (currentPrice >= last20High * 0.985 || distFrom52WHighPct >= -6);
+
+    // C. Kiểm tra ĐIỀU KIỆN TIÊN QUYẾT ĐỂ ĐẠT PHASE D (Xu hướng bên trong nền - SOS & LPS):
+    // Phải có sự xuất hiện của CÂY NẾN SOS / Pocket Pivot xác nhận dòng tiền lớn đẩy giá lên nửa trên nền (posInBasePct >= 48),
+    // giá giữ vững trên MA20 hoặc MA50, và cấu trúc đáy sau cao hơn (Higher Low).
+    // ĐẶC BIỆT: Nếu cổ phiếu đang có SOS và giữ trên MA20/MA50, dù có vài phiên đỏ rung lắc với Vol thấp thì ĐÓ LÀ LPS CỦA PHASE D,
+    // chứ không được tụt về Phase B hay Phase C!
+    const isPhaseDEligible =
+      !isSevereDowntrendOrBreakdown &&
+      !isPhaseEEligible &&
+      wyckoffPassedCount >= 5 &&
+      posInBasePct >= 48 &&
+      (sosPassed || absorptionPassed || (hhHlPassed && upDownVolRatio >= 1.05)) &&
+      currentPrice >= Math.min(sma20, sma50) * 0.985;
+
+    // D. Kiểm tra ĐIỀU KIỆN TIÊN QUYẾT ĐỂ ĐẠT PHASE C (Rũ bỏ Spring / Test đáy cạn cung):
+    // Chỉ kích hoạt khi giá thực sự có hành vi nhúng sát/thủng nhẹ đáy nền rồi rút chân lên (hasSpringAction),
+    // HOẶC đang kiểm tra lại đáy hỗ trợ nền với thanh khoản cạn kiệt (Volume Dry Up), chưa có cây nến SOS bứt phá.
+    const isPhaseCEligible =
+      !isSevereDowntrendOrBreakdown &&
+      !isPhaseEEligible &&
+      !isPhaseDEligible &&
+      (hasSpringAction ||
+        (supportHeldPassed && vduPassed && posInBasePct <= 35 && minLowLast10 <= supportBaseRef * 1.03 && upDownVolRatio >= 0.95));
+
+    // THỰC HIỆN GÁN TRẠNG THÁI TUẦN TỰ THEO THỨ TỰ LOGIC CHU KỲ
+    if (isSevereDowntrendOrBreakdown) {
       wyckoffPhase = 'Phase A';
+      phaseIndex = 0;
       wyckoffPhaseName = 'Phase A — Hãm đà giảm (SC / AR)';
       actionAdvice = 'Đứng ngoài quan sát, chưa tạo đáy xong';
       isBuyPhase = false;
       buyPointCode = 'NONE';
       buyPointLabel = '🚫 KHÔNG MUA (Phase A — Đang rơi)';
-      buyPointDetail = '';
+      buyPointDetail =
+        'Cổ phiếu đang chịu áp lực bán tháo hoặc chưa tạo đáy cân bằng. Đứng ngoài chờ thiết lập Trading Range.';
       wyckoffBuyZone = 'Đứng ngoài';
       wyckoffStopLoss = `${formatPrice(last40Low * 0.96)}`;
-    } else if (
-      wyckoffPassedCount >= 6 &&
-      posInBasePct >= 75 &&
-      distFrom52WHighPct >= -10 &&
-      currentPrice > sma50 &&
-      sma50 > sma150 &&
-      currentPrice > sma200
-    ) {
+      completedPhases = [];
+      nextMilestone = 'Tạo đáy Selling Climax (SC) và hồi phục Automatic Rally (AR) để xác lập biên độ tích lũy';
+      phaseProgressPct = 15;
+    } else if (isPhaseEEligible) {
       wyckoffPhase = 'Phase E';
+      phaseIndex = 4;
       wyckoffPhaseName = 'Phase E — Đẩy giá thoát nền (Markup)';
-      const isEarlyBreakoutOrBu = distFromSMA20Pct <= 6.0 && posInBasePct <= 95;
+      completedPhases = ['Phase A', 'Phase B', 'Phase C', 'Phase D'];
+      nextMilestone = 'Duy trì xu hướng tăng giá Markup, chốt lời theo các mốc mục tiêu và chặn lãi theo MA20';
+      phaseProgressPct = 95;
+
+      const isEarlyBreakoutOrBu = distFromSMA20Pct <= 6.0 && posInBasePct <= 98;
       if (isEarlyBreakoutOrBu) {
         isBuyPhase = true;
         buyPointCode = 'BUY_3_BREAKOUT_BU';
         buyPointLabel = '🚀 ĐIỂM MUA #3: Vượt đỉnh nền JAC / BU (Gia tăng 20-30%)';
-        buyPointDetail = '';
+        buyPointDetail = 'Cổ phiếu bứt phá dứt khoát khỏi nền giá tích lũy (JAC) và đang kiểm định trần nền (BU).';
         actionAdvice = 'Mua gia tăng 20–30% quanh đỉnh nền vừa vượt (BU)';
         wyckoffBuyZone = `${formatPrice(Math.min(currentPrice, last20High * 0.985))} – ${formatPrice(currentPrice * 1.01)}`;
         wyckoffStopLoss = `${formatPrice(Math.max(sma20 * 0.97, last20Low))}`;
@@ -645,48 +694,56 @@ export async function GET(request: Request) {
         isBuyPhase = false;
         buyPointCode = 'HOLD_MARKUP';
         buyPointLabel = '🔒 NẮM GIỮ GỒNG LÃI (Phase E đã chạy xa nền — Cấm mua đuổi)';
-        buyPointDetail = '';
+        buyPointDetail = 'Cổ phiếu đã tăng quá +5% so với điểm pivot bứt phá. Tuyệt đối không mua đuổi, chỉ nắm giữ gồng lãi.';
         actionAdvice = 'Giữ hàng gồng lãi, chặn lãi theo MA20';
         wyckoffBuyZone = `Chờ chỉnh về MA20 (${formatPrice(sma20)})`;
         wyckoffStopLoss = `${formatPrice(sma20 * 0.97)} (MA20)`;
       }
-    } else if (
-      wyckoffPassedCount >= 5 &&
-      posInBasePct >= 55 &&
-      currentPrice > sma50 &&
-      (sosPassed || absorptionPassed)
-    ) {
+    } else if (isPhaseDEligible) {
       wyckoffPhase = 'Phase D';
+      phaseIndex = 3;
       wyckoffPhaseName = 'Phase D — SOS / LPS (Quan trọng nhất ⭐)';
+      completedPhases = ['Phase A', 'Phase B', 'Phase C'];
+      nextMilestone = 'Bứt phá dứt khoát vượt trần kháng cự của Trading Range (JAC / Breakout) để bước vào Phase E';
+      phaseProgressPct = 75;
       isBuyPhase = true;
       buyPointCode = 'BUY_2_LPS';
       buyPointLabel = '⭐ ĐIỂM MUA CHUẨN #2: Phase D — SOS / LPS (Mua chủ lực 40-50%)';
-      buyPointDetail = '';
+      buyPointDetail =
+        'Đã hoàn tất rũ bỏ cạn cung. Xuất hiện nến SOS dòng tiền lớn và đang kiểm định hỗ trợ nâng đáy LPS trên MA20/MA50.';
       actionAdvice = 'Giải ngân chủ lực 40–50% ở nhịp chỉnh cạn cung LPS trên MA20/MA50';
       const lpsLow = Math.min(currentPrice, sma20 > 0 ? sma20 : currentPrice);
       const lpsHigh = Math.max(currentPrice, sma20 > 0 ? sma20 * 1.02 : currentPrice * 1.01);
       wyckoffBuyZone = `${formatPrice(lpsLow * 0.99)} – ${formatPrice(lpsHigh)}`;
       wyckoffStopLoss = `${formatPrice(Math.max(last20Low * 0.98, currentPrice * 0.93))}`;
-    } else if (
-      hasSpringAction ||
-      (supportHeldPassed && vduPassed && posInBasePct >= 12 && posInBasePct < 55 && upDownVolRatio >= 0.9)
-    ) {
+    } else if (isPhaseCEligible) {
       wyckoffPhase = 'Phase C';
+      phaseIndex = 2;
       wyckoffPhaseName = 'Phase C — Spring / Test cạn cung';
+      completedPhases = ['Phase A', 'Phase B'];
+      nextMilestone = 'Xuất hiện cây nến SOS bứt phá vượt qua nửa trên nền kèm Volume lớn để chuyển sang Phase D';
+      phaseProgressPct = 55;
       isBuyPhase = true;
       buyPointCode = 'BUY_1_SPRING';
       buyPointLabel = '🎯 ĐIỂM MUA #1: Phase C — Test Spring cạn cung (Thăm dò 20-30%)';
-      buyPointDetail = '';
+      buyPointDetail = 'Nhịp rũ bỏ Spring bẫy phe bán dưới đáy nền hoặc kiểm định đáy với thanh khoản cạn kiệt thành công.';
       actionAdvice = 'Mua thăm dò 20–30% khi nến rút chân và Test lại đáy nền Vol thấp';
       wyckoffBuyZone = `${formatPrice(supportBaseRef)} – ${formatPrice(supportBaseRef * 1.03)}`;
       wyckoffStopLoss = `${formatPrice(minLowLast10 * 0.975)}`;
     } else {
+      // Mặc định Phase B: Nền tảng tích lũy xây dựng nguyên nhân
       wyckoffPhase = 'Phase B';
+      phaseIndex = 1;
       wyckoffPhaseName = 'Phase B — Gom hàng đi ngang';
+      completedPhases = ['Phase A'];
+      nextMilestone =
+        'Xuất hiện nhịp rũ bỏ Spring cạn cung (Phase C) hoặc nổ Vol SOS vượt nửa trên nền (Phase D)';
+      phaseProgressPct = 35;
       isBuyPhase = false;
       buyPointCode = 'NONE';
       buyPointLabel = '⏳ CHƯA MUA (Phase B — Đi ngang gom hàng, chờ sang Phase C/D)';
-      buyPointDetail = '';
+      buyPointDetail =
+        'Cổ phiếu đang tích lũy đi ngang hấp thụ nguồn cung trong Trading Range. Kiên nhẫn chờ điểm rũ bỏ hoặc bứt phá.';
       actionAdvice = 'Chờ rũ bỏ Spring (Phase C) hoặc nổ Vol SOS (Phase D)';
       wyckoffBuyZone = `Chờ quanh ${formatPrice(supportBaseRef)}`;
       wyckoffStopLoss = `${formatPrice(supportBaseRef * 0.96)}`;
@@ -1144,6 +1201,7 @@ export async function GET(request: Request) {
       signals,
       wyckoff: {
         phase: wyckoffPhase,
+        phaseIndex,
         phaseName: wyckoffPhaseName,
         passedCount: wyckoffPassedCount,
         totalCount: 8,
@@ -1154,6 +1212,9 @@ export async function GET(request: Request) {
         buyPointDetail,
         buyZonePrice: wyckoffBuyZone,
         stopLossPrice: wyckoffStopLoss,
+        completedPhases,
+        nextMilestone,
+        phaseProgressPct,
         criteria: wyckoffCriteria,
       },
       aiRecommendation,

@@ -347,38 +347,92 @@ export const MinerviniStrategyPanel: React.FC<MinerviniStrategyPanelProps> = ({ 
                 </div>
               </div>
 
-              {/* Sơ đồ 5 Phase Wyckoff ngắn gọn + Checklist 8 tiêu chí */}
+              {/* Sơ đồ 5 Phase Wyckoff tuần tự (Sequential Timeline Stepper) + Checklist 8 tiêu chí */}
               {openWyckoff && (
                 <div className="divide-y divide-zinc-800/60">
-                  <div className="p-2.5 bg-zinc-950/60 space-y-1.5">
+                  <div className="p-3 bg-zinc-950/70 space-y-2">
+                    {/* Tiến trình chu kỳ tuần tự */}
+                    <div className="flex items-center justify-between text-[11px] font-mono">
+                      <span className="text-zinc-400 font-semibold flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        TIẾN TRÌNH CHU KỲ TUẦN TỰ (WYCKOFF TIMELINE)
+                      </span>
+                      <span className="text-emerald-300 font-bold">
+                        {wyckoff?.phaseProgressPct || 35}% • Giai đoạn {(wyckoff?.phaseIndex ?? 1) + 1}/5
+                      </span>
+                    </div>
+
+                    {/* Progress Bar tiến trình chu kỳ */}
+                    <div className="w-full h-1.5 bg-zinc-900 rounded-full overflow-hidden border border-zinc-800/80">
+                      <div
+                        className="h-full bg-gradient-to-r from-cyan-500 via-emerald-500 to-amber-400 transition-all duration-500"
+                        style={{ width: `${wyckoff?.phaseProgressPct || 35}%` }}
+                      />
+                    </div>
+
+                    {/* Stepper 5 Phase liên kết tuần tự */}
                     <div className="grid grid-cols-5 gap-1 text-center font-mono text-[10px]">
                       {[
-                        { p: 'Phase A', tag: 'Hãm rơi', role: 'Cấm mua', isBuy: false },
-                        { p: 'Phase B', tag: 'Gom hàng', role: 'Chờ đợi', isBuy: false },
-                        { p: 'Phase C', tag: 'Spring/Test', role: 'Mua #1 (30%)', isBuy: true },
-                        { p: 'Phase D', tag: 'SOS / LPS', role: '⭐Mua #2 (50%)', isBuy: true },
-                        { p: 'Phase E', tag: 'Breakout', role: 'Mua #3 / Giữ', isBuy: true },
+                        { idx: 0, p: 'Phase A', tag: 'Hãm rơi', role: 'Dừng giảm' },
+                        { idx: 1, p: 'Phase B', tag: 'Gom hàng', role: 'Tích lũy' },
+                        { idx: 2, p: 'Phase C', tag: 'Spring/Test', role: 'Rũ bỏ' },
+                        { idx: 3, p: 'Phase D', tag: 'SOS / LPS', role: '⭐Vào sóng' },
+                        { idx: 4, p: 'Phase E', tag: 'Breakout', role: '🚀Markup' },
                       ].map((item) => {
-                        const isActive = wyckoff?.phase === item.p;
+                        const activeIdx =
+                          wyckoff?.phaseIndex ??
+                          (wyckoff?.phase === 'Phase A'
+                            ? 0
+                            : wyckoff?.phase === 'Phase B'
+                            ? 1
+                            : wyckoff?.phase === 'Phase C'
+                            ? 2
+                            : wyckoff?.phase === 'Phase D'
+                            ? 3
+                            : 4);
+                        const isCurrent = activeIdx === item.idx;
+                        const isCompleted = activeIdx > item.idx;
+
                         return (
                           <div
                             key={item.p}
-                            className={`p-1 rounded-lg border ${
-                              isActive
-                                ? item.isBuy
-                                  ? 'bg-emerald-500/20 border-emerald-400 text-emerald-200 ring-1 ring-emerald-400/40'
-                                  : 'bg-amber-500/20 border-amber-400 text-amber-200 ring-1 ring-amber-400/40'
-                                : 'bg-zinc-900/70 border-zinc-800 text-zinc-500'
+                            className={`p-1.5 rounded-lg border transition-all duration-200 relative ${
+                              isCurrent
+                                ? 'bg-emerald-500/20 border-emerald-400 text-emerald-200 ring-1 ring-emerald-400/50 shadow-sm shadow-emerald-500/20'
+                                : isCompleted
+                                ? 'bg-zinc-900/90 border-emerald-500/30 text-emerald-300/80'
+                                : 'bg-zinc-900/40 border-zinc-800 text-zinc-500 opacity-60'
                             }`}
                           >
-                            <div className="font-black text-[10px]">{item.p.replace('Phase ', 'P.')}</div>
-                            <div className="text-[9px] truncate">{item.tag}</div>
-                            <div className="text-[8px] font-bold text-amber-300 mt-0.5">{item.role}</div>
+                            <div className="flex items-center justify-center gap-1 font-black text-[10px]">
+                              {isCompleted && <span className="text-[9px] text-emerald-400 font-bold">✓</span>}
+                              {isCurrent && (
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping inline-block" />
+                              )}
+                              <span>{item.p.replace('Phase ', 'P.')}</span>
+                            </div>
+                            <div className="text-[9px] font-medium truncate mt-0.5">{item.tag}</div>
+                            <div
+                              className={`text-[8px] font-bold mt-0.5 ${
+                                isCurrent ? 'text-amber-300' : isCompleted ? 'text-zinc-400' : 'text-zinc-600'
+                              }`}
+                            >
+                              {isCurrent ? '⭐Đang chạy' : isCompleted ? 'Đã xong' : item.role}
+                            </div>
                           </div>
                         );
                       })}
                     </div>
-                    <div className="text-[10px] font-mono text-zinc-400 flex flex-wrap justify-between gap-1 px-0.5">
+
+                    {/* Dẫn giải cột mốc tiếp theo */}
+                    {wyckoff?.nextMilestone && (
+                      <div className="text-[10px] font-mono text-zinc-300 bg-zinc-900/60 p-2 rounded-lg border border-zinc-800/60 flex items-start gap-1.5">
+                        <span className="text-amber-400 shrink-0 font-bold">🎯 Cột mốc kế tiếp:</span>
+                        <span className="text-zinc-300 leading-relaxed">{wyckoff.nextMilestone}</span>
+                      </div>
+                    )}
+
+                    <div className="text-[10px] font-mono text-zinc-400 flex flex-wrap justify-between gap-1 px-0.5 pt-0.5">
                       <span>🎯 <strong className="text-cyan-400">P.C (Test Spring):</strong> Thăm dò 30%</span>
                       <span>⭐ <strong className="text-emerald-400">P.D (LPS sau SOS):</strong> Chủ lực 50% (Chuẩn nhất)</span>
                       <span>🚀 <strong className="text-amber-400">Đầu P.E (Breakout):</strong> Gia tăng 20%</span>
