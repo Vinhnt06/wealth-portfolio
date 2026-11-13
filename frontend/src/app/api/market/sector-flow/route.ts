@@ -46,6 +46,121 @@ const SECTORS_LIST = {
   vin: new Set(['VIC', 'VHM', 'VRE']),
 };
 
+async function fetchLiveFromVietcap(): Promise<SessionSectorFlow | null> {
+  try {
+    const symbols = Array.from(
+      new Set(Object.values(SECTORS_LIST).flatMap((s) => Array.from(s)))
+    );
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 4000);
+
+    const res = await fetch('https://trading.vietcap.com.vn/api/price/symbols/getList', {
+      method: 'POST',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36',
+        'Content-Type': 'application/json',
+        Origin: 'https://trading.vietcap.com.vn',
+        Referer: 'https://trading.vietcap.com.vn/',
+      },
+      body: JSON.stringify({ symbols }),
+      signal: controller.signal,
+      cache: 'no-store',
+    });
+    clearTimeout(timeout);
+
+    if (!res.ok) return null;
+    const list = await res.json();
+    if (!Array.isArray(list) || list.length === 0) return null;
+
+    let totalMarketVal = 0;
+    const stats: Record<string, { total: number; buy: number; sell: number }> = {};
+    for (const k of Object.keys(SECTORS_LIST)) {
+      stats[k] = { total: 0, buy: 0, sell: 0 };
+    }
+
+    for (const item of list) {
+      const sym = item.listingInfo?.symbol;
+      if (!sym) continue;
+
+      const refPrice = Number(item.listingInfo?.refPrice || 0);
+      const matched = Number(item.matchPrice?.matchPrice || 0);
+      const livePrice = matched > 0 ? matched : refPrice;
+      const valMillion = Number(item.matchPrice?.accumulatedValue || 0);
+      const valVND = valMillion * 1_000_000;
+
+      totalMarketVal += valVND;
+
+      // Estimate buy/sell distribution based on price direction relative to refPrice
+      const delta = livePrice - refPrice;
+      let buyRatio = 0.5;
+      if (delta > 0) {
+        buyRatio = 0.55 + Math.min(0.25, (delta / (refPrice || 1)) * 5);
+      } else if (delta < 0) {
+        buyRatio = 0.45 - Math.min(0.25, (Math.abs(delta) / (refPrice || 1)) * 5);
+      }
+      buyRatio = Math.max(0.3, Math.min(0.7, buyRatio));
+
+      const symUpper = sym.toUpperCase();
+      for (const [secKey, set] of Object.entries(SECTORS_LIST)) {
+        if (set.has(symUpper)) {
+          stats[secKey].total += valVND;
+          stats[secKey].buy += valVND * buyRatio;
+          stats[secKey].sell += valVND * (1 - buyRatio);
+        }
+      }
+    }
+
+    if (totalMarketVal <= 0) return null;
+
+    // Scale up totalMarketVal by 1.15 to account for remaining non-pillar stocks
+    const fullMarketEstimate = totalMarketVal * 1.15;
+    const dateStr = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' });
+    const displayDate = dateStr.slice(2);
+
+    const toB = (v: number) => Number((v / 1e9).toFixed(2));
+    const toPct = (secVal: number) => Number(((secVal / (fullMarketEstimate || 1)) * 100).toFixed(2));
+
+    const buildSectorItem = (key: string): SectorItemData => {
+      const ratio = toPct(stats[key].total);
+      return {
+        total: toB(stats[key].total),
+        buy: toB(stats[key].buy),
+        sell: toB(stats[key].sell),
+        ratioPct: ratio,
+        isClimax: (key === 'nh' && ratio >= 30) || (key === 'ck' && ratio >= 20) || (key === 'bds' && ratio >= 22) || (key === 'thep' && ratio >= 9) || (key === 'vin' && ratio >= 15),
+        isTrough: (key === 'nh' && ratio <= 16) || (key === 'ck' && ratio <= 8) || (key === 'bds' && ratio <= 8) || (key === 'thep' && ratio <= 4),
+      };
+    };
+
+    return {
+      date: dateStr,
+      displayDate,
+      totalMarket: toB(fullMarketEstimate),
+      bds: buildSectorItem('bds'),
+      nh: buildSectorItem('nh'),
+      ck: buildSectorItem('ck'),
+      thep: buildSectorItem('thep'),
+      thuc_pham: buildSectorItem('thuc_pham'),
+      cong_nghiep: buildSectorItem('cong_nghiep'),
+      ban_le: buildSectorItem('ban_le'),
+      dau_khi: buildSectorItem('dau_khi'),
+      cntt: buildSectorItem('cntt'),
+      hoa_chat: buildSectorItem('hoa_chat'),
+      vin: buildSectorItem('vin'),
+      isLive: true,
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function fetchLiveSectorFlow(): Promise<SessionSectorFlow | null> {
+  const fromVietcap = await fetchLiveFromVietcap();
+  if (fromVietcap) return fromVietcap;
+  return fetchLiveFromSsi();
+}
+
 async function fetchLiveFromSsi(): Promise<SessionSectorFlow | null> {
   try {
     const controller = new AbortController();
@@ -166,7 +281,7 @@ export async function GET(req: NextRequest) {
     const shouldFetchLive = (vnHour >= 9 && vnHour < 15) || (history[0]?.date !== todayDateStr && vnHour >= 9);
 
     if (shouldFetchLive) {
-      const liveSession = await fetchLiveFromSsi();
+      const liveSession = await fetchLiveSectorFlow();
       if (liveSession) {
         const existingIdx = history.findIndex((h) => h.date === liveSession.date);
         if (existingIdx !== -1) {
