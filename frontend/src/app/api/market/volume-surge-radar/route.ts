@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
+import lastMinerviniScan from '@/features/market/data/lastMinerviniScan.json';
+import stockDatabase from '@/features/market/data/stockDatabase.json';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -20,6 +22,24 @@ interface StockBaseline {
   volume?: number;
 }
 
+interface RawLiveStock {
+  symbol: string;
+  livePrice: number;
+  refPrice: number;
+  liveVol: number;
+  changePct: number;
+}
+
+const BROWSER_HEADERS = {
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36',
+  Accept: 'application/json',
+};
+
+// Universe of stock symbols across HOSE & HNX
+const BOARD_SYMBOLS: string[] = (stockDatabase as any[])
+  .filter((s) => s.exchange === 'HOSE' || s.exchange === 'HNX' || s.exchange === 'UPCOM')
+  .map((s) => s.symbol.toUpperCase());
+
 let cachedBaselineMap: Map<string, StockBaseline> | null = null;
 let lastBaselineLoad = 0;
 
@@ -30,12 +50,14 @@ function loadBaselines(): Map<string, StockBaseline> {
   }
 
   const map = new Map<string, StockBaseline>();
+
+  // 1. Try reading any dynamically updated scan file (e.g. from GitHub Actions / Local / /tmp)
+  let rawData: any[] = [];
   const scanPaths = [
+    '/tmp/lastMinerviniScan.json',
     path.resolve(process.cwd(), 'src/features/market/data/lastMinerviniScan.json'),
     path.resolve(process.cwd(), 'frontend/src/features/market/data/lastMinerviniScan.json'),
   ];
-
-  let rawData: any[] = [];
   for (const p of scanPaths) {
     if (fs.existsSync(p)) {
       try {
@@ -46,6 +68,11 @@ function loadBaselines(): Map<string, StockBaseline> {
         }
       } catch {}
     }
+  }
+
+  // 2. Fallback to bundled lastMinerviniScan (Guaranteed 100% available on Vercel Serverless)
+  if (rawData.length === 0 && (lastMinerviniScan as any)?.data) {
+    rawData = (lastMinerviniScan as any).data;
   }
 
   rawData.forEach((item) => {
@@ -70,6 +97,109 @@ function loadBaselines(): Map<string, StockBaseline> {
   return map;
 }
 
+// ─── Nguồn 1: Vietcap Live API (Chạy siêu tốc ~200ms, không chặn IP Vercel/Datacenter) ───
+async function fetchLiveFromVietcap(): Promise<RawLiveStock[] | null> {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 4500);
+
+    const res = await fetch('https://trading.vietcap.com.vn/api/price/symbols/getList', {
+      method: 'POST',
+      headers: {
+        ...BROWSER_HEADERS,
+        'Content-Type': 'application/json',
+        Origin: 'https://trading.vietcap.com.vn',
+        Referer: 'https://trading.vietcap.com.vn/',
+      },
+      body: JSON.stringify({ symbols: BOARD_SYMBOLS }),
+      signal: controller.signal,
+      cache: 'no-store',
+    });
+    clearTimeout(timeout);
+
+    if (!res.ok) return null;
+    const list = await res.json();
+    if (!Array.isArray(list) || list.length === 0) return null;
+
+    const items: RawLiveStock[] = [];
+    for (const raw of list) {
+      const sym = raw?.listingInfo?.symbol;
+      if (!sym) continue;
+
+      const refPrice = Number(raw.listingInfo?.refPrice || 0);
+      const matched = Number(raw.matchPrice?.matchPrice || 0);
+      const livePrice = matched > 0 ? matched : refPrice;
+      const liveVol = Number(raw.matchPrice?.accumulatedVolume || 0);
+
+      const changePct =
+        refPrice > 0 ? Number((((livePrice - refPrice) / refPrice) * 100).toFixed(2)) : 0;
+
+      items.push({
+        symbol: sym.toUpperCase(),
+        livePrice,
+        refPrice,
+        liveVol,
+        changePct,
+      });
+    }
+
+    return items;
+  } catch {
+    return null;
+  }
+}
+
+// ─── Nguồn 2: SSI iBoard (Dự phòng khi chạy từ IP nội địa) ───
+async function fetchLiveFromSsi(): Promise<RawLiveStock[] | null> {
+  try {
+    const exchanges = ['hose', 'hnx', 'upcom'];
+    const results = await Promise.all(
+      exchanges.map((ex) =>
+        fetch(`https://iboard-query.ssi.com.vn/stock/exchange/${ex}`, {
+          headers: BROWSER_HEADERS,
+          cache: 'no-store',
+          signal: AbortSignal.timeout(4000),
+        })
+          .then((r) => r.json())
+          .catch(() => ({ data: [] }))
+      )
+    );
+
+    const allStocks = results.flatMap((r) => r?.data || []);
+    if (allStocks.length === 0) return null;
+
+    const items: RawLiveStock[] = [];
+    for (const item of allStocks) {
+      const sym = item.stockSymbol ? item.stockSymbol.toUpperCase() : '';
+      if (!sym) continue;
+
+      const matchedPrice = Number(item.matchedPrice || 0);
+      const refPrice = Number(item.refPrice || 0);
+      const livePrice = matchedPrice > 0 ? matchedPrice : refPrice;
+      const liveVol = Number(item.nmTotalTradedQty || item.stockVol || 0);
+
+      const changePct =
+        item.priceChangePercent !== undefined && item.priceChangePercent !== null
+          ? Number(item.priceChangePercent)
+          : refPrice > 0
+          ? Number((((livePrice - refPrice) / refPrice) * 100).toFixed(2))
+          : 0;
+
+      items.push({
+        symbol: sym,
+        livePrice,
+        refPrice,
+        liveVol,
+        changePct,
+      });
+    }
+
+    return items;
+  } catch {
+    return null;
+  }
+}
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -80,23 +210,14 @@ export async function GET(req: NextRequest) {
 
     const baselineMap = loadBaselines();
 
-    // Fetch live market data across exchanges from SSI iBoard
-    const exchanges = ['hose', 'hnx', 'upcom'];
-    const results = await Promise.all(
-      exchanges.map((ex) =>
-        fetch(`https://iboard-query.ssi.com.vn/stock/exchange/${ex}`, {
-          headers: { 'User-Agent': 'Mozilla/5.0' },
-          cache: 'no-store',
-          signal: AbortSignal.timeout(3500),
-        })
-          .then((r) => r.json())
-          .catch(() => ({ data: [] }))
-      )
-    );
+    // 1. Fetch live market stocks (Vietcap ưu tiên vì không chặn Vercel IP -> fallback SSI)
+    let liveStocks = await fetchLiveFromVietcap();
+    if (!liveStocks || liveStocks.length === 0) {
+      liveStocks = await fetchLiveFromSsi();
+    }
+    const allLiveStocks = liveStocks || [];
 
-    const allLiveStocks = results.flatMap((r) => r?.data || []);
-
-    // Calculate elapsed fraction of the trading session (Vietnam time)
+    // 2. Calculate elapsed fraction of the trading session (Vietnam time GMT+7)
     const vnDate = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }));
     const hours = vnDate.getHours();
     const minutes = vnDate.getMinutes();
@@ -126,28 +247,20 @@ export async function GET(req: NextRequest) {
     const seenSymbols = new Set<string>();
 
     for (const item of allLiveStocks) {
-      const sym = item.stockSymbol ? item.stockSymbol.toUpperCase() : '';
+      const sym = item.symbol;
       if (!sym || seenSymbols.has(sym)) continue;
       seenSymbols.add(sym);
 
       const base = baselineMap.get(sym);
       if (!base || !base.avgVol20 || base.avgVol20 < 80000) continue;
 
-      const matchedPrice = Number(item.matchedPrice || 0);
-      const expectedPrice = Number(item.expectedMatchedPrice || 0);
-      const refPrice = Number(item.refPrice || 0);
-      const livePrice = matchedPrice > 0 ? matchedPrice : expectedPrice > 0 ? expectedPrice : refPrice || base.price || 0;
+      const livePrice = item.livePrice > 0 ? item.livePrice : base.price || 0;
+      const liveVol = item.liveVol;
 
-      // STRICTLY use today's live traded volume. NEVER fall back to base.volume (which is yesterday's volume)!
-      const liveVol = Number(item.nmTotalTradedQty || item.stockVol || 0);
       // Require at least 25,000 shares traded TODAY to prevent false breakouts from illiquid early ticks
       if (liveVol < 25000) continue;
 
-      const changePct =
-        item.priceChangePercent !== undefined && item.priceChangePercent !== null
-          ? Number(item.priceChangePercent)
-          : 0;
-
+      const changePct = item.changePct;
       const rVol = Number((liveVol / base.avgVol20).toFixed(2));
       const projectedTotal = Math.round(liveVol / sessionProgressRatio);
       const projectedRVol = Number((projectedTotal / base.avgVol20).toFixed(2));

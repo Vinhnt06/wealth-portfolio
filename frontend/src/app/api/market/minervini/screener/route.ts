@@ -100,8 +100,45 @@ async function getLiveSsiTicks(): Promise<Map<string, LiveTick>> {
   if (ssiCache && Date.now() - ssiCache.timestamp < SSI_CACHE_TTL_MS) {
     return ssiCache.map;
   }
-  const exchanges = ['hose', 'hnx', 'upcom'];
   const map = new Map<string, LiveTick>();
+
+  // 1. Try Vietcap Live API first (Runs in ~200ms, zero IP blocks on Vercel Singapore Datacenter)
+  try {
+    const vRes = await fetch('https://trading.vietcap.com.vn/api/price/symbols/getList', {
+      method: 'POST',
+      headers: {
+        'User-Agent': 'Mozilla/5.0',
+        'Content-Type': 'application/json',
+        Origin: 'https://trading.vietcap.com.vn',
+        Referer: 'https://trading.vietcap.com.vn/',
+      },
+      body: JSON.stringify({ symbols: ALL_MARKET_SYMBOLS }),
+      cache: 'no-store',
+      signal: AbortSignal.timeout(3500),
+    });
+    if (vRes.ok) {
+      const list = await vRes.json();
+      if (Array.isArray(list) && list.length > 0) {
+        for (const it of list) {
+          const sym = it?.listingInfo?.symbol;
+          if (!sym) continue;
+          const ref = Number(it.listingInfo?.refPrice || 0);
+          const matched = Number(it.matchPrice?.matchPrice || 0);
+          const price = matched > 0 ? matched : ref;
+          const changePct = ref > 0 ? Number((((price - ref) / ref) * 100).toFixed(2)) : 0;
+          const volume = Number(it.matchPrice?.accumulatedVolume || 0);
+          map.set(sym.toUpperCase(), { price, changePct, volume });
+        }
+        if (map.size > 0) {
+          ssiCache = { timestamp: Date.now(), map };
+          return map;
+        }
+      }
+    }
+  } catch {}
+
+  // 2. Fallback to SSI iBoard
+  const exchanges = ['hose', 'hnx', 'upcom'];
   try {
     const results = await Promise.all(
       exchanges.map((ex) =>
