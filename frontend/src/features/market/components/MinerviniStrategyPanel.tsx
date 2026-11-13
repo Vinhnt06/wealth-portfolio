@@ -134,6 +134,35 @@ export const MinerviniStrategyPanel: React.FC<MinerviniStrategyPanelProps> = ({ 
   const passedCount = data?.passedCount ?? 0;
   const wyckoff = data?.wyckoff;
 
+  const currentPhaseIndex =
+    typeof wyckoff?.phaseIndex === 'number'
+      ? wyckoff.phaseIndex
+      : wyckoff?.phase === 'Phase A'
+      ? 0
+      : wyckoff?.phase === 'Phase B'
+      ? 1
+      : wyckoff?.phase === 'Phase C'
+      ? 2
+      : wyckoff?.phase === 'Phase D'
+      ? 3
+      : wyckoff?.phase === 'Phase E'
+      ? 4
+      : 1;
+
+  const currentStepNumber = currentPhaseIndex + 1;
+  const currentProgressPct =
+    typeof wyckoff?.phaseProgressPct === 'number' && wyckoff.phaseProgressPct > 0
+      ? wyckoff.phaseProgressPct
+      : currentStepNumber * 20;
+
+  const phaseItems = [
+    { idx: 0, p: 'P.A', tag: 'Hãm rơi', role: 'Dừng giảm' },
+    { idx: 1, p: 'P.B', tag: 'Gom hàng', role: 'Tích lũy' },
+    { idx: 2, p: 'P.C', tag: 'Rũ bỏ', role: 'Spring' },
+    { idx: 3, p: 'P.D', tag: 'Vào sóng', role: 'SOS / LPS' },
+    { idx: 4, p: 'P.E', tag: 'Bứt phá', role: 'Markup' },
+  ];
+
   return (
     <div className="bg-[#090d14]/95 flex flex-col h-full overflow-hidden text-zinc-300 font-mono select-none">
       {/* ── Top Header: Title & Minimalist Scan Button ────────────── */}
@@ -350,48 +379,43 @@ export const MinerviniStrategyPanel: React.FC<MinerviniStrategyPanelProps> = ({ 
               {/* Sơ đồ 5 Phase Wyckoff tuần tự (Sequential Timeline Stepper) + Checklist 8 tiêu chí */}
               {openWyckoff && (
                 <div className="divide-y divide-zinc-800/60">
-                  <div className="p-3 bg-zinc-950/70 space-y-2">
-                    {/* Tiến trình chu kỳ tuần tự */}
-                    <div className="flex items-center justify-between text-[11px] font-mono">
-                      <span className="text-zinc-400 font-semibold flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                        TIẾN TRÌNH CHU KỲ TUẦN TỰ (WYCKOFF TIMELINE)
+                  <div className="p-3 bg-zinc-950/70 space-y-2.5">
+                    {/* Tiêu đề & Tiến trình chu kỳ tuần tự (Chống rớt dòng) */}
+                    <div className="flex items-center justify-between text-[11px] font-mono gap-2">
+                      <span className="text-zinc-300 font-semibold flex items-center gap-1.5 truncate">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                        <span className="truncate">CHU KỲ WYCKOFF (5 PHA)</span>
                       </span>
-                      <span className="text-emerald-300 font-bold">
-                        {wyckoff?.phaseProgressPct || 35}% • Giai đoạn {(wyckoff?.phaseIndex ?? 1) + 1}/5
+                      <span className="text-emerald-300 font-bold shrink-0 whitespace-nowrap text-right">
+                        {currentProgressPct}% • Giai đoạn {currentStepNumber}/5
                       </span>
                     </div>
 
-                    {/* Progress Bar tiến trình chu kỳ */}
-                    <div className="w-full h-1.5 bg-zinc-900 rounded-full overflow-hidden border border-zinc-800/80">
-                      <div
-                        className="h-full bg-gradient-to-r from-cyan-500 via-emerald-500 to-amber-400 transition-all duration-500"
-                        style={{ width: `${wyckoff?.phaseProgressPct || 35}%` }}
-                      />
+                    {/* 5 Thanh phân đoạn đồng bộ chuẩn xác trực tiếp với 5 Phase bên dưới */}
+                    <div className="grid grid-cols-5 gap-1.5 h-1.5 w-full">
+                      {phaseItems.map((item) => {
+                        const isStepCompleted = currentPhaseIndex > item.idx;
+                        const isStepCurrent = currentPhaseIndex === item.idx;
+                        return (
+                          <div
+                            key={item.p}
+                            className={`h-full rounded-full transition-all duration-300 ${
+                              isStepCompleted
+                                ? 'bg-emerald-500'
+                                : isStepCurrent
+                                ? 'bg-gradient-to-r from-emerald-400 to-amber-300 animate-pulse shadow-sm shadow-emerald-500/50'
+                                : 'bg-zinc-800/80'
+                            }`}
+                          />
+                        );
+                      })}
                     </div>
 
                     {/* Stepper 5 Phase liên kết tuần tự */}
                     <div className="grid grid-cols-5 gap-1 text-center font-mono text-[10px]">
-                      {[
-                        { idx: 0, p: 'Phase A', tag: 'Hãm rơi', role: 'Dừng giảm' },
-                        { idx: 1, p: 'Phase B', tag: 'Gom hàng', role: 'Tích lũy' },
-                        { idx: 2, p: 'Phase C', tag: 'Spring/Test', role: 'Rũ bỏ' },
-                        { idx: 3, p: 'Phase D', tag: 'SOS / LPS', role: '⭐Vào sóng' },
-                        { idx: 4, p: 'Phase E', tag: 'Breakout', role: '🚀Markup' },
-                      ].map((item) => {
-                        const activeIdx =
-                          wyckoff?.phaseIndex ??
-                          (wyckoff?.phase === 'Phase A'
-                            ? 0
-                            : wyckoff?.phase === 'Phase B'
-                            ? 1
-                            : wyckoff?.phase === 'Phase C'
-                            ? 2
-                            : wyckoff?.phase === 'Phase D'
-                            ? 3
-                            : 4);
-                        const isCurrent = activeIdx === item.idx;
-                        const isCompleted = activeIdx > item.idx;
+                      {phaseItems.map((item) => {
+                        const isCurrent = currentPhaseIndex === item.idx;
+                        const isCompleted = currentPhaseIndex > item.idx;
 
                         return (
                           <div
@@ -409,11 +433,11 @@ export const MinerviniStrategyPanel: React.FC<MinerviniStrategyPanelProps> = ({ 
                               {isCurrent && (
                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping inline-block" />
                               )}
-                              <span>{item.p.replace('Phase ', 'P.')}</span>
+                              <span>{item.p}</span>
                             </div>
                             <div className="text-[9px] font-medium truncate mt-0.5">{item.tag}</div>
                             <div
-                              className={`text-[8px] font-bold mt-0.5 ${
+                              className={`text-[8px] font-bold mt-0.5 truncate ${
                                 isCurrent ? 'text-amber-300' : isCompleted ? 'text-zinc-400' : 'text-zinc-600'
                               }`}
                             >
@@ -433,9 +457,9 @@ export const MinerviniStrategyPanel: React.FC<MinerviniStrategyPanelProps> = ({ 
                     )}
 
                     <div className="text-[10px] font-mono text-zinc-400 flex flex-wrap justify-between gap-1 px-0.5 pt-0.5">
-                      <span>🎯 <strong className="text-cyan-400">P.C (Test Spring):</strong> Thăm dò 30%</span>
-                      <span>⭐ <strong className="text-emerald-400">P.D (LPS sau SOS):</strong> Chủ lực 50% (Chuẩn nhất)</span>
-                      <span>🚀 <strong className="text-amber-400">Đầu P.E (Breakout):</strong> Gia tăng 20%</span>
+                      <span>🎯 <strong className="text-cyan-400">P.C (Spring):</strong> Thăm dò 30%</span>
+                      <span>⭐ <strong className="text-emerald-400">P.D (LPS/SOS):</strong> Chủ lực 50%</span>
+                      <span>🚀 <strong className="text-amber-400">Đầu P.E:</strong> Gia tăng 20%</span>
                     </div>
                   </div>
 
