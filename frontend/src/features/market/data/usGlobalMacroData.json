@@ -1,7 +1,7 @@
 {
   "success": true,
-  "timestamp": "2026-11-13T08:57:27.082Z",
-  "updateTime": "15:57:26",
+  "timestamp": "2026-11-13T09:46:47.057Z",
+  "updateTime": "16:46:46",
   "indices": [
     {
       "symbol": "^GSPC",
@@ -30,7 +30,7 @@
       "name": "Dow Jones",
       "category": "equity",
       "region": "us",
-      "price": 52297.1,
+      "price": 52297.09,
       "change": -189.4,
       "changePercent": -0.36,
       "unit": "pts",
@@ -85,9 +85,9 @@
       "name": "FTSE 100",
       "category": "equity",
       "region": "europe",
-      "price": 10853.8,
-      "change": -9.29,
-      "changePercent": -0.09,
+      "price": 10884.08,
+      "change": 20.99,
+      "changePercent": 0.19,
       "unit": "pts",
       "note": "Chỉ số 100 Bluechip sàn London (Anh)"
     },
@@ -96,9 +96,9 @@
       "name": "DAX 40",
       "category": "equity",
       "region": "europe",
-      "price": 26687.85,
-      "change": -84.03,
-      "changePercent": -0.31,
+      "price": 26754.62,
+      "change": -17.26,
+      "changePercent": -0.06,
       "unit": "pts",
       "note": "Chỉ số 40 cổ phiếu hàng đầu nước Đức"
     },
@@ -107,9 +107,9 @@
       "name": "Vàng Thế Giới",
       "category": "commodity",
       "region": "global",
-      "price": 3899.3,
-      "change": 14,
-      "changePercent": 0.36,
+      "price": 3903.2,
+      "change": 17.9,
+      "changePercent": 0.46,
       "unit": "USD/oz",
       "note": "Giá vàng giao ngay quốc tế"
     },
@@ -118,9 +118,9 @@
       "name": "Dầu Brent",
       "category": "commodity",
       "region": "global",
-      "price": 96.48,
-      "change": 0.66,
-      "changePercent": 0.69,
+      "price": 95.86,
+      "change": 0.04,
+      "changePercent": 0.04,
       "unit": "USD/thùng",
       "note": "Dầu thô tiêu chuẩn toàn cầu"
     },
@@ -129,9 +129,9 @@
       "name": "Dầu WTI",
       "category": "commodity",
       "region": "global",
-      "price": 89.14,
-      "change": 0.4,
-      "changePercent": 0.45,
+      "price": 88.54,
+      "change": -0.2,
+      "changePercent": -0.23,
       "unit": "USD/thùng",
       "note": "Dầu thô ngọt nhẹ giao dịch tại NYMEX"
     },
@@ -140,9 +140,9 @@
       "name": "Bạc Thế Giới",
       "category": "commodity",
       "region": "global",
-      "price": 49.91,
-      "change": -0.15,
-      "changePercent": -0.3,
+      "price": 50.09,
+      "change": 0.03,
+      "changePercent": 0.05,
       "unit": "USD/oz",
       "note": "Giá kim loại bạc thế giới"
     },
@@ -173,9 +173,9 @@
       "name": "CBOE VIX",
       "category": "volatility",
       "region": "global",
-      "price": 18.92,
-      "change": 0.22,
-      "changePercent": 1.18,
+      "price": 18.67,
+      "change": -0.03,
+      "changePercent": -0.16,
       "unit": "pts",
       "note": "Thước đo mức độ biến động & sợ hãi toàn cầu"
     },
@@ -184,9 +184,9 @@
       "name": "Bitcoin (BTC)",
       "category": "crypto",
       "region": "global",
-      "price": 68730.84,
-      "change": -4771.22,
-      "changePercent": -6.49,
+      "price": 68946.06,
+      "change": -4459.4,
+      "changePercent": -6.08,
       "unit": "USD",
       "note": "Đồng tiền mã hóa vốn hóa lớn nhất"
     },
@@ -195,9 +195,9 @@
       "name": "Ethereum (ETH)",
       "category": "crypto",
       "region": "global",
-      "price": 1932.82,
-      "change": -114.87,
-      "changePercent": -5.61,
+      "price": 1936.45,
+      "change": -107.88,
+      "changePercent": -5.28,
       "unit": "USD",
       "note": "Nền tảng smart contract hàng đầu"
     }
@@ -230,7 +230,7 @@
       "status": "Trung Lập",
       "statusColor": "amber",
       "headline": "Xu hướng dòng vốn ngoại trên TTCK",
-      "detail": "Lợi suất trái phiếu chính phủ Mỹ 10 năm (5.10%) và chỉ số VIX (18.92 điểm) phản ánh khẩu vị rủi ro toàn cầu đang trong tầm kiểm soát (Tâm lý ổn định), tạo điều kiện cân bằng dòng vốn ngoại trên HOSE/HNX."
+      "detail": "Lợi suất trái phiếu chính phủ Mỹ 10 năm (5.10%) và chỉ số VIX (18.67 điểm) phản ánh khẩu vị rủi ro toàn cầu đang trong tầm kiểm soát (Tâm lý ổn định), tạo điều kiện cân bằng dòng vốn ngoại trên HOSE/HNX."
     }
   ]
 }
