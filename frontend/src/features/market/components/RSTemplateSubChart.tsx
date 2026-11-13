@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   createChart,
   ColorType,
@@ -18,12 +18,57 @@ import { calculateRSTemplate, RSTemplateDataset } from '../utils/rsIndicators';
 
 export type RSTemplateViewMode = 'all' | 'rs_line' | 'mansfield' | 'oneil';
 
+export interface RSCrosshairData {
+  x: number | null;
+  time: Time | null;
+  dateStr: string | null;
+  rs?: number;
+  ma50?: number;
+  mansfield?: number;
+  oneil?: number;
+}
+
 interface RSTemplateSubChartProps {
   stockCandles: CandlestickData<Time>[];
   mainChart: IChartApi | null;
   onClose: () => void;
   selectedSymbol: string;
   initialView?: RSTemplateViewMode;
+  onCrosshairChange?: (data: RSCrosshairData | null) => void;
+}
+
+function getTimeKey(t: Time | null | undefined): string {
+  if (t === null || t === undefined) return '';
+  if (typeof t === 'string' || typeof t === 'number') return String(t);
+  if (typeof t === 'object' && 'year' in t) {
+    const bd = t as { year: number; month: number; day: number };
+    return `${bd.year}-${String(bd.month).padStart(2, '0')}-${String(bd.day).padStart(2, '0')}`;
+  }
+  return String(t);
+}
+
+function formatDate(t: Time | null): string {
+  if (!t) return '';
+  if (typeof t === 'string') {
+    const parts = t.split('-');
+    if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    return t;
+  }
+  if (typeof t === 'number') {
+    return new Date(t * 1000).toLocaleDateString('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      timeZone: 'Asia/Ho_Chi_Minh',
+    });
+  }
+  if (typeof t === 'object' && t !== null && 'year' in t) {
+    const y = (t as any).year;
+    const m = String((t as any).month).padStart(2, '0');
+    const d = String((t as any).day).padStart(2, '0');
+    return `${d}/${m}/${y}`;
+  }
+  return String(t);
 }
 
 // Module-level cache for VNINDEX candles
@@ -73,7 +118,9 @@ export const RSTemplateSubChart: React.FC<RSTemplateSubChartProps> = ({
   onClose,
   selectedSymbol,
   initialView = 'all',
+  onCrosshairChange,
 }) => {
+  const containerWrapperRef = useRef<HTMLDivElement>(null);
   const containerPane1Ref = useRef<HTMLDivElement>(null);
   const containerPane2Ref = useRef<HTMLDivElement>(null);
   const containerPane3Ref = useRef<HTMLDivElement>(null);
@@ -81,6 +128,12 @@ export const RSTemplateSubChart: React.FC<RSTemplateSubChartProps> = ({
   const chartPane1Ref = useRef<IChartApi | null>(null);
   const chartPane2Ref = useRef<IChartApi | null>(null);
   const chartPane3Ref = useRef<IChartApi | null>(null);
+
+  // Series instances for coordinate calculations
+  const seriesRsRef = useRef<any>(null);
+  const seriesMa50Ref = useRef<any>(null);
+  const seriesMansfieldRef = useRef<any>(null);
+  const seriesOneilRef = useRef<any>(null);
 
   const [isLoading, setIsLoading] = useState(true);
   const [dataset, setDataset] = useState<RSTemplateDataset | null>(null);
@@ -101,6 +154,37 @@ export const RSTemplateSubChart: React.FC<RSTemplateSubChartProps> = ({
     mansfield?: number;
     oneil?: number;
   }>({});
+
+  // Overlay state for Synchronized Crosshair Guide Line & Marker Dots
+  const [crosshairPos, setCrosshairPos] = useState<{
+    x: number;
+    dateStr: string;
+    dots: { id: string; y: number; color: string }[];
+  } | null>(null);
+
+  // O(1) Lookup Maps keyed by normalized timeKey
+  const lookupMaps = useMemo(() => {
+    const rsMap = new Map<string, number>();
+    const ma50Map = new Map<string, number>();
+    const mansfieldMap = new Map<string, number>();
+    const oneilMap = new Map<string, number>();
+
+    if (dataset) {
+      dataset.rsPoints.forEach((p) => {
+        const k = getTimeKey(p.time);
+        rsMap.set(k, p.rs);
+        if (typeof p.ma50 === 'number') ma50Map.set(k, p.ma50);
+      });
+      dataset.mansfieldPoints.forEach((p) => {
+        mansfieldMap.set(getTimeKey(p.time), p.value);
+      });
+      dataset.oneilPoints.forEach((p) => {
+        oneilMap.set(getTimeKey(p.time), p.score);
+      });
+    }
+
+    return { rsMap, ma50Map, mansfieldMap, oneilMap };
+  }, [dataset]);
 
   // 1. Fetch VNINDEX & Calculate Dataset
   useEffect(() => {
@@ -232,6 +316,8 @@ export const RSTemplateSubChart: React.FC<RSTemplateSubChartProps> = ({
 
         rsSeriesInstance = rsSeries;
         ma50SeriesInstance = ma50Series;
+        seriesRsRef.current = rsSeries;
+        seriesMa50Ref.current = ma50Series;
       }
     }
 
@@ -275,6 +361,7 @@ export const RSTemplateSubChart: React.FC<RSTemplateSubChartProps> = ({
         mansfieldSeries.setData(mansfieldData);
 
         mansfieldSeriesInstance = mansfieldSeries;
+        seriesMansfieldRef.current = mansfieldSeries;
       }
     }
 
@@ -336,6 +423,7 @@ export const RSTemplateSubChart: React.FC<RSTemplateSubChartProps> = ({
         oneilSeries.setData(oneilLineData);
 
         oneilSeriesInstance = oneilSeries;
+        seriesOneilRef.current = oneilSeries;
       }
     }
 
@@ -391,23 +479,110 @@ export const RSTemplateSubChart: React.FC<RSTemplateSubChartProps> = ({
       });
     }
 
-    // ── Synchronization: Crosshair Hover Data Inspection ───────────────
+    // ── Synchronization: Crosshair Hover & Marker Dots ───────────────
     const handleCrosshairMove = (param: any) => {
-      if (isDisposed || !param || !param.time || !param.seriesData) return;
+      if (isDisposed || !containerWrapperRef.current) return;
+      if (!param || !param.time) {
+        setCrosshairPos(null);
+        if (dataset) {
+          setHoverValues({
+            rs: dataset.currentRS,
+            ma50: dataset.currentMA50,
+            mansfield: dataset.currentMansfield,
+            oneil: dataset.currentOneilScore,
+          });
+        }
+        if (onCrosshairChange) onCrosshairChange(null);
+        return;
+      }
 
-      try {
-        const rsVal = rsSeriesInstance ? param.seriesData.get(rsSeriesInstance)?.value : undefined;
-        const ma50Val = ma50SeriesInstance ? param.seriesData.get(ma50SeriesInstance)?.value : undefined;
-        const mansfieldVal = mansfieldSeriesInstance ? param.seriesData.get(mansfieldSeriesInstance)?.value : undefined;
-        const oneilVal = oneilSeriesInstance ? param.seriesData.get(oneilSeriesInstance)?.value : undefined;
+      // 1. Get exact snapped bar-center pixel X so marker dots sit squarely on the indicator curve
+      let pixelX: number | null = null;
+      const refChart = subCharts[0] || mainChart;
+      if (refChart) {
+        try {
+          const snappedX = refChart.timeScale().timeToCoordinate(param.time);
+          if (snappedX !== null && !isNaN(snappedX)) {
+            pixelX = snappedX;
+          }
+        } catch {}
+      }
+      if (pixelX === null && param.point && typeof param.point.x === 'number') {
+        pixelX = param.point.x;
+      }
 
-        setHoverValues((prev) => ({
-          rs: typeof rsVal === 'number' ? rsVal : prev.rs,
-          ma50: typeof ma50Val === 'number' ? ma50Val : prev.ma50,
-          mansfield: typeof mansfieldVal === 'number' ? mansfieldVal : prev.mansfield,
-          oneil: typeof oneilVal === 'number' ? oneilVal : prev.oneil,
-        }));
-      } catch {}
+      if (pixelX === null || pixelX < 0) {
+        setCrosshairPos(null);
+        if (onCrosshairChange) onCrosshairChange(null);
+        return;
+      }
+
+      // 2. Extract values in O(1) from lookupMaps
+      const tKey = getTimeKey(param.time);
+      const rsVal = lookupMaps.rsMap.get(tKey) ?? dataset.currentRS;
+      const ma50Val = lookupMaps.ma50Map.get(tKey) ?? dataset.currentMA50;
+      const mansfieldVal = lookupMaps.mansfieldMap.get(tKey) ?? dataset.currentMansfield;
+      const oneilVal = lookupMaps.oneilMap.get(tKey) ?? dataset.currentOneilScore;
+
+      setHoverValues({
+        rs: rsVal,
+        ma50: ma50Val,
+        mansfield: mansfieldVal,
+        oneil: oneilVal,
+      });
+
+      // 3. Compute Y coordinates for all indicator marker dots
+      const dots: { id: string; y: number; color: string }[] = [];
+      const wrapperRect = containerWrapperRef.current.getBoundingClientRect();
+
+      const computeDot = (
+        container: HTMLDivElement | null,
+        series: any,
+        val: number | undefined,
+        id: string,
+        color: string
+      ) => {
+        if (!container || !series || typeof val !== 'number') return;
+        try {
+          const coord = series.priceToCoordinate(val);
+          if (coord !== null && !isNaN(coord)) {
+            const cRect = container.getBoundingClientRect();
+            const yOffset = cRect.top - wrapperRect.top;
+            dots.push({ id, y: yOffset + coord, color });
+          }
+        } catch {}
+      };
+
+      if (activeView === 'all' || activeView === 'rs_line') {
+        computeDot(containerPane1Ref.current, seriesRsRef.current, rsVal, 'rs_line', '#f59e0b');
+        computeDot(containerPane1Ref.current, seriesMa50Ref.current, ma50Val, 'ma50_line', '#3b82f6');
+      }
+      if (activeView === 'all' || activeView === 'mansfield') {
+        const mColor = (mansfieldVal ?? 0) >= 0 ? '#2dd4bf' : '#f43f5e';
+        computeDot(containerPane2Ref.current, seriesMansfieldRef.current, mansfieldVal, 'mansfield_dot', mColor);
+      }
+      if (activeView === 'all' || activeView === 'oneil') {
+        computeDot(containerPane3Ref.current, seriesOneilRef.current, oneilVal, 'oneil_dot', '#fbbf24');
+      }
+
+      const dateStr = formatDate(param.time);
+      setCrosshairPos({
+        x: pixelX,
+        dateStr,
+        dots,
+      });
+
+      if (onCrosshairChange) {
+        onCrosshairChange({
+          x: pixelX,
+          time: param.time,
+          dateStr,
+          rs: rsVal,
+          ma50: ma50Val,
+          mansfield: mansfieldVal,
+          oneil: oneilVal,
+        });
+      }
     };
 
     subCharts.forEach((sc) => {
@@ -632,7 +807,7 @@ export const RSTemplateSubChart: React.FC<RSTemplateSubChartProps> = ({
           Đang đồng bộ nến VN-INDEX và tính toán bộ chỉ báo RS Template...
         </div>
       ) : (
-        <div className="flex flex-col divide-y divide-zinc-800/60">
+        <div ref={containerWrapperRef} className="flex flex-col divide-y divide-zinc-800/60 relative">
           {/* PANE 1: RS Line vs VNINDEX (with MA50) */}
           {(activeView === 'all' || activeView === 'rs_line') && (
             <div className="w-full flex flex-col bg-zinc-950/60">
@@ -724,6 +899,58 @@ export const RSTemplateSubChart: React.FC<RSTemplateSubChartProps> = ({
               </div>
               <div ref={containerPane3Ref} className={`w-full ${activeView === 'all' ? 'h-[72px]' : 'h-[105px]'}`} />
             </div>
+          )}
+
+          {/* ── SYNCHRONIZED SVG OVERLAY: VERTICAL GUIDELINE & MARKER DOTS ── */}
+          {crosshairPos && (
+            <>
+              <svg
+                className="absolute inset-0 w-full h-full pointer-events-none z-30"
+                style={{ overflow: 'visible' }}
+              >
+                {/* Vertical Dashed Guideline */}
+                <line
+                  x1={crosshairPos.x}
+                  y1={0}
+                  x2={crosshairPos.x}
+                  y2="100%"
+                  stroke="rgba(255, 255, 255, 0.38)"
+                  strokeWidth={1}
+                  strokeDasharray="3 3"
+                />
+
+                {/* Marker Dots on each Indicator */}
+                {crosshairPos.dots.map((dot) => (
+                  <g key={dot.id}>
+                    <circle
+                      cx={crosshairPos.x}
+                      cy={dot.y}
+                      r={4.5}
+                      fill={dot.color}
+                      opacity={0.28}
+                    />
+                    <circle
+                      cx={crosshairPos.x}
+                      cy={dot.y}
+                      r={2.75}
+                      fill={dot.color}
+                      stroke="#ffffff"
+                      strokeWidth={1}
+                    />
+                  </g>
+                ))}
+              </svg>
+
+              {/* Bottom Date Pill anchored cleanly on the Time Axis Bar */}
+              {crosshairPos.dateStr && (
+                <div
+                  className="absolute bottom-0.5 z-30 pointer-events-none -translate-x-1/2 px-1.5 py-0.5 rounded-sm bg-[#18181b] border border-zinc-600 text-[9.5px] font-mono font-semibold text-zinc-100 tabular-nums whitespace-nowrap"
+                  style={{ left: crosshairPos.x }}
+                >
+                  {crosshairPos.dateStr}
+                </div>
+              )}
+            </>
           )}
         </div>
       )}

@@ -88,9 +88,9 @@ import {
   SuperTrendSettings,
 } from '../utils/superTrend';
 import { SuperTrendStrategyModal } from './SuperTrendStrategyModal';
-import { RSTemplateSubChart } from './RSTemplateSubChart';
+import { RSTemplateSubChart, RSCrosshairData } from './RSTemplateSubChart';
 import { GeneralEvaluationSubChart, SynchronizedCrosshairData } from './GeneralEvaluationSubChart';
-import { MCDXSubChart } from './MCDXSubChart';
+import { MCDXSubChart, MCDXCrosshairData } from './MCDXSubChart';
 import { calculateKAMA } from '../utils/generalEvaluationIndicators';
 import stockDatabase from '../data/stockDatabase.json';
 import { getStockPriceColor } from '../utils/priceColors';
@@ -1348,6 +1348,8 @@ export function MarketCandleChart() {
   const [showKAMA3060, setShowKAMA3060] = useState(false);
   const [activeKAMA3060, setActiveKAMA3060] = useState<number | undefined>(undefined);
   const [generalCrosshairData, setGeneralCrosshairData] = useState<SynchronizedCrosshairData | null>(null);
+  const [rsCrosshairData, setRsCrosshairData] = useState<RSCrosshairData | null>(null);
+  const [mcdxCrosshairData, setMcdxCrosshairData] = useState<MCDXCrosshairData | null>(null);
   const [compactMode, setCompactMode] = useState(false);
 
   // Sub-Chart Indicators (RSI, MACD, MFI, OBV, General Template)
@@ -6886,33 +6888,51 @@ export function MarketCandleChart() {
             />
 
             {/* ── Synchronized Vertical Crosshair Guideline across Main Candle Chart ── */}
-            {activeSubIndicator === 'general_template' && generalCrosshairData?.x !== null && generalCrosshairData?.x !== undefined && (
-              <svg className="absolute inset-0 w-full h-full pointer-events-none z-20" style={{ overflow: 'visible' }}>
-                <line
-                  x1={generalCrosshairData.x}
-                  y1={0}
-                  x2={generalCrosshairData.x}
-                  y2="100%"
-                  stroke="rgba(255, 255, 255, 0.45)"
-                  strokeWidth={1}
-                  strokeDasharray="3 3"
-                />
-                {generalKamaSeriesRef.current && generalCrosshairData.kamaVal !== undefined && (() => {
-                  try {
-                    const yKama = generalKamaSeriesRef.current.priceToCoordinate(generalCrosshairData.kamaVal);
-                    if (yKama !== null && !isNaN(yKama)) {
-                      return (
-                        <g>
-                          <circle cx={generalCrosshairData.x} cy={yKama} r={5} fill="#10b981" opacity={0.3} />
-                          <circle cx={generalCrosshairData.x} cy={yKama} r={3} fill="#10b981" stroke="#ffffff" strokeWidth={1} />
-                        </g>
-                      );
-                    }
-                  } catch {}
-                  return null;
-                })()}
-              </svg>
-            )}
+            {(() => {
+              const activeX =
+                activeSubIndicator === 'general_template'
+                  ? generalCrosshairData?.x
+                  : (activeSubIndicator === 'rs_template' ||
+                     activeSubIndicator === 'rs_line' ||
+                     activeSubIndicator === 'mansfield' ||
+                     activeSubIndicator === 'oneil')
+                  ? rsCrosshairData?.x
+                  : activeSubIndicator === 'mcdx'
+                  ? mcdxCrosshairData?.x
+                  : null;
+
+              if (activeX === null || activeX === undefined) return null;
+
+              return (
+                <svg className="absolute inset-0 w-full h-full pointer-events-none z-20" style={{ overflow: 'visible' }}>
+                  <line
+                    x1={activeX}
+                    y1={0}
+                    x2={activeX}
+                    y2="100%"
+                    stroke="rgba(255, 255, 255, 0.45)"
+                    strokeWidth={1}
+                    strokeDasharray="3 3"
+                  />
+                  {activeSubIndicator === 'general_template' &&
+                    generalKamaSeriesRef.current &&
+                    generalCrosshairData?.kamaVal !== undefined && (() => {
+                      try {
+                        const yKama = generalKamaSeriesRef.current.priceToCoordinate(generalCrosshairData.kamaVal);
+                        if (yKama !== null && !isNaN(yKama)) {
+                          return (
+                            <g>
+                              <circle cx={activeX} cy={yKama} r={5} fill="#10b981" opacity={0.3} />
+                              <circle cx={activeX} cy={yKama} r={3} fill="#10b981" stroke="#ffffff" strokeWidth={1} />
+                            </g>
+                          );
+                        }
+                      } catch {}
+                      return null;
+                    })()}
+                </svg>
+              );
+            })()}
 
             {/* ── Compact Mode Toggle (hides minor Fib rays & S/R pills) ── */}
             {(showTrendlinePro || activeSubIndicator === 'general_template') && (
@@ -6976,6 +6996,120 @@ export function MarketCandleChart() {
                     <div className="flex justify-between py-0.5"><span className={macdBull ? up : down}>MACD {macdBull ? '▲' : '▼'}</span><span className="text-zinc-100 font-semibold">{f(g.macdVal)} / {f(g.signalVal)}</span></div>
                     <div className="flex justify-between py-0.5"><span className={aoBull ? up : down}>AO {aoBull ? '▲' : '▼'}</span><span className="text-zinc-100 font-semibold">{f(g.aoVal)}</span></div>
                     <div className="flex justify-between py-0.5"><span className={rsiColor}>RSI ({rsiZone})</span><span className="text-zinc-100 font-semibold">{f(rsi)}</span></div>
+                  </div>
+                );
+              })()}
+
+            {/* ── Combined Hover Tooltip: RS Template (RS Line • Mansfield • O'Neil) ── */}
+            {(activeSubIndicator === 'rs_template' ||
+              activeSubIndicator === 'rs_line' ||
+              activeSubIndicator === 'mansfield' ||
+              activeSubIndicator === 'oneil') &&
+              rsCrosshairData?.x !== null &&
+              rsCrosshairData?.x !== undefined && (() => {
+                const r = rsCrosshairData;
+                const rx = r.x as number;
+                const cw = chartContainerRef.current?.clientWidth ?? 0;
+                const left = cw > 0 && rx > cw / 2 ? rx - 216 : Math.max(76, rx + 14);
+                const isAbove = r.rs !== undefined && r.ma50 !== undefined ? r.rs >= r.ma50 : false;
+                const isMansfieldPos = (r.mansfield ?? 0) >= 0;
+                const isLeader = (r.oneil ?? 0) >= 80;
+                return (
+                  <div
+                    className="absolute bottom-8 z-30 w-[202px] pointer-events-none rounded-sm border border-zinc-700 bg-[#09090b]/95 px-2.5 py-1.5 font-mono text-[10px] tabular-nums shadow-lg"
+                    style={{ left: Math.max(76, left) }}
+                  >
+                    <div className="flex items-center justify-between border-b border-zinc-800 pb-1 mb-1">
+                      <span className="text-zinc-300 font-bold">{r.dateStr}</span>
+                      <span
+                        className={`px-1 rounded-sm text-[9px] font-bold ${
+                          isAbove && isMansfieldPos
+                            ? 'bg-emerald-500/15 text-emerald-300'
+                            : 'bg-zinc-800 text-zinc-400'
+                        }`}
+                      >
+                        {isAbove && isMansfieldPos ? 'DẪN DẮT (OUTPERFORM)' : 'THEO DÕI'}
+                      </span>
+                    </div>
+                    <div className="space-y-0.5 text-[9.5px]">
+                      <div className="flex items-between justify-between">
+                        <span className="text-zinc-400">RS vs VNI:</span>
+                        <span className="font-bold text-amber-400">
+                          {r.rs !== undefined ? r.rs.toFixed(1) : '--'}
+                          <span className="text-blue-400 font-normal ml-1">
+                            (MA {r.ma50 !== undefined ? r.ma50.toFixed(1) : '--'})
+                          </span>
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-zinc-400">Mansfield RS:</span>
+                        <span className={`font-bold ${isMansfieldPos ? 'text-teal-400' : 'text-rose-400'}`}>
+                          {r.mansfield !== undefined ? `${r.mansfield > 0 ? '+' : ''}${r.mansfield.toFixed(2)}` : '--'}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-zinc-400">RS Score O&apos;Neil:</span>
+                        <span className={`font-bold ${isLeader ? 'text-emerald-400' : 'text-yellow-400'}`}>
+                          {r.oneil !== undefined ? r.oneil.toFixed(0) : '--'}/99
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+            {/* ── Combined Hover Tooltip: MCDX (Banker • Hot Money • Retailer) ── */}
+            {activeSubIndicator === 'mcdx' &&
+              mcdxCrosshairData?.x !== null &&
+              mcdxCrosshairData?.x !== undefined && (() => {
+                const m = mcdxCrosshairData;
+                const mx = m.x as number;
+                const cw = chartContainerRef.current?.clientWidth ?? 0;
+                const left = cw > 0 && mx > cw / 2 ? mx - 216 : Math.max(76, mx + 14);
+                const bankerDominant = (m.banker ?? 0) >= 10;
+                return (
+                  <div
+                    className="absolute bottom-8 z-30 w-[202px] pointer-events-none rounded-sm border border-zinc-700 bg-[#09090b]/95 px-2.5 py-1.5 font-mono text-[10px] tabular-nums shadow-lg"
+                    style={{ left: Math.max(76, left) }}
+                  >
+                    <div className="flex items-center justify-between border-b border-zinc-800 pb-1 mb-1">
+                      <span className="text-zinc-300 font-bold">{m.dateStr}</span>
+                      <span
+                        className={`px-1 rounded-sm text-[9px] font-bold ${
+                          bankerDominant
+                            ? 'bg-rose-500/15 text-rose-300'
+                            : 'bg-zinc-800 text-zinc-400'
+                        }`}
+                      >
+                        {bankerDominant ? 'CÁ MẬP KIỂM SOÁT' : 'DÒNG TIỀN PHÂN HÓA'}
+                      </span>
+                    </div>
+                    <div className="space-y-0.5 text-[9.5px]">
+                      <div className="flex items-center justify-between">
+                        <span className="text-rose-400">Banker (Cá mập):</span>
+                        <span className="font-bold text-rose-400">
+                          {m.banker !== undefined ? `${((m.banker / 20) * 100).toFixed(0)}%` : '--'}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-yellow-400">Hot Money (Đầu cơ):</span>
+                        <span className="font-bold text-yellow-400">
+                          {m.hotMoney !== undefined ? `${((m.hotMoney / 20) * 100).toFixed(0)}%` : '--'}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-emerald-400">Retailer (Nhỏ lẻ):</span>
+                        <span className="font-bold text-emerald-400">
+                          {m.retailer !== undefined ? `${((m.retailer / 20) * 100).toFixed(0)}%` : '--'}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between border-t border-zinc-800/60 pt-0.5">
+                        <span className="text-lime-400">Banker MA:</span>
+                        <span className="font-bold text-lime-400">
+                          {m.bankerMA !== undefined ? m.bankerMA.toFixed(2) : '--'}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 );
               })()}
@@ -7306,6 +7440,7 @@ export function MarketCandleChart() {
                   ? 'oneil'
                   : 'all'
               }
+              onCrosshairChange={setRsCrosshairData}
             />
           )}
 
@@ -7337,6 +7472,7 @@ export function MarketCandleChart() {
               mainChart={chartRef.current}
               onClose={() => setActiveSubIndicator('none')}
               selectedSymbol={selectedSymbol}
+              onCrosshairChange={setMcdxCrosshairData}
             />
           )}
 

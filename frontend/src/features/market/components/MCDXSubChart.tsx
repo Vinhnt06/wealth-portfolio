@@ -29,11 +29,22 @@ import {
   MCDXSettings,
 } from '../utils/mcdxIndicator';
 
+export interface MCDXCrosshairData {
+  x: number | null;
+  time: Time | null;
+  dateStr: string | null;
+  banker?: number;
+  hotMoney?: number;
+  retailer?: number;
+  bankerMA?: number;
+}
+
 interface MCDXSubChartProps {
   stockCandles: CandlestickData<Time>[];
   mainChart: IChartApi | null;
   onClose: () => void;
   selectedSymbol: string;
+  onCrosshairChange?: (data: MCDXCrosshairData | null) => void;
 }
 
 function formatDate(t: Time | null): string {
@@ -65,6 +76,7 @@ export const MCDXSubChart: React.FC<MCDXSubChartProps> = ({
   mainChart,
   onClose,
   selectedSymbol,
+  onCrosshairChange,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartInstanceRef = useRef<IChartApi | null>(null);
@@ -72,6 +84,13 @@ export const MCDXSubChart: React.FC<MCDXSubChartProps> = ({
   const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
   const [showSettings, setShowSettings] = useState<boolean>(false);
   const [settings, setSettings] = useState<MCDXSettings>(DEFAULT_MCDX_SETTINGS);
+
+  // Overlay state for Synchronized Crosshair Guide Line & Banker MA Dot
+  const [crosshairPos, setCrosshairPos] = useState<{
+    x: number;
+    dateStr: string;
+    dotBankerMA?: number;
+  } | null>(null);
 
   // Compute dataset
   const dataset: MCDXDataset = useMemo(() => {
@@ -280,17 +299,69 @@ export const MCDXSubChart: React.FC<MCDXSubChartProps> = ({
 
     // ── Crosshair Hover Sync ───────────────────────────────────────────
     const handleCrosshairMove = (param: any) => {
-      if (isDisposed) return;
+      if (isDisposed || !containerRef.current) return;
       if (!param || !param.time) {
         setHoveredPoint(null);
+        setCrosshairPos(null);
+        if (onCrosshairChange) onCrosshairChange(null);
         return;
       }
+
+      // 1. Get exact snapped bar-center pixel X
+      let pixelX: number | null = null;
+      const refChart = chart || mainChart;
+      if (refChart) {
+        try {
+          const snappedX = refChart.timeScale().timeToCoordinate(param.time);
+          if (snappedX !== null && !isNaN(snappedX)) {
+            pixelX = snappedX;
+          }
+        } catch {}
+      }
+      if (pixelX === null && param.point && typeof param.point.x === 'number') {
+        pixelX = param.point.x;
+      }
+
+      if (pixelX === null || pixelX < 0) {
+        setHoveredPoint(null);
+        setCrosshairPos(null);
+        if (onCrosshairChange) onCrosshairChange(null);
+        return;
+      }
+
       const key = typeof param.time === 'object' && 'year' in (param.time as any)
         ? `${(param.time as any).year}-${String((param.time as any).month).padStart(2, '0')}-${String((param.time as any).day).padStart(2, '0')}`
         : String(param.time);
       const found = pointMap.get(key);
       if (found) {
         setHoveredPoint(found);
+
+        let dotBankerMA: number | undefined;
+        try {
+          const coord = bankerMASeries.priceToCoordinate(found.bankerMA);
+          if (coord !== null && !isNaN(coord)) {
+            dotBankerMA = coord;
+          }
+        } catch {}
+
+        const dateStr = formatDate(param.time);
+        setCrosshairPos({
+          x: pixelX,
+          dateStr,
+          dotBankerMA,
+        });
+
+        if (onCrosshairChange) {
+          onCrosshairChange({
+            x: pixelX,
+            time: param.time,
+            dateStr,
+            banker: found.banker,
+            hotMoney: found.hotMoney,
+            retailer: found.retailer,
+            bankerMA: found.bankerMA,
+          });
+        }
       }
     };
 
@@ -564,7 +635,58 @@ export const MCDXSubChart: React.FC<MCDXSubChartProps> = ({
 
       {/* ── Chart Container ───────────────────────────────────────────── */}
       {!isCollapsed && (
-        <div ref={containerRef} className="w-full flex-1 min-h-0 relative" />
+        <div ref={containerRef} className="w-full flex-1 min-h-0 relative">
+          {crosshairPos && (
+            <>
+              <svg
+                className="absolute inset-0 w-full h-full pointer-events-none z-30"
+                style={{ overflow: 'visible' }}
+              >
+                {/* Vertical Dashed Guideline */}
+                <line
+                  x1={crosshairPos.x}
+                  y1={0}
+                  x2={crosshairPos.x}
+                  y2="100%"
+                  stroke="rgba(255, 255, 255, 0.38)"
+                  strokeWidth={1}
+                  strokeDasharray="3 3"
+                />
+
+                {/* Marker Dot on Banker MA Lime Line */}
+                {crosshairPos.dotBankerMA !== undefined && (
+                  <g>
+                    <circle
+                      cx={crosshairPos.x}
+                      cy={crosshairPos.dotBankerMA}
+                      r={4.5}
+                      fill="#84cc16"
+                      opacity={0.28}
+                    />
+                    <circle
+                      cx={crosshairPos.x}
+                      cy={crosshairPos.dotBankerMA}
+                      r={2.75}
+                      fill="#84cc16"
+                      stroke="#ffffff"
+                      strokeWidth={1}
+                    />
+                  </g>
+                )}
+              </svg>
+
+              {/* Bottom Date Pill anchored cleanly on the Time Axis Bar */}
+              {crosshairPos.dateStr && (
+                <div
+                  className="absolute bottom-0.5 z-30 pointer-events-none -translate-x-1/2 px-1.5 py-0.5 rounded-sm bg-[#18181b] border border-zinc-600 text-[9.5px] font-mono font-semibold text-zinc-100 tabular-nums whitespace-nowrap"
+                  style={{ left: crosshairPos.x }}
+                >
+                  {crosshairPos.dateStr}
+                </div>
+              )}
+            </>
+          )}
+        </div>
       )}
     </div>
   );
