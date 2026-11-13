@@ -10,7 +10,7 @@
     "q3Perf": 72.7,
     "q4Perf": 176.9,
     "currentPrice": 58.4,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "VCP": {
     "symbol": "VCP",
@@ -23,7 +23,7 @@
     "q3Perf": 73.7,
     "q4Perf": 59.8,
     "currentPrice": 40.1,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "PET": {
     "symbol": "PET",
@@ -36,7 +36,7 @@
     "q3Perf": 113.3,
     "q4Perf": 140.3,
     "currentPrice": 50.6,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "VIC": {
     "symbol": "VIC",
@@ -49,7 +49,7 @@
     "q3Perf": 86.8,
     "q4Perf": 133.9,
     "currentPrice": 243,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "MSB": {
     "symbol": "MSB",
@@ -62,7 +62,7 @@
     "q3Perf": 60.2,
     "q4Perf": 60.2,
     "currentPrice": 16.15,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "NVB": {
     "symbol": "NVB",
@@ -75,7 +75,7 @@
     "q3Perf": 31.7,
     "q4Perf": 15.7,
     "currentPrice": 16.2,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "ABB": {
     "symbol": "ABB",
@@ -88,7 +88,7 @@
     "q3Perf": 39,
     "q4Perf": 65.2,
     "currentPrice": 16.8,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "AAS": {
     "symbol": "AAS",
@@ -101,7 +101,7 @@
     "q3Perf": 0,
     "q4Perf": 15.7,
     "currentPrice": 10.3,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "VPI": {
     "symbol": "VPI",
@@ -114,7 +114,7 @@
     "q3Perf": 26.1,
     "q4Perf": 34.7,
     "currentPrice": 59,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "VVS": {
     "symbol": "VVS",
@@ -127,7 +127,7 @@
     "q3Perf": 28.6,
     "q4Perf": 122,
     "currentPrice": 71,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "PHP": {
     "symbol": "PHP",
@@ -140,7 +140,7 @@
     "q3Perf": 24.8,
     "q4Perf": 35.4,
     "currentPrice": 45,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "CDC": {
     "symbol": "CDC",
@@ -153,7 +153,7 @@
     "q3Perf": 34.2,
     "q4Perf": 15.6,
     "currentPrice": 22.7,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "VPL": {
     "symbol": "VPL",
@@ -166,7 +166,7 @@
     "q3Perf": 9.3,
     "q4Perf": 27.4,
     "currentPrice": 94,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "DHC": {
     "symbol": "DHC",
@@ -179,7 +179,7 @@
     "q3Perf": 15,
     "q4Perf": 28.1,
     "currentPrice": 37.2,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "APH": {
     "symbol": "APH",
@@ -192,7 +192,7 @@
     "q3Perf": 10.9,
     "q4Perf": 8.8,
     "currentPrice": 6.91,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "HHP": {
     "symbol": "HHP",
@@ -205,7 +205,7 @@
     "q3Perf": 18.8,
     "q4Perf": 31.2,
     "currentPrice": 14.9,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "PVP": {
     "symbol": "PVP",
@@ -218,7 +218,7 @@
     "q3Perf": 24.1,
     "q4Perf": 31.4,
     "currentPrice": 17.9,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "GMD": {
     "symbol": "GMD",
@@ -231,7 +231,7 @@
     "q3Perf": 16.6,
     "q4Perf": 25.4,
     "currentPrice": 53.7,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "HDB": {
     "symbol": "HDB",
@@ -244,7 +244,7 @@
     "q3Perf": 6.2,
     "q4Perf": 26.1,
     "currentPrice": 22.5,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "TLG": {
     "symbol": "TLG",
@@ -257,7 +257,7 @@
     "q3Perf": 9.2,
     "q4Perf": 21.1,
     "currentPrice": 53.6,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "NAF": {
     "symbol": "NAF",
@@ -270,7 +270,7 @@
     "q3Perf": 15.6,
     "q4Perf": 38.5,
     "currentPrice": 48.05,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "DCL": {
     "symbol": "DCL",
@@ -283,7 +283,7 @@
     "q3Perf": -23.6,
     "q4Perf": 28.9,
     "currentPrice": 44.15,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "NTP": {
     "symbol": "NTP",
@@ -296,7 +296,7 @@
     "q3Perf": 6.7,
     "q4Perf": 6.8,
     "currentPrice": 54.7,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "C69": {
     "symbol": "C69",
@@ -309,7 +309,7 @@
     "q3Perf": -1.6,
     "q4Perf": 42.2,
     "currentPrice": 16.3,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "NAB": {
     "symbol": "NAB",
@@ -322,7 +322,7 @@
     "q3Perf": 10.6,
     "q4Perf": 9.1,
     "currentPrice": 13,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "BAF": {
     "symbol": "BAF",
@@ -335,7 +335,7 @@
     "q3Perf": 3.2,
     "q4Perf": 20.9,
     "currentPrice": 30.7,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "QNS": {
     "symbol": "QNS",
@@ -348,7 +348,7 @@
     "q3Perf": 6.6,
     "q4Perf": 18.2,
     "currentPrice": 48.8,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "PVT": {
     "symbol": "PVT",
@@ -361,7 +361,7 @@
     "q3Perf": 5.7,
     "q4Perf": 28.5,
     "currentPrice": 20.9,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "BSR": {
     "symbol": "BSR",
@@ -374,7 +374,7 @@
     "q3Perf": 5.7,
     "q4Perf": 56.3,
     "currentPrice": 25.5,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "TVN": {
     "symbol": "TVN",
@@ -387,7 +387,7 @@
     "q3Perf": 4.5,
     "q4Perf": 20.4,
     "currentPrice": 9.2,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "NT2": {
     "symbol": "NT2",
@@ -400,7 +400,7 @@
     "q3Perf": -8.3,
     "q4Perf": 3.3,
     "currentPrice": 23.5,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "STB": {
     "symbol": "STB",
@@ -413,7 +413,7 @@
     "q3Perf": 10.6,
     "q4Perf": 32.8,
     "currentPrice": 68.9,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "VEA": {
     "symbol": "VEA",
@@ -426,7 +426,7 @@
     "q3Perf": 3,
     "q4Perf": 0.5,
     "currentPrice": 31.9,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "VJC": {
     "symbol": "VJC",
@@ -439,7 +439,7 @@
     "q3Perf": 6.6,
     "q4Perf": -1.9,
     "currentPrice": 136.5,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "SSB": {
     "symbol": "SSB",
@@ -452,7 +452,7 @@
     "q3Perf": 8,
     "q4Perf": 3.9,
     "currentPrice": 15.05,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "VPB": {
     "symbol": "VPB",
@@ -465,7 +465,7 @@
     "q3Perf": 2.5,
     "q4Perf": -1.4,
     "currentPrice": 21.9,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "FRT": {
     "symbol": "FRT",
@@ -478,7 +478,7 @@
     "q3Perf": -8.7,
     "q4Perf": 8.5,
     "currentPrice": 147.8,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "VHM": {
     "symbol": "VHM",
@@ -491,7 +491,7 @@
     "q3Perf": 32.3,
     "q4Perf": 30.6,
     "currentPrice": 62.2,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "SHI": {
     "symbol": "SHI",
@@ -504,7 +504,7 @@
     "q3Perf": 1.8,
     "q4Perf": 2.1,
     "currentPrice": 14.5,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "OCB": {
     "symbol": "OCB",
@@ -517,7 +517,7 @@
     "q3Perf": 5.2,
     "q4Perf": -0.4,
     "currentPrice": 10.7,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "CTD": {
     "symbol": "CTD",
@@ -530,7 +530,7 @@
     "q3Perf": -7.9,
     "q4Perf": -9.9,
     "currentPrice": 73.5,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "HCM": {
     "symbol": "HCM",
@@ -543,7 +543,7 @@
     "q3Perf": 16.2,
     "q4Perf": 21.3,
     "currentPrice": 23.2,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "ORS": {
     "symbol": "ORS",
@@ -556,7 +556,7 @@
     "q3Perf": 2.9,
     "q4Perf": 1.1,
     "currentPrice": 14.3,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "VTZ": {
     "symbol": "VTZ",
@@ -569,7 +569,7 @@
     "q3Perf": -0.5,
     "q4Perf": 10.4,
     "currentPrice": 20.2,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "TRC": {
     "symbol": "TRC",
@@ -582,7 +582,7 @@
     "q3Perf": 6.5,
     "q4Perf": 5.8,
     "currentPrice": 19.7,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "MSH": {
     "symbol": "MSH",
@@ -595,7 +595,7 @@
     "q3Perf": -13.7,
     "q4Perf": 0.4,
     "currentPrice": 34,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "TDP": {
     "symbol": "TDP",
@@ -608,7 +608,7 @@
     "q3Perf": -12.1,
     "q4Perf": 3.3,
     "currentPrice": 27.1,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "TCH": {
     "symbol": "TCH",
@@ -621,7 +621,7 @@
     "q3Perf": -3.6,
     "q4Perf": -28.2,
     "currentPrice": 13.5,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "NKG": {
     "symbol": "NKG",
@@ -634,7 +634,7 @@
     "q3Perf": -9.4,
     "q4Perf": -17.3,
     "currentPrice": 12.6,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "IDC": {
     "symbol": "IDC",
@@ -647,7 +647,7 @@
     "q3Perf": -14.8,
     "q4Perf": 11,
     "currentPrice": 35.7,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "TPB": {
     "symbol": "TPB",
@@ -660,7 +660,7 @@
     "q3Perf": -8.7,
     "q4Perf": -7.7,
     "currentPrice": 13.1,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "TCB": {
     "symbol": "TCB",
@@ -673,7 +673,7 @@
     "q3Perf": -5.3,
     "q4Perf": -1.8,
     "currentPrice": 21.55,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "AAN": {
     "symbol": "AAN",
@@ -686,7 +686,7 @@
     "q3Perf": -1.9,
     "q4Perf": -1.9,
     "currentPrice": 15.1,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "CTS": {
     "symbol": "CTS",
@@ -699,7 +699,7 @@
     "q3Perf": -4.1,
     "q4Perf": -18.6,
     "currentPrice": 23.3,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "TNG": {
     "symbol": "TNG",
@@ -712,7 +712,7 @@
     "q3Perf": -16.7,
     "q4Perf": 2.5,
     "currentPrice": 17.1,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "VIB": {
     "symbol": "VIB",
@@ -725,7 +725,7 @@
     "q3Perf": -5.4,
     "q4Perf": -12.5,
     "currentPrice": 14.05,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "SAM": {
     "symbol": "SAM",
@@ -738,7 +738,7 @@
     "q3Perf": -8.1,
     "q4Perf": -14,
     "currentPrice": 6.16,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "REE": {
     "symbol": "REE",
@@ -751,7 +751,7 @@
     "q3Perf": -7.2,
     "q4Perf": -11.5,
     "currentPrice": 49.3,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "MSN": {
     "symbol": "MSN",
@@ -764,7 +764,7 @@
     "q3Perf": -10.3,
     "q4Perf": -9.6,
     "currentPrice": 71.2,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "BVH": {
     "symbol": "BVH",
@@ -777,7 +777,7 @@
     "q3Perf": -20.3,
     "q4Perf": 19.4,
     "currentPrice": 63.4,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "VGT": {
     "symbol": "VGT",
@@ -790,7 +790,7 @@
     "q3Perf": -18.8,
     "q4Perf": -3.6,
     "currentPrice": 11.4,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "BVS": {
     "symbol": "BVS",
@@ -803,7 +803,7 @@
     "q3Perf": -9,
     "q4Perf": -17.5,
     "currentPrice": 27.4,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "DPR": {
     "symbol": "DPR",
@@ -816,7 +816,7 @@
     "q3Perf": -9.1,
     "q4Perf": -0.4,
     "currentPrice": 36.15,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "SBT": {
     "symbol": "SBT",
@@ -829,7 +829,7 @@
     "q3Perf": -6.9,
     "q4Perf": -12,
     "currentPrice": 21,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "DGW": {
     "symbol": "DGW",
@@ -842,7 +842,7 @@
     "q3Perf": -22.8,
     "q4Perf": 6.5,
     "currentPrice": 39.45,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "ACB": {
     "symbol": "ACB",
@@ -855,7 +855,7 @@
     "q3Perf": 1,
     "q4Perf": -6.4,
     "currentPrice": 20.4,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "SAB": {
     "symbol": "SAB",
@@ -868,7 +868,7 @@
     "q3Perf": -8.5,
     "q4Perf": 3.6,
     "currentPrice": 42.9,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "VC3": {
     "symbol": "VC3",
@@ -881,7 +881,7 @@
     "q3Perf": -7.5,
     "q4Perf": -8.2,
     "currentPrice": 23.4,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "SIP": {
     "symbol": "SIP",
@@ -894,7 +894,7 @@
     "q3Perf": -13.7,
     "q4Perf": -2.9,
     "currentPrice": 50.3,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "DPG": {
     "symbol": "DPG",
@@ -907,7 +907,7 @@
     "q3Perf": -21.4,
     "q4Perf": -19.3,
     "currentPrice": 34.6,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "TTA": {
     "symbol": "TTA",
@@ -920,7 +920,7 @@
     "q3Perf": -4.1,
     "q4Perf": -7,
     "currentPrice": 10.45,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "MBB": {
     "symbol": "MBB",
@@ -933,7 +933,7 @@
     "q3Perf": -11.4,
     "q4Perf": 1.2,
     "currentPrice": 19.2,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "VAB": {
     "symbol": "VAB",
@@ -946,7 +946,7 @@
     "q3Perf": -11.2,
     "q4Perf": -10.8,
     "currentPrice": 9,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "EVF": {
     "symbol": "EVF",
@@ -959,7 +959,7 @@
     "q3Perf": 0.9,
     "q4Perf": -6.3,
     "currentPrice": 11.8,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "MWG": {
     "symbol": "MWG",
@@ -972,7 +972,7 @@
     "q3Perf": -16.7,
     "q4Perf": -6.4,
     "currentPrice": 73,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "QTP": {
     "symbol": "QTP",
@@ -985,7 +985,7 @@
     "q3Perf": -13.3,
     "q4Perf": -7.1,
     "currentPrice": 10.4,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "AAA": {
     "symbol": "AAA",
@@ -998,7 +998,7 @@
     "q3Perf": -9.9,
     "q4Perf": -11.3,
     "currentPrice": 6.9,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "HSG": {
     "symbol": "HSG",
@@ -1011,7 +1011,7 @@
     "q3Perf": -11,
     "q4Perf": -15.5,
     "currentPrice": 11.05,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "VGC": {
     "symbol": "VGC",
@@ -1024,7 +1024,7 @@
     "q3Perf": -24.2,
     "q4Perf": -5.7,
     "currentPrice": 40.55,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "VNM": {
     "symbol": "VNM",
@@ -1037,7 +1037,7 @@
     "q3Perf": -15.3,
     "q4Perf": 0.9,
     "currentPrice": 54.2,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "POW": {
     "symbol": "POW",
@@ -1050,7 +1050,7 @@
     "q3Perf": -11.3,
     "q4Perf": 4.7,
     "currentPrice": 12.6,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "VOS": {
     "symbol": "VOS",
@@ -1063,7 +1063,7 @@
     "q3Perf": -20.9,
     "q4Perf": -9,
     "currentPrice": 10.65,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "HT1": {
     "symbol": "HT1",
@@ -1076,7 +1076,7 @@
     "q3Perf": -14.5,
     "q4Perf": -16.6,
     "currentPrice": 12.95,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "VGS": {
     "symbol": "VGS",
@@ -1089,7 +1089,7 @@
     "q3Perf": -21.5,
     "q4Perf": -25.4,
     "currentPrice": 20.3,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "MZG": {
     "symbol": "MZG",
@@ -1102,7 +1102,7 @@
     "q3Perf": 15.6,
     "q4Perf": -20.1,
     "currentPrice": 10.7,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "CTF": {
     "symbol": "CTF",
@@ -1115,7 +1115,7 @@
     "q3Perf": -6.6,
     "q4Perf": -9,
     "currentPrice": 18.3,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "GAS": {
     "symbol": "GAS",
@@ -1128,7 +1128,7 @@
     "q3Perf": -32.7,
     "q4Perf": 21.3,
     "currentPrice": 73.2,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "HAH": {
     "symbol": "HAH",
@@ -1141,7 +1141,7 @@
     "q3Perf": -13.3,
     "q4Perf": -20.1,
     "currentPrice": 48.05,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "NLG": {
     "symbol": "NLG",
@@ -1154,7 +1154,7 @@
     "q3Perf": -13.4,
     "q4Perf": -34.7,
     "currentPrice": 24.3,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "CTG": {
     "symbol": "CTG",
@@ -1167,7 +1167,7 @@
     "q3Perf": -17,
     "q4Perf": -9.3,
     "currentPrice": 31.55,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "CTI": {
     "symbol": "CTI",
@@ -1180,7 +1180,7 @@
     "q3Perf": -20.3,
     "q4Perf": -13.5,
     "currentPrice": 17.85,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "PC1": {
     "symbol": "PC1",
@@ -1193,7 +1193,7 @@
     "q3Perf": -24.9,
     "q4Perf": -10.5,
     "currentPrice": 16.75,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "OIL": {
     "symbol": "OIL",
@@ -1206,7 +1206,7 @@
     "q3Perf": -25.3,
     "q4Perf": 14.8,
     "currentPrice": 12.4,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "TV2": {
     "symbol": "TV2",
@@ -1219,7 +1219,7 @@
     "q3Perf": -24.5,
     "q4Perf": -17.5,
     "currentPrice": 28.3,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "PPC": {
     "symbol": "PPC",
@@ -1232,7 +1232,7 @@
     "q3Perf": -14.4,
     "q4Perf": -11.9,
     "currentPrice": 8.24,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "PVS": {
     "symbol": "PVS",
@@ -1245,7 +1245,7 @@
     "q3Perf": -25.3,
     "q4Perf": 5.7,
     "currentPrice": 28.4,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "MCH": {
     "symbol": "MCH",
@@ -1258,7 +1258,7 @@
     "q3Perf": -18.7,
     "q4Perf": -3.1,
     "currentPrice": 123.9,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "SSI": {
     "symbol": "SSI",
@@ -1271,7 +1271,7 @@
     "q3Perf": -18.3,
     "q4Perf": -18.9,
     "currentPrice": 20.25,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "HPG": {
     "symbol": "HPG",
@@ -1284,7 +1284,7 @@
     "q3Perf": -14.4,
     "q4Perf": -9.7,
     "currentPrice": 21.05,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "PVD": {
     "symbol": "PVD",
@@ -1297,7 +1297,7 @@
     "q3Perf": -17.9,
     "q4Perf": 11.5,
     "currentPrice": 16.5,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "VCK": {
     "symbol": "VCK",
@@ -1310,7 +1310,7 @@
     "q3Perf": -0.4,
     "q4Perf": -12.4,
     "currentPrice": 27.8,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "BSI": {
     "symbol": "BSI",
@@ -1323,7 +1323,7 @@
     "q3Perf": -18.1,
     "q4Perf": -24.3,
     "currentPrice": 28.75,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "DCM": {
     "symbol": "DCM",
@@ -1336,7 +1336,7 @@
     "q3Perf": -16,
     "q4Perf": -8.4,
     "currentPrice": 30.65,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "PHR": {
     "symbol": "PHR",
@@ -1349,7 +1349,7 @@
     "q3Perf": -14.3,
     "q4Perf": -3.1,
     "currentPrice": 29.35,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "HVN": {
     "symbol": "HVN",
@@ -1362,7 +1362,7 @@
     "q3Perf": -16.6,
     "q4Perf": -29.6,
     "currentPrice": 22.05,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "QCG": {
     "symbol": "QCG",
@@ -1375,7 +1375,7 @@
     "q3Perf": -26.4,
     "q4Perf": -20.9,
     "currentPrice": 10.6,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "GVR": {
     "symbol": "GVR",
@@ -1388,7 +1388,7 @@
     "q3Perf": -26,
     "q4Perf": 4.6,
     "currentPrice": 29.2,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "FCN": {
     "symbol": "FCN",
@@ -1401,7 +1401,7 @@
     "q3Perf": -20.7,
     "q4Perf": -24.8,
     "currentPrice": 11.3,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "HAG": {
     "symbol": "HAG",
@@ -1414,7 +1414,7 @@
     "q3Perf": -19.7,
     "q4Perf": -18.3,
     "currentPrice": 13.65,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "VCB": {
     "symbol": "VCB",
@@ -1427,7 +1427,7 @@
     "q3Perf": -20.5,
     "q4Perf": -9.9,
     "currentPrice": 53.9,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "HNG": {
     "symbol": "HNG",
@@ -1440,7 +1440,7 @@
     "q3Perf": -10.8,
     "q4Perf": -1.7,
     "currentPrice": 5.8,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "VCG": {
     "symbol": "VCG",
@@ -1453,7 +1453,7 @@
     "q3Perf": -7.4,
     "q4Perf": -27.8,
     "currentPrice": 15.55,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "CSV": {
     "symbol": "CSV",
@@ -1466,7 +1466,7 @@
     "q3Perf": -25.4,
     "q4Perf": -29.1,
     "currentPrice": 22.75,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "VHC": {
     "symbol": "VHC",
@@ -1479,7 +1479,7 @@
     "q3Perf": -21.3,
     "q4Perf": -13.3,
     "currentPrice": 50,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "HHS": {
     "symbol": "HHS",
@@ -1492,7 +1492,7 @@
     "q3Perf": -10.3,
     "q4Perf": -31.6,
     "currentPrice": 10.05,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "IPA": {
     "symbol": "IPA",
@@ -1505,7 +1505,7 @@
     "q3Perf": -21.9,
     "q4Perf": -25.1,
     "currentPrice": 12.3,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "GEG": {
     "symbol": "GEG",
@@ -1518,7 +1518,7 @@
     "q3Perf": -18.8,
     "q4Perf": -20.9,
     "currentPrice": 11.6,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "DSE": {
     "symbol": "DSE",
@@ -1531,7 +1531,7 @@
     "q3Perf": -17.3,
     "q4Perf": -12.1,
     "currentPrice": 19.85,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "VRE": {
     "symbol": "VRE",
@@ -1544,7 +1544,7 @@
     "q3Perf": -12.6,
     "q4Perf": -21.4,
     "currentPrice": 24.3,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "HHV": {
     "symbol": "HHV",
@@ -1557,7 +1557,7 @@
     "q3Perf": -17.4,
     "q4Perf": -26.4,
     "currentPrice": 9.75,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "PLX": {
     "symbol": "PLX",
@@ -1570,7 +1570,7 @@
     "q3Perf": -39.4,
     "q4Perf": 0.1,
     "currentPrice": 33.6,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "KBC": {
     "symbol": "KBC",
@@ -1583,7 +1583,7 @@
     "q3Perf": -25.3,
     "q4Perf": -24.6,
     "currentPrice": 26.9,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "DXG": {
     "symbol": "DXG",
@@ -1596,7 +1596,7 @@
     "q3Perf": -15.9,
     "q4Perf": -36.1,
     "currentPrice": 11.1,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "AGR": {
     "symbol": "AGR",
@@ -1609,7 +1609,7 @@
     "q3Perf": -23.6,
     "q4Perf": -21.6,
     "currentPrice": 11.65,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "SZC": {
     "symbol": "SZC",
@@ -1622,7 +1622,7 @@
     "q3Perf": -41.4,
     "q4Perf": -31,
     "currentPrice": 20.5,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "NTL": {
     "symbol": "NTL",
@@ -1635,7 +1635,7 @@
     "q3Perf": -22.9,
     "q4Perf": -23,
     "currentPrice": 13.1,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "MBS": {
     "symbol": "MBS",
@@ -1648,7 +1648,7 @@
     "q3Perf": -19.3,
     "q4Perf": -27.7,
     "currentPrice": 16.3,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "KLB": {
     "symbol": "KLB",
@@ -1661,7 +1661,7 @@
     "q3Perf": -10.7,
     "q4Perf": -23.8,
     "currentPrice": 10.3,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "DPM": {
     "symbol": "DPM",
@@ -1674,7 +1674,7 @@
     "q3Perf": -16.5,
     "q4Perf": -14.6,
     "currentPrice": 19.55,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "VGI": {
     "symbol": "VGI",
@@ -1687,7 +1687,7 @@
     "q3Perf": -37.2,
     "q4Perf": -1.4,
     "currentPrice": 73,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "SCS": {
     "symbol": "SCS",
@@ -1700,7 +1700,7 @@
     "q3Perf": -21.4,
     "q4Perf": -18.4,
     "currentPrice": 40.55,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "VND": {
     "symbol": "VND",
@@ -1713,7 +1713,7 @@
     "q3Perf": -18,
     "q4Perf": -23.9,
     "currentPrice": 14.5,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "LAS": {
     "symbol": "LAS",
@@ -1726,7 +1726,7 @@
     "q3Perf": -29.7,
     "q4Perf": -28,
     "currentPrice": 11.3,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "IDI": {
     "symbol": "IDI",
@@ -1739,7 +1739,7 @@
     "q3Perf": -30.1,
     "q4Perf": -31.8,
     "currentPrice": 4.92,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "ACV": {
     "symbol": "ACV",
@@ -1752,7 +1752,7 @@
     "q3Perf": -27.9,
     "q4Perf": -30.7,
     "currentPrice": 39.1,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "VPX": {
     "symbol": "VPX",
@@ -1765,7 +1765,7 @@
     "q3Perf": -17.7,
     "q4Perf": -25.3,
     "currentPrice": 23,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "TCX": {
     "symbol": "TCX",
@@ -1778,7 +1778,7 @@
     "q3Perf": -25.7,
     "q4Perf": -5.3,
     "currentPrice": 28.5,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "TAL": {
     "symbol": "TAL",
@@ -1791,7 +1791,7 @@
     "q3Perf": -27.4,
     "q4Perf": -22,
     "currentPrice": 23.95,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "BVB": {
     "symbol": "BVB",
@@ -1804,7 +1804,7 @@
     "q3Perf": -24.3,
     "q4Perf": -19.1,
     "currentPrice": 10.4,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "PLC": {
     "symbol": "PLC",
@@ -1817,7 +1817,7 @@
     "q3Perf": -40.2,
     "q4Perf": -26,
     "currentPrice": 19.9,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "CII": {
     "symbol": "CII",
@@ -1830,7 +1830,7 @@
     "q3Perf": -21.5,
     "q4Perf": -39.3,
     "currentPrice": 14.2,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "BID": {
     "symbol": "BID",
@@ -1843,7 +1843,7 @@
     "q3Perf": -32.6,
     "q4Perf": -9.9,
     "currentPrice": 32.1,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "HDC": {
     "symbol": "HDC",
@@ -1856,7 +1856,7 @@
     "q3Perf": -32.7,
     "q4Perf": -49.6,
     "currentPrice": 12.9,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "GEL": {
     "symbol": "GEL",
@@ -1869,7 +1869,7 @@
     "q3Perf": -20.2,
     "q4Perf": -20.2,
     "currentPrice": 26.35,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "HUT": {
     "symbol": "HUT",
@@ -1882,7 +1882,7 @@
     "q3Perf": -25,
     "q4Perf": -30.8,
     "currentPrice": 12.6,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "ANV": {
     "symbol": "ANV",
@@ -1895,7 +1895,7 @@
     "q3Perf": -35.4,
     "q4Perf": -35.8,
     "currentPrice": 17.1,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "VCI": {
     "symbol": "VCI",
@@ -1908,7 +1908,7 @@
     "q3Perf": -25.2,
     "q4Perf": -25.6,
     "currentPrice": 19.85,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "DBC": {
     "symbol": "DBC",
@@ -1921,7 +1921,7 @@
     "q3Perf": -36,
     "q4Perf": -29.5,
     "currentPrice": 16,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "SHB": {
     "symbol": "SHB",
@@ -1934,7 +1934,7 @@
     "q3Perf": -28.7,
     "q4Perf": -29.6,
     "currentPrice": 11,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "KHG": {
     "symbol": "KHG",
@@ -1947,7 +1947,7 @@
     "q3Perf": -30.5,
     "q4Perf": -43.5,
     "currentPrice": 4.63,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "VFS": {
     "symbol": "VFS",
@@ -1960,7 +1960,7 @@
     "q3Perf": -30.5,
     "q4Perf": -37.5,
     "currentPrice": 9.6,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "YEG": {
     "symbol": "YEG",
@@ -1973,7 +1973,7 @@
     "q3Perf": -34.8,
     "q4Perf": -34.8,
     "currentPrice": 7.5,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "EIB": {
     "symbol": "EIB",
@@ -1986,7 +1986,7 @@
     "q3Perf": -22.9,
     "q4Perf": -25.5,
     "currentPrice": 16.2,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "LCG": {
     "symbol": "LCG",
@@ -1999,7 +1999,7 @@
     "q3Perf": -29.3,
     "q4Perf": -28.2,
     "currentPrice": 6.77,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "DIG": {
     "symbol": "DIG",
@@ -2012,7 +2012,7 @@
     "q3Perf": -30.3,
     "q4Perf": -45.4,
     "currentPrice": 10.45,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "VIX": {
     "symbol": "VIX",
@@ -2025,7 +2025,7 @@
     "q3Perf": -26.5,
     "q4Perf": -37.9,
     "currentPrice": 13.05,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "CTR": {
     "symbol": "CTR",
@@ -2038,7 +2038,7 @@
     "q3Perf": -25.4,
     "q4Perf": -20.8,
     "currentPrice": 62,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "KSB": {
     "symbol": "KSB",
@@ -2051,7 +2051,7 @@
     "q3Perf": -29,
     "q4Perf": -30.9,
     "currentPrice": 12.5,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "PAC": {
     "symbol": "PAC",
@@ -2064,7 +2064,7 @@
     "q3Perf": -30.3,
     "q4Perf": -32.9,
     "currentPrice": 14.85,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "PCB": {
     "symbol": "PCB",
@@ -2077,7 +2077,7 @@
     "q3Perf": -20.9,
     "q4Perf": -20.9,
     "currentPrice": 9.1,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "HDG": {
     "symbol": "HDG",
@@ -2090,7 +2090,7 @@
     "q3Perf": -32.6,
     "q4Perf": -41.9,
     "currentPrice": 16.3,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "NVL": {
     "symbol": "NVL",
@@ -2103,7 +2103,7 @@
     "q3Perf": -8.9,
     "q4Perf": -16.6,
     "currentPrice": 10.4,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "CEO": {
     "symbol": "CEO",
@@ -2116,7 +2116,7 @@
     "q3Perf": -33.1,
     "q4Perf": -47.3,
     "currentPrice": 12.3,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "SHS": {
     "symbol": "SHS",
@@ -2129,7 +2129,7 @@
     "q3Perf": -25.8,
     "q4Perf": -38.2,
     "currentPrice": 13.4,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "F88": {
     "symbol": "F88",
@@ -2142,7 +2142,7 @@
     "q3Perf": -45,
     "q4Perf": 19.8,
     "currentPrice": 49.5,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "GEX": {
     "symbol": "GEX",
@@ -2155,7 +2155,7 @@
     "q3Perf": -12.8,
     "q4Perf": -29.4,
     "currentPrice": 21.95,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "FIT": {
     "symbol": "FIT",
@@ -2168,7 +2168,7 @@
     "q3Perf": -36,
     "q4Perf": -36.4,
     "currentPrice": 2.95,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "PDR": {
     "symbol": "PDR",
@@ -2181,7 +2181,7 @@
     "q3Perf": -32.4,
     "q4Perf": -46.4,
     "currentPrice": 11.8,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "IJC": {
     "symbol": "IJC",
@@ -2194,7 +2194,7 @@
     "q3Perf": -29.3,
     "q4Perf": -38.3,
     "currentPrice": 7.13,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "VTP": {
     "symbol": "VTP",
@@ -2207,7 +2207,7 @@
     "q3Perf": -33.5,
     "q4Perf": -31.4,
     "currentPrice": 45.85,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "FTS": {
     "symbol": "FTS",
@@ -2220,7 +2220,7 @@
     "q3Perf": -33.3,
     "q4Perf": -37.1,
     "currentPrice": 19.4,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "HPX": {
     "symbol": "HPX",
@@ -2233,7 +2233,7 @@
     "q3Perf": -32.1,
     "q4Perf": -26.5,
     "currentPrice": 3.53,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "PAN": {
     "symbol": "PAN",
@@ -2246,7 +2246,7 @@
     "q3Perf": -27,
     "q4Perf": -29.5,
     "currentPrice": 17.1,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "KDH": {
     "symbol": "KDH",
@@ -2259,7 +2259,7 @@
     "q3Perf": -35.7,
     "q4Perf": -49.8,
     "currentPrice": 15.55,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "AGG": {
     "symbol": "AGG",
@@ -2272,7 +2272,7 @@
     "q3Perf": -33.6,
     "q4Perf": -40.6,
     "currentPrice": 8.78,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "LPB": {
     "symbol": "LPB",
@@ -2285,7 +2285,7 @@
     "q3Perf": -6,
     "q4Perf": -25.2,
     "currentPrice": 36.4,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "VDS": {
     "symbol": "VDS",
@@ -2298,7 +2298,7 @@
     "q3Perf": -39.9,
     "q4Perf": -42.9,
     "currentPrice": 9.83,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "VSC": {
     "symbol": "VSC",
@@ -2311,7 +2311,7 @@
     "q3Perf": -37.3,
     "q4Perf": -38.4,
     "currentPrice": 13.55,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "TCM": {
     "symbol": "TCM",
@@ -2324,7 +2324,7 @@
     "q3Perf": -41.3,
     "q4Perf": -41.9,
     "currentPrice": 14.95,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "HQC": {
     "symbol": "HQC",
@@ -2337,7 +2337,7 @@
     "q3Perf": -35.3,
     "q4Perf": -41,
     "currentPrice": 1.87,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "DGC": {
     "symbol": "DGC",
@@ -2350,7 +2350,7 @@
     "q3Perf": -41.5,
     "q4Perf": -56.5,
     "currentPrice": 32.85,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "ASM": {
     "symbol": "ASM",
@@ -2363,7 +2363,7 @@
     "q3Perf": -28.8,
     "q4Perf": -35.1,
     "currentPrice": 4.45,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "DRC": {
     "symbol": "DRC",
@@ -2376,7 +2376,7 @@
     "q3Perf": -40,
     "q4Perf": -40.4,
     "currentPrice": 8.93,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "BCM": {
     "symbol": "BCM",
@@ -2389,7 +2389,7 @@
     "q3Perf": -44.1,
     "q4Perf": -44,
     "currentPrice": 37.85,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "GEE": {
     "symbol": "GEE",
@@ -2402,7 +2402,7 @@
     "q3Perf": -36.1,
     "q4Perf": -35.6,
     "currentPrice": 62.1,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "C4G": {
     "symbol": "C4G",
@@ -2415,7 +2415,7 @@
     "q3Perf": -42,
     "q4Perf": -42,
     "currentPrice": 4.7,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "FPT": {
     "symbol": "FPT",
@@ -2428,7 +2428,7 @@
     "q3Perf": -44.2,
     "q4Perf": -44.3,
     "currentPrice": 49.55,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "SCR": {
     "symbol": "SCR",
@@ -2441,7 +2441,7 @@
     "q3Perf": -44.6,
     "q4Perf": -53.5,
     "currentPrice": 3.93,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "DXS": {
     "symbol": "DXS",
@@ -2454,7 +2454,7 @@
     "q3Perf": -31,
     "q4Perf": -51.3,
     "currentPrice": 4.92,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "DDV": {
     "symbol": "DDV",
@@ -2467,7 +2467,7 @@
     "q3Perf": -43.3,
     "q4Perf": -46,
     "currentPrice": 15.3,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "TNH": {
     "symbol": "TNH",
@@ -2480,7 +2480,7 @@
     "q3Perf": -47.2,
     "q4Perf": -50.5,
     "currentPrice": 6.34,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "ELC": {
     "symbol": "ELC",
@@ -2493,7 +2493,7 @@
     "q3Perf": -51.6,
     "q4Perf": -46.2,
     "currentPrice": 10.6,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "CMG": {
     "symbol": "CMG",
@@ -2506,7 +2506,7 @@
     "q3Perf": -50.6,
     "q4Perf": -51.1,
     "currentPrice": 17.6,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "HBC": {
     "symbol": "HBC",
@@ -2519,7 +2519,7 @@
     "q3Perf": -55.4,
     "q4Perf": -54.7,
     "currentPrice": 2.9,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "BGE": {
     "symbol": "BGE",
@@ -2532,7 +2532,7 @@
     "q3Perf": -71,
     "q4Perf": -71,
     "currentPrice": 3.1,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "LPS": {
     "symbol": "LPS",
@@ -2545,7 +2545,7 @@
     "q3Perf": -51.6,
     "q4Perf": -51.6,
     "currentPrice": 15.4,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   },
   "PNJ": {
     "symbol": "PNJ",
@@ -2558,6 +2558,6 @@
     "q3Perf": -80.7,
     "q4Perf": -74.8,
     "currentPrice": 14.95,
-    "calculatedDate": "2026-11-12"
+    "calculatedDate": "2026-11-13"
   }
 }
