@@ -104,14 +104,20 @@ export const VolumeSurgeTracker: React.FC<VolumeSurgeTrackerProps> = ({ symbol }
   // Live WebSocket Tick from MarketStore
   const liveTick = useMarketStore((state) => (symbol ? state.ticks[symbol.toUpperCase()] : null));
   const currentLiveVol = liveTick?.volume || 0;
+  const liveVolRef = React.useRef(currentLiveVol);
+
+  useEffect(() => {
+    liveVolRef.current = currentLiveVol;
+  }, [currentLiveVol]);
 
   const fetchData = useCallback(
     async (isBackground = false) => {
       if (!symbol) return;
       if (!isBackground) setIsLoading(true);
       try {
+        const liveVol = liveVolRef.current;
         const res = await fetch(
-          `/api/market/volume-pace?symbol=${encodeURIComponent(symbol)}&days=${baselineDays}&liveVol=${currentLiveVol}`
+          `/api/market/volume-pace?symbol=${encodeURIComponent(symbol)}&days=${baselineDays}&liveVol=${liveVol}`
         );
         if (res.ok) {
           const json = await res.json();
@@ -125,15 +131,15 @@ export const VolumeSurgeTracker: React.FC<VolumeSurgeTrackerProps> = ({ symbol }
         if (!isBackground) setIsLoading(false);
       }
     },
-    [symbol, baselineDays, currentLiveVol]
+    [symbol, baselineDays]
   );
 
   useEffect(() => {
     fetchData();
-    // Auto-refresh every 15 seconds during trading hours
+    // Auto-refresh every 20 seconds during trading hours
     const interval = setInterval(() => {
       fetchData(true);
-    }, 15000);
+    }, 20000);
     return () => clearInterval(interval);
   }, [fetchData]);
 
@@ -228,10 +234,15 @@ export const VolumeSurgeTracker: React.FC<VolumeSurgeTrackerProps> = ({ symbol }
             </div>
             <p className="text-xs text-zinc-400 mt-0.5 font-mono">
               Phiên giao dịch {data.displayDate} • Đối chiếu trung bình {data.baselineDays} phiên gần nhất
-              {data.isTodayLive && (
+              {data.isTodayLive ? (
                 <span className="text-emerald-400 ml-2 font-bold inline-flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
                   REALTIME INTRADAY
+                </span>
+              ) : (
+                <span className="text-zinc-500 ml-2 font-medium inline-flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-zinc-600" />
+                  ĐÃ ĐÓNG CỬA PHIÊN
                 </span>
               )}
             </p>
@@ -308,7 +319,9 @@ export const VolumeSurgeTracker: React.FC<VolumeSurgeTrackerProps> = ({ symbol }
         {/* Card 2: Intraday Pace Delta vs Same Time */}
         <div className="p-4 rounded-2xl bg-zinc-950/80 border border-zinc-800/80 relative overflow-hidden group hover:border-zinc-700/80 transition-all">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-mono text-zinc-400 uppercase tracking-wider">Tốc Độ Cùng Giờ</span>
+            <span className="text-[11px] font-mono text-zinc-400 uppercase tracking-wider">
+              {data.isTodayLive ? 'Tốc Độ Cùng Giờ' : 'So Với Trung Bình'}
+            </span>
             {metrics.paceDeltaPct >= 0 ? (
               <TrendUp className="w-4 h-4 text-emerald-400" />
             ) : (
@@ -327,9 +340,13 @@ export const VolumeSurgeTracker: React.FC<VolumeSurgeTrackerProps> = ({ symbol }
           </div>
           <p className="text-[10px] text-zinc-400 font-mono mt-2.5">
             {metrics.isAboveAvg ? (
-              <span className="text-emerald-400 font-bold">Tốc độ khớp vượt mức trung bình</span>
+              <span className="text-emerald-400 font-bold">
+                {data.isTodayLive ? 'Tốc độ khớp vượt mức trung bình' : 'Thanh khoản cả phiên vượt mức trung bình'}
+              </span>
             ) : (
-              <span className="text-zinc-500">Hấp thụ chậm hơn tốc độ bình quân</span>
+              <span className="text-zinc-500">
+                {data.isTodayLive ? 'Hấp thụ chậm hơn tốc độ bình quân' : 'Thanh khoản cả phiên thấp hơn trung bình'}
+              </span>
             )}
           </p>
         </div>
@@ -337,18 +354,24 @@ export const VolumeSurgeTracker: React.FC<VolumeSurgeTrackerProps> = ({ symbol }
         {/* Card 3: Projected Volume */}
         <div className="p-4 rounded-2xl bg-zinc-950/80 border border-zinc-800/80 relative overflow-hidden group hover:border-zinc-700/80 transition-all">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-mono text-zinc-400 uppercase tracking-wider">Dự Phóng Cả Phiên</span>
+            <span className="text-[11px] font-mono text-zinc-400 uppercase tracking-wider">
+              {data.isTodayLive ? 'Dự Phóng Cả Phiên' : 'Khối Lượng Cả Phiên'}
+            </span>
             <Gauge className="w-4 h-4 text-cyan-400" />
           </div>
           <div className="flex items-baseline gap-2">
             <span className="text-2xl sm:text-3xl font-mono font-black text-zinc-100">
-              {formatNumber(metrics.projectedTotalVol)}
+              {formatNumber(data.isTodayLive ? metrics.projectedTotalVol : metrics.todayTotalVol)}
             </span>
             <span className="text-xs font-mono text-zinc-400">CP</span>
           </div>
           <div className="mt-2.5 flex items-center justify-between text-[10px] font-mono text-zinc-400">
-            <span>Thực tế: {formatNumber(metrics.todayTotalVol)} CP</span>
-            <span className="text-emerald-400 font-bold">{metrics.projectedRVol}x SMA20</span>
+            <span>
+              {data.isTodayLive ? `Thực tế: ${formatNumber(metrics.todayTotalVol)} CP` : `Đã kết thúc phiên`}
+            </span>
+            <span className="text-emerald-400 font-bold">
+              {data.isTodayLive ? `${metrics.projectedRVol}x SMA20` : `${metrics.rVol}x SMA20`}
+            </span>
           </div>
         </div>
 
@@ -488,10 +511,14 @@ export const VolumeSurgeTracker: React.FC<VolumeSurgeTrackerProps> = ({ symbol }
                           <div className="flex items-center justify-between">
                             <span className="text-emerald-400 flex items-center gap-1">
                               <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                              Hôm nay (Realtime):
+                              {data.isTodayLive ? 'Hôm nay (Realtime):' : 'Khối lượng luỹ kế:'}
                             </span>
                             <span className="font-bold text-zinc-100">
-                              {d.rawTodayCum !== null ? `${formatNumber(d.rawTodayCum)} CP` : '-- (Chưa diễn ra)'}
+                              {d.rawTodayCum !== null
+                                ? `${formatNumber(d.rawTodayCum)} CP`
+                                : data.isTodayLive
+                                ? '-- (Chưa diễn ra)'
+                                : '--'}
                             </span>
                           </div>
 
