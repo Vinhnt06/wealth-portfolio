@@ -1,3 +1,8 @@
+import type { StageSub, StageEvidence } from '../utils/stageEngine';
+import type { CycleContext } from '../utils/wyckoffContext';
+import type { Decision } from '../utils/decisionEngine';
+import type { DecisionEvidence } from '../utils/decisionEvidence';
+
 export interface MinerviniCriterion {
   id: number;
   label: string;
@@ -71,6 +76,12 @@ export interface MinerviniAnalysisResult {
   rsUniverseTotal?: number;
   stage: 1 | 2 | 3 | 4;
   stageName: string;
+  /** Cơ sở phân loại Stage (độ dốc MA150, xu hướng trước đó, quy tắc đã kích hoạt) */
+  stageInfo?: { sub: StageSub; rule: string; confirmed: boolean; evidence: StageEvidence | null };
+  /** Wyckoff đặt trong bối cảnh Stage (chu kỳ, pha, dấu hiệu phân phối) */
+  cycle?: CycleContext;
+  /** Quyết định hợp nhất Stage × Wyckoff */
+  decision?: Decision & { evidence: DecisionEvidence; marketUp: boolean | null };
   passedCount: number;
   totalCount: number;
   isStage2Eligible: boolean;

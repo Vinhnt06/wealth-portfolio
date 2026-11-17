@@ -141,6 +141,14 @@ export async function GET(request: Request) {
 
       // Cấu trúc tích lũy chưa được xu hướng xác nhận (Trend Template < 8/8): chỉ tính một nửa điểm cộng
       if (wyckoffBlocked && wyckoffDelta > 0) wyckoffDelta = Math.round(wyckoffDelta / 2);
+
+      // Máy Wyckoff chỉ biết pha tích lũy: ở Stage 3/4 cách đọc đó KHÔNG áp dụng (xem wyckoffContext.ts) → không được cộng điểm
+      const ctx = stockData.cycle;
+      if (ctx && !ctx.coherent) {
+        wyckoffScore = ctx.cycle === 'MARKDOWN' || ctx.cycle === 'DISTRIBUTION' ? 25 : 40;
+        wyckoffDelta = ctx.bias === 'BEARISH' ? -5 : -2;
+        wyckoffDetails = `Chu kỳ: ${ctx.cycle === 'MARKDOWN' ? 'Markdown (Stage 4)' : ctx.cycle === 'DISTRIBUTION' ? 'Phân phối (Stage 3)' : ctx.phase} • cách đọc tích lũy "${phase}" không áp dụng trong bối cảnh này`;
+      }
     }
 
     factors.push({

@@ -5,6 +5,17 @@ import { Check, X, CaretDown, Lock, Crosshair, ShieldCheck } from '@phosphor-ico
 import type { MinerviniAnalysisResult, MinerviniCriterion } from '../types/minervini.types';
 import { useLanguage } from '../../../app/components/LanguageContext';
 import {
+  ALIGNMENT_TEXT,
+  HEADLINE_TEXT,
+  ENTRY_TEXT,
+  SIZE_TEXT,
+  HOLDER_TEXT,
+  REASON_TEXT,
+  CYCLE_PHASE_TEXT,
+  SUB_STAGE_TEXT,
+  triggerText,
+} from '../i18n/decision';
+import {
   TREND_LABEL_EN,
   WYCKOFF_LABEL_EN,
   PHASE_NAME_EN,
@@ -231,7 +242,8 @@ const TrendTemplateCard: React.FC<{ data: MinerviniAnalysisResult }> = ({ data }
   const barTone = passed === 8 ? 'bg-emerald-400' : passed >= 5 ? 'bg-amber-400' : 'bg-rose-400/90';
   const stageShort = `Stage ${stage}`;
   const stageInfo = STAGES[stage - 1];
-  const stageNote = language === 'en' ? stageInfo?.noteEn : stageInfo?.note;
+  const stageNote = data.stageInfo ? SUB_STAGE_TEXT[data.stageInfo.sub][language] : language === 'en' ? stageInfo?.noteEn : stageInfo?.note;
+  const ev = data.stageInfo?.evidence;
 
   return (
     <Card>
@@ -302,6 +314,13 @@ const TrendTemplateCard: React.FC<{ data: MinerviniAnalysisResult }> = ({ data }
           <span className="text-zinc-300">{language === 'en' ? stageInfo?.nameEn : stageInfo?.name} · </span>
           {language === 'en' ? stageInfo?.defEn : stageInfo?.def}
         </p>
+        {ev && (
+          <p className="mt-1.5 text-[10.5px] leading-relaxed text-zinc-500 tabular-nums">
+            {tr('Cơ sở xét Stage', 'Why this Stage')}: MA150 {ev.slope150Pct > 0 ? '+' : ''}{ev.slope150Pct}% / 30 {tr('phiên', 'sessions')}
+            {ev.priorTrendPct !== null ? ` · ${tr('xu hướng trước đó', 'prior trend')} ${ev.priorTrendPct > 0 ? '+' : ''}${ev.priorTrendPct}%` : ''}
+            {' · '}{tr('giá so MA150', 'price vs MA150')} {ev.distFromMa150Pct > 0 ? '+' : ''}{ev.distFromMa150Pct}%
+          </p>
+        )}
       </div>
 
       {open && (
@@ -345,6 +364,8 @@ const WyckoffCard: React.FC<{ data: MinerviniAnalysisResult }> = ({ data }) => {
   const [phaseEyebrow, phaseTitleRaw] = stripEmoji(w.phaseName).split(/\s[—–-]\s/);
   const phaseTitle = (phaseTitleRaw || phaseEyebrow).replace(/\s*\(.*?\)\s*$/, '');
   const phaseEn = PHASE_NAME_EN[w.phase];
+  const ctx = data.cycle;
+  const ctxText = ctx ? CYCLE_PHASE_TEXT[ctx.phase] : null;
 
   const [sigTitleVi, sigDescVi] = splitTitle(w.buyPointLabel);
   const sigEn = SIGNAL_EN[w.buyPointCode === 'NONE' || !w.buyPointCode ? `NONE_${w.phase.slice(-1)}` : w.buyPointCode];
@@ -384,8 +405,12 @@ const WyckoffCard: React.FC<{ data: MinerviniAnalysisResult }> = ({ data }) => {
       <div className="px-4 pb-4">
         <div className="flex items-end justify-between gap-3">
           <div className="min-w-0">
-            <div className="text-[10.5px] text-emerald-400/90">{en && phaseEn ? phaseEn.eyebrow : phaseEyebrow}</div>
-            <div className="mt-0.5 text-[16px] font-semibold leading-tight text-zinc-50">{en && phaseEn ? phaseEn.title : phaseTitle}</div>
+            <div className={cx('text-[10.5px]', ctx && ctx.cycle === 'DISTRIBUTION' ? 'text-rose-300/90' : ctx && ctx.cycle === 'MARKDOWN' ? 'text-rose-300/90' : 'text-emerald-400/90')}>
+              {ctxText ? ctxText.eyebrow[language] : en && phaseEn ? phaseEn.eyebrow : phaseEyebrow}
+            </div>
+            <div className="mt-0.5 text-[16px] font-semibold leading-tight text-zinc-50">
+              {ctxText ? ctxText.title[language] : en && phaseEn ? phaseEn.title : phaseTitle}
+            </div>
           </div>
           <div className="shrink-0 text-right">
             <div className="text-[18px] font-semibold leading-none tabular-nums text-zinc-100">{progress}%</div>
@@ -393,8 +418,63 @@ const WyckoffCard: React.FC<{ data: MinerviniAnalysisResult }> = ({ data }) => {
           </div>
         </div>
 
+        {/* Vị trí trong chu kỳ lớn: Wyckoff và Stage cùng nhìn một chu kỳ */}
+        {ctx && (
+          <div className="mt-3">
+            <div className="grid grid-cols-4 gap-1">
+              {(
+                [
+                  ['ACCUMULATION', tr('Tích lũy', 'Accumulation'), 'Stage 1'],
+                  ['MARKUP', 'Markup', 'Stage 2'],
+                  ['DISTRIBUTION', tr('Phân phối', 'Distribution'), 'Stage 3'],
+                  ['MARKDOWN', 'Markdown', 'Stage 4'],
+                ] as const
+              ).map(([k, label, st]) => (
+                <div
+                  key={k}
+                  className={cx(
+                    'rounded-md px-1.5 py-1 text-center text-[10px] ring-1 ring-inset',
+                    ctx.cycle === k ? 'bg-white/[0.07] text-zinc-100 ring-white/20' : 'text-zinc-600 ring-white/[0.05]'
+                  )}
+                >
+                  <div className="font-medium">{label}</div>
+                  <div className="text-[9px] opacity-70">{st}</div>
+                </div>
+              ))}
+            </div>
+            {!ctx.coherent && (
+              <p className="mt-2 text-[10.5px] leading-relaxed text-amber-200/75">
+                {tr(
+                  `Máy Wyckoff chỉ biết các pha tích lũy nên đọc thô là "${w.phase}". Với cổ phiếu đang ở Stage ${data.stage}, cách đọc đó không áp dụng — bối cảnh chu kỳ ở trên mới là kết luận.`,
+                  `The Wyckoff engine only knows accumulation phases, so its raw reading is "${w.phase}". For a Stage ${data.stage} stock that reading does not apply — the cycle context above is the conclusion.`
+                )}
+              </p>
+            )}
+            {ctx.earlyBasing && (
+              <p className="mt-2 text-[10.5px] leading-relaxed text-cyan-200/80">
+                {tr('Cấu trúc nền đang hình thành: theo dõi để chuyển sang Stage 1.', 'A base is forming: watch for a move to Stage 1.')}
+              </p>
+            )}
+            {ctx.distribution.score >= 2 && (
+              <p className="mt-2 text-[10.5px] leading-relaxed text-rose-200/75">
+                {tr(`Dấu hiệu phân phối: ${ctx.distribution.score}/5`, `Distribution signs: ${ctx.distribution.score}/5`)}
+                {' — '}
+                {[
+                  ctx.distribution.flags.upthrust && 'Upthrust',
+                  ctx.distribution.flags.sow && 'SOW',
+                  ctx.distribution.flags.supplyDominant && tr('cung lấn át cầu', 'supply > demand'),
+                  ctx.distribution.flags.belowMa50Falling && tr('dưới MA50 đang dốc xuống', 'below a falling MA50'),
+                  ctx.distribution.flags.lowerHighs && tr('đỉnh sau thấp hơn', 'lower highs'),
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
+              </p>
+            )}
+          </div>
+        )}
+
         {/* Timeline 5 pha */}
-        <div className="relative mt-5">
+        <div className={cx('relative mt-5 transition-opacity', ctx && !ctx.coherent && 'opacity-35')}>
           <div className="absolute left-[10%] right-[10%] top-[9px] h-px bg-white/[0.08]" />
           <div
             className="absolute left-[10%] top-[9px] h-px bg-emerald-400/70 transition-all duration-500"
@@ -597,6 +677,210 @@ const RsCard: React.FC<{ data: MinerviniAnalysisResult }> = ({ data }) => {
  * Tab
  * ──────────────────────────────────────────────────────────────────────────── */
 
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * Quyết định hợp nhất Stage × Wyckoff
+ * ──────────────────────────────────────────────────────────────────────────── */
+
+const ENTRY_TONE = {
+  BUY: 'text-emerald-300 bg-emerald-500/10 ring-emerald-400/30',
+  WAIT: 'text-amber-300 bg-amber-500/10 ring-amber-400/25',
+  AVOID: 'text-rose-300 bg-rose-500/10 ring-rose-400/25',
+} as const;
+const HOLDER_TONE = {
+  HOLD: ENTRY_TONE.BUY,
+  HOLD_TIGHTEN: ENTRY_TONE.WAIT,
+  HOLD_NO_ADD: ENTRY_TONE.WAIT,
+  REDUCE: ENTRY_TONE.AVOID,
+  EXIT: ENTRY_TONE.AVOID,
+} as const;
+const ALIGN_TONE: Record<string, string> = {
+  ALIGNED_BULLISH: 'text-emerald-300',
+  ALIGNED_BEARISH: 'text-rose-300',
+  TIMING_PENDING: 'text-amber-300',
+  WYCKOFF_LEADS: 'text-cyan-300',
+  WYCKOFF_WARNS: 'text-rose-300',
+  NEUTRAL_WAIT: 'text-zinc-300',
+};
+
+const DriverChip: React.FC<{ label: string; value: string; state: 'OK' | 'NOT_YET' | 'BAD' | 'WARN' }> = ({ label, value, state }) => {
+  const tone =
+    state === 'OK' ? 'bg-emerald-500/15 text-emerald-300 ring-emerald-400/30' : state === 'NOT_YET' ? 'bg-amber-500/10 text-amber-300 ring-amber-400/25' : 'bg-rose-500/10 text-rose-300 ring-rose-400/25';
+  return (
+    <div className="min-w-0 flex-1 rounded-lg bg-white/[0.02] p-2.5 ring-1 ring-inset ring-white/[0.06]">
+      <div className="text-[9.5px] uppercase tracking-wider text-zinc-500">{label}</div>
+      <div className="mt-1 flex items-start gap-1.5">
+        <span className={cx('mt-px grid h-[16px] w-[16px] shrink-0 place-items-center rounded-full ring-1 ring-inset', tone)}>
+          {state === 'OK' ? <Check size={9} weight="bold" /> : state === 'NOT_YET' ? <span className="h-1 w-1 rounded-full bg-current" /> : <X size={9} weight="bold" />}
+        </span>
+        <span className="text-[11.5px] leading-snug text-zinc-200">{value}</span>
+      </div>
+    </div>
+  );
+};
+
+const DecisionCard: React.FC<{ data: MinerviniAnalysisResult }> = ({ data }) => {
+  const { tr, language } = useLanguage();
+  const [showRule, setShowRule] = useState(false);
+  const d = data.decision;
+  if (!d) return null;
+  const lang = language;
+  const labelOf = (id: number) => {
+    const c = data.criteria.find((x) => x.id === id);
+    return lang === 'en' ? TREND_LABEL_EN[id] || c?.label || String(id) : c?.label || TREND_LABEL_EN[id] || String(id);
+  };
+  const align = ALIGNMENT_TEXT[d.alignment];
+  const ctx = data.cycle;
+  const ev = d.evidence;
+  const stageValue = `Stage ${data.stage}${data.stageInfo ? ' · ' + SUB_STAGE_TEXT[data.stageInfo.sub][lang] : ''}`;
+  const wyValue = ctx ? `${CYCLE_PHASE_TEXT[ctx.phase].eyebrow[lang]} · ${CYCLE_PHASE_TEXT[ctx.phase].title[lang]}` : '';
+  const stageState = d.drivers.stage;
+  const wyState = d.drivers.wyckoff === 'WARN' ? 'BAD' : d.drivers.wyckoff;
+  const rr = (r: string) => REASON_TEXT[r]?.[lang] ?? r;
+  const fmtN = (v: number | undefined) => (v === undefined ? '—' : `${v > 0 ? '+' : ''}${v}%`);
+
+  return (
+    <Card>
+      <div className="px-4 pt-3.5 pb-2.5">
+        <Eyebrow className="text-zinc-400">{tr('Quyết định hợp nhất · Minervini × Wyckoff', 'Unified decision · Minervini × Wyckoff')}</Eyebrow>
+      </div>
+
+      <div className="px-4 pb-4 space-y-4">
+        {/* Hai khung đồng thuận hay lệch nhau? */}
+        <div>
+          <div className={cx('text-[13px] font-semibold', ALIGN_TONE[d.alignment])}>{align.title[lang]}</div>
+          <p className="mt-1 text-[11px] leading-relaxed text-zinc-400">{align.desc[lang]}</p>
+        </div>
+
+        <div className="flex gap-2">
+          <DriverChip label={tr('Khung Minervini (Stage)', 'Minervini frame (Stage)')} value={stageValue} state={stageState} />
+          <DriverChip label={tr('Khung Wyckoff (chu kỳ)', 'Wyckoff frame (cycle)')} value={wyValue} state={wyState} />
+        </div>
+
+        {/* Hai quyết định tách biệt: người chưa có vị thế / người đang giữ */}
+        <div className="grid grid-cols-2 gap-2">
+          <div className="rounded-xl bg-white/[0.02] p-3 ring-1 ring-inset ring-white/[0.06]">
+            <div className="text-[9.5px] uppercase tracking-wider text-zinc-500">{tr('Chưa có vị thế', 'No position yet')}</div>
+            <div className={cx('mt-1.5 inline-flex rounded-md px-2 py-1 text-[13px] font-bold ring-1 ring-inset', ENTRY_TONE[d.newBuyer.action])}>
+              {ENTRY_TEXT[d.newBuyer.action][lang]}
+            </div>
+            {d.newBuyer.size !== 'NONE' && <span className="ml-2 text-[10.5px] text-zinc-400">{SIZE_TEXT[d.newBuyer.size][lang]}</span>}
+          </div>
+          <div className="rounded-xl bg-white/[0.02] p-3 ring-1 ring-inset ring-white/[0.06]">
+            <div className="text-[9.5px] uppercase tracking-wider text-zinc-500">{tr('Đang giữ vị thế', 'Holding a position')}</div>
+            <div className={cx('mt-1.5 inline-flex rounded-md px-2 py-1 text-[12px] font-bold ring-1 ring-inset', HOLDER_TONE[d.holder.action])}>
+              {HOLDER_TEXT[d.holder.action][lang]}
+            </div>
+          </div>
+        </div>
+
+        <p className="text-[12px] font-medium leading-snug text-zinc-100">{HEADLINE_TEXT[d.headline]?.[lang] ?? d.headline}</p>
+
+        <ul className="space-y-1.5 text-[11px] leading-relaxed text-zinc-400">
+          {[...d.newBuyer.reasons, ...d.holder.reasons, ...d.sizeNotes].filter((v, i, a) => a.indexOf(v) === i).map((r) => (
+            <li key={r} className="flex gap-2">
+              <span className="mt-[7px] h-1 w-1 shrink-0 rounded-full bg-zinc-600" />
+              <span>{rr(r)}</span>
+            </li>
+          ))}
+        </ul>
+
+        {/* Khi nào đổi quyết định */}
+        {(d.triggersUp.length > 0 || d.triggersDown.length > 0) && (
+          <div className="space-y-3 border-t border-white/[0.05] pt-3">
+            {d.triggersUp.length > 0 && (
+              <div>
+                <Eyebrow className="text-[9.5px] text-emerald-400/80">
+                  {d.newBuyer.action === 'BUY' ? tr('Điều kiện để giữ quyết định mua', 'To keep the buy valid') : tr('Khi nào nâng lên MUA', 'What upgrades this to BUY')}
+                </Eyebrow>
+                <ul className="mt-1.5 space-y-1 text-[11px] leading-relaxed text-zinc-300">
+                  {d.triggersUp.map((t, i) => (
+                    <li key={i} className="flex gap-2">
+                      <span className="text-emerald-400/70">↑</span>
+                      <span>{triggerText(t, lang, labelOf)}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {d.triggersDown.length > 0 && (
+              <div>
+                <Eyebrow className="text-[9.5px] text-rose-400/80">{tr('Khi nào hạ xuống / thoát', 'What downgrades this / forces an exit')}</Eyebrow>
+                <ul className="mt-1.5 space-y-1 text-[11px] leading-relaxed text-zinc-300">
+                  {d.triggersDown.map((t, i) => (
+                    <li key={i} className="flex gap-2">
+                      <span className="text-rose-400/70">↓</span>
+                      <span>{triggerText(t, lang, labelOf)}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Bằng chứng lịch sử */}
+        {ev?.current && (
+          <div className="rounded-lg bg-white/[0.02] p-3 text-[10.5px] leading-relaxed text-zinc-400 ring-1 ring-inset ring-white/[0.05]">
+            <div className="text-zinc-300">
+              {tr('Lịch sử của trạng thái này', 'History of this state')} ({ev.current.n.toLocaleString()} {tr('mã-phiên', 'stock-sessions')}, {ev.meta.periodStart} → {ev.meta.periodEnd}):
+            </div>
+            <div className="mt-1 tabular-nums">
+              {tr('60 phiên sau: trung bình', '60 sessions later: mean')} {fmtN(ev.current.f60.mean)} · {tr('trung vị', 'median')} {fmtN(ev.current.f60.median)} · {ev.current.f60.pos}% {tr('có lãi', 'positive')} · {tr('sụt tối đa 20 phiên (trung vị)', 'max 20-session drawdown (median)')} {ev.current.dd20.median}%
+            </div>
+            {ev.controls.unifiedBuy && ev.controls.stageOnly && ev.controls.wyckoffOnly && (
+              <div className="mt-1 tabular-nums">
+                {tr('So sánh điểm MUA (60 phiên, trung vị / % có lãi)', 'Comparing BUY signals (60 sessions, median / % positive)')}: {tr('hợp nhất', 'unified')} {fmtN(ev.controls.unifiedBuy.f60.median)} / {ev.controls.unifiedBuy.f60.pos}% · {tr('chỉ Stage 2', 'Stage 2 only')} {fmtN(ev.controls.stageOnly.f60.median)} / {ev.controls.stageOnly.f60.pos}% · {tr('chỉ Wyckoff D/E', 'Wyckoff D/E only')} {fmtN(ev.controls.wyckoffOnly.f60.median)} / {ev.controls.wyckoffOnly.f60.pos}%
+              </div>
+            )}
+            <div className="mt-1.5 text-zinc-500">
+              {tr(
+                'Chênh lệch giữa các nhóm nhỏ so với sai số (~3 năm, một chu kỳ thị trường, có thiên lệch sống sót). Hãy coi đây là kỷ luật quản trị rủi ro, không phải lợi thế lợi nhuận đã được chứng minh.',
+                'Differences between groups are small relative to the error (~3 years, one market cycle, survivorship bias). Treat this as risk discipline, not a proven profit edge.'
+              )}
+            </div>
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={() => setShowRule((v) => !v)}
+          aria-expanded={showRule}
+          className="flex items-center gap-1.5 text-[11px] text-zinc-400 hover:text-zinc-200 cursor-pointer"
+        >
+          <CaretDown size={11} weight="bold" className={cx('transition-transform duration-200', showRule && 'rotate-180')} />
+          {tr('Khi hai khung lệch nhau thì nghe khung nào?', 'When the two frameworks disagree, which one wins?')}
+        </button>
+        {showRule && (
+          <div className="space-y-2 text-[11px] leading-relaxed text-zinc-400">
+            <p>
+              <span className="text-zinc-200">{tr('MUA cần cả hai (phép VÀ). ', 'BUYING needs both (AND). ')}</span>
+              {tr(
+                'Stage 2 đủ 8/8 cho biết được phép có vị thế mua; Wyckoff ở Phase D/E không kèm dấu hiệu phân phối cho biết đúng thời điểm. Thiếu một trong hai thì chờ.',
+                'Stage 2 with 8/8 says a long position is allowed; Wyckoff in Phase D/E with no distribution says the timing is right. If either is missing, wait.'
+              )}
+            </p>
+            <p>
+              <span className="text-zinc-200">{tr('GIẢM / THOÁT chỉ cần một (phép HOẶC). ', 'REDUCING / EXITING needs only one (OR). ')}</span>
+              {tr(
+                'Wyckoff thường lộ phân phối trước khi các đường MA kịp quay đầu; còn nếu Stage hỏng thì cấu trúc xu hướng đã gãy dù Wyckoff còn đẹp. Bảo toàn vốn quan trọng hơn bắt trọn sóng.',
+                'Wyckoff often reveals distribution before the moving averages turn; and if Stage breaks, the trend structure is gone even if Wyckoff still looks good. Protecting capital matters more than catching the whole move.'
+              )}
+            </p>
+            <p>
+              <span className="text-zinc-200">{tr('Vì sao lệch? ', 'Why do they differ? ')}</span>
+              {tr(
+                'Hai khung nhìn cùng một chu kỳ ở hai độ phân giải: Stage dựa trên đường MA (trễ nhưng bền), Wyckoff dựa trên giá và khối lượng (sớm nhưng nhiễu hơn). Phần lớn lần lệch là chuyện ai đi trước, không phải hai khung nói ngược nhau.',
+                'They view the same cycle at two resolutions: Stage uses moving averages (late but durable), Wyckoff uses price and volume (early but noisier). Most disagreements are about who moves first, not about opposite conclusions.'
+              )}
+            </p>
+          </div>
+        )}
+      </div>
+    </Card>
+  );
+};
+
 export const MinerviniStrategyTab: React.FC<{ data: MinerviniAnalysisResult | null; loading?: boolean }> = ({
   data,
   loading,
@@ -612,6 +896,7 @@ export const MinerviniStrategyTab: React.FC<{ data: MinerviniAnalysisResult | nu
   }
   return (
     <div className="space-y-3">
+      <DecisionCard data={data} />
       <TrendTemplateCard data={data} />
       <WyckoffCard data={data} />
       <RsCard data={data} />
