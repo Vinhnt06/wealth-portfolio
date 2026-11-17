@@ -211,7 +211,7 @@ export function evaluateMinerviniCriteria(params: {
   const c2 = sma150 > 0 && sma200 > 0 && sma150 > sma200;
   // Fallback nếu bản ghi cũ chưa lưu boolean sma200SlopeUp nhưng đã có sma150 > sma200
   const c3 = Boolean(sma200SlopeUp);
-  const c4 = sma50 > 0 && sma150 > 0 && sma200 > 0 && sma50 > sma150 && sma50 > sma200;
+  const c4 = sma50 > 0 && sma150 > 0 && sma200 > 0 && sma50 > sma150 && sma150 > sma200;
   const c5 = sma50 > 0 && priceK > sma50;
   const c6 = distLow >= 30;
   const c7 = distHigh >= -25;

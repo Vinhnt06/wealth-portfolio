@@ -214,7 +214,11 @@ export async function GET(request: Request) {
     }
 
     // Evaluate 8 Minervini Trend Template Criteria matching exact VN TERMINAL Pro format
-    const formatK = (val: number) => (val > 1000 ? (val / 1000).toFixed(1) : Number(val.toFixed(1)).toString());
+    // Giá tính theo nghìn đồng. Luôn cố định số lẻ để cột số trong panel thẳng hàng (9.80 / 10.70 / 11.00)
+    const formatK = (val: number) => {
+      const k = val > 1000 ? val / 1000 : val;
+      return k >= 100 ? k.toFixed(1) : k.toFixed(2);
+    };
 
     const criteria: MinerviniCriterion[] = [
       {
@@ -253,11 +257,11 @@ export async function GET(request: Request) {
         id: 4,
         label: 'MA50 > MA150 > MA200',
         description: 'Đường MA 50 ngày phải nằm trên cả đường MA 150 ngày và MA 200 ngày',
-        passed: sma50 > 0 && sma150 > 0 && sma200 > 0 && sma50 > sma150 && sma50 > sma200,
+        passed: sma50 > 0 && sma150 > 0 && sma200 > 0 && sma50 > sma150 && sma150 > sma200,
         value: sma50 > 0 && sma150 > 0 && sma200 > 0
           ? `MA50(${sma50}) vs MA150(${sma150}) & MA200(${sma200})`
           : 'Chưa đủ dữ liệu nến (cần ≥ 200 phiên)',
-        comparisonValue: sma50 > 0 ? formatK(sma50) : 'N/A',
+        comparisonValue: sma50 > 0 && sma150 > 0 && sma200 > 0 ? `${formatK(sma50)} / ${formatK(sma150)} / ${formatK(sma200)}` : 'N/A',
       },
       {
         id: 5,
@@ -265,7 +269,7 @@ export async function GET(request: Request) {
         description: 'Giá cổ phiếu hiện tại nằm trên đường trung bình MA 50 ngày',
         passed: sma50 > 0 && currentPrice > sma50,
         value: `${currentPrice} ${sma50 > 0 && currentPrice > sma50 ? '>' : '<='} MA50(${sma50})`,
-        comparisonValue: `${formatK(currentPrice)} / ${formatK(sma50)}`,
+        comparisonValue: sma50 > 0 ? `${formatK(currentPrice)} / ${formatK(sma50)}` : 'N/A',
       },
       {
         id: 6,
@@ -273,7 +277,7 @@ export async function GET(request: Request) {
         description: 'Giá hiện tại cao hơn tối thiểu 30% so với mức đáy 52 tuần',
         passed: distFrom52WLowPct >= 30,
         value: `+${distFrom52WLowPct}% so với đáy 52T (${low52W})`,
-        comparisonValue: `${distFrom52WLowPct}%`,
+        comparisonValue: `${distFrom52WLowPct > 0 ? '+' : ''}${distFrom52WLowPct}%`,
       },
       {
         id: 7,
@@ -749,6 +753,17 @@ export async function GET(request: Request) {
       wyckoffStopLoss = `${formatPrice(supportBaseRef * 0.96)}`;
     }
 
+    // CỔNG XU HƯỚNG: tín hiệu Wyckoff chỉ mang tính theo dõi khi cổ phiếu chưa đạt đủ 8/8 Trend Template (Stage 2).
+    // Giữ nguyên chẩn đoán pha & nhãn tín hiệu, nhưng KHÔNG cho phép coi là lệnh mua — đồng bộ với khuyến nghị AI.
+    const buyBlocked = isBuyPhase && !(passedCount === 8 && stage === 2);
+    const buyBlockedReason = buyBlocked
+      ? `Chưa đạt Trend Template (${passedCount}/8 · ${stage === 4 ? 'Stage 4' : stage === 3 ? 'Stage 3' : `Stage ${stage}`}). Chỉ theo dõi, chưa giải ngân.`
+      : undefined;
+    if (buyBlocked) {
+      isBuyPhase = false;
+      actionAdvice = 'Chỉ theo dõi — chờ đủ 8/8 Trend Template (Stage 2) trước khi giải ngân';
+    }
+
     // ── Indicators for Heat & Extended Analysis (RSI, MACD) ──
     // 1. RSI(14) - Wilder smoothing (khớp với RSI trên chart)
     const rsiPeriod = 14;
@@ -1207,6 +1222,8 @@ export async function GET(request: Request) {
         totalCount: 8,
         actionAdvice,
         isBuyPhase,
+        buyBlocked,
+        buyBlockedReason,
         buyPointCode,
         buyPointLabel,
         buyPointDetail,

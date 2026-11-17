@@ -22,6 +22,9 @@ export interface WyckoffDiagnosis {
   totalCount: number;
   actionAdvice: string;
   isBuyPhase?: boolean;
+  /** Có tín hiệu Wyckoff nhưng bị chặn vì chưa đạt Trend Template 8/8 */
+  buyBlocked?: boolean;
+  buyBlockedReason?: string;
   buyPointCode?: 'NONE' | 'BUY_1_SPRING' | 'BUY_2_LPS' | 'BUY_3_BREAKOUT_BU' | 'HOLD_MARKUP';
   buyPointLabel?: string;
   buyPointDetail?: string;
