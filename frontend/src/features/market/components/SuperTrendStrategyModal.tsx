@@ -300,7 +300,7 @@ export const SuperTrendStrategyModal: React.FC<SuperTrendStrategyModalProps> = (
               {/* 3. BỐN CARD SỐ LIỆU TỐI GIẢN (Minimal Geometry Metrics) */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 font-mono">
                 <div className="p-2.5 rounded-xl bg-zinc-900/60 border border-zinc-800/80">
-                  <span className="text-[9.5px] text-zinc-500 block uppercase">WIN RATE</span>
+                  <span className="text-[9.5px] text-zinc-500 block uppercase">TỶ LỆ THẮNG</span>
                   <div className="text-lg font-black text-emerald-400 mt-0.5">
                     {backtest.winRate}%
                   </div>
@@ -310,7 +310,7 @@ export const SuperTrendStrategyModal: React.FC<SuperTrendStrategyModalProps> = (
                 </div>
 
                 <div className="p-2.5 rounded-xl bg-zinc-900/60 border border-zinc-800/80">
-                  <span className="text-[9.5px] text-zinc-500 block uppercase">PROFIT FACTOR</span>
+                  <span className="text-[9.5px] text-zinc-500 block uppercase">HỆ SỐ LỢI NHUẬN</span>
                   <div className="text-lg font-black text-cyan-400 mt-0.5">
                     {backtest.profitFactor}x
                   </div>

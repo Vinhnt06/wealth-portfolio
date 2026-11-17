@@ -159,7 +159,7 @@ export const MacroChartModal: React.FC<MacroChartModalProps> = ({ indicator, onC
                   ? 'NĂNG LƯỢNG TOÀN CẦU'
                   : 'CHỈ SỐ VĨ MÔ THAM CHIẾU'}
               </span>
-              <span className="text-xs text-zinc-500 font-mono">100% REAL MARKET DATA</span>
+              <span className="text-xs text-zinc-500 font-mono">100% DỮ LIỆU THỊ TRƯỜNG THẬT</span>
             </div>
 
             <h2 className="text-xl font-bold text-zinc-100 tracking-tight flex items-center gap-2">

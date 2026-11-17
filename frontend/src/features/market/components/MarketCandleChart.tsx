@@ -177,7 +177,7 @@ const TOOL_LABELS: Record<DrawingTool, string> = {
   trendline: 'Đường xu hướng (Trend Line)',
   ray: 'Tia xu hướng (Ray)',
   horizontal: 'Đường ngang Hỗ trợ / Kháng cự',
-  horizontal_ray: 'Tia ngang (Horizontal Ray)',
+  horizontal_ray: 'Tia ngang',
   vertical: 'Đường dọc (Vertical Line)',
   parallel_channel: 'Kênh giá song song (Channel)',
   fibonacci: 'Thoái lui Fibonacci (Retracement)',
@@ -5951,7 +5951,7 @@ export function MarketCandleChart() {
                       }}
                       className="flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-mono text-zinc-200 hover:bg-zinc-800/70 transition-all border border-transparent hover:border-zinc-800"
                     >
-                      <span className="font-semibold text-zinc-200">Bollinger Bands</span>
+                      <span className="font-semibold text-zinc-200">Dải Bollinger</span>
                       <span className={`text-[10px] px-2 py-0.5 rounded font-bold transition-colors ${showBB ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-zinc-800/60 text-zinc-500'}`}>
                         {showBB ? 'BẬT' : 'TẮT'}
                       </span>
@@ -6418,7 +6418,7 @@ export function MarketCandleChart() {
                       }}
                       className="flex items-center justify-between px-2.5 py-2 rounded-lg text-left font-mono transition-all border bg-zinc-950/60 border-zinc-800 hover:bg-zinc-800/80 hover:border-amber-500/30 text-zinc-200"
                     >
-                      <span className="font-semibold text-xs text-zinc-100">Fibonacci Trend Ribbon</span>
+                      <span className="font-semibold text-xs text-zinc-100">Dải xu hướng Fibonacci</span>
                       <span className="text-[10px] px-2 py-0.5 rounded font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 ml-2 shrink-0">
                         Áp dụng
                       </span>
@@ -6435,7 +6435,7 @@ export function MarketCandleChart() {
                       }}
                       className="flex items-center justify-between px-2.5 py-2 rounded-lg text-left font-mono transition-all border bg-zinc-950/60 border-zinc-800 hover:bg-zinc-800/80 hover:border-cyan-500/30 text-zinc-200"
                     >
-                      <span className="font-semibold text-xs text-zinc-100">Smart Money Whale Flow</span>
+                      <span className="font-semibold text-xs text-zinc-100">Dòng tiền cá mập</span>
                       <span className="text-[10px] px-2 py-0.5 rounded font-bold text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 ml-2 shrink-0">
                         Áp dụng
                       </span>
@@ -6489,7 +6489,7 @@ export function MarketCandleChart() {
                 }`}
               >
                 <Target size={13} className={(chartMinervini.passedCount ?? 0) >= 6 ? 'text-emerald-400 shrink-0' : 'text-zinc-400 shrink-0'} />
-                <span className="text-[10px] text-zinc-400 uppercase font-bold hidden sm:inline">STAGE 2:</span>
+                <span className="text-[10px] text-zinc-400 uppercase font-bold hidden sm:inline">GIAI ĐOẠN 2:</span>
                 <span className="font-mono font-black text-white">
                   {chartMinervini.passedCount ?? 0}/8 Tiêu chí
                 </span>
@@ -6552,7 +6552,7 @@ export function MarketCandleChart() {
                 { id: 'trendline' as DrawingTool, label: 'Đường xu hướng (Trend Line)', icon: TrendUp },
                 { id: 'ray' as DrawingTool, label: 'Tia xu hướng (Ray)', icon: TrendUp },
                 { id: 'horizontal' as DrawingTool, label: 'Đường ngang Hỗ trợ / Kháng cự', icon: Minus },
-                { id: 'horizontal_ray' as DrawingTool, label: 'Tia ngang (Horizontal Ray)', icon: Minus },
+                { id: 'horizontal_ray' as DrawingTool, label: 'Tia ngang', icon: Minus },
                 { id: 'vertical' as DrawingTool, label: 'Đường dọc (Vertical Line)', icon: Minus },
                 { id: 'parallel_channel' as DrawingTool, label: 'Kênh giá song song (Channel)', icon: Waveform },
               ],
@@ -7356,7 +7356,7 @@ export function MarketCandleChart() {
                       {fiboPeriods[fiboPeriods.length - 1] && (
                         <>
                           <span className="text-zinc-300">PP: <strong>{formatPivotPrice(fiboPeriods[fiboPeriods.length - 1].pp)}</strong></span>
-                          <span className="text-teal-300">Range: <strong>{formatPivotPrice(fiboPeriods[fiboPeriods.length - 1].range)}</strong></span>
+                          <span className="text-teal-300">Biên độ: <strong>{formatPivotPrice(fiboPeriods[fiboPeriods.length - 1].range)}</strong></span>
                         </>
                       )}
                       <button
@@ -7492,7 +7492,7 @@ export function MarketCandleChart() {
                     <div className="flex items-center gap-2">
                       <span className="w-2 h-2 rounded-full bg-cyan-400 shrink-0 shadow-[0_0_8px_rgba(6,182,212,0.7)] animate-pulse" />
                       <span className="font-bold text-zinc-100 text-xs">
-                        Reversal Divergences <span className="text-cyan-400">RSI(14)</span>
+                        Phân kỳ đảo chiều <span className="text-cyan-400">RSI(14)</span>
                       </span>
                       <span className="text-zinc-100 font-mono font-bold text-xs ml-1">
                         {subIndicatorValues.rsi !== undefined ? subIndicatorValues.rsi.toFixed(2) : '--'}
@@ -7528,12 +7528,12 @@ export function MarketCandleChart() {
                         MACD: <strong className="text-zinc-100 font-bold">{subIndicatorValues.macd !== undefined ? subIndicatorValues.macd.toFixed(2) : '--'}</strong>
                       </span>
                       <span className="text-orange-400 font-medium">
-                        Signal: <strong className="text-zinc-100 font-bold">{subIndicatorValues.signal !== undefined ? subIndicatorValues.signal.toFixed(2) : '--'}</strong>
+                        Tín hiệu: <strong className="text-zinc-100 font-bold">{subIndicatorValues.signal !== undefined ? subIndicatorValues.signal.toFixed(2) : '--'}</strong>
                       </span>
                       <span className={`font-medium ${
                         (subIndicatorValues.hist ?? 0) >= 0 ? 'text-emerald-400' : 'text-rose-400'
                       }`}>
-                        Hist: <strong className="font-bold">{(subIndicatorValues.hist ?? 0) >= 0 ? '+' : ''}{subIndicatorValues.hist !== undefined ? subIndicatorValues.hist.toFixed(2) : '--'}</strong>
+                        Cột: <strong className="font-bold">{(subIndicatorValues.hist ?? 0) >= 0 ? '+' : ''}{subIndicatorValues.hist !== undefined ? subIndicatorValues.hist.toFixed(2) : '--'}</strong>
                       </span>
                     </div>
                   )}
@@ -7635,7 +7635,7 @@ export function MarketCandleChart() {
           <span className="text-zinc-500">{currentTimeStr}</span>
           <span className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-[10px] text-emerald-400">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            DNSE Realtime
+            DNSE Thời gian thực
           </span>
         </div>
       </div>

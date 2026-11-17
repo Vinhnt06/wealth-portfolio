@@ -4,9 +4,19 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { DashboardLayout } from '../components/layout/DashboardLayout';
+import { useLanguage } from '../components/LanguageContext';
 import { MarketPulseRibbon } from '../../features/market/components/MarketPulseRibbon';
 import { HeroMarketBento } from '../../features/market/components/HeroMarketBento';
 import { UnifiedMacroMatrix } from '../../features/market/components/UnifiedMacroMatrix';
+
+function BankRatesLoading() {
+  const { tr } = useLanguage();
+  return (
+    <div className="bg-[#111111] border border-[#1a1a1a] rounded-xl p-6 h-64 flex items-center justify-center font-mono text-xs text-zinc-500">
+      {tr('Đang nạp bảng lãi suất ngân hàng thời gian thực...', 'Loading live bank interest rates...')}
+    </div>
+  );
+}
 
 const BankInterestRatesModule = dynamic(
   () =>
@@ -15,11 +25,7 @@ const BankInterestRatesModule = dynamic(
     ),
   {
     ssr: false,
-    loading: () => (
-      <div className="bg-[#111111] border border-[#1a1a1a] rounded-xl p-6 h-64 flex items-center justify-center font-mono text-xs text-zinc-500">
-        Đang nạp bảng lãi suất ngân hàng realtime...
-      </div>
-    ),
+    loading: () => <BankRatesLoading />,
   }
 );
 
@@ -37,15 +43,24 @@ import {
 
 // Real liquid blue-chip watchlist for quick financial valuation preview
 const BLUECHIP_WATCHLIST = [
-  { symbol: 'HPG', name: 'Tập đoàn Hòa Phát', sector: 'Thép & Kim loại' },
-  { symbol: 'FPT', name: 'Tập đoàn FPT', sector: 'Công nghệ thông tin' },
-  { symbol: 'VCB', name: 'Vietcombank', sector: 'Ngân hàng' },
-  { symbol: 'MWG', name: 'Thế Giới Di Động', sector: 'Bán lẻ' },
-  { symbol: 'VHM', name: 'Vinhomes', sector: 'Bất động sản' },
-  { symbol: 'SSI', name: 'Chứng khoán SSI', sector: 'Dịch vụ tài chính' },
+  { symbol: 'HPG', name: 'Tập đoàn Hòa Phát', nameEn: 'Hoa Phat Group', sector: 'Thép & Kim loại', sectorEn: 'Steel & Metals' },
+  { symbol: 'FPT', name: 'Tập đoàn FPT', nameEn: 'FPT Corporation', sector: 'Công nghệ thông tin', sectorEn: 'Information Technology' },
+  { symbol: 'VCB', name: 'Vietcombank', nameEn: 'Vietcombank', sector: 'Ngân hàng', sectorEn: 'Banking' },
+  { symbol: 'MWG', name: 'Thế Giới Di Động', nameEn: 'Mobile World Group', sector: 'Bán lẻ', sectorEn: 'Retail' },
+  { symbol: 'VHM', name: 'Vinhomes', nameEn: 'Vinhomes', sector: 'Bất động sản', sectorEn: 'Real Estate' },
+  { symbol: 'SSI', name: 'Chứng khoán SSI', nameEn: 'SSI Securities', sector: 'Dịch vụ tài chính', sectorEn: 'Financial Services' },
 ];
 
+// Kết luận định giá do API trả về bằng tiếng Việt → bản tiếng Anh khi hiển thị
+const VERDICT_EN: Record<string, string> = {
+  'Định Giá Hấp Dẫn': 'Attractive Valuation',
+  'Định Giá Hợp Lý': 'Fair Valuation',
+  'Định Giá Cao': 'Expensive',
+  'Trung lập': 'Neutral',
+};
+
 export default function DashboardPage() {
+  const { tr, language } = useLanguage();
   const [valuationData, setValuationData] = useState<Record<string, any>>({});
   const [loadingValuations, setLoadingValuations] = useState<boolean>(true);
 
@@ -101,15 +116,15 @@ export default function DashboardPage() {
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               <h1 className="font-mono text-sm font-bold uppercase tracking-wider text-zinc-100">
-                TERMINAL INTELLIGENCE & MARKET VALUATION
+                {tr('PHÂN TÍCH THỊ TRƯỜNG & ĐỊNH GIÁ CỔ PHIẾU', 'MARKET ANALYSIS & STOCK VALUATION')}
               </h1>
               <span className="px-2 py-0.5 text-[10px] font-mono font-bold text-emerald-400 border border-emerald-500/30 bg-emerald-500/10 rounded flex items-center gap-1">
                 <ShieldCheck className="w-3 h-3" />
-                DỮ LIỆU THỊ TRƯỜNG THỰC TẾ
+                {tr('DỮ LIỆU THỊ TRƯỜNG THỰC TẾ', 'REAL MARKET DATA')}
               </span>
             </div>
             <p className="text-xs text-zinc-400">
-              Hệ thống giám sát dòng tiền thực, định giá P/E, P/B, PEG Peter Lynch, biểu lãi suất ngân hàng và vĩ mô tích hợp từ nguồn thị trường.
+              {tr('Hệ thống giám sát dòng tiền thực, định giá P/E, P/B, PEG Peter Lynch, biểu lãi suất ngân hàng và vĩ mô tích hợp từ nguồn thị trường.', 'Live money-flow monitoring, P/E, P/B and Peter Lynch PEG valuation, bank interest rates and macro data from market sources.')}
             </p>
           </div>
 
@@ -119,7 +134,7 @@ export default function DashboardPage() {
               href="/market"
               className="px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-200 rounded-lg flex items-center gap-1.5 transition-colors"
             >
-              <span>Live Terminal</span>
+              <span>{tr('Bảng Giá Trực Tuyến', 'Live Board')}</span>
               <ArrowRight className="w-3.5 h-3.5 text-zinc-400" />
             </Link>
             <Link
@@ -127,7 +142,7 @@ export default function DashboardPage() {
               className="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 rounded-lg flex items-center gap-1.5 transition-colors"
             >
               <Scales className="w-3.5 h-3.5" />
-              <span>Định Giá Cổ Phiếu</span>
+              <span>{tr('Định Giá Cổ Phiếu', 'Stock Valuation')}</span>
             </Link>
           </div>
         </div>
@@ -153,20 +168,20 @@ export default function DashboardPage() {
             <div className="flex items-center gap-2">
               <Scales className="w-4 h-4 text-emerald-400" />
               <h2 className="font-mono text-xs font-bold uppercase tracking-wider text-zinc-200">
-                BẢNG ĐỊNH GIÁ & TÀI CHÍNH CỔ PHIẾU TIÊU BIỂU (REAL FINANCIAL VALUATION)
+                {tr('BẢNG ĐỊNH GIÁ & TÀI CHÍNH CỔ PHIẾU TIÊU BIỂU', 'BLUE-CHIP VALUATION & FINANCIALS')}
               </h2>
               <span className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
                 <ShieldCheck className="w-3 h-3" />
-                BCTC KIỂM TOÁN CHÍNH THỨC
+                {tr('BCTC KIỂM TOÁN CHÍNH THỨC', 'OFFICIAL AUDITED FINANCIALS')}
               </span>
             </div>
             <div className="flex items-center gap-2 font-mono text-xs text-zinc-500">
-              <span>Nguồn: Vietcap IQ & Mô hình Peter Lynch</span>
+              <span>{tr('Nguồn: Vietcap IQ & Mô hình Peter Lynch', 'Source: Vietcap IQ & Peter Lynch model')}</span>
               <Link
                 href="/market"
                 className="text-emerald-400 hover:text-emerald-300 flex items-center gap-1 text-[11px] font-semibold"
               >
-                <span>Xem tất cả mã</span>
+                <span>{tr('Xem tất cả mã', 'View all tickers')}</span>
                 <ArrowRight className="w-3 h-3" />
               </Link>
             </div>
@@ -176,16 +191,16 @@ export default function DashboardPage() {
             <table className="w-full text-left font-mono text-xs">
               <thead>
                 <tr className="border-b border-[#1a1a1a] text-[11px] text-zinc-500 uppercase tracking-wider bg-[#0a0a0a]">
-                  <th className="py-2.5 px-4 font-medium">Mã CK</th>
-                  <th className="py-2.5 px-4 font-medium">Tên Doanh Nghiệp</th>
-                  <th className="py-2.5 px-4 font-medium">Ngành</th>
+                  <th className="py-2.5 px-4 font-medium">{tr('Mã CK', 'Ticker')}</th>
+                  <th className="py-2.5 px-4 font-medium">{tr('Tên Doanh Nghiệp', 'Company')}</th>
+                  <th className="py-2.5 px-4 font-medium">{tr('Ngành', 'Sector')}</th>
                   <th className="py-2.5 px-4 font-medium text-right">P/E TTM</th>
-                  <th className="py-2.5 px-4 font-medium text-right">P/E Ngành</th>
+                  <th className="py-2.5 px-4 font-medium text-right">{tr('P/E Ngành', 'Sector P/E')}</th>
                   <th className="py-2.5 px-4 font-medium text-right">P/B</th>
-                  <th className="py-2.5 px-4 font-medium text-right">P/B Ngành</th>
+                  <th className="py-2.5 px-4 font-medium text-right">{tr('P/B Ngành', 'Sector P/B')}</th>
                   <th className="py-2.5 px-4 font-medium text-right">PEG Peter Lynch</th>
-                  <th className="py-2.5 px-4 font-medium text-center">Đánh Giá Định Giá</th>
-                  <th className="py-2.5 px-4 font-medium text-right">Thao Tác</th>
+                  <th className="py-2.5 px-4 font-medium text-center">{tr('Đánh Giá Định Giá', 'Valuation')}</th>
+                  <th className="py-2.5 px-4 font-medium text-right">{tr('Thao Tác', 'Action')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#1a1a1a] text-zinc-300">
@@ -208,8 +223,8 @@ export default function DashboardPage() {
                       <td className="py-3 px-4 font-bold text-zinc-100 flex items-center gap-2">
                         <span>{item.symbol}</span>
                       </td>
-                      <td className="py-3 px-4 text-zinc-300 font-sans">{item.name}</td>
-                      <td className="py-3 px-4 text-zinc-400 font-sans text-[11px]">{item.sector}</td>
+                      <td className="py-3 px-4 text-zinc-300 font-sans">{language === 'en' ? item.nameEn : item.name}</td>
+                      <td className="py-3 px-4 text-zinc-400 font-sans text-[11px]">{language === 'en' ? item.sectorEn : item.sector}</td>
 
                       {/* P/E TTM */}
                       <td className="py-3 px-4 text-right tabular-nums">
@@ -271,7 +286,7 @@ export default function DashboardPage() {
                       {/* Verdict */}
                       <td className="py-3 px-4 text-center">
                         {isLoading ? (
-                          <span className="text-zinc-600 text-[11px]">Đang tính...</span>
+                          <span className="text-zinc-600 text-[11px]">{tr('Đang tính...', 'Calculating...')}</span>
                         ) : verdict ? (
                           <span
                             className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
@@ -282,10 +297,10 @@ export default function DashboardPage() {
                                 : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
                             }`}
                           >
-                            {verdict}
+                            {language === 'en' ? VERDICT_EN[verdict] || verdict : verdict}
                           </span>
                         ) : (
-                          <span className="text-zinc-600 text-[10px]">Trung lập</span>
+                          <span className="text-zinc-600 text-[10px]">{tr('Trung lập', 'Neutral')}</span>
                         )}
                       </td>
 
@@ -295,7 +310,7 @@ export default function DashboardPage() {
                           href={`/market?symbol=${item.symbol}`}
                           className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-zinc-400 group-hover:text-emerald-400 hover:bg-zinc-800/80 rounded transition-colors"
                         >
-                          <span>Phân tích</span>
+                          <span>{tr('Phân tích', 'Analyze')}</span>
                           <ArrowRight className="w-3 h-3" />
                         </Link>
                       </td>

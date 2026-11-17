@@ -11,6 +11,8 @@ import {
   ArrowUpRight,
 } from '@phosphor-icons/react';
 import { HeroIndexChart, type Candle, type ChartKind } from './HeroIndexChart';
+import { useLanguage } from '../../../app/components/LanguageContext';
+import { sectorLabel, VALUATION_STATUS_EN } from '../i18n/sectors';
 import vnindexCandles from '../data/vnindexHistory.json';
 import lastScan from '../data/lastMinerviniScan.json';
 
@@ -116,12 +118,14 @@ const LOCAL_VNINDEX: Candle[] = (vnindexCandles as any[]).map((c) => ({
 const toVnDate = (sec: number) =>
   new Date(sec * 1000).toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' });
 
-const fmtPrice = (p?: number) =>
-  p ? (p < 1000 ? p * 1000 : p).toLocaleString('vi-VN') : '--';
+const fmtPrice = (p: number | undefined, locale: string) =>
+  p ? (p < 1000 ? p * 1000 : p).toLocaleString(locale) : '--';
 
 const pctCls = (v: number) => (v > 0 ? 'text-[#10b981]' : v < 0 ? 'text-[#e5484d]' : 'text-[#e5a93b]');
 
 export const HeroMarketBento: React.FC = () => {
+  const { tr, language } = useLanguage();
+  const locale = language === 'en' ? 'en-US' : 'vi-VN';
   const [indexes, setIndexes] = useState<IndexMeta[]>(DEFAULT_INDEXES);
   const [selectedIndexSymbol, setSelectedIndexSymbol] = useState<string>('VNINDEX');
   const [tf, setTf] = useState<string>('3M');
@@ -238,7 +242,8 @@ export const HeroMarketBento: React.FC = () => {
 
   const formatBillion = (val: number) => {
     if (!val || val === 0) return '--';
-    return `${(val / 1_000_000_000).toLocaleString('vi-VN', { maximumFractionDigits: 0 })} tỷ`;
+    const n = (val / 1_000_000_000).toLocaleString(locale, { maximumFractionDigits: 0 });
+    return language === 'en' ? `${n}B VND` : `${n} tỷ`;
   };
 
   // ── Radar lists ──
@@ -344,7 +349,7 @@ export const HeroMarketBento: React.FC = () => {
                   flash === 'up' ? 'bg-[#10b981]/20' : flash === 'down' ? 'bg-[#e5484d]/20' : ''
                 }`}
               >
-                {shownValue.toLocaleString('vi-VN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                {shownValue.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
               <span className={`text-sm font-mono font-bold ${valCls}`}>
                 {shownChange > 0 ? '+' : ''}
@@ -353,30 +358,30 @@ export const HeroMarketBento: React.FC = () => {
               </span>
               {hover && (
                 <span className="text-[11px] font-mono text-[#777]">
-                  {new Date(hover.c.time).toLocaleDateString('vi-VN')}
+                  {new Date(hover.c.time).toLocaleDateString(locale)}
                 </span>
               )}
             </div>
 
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-mono text-[#888888]">
               <div>
-                <span className="text-[#555555]">Đáy: </span>
+                <span className="text-[#555555]">{tr('Đáy', 'Low')}: </span>
                 <span className="text-[#e5484d] font-semibold">
-                  {activeIndex.low.toLocaleString('vi-VN', { minimumFractionDigits: 1 })}
+                  {activeIndex.low.toLocaleString(locale, { minimumFractionDigits: 1 })}
                 </span>
               </div>
               <div>
-                <span className="text-[#555555]">Đỉnh: </span>
+                <span className="text-[#555555]">{tr('Đỉnh', 'High')}: </span>
                 <span className="text-[#10b981] font-semibold">
-                  {activeIndex.high.toLocaleString('vi-VN', { minimumFractionDigits: 1 })}
+                  {activeIndex.high.toLocaleString(locale, { minimumFractionDigits: 1 })}
                 </span>
               </div>
               <div>
-                <span className="text-[#555555]">Khối lượng: </span>
-                <span className="text-zinc-200 font-semibold">{(activeIndex.volume / 1_000_000).toFixed(1)}M cp</span>
+                <span className="text-[#555555]">{tr('Khối lượng', 'Volume')}: </span>
+                <span className="text-zinc-200 font-semibold">{(activeIndex.volume / 1_000_000).toFixed(1)}M {tr('cp', 'shares')}</span>
               </div>
               <div>
-                <span className="text-[#555555]">Giá trị: </span>
+                <span className="text-[#555555]">{tr('Giá trị', 'Value')}: </span>
                 <span className="text-zinc-200 font-semibold">{formatBillion(activeIndex.totalValue)}</span>
               </div>
             </div>
@@ -386,16 +391,16 @@ export const HeroMarketBento: React.FC = () => {
         {/* Chart toolbar */}
         <div className="flex flex-wrap items-center justify-between gap-2 -mb-1">
           <div className="flex items-center gap-1">
-            <Pill active={kind === 'area'} onClick={() => setKind('area')}>Vùng</Pill>
-            <Pill active={kind === 'candle'} onClick={() => setKind('candle')}>Nến</Pill>
+            <Pill active={kind === 'area'} onClick={() => setKind('area')}>{tr('Vùng', 'Area')}</Pill>
+            <Pill active={kind === 'candle'} onClick={() => setKind('candle')}>{tr('Nến', 'Candles')}</Pill>
             <span className="w-px h-3.5 bg-[#222] mx-1" />
-            <Pill active={ma20} onClick={() => setMa20((v) => !v)} title="Đường trung bình 20 phiên">
+            <Pill active={ma20} onClick={() => setMa20((v) => !v)} title={tr('Đường trung bình 20 phiên', '20-session moving average')}>
               <span className="text-[#e5a93b]">●</span> MA20
             </Pill>
-            <Pill active={ma50} onClick={() => setMa50((v) => !v)} title="Đường trung bình 50 phiên">
+            <Pill active={ma50} onClick={() => setMa50((v) => !v)} title={tr('Đường trung bình 50 phiên', '50-session moving average')}>
               <span className="text-[#6aa9ff]">●</span> MA50
             </Pill>
-            <Pill active={vol} onClick={() => setVol((v) => !v)}>KL</Pill>
+            <Pill active={vol} onClick={() => setVol((v) => !v)}>{tr('KL', 'Vol')}</Pill>
           </div>
           {rangePerf && (
             <div className="text-[11px] font-mono text-[#777] flex items-center gap-3">
@@ -407,10 +412,10 @@ export const HeroMarketBento: React.FC = () => {
                 </span>
               </span>
               <span className="hidden sm:inline">
-                Cao <span className="text-zinc-300">{rangePerf.hi.toLocaleString('vi-VN', { maximumFractionDigits: 1 })}</span>
+                {tr('Cao', 'High')} <span className="text-zinc-300">{rangePerf.hi.toLocaleString(locale, { maximumFractionDigits: 1 })}</span>
               </span>
               <span className="hidden sm:inline">
-                Thấp <span className="text-zinc-300">{rangePerf.lo.toLocaleString('vi-VN', { maximumFractionDigits: 1 })}</span>
+                {tr('Thấp', 'Low')} <span className="text-zinc-300">{rangePerf.lo.toLocaleString(locale, { maximumFractionDigits: 1 })}</span>
               </span>
             </div>
           )}
@@ -429,17 +434,17 @@ export const HeroMarketBento: React.FC = () => {
             />
           ) : (
             <div className="h-[320px] flex items-center justify-center text-xs font-mono text-[#666]">
-              {loadingHist ? 'Đang nạp dữ liệu lịch sử...' : 'Chưa có dữ liệu lịch sử cho chỉ số này'}
+              {loadingHist ? tr('Đang nạp dữ liệu lịch sử...', 'Loading historical data...') : tr('Chưa có dữ liệu lịch sử cho chỉ số này', 'No historical data for this index')}
             </div>
           )}
           {loadingHist && chartData.length > 0 && (
             <div className="absolute inset-0 bg-[#111111]/60 flex items-center justify-center text-xs font-mono text-[#888] rounded-xl">
-              Đang nạp...
+              {tr('Đang nạp...', 'Loading...')}
             </div>
           )}
         </div>
         <p className="text-[10px] font-mono text-[#555] -mt-2">
-          Cuộn chuột để zoom · kéo để di chuyển · rê chuột để xem từng phiên
+          {tr('Cuộn chuột để zoom · kéo để di chuyển · rê chuột để xem từng phiên', 'Scroll to zoom · drag to pan · hover to inspect each session')}
         </p>
       </div>
 
@@ -455,7 +460,7 @@ export const HeroMarketBento: React.FC = () => {
                 }`}
               >
                 <Lightning className="w-3.5 h-3.5 text-[#10b981]" />
-                <span>Top Tăng Trưởng</span>
+                <span>{tr('Top Tăng Trưởng', 'Top Growth')}</span>
                 {radarTab === 'minervini' && (
                   <span className="absolute bottom-[-13px] left-0 right-0 h-[2px] bg-[#10b981]" />
                 )}
@@ -467,7 +472,7 @@ export const HeroMarketBento: React.FC = () => {
                 }`}
               >
                 <Scales className="w-3.5 h-3.5 text-[#e5a93b]" />
-                <span>Định Giá Rẻ (PEG)</span>
+                <span>{tr('Định Giá Rẻ (PEG)', 'Cheap Valuation (PEG)')}</span>
                 {radarTab === 'valuation' && (
                   <span className="absolute bottom-[-13px] left-0 right-0 h-[2px] bg-[#e5a93b]" />
                 )}
@@ -477,25 +482,25 @@ export const HeroMarketBento: React.FC = () => {
               href="/market"
               className="text-[11px] font-mono text-[#888888] hover:text-white flex items-center gap-1 transition-colors"
             >
-              <span>Xem hết</span>
+              <span>{tr('Xem hết', 'View all')}</span>
               <ArrowRight className="w-3 h-3" />
             </Link>
           </div>
 
           {/* Sort */}
           <div className="flex items-center gap-1 pt-2.5">
-            <span className="text-[10px] font-mono text-[#555] mr-1">Sắp xếp</span>
+            <span className="text-[10px] font-mono text-[#555] mr-1">{tr('Sắp xếp', 'Sort by')}</span>
             {radarTab === 'minervini' ? (
               <>
                 <Pill active={mSort === 'rs'} onClick={() => setMSort('rs')}>RS</Pill>
-                <Pill active={mSort === 'chg'} onClick={() => setMSort('chg')}>% Giá</Pill>
-                <Pill active={mSort === 'vol'} onClick={() => setMSort('vol')}>KL vọt</Pill>
+                <Pill active={mSort === 'chg'} onClick={() => setMSort('chg')}>{tr('% Giá', '% Price')}</Pill>
+                <Pill active={mSort === 'vol'} onClick={() => setMSort('vol')}>{tr('KL vọt', 'Vol surge')}</Pill>
               </>
             ) : (
               <>
                 <Pill active={vSort === 'peg'} onClick={() => setVSort('peg')}>PEG</Pill>
                 <Pill active={vSort === 'pe'} onClick={() => setVSort('pe')}>P/E</Pill>
-                <Pill active={vSort === 'growth'} onClick={() => setVSort('growth')}>LNST</Pill>
+                <Pill active={vSort === 'growth'} onClick={() => setVSort('growth')}>{tr('LNST', 'Net profit')}</Pill>
               </>
             )}
           </div>
@@ -521,12 +526,12 @@ export const HeroMarketBento: React.FC = () => {
                             </span>
                           </div>
                           <span className="text-[11px] text-[#777777] font-sans block truncate max-w-[170px]">
-                            {s.sector || s.name}
+                            {sectorLabel(s.sector, language) || s.name}
                           </span>
                         </div>
                         <div className="flex items-center gap-2">
                           <div className="text-right font-mono">
-                            <div className="text-sm font-bold text-white tabular-nums">{fmtPrice(s.price)}</div>
+                            <div className="text-sm font-bold text-white tabular-nums">{fmtPrice(s.price, locale)}</div>
                             <span className={`text-xs font-bold ${pctCls(s.changePct)}`}>
                               {s.changePct > 0 ? '+' : ''}
                               {s.changePct?.toFixed(2)}%
@@ -538,17 +543,17 @@ export const HeroMarketBento: React.FC = () => {
                       <div className={`grid transition-all duration-300 ${open ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
                         <div className="overflow-hidden">
                           <div className="mx-1.5 mb-2 rounded-lg bg-[#0d0d0d] border border-[#1c1c1c] p-3 grid grid-cols-3 gap-y-2 gap-x-3 text-[10px] font-mono">
-                            <Stat k="Perf 1T" v={s.perf1M} pct />
-                            <Stat k="Perf 1N" v={s.perf1Y} pct />
-                            <Stat k="Cách đỉnh 52T" v={s.distHigh} pct />
-                            <Stat k="KL / TB20" v={s.relVol} suffix="x" />
-                            <Stat k="Điểm Minervini" v={s.score} suffix="/8" plain />
-                            <Stat k="Vốn hoá" v={s.mktCapT ? s.mktCapT / 1000 : null} suffix=" nghìn tỷ" plain />
+                            <Stat k={tr('Hiệu suất 1T', '1M return')} v={s.perf1M} pct />
+                            <Stat k={tr('Hiệu suất 1N', '1Y return')} v={s.perf1Y} pct />
+                            <Stat k={tr('Cách đỉnh 52T', 'From 52W high')} v={s.distHigh} pct />
+                            <Stat k={tr('KL / TB20', 'Vol / 20D avg')} v={s.relVol} suffix="x" />
+                            <Stat k={tr('Điểm Minervini', 'Minervini score')} v={s.score} suffix="/8" plain />
+                            <Stat k={tr('Vốn hoá', 'Market cap')} v={s.mktCapT ? s.mktCapT / 1000 : null} suffix={tr(' nghìn tỷ', 'T VND')} plain />
                             <Link
                               href={`/market?symbol=${s.symbol}`}
                               className="col-span-3 mt-1 inline-flex items-center justify-center gap-1 py-1.5 rounded-md bg-[#10b981]/10 hover:bg-[#10b981]/20 text-[#10b981] font-bold transition-colors"
                             >
-                              Mở phân tích {s.symbol} <ArrowUpRight className="w-3 h-3" />
+                              {tr('Mở phân tích', 'Open analysis for')} {s.symbol} <ArrowUpRight className="w-3 h-3" />
                             </Link>
                           </div>
                         </div>
@@ -580,8 +585,8 @@ export const HeroMarketBento: React.FC = () => {
                         </div>
                         <div className="flex items-center gap-2">
                           <div className="text-right font-mono">
-                            <div className="text-xs font-bold text-[#10b981]">LNST +{s.growth}%</div>
-                            <span className="text-[10px] text-[#888888] uppercase">{s.status}</span>
+                            <div className="text-xs font-bold text-[#10b981]">{tr('LNST', 'Net profit')} +{s.growth}%</div>
+                            <span className="text-[10px] text-[#888888] uppercase">{language === 'en' ? VALUATION_STATUS_EN[s.status] || s.status : s.status}</span>
                           </div>
                           <CaretDown className={`w-3 h-3 text-[#555] transition-transform ${open ? 'rotate-180' : ''}`} />
                         </div>
@@ -594,7 +599,7 @@ export const HeroMarketBento: React.FC = () => {
                             <div>
                               <div className="flex justify-between text-[#666] mb-1">
                                 <span>PEG {s.peg}</span>
-                                <span>1.0 = hợp lý</span>
+                                <span>{tr('1.0 = hợp lý', '1.0 = fair value')}</span>
                               </div>
                               <div className="relative h-1.5 rounded bg-[#1a1a1a]">
                                 <div
@@ -608,7 +613,7 @@ export const HeroMarketBento: React.FC = () => {
                               href={`/market?symbol=${s.symbol}`}
                               className="inline-flex w-full items-center justify-center gap-1 py-1.5 rounded-md bg-[#e5a93b]/10 hover:bg-[#e5a93b]/20 text-[#e5a93b] font-bold transition-colors"
                             >
-                              Xem định giá {s.symbol} <ArrowUpRight className="w-3 h-3" />
+                              {tr('Xem định giá', 'View valuation for')} {s.symbol} <ArrowUpRight className="w-3 h-3" />
                             </Link>
                           </div>
                         </div>
@@ -623,15 +628,15 @@ export const HeroMarketBento: React.FC = () => {
               onClick={() => setShowAll((v) => !v)}
               className="w-full mt-1 py-1.5 text-[11px] font-mono text-[#777] hover:text-white transition-colors cursor-pointer"
             >
-              {showAll ? 'Thu gọn' : `Hiện thêm ${Math.min(10, leaders.length) - 5} mã`}
+              {showAll ? tr('Thu gọn', 'Show less') : tr(`Hiện thêm ${Math.min(10, leaders.length) - 5} mã`, `Show ${Math.min(10, leaders.length) - 5} more`)}
             </button>
           )}
         </div>
 
         <div className="pt-3 border-t border-[#1a1a1a] flex items-center justify-between text-[11px] font-mono text-[#666666]">
-          <span>Dữ liệu: DNSE & BCTC Kiểm toán</span>
+          <span>{tr('Dữ liệu: DNSE & BCTC Kiểm toán', 'Data: DNSE & audited financials')}</span>
           <span className="text-[#10b981] flex items-center gap-1">
-            <ShieldCheck className="w-3.5 h-3.5" /> 100% Real API
+            <ShieldCheck className="w-3.5 h-3.5" /> {tr('100% Dữ liệu thật', '100% Real data')}
           </span>
         </div>
       </div>

@@ -33,7 +33,7 @@ export function SectorSessionDetailModal({
               Chi Tiết Khớp Lệnh Dòng Tiền • Phiên {session.date}
               {session.isLive && (
                 <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-500/40">
-                  Live
+                  Trực tiếp
                 </span>
               )}
             </h3>

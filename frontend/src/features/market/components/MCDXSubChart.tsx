@@ -531,7 +531,7 @@ export const MCDXSubChart: React.FC<MCDXSubChartProps> = ({
             </div>
             <div className="grid grid-cols-3 gap-2">
               <div>
-                <label className="text-[9px] text-zinc-400 block">RSI Period</label>
+                <label className="text-[9px] text-zinc-400 block">Chu kỳ RSI</label>
                 <input
                   type="number"
                   value={settings.bankerPeriod}
@@ -585,7 +585,7 @@ export const MCDXSubChart: React.FC<MCDXSubChartProps> = ({
             </div>
             <div className="grid grid-cols-3 gap-2">
               <div>
-                <label className="text-[9px] text-zinc-400 block">RSI Period</label>
+                <label className="text-[9px] text-zinc-400 block">Chu kỳ RSI</label>
                 <input
                   type="number"
                   value={settings.hotPeriod}

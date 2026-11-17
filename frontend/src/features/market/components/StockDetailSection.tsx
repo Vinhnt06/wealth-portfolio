@@ -442,7 +442,7 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
 
             <span className="hidden lg:inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-mono text-zinc-500">
               <Database className="w-3 h-3 text-emerald-500" />
-              <span>Verified</span>
+              <span>Đã xác minh</span>
             </span>
           </div>
         </div>
@@ -798,7 +798,7 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
                   <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/70">
                     <span className="text-[10px] font-mono text-zinc-500 block uppercase">Dữ Liệu Trực Tiếp</span>
                     <span className="text-base font-mono font-bold text-zinc-100 mt-1 block">
-                      DNSE Lightspeed
+                      DNSE Tốc độ cao
                     </span>
                   </div>
                 </div>
@@ -878,7 +878,7 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
                     <span className="text-right text-zinc-300 truncate">{info?.address || 'Hà Nội / TP.HCM'}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-zinc-500">Website:</span>
+                    <span className="text-zinc-500">Trang web:</span>
                     {info?.website ? (
                       <a href={info.website} target="_blank" rel="noreferrer" className="text-emerald-400 hover:underline flex items-center gap-1 font-mono">
                         <Globe className="w-3.5 h-3.5" />

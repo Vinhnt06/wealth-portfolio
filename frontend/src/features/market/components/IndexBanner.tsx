@@ -146,14 +146,14 @@ export const IndexBanner: React.FC = () => {
                 : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
             }`}
           >
-            <span>Thị Trường Toàn Cầu (Global Live)</span>
+            <span>Thị Trường Toàn Cầu (trực tiếp)</span>
           </button>
         </div>
 
         <div className="flex items-center gap-2 text-[11px] font-mono text-zinc-400">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
           <span className="text-zinc-300 font-semibold">
-            {marketScope === 'vietnam' ? 'DNSE LIGHTSPEED REALTIME' : 'YAHOO FINANCE LIVE FEED (15s)'}
+            {marketScope === 'vietnam' ? 'DNSE TỐC ĐỘ CAO · THỜI GIAN THỰC' : 'YAHOO FINANCE TRỰC TIẾP (15s)'}
           </span>
         </div>
       </div>
@@ -294,7 +294,7 @@ export const IndexBanner: React.FC = () => {
                   <div className="flex justify-between items-center text-[9px] font-mono text-zinc-500 pt-0.5">
                     <span className="text-emerald-400/90 font-medium flex items-center gap-1.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                      DNSE Lightspeed Live
+                      DNSE Trực tiếp tốc độ cao
                     </span>
                     <span className="font-sans text-zinc-400">{isSelected ? 'Đang chọn' : 'Bấm để xem'}</span>
                   </div>
@@ -363,7 +363,7 @@ export const IndexBanner: React.FC = () => {
 
                 <div className="pt-2 border-t border-zinc-800/60 flex items-center justify-between text-[10px] font-mono">
                   <span className="text-zinc-500 truncate max-w-[180px]">{item?.note || 'Dữ liệu thời gian thực'}</span>
-                  <span className="text-cyan-400 font-semibold shrink-0">Yahoo Live API</span>
+                  <span className="text-cyan-400 font-semibold shrink-0">Yahoo (trực tiếp)</span>
                 </div>
               </div>
             );

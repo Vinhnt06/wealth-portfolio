@@ -1017,7 +1017,7 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                 <span className="text-xs font-mono font-bold text-zinc-200">LA BÀN 4 PHA KINH TẾ</span>
                 <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-mono text-emerald-400">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  <span>Realtime (30s)</span>
+                  <span>Thời gian thực (30s)</span>
                 </div>
                 <button
                   onClick={() => setShowCycleGuide(!showCycleGuide)}
@@ -1897,7 +1897,7 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                 <div className="flex items-center gap-2">
                   <ChartLineUp className="w-4 h-4 text-emerald-400" />
                   <h4 className="text-xs font-mono font-bold text-zinc-200 uppercase">
-                    BẢNG XẾP HẠNG SỨC MẠNH NGÀNH THỰC TẾ (LIVE RS RANKING TỪ SCREENER)
+                    BẢNG XẾP HẠNG SỨC MẠNH NGÀNH THỰC TẾ (XẾP HẠNG RS TRỰC TIẾP TỪ BỘ LỌC)
                   </h4>
                 </div>
                 <span className="text-[10px] font-mono text-zinc-400">

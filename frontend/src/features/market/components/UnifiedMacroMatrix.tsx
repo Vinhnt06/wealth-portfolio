@@ -1,5 +1,7 @@
 'use client';
 
+import { useLanguage } from '../../../app/components/LanguageContext';
+import { macroName, macroSource } from '../i18n/macro';
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Globe,
@@ -118,21 +120,23 @@ function parsePercentText(raw: string | number | undefined): number | undefined 
   return Number.isFinite(n) ? n : undefined;
 }
 
-function vixSentiment(vix: number): { label: string; tone: 'gain' | 'warn' | 'loss' } {
-  if (vix < 15) return { label: 'Tâm lý lạc quan', tone: 'gain' };
-  if (vix < 20) return { label: 'Tâm lý ổn định', tone: 'gain' };
-  if (vix < 30) return { label: 'Thận trọng', tone: 'warn' };
-  return { label: 'Hoảng loạn', tone: 'loss' };
+type TrFn = (vi: string, en?: string) => string;
+
+function vixSentiment(vix: number, tr: TrFn): { label: string; tone: 'gain' | 'warn' | 'loss' } {
+  if (vix < 15) return { label: tr('Tâm lý lạc quan', 'Optimistic'), tone: 'gain' };
+  if (vix < 20) return { label: tr('Tâm lý ổn định', 'Stable sentiment'), tone: 'gain' };
+  if (vix < 30) return { label: tr('Thận trọng', 'Cautious'), tone: 'warn' };
+  return { label: tr('Hoảng loạn', 'Panic'), tone: 'loss' };
 }
 
-function assessCycle(gdp?: GdpPoint, cpi?: CpiPoint): string | null {
+function assessCycle(gdp: GdpPoint | undefined, cpi: CpiPoint | undefined, tr: TrFn): string | null {
   if (!gdp || !cpi) return null;
   const growthOk = gdp.growthRate >= gdp.target;
   const inflationOk = cpi.yoy <= cpi.target;
-  if (growthOk && inflationOk) return 'Tăng trưởng vượt mục tiêu, lạm phát trong tầm kiểm soát';
-  if (growthOk) return 'Tăng trưởng vượt mục tiêu, lạm phát vượt trần';
-  if (inflationOk) return 'Tăng trưởng dưới mục tiêu, lạm phát thấp';
-  return 'Tăng trưởng dưới mục tiêu, lạm phát vượt trần';
+  if (growthOk && inflationOk) return tr('Tăng trưởng vượt mục tiêu, lạm phát trong tầm kiểm soát', 'Growth above target, inflation under control');
+  if (growthOk) return tr('Tăng trưởng vượt mục tiêu, lạm phát vượt trần', 'Growth above target, inflation above the ceiling');
+  if (inflationOk) return tr('Tăng trưởng dưới mục tiêu, lạm phát thấp', 'Growth below target, inflation low');
+  return tr('Tăng trưởng dưới mục tiêu, lạm phát vượt trần', 'Growth below target, inflation above the ceiling');
 }
 
 const TONE_TEXT = { gain: 'text-emerald-400', warn: 'text-amber-300', loss: 'text-rose-400' } as const;
@@ -290,6 +294,8 @@ function MetricBar({ value, target, tone }: { value: number; target: number; ton
 /* ───────────────────────────── Main component ───────────────────────────── */
 
 export const UnifiedMacroMatrix: React.FC = () => {
+  const { tr, language } = useLanguage();
+  const fmtNum = language === 'en' ? enNum : viNum;
   const [usData, setUsData] = useState<UsMarketItem[]>([]);
   const [commodities, setCommodities] = useState<CommodityItem[]>([]);
   const [rates, setRates] = useState<ExchangeRateItem[]>([]);
@@ -406,22 +412,22 @@ export const UnifiedMacroMatrix: React.FC = () => {
   const worldRows = ['gold_world', 'silver', 'brent', 'wti']
     .map((id) => commodities.find((c) => c.id === id))
     .filter((c): c is CommodityItem => Boolean(c));
-  const cycleText = assessCycle(indicators?.gdp, indicators?.cpi);
+  const cycleText = assessCycle(indicators?.gdp, indicators?.cpi, tr);
 
   const usTarget = (idx: UsMarketItem): MacroIndicatorTarget => ({
     id: US_HISTORY_ID[idx.symbol] ?? idx.symbol,
     symbol: idx.symbol,
-    name: idx.name,
+    name: macroName(idx.name, language),
     category: idx.symbol === 'DX-Y.NYB' ? 'currency' : idx.symbol === '^TNX' ? 'yield' : 'equity',
     price: idx.price,
-    unit: idx.unit === '%' ? '%' : 'điểm',
+    unit: idx.unit === '%' ? '%' : tr('điểm', 'pts'),
     change: idx.change,
     changePercent: idx.changePercent,
   });
 
   const commodityTarget = (c: CommodityItem): MacroIndicatorTarget => ({
     id: c.id,
-    name: c.name,
+    name: macroName(c.name, language),
     category: c.id === 'silver' ? 'metal' : c.id === 'gold_world' ? 'gold_world' : 'oil',
     price: c.price,
     unit: c.unit,
@@ -438,17 +444,17 @@ export const UnifiedMacroMatrix: React.FC = () => {
       <div className="flex items-center justify-between gap-3 border-b border-white/[0.06] px-5 py-3.5">
         <div className="flex items-center gap-2.5">
           <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
-          <h2 className="text-sm font-semibold tracking-tight text-zinc-100">Vĩ mô &amp; Thị trường toàn cầu</h2>
+          <h2 className="text-sm font-semibold tracking-tight text-zinc-100">{tr('Vĩ mô & Thị trường toàn cầu', 'Macro & Global Markets')}</h2>
         </div>
         <div className="flex items-center gap-3 font-mono text-[11px] text-zinc-500">
-          <span>{lastRefreshed ? `Cập nhật ${lastRefreshed}` : 'Đang đồng bộ...'}</span>
+          <span>{lastRefreshed ? tr(`Cập nhật ${lastRefreshed}`, `Updated ${lastRefreshed}`) : tr('Đang đồng bộ...', 'Syncing...')}</span>
           <button
             id="macro-refresh"
             type="button"
             onClick={fetchAllMacro}
             disabled={loading}
             className="rounded-md p-1.5 transition-colors hover:bg-zinc-800 hover:text-zinc-200 disabled:opacity-40"
-            aria-label="Làm mới dữ liệu vĩ mô"
+            aria-label={tr('Làm mới dữ liệu vĩ mô', 'Refresh macro data')}
           >
             <ArrowsClockwise size={14} className={loading ? 'animate-spin text-emerald-400' : ''} />
           </button>
@@ -461,9 +467,9 @@ export const UnifiedMacroMatrix: React.FC = () => {
           <KpiTile
             id="kpi-usdvnd"
             label="USD/VND"
-            hint="Tỷ giá thị trường"
+            hint={tr('Tỷ giá thị trường', 'Market exchange rate')}
             loading={!hasLoaded}
-            value={usdVnd ? viNum(usdVnd.sell, 0) : undefined}
+            value={usdVnd ? fmtNum(usdVnd.sell, 0) : undefined}
             unit="đ"
             pct={usdVnd?.changePercent}
             spark={sparks.usdvnd}
@@ -473,10 +479,10 @@ export const UnifiedMacroMatrix: React.FC = () => {
                     setActiveChartIndicator({
                       id: 'usdvnd',
                       symbol: 'USDVND=X',
-                      name: 'Tỷ giá USD/VND',
+                      name: tr('Tỷ giá USD/VND', 'USD/VND exchange rate'),
                       category: 'currency',
                       price: usdVnd.sell,
-                      unit: 'VNĐ',
+                      unit: 'VND',
                       change: usdVnd.change,
                       changePercent: usdVnd.changePercent,
                     })
@@ -485,17 +491,17 @@ export const UnifiedMacroMatrix: React.FC = () => {
           />
           <KpiTile
             id="kpi-sjc"
-            label="Vàng SJC"
-            hint="Bán ra · triệu đồng/lượng"
+            label={tr('Vàng SJC', 'SJC Gold')}
+            hint={tr('Bán ra · triệu đồng/lượng', 'Sell · million VND/tael')}
             loading={!hasLoaded}
-            value={sjcSellM !== undefined ? viNum(sjcSellM, 1) : undefined}
+            value={sjcSellM !== undefined ? fmtNum(sjcSellM, 1) : undefined}
             unit="Tr"
             pct={sjcChangePct}
           />
           <KpiTile
             id="kpi-vix"
             label="VIX"
-            hint="Chỉ số sợ hãi"
+            hint={tr('Chỉ số sợ hãi', 'Fear index')}
             loading={!hasLoaded}
             value={vixItem ? enNum(vixItem.price) : undefined}
             pct={vixItem?.changePercent}
@@ -503,8 +509,8 @@ export const UnifiedMacroMatrix: React.FC = () => {
             onClick={vixItem ? () => setActiveChartIndicator(usTarget(vixItem)) : undefined}
             footnote={
               vixItem && (
-                <span className={`text-[11px] font-medium ${TONE_TEXT[vixSentiment(vixItem.price).tone]}`}>
-                  {vixSentiment(vixItem.price).label}
+                <span className={`text-[11px] font-medium ${TONE_TEXT[vixSentiment(vixItem.price, tr).tone]}`}>
+                  {vixSentiment(vixItem.price, tr).label}
                 </span>
               )
             }
@@ -512,7 +518,7 @@ export const UnifiedMacroMatrix: React.FC = () => {
           <KpiTile
             id="kpi-us10y"
             label="US 10Y"
-            hint="Lợi suất trái phiếu Mỹ"
+            hint={tr('Lợi suất trái phiếu Mỹ', 'US Treasury yield')}
             loading={!hasLoaded}
             value={us10y ? enNum(us10y.price) : undefined}
             unit="%"
@@ -525,8 +531,8 @@ export const UnifiedMacroMatrix: React.FC = () => {
         {/* ── Panels (asymmetric: wide global markets, two narrower columns) ── */}
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
           {/* Global markets */}
-          <section className="rounded-xl border border-white/[0.06] bg-[#0f0f11] p-4 lg:col-span-5" aria-label="Thị trường quốc tế">
-            <PanelHeader icon={<Globe size={15} />} title="Thị trường quốc tế" />
+          <section className="rounded-xl border border-white/[0.06] bg-[#0f0f11] p-4 lg:col-span-5" aria-label={tr('Thị trường quốc tế', 'International markets')}>
+            <PanelHeader icon={<Globe size={15} />} title={tr('Thị trường quốc tế', 'International markets')} />
             {!hasLoaded ? (
               <div className="space-y-2">
                 {[0, 1, 2, 3].map((i) => (
@@ -534,7 +540,7 @@ export const UnifiedMacroMatrix: React.FC = () => {
                 ))}
               </div>
             ) : usData.length === 0 ? (
-              <EmptyNote>{failed.us ? 'Không tải được dữ liệu thị trường quốc tế.' : 'Chưa có dữ liệu.'}</EmptyNote>
+              <EmptyNote>{failed.us ? tr('Không tải được dữ liệu thị trường quốc tế.', 'Could not load international market data.') : tr('Chưa có dữ liệu.', 'No data yet.')}</EmptyNote>
             ) : (
               <ul className="divide-y divide-white/[0.05]">
                 {usData
@@ -545,11 +551,11 @@ export const UnifiedMacroMatrix: React.FC = () => {
                         type="button"
                         onClick={() => setActiveChartIndicator(usTarget(idx))}
                         className="group flex w-full items-center justify-between gap-3 rounded-lg px-2 py-2.5 text-left transition-colors hover:bg-white/[0.03]"
-                        aria-label={`Xem biểu đồ ${idx.name}`}
+                        aria-label={tr(`Xem biểu đồ ${idx.name}`, `View chart for ${macroName(idx.name, language)}`)}
                       >
                         <div className="min-w-0">
                           <div className="truncate text-[13px] font-medium text-zinc-200 group-hover:text-emerald-400">
-                            {idx.name}
+                            {macroName(idx.name, language)}
                           </div>
                           <div className="font-mono text-[10px] text-zinc-600">{idx.symbol}</div>
                         </div>
@@ -570,17 +576,17 @@ export const UnifiedMacroMatrix: React.FC = () => {
           </section>
 
           {/* Vietnam macro */}
-          <section className="rounded-xl border border-white/[0.06] bg-[#0f0f11] p-4 lg:col-span-3" aria-label="Vĩ mô Việt Nam">
+          <section className="rounded-xl border border-white/[0.06] bg-[#0f0f11] p-4 lg:col-span-3" aria-label={tr('Vĩ mô Việt Nam', 'Vietnam macro')}>
             <PanelHeader
               icon={<Bank size={15} />}
-              title="Vĩ mô Việt Nam"
+              title={tr('Vĩ mô Việt Nam', 'Vietnam macro')}
               right={
                 indicators && !indicators.verified ? (
                   <span
                     className="rounded-md border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-medium text-amber-300"
-                    title="Số liệu lấy từ file cơ sở nội bộ, chưa được đối chiếu tự động với GSO/NHNN"
+                    title={tr('Số liệu lấy từ file cơ sở nội bộ, chưa được đối chiếu tự động với GSO/NHNN', 'Figures come from an internal base file and are not automatically reconciled with GSO/SBV')}
                   >
-                    Chưa đối chiếu
+                    {tr('Chưa đối chiếu', 'Unverified')}
                   </span>
                 ) : undefined
               }
@@ -592,15 +598,15 @@ export const UnifiedMacroMatrix: React.FC = () => {
                 <Skeleton className="h-10 w-full" />
               </div>
             ) : !indicators ? (
-              <EmptyNote>{failed.indicators ? 'Không tải được chỉ số vĩ mô.' : 'Chưa có dữ liệu.'}</EmptyNote>
+              <EmptyNote>{failed.indicators ? tr('Không tải được chỉ số vĩ mô.', 'Could not load macro indicators.') : tr('Chưa có dữ liệu.', 'No data yet.')}</EmptyNote>
             ) : (
               <div className="space-y-4">
                 {indicators.gdp && (
                   <div>
                     <div className="flex items-baseline justify-between">
-                      <span className="text-[13px] text-zinc-300">Tăng trưởng GDP</span>
+                      <span className="text-[13px] text-zinc-300">{tr('Tăng trưởng GDP', 'GDP growth')}</span>
                       <span className="font-mono text-lg font-semibold text-emerald-400 tabular-nums">
-                        {viNum(indicators.gdp.growthRate)}%
+                        {fmtNum(indicators.gdp.growthRate)}%
                       </span>
                     </div>
                     <MetricBar
@@ -609,8 +615,8 @@ export const UnifiedMacroMatrix: React.FC = () => {
                       tone={indicators.gdp.growthRate >= indicators.gdp.target ? 'gain' : 'warn'}
                     />
                     <div className="mt-1.5 flex justify-between text-[10px] text-zinc-500">
-                      <span>Kỳ {indicators.gdp.period}</span>
-                      <span>Mục tiêu {viNum(indicators.gdp.target, 1)}%</span>
+                      <span>{tr('Kỳ', 'Period')} {indicators.gdp.period}</span>
+                      <span>{tr('Mục tiêu', 'Target')} {fmtNum(indicators.gdp.target, 1)}%</span>
                     </div>
                   </div>
                 )}
@@ -618,9 +624,9 @@ export const UnifiedMacroMatrix: React.FC = () => {
                 {indicators.cpi && (
                   <div>
                     <div className="flex items-baseline justify-between">
-                      <span className="text-[13px] text-zinc-300">Lạm phát CPI (YoY)</span>
+                      <span className="text-[13px] text-zinc-300">{tr('Lạm phát CPI (YoY)', 'CPI inflation (YoY)')}</span>
                       <span className="font-mono text-lg font-semibold text-zinc-100 tabular-nums">
-                        {viNum(indicators.cpi.yoy)}%
+                        {fmtNum(indicators.cpi.yoy)}%
                       </span>
                     </div>
                     <MetricBar
@@ -629,42 +635,42 @@ export const UnifiedMacroMatrix: React.FC = () => {
                       tone={indicators.cpi.yoy <= indicators.cpi.target ? 'gain' : 'loss'}
                     />
                     <div className="mt-1.5 flex justify-between text-[10px] text-zinc-500">
-                      <span>Kỳ {indicators.cpi.period}</span>
-                      <span>Trần {viNum(indicators.cpi.target, 1)}%</span>
+                      <span>{tr('Kỳ', 'Period')} {indicators.cpi.period}</span>
+                      <span>{tr('Trần', 'Ceiling')} {fmtNum(indicators.cpi.target, 1)}%</span>
                     </div>
                   </div>
                 )}
 
                 {indicators.refiRate !== undefined && (
                   <div className="flex items-baseline justify-between border-t border-white/[0.05] pt-3">
-                    <span className="text-[13px] text-zinc-300">Lãi suất tái cấp vốn</span>
+                    <span className="text-[13px] text-zinc-300">{tr('Lãi suất tái cấp vốn', 'Refinancing rate')}</span>
                     <span className="font-mono text-lg font-semibold text-amber-300 tabular-nums">
-                      {viNum(indicators.refiRate)}%
+                      {fmtNum(indicators.refiRate)}%
                     </span>
                   </div>
                 )}
 
                 <div className="border-t border-white/[0.05] pt-3">
-                  <div className="text-[10px] uppercase tracking-wide text-zinc-600">Đánh giá nhanh</div>
+                  <div className="text-[10px] uppercase tracking-wide text-zinc-600">{tr('Đánh giá nhanh', 'Quick assessment')}</div>
                   <div className="mt-1 text-xs leading-relaxed text-zinc-300">
-                    {cycleText ?? 'Chưa đủ dữ liệu để đánh giá.'}
+                    {cycleText ?? tr('Chưa đủ dữ liệu để đánh giá.', 'Not enough data to assess.')}
                   </div>
-                  <div className="mt-1 text-[10px] text-zinc-600">Nguồn: {indicators.source}</div>
+                  <div className="mt-1 text-[10px] text-zinc-600">{tr('Nguồn', 'Source')}: {macroSource(indicators.source, language)}</div>
                 </div>
               </div>
             )}
           </section>
 
           {/* Gold & commodities */}
-          <section className="rounded-xl border border-white/[0.06] bg-[#0f0f11] p-4 lg:col-span-4" aria-label="Vàng và hàng hóa">
+          <section className="rounded-xl border border-white/[0.06] bg-[#0f0f11] p-4 lg:col-span-4" aria-label={tr('Vàng và hàng hóa', 'Gold and commodities')}>
             <PanelHeader
               icon={<Coins size={15} />}
-              title="Vàng & hàng hóa"
+              title={tr('Vàng & hàng hóa', 'Gold & commodities')}
               right={
                 <div className="flex items-center gap-0.5 rounded-lg border border-zinc-800 bg-[#09090b] p-0.5">
                   {([
-                    ['vn_gold', 'Vàng VN'],
-                    ['world_comm', 'Thế giới'],
+                    ['vn_gold', tr('Vàng VN', 'Vietnam gold')],
+                    ['world_comm', tr('Thế giới', 'World')],
                   ] as const).map(([key, label]) => (
                     <button
                       key={key}
@@ -690,7 +696,7 @@ export const UnifiedMacroMatrix: React.FC = () => {
               </div>
             ) : goldTab === 'vn_gold' ? (
               vnGold.length === 0 ? (
-                <EmptyNote>{failed.commodities ? 'Không tải được giá vàng trong nước.' : 'Chưa có dữ liệu giá vàng.'}</EmptyNote>
+                <EmptyNote>{failed.commodities ? tr('Không tải được giá vàng trong nước.', 'Could not load domestic gold prices.') : tr('Chưa có dữ liệu giá vàng.', 'No gold price data yet.')}</EmptyNote>
               ) : (
                 <ul className="max-h-[264px] divide-y divide-white/[0.05] overflow-y-auto pr-1">
                   {vnGold.slice(0, 8).map((g) => {
@@ -703,16 +709,16 @@ export const UnifiedMacroMatrix: React.FC = () => {
                             <span className="shrink-0 rounded bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-bold text-amber-300">
                               {g.brand}
                             </span>
-                            <span className="truncate text-[13px] text-zinc-200">{g.name}</span>
+                            <span className="truncate text-[13px] text-zinc-200">{macroName(g.name, language)}</span>
                           </div>
                           <span className="shrink-0 font-mono text-[13px] font-semibold text-amber-300 tabular-nums">
-                            {sell !== undefined ? viNum(sell, 1) : '—'}
+                            {sell !== undefined ? fmtNum(sell, 1) : '—'}
                             <span className="ml-1 text-[10px] font-normal text-zinc-500">Tr</span>
                           </span>
                         </div>
                         <div className="mt-1 flex items-center justify-between pl-1 font-mono text-[10px] text-zinc-500">
                           <span>
-                            Mua {buy !== undefined ? viNum(buy, 1) : '—'} · Bán {sell !== undefined ? viNum(sell, 1) : '—'}
+                            {tr('Mua', 'Buy')} {buy !== undefined ? fmtNum(buy, 1) : '—'} · {tr('Bán', 'Sell')} {sell !== undefined ? fmtNum(sell, 1) : '—'}
                           </span>
                           <Delta pct={g.changePercent} />
                         </div>
@@ -722,7 +728,7 @@ export const UnifiedMacroMatrix: React.FC = () => {
                 </ul>
               )
             ) : worldRows.length === 0 ? (
-              <EmptyNote>{failed.commodities ? 'Không tải được giá hàng hóa thế giới.' : 'Chưa có dữ liệu.'}</EmptyNote>
+              <EmptyNote>{failed.commodities ? tr('Không tải được giá hàng hóa thế giới.', 'Could not load world commodity prices.') : tr('Chưa có dữ liệu.', 'No data yet.')}</EmptyNote>
             ) : (
               <ul className="divide-y divide-white/[0.05]">
                 {worldRows.map((c) => (
@@ -731,11 +737,11 @@ export const UnifiedMacroMatrix: React.FC = () => {
                       type="button"
                       onClick={() => setActiveChartIndicator(commodityTarget(c))}
                       className="group flex w-full items-center justify-between gap-3 rounded-lg px-2 py-2.5 text-left transition-colors hover:bg-white/[0.03]"
-                      aria-label={`Xem biểu đồ ${c.name}`}
+                      aria-label={tr(`Xem biểu đồ ${c.name}`, `View chart for ${macroName(c.name, language)}`)}
                     >
                       <div className="min-w-0">
                         <div className="truncate text-[13px] font-medium text-zinc-200 group-hover:text-amber-300">
-                          {c.name}
+                          {macroName(c.name, language)}
                         </div>
                         <div className="text-[10px] text-zinc-600">{c.unit}</div>
                       </div>
@@ -755,12 +761,12 @@ export const UnifiedMacroMatrix: React.FC = () => {
             )}
 
             <div className="mt-3 flex items-center justify-between border-t border-white/[0.05] pt-3 text-[11px] text-zinc-500">
-              <span>Lãi suất tiền gửi 12T (Big 4)</span>
+              <span>{tr('Lãi suất tiền gửi 12T (Big 4)', '12M deposit rate (Big 4)')}</span>
               <span className="font-mono font-semibold text-amber-300 tabular-nums">
                 {big4Range
                   ? big4Range.min === big4Range.max
-                    ? `${viNum(big4Range.min)}%`
-                    : `${viNum(big4Range.min)}% – ${viNum(big4Range.max)}%`
+                    ? `${fmtNum(big4Range.min)}%`
+                    : `${fmtNum(big4Range.min)}% – ${fmtNum(big4Range.max)}%`
                   : '—'}
               </span>
             </div>
@@ -778,10 +784,10 @@ export const UnifiedMacroMatrix: React.FC = () => {
         >
           <span className="flex items-center gap-2">
             <Scales size={15} className="text-emerald-400" />
-            Mô hình chu kỳ kinh tế &amp; phân bổ tài sản
+            {tr('Mô hình chu kỳ kinh tế & phân bổ tài sản', 'Economic cycle model & asset allocation')}
           </span>
           <span className="flex items-center gap-1 text-[11px] text-zinc-500">
-            {showCycleDeepDive ? 'Thu gọn' : 'Xem chi tiết'}
+            {showCycleDeepDive ? tr('Thu gọn', 'Collapse') : tr('Xem chi tiết', 'View details')}
             {showCycleDeepDive ? <CaretUp size={13} /> : <CaretDown size={13} />}
           </span>
         </button>

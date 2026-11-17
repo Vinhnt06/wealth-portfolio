@@ -38,11 +38,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
     const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
-    const { t } = useLanguage();
+    const { t, tr } = useLanguage();
     const { data: session } = useSession();
 
     const user = session?.user as any;
-    const firstName = user?.firstName || user?.name?.split(' ')[0] || 'User';
+    const firstName = user?.firstName || user?.name?.split(' ')[0] || tr('Người dùng', 'User');
     const lastName = user?.lastName || user?.name?.split(' ').slice(1).join(' ') || '';
     const displayName = `${firstName} ${lastName}`.trim();
     const initials = `${firstName[0] || ''}${lastName[0] || ''}`.toUpperCase();
@@ -91,22 +91,22 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
     const navSections: NavSection[] = [
         {
-            title: 'DANH MỤC',
+            title: tr('DANH MỤC', 'MENU'),
             items: [
                 { icon: House, labelKey: 'dash.nav.overview', href: '/dashboard', mode: null },
             ],
         },
         {
-            title: 'THỊ TRƯỜNG & DÒNG TIỀN',
+            title: tr('THỊ TRƯỜNG & DÒNG TIỀN', 'MARKET & MONEY FLOW'),
             items: [
-                { icon: ChartPieSlice, labelKey: 'Thị Trường Realtime', href: '/market?tab=overview', mode: 'overview' },
+                { icon: ChartPieSlice, labelKey: 'dash.nav.market_live', href: '/market?tab=overview', mode: 'overview' },
                 { icon: TrendUp, labelKey: 'dash.nav.flow', href: '/market?tab=flow', mode: 'flow' },
                 { icon: Funnel, labelKey: 'dash.nav.screener', href: '/market?tab=screener', mode: 'screener' },
                 { icon: Compass, labelKey: 'dash.nav.rrg', href: '/market?tab=rrg', mode: 'rrg' },
             ],
         },
         {
-            title: 'THÔNG TIN',
+            title: tr('THÔNG TIN', 'INFORMATION'),
             items: [
                 { icon: Newspaper, labelKey: 'dash.nav.news', href: '/news', mode: null },
             ],
@@ -124,7 +124,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
     const topNavItems = [
         { labelKey: 'dash.nav.portfolio', href: '/dashboard' },
-        { labelKey: 'Thị Trường Realtime', href: '/market' },
+        { labelKey: 'dash.nav.market_live', href: '/market' },
         { labelKey: 'dash.nav.news', href: '/news' },
     ];
 
@@ -166,7 +166,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                             {/* Collapse Toggle Button (Desktop) */}
                             <button
                                 onClick={toggleSidebarCollapse}
-                                title={isCollapsed ? 'Mở rộng sidebar' : 'Thu gọn sidebar để mở rộng chart'}
+                                title={isCollapsed ? tr('Mở rộng thanh bên', 'Expand sidebar') : tr('Thu gọn thanh bên để mở rộng biểu đồ', 'Collapse sidebar to widen the chart')}
                                 className={`hidden md:flex items-center justify-center w-6 h-6 rounded-md bg-white/5 hover:bg-white/15 text-zinc-400 hover:text-white transition-colors absolute top-3.5 ${
                                     isCollapsed ? 'right-2' : 'right-3'
                                 }`}
@@ -337,7 +337,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                                         <div className="p-3 border-b border-white/5">
                                             <div className="flex items-center gap-2">
                                                 <div className="px-2 py-1 bg-gradient-to-r from-emerald-500/20 to-blue-500/20 border border-emerald-500/30 rounded-md">
-                                                    <p className="text-[10px] font-bold text-emerald-400 tracking-wider uppercase">Premium Tier</p>
+                                                    <p className="text-[10px] font-bold text-emerald-400 tracking-wider uppercase">{tr('Gói Premium', 'Premium Tier')}</p>
                                                 </div>
                                             </div>
                                         </div>

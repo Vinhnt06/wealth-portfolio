@@ -14,6 +14,7 @@ import {
   type ISeriesApi,
   type Time,
 } from 'lightweight-charts';
+import { useLanguage } from '../../../app/components/LanguageContext';
 
 export interface Candle {
   time: string; // YYYY-MM-DD
@@ -60,6 +61,8 @@ export const HeroIndexChart: React.FC<Props> = ({
   height = 320,
   onHover,
 }) => {
+  const { tr, language } = useLanguage();
+  const locale = language === 'en' ? 'en-US' : 'vi-VN';
   const wrapRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const mainRef = useRef<ISeriesApi<'Area'> | ISeriesApi<'Candlestick'> | null>(null);
@@ -229,7 +232,7 @@ export const HeroIndexChart: React.FC<Props> = ({
     volRef.current?.applyOptions({ visible: showVolume });
   }, [showVolume, kind]);
 
-  const fmt = (n: number) => n.toLocaleString('vi-VN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const fmt = (n: number) => n.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const tipLeft = tip ? (tip.x > (wrapRef.current?.clientWidth ?? 0) - 190 ? tip.x - 180 : tip.x + 16) : 0;
 
   return (
@@ -242,25 +245,25 @@ export const HeroIndexChart: React.FC<Props> = ({
           style={{ left: tipLeft, top: Math.max(8, Math.min(tip.y - 40, height - 120)) }}
         >
           <div className="text-[#888] mb-1">
-            {new Date(tip.c.time).toLocaleDateString('vi-VN', {
+            {new Date(tip.c.time).toLocaleDateString(locale, {
               weekday: 'short',
               day: '2-digit',
               month: '2-digit',
               year: 'numeric',
             })}
           </div>
-          <Row k="Mở" v={fmt(tip.c.open)} />
-          <Row k="Cao" v={fmt(tip.c.high)} cls="text-[#10b981]" />
-          <Row k="Thấp" v={fmt(tip.c.low)} cls="text-[#e5484d]" />
-          <Row k="Đóng" v={fmt(tip.c.close)} cls="text-white font-bold" />
+          <Row k={tr('Mở', 'Open')} v={fmt(tip.c.open)} />
+          <Row k={tr('Cao', 'High')} v={fmt(tip.c.high)} cls="text-[#10b981]" />
+          <Row k={tr('Thấp', 'Low')} v={fmt(tip.c.low)} cls="text-[#e5484d]" />
+          <Row k={tr('Đóng', 'Close')} v={fmt(tip.c.close)} cls="text-white font-bold" />
           {tip.prev && (
             <Row
-              k="So phiên trước"
+              k={tr('So phiên trước', 'vs prev. session')}
               v={`${tip.c.close >= tip.prev.close ? '+' : ''}${(((tip.c.close - tip.prev.close) / tip.prev.close) * 100).toFixed(2)}%`}
               cls={tip.c.close >= tip.prev.close ? 'text-[#10b981]' : 'text-[#e5484d]'}
             />
           )}
-          {!!tip.c.volume && <Row k="KL" v={`${(tip.c.volume / 1_000_000).toFixed(1)}M`} />}
+          {!!tip.c.volume && <Row k={tr('KL', 'Vol')} v={`${(tip.c.volume / 1_000_000).toFixed(1)}M`} />}
         </div>
       )}
     </div>

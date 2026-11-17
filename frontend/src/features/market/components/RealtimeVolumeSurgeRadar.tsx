@@ -139,11 +139,11 @@ export const RealtimeVolumeSurgeRadar: React.FC = () => {
             <div>
               <div className="flex items-center gap-2.5">
                 <h1 className="text-lg sm:text-xl font-bold text-zinc-100">
-                  Radar Bùng Nổ Khối Lượng Realtime
+                  Radar Bùng Nổ Khối Lượng Thời gian thực
                 </h1>
                 <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-zinc-900 text-zinc-300 border border-zinc-800">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                  REALTIME FEED
+                  LUỒNG THỜI GIAN THỰC
                 </span>
               </div>
               <p className="text-xs text-zinc-400 mt-1 font-mono">

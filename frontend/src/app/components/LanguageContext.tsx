@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 
 type Language = 'en' | 'vi';
 
@@ -8,6 +8,13 @@ interface LanguageContextType {
     language: Language;
     setLanguage: (lang: Language) => void;
     t: (key: string) => string;
+    /** Luôn trả về tiếng Việt */
+    tVi: (key: string) => string;
+    /**
+     * Dịch tại chỗ cho khu vực ứng dụng (dashboard, thị trường): tr('Tổng quan', 'Overview').
+     * Nguồn là tiếng Việt; thiếu bản tiếng Anh thì tự rơi về tiếng Việt.
+     */
+    tr: (vi: string, en?: string) => string;
 }
 
 const translations = {
@@ -163,6 +170,7 @@ const translations = {
         'dash.nav.overview': 'Overview',
         'dash.nav.portfolio': 'Portfolio',
         'dash.nav.markets': 'Markets',
+        'dash.nav.market_live': 'Live Market',
         'dash.nav.flow': 'Sector Money Flow',
         'dash.nav.screener': 'Minervini Screener',
         'dash.nav.rrg': 'RRG Rotation Matrix',
@@ -406,6 +414,7 @@ const translations = {
         'dash.nav.overview': 'Tổng quan',
         'dash.nav.portfolio': 'Danh mục',
         'dash.nav.markets': 'Thị trường',
+        'dash.nav.market_live': 'Thị Trường Thời Gian Thực',
         'dash.nav.flow': 'Dòng Tiền Ngành',
         'dash.nav.screener': 'Bộ Lọc Minervini',
         'dash.nav.rrg': 'Luân Chuyển RRG',
@@ -501,16 +510,44 @@ const translations = {
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
+const LANGUAGE_STORAGE_KEY = 'yf_language';
+
 export function LanguageProvider({ children }: { children: ReactNode }) {
-    const [language, setLanguage] = useState<Language>('en');
+    // Mặc định tiếng Việt (thị trường chứng khoán Việt Nam); lựa chọn của người dùng được ghi nhớ
+    const [language, setLanguageState] = useState<Language>('vi');
+
+    useEffect(() => {
+        try {
+            const saved = localStorage.getItem(LANGUAGE_STORAGE_KEY);
+            if (saved === 'en' || saved === 'vi') setLanguageState(saved);
+        } catch {
+            /* bỏ qua nếu trình duyệt chặn localStorage */
+        }
+    }, []);
+
+    const setLanguage = (lang: Language) => {
+        setLanguageState(lang);
+        try {
+            localStorage.setItem(LANGUAGE_STORAGE_KEY, lang);
+        } catch {
+            /* bỏ qua */
+        }
+    };
 
     const t = (key: string): string => {
         const trans = translations[language] as Record<string, string>;
         return trans[key] || key;
     };
 
+    const tVi = (key: string): string => {
+        const trans = translations.vi as Record<string, string>;
+        return trans[key] || key;
+    };
+
+    const tr = (vi: string, en?: string): string => (language === 'en' && en ? en : vi);
+
     return (
-        <LanguageContext.Provider value={{ language, setLanguage, t }}>
+        <LanguageContext.Provider value={{ language, setLanguage, t, tVi, tr }}>
             {children}
         </LanguageContext.Provider>
     );

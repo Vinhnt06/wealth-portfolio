@@ -131,7 +131,7 @@ export function OrderBook() {
               {sessionInfo.sessionBadge === 'PHIÊN ATC'
                 ? 'PHIÊN ĐỊNH KỲ ATC'
                 : wsStatus === 'connected'
-                ? 'REALTIME STREAM'
+                ? 'LUỒNG THỜI GIAN THỰC'
                 : 'ĐANG KẾT NỐI'}
             </span>
           </h3>
@@ -309,7 +309,7 @@ export function OrderBook() {
         <div className="mt-4 pt-3.5 border-t border-zinc-800/80 space-y-2.5 font-mono">
           <div className="flex items-center justify-between text-[11px] text-zinc-400">
             <span className="font-bold uppercase tracking-wider text-zinc-300">Biên Độ & Giá Khớp {selectedSymbol}</span>
-            <span className="text-[10px] text-zinc-500">HOSE / HNX REAL DATA</span>
+            <span className="text-[10px] text-zinc-500">DỮ LIỆU THẬT HOSE / HNX</span>
           </div>
 
           <div className="grid grid-cols-3 gap-2 text-center text-xs">

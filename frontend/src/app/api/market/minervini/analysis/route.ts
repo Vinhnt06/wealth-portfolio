@@ -302,6 +302,12 @@ export async function GET(request: Request) {
     const passedCount = criteria.filter((c) => c.passed).length;
     const isStage2Eligible = passedCount === 8;
 
+    // Chu kỳ 4 Stage (Weinstein / Minervini): 1 Tích lũy → 2 Tăng trưởng → 3 Phân phối → 4 Giảm giá
+    // Cấu trúc xu hướng tăng còn nguyên (giá > MA150 > MA200, MA200 dốc lên) vẫn thuộc Stage 2
+    // dù chưa đủ 8/8 — chỉ khi đủ 8/8 mới được phép xét mua.
+    const coreUptrendIntact =
+      sma150 > 0 && sma200 > 0 && currentPrice > sma150 && currentPrice > sma200 && sma150 > sma200 && sma200SlopeUp;
+
     let stage: 1 | 2 | 3 | 4 = 1;
     let stageName = 'Stage 1 (Tích lũy / Base)';
     if (passedCount === 8) {
@@ -310,6 +316,9 @@ export async function GET(request: Request) {
     } else if (currentPrice < sma200 && sma50 < sma200) {
       stage = 4;
       stageName = 'Stage 4 (Giảm giá / Không tham gia)';
+    } else if (coreUptrendIntact && passedCount >= 6) {
+      stage = 2;
+      stageName = 'Stage 2 (Tăng trưởng / Chưa đủ chuẩn mua)';
     } else if (distFrom52WHighPct < -20 && sma50 < sma150) {
       stage = 3;
       stageName = 'Stage 3 (Phân phối / Rủi ro)';

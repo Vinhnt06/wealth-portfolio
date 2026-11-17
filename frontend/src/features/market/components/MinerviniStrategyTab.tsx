@@ -3,6 +3,16 @@
 import React, { useState } from 'react';
 import { Check, X, CaretDown, Lock, Crosshair, ShieldCheck } from '@phosphor-icons/react';
 import type { MinerviniAnalysisResult, MinerviniCriterion } from '../types/minervini.types';
+import { useLanguage } from '../../../app/components/LanguageContext';
+import {
+  TREND_LABEL_EN,
+  WYCKOFF_LABEL_EN,
+  PHASE_NAME_EN,
+  PHASE_TAG_EN,
+  MILESTONE_EN,
+  SIGNAL_EN,
+  translateValue,
+} from '../i18n/minervini';
 
 /* ────────────────────────────────────────────────────────────────────────────
  * Helpers
@@ -21,22 +31,69 @@ const splitTitle = (s?: string): [string, string] => {
 const cx = (...a: Array<string | false | null | undefined>) => a.filter(Boolean).join(' ');
 
 /** Mô tả cách hiển thị số liệu của từng tiêu chí Trend Template. */
-const CRITERIA_VIEW: Record<number, { sep?: string; parts?: string[]; req?: string }> = {
-  1: { sep: ' / ', parts: ['Giá', 'MA150', 'MA200'] },
-  2: { sep: ' > ', parts: ['MA150', 'MA200'] },
-  3: { sep: ' vs ', parts: ['MA200 nay', '1 tháng trước'] },
-  4: { sep: ' / ', parts: ['MA50', 'MA150', 'MA200'] },
-  5: { sep: ' / ', parts: ['Giá', 'MA50'] },
-  6: { req: 'Cần ≥ +30%' },
-  7: { req: 'Cần ≥ −25%' },
-  8: { req: 'Cần ≥ 70' },
+const CRITERIA_VIEW: Record<number, { sep?: string; parts?: string[]; partsEn?: string[]; req?: string; reqEn?: string }> = {
+  1: { sep: ' / ', parts: ['Giá', 'MA150', 'MA200'], partsEn: ['Price', 'MA150', 'MA200'] },
+  2: { sep: ' > ', parts: ['MA150', 'MA200'], partsEn: ['MA150', 'MA200'] },
+  3: { sep: ' vs ', parts: ['MA200 nay', '1 tháng trước'], partsEn: ['MA200 now', '1 month ago'] },
+  4: { sep: ' / ', parts: ['MA50', 'MA150', 'MA200'], partsEn: ['MA50', 'MA150', 'MA200'] },
+  5: { sep: ' / ', parts: ['Giá', 'MA50'], partsEn: ['Price', 'MA50'] },
+  6: { req: 'Cần ≥ +30%', reqEn: 'Need ≥ +30%' },
+  7: { req: 'Cần ≥ −25%', reqEn: 'Need ≥ −25%' },
+  8: { req: 'Cần ≥ 70', reqEn: 'Need ≥ 70' },
 };
 
-const GROUPS: { title: string; ids: number[] }[] = [
-  { title: 'Cấu trúc đường trung bình', ids: [1, 2, 3, 4, 5] },
-  { title: 'Vị thế trong biên độ 52 tuần', ids: [6, 7] },
-  { title: 'Sức mạnh tương đối', ids: [8] },
+const GROUPS: { title: string; en: string; ids: number[] }[] = [
+  { title: 'Cấu trúc đường trung bình', en: 'Moving-average structure', ids: [1, 2, 3, 4, 5] },
+  { title: 'Vị thế trong biên độ 52 tuần', en: 'Position in the 52-week range', ids: [6, 7] },
+  { title: 'Sức mạnh tương đối', en: 'Relative strength', ids: [8] },
 ];
+
+/** Chu kỳ 4 Stage theo Weinstein / Minervini — luôn đi theo thứ tự 1 → 2 → 3 → 4. */
+const STAGES = [
+  {
+    n: 1,
+    name: 'Tích lũy',
+    nameEn: 'Basing',
+    note: 'Tích lũy / Base',
+    noteEn: 'Basing phase',
+    def: 'Đáy nền sau nhịp giảm: giá đi ngang quanh MA200 đã phẳng. Chờ, chưa mua.',
+    defEn: 'A base after a decline: price drifts sideways around a flat MA200. Wait — do not buy yet.',
+  },
+  {
+    n: 2,
+    name: 'Tăng trưởng',
+    nameEn: 'Advancing',
+    note: 'Tăng trưởng',
+    noteEn: 'Uptrend',
+    def: 'Giá trên MA150 & MA200, MA200 dốc lên. Chỉ khi đủ 8/8 tiêu chí mới được xét mua.',
+    defEn: 'Price above MA150 & MA200 with MA200 rising. Only buyable when all 8 criteria pass.',
+  },
+  {
+    n: 3,
+    name: 'Phân phối',
+    nameEn: 'Topping',
+    note: 'Phân phối / Rủi ro',
+    noteEn: 'Distribution / Risk',
+    def: 'Đà tăng chững lại, MA50 cắt xuống MA150, giá cách đỉnh xa dần. Không mua mới, giảm tỷ trọng.',
+    defEn: 'Momentum stalls, MA50 crosses below MA150 and price drifts from its high. No new buys; trim exposure.',
+  },
+  {
+    n: 4,
+    name: 'Giảm giá',
+    nameEn: 'Declining',
+    note: 'Giảm giá / Không tham gia',
+    noteEn: 'Downtrend / Stay out',
+    def: 'Giá dưới MA200 đang dốc xuống. Đứng ngoài, không bắt đáy.',
+    defEn: 'Price below a falling MA200. Stay out — do not try to catch the bottom.',
+  },
+];
+
+const STAGE_ACTIVE: Record<number, string> = {
+  1: 'bg-zinc-500/15 text-zinc-100 ring-zinc-300/40',
+  2: 'bg-emerald-500/15 text-emerald-200 ring-emerald-400/50',
+  3: 'bg-amber-500/15 text-amber-200 ring-amber-400/45',
+  4: 'bg-rose-500/15 text-rose-200 ring-rose-400/45',
+};
 
 const PHASES = [
   { key: 'A', tag: 'Hãm rơi' },
@@ -47,9 +104,9 @@ const PHASES = [
 ];
 
 const ALLOCATION = [
-  { phase: 2, name: 'Thăm dò', pct: '20–30%', at: 'Phase C' },
-  { phase: 3, name: 'Chủ lực', pct: '40–50%', at: 'Phase D' },
-  { phase: 4, name: 'Gia tăng', pct: '20–30%', at: 'Đầu Phase E' },
+  { phase: 2, name: 'Thăm dò', nameEn: 'Probe', pct: '20–30%', at: 'Phase C', atEn: 'Phase C' },
+  { phase: 3, name: 'Chủ lực', nameEn: 'Core', pct: '40–50%', at: 'Phase D', atEn: 'Phase D' },
+  { phase: 4, name: 'Gia tăng', nameEn: 'Add', pct: '20–30%', at: 'Đầu Phase E', atEn: 'Early Phase E' },
 ];
 
 /* ────────────────────────────────────────────────────────────────────────────
@@ -116,6 +173,7 @@ const CardHeader: React.FC<{
  * ──────────────────────────────────────────────────────────────────────────── */
 
 const CriterionRow: React.FC<{ c: MinerviniCriterion }> = ({ c }) => {
+  const { tr, language } = useLanguage();
   const view = CRITERIA_VIEW[c.id] || {};
   const raw = c.comparisonValue && c.comparisonValue !== 'N/A' ? c.comparisonValue : '';
   const parts = view.parts && view.sep && raw ? raw.split(view.sep) : null;
@@ -124,18 +182,20 @@ const CriterionRow: React.FC<{ c: MinerviniCriterion }> = ({ c }) => {
     <div className="flex items-start gap-3 px-4 py-2.5">
       <Mark passed={c.passed} />
       <div className="min-w-0 flex-1">
-        <div className={cx('text-[12px] leading-snug', c.passed ? 'text-zinc-100' : 'text-zinc-300')}>{c.label}</div>
+        <div className={cx('text-[12px] leading-snug', c.passed ? 'text-zinc-100' : 'text-zinc-300')}>
+          {language === 'en' ? TREND_LABEL_EN[c.id] || c.label : c.label}
+        </div>
         {parts && (
           <div className="mt-1 flex flex-wrap gap-x-3.5 gap-y-0.5 text-[10.5px] text-zinc-500">
             {parts.map((v, i) => (
               <span key={i}>
-                {view.parts![i]} <span className="tabular-nums text-zinc-300">{v}</span>
+                {(language === 'en' ? view.partsEn! : view.parts!)[i]} <span className="tabular-nums text-zinc-300">{v}</span>
               </span>
             ))}
           </div>
         )}
         {!parts && !view.req && (
-          <div className="mt-1 text-[10.5px] text-zinc-600">{raw || 'Chưa đủ dữ liệu'}</div>
+          <div className="mt-1 text-[10.5px] text-zinc-600">{raw || tr('Chưa đủ dữ liệu', 'Not enough data')}</div>
         )}
       </div>
       {view.req && (
@@ -148,7 +208,7 @@ const CriterionRow: React.FC<{ c: MinerviniCriterion }> = ({ c }) => {
           >
             {raw || '—'}
           </div>
-          <div className="mt-0.5 text-[10px] text-zinc-600">{view.req}</div>
+          <div className="mt-0.5 text-[10px] text-zinc-600">{language === 'en' ? view.reqEn : view.req}</div>
         </div>
       )}
     </div>
@@ -163,17 +223,19 @@ const STAGE_TONE: Record<number, { pill: string; dot: string }> = {
 };
 
 const TrendTemplateCard: React.FC<{ data: MinerviniAnalysisResult }> = ({ data }) => {
+  const { tr, language } = useLanguage();
   const [open, setOpen] = useState(true);
   const passed = data.passedCount;
   const stage = data.stage;
   const tone = STAGE_TONE[stage] || STAGE_TONE[1];
   const barTone = passed === 8 ? 'bg-emerald-400' : passed >= 5 ? 'bg-amber-400' : 'bg-rose-400/90';
-  const stageShort = (data.stageName || '').split('(')[0].trim() || `Stage ${stage}`;
-  const stageNote = (data.stageName || '').match(/\(([^)]+)\)/)?.[1];
+  const stageShort = `Stage ${stage}`;
+  const stageInfo = STAGES[stage - 1];
+  const stageNote = language === 'en' ? stageInfo?.noteEn : stageInfo?.note;
 
   return (
     <Card>
-      <CardHeader title="Trend Template · Minervini" open={open} onToggle={() => setOpen((v) => !v)} />
+      <CardHeader title={tr('Mẫu hình xu hướng · Minervini', 'Trend Template · Minervini')} open={open} onToggle={() => setOpen((v) => !v)} />
 
       <div className="flex items-end justify-between gap-4 px-4 pb-4">
         <div>
@@ -184,7 +246,9 @@ const TrendTemplateCard: React.FC<{ data: MinerviniAnalysisResult }> = ({ data }
             <span className="text-[15px] text-zinc-600 tabular-nums">/ 8</span>
           </div>
           <div className="mt-1 text-[11px] text-zinc-500">
-            {passed === 8 ? 'Đủ điều kiện xét mua' : `Thiếu ${8 - passed} tiêu chí để vào Stage 2`}
+            {passed === 8
+              ? tr('Đủ điều kiện xét mua', 'Eligible to buy')
+              : tr(`Thiếu ${8 - passed} tiêu chí để vào Stage 2`, `${8 - passed} more criteria needed for Stage 2`)}
           </div>
         </div>
         <div className="text-right">
@@ -208,6 +272,38 @@ const TrendTemplateCard: React.FC<{ data: MinerviniAnalysisResult }> = ({ data }
         ))}
       </div>
 
+      {/* Chu kỳ 4 Stage theo thứ tự */}
+      <div className="px-4 pb-4">
+        <div className="flex items-center justify-between">
+          <Eyebrow className="text-[9.5px] text-zinc-600">{tr('Chu kỳ 4 Stage', 'The 4 Stages')}</Eyebrow>
+          <span className="text-[10px] text-zinc-600">{tr('Chỉ mua ở Stage 2', 'Buy only in Stage 2')}</span>
+        </div>
+        <ol className="mt-2 grid grid-cols-4 gap-1.5" aria-label={tr('Thứ tự các Stage', 'Order of the Stages')}>
+          {STAGES.map((st) => {
+            const cur = st.n === stage;
+            return (
+              <li
+                key={st.n}
+                aria-current={cur ? 'step' : undefined}
+                className={cx(
+                  'rounded-lg px-2 py-2 text-center ring-1 ring-inset transition-colors',
+                  cur ? STAGE_ACTIVE[st.n] : 'bg-white/[0.015] text-zinc-600 ring-white/[0.06]'
+                )}
+              >
+                <div className="text-[9.5px] font-medium uppercase tracking-wider opacity-80">Stage {st.n}</div>
+                <div className={cx('mt-0.5 text-[11px] leading-tight', cur ? 'font-semibold' : 'text-zinc-500')}>
+                  {language === 'en' ? st.nameEn : st.name}
+                </div>
+              </li>
+            );
+          })}
+        </ol>
+        <p className="mt-2.5 text-[11px] leading-relaxed text-zinc-400">
+          <span className="text-zinc-300">{language === 'en' ? stageInfo?.nameEn : stageInfo?.name} · </span>
+          {language === 'en' ? stageInfo?.defEn : stageInfo?.def}
+        </p>
+      </div>
+
       {open && (
         <div className="border-t border-white/[0.05]">
           {GROUPS.map((g) => {
@@ -216,7 +312,7 @@ const TrendTemplateCard: React.FC<{ data: MinerviniAnalysisResult }> = ({ data }
             return (
               <div key={g.title} className="border-b border-white/[0.04] last:border-b-0">
                 <div className="px-4 pt-3 pb-0.5">
-                  <Eyebrow className="text-[9.5px] text-zinc-600">{g.title}</Eyebrow>
+                  <Eyebrow className="text-[9.5px] text-zinc-600">{language === 'en' ? g.en : g.title}</Eyebrow>
                 </div>
                 <div className="divide-y divide-white/[0.03]">
                   {rows.map((c) => (
@@ -237,6 +333,8 @@ const TrendTemplateCard: React.FC<{ data: MinerviniAnalysisResult }> = ({ data }
  * ──────────────────────────────────────────────────────────────────────────── */
 
 const WyckoffCard: React.FC<{ data: MinerviniAnalysisResult }> = ({ data }) => {
+  const { tr, language } = useLanguage();
+  const en = language === 'en';
   const [open, setOpen] = useState(true);
   const [showCriteria, setShowCriteria] = useState(false);
   const w = data.wyckoff;
@@ -246,8 +344,15 @@ const WyckoffCard: React.FC<{ data: MinerviniAnalysisResult }> = ({ data }) => {
   const progress = typeof w.phaseProgressPct === 'number' && w.phaseProgressPct > 0 ? w.phaseProgressPct : (idx + 1) * 20;
   const [phaseEyebrow, phaseTitleRaw] = stripEmoji(w.phaseName).split(/\s[—–-]\s/);
   const phaseTitle = (phaseTitleRaw || phaseEyebrow).replace(/\s*\(.*?\)\s*$/, '');
+  const phaseEn = PHASE_NAME_EN[w.phase];
 
-  const [sigTitle, sigDesc] = splitTitle(w.buyPointLabel);
+  const [sigTitleVi, sigDescVi] = splitTitle(w.buyPointLabel);
+  const sigEn = SIGNAL_EN[w.buyPointCode === 'NONE' || !w.buyPointCode ? `NONE_${w.phase.slice(-1)}` : w.buyPointCode];
+  const sigTitle = en && sigEn ? sigEn[0] : sigTitleVi;
+  const sigDesc = en && sigEn ? sigEn[1] : sigDescVi;
+  const buyBlockedReason = en
+    ? `Trend Template not met (${data.passedCount}/8 · Stage ${data.stage}). Watch only — do not deploy capital yet.`
+    : w.buyBlockedReason;
   const blocked = Boolean(w.buyBlocked);
   const code = w.buyPointCode;
   const sigTone = blocked
@@ -265,12 +370,12 @@ const WyckoffCard: React.FC<{ data: MinerviniAnalysisResult }> = ({ data }) => {
   return (
     <Card>
       <CardHeader
-        title="Chẩn đoán Wyckoff"
+        title={tr('Chẩn đoán Wyckoff', 'Wyckoff diagnosis')}
         open={open}
         onToggle={() => setOpen((v) => !v)}
         right={
           <span className="text-[10.5px] tabular-nums text-zinc-500">
-            {w.passedCount}/{w.totalCount || 8} tiêu chí
+            {w.passedCount}/{w.totalCount || 8} {tr('tiêu chí', 'criteria')}
           </span>
         }
       />
@@ -279,12 +384,12 @@ const WyckoffCard: React.FC<{ data: MinerviniAnalysisResult }> = ({ data }) => {
       <div className="px-4 pb-4">
         <div className="flex items-end justify-between gap-3">
           <div className="min-w-0">
-            <div className="text-[10.5px] text-emerald-400/90">{phaseEyebrow}</div>
-            <div className="mt-0.5 text-[16px] font-semibold leading-tight text-zinc-50">{phaseTitle}</div>
+            <div className="text-[10.5px] text-emerald-400/90">{en && phaseEn ? phaseEn.eyebrow : phaseEyebrow}</div>
+            <div className="mt-0.5 text-[16px] font-semibold leading-tight text-zinc-50">{en && phaseEn ? phaseEn.title : phaseTitle}</div>
           </div>
           <div className="shrink-0 text-right">
             <div className="text-[18px] font-semibold leading-none tabular-nums text-zinc-100">{progress}%</div>
-            <div className="mt-1 text-[10px] text-zinc-600">chu kỳ tích lũy</div>
+            <div className="mt-1 text-[10px] text-zinc-600">{tr('chu kỳ tích lũy', 'accumulation cycle')}</div>
           </div>
         </div>
 
@@ -317,7 +422,7 @@ const WyckoffCard: React.FC<{ data: MinerviniAnalysisResult }> = ({ data }) => {
                       cur ? 'font-medium text-zinc-100' : done ? 'text-zinc-400' : 'text-zinc-600'
                     )}
                   >
-                    {p.tag}
+                    {en ? PHASE_TAG_EN[PHASES.indexOf(p)] : p.tag}
                   </span>
                 </li>
               );
@@ -336,11 +441,11 @@ const WyckoffCard: React.FC<{ data: MinerviniAnalysisResult }> = ({ data }) => {
               )}
               <div className="min-w-0">
                 <div className={cx('text-[11px] font-semibold uppercase tracking-wide', sigTone.head)}>
-                  {blocked ? `Tín hiệu theo dõi · ${w.phase}` : sigTitle}
+                  {blocked ? `${tr('Tín hiệu theo dõi', 'Watch signal')} · ${w.phase}` : sigTitle}
                 </div>
                 {sigDesc && <div className="mt-0.5 text-[11.5px] leading-snug text-zinc-300">{sigDesc}</div>}
                 {blocked && w.buyBlockedReason && (
-                  <div className="mt-1.5 text-[10.5px] leading-snug text-amber-200/70">{w.buyBlockedReason}</div>
+                  <div className="mt-1.5 text-[10.5px] leading-snug text-amber-200/70">{buyBlockedReason}</div>
                 )}
               </div>
             </div>
@@ -349,18 +454,18 @@ const WyckoffCard: React.FC<{ data: MinerviniAnalysisResult }> = ({ data }) => {
               <dl className="mt-3 grid grid-cols-2 gap-px overflow-hidden rounded-lg bg-white/[0.06]">
                 <div className="bg-zinc-950/70 px-3 py-2">
                   <dt className="text-[9.5px] uppercase tracking-wider text-zinc-500">
-                    {blocked ? 'Vùng theo dõi' : 'Vùng mua'}
+                    {blocked ? tr('Vùng theo dõi', 'Watch zone') : tr('Vùng mua', 'Buy zone')}
                   </dt>
                   <dd className="mt-0.5 text-[12px] font-medium tabular-nums text-zinc-100">
-                    {hasZone ? w.buyZonePrice : '—'}
+                    {hasZone ? translateValue(w.buyZonePrice, language) : '—'}
                   </dd>
                 </div>
                 <div className="bg-zinc-950/70 px-3 py-2">
                   <dt className="flex items-center gap-1 text-[9.5px] uppercase tracking-wider text-zinc-500">
-                    <ShieldCheck size={10} /> {blocked ? 'Mốc vô hiệu' : 'Cắt lỗ'}
+                    <ShieldCheck size={10} /> {blocked ? tr('Mốc vô hiệu', 'Invalidation') : tr('Cắt lỗ', 'Stop loss')}
                   </dt>
                   <dd className="mt-0.5 text-[12px] font-medium tabular-nums text-rose-300">
-                    {w.stopLossPrice || '—'}
+                    {translateValue(w.stopLossPrice, language) || '—'}
                   </dd>
                 </div>
               </dl>
@@ -370,7 +475,7 @@ const WyckoffCard: React.FC<{ data: MinerviniAnalysisResult }> = ({ data }) => {
 
         {/* Phân bổ vốn theo pha */}
         <div className="mt-4">
-          <Eyebrow className="text-[9.5px] text-zinc-600">Giải ngân theo pha</Eyebrow>
+          <Eyebrow className="text-[9.5px] text-zinc-600">{tr('Giải ngân theo pha', 'Position sizing by phase')}</Eyebrow>
           <div className="mt-2 grid grid-cols-3 gap-1.5">
             {ALLOCATION.map((a) => {
               const active = !blocked && idx === a.phase;
@@ -385,8 +490,8 @@ const WyckoffCard: React.FC<{ data: MinerviniAnalysisResult }> = ({ data }) => {
                   <div className={cx('text-[13px] font-semibold tabular-nums', active ? 'text-emerald-300' : 'text-zinc-300')}>
                     {a.pct}
                   </div>
-                  <div className="mt-0.5 text-[10.5px] text-zinc-400">{a.name}</div>
-                  <div className="text-[9.5px] text-zinc-600">{a.at}</div>
+                  <div className="mt-0.5 text-[10.5px] text-zinc-400">{en ? a.nameEn : a.name}</div>
+                  <div className="text-[9.5px] text-zinc-600">{en ? a.atEn : a.at}</div>
                 </div>
               );
             })}
@@ -395,8 +500,8 @@ const WyckoffCard: React.FC<{ data: MinerviniAnalysisResult }> = ({ data }) => {
 
         {w.nextMilestone && (
           <p className="mt-4 border-l border-white/10 pl-3 text-[11px] leading-relaxed text-zinc-400">
-            <span className="text-zinc-300">Cột mốc kế tiếp · </span>
-            {w.nextMilestone}
+            <span className="text-zinc-300">{tr('Cột mốc kế tiếp', 'Next milestone')} · </span>
+            {en ? MILESTONE_EN[w.phase] || w.nextMilestone : w.nextMilestone}
           </p>
         )}
       </div>
@@ -410,7 +515,7 @@ const WyckoffCard: React.FC<{ data: MinerviniAnalysisResult }> = ({ data }) => {
             aria-expanded={showCriteria}
             className="flex w-full items-center justify-between px-4 py-2.5 text-left cursor-pointer hover:bg-white/[0.02] transition-colors"
           >
-            <Eyebrow className="text-[9.5px] text-zinc-500">Chi tiết 8 tiêu chí Wyckoff &amp; VSA</Eyebrow>
+            <Eyebrow className="text-[9.5px] text-zinc-500">{tr('Chi tiết 8 tiêu chí Wyckoff & VSA', 'All 8 Wyckoff & VSA criteria')}</Eyebrow>
             <CaretDown
               size={11}
               weight="bold"
@@ -424,9 +529,9 @@ const WyckoffCard: React.FC<{ data: MinerviniAnalysisResult }> = ({ data }) => {
                   <Mark passed={c.passed} />
                   <div className="min-w-0">
                     <div className={cx('text-[12px] leading-snug', c.passed ? 'text-zinc-100' : 'text-zinc-300')}>
-                      {c.label}
+                      {en ? WYCKOFF_LABEL_EN[c.id] || c.label : c.label}
                     </div>
-                    <div className="mt-0.5 text-[10.5px] tabular-nums text-zinc-500">{c.value}</div>
+                    <div className="mt-0.5 text-[10.5px] tabular-nums text-zinc-500">{translateValue(c.value, language)}</div>
                   </div>
                 </div>
               ))}
@@ -443,18 +548,19 @@ const WyckoffCard: React.FC<{ data: MinerviniAnalysisResult }> = ({ data }) => {
  * ──────────────────────────────────────────────────────────────────────────── */
 
 const RsCard: React.FC<{ data: MinerviniAnalysisResult }> = ({ data }) => {
+  const { tr } = useLanguage();
   const rs = Math.min(99, Math.max(1, data.rsRating));
   const leading = rs >= 70;
   const tone = leading ? 'text-emerald-300' : rs >= 50 ? 'text-amber-300' : 'text-rose-300';
   const fill = leading ? 'from-emerald-500/70 to-emerald-300' : rs >= 50 ? 'from-amber-500/70 to-amber-300' : 'from-rose-500/70 to-rose-300';
-  const label = leading ? 'Dẫn dắt' : rs >= 50 ? 'Trung bình khá' : 'Yếu';
+  const label = leading ? tr('Dẫn dắt', 'Leading') : rs >= 50 ? tr('Trung bình khá', 'Above average') : tr('Yếu', 'Weak');
 
   return (
     <Card className="px-4 py-3.5">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <Eyebrow className="text-zinc-400">Sức mạnh giá RS</Eyebrow>
-          <div className="mt-0.5 text-[10.5px] text-zinc-600">Percentile 1–99 so với toàn thị trường</div>
+          <Eyebrow className="text-zinc-400">{tr('Sức mạnh giá RS', 'Relative Strength (RS)')}</Eyebrow>
+          <div className="mt-0.5 text-[10.5px] text-zinc-600">{tr('Percentile 1–99 so với toàn thị trường', 'Percentile 1–99 vs. the whole market')}</div>
         </div>
         <div className="text-right">
           <div className="flex items-baseline justify-end gap-1">

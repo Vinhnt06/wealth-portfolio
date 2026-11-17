@@ -138,3 +138,30 @@ export function isPreMarketResetWindow(exchangeOrSymbol?: string): boolean {
   return timeVal >= 8 * 60 + 30 && timeVal < 9 * 60;
 }
 
+
+/** Bản tiếng Anh cho các chuỗi phiên giao dịch ở trên (khoá theo nguyên văn tiếng Việt) */
+const SESSION_TEXT_EN: Record<string, string> = {
+  'Thị trường đóng cửa (Nghỉ cuối tuần)': 'Market closed (weekend)',
+  'KẾT THÚC PHIÊN (Cuối tuần)': 'CLOSED (Weekend)',
+  'Mở phiên tiếp theo: 09:00 sáng Thứ Hai': 'Next session: Monday 09:00',
+  'Chưa vào phiên giao dịch': 'Pre-market',
+  'CHƯA MỞ PHIÊN': 'PRE-MARKET',
+  'Mở phiên ATO lúc 09:00 hôm nay': 'ATO opens at 09:00 today',
+  'Phiên Sáng (Đang giao dịch trực tiếp)': 'Morning session (live trading)',
+  'ĐANG GIAO DỊCH (Phiên Sáng)': 'TRADING (Morning)',
+  'Nghỉ trưa lúc 11:30': 'Lunch break at 11:30',
+  'Nghỉ trưa giữa hai phiên (11:30 - 13:00)': 'Lunch break (11:30 – 13:00)',
+  'NGHỈ TRƯA': 'LUNCH BREAK',
+  'Mở phiên chiều lúc 13:00': 'Afternoon session opens at 13:00',
+  'Phiên ATC Đóng Cửa': 'Closing auction (ATC)',
+  'Phiên Chiều (Đang giao dịch trực tiếp)': 'Afternoon session (live trading)',
+  'PHIÊN ATC': 'ATC',
+  'ĐANG GIAO DỊCH (Phiên Chiều)': 'TRADING (Afternoon)',
+  'Đóng cửa phiên lúc 14:45': 'Session closes at 14:45',
+  'Đã kết thúc phiên hôm nay': 'Today’s session has ended',
+  'KẾT THÚC PHIÊN': 'SESSION ENDED',
+  'Mở phiên tiếp theo: 09:00 sáng ngày làm việc tới': 'Next session: 09:00 next business day',
+};
+
+export const sessionText = (vi: string, lang: 'vi' | 'en'): string =>
+  lang === 'en' ? SESSION_TEXT_EN[vi] || vi : vi;

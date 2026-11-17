@@ -219,7 +219,7 @@ function squarify<T extends { weight: number }>(
 
 // Nhãn nguồn dữ liệu hiển thị trên header để biết realtime hay dữ liệu cũ
 const SOURCE_LABELS: Record<string, string> = {
-  vietcap: 'Vietcap Live',
+  vietcap: 'Vietcap trực tiếp',
   ssi_iboard: 'SSI iBoard',
   stale: 'Cache cũ • đang thử lại',
   snapshot: 'Ảnh chụp cuối phiên',
@@ -330,7 +330,7 @@ export const MarketHeatmap: React.FC = () => {
         setLastUpdated(new Date().toLocaleTimeString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh', hour12: false }));
       }
     } catch (err) {
-      console.error('Lỗi nạp dữ liệu Heatmap realtime:', err);
+      console.error('Lỗi nạp dữ liệu Heatmap thời gian thực:', err);
     } finally {
       setIsLoading(false);
       if (isManual) setIsRefreshing(false);
@@ -909,12 +909,12 @@ export const MarketHeatmap: React.FC = () => {
                       isStale ? 'bg-amber-400' : 'bg-emerald-400 animate-pulse'
                     }`}
                   />
-                  <span>{isStale ? 'DỮ LIỆU CŨ' : 'LIVE REALTIME'}</span>
+                  <span>{isStale ? 'DỮ LIỆU CŨ' : 'TRỰC TIẾP'}</span>
                 </span>
               </div>
               <div className="flex items-center gap-1.5 text-[10px] text-zinc-400 font-medium">
                 <span>
-                  {(dataSource && SOURCE_LABELS[dataSource]) || dataSource || 'Realtime'} • {rawStocks.length} mã
+                  {(dataSource && SOURCE_LABELS[dataSource]) || dataSource || 'Thời gian thực'} • {rawStocks.length} mã
                 </span>
                 {lastUpdated && (
                   <span className="text-zinc-500">
@@ -1032,7 +1032,7 @@ export const MarketHeatmap: React.FC = () => {
           <button
             onClick={() => fetchHeatmapData(true)}
             disabled={isRefreshing}
-            title="Làm mới dữ liệu Realtime"
+            title="Làm mới dữ liệu Thời gian thực"
             className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-bold rounded-lg border border-zinc-800 bg-zinc-900 text-zinc-300 hover:text-emerald-400 hover:border-emerald-500/40 transition-all disabled:opacity-50"
           >
             <ArrowsClockwise className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-emerald-400' : ''}`} />
@@ -1553,7 +1553,7 @@ export const MarketHeatmap: React.FC = () => {
             </div>
 
             <div className="mt-2.5 pt-1.5 border-t border-zinc-800/80 text-center text-[9px] text-emerald-400 font-bold">
-              ⚡ Click để mở Chart & Sổ Lệnh realtime
+              ⚡ Click để mở Chart & Sổ Lệnh thời gian thực
             </div>
           </div>
         )}

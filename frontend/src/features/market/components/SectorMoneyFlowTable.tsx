@@ -374,7 +374,7 @@ export function SectorMoneyFlowTable({
           </span>
         </div>
         <span className="text-[11px] font-mono text-zinc-500">
-          HOSE + HNX + UPCOM • Realtime
+          HOSE + HNX + UPCOM • Thời gian thực
         </span>
       </div>
 
@@ -729,7 +729,7 @@ export function SectorMoneyFlowTable({
                   Chi Tiết Khớp Lệnh Dòng Tiền • Phiên {selectedSession.date}
                   {selectedSession.isLive && (
                     <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-500/40">
-                      Live
+                      Trực tiếp
                     </span>
                   )}
                 </h3>

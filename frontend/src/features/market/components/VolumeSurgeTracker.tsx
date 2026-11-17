@@ -237,7 +237,7 @@ export const VolumeSurgeTracker: React.FC<VolumeSurgeTrackerProps> = ({ symbol }
               {data.isTodayLive ? (
                 <span className="text-emerald-400 ml-2 font-bold inline-flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                  REALTIME INTRADAY
+                  TRONG PHIÊN · THỜI GIAN THỰC
                 </span>
               ) : (
                 <span className="text-zinc-500 ml-2 font-medium inline-flex items-center gap-1">
@@ -428,7 +428,7 @@ export const VolumeSurgeTracker: React.FC<VolumeSurgeTrackerProps> = ({ symbol }
           <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs font-mono">
             <div className="flex items-center gap-1.5">
               <span className="w-3 h-1 bg-emerald-400 rounded-full" />
-              <span className="text-zinc-200 font-bold">Hôm nay (Realtime)</span>
+              <span className="text-zinc-200 font-bold">Hôm nay (Thời gian thực)</span>
             </div>
             <div className="flex items-center gap-1.5">
               <span className="w-3 h-0.5 border-t-2 border-dashed border-amber-400" />
@@ -511,7 +511,7 @@ export const VolumeSurgeTracker: React.FC<VolumeSurgeTrackerProps> = ({ symbol }
                           <div className="flex items-center justify-between">
                             <span className="text-emerald-400 flex items-center gap-1">
                               <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                              {data.isTodayLive ? 'Hôm nay (Realtime):' : 'Khối lượng luỹ kế:'}
+                              {data.isTodayLive ? 'Hôm nay (Thời gian thực):' : 'Khối lượng luỹ kế:'}
                             </span>
                             <span className="font-bold text-zinc-100">
                               {d.rawTodayCum !== null

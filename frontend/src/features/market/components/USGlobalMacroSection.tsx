@@ -66,7 +66,7 @@ export const USGlobalMacroSection: React.FC = memo(() => {
         }
       }
     } catch (err) {
-      console.error('Lỗi fetch dữ liệu thị trường toàn cầu realtime:', err);
+      console.error('Lỗi fetch dữ liệu thị trường toàn cầu thời gian thực:', err);
     } finally {
       if (isManual) setLoading(false);
     }
@@ -140,10 +140,10 @@ export const USGlobalMacroSection: React.FC = memo(() => {
                 TRUNG TÂM DỮ LIỆU THỊ TRƯỜNG TOÀN CẦU & VĨ MÔ QUỐC TẾ
               </h2>
               <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 shrink-0">
-                YAHOO FINANCE LIVE FEED
+                YAHOO FINANCE TRỰC TIẾP
               </span>
               <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 shrink-0">
-                STREAMING 15S
+                CẬP NHẬT 15 GIÂY
               </span>
             </div>
             <p className="text-xs text-zinc-400 mt-1 truncate">
@@ -156,7 +156,7 @@ export const USGlobalMacroSection: React.FC = memo(() => {
         <div className="flex items-center gap-2 shrink-0 self-start lg:self-auto">
           <span suppressHydrationWarning className="text-[11px] font-mono font-bold px-2.5 py-1.5 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-300 flex items-center gap-2 shadow-inner whitespace-nowrap">
             <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)] shrink-0" />
-            <span>Cập nhật lúc: {lastRefreshed || 'Realtime'}</span>
+            <span>Cập nhật lúc: {lastRefreshed || 'Thời gian thực'}</span>
           </span>
 
           <button
@@ -289,7 +289,7 @@ export const USGlobalMacroSection: React.FC = memo(() => {
                   <span className="font-mono text-xs font-bold uppercase tracking-wider text-cyan-400">Tỷ Giá DXY & Lợi Suất US 10Y</span>
                 </div>
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 font-bold">
-                  BOND & FX
+                  TRÁI PHIẾU & NGOẠI HỐI
                 </span>
               </div>
 
@@ -352,7 +352,7 @@ export const USGlobalMacroSection: React.FC = memo(() => {
                   <span className="font-mono text-xs font-bold uppercase tracking-wider text-amber-400">Chỉ Số Biến Động VIX & Rủi Ro</span>
                 </div>
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 font-bold">
-                  CBOE VOLATILITY
+                  BIẾN ĐỘNG CBOE
                 </span>
               </div>
 

@@ -506,7 +506,7 @@ export const InvestorFlowAnalysis: React.FC = () => {
                 {sessionInfo.sessionBadge === 'PHIÊN ATC'
                   ? 'PHIÊN ĐỊNH KỲ ATC'
                   : wsStatus === 'connected'
-                  ? 'REALTIME STREAM'
+                  ? 'LUỒNG THỜI GIAN THỰC'
                   : 'ĐANG KẾT NỐI'}
               </span>
             </h3>

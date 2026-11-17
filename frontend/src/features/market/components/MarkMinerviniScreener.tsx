@@ -149,7 +149,7 @@ export const MarkMinerviniScreener: React.FC = () => {
           new Date().toLocaleTimeString('vi-VN', {
             hour12: false,
             timeZone: 'Asia/Ho_Chi_Minh',
-          }) + ' (SSI Live)'
+          }) + ' (SSI trực tiếp)'
         );
       }
     } catch (err) {
@@ -583,7 +583,7 @@ export const MarkMinerviniScreener: React.FC = () => {
               </span>
               <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                {wsStatus === 'connected' ? 'LIVE TICK STREAMING' : 'REALTIME SYNC'}
+                {wsStatus === 'connected' ? 'ĐANG NHẬN GIÁ TRỰC TIẾP' : 'ĐỒNG BỘ THỜI GIAN THỰC'}
               </span>
             </div>
             <p className="text-xs text-zinc-400">
@@ -743,7 +743,7 @@ export const MarkMinerviniScreener: React.FC = () => {
                   </h3>
                   <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    LIVE REALTIME
+                    TRỰC TIẾP
                   </span>
                 </div>
                 <p className="text-xs text-zinc-400 font-sans">
@@ -1391,7 +1391,7 @@ export const MarkMinerviniScreener: React.FC = () => {
                     : 'bg-zinc-900 border-zinc-800 hover:text-zinc-200'
                 }`}
               >
-                🔥 Top RS Rating
+                🔥 RS Rating cao nhất
               </button>
               <button
                 onClick={() => {
@@ -1945,7 +1945,7 @@ export const MarkMinerviniScreener: React.FC = () => {
                               }}
                               className="px-2.5 py-1 rounded-lg bg-amber-400/10 hover:bg-amber-400 text-amber-400 hover:text-zinc-950 border border-amber-400/20 text-[11px] font-mono font-bold transition-all inline-flex items-center gap-1"
                             >
-                              <span>Xem Chart</span>
+                              <span>Xem biểu đồ</span>
                               <ArrowRight className="w-3 h-3" />
                             </button>
                           </td>

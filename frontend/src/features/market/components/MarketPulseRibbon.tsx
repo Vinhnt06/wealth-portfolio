@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useLanguage } from '../../../app/components/LanguageContext';
 import Link from 'next/link';
 import { ArrowRight, Circle, Clock, TrendUp, TrendDown } from '@phosphor-icons/react';
 
@@ -15,7 +16,18 @@ interface IndexQuote {
   volume: number;
 }
 
+const STATUS_EN: Record<string, string> = {
+  'Khớp Lệnh': 'Trading',
+  'Phiên Sáng (Khớp Lệnh Liên Tục)': 'Morning Session (Continuous Matching)',
+  'Nghỉ Trưa (Chờ Phiên Chiều)': 'Lunch Break (Afternoon Session Pending)',
+  'Phiên Chiều (Khớp Lệnh Liên Tục)': 'Afternoon Session (Continuous Matching)',
+  'Phiên Khớp Lệnh Định Kỳ Đóng Cửa (ATC)': 'Closing Auction (ATC)',
+  'Thị Trường Đóng Cửa': 'Market Closed',
+};
+
 export const MarketPulseRibbon: React.FC = () => {
+  const { tr, language } = useLanguage();
+  const locale = language === 'en' ? 'en-US' : 'vi-VN';
   const [indexes, setIndexes] = useState<IndexQuote[]>([]);
   const [totalLiquidity, setTotalLiquidity] = useState<number>(0);
   const [marketStatus, setMarketStatus] = useState<string>('Khớp Lệnh');
@@ -69,12 +81,14 @@ export const MarketPulseRibbon: React.FC = () => {
   const declinePct = totalBreadth > 0 ? (declineCount / totalBreadth) * 100 : 35;
 
   const formatBillion = (val: number) => {
-    if (!val || val === 0) return '6,958 Tỷ';
+    if (!val || val === 0) return language === 'en' ? '6,958B VND' : '6,958 Tỷ';
     const bil = val / 1_000_000_000;
     if (bil >= 1000) {
-      return `${(bil / 1000).toLocaleString('vi-VN', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} nghìn tỷ`;
+      const t = (bil / 1000).toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+      return language === 'en' ? `${t}T VND` : `${t} nghìn tỷ`;
     }
-    return `${bil.toLocaleString('vi-VN', { maximumFractionDigits: 0 })} tỷ`;
+    const b = bil.toLocaleString(locale, { maximumFractionDigits: 0 });
+    return language === 'en' ? `${b}B VND` : `${b} tỷ`;
   };
 
   return (
@@ -84,13 +98,13 @@ export const MarketPulseRibbon: React.FC = () => {
         <div className="flex flex-wrap items-center gap-4 text-zinc-400">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-[#10b981] animate-pulse" />
-            <span className="text-zinc-200 font-semibold">{marketStatus}</span>
+            <span className="text-zinc-200 font-semibold">{language === 'en' ? STATUS_EN[marketStatus] || marketStatus : marketStatus}</span>
           </div>
 
           <span className="text-zinc-700 hidden sm:inline">|</span>
 
           <div className="flex items-center gap-1.5 text-zinc-400">
-            <span className="text-[11px] text-zinc-500 uppercase">Thanh khoản 3 sàn:</span>
+            <span className="text-[11px] text-zinc-500 uppercase">{tr('Thanh khoản 3 sàn:', '3-exchange liquidity:')}</span>
             <span className="text-zinc-100 font-bold tracking-tight">
               {formatBillion(totalLiquidity)}
             </span>
@@ -99,10 +113,10 @@ export const MarketPulseRibbon: React.FC = () => {
 
         {/* Center: Market Breadth Ratio (Realtime advances vs declines) */}
         <div className="hidden lg:flex items-center gap-3">
-          <span className="text-[11px] text-zinc-500 uppercase">Độ rộng:</span>
+          <span className="text-[11px] text-zinc-500 uppercase">{tr('Độ rộng:', 'Breadth:')}</span>
           <div className="flex items-center gap-1.5">
             <span className="text-[#10b981] font-bold">{advanceCount}</span>
-            <span className="text-[10px] text-zinc-600">Tăng</span>
+            <span className="text-[10px] text-zinc-600">{tr('Tăng', 'Up')}</span>
           </div>
 
           {/* Mini 1px Breadth ratio bar */}
@@ -114,7 +128,7 @@ export const MarketPulseRibbon: React.FC = () => {
 
           <div className="flex items-center gap-1.5">
             <span className="text-[#e5484d] font-bold">{declineCount}</span>
-            <span className="text-[10px] text-zinc-600">Giảm</span>
+            <span className="text-[10px] text-zinc-600">{tr('Giảm', 'Down')}</span>
           </div>
         </div>
 
@@ -124,7 +138,7 @@ export const MarketPulseRibbon: React.FC = () => {
             href="/market"
             className="flex items-center gap-1 text-[11px] text-zinc-400 hover:text-zinc-100 transition-colors py-0.5 px-2 rounded hover:bg-[#1a1a1a]"
           >
-            <span>Live Terminal</span>
+            <span>{tr('Bảng Giá Trực Tuyến', 'Live Board')}</span>
             <ArrowRight className="w-3 h-3 text-[#10b981]" />
           </Link>
         </div>

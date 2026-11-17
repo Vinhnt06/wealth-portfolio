@@ -137,7 +137,7 @@ export const CommoditiesAndGoldSection: React.FC = () => {
                 GIÁ DẦU, GIÁ VÀNG & LÃI SUẤT TIẾT KIỆM
               </h2>
               <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 shrink-0">
-                REAL DATA 100%
+                DỮ LIỆU THẬT 100%
               </span>
               <span suppressHydrationWarning className="text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300 flex items-center gap-1.5 shadow-inner shrink-0 whitespace-nowrap">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
@@ -206,7 +206,7 @@ export const CommoditiesAndGoldSection: React.FC = () => {
           <div className="flex items-center justify-between text-xs font-mono text-zinc-400">
             <span className="flex items-center gap-1.5 text-emerald-400 font-bold">
               <Lightning size={14} weight="fill" />
-              Dữ liệu trực tuyến từ sàn NYMEX / COMEX / ICE (Cập nhật realtime mỗi 30s)
+              Dữ liệu trực tuyến từ sàn NYMEX / COMEX / ICE (Cập nhật thời gian thực mỗi 30s)
             </span>
             {lastRefreshed && <span>Cập nhật lúc: {lastRefreshed}</span>}
           </div>
@@ -223,7 +223,7 @@ export const CommoditiesAndGoldSection: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <span className="font-mono text-xs font-bold text-zinc-300">{item.name}</span>
                     <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold">
-                      REALTIME
+                      THỜI GIAN THỰC
                     </span>
                   </div>
 

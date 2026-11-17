@@ -78,7 +78,7 @@ export const ExpandableChart: React.FC = () => {
             <div className="flex items-center gap-3">
               <span className="font-mono text-xl font-bold text-zinc-100">PHÂN TÍCH KỸ THUẬT CHUYÊN SÂU — {selectedSymbol}</span>
               <span className="text-xs font-mono px-2 py-0.5 bg-emerald-500/10 text-emerald-400 rounded-full border border-emerald-500/20">
-                LIVE STREAM
+                TRỰC TIẾP
               </span>
             </div>
 

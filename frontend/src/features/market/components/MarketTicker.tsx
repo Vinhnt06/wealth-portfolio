@@ -25,7 +25,7 @@ export function MarketTicker() {
             <Star size={16} weight="fill" />
           </div>
           <div>
-            <h3 className="font-semibold text-zinc-100 text-sm tracking-tight">Bảng Giá Thị Trường Live</h3>
+            <h3 className="font-semibold text-zinc-100 text-sm tracking-tight">Bảng Giá Thị Trường Trực Tiếp</h3>
             <p className="text-[11px] text-zinc-400">Chọn mã để xem sổ lệnh & biểu đồ kỹ thuật</p>
           </div>
         </div>

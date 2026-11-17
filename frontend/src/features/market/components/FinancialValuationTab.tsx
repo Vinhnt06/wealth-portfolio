@@ -795,7 +795,7 @@ export const FinancialValuationTab: React.FC<FinancialValuationTabProps> = ({
             Nguồn: Báo cáo tài chính doanh nghiệp niêm yết & Cổng thông tin Vietcap IQ Insight.
           </span>
           <span className="text-emerald-400 flex items-center gap-1">
-            <ShieldCheck className="w-3.5 h-3.5" /> 100% Real Audited Data
+            <ShieldCheck className="w-3.5 h-3.5" /> 100% Dữ liệu BCTC kiểm toán
           </span>
         </div>
       </div>

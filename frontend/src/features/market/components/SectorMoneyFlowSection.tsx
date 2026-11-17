@@ -59,11 +59,11 @@ export function SectorMoneyFlowSection() {
             <span>Dòng Tiền Ngành & Ma Trận Thanh Khoản Thị Trường</span>
             <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              LIVE UPDATE
+              CẬP NHẬT TRỰC TIẾP
             </span>
           </h1>
           <p className="text-xs text-zinc-400 mt-0.5">
-            Dữ liệu realtime từ 3 sàn HOSE, HNX, UPCOM • Đơn vị: Tỷ VNĐ
+            Dữ liệu thời gian thực từ 3 sàn HOSE, HNX, UPCOM • Đơn vị: Tỷ VNĐ
           </p>
         </div>
 

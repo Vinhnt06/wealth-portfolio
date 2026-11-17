@@ -110,7 +110,11 @@ export async function GET(request: Request) {
     if (wyckoff) {
       const phase = wyckoff.phase; // Phase A, B, C, D, E
       const wyckoffPassed = wyckoff.passedCount || 0; // 0 to 8
-      const buyPoint = wyckoff.buyPointLabel || '';
+      // Tín hiệu bị chặn bởi Trend Template thì không được gọi là "điểm mua"
+      const wyckoffBlocked = Boolean(wyckoff.buyBlocked);
+      const buyPoint = wyckoffBlocked
+        ? 'Tín hiệu theo dõi — chưa đủ Trend Template'
+        : (wyckoff.buyPointLabel || '').replace(/^[^\p{L}\p{N}]+/u, '');
 
       if (phase === 'Phase D' || phase === 'Phase E') {
         wyckoffScore = 95;
@@ -133,6 +137,9 @@ export async function GET(request: Request) {
       // Bonus/Penalty based on Wyckoff criteria checklist
       if (wyckoffPassed >= 7) wyckoffDelta += 2;
       else if (wyckoffPassed <= 2 && phase === 'Phase A') wyckoffDelta -= 2;
+
+      // Cấu trúc tích lũy chưa được xu hướng xác nhận (Trend Template < 8/8): chỉ tính một nửa điểm cộng
+      if (wyckoffBlocked && wyckoffDelta > 0) wyckoffDelta = Math.round(wyckoffDelta / 2);
     }
 
     factors.push({
@@ -342,17 +349,28 @@ export async function GET(request: Request) {
       }
     }
 
-    // Target: capped at 3R and +25% so that "A" stays an average-winner estimate, independent of the 52W high
-    const MAX_TARGET_R = 3;
-    const MAX_TARGET_PCT = 25;
-    let optimalTargetGainPct = Number(Math.min(optimalStopLossPct * 2.5, optimalStopLossPct * MAX_TARGET_R, MAX_TARGET_PCT).toFixed(1));
-    const optimalTargetPrice = currentPrice > 0 ? Math.round(currentPrice * (1 + optimalTargetGainPct / 100)) : 0;
-    const optimalTargetReason = `Mục tiêu R:R ${(optimalTargetGainPct / optimalStopLossPct).toFixed(1)}:1 (+${optimalTargetGainPct}%) — giới hạn ≤ 3R để kỳ vọng không bị thổi phồng`;
-
-    // 52-week high is shown for reference only (never used as the target)
+    // 52-week high: kháng cự phía trên gần nhất
     const high52W = Math.round((stockData.high52W || 0) * priceUnit);
     const distToHigh52WPct =
       high52W > 0 && currentPrice > 0 ? Number((((high52W - currentPrice) / currentPrice) * 100).toFixed(1)) : null;
+
+    // Mục tiêu KHÔNG được suy thẳng từ mức cắt lỗ (như vậy R:R luôn = 2.5 và kỳ vọng gần như luôn dương).
+    //  - Trần lý tưởng: 2.5R, tối đa 3R và +25% (lãi trung bình của lệnh thắng, không phải kỳ vọng tối đa)
+    //  - Mã CHƯA đạt Stage 2 (8/8) mà giá còn cách đỉnh 52 tuần > 5% có vùng cung phía trên thật:
+    //    nếu đỉnh đó thấp hơn trần lý tưởng thì mục tiêu bị chặn ở đỉnh 52 tuần → R:R thấp, kỳ vọng phản ánh đúng
+    //  - Mã dẫn dắt đã đạt Stage 2 8/8, hoặc giá sát/vượt đỉnh (<= 5%): kỳ vọng là phá đỉnh mới → dùng trần lý tưởng
+    const MAX_TARGET_R = 3;
+    const MAX_TARGET_PCT = 25;
+    const idealTargetPct = Math.min(optimalStopLossPct * 2.5, optimalStopLossPct * MAX_TARGET_R, MAX_TARGET_PCT);
+    const hasOverheadResistance = distToHigh52WPct !== null && distToHigh52WPct > 5 && passedCount < 8;
+    const cappedByResistance = hasOverheadResistance && (distToHigh52WPct as number) < idealTargetPct;
+    const optimalTargetGainPct = Number(
+      (cappedByResistance ? Math.max(1, distToHigh52WPct as number) : idealTargetPct).toFixed(1)
+    );
+    const optimalTargetPrice = currentPrice > 0 ? Math.round(currentPrice * (1 + optimalTargetGainPct / 100)) : 0;
+    const optimalTargetReason = cappedByResistance
+      ? `Bị chặn bởi đỉnh 52 tuần (+${optimalTargetGainPct}%) — R:R ${(optimalTargetGainPct / optimalStopLossPct).toFixed(1)}:1, kháng cự gần hơn mục tiêu lý tưởng`
+      : `Mục tiêu R:R ${(optimalTargetGainPct / optimalStopLossPct).toFixed(1)}:1 (+${optimalTargetGainPct}%) — giới hạn ≤ 3R. Đây là mục tiêu theo kế hoạch R, không phải dự báo giá`;
 
     // Minervini Practical Action Advice
     let advice = '';
@@ -379,7 +397,11 @@ export async function GET(request: Request) {
         marketStatus: marketData ? marketData.stageName : 'N/A',
         stockStage: stockData.stageName,
         wyckoffPhase: wyckoff?.phaseName || 'N/A',
-        wyckoffBuyPoint: wyckoff?.buyPointLabel || 'Chưa có điểm mua',
+        wyckoffBuyPoint: wyckoff?.buyBlocked
+          ? 'Tín hiệu theo dõi — chưa đủ Trend Template'
+          : wyckoff?.buyPointLabel || 'Chưa có điểm mua',
+        stage: stockData.stage,
+        passedCount,
         passedCriteria: `${passedCount}/8`,
         wyckoffPassedCriteria: `${wyckoff?.passedCount || 0}/8`,
         rsRating: rs,

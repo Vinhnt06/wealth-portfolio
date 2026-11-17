@@ -814,7 +814,7 @@ export const RSTemplateSubChart: React.FC<RSTemplateSubChartProps> = ({
               <div className="flex items-center justify-between px-3 py-0.5 text-[10.5px] font-mono bg-zinc-900/40">
                 <div className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0" />
-                  <span className="font-bold text-zinc-200 text-xs">RS Line vs VNINDEX</span>
+                  <span className="font-bold text-zinc-200 text-xs">Đường RS so với VNINDEX</span>
                   <span className="text-amber-400 font-bold ml-1">
                     RS: {hoverValues.rs !== undefined ? hoverValues.rs.toFixed(1) : '--'}
                   </span>

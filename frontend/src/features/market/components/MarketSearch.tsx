@@ -511,7 +511,7 @@ export const MarketSearch: React.FC = () => {
             <span>Bấm <kbd className="text-zinc-200 font-bold bg-zinc-800 px-1 rounded">↵</kbd> để chọn</span>
             <span className="text-emerald-400 font-semibold flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              Chỉ số & Cổ phiếu Realtime
+              Chỉ số & Cổ phiếu Thời gian thực
             </span>
           </div>
         </div>

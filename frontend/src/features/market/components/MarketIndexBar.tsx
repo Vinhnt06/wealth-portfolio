@@ -29,7 +29,7 @@ export function MarketIndexBar() {
             : 'bg-zinc-800/80 text-zinc-400 border border-zinc-700/60'
         }`}>
           {wsStatus === 'connected' ? <WifiHigh size={10} className="mr-1 inline" /> : <WifiSlash size={10} className="mr-1 inline" />}
-          {wsStatus === 'connected' ? 'REALTIME' : sessionInfo.isOpen ? 'CHỜ KẾT NỐI' : 'ĐÃ ĐÓNG CỬA'}
+          {wsStatus === 'connected' ? 'THỜI GIAN THỰC' : sessionInfo.isOpen ? 'CHỜ KẾT NỐI' : 'ĐÃ ĐÓNG CỬA'}
         </span>
       </div>
 

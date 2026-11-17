@@ -1,5 +1,6 @@
 'use client';
 
+import { useLanguage } from '../../../app/components/LanguageContext';
 import React, { useState, useEffect, useMemo, memo } from 'react';
 import {
   Bank,
@@ -35,9 +36,21 @@ const TERM_LABELS = {
   rate36M: '36 Tháng',
 } as const;
 
+const TERM_LABELS_EN: Record<keyof typeof TERM_LABELS, string> = {
+  rate1M: '1 Month',
+  rate3M: '3 Months',
+  rate6M: '6 Months',
+  rate12M: '12 Months (Standard)',
+  rate18M: '18 Months',
+  rate24M: '24 Months',
+  rate36M: '36 Months',
+};
+
 type TermKey = keyof typeof TERM_LABELS;
 
 export const BankInterestRatesModule: React.FC = memo(() => {
+  const { tr, language } = useLanguage();
+  const termLabel = (k: TermKey) => (language === 'en' ? TERM_LABELS_EN[k] : TERM_LABELS[k]);
   const [rateType, setRateType] = useState<'online' | 'counter'>('online');
   const [selectedTerm, setSelectedTerm] = useState<TermKey>('rate12M');
   const [bankGroupFilter, setBankGroupFilter] = useState<'all' | 'big4' | 'private'>('all');
@@ -74,7 +87,7 @@ export const BankInterestRatesModule: React.FC = memo(() => {
         }
       }
     } catch (err) {
-      console.error('Lỗi nạp dữ liệu lãi suất ngân hàng realtime:', err);
+      console.error('Lỗi nạp dữ liệu lãi suất ngân hàng thời gian thực:', err);
     } finally {
       setLoading(false);
     }
@@ -126,33 +139,33 @@ export const BankInterestRatesModule: React.FC = memo(() => {
         <div className="flex items-center gap-2.5 flex-wrap">
           <Bank className="w-4 h-4 text-emerald-400" />
           <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-100 flex items-center gap-2">
-            <span>BẢNG SO SÁNH LÃI SUẤT TIẾT KIỆM NGÂN HÀNG (VIETNAM BANK SAVINGS RATES)</span>
+            <span>{tr('BẢNG SO SÁNH LÃI SUẤT TIẾT KIỆM NGÂN HÀNG', 'BANK SAVINGS INTEREST RATE COMPARISON')}</span>
           </h2>
           <span className="inline-flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-bold rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/25">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            REALTIME (30s)
+            {tr('THỜI GIAN THỰC (30s)', 'REAL TIME (30s)')}
           </span>
           <span className="hidden lg:inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold rounded bg-amber-500/10 text-amber-400 border border-amber-500/25">
             <ShieldCheck className="w-3 h-3" />
-            CHÍNH THỨC TỪ HỆ THỐNG NHTM
+            {tr('CHÍNH THỨC TỪ HỆ THỐNG NHTM', 'OFFICIAL FROM BANK SYSTEMS')}
           </span>
         </div>
 
         <div className="flex items-center gap-3 text-xs text-zinc-500" suppressHydrationWarning>
           <span suppressHydrationWarning>
             {!mounted
-              ? 'Đang kết nối...'
+              ? tr('Đang kết nối...', 'Connecting...')
               : lastSyncTime
-              ? `Đồng bộ: ${lastSyncTime}`
+              ? tr(`Đồng bộ: ${lastSyncTime}`, `Synced: ${lastSyncTime}`)
               : ratesData.updateTime
-              ? `Cập nhật: ${ratesData.updateTime}`
-              : 'Đang tải...'}
+              ? tr(`Cập nhật: ${ratesData.updateTime}`, `Updated: ${ratesData.updateTime}`)
+              : tr('Đang tải...', 'Loading...')}
           </span>
           <button
             onClick={() => fetchRates(true)}
             disabled={loading}
             className="p-1 hover:text-zinc-200 hover:bg-zinc-800 rounded transition-colors disabled:opacity-50"
-            title="Lấy dữ liệu realtime ngay lập tức"
+            title={tr('Lấy dữ liệu thời gian thực ngay lập tức', 'Fetch live data now')}
           >
             <ArrowsClockwise className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-emerald-400' : ''}`} />
           </button>
@@ -164,9 +177,9 @@ export const BankInterestRatesModule: React.FC = memo(() => {
         <div className="flex items-center justify-between mb-3 text-xs text-zinc-400">
           <span className="flex items-center gap-1.5 text-zinc-300 font-semibold">
             <TrendUp className="w-4 h-4 text-emerald-400" />
-            Top 3 Ngân Hàng Lãi Suất Cao Nhất Kỳ Hạn {TERM_LABELS[selectedTerm]} ({rateType === 'online' ? 'Online' : 'Tại quầy'})
+            {tr('Top 3 Ngân Hàng Lãi Suất Cao Nhất Kỳ Hạn', 'Top 3 Highest-Rate Banks for')} {termLabel(selectedTerm)} ({rateType === 'online' ? tr('Online', 'Online') : tr('Tại quầy', 'In branch')})
           </span>
-          <span className="text-[11px] text-zinc-500">Tự động sắp xếp theo thứ hạng</span>
+          <span className="text-[11px] text-zinc-500">{tr('Tự động sắp xếp theo thứ hạng', 'Automatically ranked')}</span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -180,11 +193,11 @@ export const BankInterestRatesModule: React.FC = memo(() => {
                 <div>
                   <div className="flex items-center gap-1.5 mb-1">
                     <span className="px-1.5 py-0.5 text-[9px] font-black rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                      TOP #{idx + 1}
+                      {tr('TOP', 'TOP')} #{idx + 1}
                     </span>
                     {isBig4 && (
                       <span className="px-1.5 py-0.5 text-[9px] font-bold rounded bg-amber-500/10 text-amber-400 border border-amber-500/30">
-                        BIG 4 CHÍNH THỨC
+                        {tr('BIG 4 CHÍNH THỨC', 'OFFICIAL BIG 4')}
                       </span>
                     )}
                   </div>
@@ -200,7 +213,7 @@ export const BankInterestRatesModule: React.FC = memo(() => {
                   <span className="text-xl font-black text-emerald-400 tabular-nums">
                     {b[selectedTerm]}%
                   </span>
-                  <div className="text-[10px] text-zinc-500">/ năm</div>
+                  <div className="text-[10px] text-zinc-500">{tr('/ năm', '/ year')}</div>
                 </div>
               </div>
             );
@@ -212,7 +225,7 @@ export const BankInterestRatesModule: React.FC = memo(() => {
       <div className="p-4 border-b border-[#1a1a1a] flex flex-col lg:flex-row lg:items-center justify-between gap-3 text-xs bg-[#0f0f0f]">
         {/* Rate Type (Online vs Counter) */}
         <div className="flex items-center gap-2">
-          <span className="text-zinc-500 uppercase text-[11px]">Kênh gửi:</span>
+          <span className="text-zinc-500 uppercase text-[11px]">{tr('Kênh gửi:', 'Channel:')}</span>
           <div className="flex p-0.5 bg-black border border-zinc-800 rounded-lg">
             <button
               onClick={() => setRateType('online')}
@@ -222,7 +235,7 @@ export const BankInterestRatesModule: React.FC = memo(() => {
                   : 'text-zinc-400 hover:text-zinc-200'
               }`}
             >
-              Gửi Online (Lãi cao hơn)
+              {tr('Gửi Online (Lãi cao hơn)', 'Online deposit (higher rate)')}
             </button>
             <button
               onClick={() => setRateType('counter')}
@@ -232,14 +245,14 @@ export const BankInterestRatesModule: React.FC = memo(() => {
                   : 'text-zinc-400 hover:text-zinc-200'
               }`}
             >
-              Tại Quầy Giao Dịch
+              {tr('Tại Quầy Giao Dịch', 'In-branch deposit')}
             </button>
           </div>
         </div>
 
         {/* Group Filter (All / Big 4 Official / Private) */}
         <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-zinc-500 uppercase text-[11px] mr-1">Nhóm:</span>
+          <span className="text-zinc-500 uppercase text-[11px] mr-1">{tr('Nhóm:', 'Group:')}</span>
           <button
             onClick={() => setBankGroupFilter('all')}
             className={`px-2.5 py-1 rounded text-[11px] border transition-all ${
@@ -248,7 +261,7 @@ export const BankInterestRatesModule: React.FC = memo(() => {
                 : 'text-zinc-400 border-transparent hover:text-zinc-200'
             }`}
           >
-            Tất cả ({currentList.length})
+            {tr('Tất cả', 'All')} ({currentList.length})
           </button>
           <button
             onClick={() => setBankGroupFilter('big4')}
@@ -259,7 +272,7 @@ export const BankInterestRatesModule: React.FC = memo(() => {
             }`}
           >
             <ShieldCheck className="w-3.5 h-3.5" />
-            <span>🏛️ Big 4 Nhà Nước (Chính Thức)</span>
+            <span>🏛️ {tr('Big 4 Nhà Nước (Chính Thức)', 'State-owned Big 4 (Official)')}</span>
           </button>
           <button
             onClick={() => setBankGroupFilter('private')}
@@ -269,13 +282,13 @@ export const BankInterestRatesModule: React.FC = memo(() => {
                 : 'text-zinc-400 border-transparent hover:text-zinc-200'
             }`}
           >
-            NHTM Cổ Phần
+            {tr('NHTM Cổ Phần', 'Joint-stock banks')}
           </button>
         </div>
 
         {/* Term Selector */}
         <div className="flex items-center gap-1 flex-wrap">
-          <span className="text-zinc-500 uppercase text-[11px] mr-1">Kỳ hạn:</span>
+          <span className="text-zinc-500 uppercase text-[11px] mr-1">{tr('Kỳ hạn:', 'Term:')}</span>
           {(['rate1M', 'rate3M', 'rate6M', 'rate12M', 'rate18M', 'rate24M', 'rate36M'] as const).map((t) => (
             <button
               key={t}
@@ -286,7 +299,7 @@ export const BankInterestRatesModule: React.FC = memo(() => {
                   : 'text-zinc-400 border-zinc-800/80 hover:border-zinc-700'
               }`}
             >
-              {t === 'rate12M' ? '12T (Chuẩn)' : t.replace('rate', '')}
+              {t === 'rate12M' ? tr('12T (Chuẩn)', '12M (Std)') : t.replace('rate', '').replace('M', language === 'en' ? 'M' : 'T')}
             </button>
           ))}
         </div>
@@ -296,7 +309,7 @@ export const BankInterestRatesModule: React.FC = memo(() => {
           <MagnifyingGlass className="w-3.5 h-3.5 text-zinc-500 absolute left-2.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="Tìm ngân hàng (VCB, BIDV...)"
+            placeholder={tr('Tìm ngân hàng (VCB, BIDV...)', 'Search banks (VCB, BIDV...)')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-8 pr-3 py-1 bg-black border border-zinc-800 rounded-lg text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-zinc-600 w-full"
@@ -309,22 +322,22 @@ export const BankInterestRatesModule: React.FC = memo(() => {
         <table className="w-full text-left text-xs">
           <thead>
             <tr className="border-b border-[#1a1a1a] text-[11px] text-zinc-500 uppercase tracking-wider bg-[#0a0a0a]">
-              <th className="py-2.5 px-4 font-medium">Ngân Hàng</th>
-              <th className="py-2.5 px-3 font-medium text-right">01T</th>
-              <th className="py-2.5 px-3 font-medium text-right">03T</th>
-              <th className="py-2.5 px-3 font-medium text-right font-semibold text-zinc-300">06T</th>
-              <th className="py-2.5 px-3 font-medium text-right font-bold text-emerald-400">12T (Chuẩn)</th>
-              <th className="py-2.5 px-3 font-medium text-right text-zinc-300">18T</th>
-              <th className="py-2.5 px-3 font-medium text-right">24T</th>
-              <th className="py-2.5 px-3 font-medium text-right">36T</th>
-              <th className="py-2.5 px-4 font-medium text-center">Phân Loại</th>
+              <th className="py-2.5 px-4 font-medium">{tr('Ngân Hàng', 'Bank')}</th>
+              <th className="py-2.5 px-3 font-medium text-right">{tr('01T', '1M')}</th>
+              <th className="py-2.5 px-3 font-medium text-right">{tr('03T', '3M')}</th>
+              <th className="py-2.5 px-3 font-medium text-right font-semibold text-zinc-300">{tr('06T', '6M')}</th>
+              <th className="py-2.5 px-3 font-medium text-right font-bold text-emerald-400">{tr('12T (Chuẩn)', '12M (Std)')}</th>
+              <th className="py-2.5 px-3 font-medium text-right text-zinc-300">{tr('18T', '18M')}</th>
+              <th className="py-2.5 px-3 font-medium text-right">{tr('24T', '24M')}</th>
+              <th className="py-2.5 px-3 font-medium text-right">{tr('36T', '36M')}</th>
+              <th className="py-2.5 px-4 font-medium text-center">{tr('Phân Loại', 'Type')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#1a1a1a]">
             {sortedBanks.length === 0 ? (
               <tr>
                 <td colSpan={9} className="py-8 text-center text-zinc-500">
-                  {loading ? 'Đang tải dữ liệu biểu lãi suất...' : 'Không tìm thấy ngân hàng phù hợp'}
+                  {loading ? tr('Đang tải dữ liệu biểu lãi suất...', 'Loading interest rate table...') : tr('Không tìm thấy ngân hàng phù hợp', 'No matching bank found')}
                 </td>
               </tr>
             ) : (
@@ -345,7 +358,7 @@ export const BankInterestRatesModule: React.FC = memo(() => {
                       </span>
                       {isBig4 && (
                         <span className="px-1.5 py-0.5 rounded text-[9px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/40 inline-flex items-center gap-0.5">
-                          🏛️ CHÍNH THỨC BIG 4
+                          🏛️ {tr('CHÍNH THỨC BIG 4', 'OFFICIAL BIG 4')}
                         </span>
                       )}
                     </td>
@@ -361,10 +374,10 @@ export const BankInterestRatesModule: React.FC = memo(() => {
                     <td className="py-2.5 px-4 text-center">
                       {isBig4 ? (
                         <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
-                          NHTM Nhà Nước
+                          {tr('NHTM Nhà Nước', 'State-owned')}
                         </span>
                       ) : (
-                        <span className="text-[10px] text-zinc-500">NHTM Cổ Phần</span>
+                        <span className="text-[10px] text-zinc-500">{tr('NHTM Cổ Phần', 'Joint-stock')}</span>
                       )}
                     </td>
                   </tr>

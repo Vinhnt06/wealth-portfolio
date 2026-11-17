@@ -59,11 +59,11 @@ export function DnseMarketModule() {
         <div className="flex items-center gap-3 text-xs font-mono">
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-300">
             <ShieldCheck size={14} className="text-emerald-400" />
-            <span>Zero DB Latency</span>
+            <span>Không trễ CSDL</span>
           </div>
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-300">
             <Globe size={14} className="text-emerald-400" />
-            <span>JSON Protocol</span>
+            <span>Giao thức JSON</span>
           </div>
         </div>
       </div>
@@ -104,7 +104,7 @@ export function DnseMarketModule() {
             </div>
           </div>
           <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-900 text-zinc-400 border border-zinc-800">
-            HOSE Today
+            HOSE hôm nay
           </span>
         </div>
 
@@ -129,7 +129,7 @@ export function DnseMarketModule() {
               <Globe size={20} weight="bold" />
             </div>
             <div>
-              <div className="text-xs text-zinc-400 font-medium">Tỷ Giá USD/VND Live</div>
+              <div className="text-xs text-zinc-400 font-medium">Tỷ Giá USD/VND Trực Tiếp</div>
               <div className="text-sm font-mono font-bold text-zinc-100 mt-0.5">25,420 VND</div>
             </div>
           </div>

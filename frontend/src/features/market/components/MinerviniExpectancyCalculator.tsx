@@ -65,6 +65,8 @@ interface AutoWinRateData {
   summary: {
     marketStatus: string;
     stockStage: string;
+    stage?: number;
+    passedCount?: number;
     wyckoffPhase?: string;
     wyckoffBuyPoint?: string;
     passedCriteria: string;
@@ -86,6 +88,9 @@ interface AutoWinRateData {
   };
   factors: WinRateFactor[];
 }
+
+// Chi phí khứ hồi ước tính trên TTCK Việt Nam: phí môi giới ~0.15% x 2 chiều + thuế bán 0.1%
+const ROUND_TRIP_COST_PCT = 0.4;
 
 const POPULAR_SYMBOLS = ['HPG', 'SSI', 'VND', 'TCB', 'MWG', 'FPT', 'VHM', 'MBB', 'DGC', 'VCI'];
 
@@ -249,6 +254,9 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
       .catch(() => {});
   };
 
+  const trendGateFail =
+    autoWinRateData?.summary?.passedCount !== undefined && autoWinRateData.summary.passedCount < 8;
+
   // ── MATHEMATICAL ENGINE (MARK MINERVINI FORMULAS) ──
   const math = useMemo(() => {
     const W = winRatePct / 100; // Tỷ lệ thắng
@@ -265,7 +273,7 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
 
     // 3. Tỷ lệ thắng tối thiểu để hòa vốn (Breakeven Win Rate)
     // Formula: W_be = 1 / (1 + RR) = B / (A + B)
-    const breakevenWinRatePct = Number(((B / (A + B)) * 100).toFixed(1));
+    const breakevenWinRatePct = A + B > 0 ? Number(((B / (A + B)) * 100).toFixed(1)) : 0;
 
     // 4. Mức cắt lỗ tối đa cho phép để hòa vốn với Win Rate này
     // Formula: B_max = (W / (1 - W)) * A
@@ -284,9 +292,19 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
     // 7. Quản trị quy mô vị thế (Position Sizing theo rủi ro % NAV)
     const maxRiskCapital = totalCapital * (riskPerTradePct / 100);
     const riskPerShare = entryPrice - stopLossPrice;
-    const maxShares = riskPerShare > 0 ? Math.floor(maxRiskCapital / riskPerShare / 100) * 100 : 0;
+    const sharesByRisk = riskPerShare > 0 ? Math.floor(maxRiskCapital / riskPerShare / 100) * 100 : 0;
+    // Không thể mua vượt tổng vốn: stop càng chặt, khối lượng theo rủi ro càng phình (VD stop 1% / rủi ro 1.5% NAV = 150% NAV)
+    const sharesByCapital = entryPrice > 0 ? Math.floor(totalCapital / entryPrice / 100) * 100 : 0;
+    const isCapitalCapped = sharesByRisk > sharesByCapital;
+    const maxShares = Math.min(sharesByRisk, sharesByCapital);
     const positionValue = maxShares * entryPrice;
     const allocationPct = totalCapital > 0 ? Number(((positionValue / totalCapital) * 100).toFixed(1)) : 0;
+
+    // Rủi ro thực tế (đã tính làm tròn lô 100 CP và giới hạn vốn)
+    const actualRiskCapital = maxShares * Math.max(0, riskPerShare);
+    const actualRiskPct = totalCapital > 0 ? Number(((actualRiskCapital / totalCapital) * 100).toFixed(2)) : 0;
+    // Minervini thường giữ mỗi vị thế quanh 25% NAV; vượt mức này là tập trung cao
+    const isConcentrated = allocationPct > 25;
 
     // Lợi nhuận kỳ vọng khi chạm Target (VND)
     const profitAtTarget = maxShares * (targetPrice - entryPrice);
@@ -295,7 +313,7 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
 
     // 8. Chiến Lược Giải Ngân Kim Tự Tháp (Pyramiding Scale-In: 40% - 35% - 25% theo Mark Minervini)
     // Đợt 1: Pilot Tranche (40%) - Mua thăm dò tại Entry
-    const t1Shares = Math.floor((maxShares * 0.4) / 100) * 100;
+    const t1Shares = Math.round((maxShares * 0.4) / 100) * 100;
     const t1EntryPrice = entryPrice;
     const t1Value = t1Shares * t1EntryPrice;
     const t1StopLossPrice = stopLossPrice;
@@ -305,7 +323,7 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
     // Đợt 2: Scale-Up Tranche 1 (35%) - Chỉ mua gia tăng khi Đợt 1 đã có đệm lãi +2.5%
     const t2TriggerPct = 2.5;
     const t2EntryPrice = Math.round(entryPrice * (1 + t2TriggerPct / 100));
-    const t2Shares = Math.floor((maxShares * 0.35) / 100) * 100;
+    const t2Shares = Math.round((maxShares * 0.35) / 100) * 100;
     const t2Value = t2Shares * t2EntryPrice;
     // Hành động bảo vệ vốn sống còn: Nâng Stop Loss của Đợt 1 lên Giá Vốn Hòa Vốn (Breakeven - Risk-Free)
     const t2StopLossPrice = entryPrice;
@@ -326,7 +344,7 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
     // 9. Kế Hoạch Cắt Lỗ Bậc Thang (Staged Stop-Loss / Phòng thủ 2 nấc)
     const halfStopLossPct = Number((stopLossPct / 2).toFixed(1));
     const stopPriceStage1 = Math.round(entryPrice * (1 - halfStopLossPct / 100));
-    const stage1CutShares = Math.floor((maxShares * 0.5) / 100) * 100;
+    const stage1CutShares = Math.round((maxShares * 0.5) / 100) * 100;
     const stage1Loss = stage1CutShares * (entryPrice - stopPriceStage1);
 
     const stage2CutShares = Math.max(0, maxShares - stage1CutShares);
@@ -340,11 +358,11 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
     // 10. Kế Hoạch Chốt Lời Bậc Thang (Staged Profit-Taking / Tấn công 3 nấc)
     const tp1Pct = Math.round(targetGainPct * 0.6 * 10) / 10; // ~60% target
     const tp1Price = Math.round(entryPrice * (1 + tp1Pct / 100));
-    const tp1Shares = Math.floor((maxShares * 0.35) / 100) * 100;
+    const tp1Shares = Math.round((maxShares * 0.35) / 100) * 100;
     const tp1Profit = tp1Shares * (tp1Price - entryPrice);
 
     const tp2Price = targetPrice;
-    const tp2Shares = Math.floor((maxShares * 0.40) / 100) * 100;
+    const tp2Shares = Math.round((maxShares * 0.40) / 100) * 100;
     const tp2Profit = tp2Shares * (tp2Price - entryPrice);
 
     const runnerShares = Math.max(0, maxShares - tp1Shares - tp2Shares);
@@ -366,6 +384,10 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
       verdict = 'KỲ VỌNG TOÁN HỌC ÂM';
       verdictColor = 'text-rose-400 bg-rose-500/10 border-rose-500/30';
       verdictNote = `Với Win Rate ${winRatePct}%, mức cắt lỗ ${stopLossPct}% đang vượt ngưỡng hòa vốn (${maxBreakevenStopLossPct}%). Vốn của bạn sẽ bị bào mòn dần!`;
+    } else if (expectancyPct < ROUND_TRIP_COST_PCT * 2) {
+      verdict = 'KỲ VỌNG DƯƠNG NHƯNG MỎNG';
+      verdictColor = 'text-amber-400 bg-amber-500/10 border-amber-500/30';
+      verdictNote = `Kỳ vọng ${expectancyPct}%/lệnh gần bằng chi phí giao dịch khứ hồi (~${ROUND_TRIP_COST_PCT}% gồm phí 2 chiều + thuế bán 0.1%). Sau chi phí gần như hòa vốn.`;
     } else if (!isRiskRewardOptimal) {
       verdict = 'TỶ LỆ R:R THẤP (< 2.0)';
       verdictColor = 'text-amber-400 bg-amber-500/10 border-amber-500/30';
@@ -384,6 +406,10 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
       optimalStopPrice2to1,
       breakevenStopPrice,
       maxRiskCapital,
+      actualRiskCapital,
+      actualRiskPct,
+      isCapitalCapped,
+      isConcentrated,
       riskPerShare,
       maxShares,
       positionValue,
@@ -663,15 +689,25 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
         const setup = autoWinRateData?.optimalSetup;
         const structureBroken = setup?.setupQuality === 'STRUCTURE_BROKEN';
         const hasPrice = entryPrice > 0;
+        // Cổng xu hướng: chưa Stage 2 (8/8) thì mọi con số kỳ vọng chỉ mang tính tham khảo — Minervini không mua ngoài Stage 2
+        const sm = autoWinRateData?.summary;
+        const trendFail = sm?.passedCount !== undefined && sm.passedCount < 8;
+        const trendTone = trendFail ? ((sm?.stage ?? 1) >= 3 ? 'rose' : 'amber') : null;
         const tone = structureBroken || math.verdictColor.includes('rose')
           ? 'rose'
-          : math.verdictColor.includes('amber')
-            ? 'amber'
-            : 'emerald';
+          : trendTone ?? (math.verdictColor.includes('amber') ? 'amber' : 'emerald');
         const toneText = { rose: 'text-rose-400', amber: 'text-amber-400', emerald: 'text-emerald-400' }[tone];
         const toneBar = { rose: 'bg-rose-500', amber: 'bg-amber-400', emerald: 'bg-emerald-400' }[tone];
-        const verdictLabel = structureBroken ? 'KHÔNG NÊN MUA — CẤU TRÚC ĐÃ GÃY' : math.verdict;
-        const verdictNote = structureBroken ? setup?.setupWarning : math.verdictNote;
+        const verdictLabel = structureBroken
+          ? 'KHÔNG NÊN MUA — CẤU TRÚC ĐÃ GÃY'
+          : trendFail
+            ? 'CHƯA ĐỦ ĐIỀU KIỆN MUA — CHƯA VÀO STAGE 2'
+            : math.verdict;
+        const verdictNote = structureBroken
+          ? setup?.setupWarning
+          : trendFail
+            ? `Trend Template mới đạt ${sm?.passedCount}/8 (Stage ${sm?.stage}). Minervini chỉ mua cổ phiếu ở Stage 2 đủ 8/8, nên kỳ vọng bên dưới chỉ để tham khảo, không phải tín hiệu vào lệnh.`
+            : math.verdictNote;
 
         return (
           <section className="rounded-xl bg-zinc-950 border border-zinc-800 overflow-hidden">
@@ -846,7 +882,7 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
                       className="px-3 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-[11px] font-mono text-zinc-300 transition-colors shrink-0"
                       title="Đặt lại về giá khớp thị trường hiện tại"
                     >
-                      Giá Live ({formatVND(livePrice)})
+                      Giá trực tiếp ({formatVND(livePrice)})
                     </button>
                   )}
                 </div>
@@ -1233,10 +1269,20 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
           </div>
 
           {/* Verdict Box */}
-          <div className={`p-3 rounded-xl border text-xs font-mono leading-relaxed mt-4 ${math.verdictColor}`}>
+          <div className={`p-3 rounded-xl border text-xs font-mono leading-relaxed mt-4 ${
+            trendGateFail
+              ? (autoWinRateData?.summary?.stage ?? 1) >= 3
+                ? 'text-rose-400 bg-rose-500/10 border-rose-500/30'
+                : 'text-amber-400 bg-amber-500/10 border-amber-500/30'
+              : math.verdictColor
+          }`}>
             <div className="flex items-start gap-2">
               <Info className="w-4 h-4 shrink-0 mt-0.5" />
-              <span>{math.verdictNote}</span>
+              <span>
+                {trendGateFail
+                  ? `Chưa đạt Trend Template (${autoWinRateData?.summary?.passedCount}/8 · Stage ${autoWinRateData?.summary?.stage}) — không phải tín hiệu vào lệnh. ${math.verdictNote}`
+                  : math.verdictNote}
+              </span>
             </div>
           </div>
         </div>
@@ -1294,10 +1340,12 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
                   </div>
                   <div>
                     <span className="text-[10px] text-zinc-500 uppercase block">Tỷ Trọng NAV</span>
-                    <span className="text-sm font-bold text-emerald-400 block mt-0.5">
+                    <span className={`text-sm font-bold block mt-0.5 ${math.isConcentrated ? 'text-amber-400' : 'text-emerald-400'}`}>
                       {math.allocationPct}%
                     </span>
-                    <span className="text-[10px] text-zinc-400">Rủi ro: {riskPerTradePct}%</span>
+                    <span className="text-[10px] text-zinc-400">
+                      Rủi ro thực: {math.actualRiskPct}%{math.isCapitalCapped ? ' · chạm trần vốn' : math.isConcentrated ? ' · tập trung cao' : ''}
+                    </span>
                   </div>
                   <div>
                     <span className="text-[10px] text-zinc-500 uppercase block">Giá Vốn TB (3 Đợt)</span>
@@ -1339,7 +1387,7 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
                           <span className="text-zinc-200">{math.pyramid.t1Shares.toLocaleString('vi-VN')} CP</span>
                         </div>
                         <div className="flex items-center justify-between pt-1 border-t border-zinc-800/70">
-                          <span className="text-zinc-500 text-[11px]">Stop-Loss:</span>
+                          <span className="text-zinc-500 text-[11px]">Cắt lỗ:</span>
                           <span className="text-rose-400 font-bold">
                             {formatVND(math.pyramid.t1StopLossPrice)} đ (-{stopLossPct}%)
                           </span>
@@ -1497,7 +1545,7 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
                             {math.stagedExit.runnerShares.toLocaleString('vi-VN')} CP
                           </span>
                         </div>
-                        <span className="text-cyan-400 font-bold">Trailing Stop</span>
+                        <span className="text-cyan-400 font-bold">Cắt lỗ dời</span>
                       </div>
                     </div>
                   </div>
@@ -1592,12 +1640,15 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-zinc-400">Tỷ trọng giải ngân danh mục:</span>
-                    <span className="font-bold text-zinc-200">{math.allocationPct}% Tổng Tài Khoản (NAV)</span>
+                    <span className={`font-bold ${math.isConcentrated ? 'text-amber-300' : 'text-zinc-200'}`}>
+                      {math.allocationPct}% Tổng Tài Khoản (NAV)
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-zinc-400">Tổn thất tối đa nếu dính Stop-Loss:</span>
+                    <span className="text-zinc-400">Tổn thất tối đa nếu dính Cắt lỗ:</span>
                     <span className="font-bold text-rose-400">
-                      -{formatVND(math.maxRiskCapital)} đ (Đúng {riskPerTradePct}% NAV)
+                      -{formatVND(math.actualRiskCapital)} đ ({math.actualRiskPct}% NAV
+                      {math.actualRiskCapital < math.maxRiskCapital * 0.98 ? `, thấp hơn mức ${riskPerTradePct}% do làm tròn lô / giới hạn vốn` : ''})
                     </span>
                   </div>
                   <div className="flex items-center justify-between pt-1 border-t border-zinc-800/80">
@@ -1623,7 +1674,7 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
                 <span>Mô Phỏng Monte Carlo: Tăng Trưởng Tài Khoản Qua Chuỗi {simulationTradeCount} Lệnh</span>
               </h3>
               <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-zinc-900 text-emerald-400 border border-emerald-500/30">
-                PROBABILITY ENGINE
+                BỘ MÁY XÁC SUẤT
               </span>
             </div>
             <p className="text-xs text-zinc-400 font-mono mt-0.5">
@@ -1910,7 +1961,7 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
           <table className="w-full text-xs font-mono text-center">
             <thead>
               <tr className="border-b border-zinc-800 text-zinc-400">
-                <th className="py-2.5 px-3 text-left">Win Rate \ R:R</th>
+                <th className="py-2.5 px-3 text-left">Tỷ lệ thắng \ R:R</th>
                 <th className="py-2.5 px-3">1.5 : 1</th>
                 <th className="py-2.5 px-3">2.0 : 1 (Chuẩn)</th>
                 <th className="py-2.5 px-3">2.5 : 1</th>
@@ -2035,7 +2086,7 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
                 <CheckCircle className="w-4 h-4 text-emerald-400" />
                 <span>4 Nguyên Tắc Vàng Ghi Nhớ Suốt Đời</span>
               </h4>
-              <span className="text-[10px] font-mono text-emerald-400 font-bold">MINERVINI CREED</span>
+              <span className="text-[10px] font-mono text-emerald-400 font-bold">TÂM NIỆM MINERVINI</span>
             </div>
 
             <div className="space-y-2.5 text-xs font-mono">

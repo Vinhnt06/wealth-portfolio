@@ -752,7 +752,7 @@ export const ShareholderStructureView: React.FC<ShareholderStructureViewProps> =
 
             {/* Donut Center Display */}
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
-              <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">Free Float</span>
+              <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">Cổ phiếu tự do chuyển nhượng</span>
               <span className="text-xl font-mono font-bold text-zinc-100">
                 {structure ? `${structure.freeFloatPercentage.toFixed(1)}%` : '--'}
               </span>

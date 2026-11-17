@@ -30,6 +30,7 @@ import {
 } from '@phosphor-icons/react';
 import { MinerviniAnalysisResult, RsLeaderboardItem } from '../types/minervini.types';
 import { useMarketStore } from '../store/marketStore';
+import { useLanguage } from '../../../app/components/LanguageContext';
 import { MinerviniStrategyTab } from './MinerviniStrategyTab';
 
 interface MinerviniStrategyPanelProps {
@@ -37,6 +38,7 @@ interface MinerviniStrategyPanelProps {
 }
 
 export const MinerviniStrategyPanel: React.FC<MinerviniStrategyPanelProps> = ({ symbol }) => {
+  const { tr } = useLanguage();
   const { setSelectedSymbol } = useMarketStore();
   const liveTick = useMarketStore((state) => state.ticks[symbol?.toUpperCase()]);
   const wsStatus = useMarketStore((state) => state.wsStatus);
@@ -137,11 +139,11 @@ export const MinerviniStrategyPanel: React.FC<MinerviniStrategyPanelProps> = ({ 
         <div className="flex items-center gap-2 min-w-0">
           <Sparkle className="w-3.5 h-3.5 text-amber-400 shrink-0" weight="fill" />
           <span className="text-xs font-mono font-bold text-zinc-100 tracking-tight truncate">
-            Chiến Lược Minervini
+            {tr('Chiến Lược Minervini', 'Minervini Strategy')}
           </span>
           <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-bold uppercase tracking-wider inline-flex items-center gap-1 shrink-0">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            {wsStatus === 'connected' ? 'LIVE' : 'SYNC'}
+            {wsStatus === 'connected' ? tr('TRỰC TIẾP', 'LIVE') : tr('ĐỒNG BỘ', 'SYNC')}
           </span>
         </div>
 
@@ -150,7 +152,7 @@ export const MinerviniStrategyPanel: React.FC<MinerviniStrategyPanelProps> = ({ 
           onClick={handleScan}
           disabled={isScanning || isLoading}
           className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 active:bg-zinc-700/80 text-zinc-300 hover:text-zinc-100 border border-zinc-700/80 hover:border-zinc-500 text-[11px] font-mono font-medium transition-all duration-150 active:scale-95 cursor-pointer disabled:opacity-50 shrink-0 group shadow-sm"
-          title="Bấm để tính toán và quét lại 8 tiêu chí Trend Template & RS Rating"
+          title={tr('Bấm để tính toán và quét lại 8 tiêu chí Trend Template & RS Rating', 'Recalculate the 8 Trend Template criteria and RS Rating')}
         >
           <ArrowsClockwise
             size={12}
@@ -158,7 +160,7 @@ export const MinerviniStrategyPanel: React.FC<MinerviniStrategyPanelProps> = ({ 
               isScanning || isLoading ? 'animate-spin' : 'group-hover:rotate-180 duration-300'
             }`}
           />
-          <span className="text-[11px]">{isScanning || isLoading ? 'Đang quét...' : 'Quét lại'}</span>
+          <span className="text-[11px]">{isScanning || isLoading ? tr('Đang quét...', 'Scanning...') : tr('Quét lại', 'Rescan')}</span>
         </button>
       </div>
 
@@ -173,7 +175,7 @@ export const MinerviniStrategyPanel: React.FC<MinerviniStrategyPanelProps> = ({ 
                 : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40 border border-transparent'
             }`}
           >
-            Chiến lược
+            {tr('Chiến lược', 'Strategy')}
           </button>
           <button
             onClick={() => setActiveTab('indicators')}
@@ -183,7 +185,7 @@ export const MinerviniStrategyPanel: React.FC<MinerviniStrategyPanelProps> = ({ 
                 : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40 border border-transparent'
             }`}
           >
-            Chỉ báo
+            {tr('Chỉ báo', 'Indicators')}
           </button>
           <button
             onClick={() => setActiveTab('screener')}
@@ -193,7 +195,7 @@ export const MinerviniStrategyPanel: React.FC<MinerviniStrategyPanelProps> = ({ 
                 : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40 border border-transparent'
             }`}
           >
-            Sàng lọc
+            {tr('Sàng lọc', 'Screener')}
           </button>
           <button
             onClick={() => setActiveTab('leaderboard')}
@@ -203,7 +205,7 @@ export const MinerviniStrategyPanel: React.FC<MinerviniStrategyPanelProps> = ({ 
                 : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40 border border-transparent'
             }`}
           >
-            Bảng Vàng
+            {tr('Bảng Vàng', 'Leaderboard')}
           </button>
           <button
             onClick={() => setActiveTab('ai')}
@@ -223,7 +225,7 @@ export const MinerviniStrategyPanel: React.FC<MinerviniStrategyPanelProps> = ({ 
         {isLoading && !data && (
           <div className="flex flex-col items-center justify-center py-12 text-zinc-500 text-xs">
             <ArrowsClockwise size={20} className="animate-spin text-amber-400 mb-2" />
-            <span>Đang tính toán tiêu chí Minervini từ nến DNSE...</span>
+            <span>{tr('Đang tính toán tiêu chí Minervini từ nến DNSE...', 'Calculating Minervini criteria from DNSE candles...')}</span>
           </div>
         )}
 

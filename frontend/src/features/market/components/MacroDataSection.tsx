@@ -34,7 +34,7 @@ export const MacroDataSection: React.FC = () => {
   });
 
   const [liveExchangeRates, setLiveExchangeRates] = useState<any[]>(macroDatabase.exchangeRate);
-  const [exchangeUpdateTime, setExchangeUpdateTime] = useState<string>('Live');
+  const [exchangeUpdateTime, setExchangeUpdateTime] = useState<string>('Trực tiếp');
   const [isLiveRates, setIsLiveRates] = useState<boolean>(false);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
 
@@ -102,7 +102,7 @@ export const MacroDataSection: React.FC = () => {
                 Vĩ Mô & Thị Trường Tiền Tệ
               </h2>
               <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
-                CRON AUTO-SYNC
+                TỰ ĐỘNG ĐỒNG BỘ
               </span>
             </div>
             <p className="text-xs text-zinc-400 font-sans">
@@ -242,7 +242,7 @@ export const MacroDataSection: React.FC = () => {
               <div className="flex items-center gap-1.5">
                 <span className="inline-flex items-center gap-1 font-mono text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-semibold">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  Auto-crawled
+                  Tự động thu thập
                 </span>
                 <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-rose-500/10 border border-rose-500/20 text-rose-400 font-bold">
                   NHNN / TT2
