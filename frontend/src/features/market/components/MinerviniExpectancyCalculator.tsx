@@ -39,6 +39,7 @@ import {
 import type { EmpiricalResult } from '../utils/setupEmpirical';
 import { useMarketStore } from '../store/marketStore';
 import { useLanguage } from '../../../app/components/LanguageContext';
+import { SHORT_HEADLINE } from '../i18n/decision';
 
 interface MinerviniExpectancyCalculatorProps {
   initialSymbol?: string;
@@ -72,6 +73,8 @@ interface AutoWinRateData {
     stockStage: string;
     exchange?: string;
     stage?: number;
+    /** Quyết định hợp nhất (thẻ Tổng kết): máy tính phải khớp với nó */
+    decision?: { action: 'BUY' | 'WAIT' | 'AVOID'; size: string; headline: string; alignment: string } | null;
     passedCount?: number;
     wyckoffPhase?: string;
     wyckoffBuyPoint?: string;
@@ -81,6 +84,10 @@ interface AutoWinRateData {
   };
   optimalSetup?: {
     stopLossPct: number;
+    /** Giá vào lệnh gợi ý: pivot khi đang chờ điểm vào, ngược lại là giá hiện tại */
+    entryPrice?: number;
+    entryBasis?: 'PIVOT' | 'MARKET';
+    pivotPrice?: number | null;
     stopLossPrice: number;
     stopLossReason: string;
     targetGainPct: number;
@@ -180,7 +187,10 @@ const EmpiricalCard: React.FC<{
         <div>
           <h3 className="text-sm font-semibold text-zinc-100">{tr('Kiểm chứng thực nghiệm (backtest)', 'Empirical check (backtest)')}</h3>
           <p className="text-[11px] text-zinc-500 font-mono mt-0.5">
-            {classLabel} · {regimeLabel} · {tr('cắt lỗ', 'stop')} −{b.stopPct}% · R:R {b.rr}:1
+            {b.source === 'DECISION_BUY'
+              ? tr('Trên đúng tín hiệu MUA của ứng dụng', 'On the app’s own BUY signals')
+              : `${classLabel} · ${tr('phá đỉnh có khối lượng', 'volume breakouts')}`}
+            {' · '}{tr('cắt lỗ', 'stop')} −{b.stopPct}% · R:R {b.rr}:1
             {b.fallback ? ` · ${b.fallback}` : ''}
           </p>
         </div>
@@ -268,6 +278,47 @@ const EmpiricalCard: React.FC<{
           </div>
         )}
 
+        {/* Theo mức cắt lỗ: cắt lỗ quá chặt bị quét ra */}
+        {emp.byStop && emp.byStop.length > 1 && (
+          <div>
+            <div className="text-[10px] text-zinc-500 uppercase tracking-wide mb-1.5 font-mono">
+              {tr(`Kết quả theo mức cắt lỗ (cùng R:R ${b.rr}:1)`, `Results by stop size (same ${b.rr}:1 R:R)`)}
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-[11px] font-mono">
+                <thead>
+                  <tr className="text-zinc-500 text-left border-b border-zinc-800">
+                    <th className="py-1.5 pr-3 font-medium">{tr('Cắt lỗ', 'Stop')}</th>
+                    <th className="py-1.5 pr-3 font-medium text-right">{tr('Số lệnh', 'Trades')}</th>
+                    <th className="py-1.5 pr-3 font-medium text-right">{tr('Thắng', 'Win')}</th>
+                    <th className="py-1.5 pr-3 font-medium text-right">{tr('Kỳ vọng', 'Expectancy')}</th>
+                    <th className="py-1.5 font-medium text-right">95%</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-900">
+                  {emp.byStop.map((r) => (
+                    <tr key={r.stop} className={r.stop === b.stopPct ? 'bg-zinc-900/70 text-zinc-100' : 'text-zinc-400'}>
+                      <td className="py-1.5 pr-3">−{r.stop}%{r.stop === b.stopPct ? ' ◀' : ''}</td>
+                      <td className="py-1.5 pr-3 text-right tabular-nums">{r.n}</td>
+                      <td className="py-1.5 pr-3 text-right tabular-nums">{r.winRate}%</td>
+                      <td className={`py-1.5 pr-3 text-right tabular-nums ${r.expectancyPct > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                        {sign(r.expectancyPct)}{r.expectancyPct}%
+                      </td>
+                      <td className="py-1.5 text-right tabular-nums text-zinc-500">{r.expectancyCI[0]} → {r.expectancyCI[1]}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="mt-1.5 text-[10.5px] leading-snug text-zinc-500">
+              {tr(
+                'Cắt lỗ quá chặt (dưới ~5%) hay bị quét ra bởi biến động thường ngày nên kỳ vọng gần 0; cắt lỗ 6–8% cho kết quả tốt hơn trong mẫu. Nhưng 24 tổ hợp đã thử nên đừng chọn riêng ô đẹp nhất.',
+                'Very tight stops (under ~5%) get hit by ordinary noise so expectancy is near 0; 6–8% stops did better in the sample. Still, 24 combinations were tried — do not cherry-pick the single best cell.'
+              )}
+            </p>
+          </div>
+        )}
+
         {/* Đối chứng & chế độ thị trường */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[11px] font-mono">
           {base && (
@@ -343,7 +394,7 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
   initialSymbol,
   initialPrice,
 }) => {
-  const { tr } = useLanguage();
+  const { tr, language } = useLanguage();
   const selectedSymbol = useMarketStore((state) => state.selectedSymbol);
   const setSelectedSymbol = useMarketStore((state) => state.setSelectedSymbol);
   const ticks = useMarketStore((state) => state.ticks);
@@ -367,6 +418,9 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
 
   // Track manual edits so auto-recommendations never overwrite what the user typed
   const stopTouchedRef = useRef(false);
+  // Giá vào: 'pivot' = theo điểm vào do chiến lược đề xuất (không bị ghi đè bởi giá khớp trực tiếp); 'market' = giá hiện tại / nhập tay
+  const entryModeRef = useRef<'market' | 'pivot'>('market');
+  const [entryMode, setEntryMode] = useState<'market' | 'pivot'>('market');
   const targetTouchedRef = useRef(false);
   const setStopLossPct = (v: number) => {
     stopTouchedRef.current = true;
@@ -396,7 +450,7 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
 
   // Update entry price whenever active stock changes and has live price
   useEffect(() => {
-    if (livePrice > 0) {
+    if (livePrice > 0 && entryModeRef.current !== 'pivot') {
       setEntryPrice(livePrice);
     }
   }, [activeSymbol, livePrice]);
@@ -408,7 +462,7 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
     fetch(`/api/market/quote?symbol=${encodeURIComponent(activeSymbol)}`)
       .then((res) => res.json())
       .then((json) => {
-        if (!isCancelled && json.success && json.data?.price > 0) {
+        if (!isCancelled && json.success && json.data?.price > 0 && entryModeRef.current !== 'pivot') {
           setEntryPrice(json.data.price);
         }
       })
@@ -424,6 +478,8 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
     // New symbol → allow auto recommendations again
     stopTouchedRef.current = false;
     targetTouchedRef.current = false;
+    entryModeRef.current = 'market';
+    setEntryMode('market');
     setAutoWinRateData(null);
     setAutoWinRateLoading(true);
 
@@ -438,6 +494,12 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
           if (json.optimalSetup) {
             if (!stopTouchedRef.current) setStopLossPctRaw(json.optimalSetup.stopLossPct);
             if (!targetTouchedRef.current) setTargetGainPctRaw(json.optimalSetup.targetGainPct);
+            // Đang chờ điểm vào: tính kế hoạch từ giá pivot
+            if (json.optimalSetup.entryBasis === 'PIVOT' && (json.optimalSetup.entryPrice ?? 0) > 0) {
+              entryModeRef.current = 'pivot';
+              setEntryMode('pivot');
+              setEntryPrice(json.optimalSetup.entryPrice as number);
+            }
           }
         }
       })
@@ -488,7 +550,7 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
     fetch(`/api/market/quote?symbol=${s}`)
       .then((res) => res.json())
       .then((json) => {
-        if (json.success && json.data?.price) {
+        if (json.success && json.data?.price && entryModeRef.current !== 'pivot') {
           setEntryPrice(json.data.price);
         }
       })
@@ -503,8 +565,14 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
   // Có backtest: hệ số đã gồm gap giá, T+2 và chi phí. Không có: chỉ trừ chi phí khứ hồi.
   const costPad = hasEmp ? 0 : ROUND_TRIP_COST_PCT / 100;
 
-  const trendGateFail =
-    autoWinRateData?.summary?.passedCount !== undefined && autoWinRateData.summary.passedCount < 8;
+  // Cổng quyết định: máy tính phải khớp với thẻ Tổng kết. Chưa phải MUA (CHỜ / TRÁNH) thì mọi con số chỉ để tham khảo.
+  const decisionInfo = autoWinRateData?.summary?.decision ?? null;
+  const notBuyNow = decisionInfo
+    ? decisionInfo.action !== 'BUY'
+    : autoWinRateData?.summary?.passedCount !== undefined && autoWinRateData.summary.passedCount < 8;
+  const gateIsAvoid = decisionInfo ? decisionInfo.action === 'AVOID' : (autoWinRateData?.summary?.stage ?? 1) >= 3;
+  const trendGateFail = notBuyNow;
+  const gateHeadline = decisionInfo ? SHORT_HEADLINE[decisionInfo.headline]?.[language] ?? decisionInfo.headline : '';
 
   // Độ tin cậy: có backtest thì theo cỡ mẫu & độ rộng khoảng tin cậy; không thì theo độ hội tụ các trụ cột
   const confLevel = autoWinRateData?.winRateSource === 'BACKTEST' && emp?.confidence ? emp.confidence : autoWinRateData?.confidence;
@@ -965,8 +1033,8 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
         const hasPrice = entryPrice > 0;
         // Cổng xu hướng: chưa Stage 2 (8/8) thì mọi con số kỳ vọng chỉ mang tính tham khảo — Minervini không mua ngoài Stage 2
         const sm = autoWinRateData?.summary;
-        const trendFail = sm?.passedCount !== undefined && sm.passedCount < 8;
-        const trendTone = trendFail ? ((sm?.stage ?? 1) >= 3 ? 'rose' : 'amber') : null;
+        const trendFail = notBuyNow;
+        const trendTone = trendFail ? (gateIsAvoid ? 'rose' : 'amber') : null;
         const tone = structureBroken || math.verdictColor.includes('rose')
           ? 'rose'
           : trendTone ?? (math.verdictColor.includes('amber') ? 'amber' : 'emerald');
@@ -975,12 +1043,24 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
         const verdictLabel = structureBroken
           ? 'KHÔNG NÊN MUA — CẤU TRÚC ĐÃ GÃY'
           : trendFail
-            ? 'CHƯA ĐỦ ĐIỀU KIỆN MUA — CHƯA VÀO STAGE 2'
+            ? decisionInfo
+              ? `${tr('CHƯA ĐẾN LÚC MUA', 'NOT TIME TO BUY')} — ${gateHeadline.toUpperCase()}`
+              : 'CHƯA ĐỦ ĐIỀU KIỆN MUA — CHƯA VÀO STAGE 2'
             : math.verdict;
         const verdictNote = structureBroken
           ? setup?.setupWarning
           : trendFail
-            ? `Trend Template mới đạt ${sm?.passedCount}/8 (Stage ${sm?.stage}). Minervini chỉ mua cổ phiếu ở Stage 2 đủ 8/8, nên kỳ vọng bên dưới chỉ để tham khảo, không phải tín hiệu vào lệnh.`
+            ? decisionInfo
+              ? decisionInfo.action === 'WAIT'
+                ? tr(
+                    `Chiến lược đang báo CHỜ (${gateHeadline}). Kế hoạch bên dưới tính từ giá vào theo pivot và chỉ có hiệu lực khi điều kiện vào lệnh thành hiện thực.`,
+                    `The strategy says WAIT (${gateHeadline}). The plan below is built from the pivot entry and only applies once the entry conditions are met.`
+                  )
+                : tr(
+                    `Chiến lược đang báo TRÁNH (${gateHeadline}). Các con số bên dưới chỉ để tham khảo, không phải kế hoạch vào lệnh.`,
+                    `The strategy says AVOID (${gateHeadline}). The figures below are for reference only, not a trade plan.`
+                  )
+              : `Trend Template mới đạt ${sm?.passedCount}/8 (Stage ${sm?.stage}). Minervini chỉ mua cổ phiếu ở Stage 2 đủ 8/8, nên kỳ vọng bên dưới chỉ để tham khảo, không phải tín hiệu vào lệnh.`
             : math.verdictNote;
 
         return (
@@ -1155,12 +1235,20 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
                     step="50"
                     value={entryPrice > 0 ? entryPrice : ''}
                     placeholder="Nhập giá vào lệnh"
-                    onChange={(e) => setEntryPrice(Math.max(0, Number(e.target.value)))}
+                    onChange={(e) => {
+                      entryModeRef.current = 'market';
+                      setEntryMode('market');
+                      setEntryPrice(Math.max(0, Number(e.target.value)));
+                    }}
                     className="w-full px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-xs font-mono text-zinc-100 focus:outline-none focus:border-emerald-500/50"
                   />
                   {livePrice > 0 && (
                     <button
-                      onClick={() => setEntryPrice(livePrice)}
+                      onClick={() => {
+                        entryModeRef.current = 'market';
+                        setEntryMode('market');
+                        setEntryPrice(livePrice);
+                      }}
                       className="px-3 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-[11px] font-mono text-zinc-300 transition-colors shrink-0"
                       title="Đặt lại về giá khớp thị trường hiện tại"
                     >
@@ -1169,6 +1257,29 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
                   )}
                 </div>
               </div>
+
+              {autoWinRateData?.optimalSetup?.entryBasis === 'PIVOT' && (autoWinRateData.optimalSetup.entryPrice ?? 0) > 0 && (
+                <div className="flex items-center justify-between gap-2 -mt-3 text-[10.5px] font-mono">
+                  <span className={entryMode === 'pivot' ? 'text-emerald-300' : 'text-zinc-500'}>
+                    {entryMode === 'pivot'
+                      ? tr('Giá vào theo pivot: chỉ mua khi giá vượt mức này kèm khối lượng lớn', 'Entry at the pivot: buy only when price breaks above it on heavy volume')
+                      : tr('Đang dùng giá hiện tại (chiến lược khuyên chờ pivot)', 'Using the current price (the strategy suggests waiting for the pivot)')}
+                  </span>
+                  {entryMode !== 'pivot' && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        entryModeRef.current = 'pivot';
+                        setEntryMode('pivot');
+                        setEntryPrice(autoWinRateData.optimalSetup!.entryPrice as number);
+                      }}
+                      className="rounded-md bg-zinc-800 px-2 py-1 text-zinc-300 hover:bg-zinc-700 transition-colors"
+                    >
+                      {tr('Dùng giá pivot', 'Use pivot price')} ({formatVND(autoWinRateData.optimalSetup!.entryPrice as number)})
+                    </button>
+                  )}
+                </div>
+              )}
 
               {/* 2. Mục tiêu lợi nhuận (Target Gain %) */}
               <div className="space-y-1.5">
@@ -1557,7 +1668,7 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
           {/* Verdict Box */}
           <div className={`p-3 rounded-xl border text-xs font-mono leading-relaxed mt-4 ${
             trendGateFail
-              ? (autoWinRateData?.summary?.stage ?? 1) >= 3
+              ? gateIsAvoid
                 ? 'text-rose-400 bg-rose-500/10 border-rose-500/30'
                 : 'text-amber-400 bg-amber-500/10 border-amber-500/30'
               : math.verdictColor
@@ -1566,7 +1677,9 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
               <Info className="w-4 h-4 shrink-0 mt-0.5" />
               <span>
                 {trendGateFail
-                  ? `Chưa đạt Trend Template (${autoWinRateData?.summary?.passedCount}/8 · Stage ${autoWinRateData?.summary?.stage}) — không phải tín hiệu vào lệnh. ${math.verdictNote}`
+                  ? decisionInfo
+                    ? `${tr('Hiện chưa phải điểm mua', 'Not a buy point right now')} (${gateHeadline}). ${math.verdictNote}`
+                    : `Chưa đạt Trend Template (${autoWinRateData?.summary?.passedCount}/8 · Stage ${autoWinRateData?.summary?.stage}) — không phải tín hiệu vào lệnh. ${math.verdictNote}`
                   : math.verdictNote}
               </span>
             </div>

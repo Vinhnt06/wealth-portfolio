@@ -1,4 +1,5 @@
 import backtest from '../data/setupBacktest.json';
+import decisionBacktest from '../data/decisionBacktest.json';
 
 /**
  * Tra cứu kết quả backtest thực nghiệm (xem scripts/backtest_setups.py) cho một thiết lập
@@ -41,6 +42,12 @@ const BT = backtest as unknown as {
   stability: Record<string, Record<string, Cell | null>>;
 };
 
+/** Backtest trên ĐÚNG tín hiệu MUA của ứng dụng (xem scripts/backtest_decision_signals.mjs) */
+const DB = decisionBacktest as unknown as {
+  meta: { generatedAt: string; universe: number; signals: number; periodStart: string; periodEnd: string; costRoundTripPct: number; maxHoldBars: number; rule: string };
+  results: Results;
+};
+
 export const MIN_SAMPLE = 100;
 /**
  * Backtest thử nhiều tổ hợp (3 nhóm × 2 chế độ × 6 mức cắt lỗ × 4 R:R = 144 ô). Nếu chỉ dùng ngưỡng 95% (z≈2)
@@ -54,8 +61,10 @@ export const classOf = (passedCount: number): SetupClass =>
 
 const nearest = (arr: number[], v: number) => arr.reduce((a, b) => (Math.abs(b - v) < Math.abs(a - v) ? b : a), arr[0]);
 
-const cell = (cls: string, regime: string, stop: number, rr: number): Cell | null =>
-  BT.results?.[cls]?.[regime]?.[`${stop}|${rr}`] ?? null;
+type Source = 'DECISION_BUY' | 'TT_CLASS';
+const cellFrom = (store: Results, cls: string, regime: string, stop: number, rr: number): Cell | null =>
+  store?.[cls]?.[regime]?.[`${stop}|${rr}`] ?? null;
+const cell = (cls: string, regime: string, stop: number, rr: number): Cell | null => cellFrom(BT.results, cls, regime, stop, rr);
 
 export interface EmpiricalResult {
   available: boolean;
@@ -68,6 +77,8 @@ export interface EmpiricalResult {
     stopPct: number;
     rr: number;
     outsideGrid: boolean;
+    /** DECISION_BUY: thống kê trên đúng tín hiệu MUA của ứng dụng · TT_CLASS: theo nhóm số tiêu chí (phá đỉnh có khối lượng) */
+    source: Source;
   };
   n?: number;
   net?: Block;
@@ -86,6 +97,8 @@ export interface EmpiricalResult {
   zScore?: number;
   confidence?: 'CAO' | 'TRUNG BÌNH' | 'THẤP';
   byRr?: Array<{ rr: number; n: number; winRate: number; expectancyPct: number; expectancyCI: [number, number] }>;
+  /** Cùng R:R, đổi mức cắt lỗ: cho thấy cắt lỗ quá chặt bị quét ra thế nào */
+  byStop?: Array<{ stop: number; n: number; winRate: number; expectancyPct: number; expectancyCI: [number, number] }>;
   baseline?: { n: number; net: Block } | null;
   regimeSplit?: { up: { n: number; net: Block } | null; down: { n: number; net: Block } | null };
   stability?: Record<string, { n: number; net: Block } | null> | null;
@@ -106,6 +119,8 @@ export function lookupEmpirical(params: {
   marketUp: boolean | null;
   stopPct: number;
   targetPct: number;
+  /** Quyết định hợp nhất đang là MUA → dùng thống kê trên đúng tín hiệu MUA */
+  buySignal?: boolean;
 }): EmpiricalResult {
   const { passedCount, marketUp, stopPct, targetPct } = params;
   const m = BT.meta;
@@ -129,15 +144,17 @@ export function lookupEmpirical(params: {
   // Chế độ thị trường chỉ để THAM KHẢO: tách nhóm theo chế độ làm mẫu nhỏ đi nhiều và cho kết quả dao động
   // (ví dụ cùng một nhóm mà thuận lợi −0.5%, kém thuận lợi +2%) — dễ là nhiễu. Mặc định dùng số liệu gộp.
   const currentRegime: 'up' | 'down' | 'unknown' = marketUp === null ? 'unknown' : marketUp ? 'up' : 'down';
-  const candidates: Array<{ c: string; r: string; note?: string }> = [
-    { c: cls, r: 'all' },
-    { c: 'ANY', r: 'all', note: 'Nhóm theo số tiêu chí quá ít mẫu → gộp mọi mức Trend Template' },
+  const candidates: Array<{ store: Results; src: Source; c: string; r: string; note?: string }> = [
+    // Ưu tiên thống kê trên đúng tín hiệu MUA của ứng dụng
+    ...(params.buySignal ? [{ store: DB.results, src: 'DECISION_BUY' as Source, c: 'BUY', r: 'all' }] : []),
+    { store: BT.results, src: 'TT_CLASS', c: cls, r: 'all' },
+    { store: BT.results, src: 'TT_CLASS', c: 'ANY', r: 'all', note: 'Nhóm theo số tiêu chí quá ít mẫu → gộp mọi mức Trend Template' },
   ];
-  let chosen: { cell: Cell; c: string; r: string; note?: string } | null = null;
+  let chosen: { cell: Cell; store: Results; src: Source; c: string; r: string; note?: string } | null = null;
   for (const cand of candidates) {
-    const cl = cell(cand.c, cand.r, stop, rr);
+    const cl = cellFrom(cand.store, cand.c, cand.r, stop, rr);
     if (cl && cl.n >= MIN_SAMPLE) {
-      chosen = { cell: cl, c: cand.c, r: cand.r, note: cand.note };
+      chosen = { cell: cl, store: cand.store, src: cand.src, c: cand.c, r: cand.r, note: cand.note };
       break;
     }
   }
@@ -158,12 +175,17 @@ export function lookupEmpirical(params: {
   const useCls = chosen.c;
   const useReg = chosen.r;
   const byRr = m.rrs
-    .map((r) => ({ r, c: cell(useCls, useReg, stop, r) }))
+    .map((r) => ({ r, c: cellFrom(chosen!.store, useCls, useReg, stop, r) }))
     .filter((x): x is { r: number; c: Cell } => !!x.c && x.c.n >= 30)
     .map((x) => ({ rr: x.r, n: x.c.n, winRate: x.c.net.winRate, expectancyPct: x.c.net.expectancyPct, expectancyCI: x.c.net.expectancyCI }));
 
+  const byStop = m.stops
+    .map((st) => ({ st, c: cellFrom(chosen!.store, useCls, useReg, st, rr) }))
+    .filter((x): x is { st: number; c: Cell } => !!x.c && x.c.n >= 30)
+    .map((x) => ({ stop: x.st, n: x.c.n, winRate: x.c.net.winRate, expectancyPct: x.c.net.expectancyPct, expectancyCI: x.c.net.expectancyCI }));
+
   const pick = (k: string, rg: string) => {
-    const x = cell(k, rg, stop, rr);
+    const x = cellFrom(chosen!.store, k, rg, stop, rr);
     return x && x.n >= 30 ? { n: x.n, net: x.net } : null;
   };
   const stabilityRaw = BT.stability?.[`S2|${stop}|${rr}`];
@@ -174,12 +196,13 @@ export function lookupEmpirical(params: {
   return {
     available: true,
     basis: {
-      setupClass: useCls === 'ANY' ? cls : (useCls as SetupClass),
+      setupClass: useCls === 'ANY' || useCls === 'BUY' ? cls : (useCls as SetupClass),
       regime: useReg as 'up' | 'down' | 'all',
       fallback: chosen.note,
       stopPct: stop,
       rr,
       outsideGrid,
+      source: chosen.src,
     },
     n: cl.n,
     net: cl.net,
@@ -196,9 +219,12 @@ export function lookupEmpirical(params: {
     zScore: Number(zScore.toFixed(2)),
     confidence,
     byRr,
-    baseline: pick('ANY', 'all'),
+    byStop,
+    baseline: (() => { const x = cell('ANY', 'all', stop, rr); return x && x.n >= 30 ? { n: x.n, net: x.net } : null; })(),
     regimeSplit: { up: pick(useCls, 'up'), down: pick(useCls, 'down') },
     stability,
-    meta: metaOut,
+    meta: chosen.src === 'DECISION_BUY'
+      ? { ...metaOut, universe: DB.meta.universe, periodStart: DB.meta.periodStart, periodEnd: DB.meta.periodEnd, signals: DB.meta.signals, rules: { signal: DB.meta.rule } }
+      : metaOut,
   };
 }

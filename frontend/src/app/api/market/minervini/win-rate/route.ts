@@ -391,6 +391,8 @@ export async function GET(request: Request) {
       marketUp,
       stopPct: optimalStopLossPct,
       targetPct: optimalTargetGainPct,
+      // Khi quyết định hợp nhất là MUA, dùng thống kê trên đúng tín hiệu MUA của ứng dụng
+      buySignal: stockData.decision?.newBuyer?.action === 'BUY',
     });
     const heuristicWinRate = calculatedWinRate;
     // Có đủ mẫu thì tỷ lệ thắng = thực nghiệm; không thì mới quay về công thức đoán
@@ -420,6 +422,25 @@ export async function GET(request: Request) {
       advice = `Xác suất thắng thấp (${calculatedWinRate}%) do thị trường hoặc cổ phiếu đang ở ${stockData.stageName} (${wyckoff?.phaseName || ''}). Minervini & Wyckoff khuyên: Đứng ngoài quan sát, ưu tiên giữ tiền mặt!`;
     }
 
+    // ── Giá vào lệnh: khi đang CHỜ điểm vào thì mua ở pivot (không phải giá hiện tại) ──
+    // Cắt lỗ, mục tiêu và khối lượng phải tính từ giá thực sự sẽ vào lệnh.
+    const decisionInfo = stockData.decision as
+      | { newBuyer: { action: string; size: string }; headline: string; alignment: string; triggersUp?: Array<{ code: string; value?: number }> }
+      | undefined;
+    const pivotTrigger = decisionInfo?.triggersUp?.find((t) => t.code === 'BREAK_PIVOT_WITH_VOLUME');
+    const pivotPrice = pivotTrigger?.value ? Math.round(pivotTrigger.value * priceUnit) : 0;
+    const entryAtPivot = decisionInfo?.newBuyer?.action === 'WAIT' && pivotPrice > currentPrice && currentPrice > 0;
+    const entryPrice = entryAtPivot ? pivotPrice : currentPrice;
+    const stopPriceFromEntry = entryAtPivot ? Math.round(entryPrice * (1 - optimalStopLossPct / 100)) : optimalStopPrice;
+    const targetPriceFromEntry = entryAtPivot ? Math.round(entryPrice * (1 + optimalTargetGainPct / 100)) : optimalTargetPrice;
+    // Chưa phải điểm mua (TRÁNH): mức cắt lỗ chỉ để tham khảo, không phải kế hoạch giao dịch
+    const stopReasonFinal =
+      decisionInfo?.newBuyer?.action === 'AVOID'
+        ? `Mốc tham khảo −${optimalStopLossPct}% theo đáy nền gần nhất — hiện chưa phải điểm mua`
+        : entryAtPivot
+          ? `${optimalStopLossReason} · tính từ giá vào theo pivot`
+          : optimalStopLossReason;
+
     return NextResponse.json({
       success: true,
       symbol,
@@ -444,6 +465,7 @@ export async function GET(request: Request) {
           ? 'Tín hiệu theo dõi — chưa đủ Trend Template'
           : wyckoff?.buyPointLabel || 'Chưa có điểm mua',
         stage: stockData.stage,
+        decision: decisionInfo ? { action: decisionInfo.newBuyer.action, size: decisionInfo.newBuyer.size, headline: decisionInfo.headline, alignment: decisionInfo.alignment } : null,
         exchange: stockData.exchange,
         passedCount,
         passedCriteria: `${passedCount}/8`,
@@ -452,10 +474,13 @@ export async function GET(request: Request) {
       },
       optimalSetup: {
         stopLossPct: optimalStopLossPct,
-        stopLossPrice: optimalStopPrice,
-        stopLossReason: optimalStopLossReason,
+        stopLossPrice: stopPriceFromEntry,
+        stopLossReason: stopReasonFinal,
+        entryPrice,
+        entryBasis: entryAtPivot ? 'PIVOT' : 'MARKET',
+        pivotPrice: pivotPrice || null,
         targetGainPct: optimalTargetGainPct,
-        targetPrice: optimalTargetPrice,
+        targetPrice: targetPriceFromEntry,
         targetReason: optimalTargetReason,
         rrRatio: Number((optimalTargetGainPct / optimalStopLossPct).toFixed(2)),
         setupQuality,
