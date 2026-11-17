@@ -2,6 +2,8 @@ import type { StageSub, StageEvidence } from '../utils/stageEngine';
 import type { CycleContext } from '../utils/wyckoffContext';
 import type { Decision } from '../utils/decisionEngine';
 import type { DecisionEvidence } from '../utils/decisionEvidence';
+import type { FundamentalsResult } from '../utils/fundamentalsEngine';
+import type { SectorTone } from '../utils/sectorStrength';
 
 export interface MinerviniCriterion {
   id: number;
@@ -80,6 +82,12 @@ export interface MinerviniAnalysisResult {
   stageInfo?: { sub: StageSub; rule: string; confirmed: boolean; evidence: StageEvidence | null };
   /** Wyckoff đặt trong bối cảnh Stage (chu kỳ, pha, dấu hiệu phân phối) */
   cycle?: CycleContext;
+  /** Sức khỏe doanh nghiệp (thông tin; chưa kiểm chứng được tác động lên kết quả) */
+  fundamentals?: FundamentalsResult | null;
+  /** Vị thế ngành theo xếp hạng sức mạnh tương đối 3 tháng */
+  sectorInfo?: { name: string; rank: number | null; total: number | null; tone: SectorTone; status: string | null };
+  /** Cờ cảnh báo chất lượng khi Stage đã cho phép mua */
+  qualityFlags?: string[];
   /** Quyết định hợp nhất Stage × Wyckoff */
   decision?: Decision & { evidence: DecisionEvidence; marketUp: boolean | null };
   passedCount: number;

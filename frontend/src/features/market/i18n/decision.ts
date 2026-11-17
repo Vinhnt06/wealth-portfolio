@@ -237,3 +237,34 @@ export function shortTrigger(tr: Trigger, lang: Lang): string {
     default: return tr.code;
   }
 }
+
+/* ───────────── Yếu tố chất lượng: doanh nghiệp & ngành ───────────── */
+import type { FundState } from '../utils/fundamentalsEngine';
+import type { SectorTone } from '../utils/sectorStrength';
+
+export const FUND_STATE_TEXT: Record<FundState, T> = {
+  STRONG: { vi: 'Tăng trưởng mạnh', en: 'Strong growth' },
+  OK: { vi: 'Ổn định', en: 'Stable' },
+  WEAK: { vi: 'Yếu', en: 'Weak' },
+  NO_DATA: { vi: 'Chưa có dữ liệu', en: 'No data' },
+};
+
+export const SECTOR_TONE_TEXT: Record<SectorTone, T> = {
+  TAILWIND: { vi: 'Thuận gió', en: 'Tailwind' },
+  NEUTRAL: { vi: 'Trung tính', en: 'Neutral' },
+  HEADWIND: { vi: 'Ngược gió', en: 'Headwind' },
+  UNKNOWN: { vi: 'Chưa xác định', en: 'Unknown' },
+};
+
+export const QUALITY_FLAG_TEXT: Record<string, T> = {
+  FUND_LOSS_MAKING: { vi: 'Doanh nghiệp đang lỗ — kiểm tra kỹ trước khi mua.', en: 'The company is loss-making — check carefully before buying.' },
+  FUND_PROFIT_FALLING: { vi: 'Lợi nhuận đang giảm so cùng kỳ — kiểm tra kỹ trước khi mua.', en: 'Profit is falling year over year — check carefully before buying.' },
+  SECTOR_HEADWIND: { vi: 'Ngành đang yếu hơn thị trường (ngược gió).', en: 'The sector is lagging the market (headwind).' },
+};
+
+/** Tăng trưởng quá lớn do nền thấp thì hiển thị ">300%" thay vì con số vô nghĩa */
+export const fmtGrowth = (v: number | null | undefined, lang: Lang): string => {
+  if (v === null || v === undefined) return '—';
+  if (v > 300) return lang === 'vi' ? '>300% (nền thấp)' : '>300% (low base)';
+  return `${v > 0 ? '+' : ''}${v}%`;
+};

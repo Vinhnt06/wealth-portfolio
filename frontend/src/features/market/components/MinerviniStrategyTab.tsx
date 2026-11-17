@@ -18,6 +18,10 @@ import {
   SHORT_PHASE,
   SHORT_TT_NAME,
   shortTrigger,
+  FUND_STATE_TEXT,
+  SECTOR_TONE_TEXT,
+  QUALITY_FLAG_TEXT,
+  fmtGrowth,
 } from '../i18n/decision';
 import {
   TREND_LABEL_EN,
@@ -453,6 +457,53 @@ const SummaryCard: React.FC<{ data: MinerviniAnalysisResult }> = ({ data }) => {
           </p>
         )}
       </div>
+      {(data.fundamentals || data.sectorInfo) && (
+        <div className="space-y-1.5 border-t border-white/[0.05] px-4 py-3 text-[11.5px]">
+          {data.fundamentals && (
+            <div className="flex items-baseline justify-between gap-3">
+              <span className="text-zinc-500">{tr('Doanh nghiệp', 'Company')}</span>
+              <span className="text-right text-zinc-200">
+                <span
+                  className={cx(
+                    'font-medium',
+                    data.fundamentals.state === 'STRONG' ? 'text-emerald-300' : data.fundamentals.state === 'WEAK' ? 'text-rose-300' : data.fundamentals.state === 'OK' ? 'text-zinc-200' : 'text-zinc-500'
+                  )}
+                >
+                  {FUND_STATE_TEXT[data.fundamentals.state][language]}
+                </span>
+                {data.fundamentals.state !== 'NO_DATA' && (
+                  <span className="ml-1.5 text-zinc-500 tabular-nums">
+                    {tr('LN', 'Profit')} {fmtGrowth(data.fundamentals.netProfitYoY, language)} · {tr('DT', 'Rev')} {fmtGrowth(data.fundamentals.revenueYoY, language)}
+                  </span>
+                )}
+              </span>
+            </div>
+          )}
+          {data.sectorInfo && (
+            <div className="flex items-baseline justify-between gap-3">
+              <span className="text-zinc-500">{tr('Ngành', 'Sector')}</span>
+              <span className="text-right text-zinc-200">
+                <span
+                  className={cx(
+                    'font-medium',
+                    data.sectorInfo.tone === 'TAILWIND' ? 'text-emerald-300' : data.sectorInfo.tone === 'HEADWIND' ? 'text-rose-300' : data.sectorInfo.tone === 'NEUTRAL' ? 'text-zinc-200' : 'text-zinc-500'
+                  )}
+                >
+                  {SECTOR_TONE_TEXT[data.sectorInfo.tone][language]}
+                </span>
+                {data.sectorInfo.rank && data.sectorInfo.total && (
+                  <span className="ml-1.5 text-zinc-500 tabular-nums">
+                    {tr('hạng', 'rank')} {data.sectorInfo.rank}/{data.sectorInfo.total}
+                  </span>
+                )}
+              </span>
+            </div>
+          )}
+          {(data.qualityFlags || []).map((f) => (
+            <p key={f} className="text-[11px] leading-snug text-amber-300/90">⚠ {QUALITY_FLAG_TEXT[f]?.[language] ?? f}</p>
+          ))}
+        </div>
+      )}
       <Collapse label={tr('Vì sao & khi nào đổi', 'Why & what changes it')}>
         <div className="space-y-2.5 px-4 py-3 text-[11px] leading-relaxed text-zinc-400">
           <ul className="space-y-1">
@@ -472,6 +523,12 @@ const SummaryCard: React.FC<{ data: MinerviniAnalysisResult }> = ({ data }) => {
           )}
           <p className="text-zinc-500">
             {tr('Mua cần cả hai khung đồng ý; giảm/thoát chỉ cần một khung báo xấu.', 'Buying needs both frameworks to agree; reducing/exiting needs only one to turn bad.')}
+          </p>
+          <p className="text-zinc-500">
+            {tr(
+              'Doanh nghiệp và ngành chỉ để tham khảo, không đổi quyết định: kiểm chứng lịch sử chưa kết luận được tác động của hai yếu tố này (dữ liệu tài chính chỉ phủ ~1 năm, ~80 mã).',
+              'Company and sector are for reference and do not change the decision: backtests could not establish their effect (financial data covers only ~1 year, ~80 stocks).'
+            )}
           </p>
         </div>
       </Collapse>
@@ -515,9 +572,9 @@ export const MinerviniStrategyTab: React.FC<{ data: MinerviniAnalysisResult | nu
   }
   return (
     <div className="space-y-3">
+      <SummaryCard data={data} />
       <MinerviniCard data={data} />
       <WyckoffShortCard data={data} />
-      <SummaryCard data={data} />
     </div>
   );
 };

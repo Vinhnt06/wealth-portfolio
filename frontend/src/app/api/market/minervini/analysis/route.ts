@@ -4,6 +4,9 @@ import { classifyStage, STAGE_NAME_VI, STAGE_NAME_CONFIRMED_VI } from '../../../
 import { detectDistribution, buildCycleContext } from '../../../../../features/market/utils/wyckoffContext';
 import { buildDecision } from '../../../../../features/market/utils/decisionEngine';
 import { lookupEvidence } from '../../../../../features/market/utils/decisionEvidence';
+import { assessFundamentals, type QuarterRec, type FundamentalsResult } from '../../../../../features/market/utils/fundamentalsEngine';
+import { sectorTone } from '../../../../../features/market/utils/sectorStrength';
+import { readFinancialsDatabase, fetchStockValuationLive } from '../../../../../features/market/services/financialsSyncService';
 import fs from 'fs';
 import path from 'path';
 import stockDatabase from '../../../../../features/market/data/stockDatabase.json';
@@ -53,6 +56,30 @@ VN_MARKET_INDEXES.forEach((idx) => {
  * Computes Mark Minervini Trend Template (8/8 Criteria) & RS Rating
  * Primary data sourced from DNSE Entrade API.
  */
+// Sức khỏe doanh nghiệp: ưu tiên bản chụp trong cơ sở dữ liệu, thiếu thì gọi trực tiếp Vietcap IQ (có giới hạn thời gian); cache để không gọi lặp
+const fundamentalsCache = new Map<string, { ts: number; value: FundamentalsResult }>();
+async function getFundamentals(symbol: string): Promise<FundamentalsResult> {
+  const hit = fundamentalsCache.get(symbol);
+  const ttl = hit?.value.state === 'NO_DATA' ? 30 * 60 * 1000 : 6 * 3600 * 1000;
+  if (hit && Date.now() - hit.ts < ttl) return hit.value;
+  let quarters: QuarterRec[] | undefined;
+  try {
+    quarters = readFinancialsDatabase()?.data?.[symbol]?.quarterlyHistory;
+    if (!quarters || quarters.length < 5) {
+      const live = await Promise.race([
+        fetchStockValuationLive(symbol),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 4000)),
+      ]);
+      quarters = live?.quarterlyHistory;
+    }
+  } catch {
+    quarters = undefined;
+  }
+  const value = assessFundamentals(quarters);
+  fundamentalsCache.set(symbol, { ts: Date.now(), value });
+  return value;
+}
+
 // Chế độ thị trường (VN-Index trên cả MA50 & MA200) — cache 5 phút để không gọi DNSE cho mỗi mã
 let marketRegimeCache: { ts: number; up: boolean | null } | null = null;
 async function getMarketUp(): Promise<boolean | null> {
@@ -407,6 +434,26 @@ export async function GET(request: Request) {
           : 'Chỉ theo dõi — chờ Wyckoff xác nhận điểm vào (Phase D/E) và hết dấu hiệu phân phối';
     }
     const decisionEvidence = lookupEvidence(decision.headline, decision.holder.action);
+
+    // ── Yếu tố bổ sung (THÔNG TIN, không đổi quyết định): sức khỏe doanh nghiệp & vị thế ngành ──
+    // Kiểm chứng lịch sử CHƯA kết luận được tác động của hai yếu tố này (xem scripts/validate_quality_factors.mjs),
+    // nên chỉ hiển thị và cảnh báo, không dùng làm điều kiện mua/bán.
+    const fundamentals = isIndex ? null : await getFundamentals(symbol);
+    const rankMatch = rrgSectorInfo?.sectorRank?.match(/(\d+)\s*\/\s*(\d+)/);
+    const sectorRankNum = rankMatch ? Number(rankMatch[1]) : null;
+    const sectorTotalNum = rankMatch ? Number(rankMatch[2]) : null;
+    const sectorInfo = {
+      name: rrgSectorInfo?.sectorName ?? matchedSectorName,
+      rank: sectorRankNum,
+      total: sectorTotalNum,
+      tone: sectorTone(sectorRankNum, sectorTotalNum),
+      status: sectorStatus ?? null,
+    };
+    const qualityFlags: string[] = [];
+    if (decision.newBuyer.action === 'BUY' || decision.drivers.stage === 'OK') {
+      if (fundamentals?.state === 'WEAK') qualityFlags.push(fundamentals.lossMaking ? 'FUND_LOSS_MAKING' : 'FUND_PROFIT_FALLING');
+      if (sectorInfo.tone === 'HEADWIND') qualityFlags.push('SECTOR_HEADWIND');
+    }
 
     // ── Indicators for Heat & Extended Analysis (RSI, MACD) ──
     // 1. RSI(14) - Wilder smoothing (khớp với RSI trên chart)
@@ -860,6 +907,9 @@ export async function GET(request: Request) {
         evidence: stageResult.evidence,
       },
       cycle: cycleContext,
+      fundamentals,
+      sectorInfo,
+      qualityFlags,
       decision: { ...decision, evidence: decisionEvidence, marketUp },
       passedCount,
       totalCount: 8,
