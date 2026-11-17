@@ -1,20 +1,18 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import {
-  TrendUp,
-  TrendDown,
   Lightning,
   Scales,
   ArrowRight,
   ShieldCheck,
-  ChartLineUp,
+  CaretDown,
+  ArrowUpRight,
 } from '@phosphor-icons/react';
-import { TradingViewChart } from '../../../app/components/TradingViewChart';
+import { HeroIndexChart, type Candle, type ChartKind } from './HeroIndexChart';
 import vnindexCandles from '../data/vnindexHistory.json';
 import lastScan from '../data/lastMinerviniScan.json';
-import { CandlestickData } from 'lightweight-charts';
 
 interface IndexMeta {
   symbol: string;
@@ -94,12 +92,54 @@ const REAL_VALUATION_OPPORTUNITIES = [
   { symbol: 'VHM', name: 'Vinhomes', sector: 'Bất động sản', pe: 6.27, pb: 1.90, peg: 0.04, growth: 164.5, status: 'Chiết khấu' },
 ];
 
+
+const TIMEFRAMES: { key: string; label: string; bars: number }[] = [
+  { key: '1W', label: '1W', bars: 5 },
+  { key: '1M', label: '1M', bars: 22 },
+  { key: '3M', label: '3M', bars: 66 },
+  { key: '6M', label: '6M', bars: 132 },
+  { key: '1Y', label: '1Y', bars: 252 },
+  { key: 'ALL', label: 'ALL', bars: Infinity },
+];
+
+type MinerviniSort = 'rs' | 'chg' | 'vol';
+type ValuationSort = 'peg' | 'pe' | 'growth';
+
+const LOCAL_VNINDEX: Candle[] = (vnindexCandles as any[]).map((c) => ({
+  time: c.time,
+  open: c.open,
+  high: c.high,
+  low: c.low,
+  close: c.close,
+}));
+
+const toVnDate = (sec: number) =>
+  new Date(sec * 1000).toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' });
+
+const fmtPrice = (p?: number) =>
+  p ? (p < 1000 ? p * 1000 : p).toLocaleString('vi-VN') : '--';
+
+const pctCls = (v: number) => (v > 0 ? 'text-[#10b981]' : v < 0 ? 'text-[#e5484d]' : 'text-[#e5a93b]');
+
 export const HeroMarketBento: React.FC = () => {
   const [indexes, setIndexes] = useState<IndexMeta[]>(DEFAULT_INDEXES);
   const [selectedIndexSymbol, setSelectedIndexSymbol] = useState<string>('VNINDEX');
-  const [selectedTimeframe, setSelectedTimeframe] = useState<string>('1M');
-  const [radarTab, setRadarTab] = useState<'minervini' | 'valuation'>('minervini');
+  const [tf, setTf] = useState<string>('3M');
+  const [kind, setKind] = useState<ChartKind>('area');
+  const [ma20, setMa20] = useState(false);
+  const [ma50, setMa50] = useState(false);
+  const [vol, setVol] = useState(false);
+  const [hover, setHover] = useState<{ c: Candle; prev: Candle | null } | null>(null);
+  const [history, setHistory] = useState<Record<string, Candle[]>>({ VNINDEX: LOCAL_VNINDEX });
+  const [loadingHist, setLoadingHist] = useState(false);
 
+  const [radarTab, setRadarTab] = useState<'minervini' | 'valuation'>('minervini');
+  const [mSort, setMSort] = useState<MinerviniSort>('rs');
+  const [vSort, setVSort] = useState<ValuationSort>('peg');
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const [showAll, setShowAll] = useState(false);
+
+  // ── Realtime quotes (15s) ──
   useEffect(() => {
     const fetchIndexes = async () => {
       try {
@@ -117,45 +157,160 @@ export const HeroMarketBento: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // ── Lịch sử theo chỉ số đang chọn (cache theo symbol) ──
+  useEffect(() => {
+    const sym = selectedIndexSymbol;
+    let cancelled = false;
+    // VNINDEX có sẵn dữ liệu local, vẫn thử làm mới nhẹ để có phiên mới nhất
+    if (history[sym] && sym !== 'VNINDEX') return;
+    if (sym !== 'VNINDEX') setLoadingHist(true);
+    (async () => {
+      try {
+        const res = await fetch(`/api/market/history?symbol=${sym}&resolution=1D&days=1100`);
+        const json = await res.json();
+        if (!json.success || !Array.isArray(json.data) || json.data.length < 10) return;
+        const map = new Map<string, Candle>();
+        json.data.forEach((d: any) => {
+          const t = toVnDate(d.time);
+          map.set(t, { time: t, open: d.open, high: d.high, low: d.low, close: d.close, volume: d.volume });
+        });
+        const list = Array.from(map.values()).sort((a, b) => (a.time < b.time ? -1 : 1));
+        if (!cancelled) setHistory((h) => ({ ...h, [sym]: list }));
+      } catch {
+        /* giữ dữ liệu local nếu có */
+      } finally {
+        if (!cancelled) setLoadingHist(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedIndexSymbol]);
+
   const activeIndex = indexes.find((i) => i.symbol === selectedIndexSymbol) || indexes[0];
-  const isUp = activeIndex.change > 0;
-  const isDown = activeIndex.change < 0;
 
-  // Real Minervini leaders from last scan
-  const minerviniLeaders = (lastScan.data || [])
-    .filter((s: any) => s.isStage2 && s.rsRating >= 85)
-    .slice(0, 5);
+  // ── Flash khi giá live đổi ──
+  const prevVal = useRef(activeIndex.value);
+  const [flash, setFlash] = useState<'up' | 'down' | null>(null);
+  useEffect(() => {
+    if (prevVal.current !== activeIndex.value) {
+      setFlash(activeIndex.value > prevVal.current ? 'up' : 'down');
+      prevVal.current = activeIndex.value;
+      const t = setTimeout(() => setFlash(null), 900);
+      return () => clearTimeout(t);
+    }
+  }, [activeIndex.value]);
+  useEffect(() => {
+    prevVal.current = activeIndex.value;
+  }, [selectedIndexSymbol]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const rawCandles = (vnindexCandles as unknown as CandlestickData[]) || [];
-  const chartData = rawCandles.slice(
-    selectedTimeframe === '1D' ? -30 : selectedTimeframe === '1W' ? -60 : -120
-  );
+  const allCandles = history[selectedIndexSymbol];
+  const chartData = useMemo(() => {
+    if (!allCandles) return [];
+    const bars = TIMEFRAMES.find((t) => t.key === tf)?.bars ?? 66;
+    return Number.isFinite(bars) ? allCandles.slice(-bars) : allCandles;
+  }, [allCandles, tf]);
+
+  // Hiệu suất của khoảng đang xem
+  const rangePerf = useMemo(() => {
+    if (chartData.length < 2) return null;
+    const first = chartData[0].close;
+    const last = chartData[chartData.length - 1].close;
+    const hi = Math.max(...chartData.map((c) => c.high));
+    const lo = Math.min(...chartData.map((c) => c.low));
+    return { pct: ((last - first) / first) * 100, hi, lo };
+  }, [chartData]);
+
+  // Header: nếu đang rê chuột trên chart thì hiện số liệu của phiên đó
+  const shownValue = hover ? hover.c.close : activeIndex.value;
+  const shownChange = hover
+    ? hover.prev
+      ? hover.c.close - hover.prev.close
+      : 0
+    : activeIndex.change;
+  const shownPct = hover
+    ? hover.prev
+      ? (shownChange / hover.prev.close) * 100
+      : 0
+    : activeIndex.percentChange;
+  const valCls = pctCls(shownChange);
 
   const formatBillion = (val: number) => {
     if (!val || val === 0) return '--';
-    const bil = val / 1_000_000_000;
-    return `${bil.toLocaleString('vi-VN', { maximumFractionDigits: 0 })} tỷ`;
+    return `${(val / 1_000_000_000).toLocaleString('vi-VN', { maximumFractionDigits: 0 })} tỷ`;
   };
+
+  // ── Radar lists ──
+  const leaders = useMemo(() => {
+    const list = ((lastScan as any).data || []).filter((s: any) => s.isStage2 && s.rsRating >= 85);
+    const key = mSort === 'rs' ? 'rsRating' : mSort === 'chg' ? 'changePct' : 'relVol';
+    return [...list].sort((a: any, b: any) => (b[key] ?? -Infinity) - (a[key] ?? -Infinity));
+  }, [mSort]);
+  const leadersShown = showAll ? leaders.slice(0, 10) : leaders.slice(0, 5);
+
+  const valuations = useMemo(() => {
+    const list = [...REAL_VALUATION_OPPORTUNITIES];
+    if (vSort === 'peg') list.sort((a, b) => a.peg - b.peg);
+    else if (vSort === 'pe') list.sort((a, b) => a.pe - b.pe);
+    else list.sort((a, b) => b.growth - a.growth);
+    return list;
+  }, [vSort]);
+
+  const switchRadar = (t: 'minervini' | 'valuation') => {
+    setRadarTab(t);
+    setExpanded(null);
+  };
+
+  const Pill = ({
+    active,
+    onClick,
+    children,
+    title,
+  }: {
+    active: boolean;
+    onClick: () => void;
+    children: React.ReactNode;
+    title?: string;
+  }) => (
+    <button
+      onClick={onClick}
+      title={title}
+      className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold border transition-colors cursor-pointer ${
+        active
+          ? 'bg-[#1a1a1a] text-white border-[#333]'
+          : 'text-[#666] border-transparent hover:text-[#bbb]'
+      }`}
+    >
+      {children}
+    </button>
+  );
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-      {/* ── LEFT CANVAS (68% Width): Market Index & Interactive Telemetry Chart ── */}
-      <div className="lg:col-span-8 bg-[#111111] border border-[#1a1a1a] rounded-2xl p-5 flex flex-col justify-between space-y-4">
-        {/* Header: Quiet Ruled Index Switcher Tabs */}
+      {/* ── LEFT: Index chart ── */}
+      <div className="lg:col-span-8 bg-[#111111] border border-[#1a1a1a] rounded-2xl p-5 flex flex-col space-y-4">
         <div>
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#1a1a1a] pb-3">
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 overflow-x-auto max-w-full [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {indexes.map((idx) => {
                 const isActive = idx.symbol === selectedIndexSymbol;
                 return (
                   <button
                     key={idx.symbol}
-                    onClick={() => setSelectedIndexSymbol(idx.symbol)}
-                    className={`relative px-3 py-1.5 text-xs font-mono font-bold transition-colors cursor-pointer ${
+                    onClick={() => {
+                      setSelectedIndexSymbol(idx.symbol);
+                      setHover(null);
+                    }}
+                    className={`relative px-3 py-1.5 text-xs font-mono font-bold transition-colors cursor-pointer whitespace-nowrap group ${
                       isActive ? 'text-white' : 'text-[#888888] hover:text-[#cccccc]'
                     }`}
                   >
                     <span>{idx.name}</span>
+                    <span className={`ml-1.5 text-[10px] font-semibold ${pctCls(idx.change)} ${isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity`}>
+                      {idx.percentChange > 0 ? '+' : ''}
+                      {idx.percentChange.toFixed(2)}%
+                    </span>
                     {isActive && (
                       <span className="absolute bottom-[-13px] left-0 right-0 h-[2px] bg-[#10b981]" />
                     )}
@@ -164,49 +319,45 @@ export const HeroMarketBento: React.FC = () => {
               })}
             </div>
 
-            {/* Timeframe Pills */}
             <div className="flex items-center gap-1 font-mono text-xs">
-              {['1D', '1W', '1M', '1Y', 'ALL'].map((tf) => (
+              {TIMEFRAMES.map((t) => (
                 <button
-                  key={tf}
-                  onClick={() => setSelectedTimeframe(tf)}
+                  key={t.key}
+                  onClick={() => setTf(t.key)}
                   className={`px-2.5 py-0.5 rounded text-[11px] font-bold transition-colors cursor-pointer ${
-                    selectedTimeframe === tf
+                    tf === t.key
                       ? 'bg-[#222222] text-[#10b981] border border-[#333333]'
-                      : 'text-[#777777] hover:text-[#bbbbbb]'
+                      : 'text-[#777777] hover:text-[#bbbbbb] border border-transparent'
                   }`}
                 >
-                  {tf}
+                  {t.label}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Index Value & Key Day Metrics */}
+          {/* Value + day extremes */}
           <div className="flex flex-wrap items-baseline justify-between gap-4 pt-4">
-            <div className="flex items-baseline gap-3">
+            <div className="flex flex-wrap items-baseline gap-3">
               <span
-                className={`text-3xl sm:text-4xl font-mono font-black tracking-tight ${
-                  isUp ? 'text-[#10b981]' : isDown ? 'text-[#e5484d]' : 'text-[#e5a93b]'
+                className={`text-3xl sm:text-4xl font-mono font-black tracking-tight tabular-nums transition-colors duration-500 rounded px-1 -mx-1 ${valCls} ${
+                  flash === 'up' ? 'bg-[#10b981]/20' : flash === 'down' ? 'bg-[#e5484d]/20' : ''
                 }`}
               >
-                {activeIndex.value.toLocaleString('vi-VN', {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
+                {shownValue.toLocaleString('vi-VN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
-              <span
-                className={`text-sm font-mono font-bold inline-flex items-center gap-0.5 ${
-                  isUp ? 'text-[#10b981]' : isDown ? 'text-[#e5484d]' : 'text-[#e5a93b]'
-                }`}
-              >
-                {isUp ? '+' : ''}
-                {activeIndex.change.toFixed(2)} ({isUp ? '+' : ''}
-                {activeIndex.percentChange.toFixed(2)}%)
+              <span className={`text-sm font-mono font-bold ${valCls}`}>
+                {shownChange > 0 ? '+' : ''}
+                {shownChange.toFixed(2)} ({shownPct > 0 ? '+' : ''}
+                {shownPct.toFixed(2)}%)
               </span>
+              {hover && (
+                <span className="text-[11px] font-mono text-[#777]">
+                  {new Date(hover.c.time).toLocaleDateString('vi-VN')}
+                </span>
+              )}
             </div>
 
-            {/* Quiet Day Extremes Bar */}
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-mono text-[#888888]">
               <div>
                 <span className="text-[#555555]">Đáy: </span>
@@ -222,34 +373,83 @@ export const HeroMarketBento: React.FC = () => {
               </div>
               <div>
                 <span className="text-[#555555]">Khối lượng: </span>
-                <span className="text-zinc-200 font-semibold">
-                  {(activeIndex.volume / 1_000_000).toFixed(1)}M cp
-                </span>
+                <span className="text-zinc-200 font-semibold">{(activeIndex.volume / 1_000_000).toFixed(1)}M cp</span>
               </div>
               <div>
                 <span className="text-[#555555]">Giá trị: </span>
-                <span className="text-zinc-200 font-semibold">
-                  {formatBillion(activeIndex.totalValue)}
-                </span>
+                <span className="text-zinc-200 font-semibold">{formatBillion(activeIndex.totalValue)}</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Lightweight Candlestick Chart */}
-        <div className="w-full pt-1">
-          <TradingViewChart data={chartData} chartType="area" height={320} />
+        {/* Chart toolbar */}
+        <div className="flex flex-wrap items-center justify-between gap-2 -mb-1">
+          <div className="flex items-center gap-1">
+            <Pill active={kind === 'area'} onClick={() => setKind('area')}>Vùng</Pill>
+            <Pill active={kind === 'candle'} onClick={() => setKind('candle')}>Nến</Pill>
+            <span className="w-px h-3.5 bg-[#222] mx-1" />
+            <Pill active={ma20} onClick={() => setMa20((v) => !v)} title="Đường trung bình 20 phiên">
+              <span className="text-[#e5a93b]">●</span> MA20
+            </Pill>
+            <Pill active={ma50} onClick={() => setMa50((v) => !v)} title="Đường trung bình 50 phiên">
+              <span className="text-[#6aa9ff]">●</span> MA50
+            </Pill>
+            <Pill active={vol} onClick={() => setVol((v) => !v)}>KL</Pill>
+          </div>
+          {rangePerf && (
+            <div className="text-[11px] font-mono text-[#777] flex items-center gap-3">
+              <span>
+                {tf}:{' '}
+                <span className={`font-bold ${pctCls(rangePerf.pct)}`}>
+                  {rangePerf.pct > 0 ? '+' : ''}
+                  {rangePerf.pct.toFixed(2)}%
+                </span>
+              </span>
+              <span className="hidden sm:inline">
+                Cao <span className="text-zinc-300">{rangePerf.hi.toLocaleString('vi-VN', { maximumFractionDigits: 1 })}</span>
+              </span>
+              <span className="hidden sm:inline">
+                Thấp <span className="text-zinc-300">{rangePerf.lo.toLocaleString('vi-VN', { maximumFractionDigits: 1 })}</span>
+              </span>
+            </div>
+          )}
         </div>
+
+        <div className="relative w-full">
+          {chartData.length > 0 ? (
+            <HeroIndexChart
+              candles={chartData}
+              kind={kind}
+              showMA20={ma20}
+              showMA50={ma50}
+              showVolume={vol}
+              height={320}
+              onHover={(c, prev) => setHover(c ? { c, prev } : null)}
+            />
+          ) : (
+            <div className="h-[320px] flex items-center justify-center text-xs font-mono text-[#666]">
+              {loadingHist ? 'Đang nạp dữ liệu lịch sử...' : 'Chưa có dữ liệu lịch sử cho chỉ số này'}
+            </div>
+          )}
+          {loadingHist && chartData.length > 0 && (
+            <div className="absolute inset-0 bg-[#111111]/60 flex items-center justify-center text-xs font-mono text-[#888] rounded-xl">
+              Đang nạp...
+            </div>
+          )}
+        </div>
+        <p className="text-[10px] font-mono text-[#555] -mt-2">
+          Cuộn chuột để zoom · kéo để di chuyển · rê chuột để xem từng phiên
+        </p>
       </div>
 
-      {/* ── RIGHT RADAR STRIP (32% Width): Actionable Stock Intelligence ── */}
+      {/* ── RIGHT: Radar ── */}
       <div className="lg:col-span-4 bg-[#111111] border border-[#1a1a1a] rounded-2xl p-5 flex flex-col justify-between space-y-4">
         <div>
-          {/* Radar Header with Segmented Tabs */}
           <div className="flex items-center justify-between border-b border-[#1a1a1a] pb-3">
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setRadarTab('minervini')}
+                onClick={() => switchRadar('minervini')}
                 className={`relative px-2 py-1 text-xs font-mono font-bold transition-colors cursor-pointer flex items-center gap-1.5 ${
                   radarTab === 'minervini' ? 'text-white' : 'text-[#777777] hover:text-[#bbbbbb]'
                 }`}
@@ -260,9 +460,8 @@ export const HeroMarketBento: React.FC = () => {
                   <span className="absolute bottom-[-13px] left-0 right-0 h-[2px] bg-[#10b981]" />
                 )}
               </button>
-
               <button
-                onClick={() => setRadarTab('valuation')}
+                onClick={() => switchRadar('valuation')}
                 className={`relative px-2 py-1 text-xs font-mono font-bold transition-colors cursor-pointer flex items-center gap-1.5 ${
                   radarTab === 'valuation' ? 'text-white' : 'text-[#777777] hover:text-[#bbbbbb]'
                 }`}
@@ -274,7 +473,6 @@ export const HeroMarketBento: React.FC = () => {
                 )}
               </button>
             </div>
-
             <Link
               href="/market"
               className="text-[11px] font-mono text-[#888888] hover:text-white flex items-center gap-1 transition-colors"
@@ -284,78 +482,152 @@ export const HeroMarketBento: React.FC = () => {
             </Link>
           </div>
 
-          {/* List of High-Value Stock Rows */}
-          <div className="divide-y divide-[#181818] pt-1">
-            {radarTab === 'minervini'
-              ? minerviniLeaders.map((s: any) => (
-                  <Link
-                    key={s.symbol}
-                    href={`/market?symbol=${s.symbol}`}
-                    className="py-2.5 px-1.5 flex items-center justify-between hover:bg-[#161616] rounded-xl transition-colors group cursor-pointer"
-                  >
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono font-black text-sm text-white group-hover:text-[#10b981] transition-colors">
-                          {s.symbol}
-                        </span>
-                        <span className="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-[#1a2512] text-[#10b981]">
-                          RS {s.rsRating}
-                        </span>
-                      </div>
-                      <span className="text-[11px] text-[#777777] font-sans block truncate max-w-[170px]">
-                        {s.sector || s.name}
-                      </span>
-                    </div>
-
-                    <div className="text-right font-mono">
-                      <div className="text-sm font-bold text-white">
-                        {s.price ? (s.price < 1000 ? (s.price * 1000).toLocaleString('vi-VN') : s.price.toLocaleString('vi-VN')) : '--'}
-                      </div>
-                      <span
-                        className={`text-xs font-bold ${
-                          s.changePct > 0 ? 'text-[#10b981]' : s.changePct < 0 ? 'text-[#e5484d]' : 'text-[#e5a93b]'
-                        }`}
-                      >
-                        {s.changePct > 0 ? '+' : ''}
-                        {s.changePct?.toFixed(2)}%
-                      </span>
-                    </div>
-                  </Link>
-                ))
-              : REAL_VALUATION_OPPORTUNITIES.map((s) => (
-                  <Link
-                    key={s.symbol}
-                    href={`/market?symbol=${s.symbol}`}
-                    className="py-2.5 px-1.5 flex items-center justify-between hover:bg-[#161616] rounded-xl transition-colors group cursor-pointer"
-                  >
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono font-black text-sm text-white group-hover:text-[#10b981] transition-colors">
-                          {s.symbol}
-                        </span>
-                        <span className="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-[#1a2512] text-[#10b981]">
-                          PEG {s.peg}
-                        </span>
-                      </div>
-                      <span className="text-[11px] text-[#777777] font-sans block truncate max-w-[170px]">
-                        P/E {s.pe}x • P/B {s.pb}x
-                      </span>
-                    </div>
-
-                    <div className="text-right font-mono">
-                      <div className="text-xs font-bold text-[#10b981]">
-                        LNST +{s.growth}%
-                      </div>
-                      <span className="text-[10px] text-[#888888] font-mono uppercase">
-                        {s.status}
-                      </span>
-                    </div>
-                  </Link>
-                ))}
+          {/* Sort */}
+          <div className="flex items-center gap-1 pt-2.5">
+            <span className="text-[10px] font-mono text-[#555] mr-1">Sắp xếp</span>
+            {radarTab === 'minervini' ? (
+              <>
+                <Pill active={mSort === 'rs'} onClick={() => setMSort('rs')}>RS</Pill>
+                <Pill active={mSort === 'chg'} onClick={() => setMSort('chg')}>% Giá</Pill>
+                <Pill active={mSort === 'vol'} onClick={() => setMSort('vol')}>KL vọt</Pill>
+              </>
+            ) : (
+              <>
+                <Pill active={vSort === 'peg'} onClick={() => setVSort('peg')}>PEG</Pill>
+                <Pill active={vSort === 'pe'} onClick={() => setVSort('pe')}>P/E</Pill>
+                <Pill active={vSort === 'growth'} onClick={() => setVSort('growth')}>LNST</Pill>
+              </>
+            )}
           </div>
+
+          <div className="divide-y divide-[#181818] pt-1" key={radarTab + (radarTab === 'minervini' ? mSort : vSort)}>
+            {radarTab === 'minervini'
+              ? leadersShown.map((s: any, i: number) => {
+                  const open = expanded === s.symbol;
+                  return (
+                    <div key={s.symbol} className="animate-[fadeIn_.25s_ease-out_both]" style={{ animationDelay: `${i * 30}ms` }}>
+                      <button
+                        onClick={() => setExpanded(open ? null : s.symbol)}
+                        className="w-full py-2.5 px-1.5 flex items-center justify-between hover:bg-[#161616] rounded-xl transition-colors group cursor-pointer text-left"
+                        aria-expanded={open}
+                      >
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono font-black text-sm text-white group-hover:text-[#10b981] transition-colors">
+                              {s.symbol}
+                            </span>
+                            <span className="px-1.5 rounded text-[10px] font-mono font-bold bg-[#1a2512] text-[#10b981]">
+                              RS {s.rsRating}
+                            </span>
+                          </div>
+                          <span className="text-[11px] text-[#777777] font-sans block truncate max-w-[170px]">
+                            {s.sector || s.name}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="text-right font-mono">
+                            <div className="text-sm font-bold text-white tabular-nums">{fmtPrice(s.price)}</div>
+                            <span className={`text-xs font-bold ${pctCls(s.changePct)}`}>
+                              {s.changePct > 0 ? '+' : ''}
+                              {s.changePct?.toFixed(2)}%
+                            </span>
+                          </div>
+                          <CaretDown className={`w-3 h-3 text-[#555] transition-transform ${open ? 'rotate-180' : ''}`} />
+                        </div>
+                      </button>
+                      <div className={`grid transition-all duration-300 ${open ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+                        <div className="overflow-hidden">
+                          <div className="mx-1.5 mb-2 rounded-lg bg-[#0d0d0d] border border-[#1c1c1c] p-3 grid grid-cols-3 gap-y-2 gap-x-3 text-[10px] font-mono">
+                            <Stat k="Perf 1T" v={s.perf1M} pct />
+                            <Stat k="Perf 1N" v={s.perf1Y} pct />
+                            <Stat k="Cách đỉnh 52T" v={s.distHigh} pct />
+                            <Stat k="KL / TB20" v={s.relVol} suffix="x" />
+                            <Stat k="Điểm Minervini" v={s.score} suffix="/8" plain />
+                            <Stat k="Vốn hoá" v={s.mktCapT ? s.mktCapT / 1000 : null} suffix=" nghìn tỷ" plain />
+                            <Link
+                              href={`/market?symbol=${s.symbol}`}
+                              className="col-span-3 mt-1 inline-flex items-center justify-center gap-1 py-1.5 rounded-md bg-[#10b981]/10 hover:bg-[#10b981]/20 text-[#10b981] font-bold transition-colors"
+                            >
+                              Mở phân tích {s.symbol} <ArrowUpRight className="w-3 h-3" />
+                            </Link>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              : valuations.map((s, i) => {
+                  const open = expanded === s.symbol;
+                  return (
+                    <div key={s.symbol} className="animate-[fadeIn_.25s_ease-out_both]" style={{ animationDelay: `${i * 30}ms` }}>
+                      <button
+                        onClick={() => setExpanded(open ? null : s.symbol)}
+                        className="w-full py-2.5 px-1.5 flex items-center justify-between hover:bg-[#161616] rounded-xl transition-colors group cursor-pointer text-left"
+                        aria-expanded={open}
+                      >
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono font-black text-sm text-white group-hover:text-[#e5a93b] transition-colors">
+                              {s.symbol}
+                            </span>
+                            <span className="px-1.5 rounded text-[10px] font-mono font-bold bg-[#2a2210] text-[#e5a93b]">
+                              PEG {s.peg}
+                            </span>
+                          </div>
+                          <span className="text-[11px] text-[#777777] font-sans block truncate max-w-[170px]">
+                            P/E {s.pe}x • P/B {s.pb}x
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="text-right font-mono">
+                            <div className="text-xs font-bold text-[#10b981]">LNST +{s.growth}%</div>
+                            <span className="text-[10px] text-[#888888] uppercase">{s.status}</span>
+                          </div>
+                          <CaretDown className={`w-3 h-3 text-[#555] transition-transform ${open ? 'rotate-180' : ''}`} />
+                        </div>
+                      </button>
+                      <div className={`grid transition-all duration-300 ${open ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+                        <div className="overflow-hidden">
+                          <div className="mx-1.5 mb-2 rounded-lg bg-[#0d0d0d] border border-[#1c1c1c] p-3 text-[10px] font-mono space-y-2">
+                            <div className="text-[#888]">{s.name} · {s.sector}</div>
+                            {/* PEG gauge: 1.0 = định giá hợp lý theo Peter Lynch */}
+                            <div>
+                              <div className="flex justify-between text-[#666] mb-1">
+                                <span>PEG {s.peg}</span>
+                                <span>1.0 = hợp lý</span>
+                              </div>
+                              <div className="relative h-1.5 rounded bg-[#1a1a1a]">
+                                <div
+                                  className="absolute inset-y-0 left-0 rounded bg-[#e5a93b]"
+                                  style={{ width: `${Math.min(100, (s.peg / 2) * 100)}%` }}
+                                />
+                                <div className="absolute -top-0.5 -bottom-0.5 w-px bg-[#666]" style={{ left: '50%' }} />
+                              </div>
+                            </div>
+                            <Link
+                              href={`/market?symbol=${s.symbol}`}
+                              className="inline-flex w-full items-center justify-center gap-1 py-1.5 rounded-md bg-[#e5a93b]/10 hover:bg-[#e5a93b]/20 text-[#e5a93b] font-bold transition-colors"
+                            >
+                              Xem định giá {s.symbol} <ArrowUpRight className="w-3 h-3" />
+                            </Link>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+          </div>
+
+          {radarTab === 'minervini' && leaders.length > 5 && (
+            <button
+              onClick={() => setShowAll((v) => !v)}
+              className="w-full mt-1 py-1.5 text-[11px] font-mono text-[#777] hover:text-white transition-colors cursor-pointer"
+            >
+              {showAll ? 'Thu gọn' : `Hiện thêm ${Math.min(10, leaders.length) - 5} mã`}
+            </button>
+          )}
         </div>
 
-        {/* Footer Audit Notice */}
         <div className="pt-3 border-t border-[#1a1a1a] flex items-center justify-between text-[11px] font-mono text-[#666666]">
           <span>Dữ liệu: DNSE & BCTC Kiểm toán</span>
           <span className="text-[#10b981] flex items-center gap-1">
@@ -366,3 +638,24 @@ export const HeroMarketBento: React.FC = () => {
     </div>
   );
 };
+
+const Stat = ({
+  k,
+  v,
+  pct,
+  suffix = '',
+  plain,
+}: {
+  k: string;
+  v: number | null | undefined;
+  pct?: boolean;
+  suffix?: string;
+  plain?: boolean;
+}) => (
+  <div>
+    <div className="text-[#555]">{k}</div>
+    <div className={`font-bold ${v == null ? 'text-[#555]' : pct ? pctCls(v) : 'text-zinc-200'}`}>
+      {v == null ? '--' : `${pct && v > 0 ? '+' : ''}${plain ? v : v.toFixed(pct ? 1 : 2)}${pct ? '%' : suffix}`}
+    </div>
+  </div>
+);

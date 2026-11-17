@@ -28,6 +28,7 @@ Managing investments across multiple asset classes shouldn't be complicated. You
 - **🌊 Sector Money Flow Monitor** - Matrix table & stacked rotation chart tracking liquidity breakdown (Bank, CK, BĐS, Thép, Họ Vin) with climax/overheating alerts & daily cron update
 - **⚡ Mark Minervini Trend Template Screener** - Strict 8/8 Stage 2 trend criteria with William O'Neil 1-99 RS Percentile Rating
 - **🧭 Relative Rotation Graph (RRG) & Macro Clock** - Visual sector rotation trajectories and macroeconomic cycle mapping
+- **🖱️ Interactive Market Dashboard** - Index chart with crosshair tooltip, area/candlestick toggle, MA20/MA50 & volume overlays, zoom/pan, per-index history (VN-Index, VN30, HNX, UPCOM) and range performance; expandable stock radar (Minervini leaders & PEG valuation) with sortable columns
 - **📈 Real-Time Market Streaming** - High-frequency tick data from DNSE Entrade & SSI iBoard
 - **💹 P&L Analytics** - Instant profit/loss calculations with visual insights
 - **🔐 Bank-Grade Security** - JWT authentication with Spring Security
@@ -50,6 +51,7 @@ Managing investments across multiple asset classes shouldn't be complicated. You
 - **TypeScript** - Type-safe development
 - **Tailwind CSS v4** - Utility-first styling
 - **Framer Motion** - Smooth animations
+- **Lightweight Charts v5** - Interactive financial charts
 
 ### Infrastructure
 - **Supabase** - PostgreSQL database hosting
@@ -90,7 +92,7 @@ cd backend
 ./mvnw spring-boot:run
 ```
 
-Backend runs on `http://localhost:8081`
+Backend runs on `http://localhost:8080`
 
 ### Frontend Setup
 
@@ -100,7 +102,7 @@ npm install
 npm run dev
 ```
 
-Frontend runs on `http://localhost:8080`
+Frontend runs on `http://localhost:3000` (dashboard at `/dashboard`)
 
 ### Environment Variables
 
@@ -115,7 +117,7 @@ JWT_EXPIRATION_MS=86400000
 
 **Frontend** (`frontend/.env.local`):
 ```env
-NEXT_PUBLIC_API_URL=http://localhost:8081/api
+NEXT_PUBLIC_API_URL=http://localhost:8080/api
 ```
 
 ---
