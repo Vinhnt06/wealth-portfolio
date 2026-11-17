@@ -164,3 +164,76 @@ export function triggerText(tr: Trigger, lang: Lang, labelOf: (id: number) => st
 }
 
 export const t2 = pick;
+
+/* ───────────── Bản NGẮN cho giao diện thân thiện (tab Chiến lược) ───────────── */
+
+export const SHORT_HEADLINE: Record<string, T> = {
+  BUY_ALIGNED: { vi: 'Có thể mua', en: 'OK to buy' },
+  WAIT_PIVOT: { vi: 'Chờ điểm vào', en: 'Wait for the entry' },
+  WAIT_NO_CHASE: { vi: 'Đã chạy xa, đợi nhịp chỉnh', en: 'Extended — wait for a pullback' },
+  WAIT_STAGE_CONFIRM: { vi: 'Chờ xu hướng xác nhận', en: 'Wait for the trend to confirm' },
+  WAIT_BASE_FORMING: { vi: 'Chờ nền hình thành', en: 'Wait for a base to form' },
+  AVOID_WYCKOFF_WARNS: { vi: 'Không mua — có dấu hiệu xả hàng', en: 'Do not buy — distribution signs' },
+  AVOID_DISTRIBUTION: { vi: 'Không mua — vùng đỉnh', en: 'Do not buy — near a top' },
+  AVOID_MARKDOWN: { vi: 'Không mua — đang giảm giá', en: 'Do not buy — in a downtrend' },
+};
+
+export const SHORT_ALIGN: Record<Alignment, T> = {
+  ALIGNED_BULLISH: { vi: 'Hai khung đồng thuận', en: 'Both agree' },
+  ALIGNED_BEARISH: { vi: 'Hai khung đồng thuận (xấu)', en: 'Both agree (bearish)' },
+  TIMING_PENDING: { vi: 'Xu hướng tốt, chưa tới điểm vào', en: 'Trend good, entry not yet' },
+  WYCKOFF_LEADS: { vi: 'Lệch: Wyckoff báo sớm hơn', en: 'Mismatch: Wyckoff is early' },
+  WYCKOFF_WARNS: { vi: 'Lệch: Wyckoff cảnh báo trước', en: 'Mismatch: Wyckoff warns first' },
+  NEUTRAL_WAIT: { vi: 'Chưa rõ', en: 'Unclear' },
+};
+
+export const SHORT_PHASE: Record<CyclePhase, T> = {
+  MARKDOWN: { vi: 'Đang giảm giá, chưa có nền', en: 'Falling, no base yet' },
+  ACCUM_A: { vi: 'Vừa hãm đà giảm', en: 'Decline just stopped' },
+  ACCUM_B: { vi: 'Đang xây nền', en: 'Building a base' },
+  ACCUM_C: { vi: 'Thử cung (Spring) — chưa phải điểm mua', en: 'Spring test — not a buy point' },
+  ACCUM_D: { vi: 'Lực cầu quay lại (SOS/LPS)', en: 'Demand returning (SOS/LPS)' },
+  ACCUM_E: { vi: 'Vừa vượt nền', en: 'Just broke out of the base' },
+  REACCUM_B: { vi: 'Nghỉ giữa xu hướng tăng', en: 'Resting inside an uptrend' },
+  REACCUM_C: { vi: 'Thử cung trong xu hướng tăng', en: 'Supply test in an uptrend' },
+  REACCUM_D: { vi: 'Nhịp chỉnh có lực cầu (LPS)', en: 'Pullback with demand (LPS)' },
+  MARKUP: { vi: 'Đang tăng', en: 'Trending up' },
+  MARKUP_EXTENDED: { vi: 'Đã chạy xa khỏi nền', en: 'Extended from the base' },
+  MARKUP_FAILING: { vi: 'Còn tăng nhưng yếu dần', en: 'Still up but weakening' },
+  DIST_B: { vi: 'Đi ngang ở vùng đỉnh', en: 'Sideways near a top' },
+  DIST_C: { vi: 'Vùng đỉnh, thử đỉnh thất bại', en: 'Near a top, failed test' },
+  DIST_D: { vi: 'Vùng đỉnh, bán mạnh', en: 'Near a top, heavy selling' },
+};
+
+export const SHORT_TT_NAME: Record<number, T> = {
+  1: { vi: 'giá trên MA150 & MA200', en: 'price above MA150 & MA200' },
+  2: { vi: 'MA150 trên MA200', en: 'MA150 above MA200' },
+  3: { vi: 'MA200 dốc lên', en: 'MA200 rising' },
+  4: { vi: 'MA50 > MA150 > MA200', en: 'MA50 > MA150 > MA200' },
+  5: { vi: 'giá trên MA50', en: 'price above MA50' },
+  6: { vi: 'cao hơn đáy 52 tuần ≥ 30%', en: '≥ 30% above 52-week low' },
+  7: { vi: 'gần đỉnh 52 tuần', en: 'near the 52-week high' },
+  8: { vi: 'RS ≥ 70', en: 'RS ≥ 70' },
+};
+
+export function shortTrigger(tr: Trigger, lang: Lang): string {
+  const vi = lang === 'vi';
+  switch (tr.code) {
+    case 'CLOSE_ABOVE_MA150': return vi ? `Giá vượt MA150 (${fmtK(tr.value)})` : `Price closes above MA150 (${fmtK(tr.value)})`;
+    case 'CLOSE_ABOVE_MA200': return vi ? `Giá vượt MA200 (${fmtK(tr.value)})` : `Price closes above MA200 (${fmtK(tr.value)})`;
+    case 'MA150_TURNS_UP': return vi ? 'MA150 quay lên' : 'MA150 turns up';
+    case 'TT_CRITERIA_MISSING': return vi ? `Đủ 8/8 tiêu chí (đang ${tr.extra}/8)` : `Reach 8/8 criteria (now ${tr.extra}/8)`;
+    case 'RS_ABOVE_70': return vi ? `RS lên ≥ 70 (đang ${tr.value})` : `RS rises to ≥ 70 (now ${tr.value})`;
+    case 'PULLBACK_TO_MA20_50': return vi ? 'Đợi nhịp chỉnh về MA20–MA50' : 'Wait for a pullback to MA20–MA50';
+    case 'BREAK_PIVOT_WITH_VOLUME': return vi ? `Vượt ${fmtK(tr.value)} kèm khối lượng lớn` : `Break ${fmtK(tr.value)} on heavy volume`;
+    case 'DISTRIBUTION_CLEARS': return vi ? 'Hết dấu hiệu xả hàng' : 'Distribution signs fade';
+    case 'MARKET_RECOVERS': return vi ? 'VN-Index trên MA50 & MA200' : 'VN-Index above MA50 & MA200';
+    case 'CLOSE_BELOW_MA20': return vi ? `Đóng cửa dưới MA20 (${fmtK(tr.value)})` : `Close below MA20 (${fmtK(tr.value)})`;
+    case 'CLOSE_BELOW_MA50': return vi ? `Đóng cửa dưới MA50 (${fmtK(tr.value)})` : `Close below MA50 (${fmtK(tr.value)})`;
+    case 'CLOSE_BELOW_MA150': return vi ? `Đóng cửa dưới MA150 (${fmtK(tr.value)})` : `Close below MA150 (${fmtK(tr.value)})`;
+    case 'BREAK_BASE_LOW': return vi ? `Thủng đáy nền (${fmtK(tr.value)})` : `Break the base low (${fmtK(tr.value)})`;
+    case 'SOW_APPEARS': return vi ? 'Xuất hiện nến bán mạnh (SOW)' : 'A heavy-selling bar (SOW) appears';
+    case 'UPTHRUST_APPEARS': return vi ? 'Xuất hiện Upthrust' : 'An upthrust appears';
+    default: return tr.code;
+  }
+}
