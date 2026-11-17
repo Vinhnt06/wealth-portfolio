@@ -36,7 +36,9 @@ import {
   CartesianGrid,
   Cell,
 } from 'recharts';
+import type { EmpiricalResult } from '../utils/setupEmpirical';
 import { useMarketStore } from '../store/marketStore';
+import { useLanguage } from '../../../app/components/LanguageContext';
 
 interface MinerviniExpectancyCalculatorProps {
   initialSymbol?: string;
@@ -54,6 +56,9 @@ interface WinRateFactor {
 
 interface AutoWinRateData {
   success: boolean;
+  winRateSource?: 'BACKTEST' | 'HEURISTIC';
+  heuristicWinRate?: number;
+  empirical?: EmpiricalResult;
   symbol: string;
   autoWinRate: number;
   baseWinRate: number;
@@ -65,6 +70,7 @@ interface AutoWinRateData {
   summary: {
     marketStatus: string;
     stockStage: string;
+    exchange?: string;
     stage?: number;
     passedCount?: number;
     wyckoffPhase?: string;
@@ -92,6 +98,24 @@ interface AutoWinRateData {
 // Chi phí khứ hồi ước tính trên TTCK Việt Nam: phí môi giới ~0.15% x 2 chiều + thuế bán 0.1%
 const ROUND_TRIP_COST_PCT = 0.4;
 
+// Ngưỡng cảnh báo tập trung vị thế (mặc định của công cụ, KHÔNG phải quy tắc chính thức của Minervini)
+const CONCENTRATION_WARN_PCT = 25;
+
+// Kỳ vọng sau chi phí dưới ngưỡng này coi là "mỏng" (dễ bị xóa bởi sai số ước lượng)
+const THIN_EXPECTANCY_PCT = 0.5;
+
+/** Bước giá niêm yết: HOSE <10.000đ = 10đ, 10.000–<50.000đ = 50đ, ≥50.000đ = 100đ; HNX/UPCoM = 100đ */
+const tickSizeOf = (price: number, exchange?: string): number => {
+  const ex = (exchange || 'HOSE').toUpperCase();
+  if (ex !== 'HOSE') return 100;
+  return price < 10000 ? 10 : price < 50000 ? 50 : 100;
+};
+const roundTick = (price: number, exchange: string | undefined, mode: 'down' | 'up' | 'nearest'): number => {
+  const t = tickSizeOf(price, exchange);
+  const q = price / t;
+  return (mode === 'down' ? Math.floor(q) : mode === 'up' ? Math.ceil(q) : Math.round(q)) * t;
+};
+
 const POPULAR_SYMBOLS = ['HPG', 'SSI', 'VND', 'TCB', 'MWG', 'FPT', 'VHM', 'MBB', 'DGC', 'VCI'];
 
 const formatVND = (num: number): string => {
@@ -99,10 +123,227 @@ const formatVND = (num: number): string => {
   return Math.round(num).toLocaleString('vi-VN');
 };
 
+
+/* ───────────────────────── Thẻ kiểm chứng thực nghiệm (backtest) ───────────────────────── */
+const EmpiricalCard: React.FC<{
+  emp?: EmpiricalResult;
+  tr: (vi: string, en?: string) => string;
+  nominalStopPct: number;
+  nominalTargetPct: number;
+}> = ({ emp, tr, nominalStopPct, nominalTargetPct }) => {
+  const [showNotes, setShowNotes] = useState(false);
+  if (!emp) return null;
+
+  if (!emp.available || !emp.net || !emp.basis) {
+    return (
+      <section className="rounded-xl bg-zinc-950 border border-zinc-800 p-4 text-xs font-mono text-zinc-400 leading-relaxed">
+        <span className="text-zinc-200 font-semibold">{tr('Kiểm chứng thực nghiệm', 'Empirical check')}: </span>
+        {tr(
+          'chưa đủ mẫu backtest cho thiết lập này — tỷ lệ thắng đang dùng công thức đoán theo quy tắc, KHÔNG phải xác suất đã kiểm chứng.',
+          'not enough backtest samples for this setup — the win rate falls back to the rule-based guess, NOT a validated probability.'
+        )}
+      </section>
+    );
+  }
+
+  const n = emp.net;
+  const b = emp.basis;
+  const sigTone =
+    emp.significance === 'NEGATIVE'
+      ? 'text-rose-300 bg-rose-500/10 border-rose-500/30'
+      : emp.significance === 'POSITIVE'
+        ? 'text-emerald-300 bg-emerald-500/10 border-emerald-500/30'
+        : 'text-amber-300 bg-amber-500/10 border-amber-500/30';
+  const sigLabel =
+    emp.significance === 'NEGATIVE'
+      ? tr('ÂM RÕ RỆT', 'CLEARLY NEGATIVE')
+      : emp.significance === 'POSITIVE'
+        ? tr('DƯƠNG RÕ RỆT', 'CLEARLY POSITIVE')
+        : tr('CHƯA KẾT LUẬN ĐƯỢC', 'INCONCLUSIVE');
+  const regimeLabel = b.regime === 'up' ? tr('thị trường thuận lợi', 'bullish market') : b.regime === 'down' ? tr('thị trường kém thuận lợi', 'weak market') : tr('mọi chế độ thị trường', 'all market regimes');
+  const classLabel = b.setupClass === 'S2' ? tr('Trend Template 8/8', 'Trend Template 8/8') : b.setupClass === 'NEAR' ? tr('Trend Template 6–7/8', 'Trend Template 6–7/8') : tr('Trend Template ≤ 5/8', 'Trend Template ≤ 5/8');
+  const sign = (v: number) => (v > 0 ? '+' : '');
+  const lossOver = nominalStopPct > 0 ? Math.round(((n.avgLossPct / nominalStopPct) - 1) * 100) : 0;
+  const base = emp.baseline;
+
+  const Stat = ({ k, v, sub, tone = 'text-zinc-100' }: { k: string; v: string; sub?: string; tone?: string }) => (
+    <div>
+      <div className="text-[10px] text-zinc-500 uppercase tracking-wide">{k}</div>
+      <div className={`text-base font-bold tabular-nums mt-0.5 ${tone}`}>{v}</div>
+      {sub && <div className="text-[10px] text-zinc-500 mt-0.5 leading-tight">{sub}</div>}
+    </div>
+  );
+
+  return (
+    <section className="rounded-xl bg-zinc-950 border border-zinc-800 overflow-hidden">
+      <div className="px-5 py-3 border-b border-zinc-800/80 flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h3 className="text-sm font-semibold text-zinc-100">{tr('Kiểm chứng thực nghiệm (backtest)', 'Empirical check (backtest)')}</h3>
+          <p className="text-[11px] text-zinc-500 font-mono mt-0.5">
+            {classLabel} · {regimeLabel} · {tr('cắt lỗ', 'stop')} −{b.stopPct}% · R:R {b.rr}:1
+            {b.fallback ? ` · ${b.fallback}` : ''}
+          </p>
+        </div>
+        <span className={`px-2 py-1 rounded-md border text-[10px] font-mono font-bold ${sigTone}`}>{sigLabel}</span>
+      </div>
+
+      <div className="p-5 space-y-5">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 font-mono">
+          <Stat k={tr('Số lệnh lịch sử', 'Historical trades')} v={`${emp.n}`} sub={`${emp.meta.periodStart} → ${emp.meta.periodEnd}`} />
+          <Stat
+            k={tr('Tỷ lệ thắng', 'Win rate')}
+            v={`${n.winRate}%`}
+            sub={`95%: ${n.winRateCI[0]}–${n.winRateCI[1]}%`}
+          />
+          <Stat
+            k={tr('Lãi / Lỗ trung bình thực', 'Avg win / loss (realized)')}
+            v={`+${n.avgWinPct}% / −${n.avgLossPct}%`}
+            sub={
+              b.outsideGrid
+                ? tr('Mức bạn đặt nằm ngoài vùng backtest — chỉ mang tính tham khảo', 'Your levels are outside the backtested range — indicative only')
+                : tr(
+                    `Lỗ thực ${lossOver >= 0 ? 'lớn hơn' : 'nhỏ hơn'} mức cắt lỗ đặt ${Math.abs(lossOver)}% (gap giá, T+2)`,
+                    `Realized loss is ${Math.abs(lossOver)}% ${lossOver >= 0 ? 'larger' : 'smaller'} than the planned stop (gaps, T+2)`
+                  )
+            }
+          />
+          <Stat
+            k={tr('Kỳ vọng sau chi phí', 'Expectancy after costs')}
+            v={`${sign(n.expectancyPct)}${n.expectancyPct}%`}
+            sub={`95%: ${n.expectancyCI[0]}% → ${n.expectancyCI[1]}%`}
+            tone={n.expectancyPct > 0 ? 'text-emerald-300' : 'text-rose-300'}
+          />
+        </div>
+
+        <p className="text-xs text-zinc-400 leading-relaxed font-mono">
+          {emp.significance === 'INCONCLUSIVE'
+            ? n.expectancyCI[0] <= 0 && n.expectancyCI[1] >= 0
+              ? tr(
+                  'Khoảng tin cậy 95% của kỳ vọng chứa 0, nên dữ liệu CHƯA chứng minh bộ quy tắc này có lợi thế (hay bất lợi). Con số kỳ vọng ở trên có thể chỉ là nhiễu.',
+                  'The 95% interval of the expectancy includes 0, so the data does NOT prove an edge (or a disadvantage). The figure above may just be noise.'
+                )
+              : tr(
+                  `Khoảng tin cậy 95% không chứa 0 nhưng chưa vượt ngưỡng khắt khe hơn (z ≥ ${3}) áp dụng vì đã thử nhiều tổ hợp, nên kết quả nghiêng về ${n.expectancyPct < 0 ? 'âm' : 'dương'} nhưng chưa chắc chắn.`,
+                  `The 95% interval excludes 0 but does not pass the stricter threshold (z ≥ ${3}) applied because many combinations were tested, so the result leans ${n.expectancyPct < 0 ? 'negative' : 'positive'} but is not conclusive.`
+                )
+            : emp.significance === 'NEGATIVE'
+              ? tr('Kỳ vọng âm đủ lớn so với sai số: với bộ quy tắc này, lặp lại nhiều lệnh sẽ bào mòn vốn.', 'The negative expectancy is large relative to its error: repeating this rule set would erode capital.')
+              : tr('Kỳ vọng dương đủ lớn so với sai số trong mẫu lịch sử, nhưng chưa được kiểm chứng ngoài mẫu và còn thiên lệch sống sót.', 'The positive expectancy is large relative to its error in the historical sample, but it has not been validated out-of-sample and carries survivorship bias.')}
+        </p>
+
+        {/* Bảng theo R:R */}
+        {emp.byRr && emp.byRr.length > 1 && (
+          <div>
+            <div className="text-[10px] text-zinc-500 uppercase tracking-wide mb-1.5 font-mono">
+              {tr('Kết quả theo R:R (cùng mức cắt lỗ)', 'Results by R:R (same stop)')}
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-[11px] font-mono">
+                <thead>
+                  <tr className="text-zinc-500 text-left border-b border-zinc-800">
+                    <th className="py-1.5 pr-3 font-medium">R:R</th>
+                    <th className="py-1.5 pr-3 font-medium text-right">{tr('Số lệnh', 'Trades')}</th>
+                    <th className="py-1.5 pr-3 font-medium text-right">{tr('Thắng', 'Win')}</th>
+                    <th className="py-1.5 pr-3 font-medium text-right">{tr('Kỳ vọng', 'Expectancy')}</th>
+                    <th className="py-1.5 font-medium text-right">95%</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-900">
+                  {emp.byRr.map((r) => (
+                    <tr key={r.rr} className={r.rr === b.rr ? 'bg-zinc-900/70 text-zinc-100' : 'text-zinc-400'}>
+                      <td className="py-1.5 pr-3">{r.rr}:1{r.rr === b.rr ? ' ◀' : ''}</td>
+                      <td className="py-1.5 pr-3 text-right tabular-nums">{r.n}</td>
+                      <td className="py-1.5 pr-3 text-right tabular-nums">{r.winRate}%</td>
+                      <td className={`py-1.5 pr-3 text-right tabular-nums ${r.expectancyPct > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                        {sign(r.expectancyPct)}{r.expectancyPct}%
+                      </td>
+                      <td className="py-1.5 text-right tabular-nums text-zinc-500">
+                        {r.expectancyCI[0]} → {r.expectancyCI[1]}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Đối chứng & chế độ thị trường */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[11px] font-mono">
+          {base && (
+            <div className="p-3 rounded-lg bg-zinc-900/60 border border-zinc-800/80">
+              <div className="text-zinc-500 uppercase text-[10px] tracking-wide mb-1">{tr('Đối chứng: mọi tín hiệu phá đỉnh', 'Control: every breakout signal')}</div>
+              <div className="text-zinc-200">
+                {tr('Thắng', 'Win')} {base.net.winRate}% · {tr('kỳ vọng', 'expectancy')} {sign(base.net.expectancyPct)}{base.net.expectancyPct}% ({base.n} {tr('lệnh', 'trades')})
+              </div>
+              <div className="text-zinc-500 mt-1 leading-snug">
+                {tr('So sánh để biết Trend Template có thực sự cải thiện kết quả hay không.', 'Compare to see whether the Trend Template actually improves results.')}
+              </div>
+            </div>
+          )}
+          {emp.regimeSplit && (emp.regimeSplit.up || emp.regimeSplit.down) && (
+            <div className="p-3 rounded-lg bg-zinc-900/60 border border-zinc-800/80">
+              <div className="text-zinc-500 uppercase text-[10px] tracking-wide mb-1">{tr('Theo chế độ thị trường (chỉ tham khảo)', 'By market regime (reference only)')}</div>
+              {emp.regimeSplit.up && (
+                <div className="text-zinc-200">
+                  {tr('Thuận lợi', 'Bullish')}: {tr('thắng', 'win')} {emp.regimeSplit.up.net.winRate}% · E {sign(emp.regimeSplit.up.net.expectancyPct)}{emp.regimeSplit.up.net.expectancyPct}% ({emp.regimeSplit.up.n})
+                </div>
+              )}
+              {emp.regimeSplit.down && (
+                <div className="text-zinc-200">
+                  {tr('Kém thuận lợi', 'Weak')}: {tr('thắng', 'win')} {emp.regimeSplit.down.net.winRate}% · E {sign(emp.regimeSplit.down.net.expectancyPct)}{emp.regimeSplit.down.net.expectancyPct}% ({emp.regimeSplit.down.n})
+                </div>
+              )}
+              <div className="text-zinc-500 mt-1 leading-snug">
+                {tr(
+                  `Hiện tại: ${emp.currentRegime === 'up' ? 'thuận lợi' : emp.currentRegime === 'down' ? 'kém thuận lợi' : 'chưa rõ'}. Chênh lệch giữa hai chế độ có thể chỉ là nhiễu do mẫu nhỏ nên kết quả chính dùng số liệu gộp cả hai.`,
+                  `Now: ${emp.currentRegime === 'up' ? 'bullish' : emp.currentRegime === 'down' ? 'weak' : 'unknown'}. The gap between regimes may just be noise from small samples, so the main result pools both.`
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setShowNotes((v) => !v)}
+          className="text-[11px] font-mono text-zinc-400 hover:text-zinc-200 flex items-center gap-1"
+        >
+          {showNotes ? <CaretUp className="w-3 h-3" /> : <CaretDown className="w-3 h-3" />}
+          {tr('Giả định & giới hạn của backtest', 'Backtest assumptions & limitations')}
+        </button>
+        {showNotes && (
+          <div className="text-[11px] font-mono text-zinc-400 leading-relaxed space-y-2 border-t border-zinc-800/70 pt-3">
+            <div className="text-zinc-300">
+              {emp.meta.universe} {tr('mã', 'stocks')} · {emp.meta.signals} {tr('tín hiệu thô', 'raw signals')} · {emp.meta.periodStart} → {emp.meta.periodEnd}
+            </div>
+            <ul className="list-disc pl-4 space-y-1">
+              {Object.values(emp.meta.rules).map((r, i) => (
+                <li key={i}>{r}</li>
+              ))}
+            </ul>
+            <div className="text-amber-300/90">{tr('Giới hạn', 'Limitations')}:</div>
+            <ul className="list-disc pl-4 space-y-1 text-amber-200/70">
+              {emp.meta.caveats.map((c, i) => (
+                <li key={i}>{c}</li>
+              ))}
+            </ul>
+            <div className="text-zinc-500">
+              {tr('Kỳ vọng ở đầu trang đã hiệu chỉnh theo lỗ/lãi thực tế của backtest: lỗ ×', 'The headline expectancy is adjusted using backtest realized figures: loss ×')}
+              {emp.lossFactor}, {tr('lãi', 'win')} ×{emp.winFactor}. {tr('Mục tiêu hiện tại', 'Current target')} +{nominalTargetPct}% / {tr('cắt lỗ', 'stop')} −{nominalStopPct}%.
+            </div>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+};
+
 export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculatorProps> = ({
   initialSymbol,
   initialPrice,
 }) => {
+  const { tr } = useLanguage();
   const selectedSymbol = useMarketStore((state) => state.selectedSymbol);
   const setSelectedSymbol = useMarketStore((state) => state.setSelectedSymbol);
   const ticks = useMarketStore((state) => state.ticks);
@@ -254,8 +495,23 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
       .catch(() => {});
   };
 
+  const exchange = autoWinRateData?.summary?.exchange;
+  const emp = autoWinRateData?.empirical;
+  const hasEmp = Boolean(emp?.available && emp.lossFactor && emp.winFactor);
+  const adjLossF = hasEmp ? (emp!.lossFactor as number) : 1;
+  const adjWinF = hasEmp ? (emp!.winFactor as number) : 1;
+  // Có backtest: hệ số đã gồm gap giá, T+2 và chi phí. Không có: chỉ trừ chi phí khứ hồi.
+  const costPad = hasEmp ? 0 : ROUND_TRIP_COST_PCT / 100;
+
   const trendGateFail =
     autoWinRateData?.summary?.passedCount !== undefined && autoWinRateData.summary.passedCount < 8;
+
+  // Độ tin cậy: có backtest thì theo cỡ mẫu & độ rộng khoảng tin cậy; không thì theo độ hội tụ các trụ cột
+  const confLevel = autoWinRateData?.winRateSource === 'BACKTEST' && emp?.confidence ? emp.confidence : autoWinRateData?.confidence;
+  const confReason =
+    autoWinRateData?.winRateSource === 'BACKTEST' && emp?.n
+      ? tr(`${emp.n} lệnh lịch sử cùng nhóm. Cỡ mẫu lớn chưa có nghĩa là có lợi thế — xem khoảng tin cậy của kỳ vọng`, `${emp.n} historical trades in the same group. A large sample does not imply an edge — check the expectancy interval`)
+      : autoWinRateData?.confidenceReason;
 
   // ── MATHEMATICAL ENGINE (MARK MINERVINI FORMULAS) ──
   const math = useMemo(() => {
@@ -269,25 +525,34 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
 
     // 2. Hàm kỳ vọng toán học trên mỗi lệnh (%)
     // Formula: E = (W * A) - (L * B)
-    const expectancyPct = Number(((W * A - L * B) * 100).toFixed(2));
+    // Danh nghĩa: chưa tính gap giá / T+2 / chi phí. Hiệu chỉnh: lãi & lỗ thực tế (A', B').
+    const nominalExpectancyPct = Number(((W * A - L * B) * 100).toFixed(2));
+    const effA = A * adjWinF - costPad;
+    const effB = B * adjLossF + costPad;
+    const expectancyPct = Number(((W * effA - L * effB) * 100).toFixed(2));
+    const winR = B > 0 ? effA / B : 0; // lãi thực tính theo bội số rủi ro dự kiến
+    const lossR = B > 0 ? effB / B : 1; // lỗ thực tính theo bội số rủi ro dự kiến
+    const effRr = effB > 0 ? Number((effA / effB).toFixed(2)) : 0;
 
     // 3. Tỷ lệ thắng tối thiểu để hòa vốn (Breakeven Win Rate)
     // Formula: W_be = 1 / (1 + RR) = B / (A + B)
-    const breakevenWinRatePct = A + B > 0 ? Number(((B / (A + B)) * 100).toFixed(1)) : 0;
+    const breakevenWinRatePct = effA + effB > 0 ? Number(((effB / (effA + effB)) * 100).toFixed(1)) : 0;
 
     // 4. Mức cắt lỗ tối đa cho phép để hòa vốn với Win Rate này
     // Formula: B_max = (W / (1 - W)) * A
-    const maxBreakevenStopLossPct = W < 1 ? Number((((W / L) * A) * 100).toFixed(1)) : 100;
+    // Giải W·A' = L·B'max rồi quy ngược về mức cắt lỗ đặt: (B'max − chi phí) / hệ số lỗ
+    const maxBreakevenStopLossPct = W < 1 ? Number(Math.max(0, ((((W / L) * effA - costPad) / adjLossF) * 100)).toFixed(1)) : 100;
 
     // 5. Mức cắt lỗ chuẩn Minervini: Lỗ = 1/2 Lãi (2:1) hoặc 1/3 Lãi (3:1)
     const minerviniOptimalStopPct2to1 = Number((targetGainPct / 2).toFixed(1));
     const minerviniOptimalStopPct3to1 = Number((targetGainPct / 3).toFixed(1));
 
     // 6. Tính giá cụ thể (VND)
-    const targetPrice = Math.round(entryPrice * (1 + A));
-    const stopLossPrice = Math.round(entryPrice * (1 - B));
-    const optimalStopPrice2to1 = Math.round(entryPrice * (1 - minerviniOptimalStopPct2to1 / 100));
-    const breakevenStopPrice = Math.round(entryPrice * (1 - maxBreakevenStopLossPct / 100));
+    // Làm tròn theo bước giá niêm yết: mục tiêu & cắt lỗ làm tròn xuống (cắt lỗ xuống = rủi ro/cp lớn hơn một chút → bảo thủ)
+    const targetPrice = roundTick(entryPrice * (1 + A), exchange, 'down');
+    const stopLossPrice = roundTick(entryPrice * (1 - B), exchange, 'down');
+    const optimalStopPrice2to1 = roundTick(entryPrice * (1 - minerviniOptimalStopPct2to1 / 100), exchange, 'down');
+    const breakevenStopPrice = roundTick(entryPrice * (1 - maxBreakevenStopLossPct / 100), exchange, 'down');
 
     // 7. Quản trị quy mô vị thế (Position Sizing theo rủi ro % NAV)
     const maxRiskCapital = totalCapital * (riskPerTradePct / 100);
@@ -303,8 +568,8 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
     // Rủi ro thực tế (đã tính làm tròn lô 100 CP và giới hạn vốn)
     const actualRiskCapital = maxShares * Math.max(0, riskPerShare);
     const actualRiskPct = totalCapital > 0 ? Number(((actualRiskCapital / totalCapital) * 100).toFixed(2)) : 0;
-    // Minervini thường giữ mỗi vị thế quanh 25% NAV; vượt mức này là tập trung cao
-    const isConcentrated = allocationPct > 25;
+    // Cảnh báo khi một vị thế vượt ngưỡng tập trung mặc định (xem CONCENTRATION_WARN_PCT)
+    const isConcentrated = allocationPct > CONCENTRATION_WARN_PCT;
 
     // Lợi nhuận kỳ vọng khi chạm Target (VND)
     const profitAtTarget = maxShares * (targetPrice - entryPrice);
@@ -322,7 +587,7 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
 
     // Đợt 2: Scale-Up Tranche 1 (35%) - Chỉ mua gia tăng khi Đợt 1 đã có đệm lãi +2.5%
     const t2TriggerPct = 2.5;
-    const t2EntryPrice = Math.round(entryPrice * (1 + t2TriggerPct / 100));
+    const t2EntryPrice = roundTick(entryPrice * (1 + t2TriggerPct / 100), exchange, 'up');
     const t2Shares = Math.round((maxShares * 0.35) / 100) * 100;
     const t2Value = t2Shares * t2EntryPrice;
     // Hành động bảo vệ vốn sống còn: Nâng Stop Loss của Đợt 1 lên Giá Vốn Hòa Vốn (Breakeven - Risk-Free)
@@ -330,11 +595,11 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
 
     // Đợt 3: Pyramid Complete (25%) - Hoàn tất vị thế khi giá bứt phá +5.0%
     const t3TriggerPct = 5.0;
-    const t3EntryPrice = Math.round(entryPrice * (1 + t3TriggerPct / 100));
+    const t3EntryPrice = roundTick(entryPrice * (1 + t3TriggerPct / 100), exchange, 'up');
     const t3Shares = Math.max(0, maxShares - t1Shares - t2Shares);
     const t3Value = t3Shares * t3EntryPrice;
     // Hành động khóa lãi: Nâng Stop Loss toàn bộ lên +1.5% so với giá vốn gốc
-    const t3StopLossPrice = Math.round(entryPrice * 1.015);
+    const t3StopLossPrice = roundTick(entryPrice * 1.015, exchange, 'down');
 
     const totalAllocatedShares = t1Shares + t2Shares + t3Shares;
     const totalInvestedValue = t1Value + t2Value + t3Value;
@@ -343,7 +608,7 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
 
     // 9. Kế Hoạch Cắt Lỗ Bậc Thang (Staged Stop-Loss / Phòng thủ 2 nấc)
     const halfStopLossPct = Number((stopLossPct / 2).toFixed(1));
-    const stopPriceStage1 = Math.round(entryPrice * (1 - halfStopLossPct / 100));
+    const stopPriceStage1 = roundTick(entryPrice * (1 - halfStopLossPct / 100), exchange, 'down');
     const stage1CutShares = Math.round((maxShares * 0.5) / 100) * 100;
     const stage1Loss = stage1CutShares * (entryPrice - stopPriceStage1);
 
@@ -357,7 +622,7 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
 
     // 10. Kế Hoạch Chốt Lời Bậc Thang (Staged Profit-Taking / Tấn công 3 nấc)
     const tp1Pct = Math.round(targetGainPct * 0.6 * 10) / 10; // ~60% target
-    const tp1Price = Math.round(entryPrice * (1 + tp1Pct / 100));
+    const tp1Price = roundTick(entryPrice * (1 + tp1Pct / 100), exchange, 'down');
     const tp1Shares = Math.round((maxShares * 0.35) / 100) * 100;
     const tp1Profit = tp1Shares * (tp1Price - entryPrice);
 
@@ -374,20 +639,24 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
 
     let verdict = 'ĐẠT CHUẨN MINERVINI';
     let verdictColor = 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30';
-    let verdictNote = 'Kỳ vọng toán học dương mạnh mẽ, tỷ lệ R:R tối ưu theo nguyên tắc vàng của Mark Minervini.';
+    let verdictNote = 'Kỳ vọng dương sau khi đã trừ chi phí và trượt giá; R:R đạt chuẩn tối thiểu 2:1 của Mark Minervini.';
 
     if (isHardStopExceeded) {
       verdict = 'VI PHẠM NGUYÊN TẮC CẮT LỖ';
       verdictColor = 'text-rose-400 bg-rose-500/10 border-rose-500/30';
       verdictNote = 'Mark Minervini: Tuyệt đối không bao giờ để cắt lỗ vượt quá 7-8% trong bất kỳ hoàn cảnh nào!';
     } else if (!isExpectancyPositive) {
-      verdict = 'KỲ VỌNG TOÁN HỌC ÂM';
+      verdict = 'KỲ VỌNG ÂM (SAU CHI PHÍ & TRƯỢT GIÁ)';
       verdictColor = 'text-rose-400 bg-rose-500/10 border-rose-500/30';
-      verdictNote = `Với Win Rate ${winRatePct}%, mức cắt lỗ ${stopLossPct}% đang vượt ngưỡng hòa vốn (${maxBreakevenStopLossPct}%). Vốn của bạn sẽ bị bào mòn dần!`;
-    } else if (expectancyPct < ROUND_TRIP_COST_PCT * 2) {
+      verdictNote = `Với tỷ lệ thắng ${winRatePct}% và mức cắt lỗ ${stopLossPct}%, kỳ vọng thực tế ${expectancyPct}%/lệnh (đã tính ${hasEmp ? 'gap giá, T+2 và chi phí' : 'chi phí giao dịch'}). Mức cắt lỗ tối đa còn hòa vốn là ${maxBreakevenStopLossPct}%. Vốn sẽ bị bào mòn dần nếu lặp lại.`;
+    } else if (expectancyPct < THIN_EXPECTANCY_PCT) {
       verdict = 'KỲ VỌNG DƯƠNG NHƯNG MỎNG';
       verdictColor = 'text-amber-400 bg-amber-500/10 border-amber-500/30';
-      verdictNote = `Kỳ vọng ${expectancyPct}%/lệnh gần bằng chi phí giao dịch khứ hồi (~${ROUND_TRIP_COST_PCT}% gồm phí 2 chiều + thuế bán 0.1%). Sau chi phí gần như hòa vốn.`;
+      verdictNote = `Kỳ vọng ${expectancyPct}%/lệnh sau chi phí và trượt giá còn rất mỏng (< ${THIN_EXPECTANCY_PCT}%) — sai số ước lượng tỷ lệ thắng có thể xóa hết phần lãi này.`;
+    } else if (hasEmp && emp?.significance !== 'POSITIVE') {
+      verdict = 'KỶ LUẬT ĐẠT CHUẨN — CHƯA CÓ BẰNG CHỨNG VỀ LỢI THẾ';
+      verdictColor = 'text-amber-400 bg-amber-500/10 border-amber-500/30';
+      verdictNote = `Kế hoạch tuân thủ nguyên tắc (cắt lỗ ≤ 8%, kỳ vọng dương sau chi phí) nhưng backtest ${emp?.n ?? ''} lệnh chưa chứng minh được lợi thế thống kê. Coi đây là kỷ luật quản trị rủi ro, không phải đảm bảo có lãi.`;
     } else if (!isRiskRewardOptimal) {
       verdict = 'TỶ LỆ R:R THẤP (< 2.0)';
       verdictColor = 'text-amber-400 bg-amber-500/10 border-amber-500/30';
@@ -397,6 +666,10 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
     return {
       rrRatio,
       expectancyPct,
+      nominalExpectancyPct,
+      effRr,
+      winR,
+      lossR,
       breakevenWinRatePct,
       maxBreakevenStopLossPct,
       minerviniOptimalStopPct2to1,
@@ -467,7 +740,7 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
         runnerShares,
       },
     };
-  }, [entryPrice, targetGainPct, stopLossPct, winRatePct, totalCapital, riskPerTradePct]);
+  }, [entryPrice, targetGainPct, stopLossPct, winRatePct, totalCapital, riskPerTradePct, exchange, adjLossF, adjWinF, costPad, hasEmp, emp]);
 
   // ── SIMULATION: ACCURATE MONTE CARLO TRADING SEQUENCE ──
   const simulation = useMemo(() => {
@@ -502,7 +775,7 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
     const totalTrades = simulationTradeCount;
     const W = winRatePct / 100;
     // Expected NAV return per trade based on risk per trade & R:R
-    const expectedTradeGainPct = (W * (riskPerTradePct * math.rrRatio) - (1 - W) * riskPerTradePct) / 100;
+    const expectedTradeGainPct = (W * (riskPerTradePct * math.winR) - (1 - W) * (riskPerTradePct * math.lossR)) / 100;
 
     let winsCount = 0;
     let lossesCount = 0;
@@ -536,11 +809,11 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
       const riskAmt = capDisciplined * (riskPerTradePct / 100);
       let pnlDisciplined = 0;
       if (isWin) {
-        pnlDisciplined = riskAmt * math.rrRatio;
+        pnlDisciplined = riskAmt * math.winR;
         capDisciplined += pnlDisciplined;
       } else {
-        pnlDisciplined = -riskAmt;
-        capDisciplined -= riskAmt;
+        pnlDisciplined = -riskAmt * math.lossR;
+        capDisciplined -= riskAmt * math.lossR;
       }
 
       // Theo dõi Đỉnh (Peak) & Mức Sụt Giảm (Drawdown)
@@ -594,11 +867,11 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
       maxLossStreak,
       maxDrawdownDisciplined: Number(maxDrawdownDisciplined.toFixed(1)),
     };
-  }, [totalCapital, winRatePct, riskPerTradePct, math.rrRatio, simulationTradeCount, simulationSeed]);
+  }, [totalCapital, winRatePct, riskPerTradePct, math.winR, math.lossR, simulationTradeCount, simulationSeed]);
 
   // ── 2D EXPECTANCY HEATMAP MATRIX DATA ──
   const heatmapData = useMemo(() => {
-    const winRates = [35, 40, 45, 50, 55, 60];
+    const winRates = [25, 30, 35, 40, 45, 50, 60];
     const rrRatios = [1.5, 2.0, 2.5, 3.0, 4.0];
 
     return winRates.map((wr) => {
@@ -609,9 +882,10 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
         const L = 1 - W;
         const A = stopLossPct * rr;
         const B = stopLossPct;
-        const eVal = Number((W * A - L * B).toFixed(2));
+        // Cùng hiệu chỉnh gap giá / T+2 / chi phí như kỳ vọng chính để các con số nhất quán
+        const eVal = Number(((W * (A * adjWinF - costPad * 100) - L * (B * adjLossF + costPad * 100))).toFixed(2));
         const isCurrentCell =
-          Math.abs(winRatePct - wr) <= 2 && Math.abs(math.rrRatio - rr) < 0.35;
+          Math.abs(winRatePct - wr) <= 2.5 && Math.abs(math.rrRatio - rr) < 0.35;
 
         return {
           rr,
@@ -627,7 +901,7 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
         cells: rowCells,
       };
     });
-  }, [stopLossPct, winRatePct, math.rrRatio]);
+  }, [stopLossPct, winRatePct, math.rrRatio, adjWinF, adjLossF, costPad]);
 
   return (
     <div className="w-full max-w-full space-y-6">
@@ -722,7 +996,12 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
                       {math.expectancyPct > 0 ? '+' : ''}
                       {math.expectancyPct}%
                     </span>
-                    <span className="text-sm text-zinc-500">kỳ vọng / lệnh</span>
+                    <span className="text-sm text-zinc-500">{tr('kỳ vọng / lệnh', 'expectancy / trade')}</span>
+                  </div>
+                  <div className="mt-1 text-[11px] font-mono text-zinc-500">
+                    {tr('Danh nghĩa', 'Nominal')} {math.nominalExpectancyPct > 0 ? '+' : ''}
+                    {math.nominalExpectancyPct}% · {tr('đã trừ', 'after')}{' '}
+                    {hasEmp ? tr('gap giá, T+2 & chi phí', 'gaps, T+2 & costs') : tr('chi phí giao dịch', 'trading costs')}
                   </div>
                   <p className="text-sm text-zinc-400 mt-3 leading-relaxed max-w-md">{verdictNote}</p>
                 </div>
@@ -732,7 +1011,7 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-xs text-zinc-500">Kế hoạch giao dịch đề xuất</span>
                     <span className="text-[11px] text-zinc-500 font-mono">
-                      Tỷ lệ thắng {winRatePct}% · {isAutoWinRate ? 'ước lượng theo quy tắc' : 'nhập tay'}
+                      Tỷ lệ thắng {winRatePct}% · {isAutoWinRate ? (autoWinRateData?.winRateSource === 'BACKTEST' ? tr('thực nghiệm backtest', 'backtest-based') : tr('ước lượng theo quy tắc', 'rule-based estimate')) : tr('nhập tay', 'manual')}
                     </span>
                   </div>
                   {hasPrice ? (
@@ -796,6 +1075,9 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
           </section>
         );
       })()}
+
+      {/* ── KIỂM CHỨNG THỰC NGHIỆM (BACKTEST) ── */}
+      <EmpiricalCard emp={emp} tr={tr} nominalStopPct={stopLossPct} nominalTargetPct={targetGainPct} />
 
       {/* ── SUPPORTING METRICS: ONE CONTAINER, 1px DIVIDERS ── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-zinc-800 rounded-xl bg-zinc-950 border border-zinc-800">
@@ -1059,7 +1341,9 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
                       {isAutoWinRate ? (
                         <span className="flex items-center gap-1 text-cyan-400 font-bold">
                           <Lightning className="w-3 h-3" />
-                          Ước lượng theo quy tắc (không phải xác suất backtest)
+                          {autoWinRateData?.winRateSource === 'BACKTEST' && emp?.net
+                            ? tr(`Thực nghiệm backtest · ${emp.n} lệnh · 95%: ${emp.net.winRateCI[0]}–${emp.net.winRateCI[1]}%`, `Backtest · ${emp.n} trades · 95%: ${emp.net.winRateCI[0]}–${emp.net.winRateCI[1]}%`)
+                            : tr('Ước lượng theo quy tắc (không phải xác suất backtest)', 'Rule-based estimate (not a backtested probability)')}
                         </span>
                       ) : (
                         <span className="text-amber-400 font-bold">Tự điều chỉnh thủ công</span>
@@ -1081,19 +1365,19 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
                       <>
                         <span
                           className={`px-2 py-0.5 rounded-md text-[10px] font-mono font-bold uppercase tracking-wider ${
-                            autoWinRateData.confidence === 'CAO'
+                            confLevel === 'CAO'
                               ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                              : autoWinRateData.confidence === 'TRUNG BÌNH'
+                              : confLevel === 'TRUNG BÌNH'
                               ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
                               : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
                           }`}
-                          title={autoWinRateData.confidenceReason || 'Độ hội tụ của 4 trụ cột kỹ thuật'}
+                          title={confReason || 'Độ hội tụ của 4 trụ cột kỹ thuật'}
                         >
-                          Độ tin cậy: {autoWinRateData.confidence}
+                          {hasEmp ? tr('Cỡ mẫu', 'Sample size') : tr('Độ tin cậy', 'Confidence')}: {hasEmp ? (confLevel === 'CAO' ? tr('LỚN', 'LARGE') : confLevel === 'TRUNG BÌNH' ? tr('VỪA', 'MEDIUM') : tr('NHỎ', 'SMALL')) : confLevel}
                         </span>
-                        {autoWinRateData.confidenceReason && (
+                        {confReason && (
                           <span className="text-[9px] font-mono text-zinc-400 max-w-[210px] leading-tight">
-                            {autoWinRateData.confidenceReason}
+                            {confReason}
                           </span>
                         )}
                         {autoWinRateData.recommendedRiskNav && (
@@ -1171,7 +1455,9 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-mono font-bold text-zinc-200 flex items-center gap-1.5">
                         <Cpu className="w-3.5 h-3.5 text-cyan-400" />
-                        5 Trụ Cột Định Lượng (Wyckoff + Minervini + Vol) • {activeSymbol}
+                        {autoWinRateData.winRateSource === 'BACKTEST'
+                          ? tr('Bối cảnh định tính (không dùng để tính tỷ lệ thắng)', 'Qualitative context (not used for the win rate)')
+                          : tr('5 Trụ Cột Định Lượng (Wyckoff + Minervini + Vol)', '5 quantitative pillars (Wyckoff + Minervini + Vol)')} • {activeSymbol}
                       </span>
                       <button
                         type="button"
@@ -1196,7 +1482,7 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
                                 {factor.name} ({factor.weight}%)
                               </span>
                               <span
-                                className={`font-bold ${
+                                className={`font-bold ${autoWinRateData.winRateSource === 'BACKTEST' ? 'hidden' : ''} ${
                                   factor.deltaPct > 0
                                     ? 'text-emerald-400'
                                     : factor.deltaPct < 0

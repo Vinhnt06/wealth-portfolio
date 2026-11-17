@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { lookupEmpirical } from '../../../../../features/market/utils/setupEmpirical';
 
 export const runtime = 'nodejs';
 export const preferredRegion = 'sin1';
@@ -372,9 +373,38 @@ export async function GET(request: Request) {
       ? `Bị chặn bởi đỉnh 52 tuần (+${optimalTargetGainPct}%) — R:R ${(optimalTargetGainPct / optimalStopLossPct).toFixed(1)}:1, kháng cự gần hơn mục tiêu lý tưởng`
       : `Mục tiêu R:R ${(optimalTargetGainPct / optimalStopLossPct).toFixed(1)}:1 (+${optimalTargetGainPct}%) — giới hạn ≤ 3R. Đây là mục tiêu theo kế hoạch R, không phải dự báo giá`;
 
+    // ── 8. THỰC NGHIỆM: thống kê backtest thật thay cho công thức đoán ──
+    // Chế độ thị trường dùng đúng định nghĩa của backtest: VN-Index trên cả MA50 và MA200.
+    const marketUp: boolean | null = marketData
+      ? marketData.sma50 > 0 && marketData.sma200 > 0 && marketData.price > marketData.sma50 && marketData.price > marketData.sma200
+      : null;
+    const empirical = lookupEmpirical({
+      passedCount,
+      marketUp,
+      stopPct: optimalStopLossPct,
+      targetPct: optimalTargetGainPct,
+    });
+    const heuristicWinRate = calculatedWinRate;
+    // Có đủ mẫu thì tỷ lệ thắng = thực nghiệm; không thì mới quay về công thức đoán
+    const finalWinRate = empirical.available && empirical.net ? Number(empirical.net.winRate.toFixed(1)) : calculatedWinRate;
+
     // Minervini Practical Action Advice
     let advice = '';
-    if (calculatedWinRate >= 55) {
+    if (empirical.available && empirical.net) {
+      const e = empirical.net.expectancyPct;
+      const [lo, hi] = empirical.net.expectancyCI;
+      const gate =
+        passedCount < 8
+          ? `Cổ phiếu mới đạt ${passedCount}/8 Trend Template (${stockData.stageName}) nên chưa được phép giải ngân theo kỷ luật Minervini. `
+          : '';
+      if (empirical.significance === 'NEGATIVE') {
+        advice = `${gate}Backtest ${empirical.n} lệnh cho kỳ vọng sau chi phí ${e}%/lệnh (95%: ${lo}% → ${hi}%): ÂM rõ rệt (đã hiệu chỉnh vì thử nhiều tổ hợp) với bộ quy tắc này. Cần chọn lọc chặt hơn hoặc đứng ngoài.`;
+      } else if (empirical.significance === 'POSITIVE') {
+        advice = `${gate}Backtest ${empirical.n} lệnh cho kỳ vọng sau chi phí ${e}%/lệnh (95%: ${lo}% → ${hi}%): DƯƠNG rõ rệt trong mẫu lịch sử (đã hiệu chỉnh vì thử nhiều tổ hợp; chưa kiểm chứng ngoài mẫu, có thiên lệch sống sót).`;
+      } else {
+        advice = `${gate}Backtest ${empirical.n} lệnh cho kỳ vọng sau chi phí ${e}%/lệnh (95%: ${lo}% → ${hi}%): chưa đủ bằng chứng thống kê về lợi thế (khoảng tin cậy chứa 0, hoặc chưa vượt ngưỡng sau khi hiệu chỉnh vì thử nhiều tổ hợp). Lợi thế phải đến từ chọn lọc thêm (mẫu hình chặt, thị trường thuận lợi) và kỷ luật cắt lỗ.`;
+      }
+    } else if (calculatedWinRate >= 55) {
       advice = `Hội tụ đủ 3 yếu tố 'Thiên thời - Địa lợi - Nhân hòa': Thị trường ủng hộ, cổ phiếu ở ${wyckoff?.phaseName || 'Stage 2'}, RS cao (${rs}). Bạn có thể giải ngân với mức rủi ro tối đa 1.5% - 2.0% NAV.`;
     } else if (calculatedWinRate >= 45) {
       advice = `Xác suất thắng ở mức cân bằng (${calculatedWinRate}%). ${wyckoff?.actionAdvice || 'Chờ tín hiệu cạn cung'}. Minervini khuyên giữ R:R tối thiểu 2.5:1.`;
@@ -385,10 +415,15 @@ export async function GET(request: Request) {
     return NextResponse.json({
       success: true,
       symbol,
-      autoWinRate: calculatedWinRate,
+      autoWinRate: finalWinRate,
+      winRateSource: empirical.available ? 'BACKTEST' : 'HEURISTIC',
+      heuristicWinRate,
       baseWinRate,
       totalDelta,
-      winRateNote: 'Ước lượng theo quy tắc (điểm các trụ cột), không phải xác suất đã backtest',
+      winRateNote: empirical.available
+        ? `Thực nghiệm từ backtest ${empirical.n} lệnh lịch sử (không phải dự báo)`
+        : 'Ước lượng theo quy tắc (điểm các trụ cột), không phải xác suất đã backtest — chưa đủ mẫu backtest',
+      empirical,
       confidence,
       confidenceReason,
       recommendedRiskNav,
@@ -401,6 +436,7 @@ export async function GET(request: Request) {
           ? 'Tín hiệu theo dõi — chưa đủ Trend Template'
           : wyckoff?.buyPointLabel || 'Chưa có điểm mua',
         stage: stockData.stage,
+        exchange: stockData.exchange,
         passedCount,
         passedCriteria: `${passedCount}/8`,
         wyckoffPassedCriteria: `${wyckoff?.passedCount || 0}/8`,
