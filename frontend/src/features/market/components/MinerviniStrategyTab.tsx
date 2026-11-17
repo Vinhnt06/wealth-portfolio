@@ -169,6 +169,13 @@ const CriterionRow: React.FC<{ c: MinerviniCriterion }> = ({ c }) => {
   );
 };
 
+const STAGE_PILL_ACTIVE: Record<number, string> = {
+  1: 'bg-zinc-500/15 text-zinc-100 ring-zinc-300/40',
+  2: 'bg-emerald-500/15 text-emerald-200 ring-emerald-400/50',
+  3: 'bg-amber-500/15 text-amber-200 ring-amber-400/45',
+  4: 'bg-rose-500/15 text-rose-200 ring-rose-400/45',
+};
+
 const STAGE_TONE: Record<number, { pill: string; dot: string }> = {
   1: { pill: 'text-zinc-300 bg-zinc-500/10 ring-zinc-400/20', dot: 'bg-zinc-400' },
   2: { pill: 'text-emerald-300 bg-emerald-500/10 ring-emerald-400/30', dot: 'bg-emerald-400' },
@@ -250,7 +257,51 @@ const MinerviniCard: React.FC<{ data: MinerviniAnalysisResult }> = ({ data }) =>
             <span key={c.id} className={cx('h-[3px] rounded-full', c.passed ? barTone : 'bg-white/[0.07]')} />
           ))}
         </div>
-        <p className="mt-3 text-[12px] leading-snug text-zinc-300">{sentence}</p>
+        {/* Đủ bao nhiêu tiêu chí thì mua: Minervini yêu cầu đủ 8/8 */}
+        <div className="mt-3 flex items-center gap-2">
+          <span
+            className={cx(
+              'rounded-md px-2 py-0.5 text-[11px] font-semibold ring-1 ring-inset',
+              passed === 8 ? 'bg-emerald-500/10 text-emerald-300 ring-emerald-400/30' : passed >= 6 ? 'bg-amber-500/10 text-amber-300 ring-amber-400/25' : 'bg-rose-500/10 text-rose-300 ring-rose-400/25'
+            )}
+          >
+            {passed === 8 ? tr('Đủ điều kiện mua', 'Qualifies to buy') : passed >= 6 ? tr('Gần đạt — chỉ theo dõi', 'Close — watch only') : tr('Chưa đạt', 'Not there')}
+          </span>
+          <span className="text-[10.5px] text-zinc-500">{tr('Mua khi đủ 8/8 và đang ở Stage 2', 'Buy only at 8/8 and in Stage 2')}</span>
+        </div>
+        <p className="mt-2 text-[12px] leading-snug text-zinc-300">{sentence}</p>
+
+        {/* Stage nào? Đi theo thứ tự 1 → 2 → 3 → 4 */}
+        <div className="mt-3 grid grid-cols-4 gap-1" aria-label={tr('Các Stage', 'The Stages')}>
+          {(
+            [
+              [1, tr('Tích lũy', 'Base')],
+              [2, tr('Tăng trưởng', 'Uptrend')],
+              [3, tr('Phân phối', 'Topping')],
+              [4, tr('Giảm giá', 'Downtrend')],
+            ] as const
+          ).map(([n, label]) => (
+            <div
+              key={n}
+              aria-current={stage === n ? 'step' : undefined}
+              className={cx(
+                'rounded-md px-1 py-1 text-center text-[10px] ring-1 ring-inset',
+                stage === n ? STAGE_PILL_ACTIVE[n] : 'text-zinc-600 ring-white/[0.05]'
+              )}
+            >
+              <div className="text-[9px] opacity-70">Stage {n}</div>
+              <div className="font-medium leading-tight">{label}</div>
+            </div>
+          ))}
+        </div>
+        {data.stageInfo?.evidence && (
+          <p className="mt-2 text-[10.5px] leading-snug text-zinc-500 tabular-nums">
+            {tr('Xét Stage theo MA150', 'Stage is read from the MA150')}: {data.stageInfo.evidence.slope150Pct > 0 ? '+' : ''}
+            {data.stageInfo.evidence.slope150Pct}% / 30 {tr('phiên', 'sessions')} · {tr('giá so MA150', 'price vs MA150')}{' '}
+            {data.stageInfo.evidence.distFromMa150Pct > 0 ? '+' : ''}
+            {data.stageInfo.evidence.distFromMa150Pct}%
+          </p>
+        )}
       </div>
       <Collapse label={tr('Xem 8 tiêu chí', 'See the 8 criteria')}>
         {GROUPS.map((g) => {
@@ -287,8 +338,35 @@ const WyckoffShortCard: React.FC<{ data: MinerviniAnalysisResult }> = ({ data })
     <Card>
       <CardTitle title="Wyckoff" right={<span className={cx('rounded-full px-2.5 py-0.5 text-[11px] font-medium ring-1 ring-inset', bias.c)}>{bias.t}</span>} />
       <div className="px-4 pb-3.5 pt-2">
-        <div className="text-[11px] text-zinc-500">{phaseTag}</div>
-        <p className="mt-1 text-[12px] leading-snug text-zinc-300">{SHORT_PHASE[ctx.phase][language]}.</p>
+        {/* Wyckoff và Stage nhìn cùng một chu kỳ: Tích lũy = Stage 1, Markup = Stage 2, Phân phối = Stage 3, Markdown = Stage 4 */}
+        <div className="grid grid-cols-4 gap-1" aria-label={tr('Vị trí trong chu kỳ', 'Position in the cycle')}>
+          {(
+            [
+              ['ACCUMULATION', tr('Tích lũy', 'Accumulation'), 1],
+              ['MARKUP', 'Markup', 2],
+              ['DISTRIBUTION', tr('Phân phối', 'Distribution'), 3],
+              ['MARKDOWN', 'Markdown', 4],
+            ] as const
+          ).map(([k, label, st]) => (
+            <div
+              key={k}
+              aria-current={ctx.cycle === k ? 'step' : undefined}
+              className={cx(
+                'rounded-md px-1 py-1 text-center text-[10px] ring-1 ring-inset',
+                ctx.cycle === k ? 'bg-white/[0.08] text-zinc-100 ring-white/25' : 'text-zinc-600 ring-white/[0.05]'
+              )}
+            >
+              <div className="font-medium leading-tight">{label}</div>
+              <div className="text-[9px] opacity-70">Stage {st}</div>
+            </div>
+          ))}
+        </div>
+        <div className="mt-2.5 text-[11px] text-zinc-500">{phaseTag}</div>
+        <p className="mt-0.5 text-[12px] leading-snug text-zinc-300">
+          {ctx.earlyBasing
+            ? tr('Vẫn đang giảm giá nhưng nền bắt đầu hình thành — chỉ theo dõi, chưa mua.', 'Still falling, but a base is starting to form — watch only, do not buy yet.')
+            : `${SHORT_PHASE[ctx.phase][language]}.`}
+        </p>
         {warn && (
           <p className="mt-2 text-[11px] text-rose-300/80">
             {tr(`Dấu hiệu xả hàng: ${ctx.distribution.score}/5`, `Distribution signs: ${ctx.distribution.score}/5`)}
@@ -297,6 +375,14 @@ const WyckoffShortCard: React.FC<{ data: MinerviniAnalysisResult }> = ({ data })
       </div>
       {w.criteria && (
         <Collapse label={tr('Xem 8 tín hiệu', 'See the 8 signals')}>
+          <p className="px-4 pt-3 pb-1 text-[10.5px] leading-relaxed text-zinc-500">
+            {ctx.coherent
+              ? tr('Tám tín hiệu đo cấu trúc tích lũy trong 40 phiên gần nhất.', 'Eight signals measuring the accumulation structure over the last 40 sessions.')
+              : tr(
+                  `Tám tín hiệu này đo theo mẫu tích lũy, chỉ có giá trị ở Stage 1–2. Cổ phiếu đang ở Stage ${data.stage} nên chỉ để tham khảo, không dùng để mua.`,
+                  `These eight signals measure an accumulation pattern and only apply in Stage 1–2. This stock is in Stage ${data.stage}, so they are for reference only — not a reason to buy.`
+                )}
+          </p>
           <div className="divide-y divide-white/[0.03]">
             {w.criteria.map((c) => (
               <div key={c.id} className="flex items-start gap-3 px-4 py-2.5">
