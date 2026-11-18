@@ -1,5 +1,98 @@
 [
   {
+    "date": "2026-11-18",
+    "displayDate": "26-11-18",
+    "totalMarket": 10567,
+    "bds": {
+      "total": 1245.9,
+      "buy": 653.53,
+      "sell": 592.37,
+      "ratioPct": 11.79,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "nh": {
+      "total": 3054.82,
+      "buy": 1214.63,
+      "sell": 1840.19,
+      "ratioPct": 28.91,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "ck": {
+      "total": 1336.65,
+      "buy": 548.14,
+      "sell": 788.52,
+      "ratioPct": 12.65,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "thep": {
+      "total": 617.23,
+      "buy": 209.84,
+      "sell": 407.39,
+      "ratioPct": 5.84,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "thuc_pham": {
+      "total": 555.1,
+      "buy": 221.24,
+      "sell": 333.86,
+      "ratioPct": 5.25,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "cong_nghiep": {
+      "total": 576.35,
+      "buy": 232.56,
+      "sell": 343.79,
+      "ratioPct": 5.45,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "ban_le": {
+      "total": 331.18,
+      "buy": 150.44,
+      "sell": 180.74,
+      "ratioPct": 3.13,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "dau_khi": {
+      "total": 619.96,
+      "buy": 218.71,
+      "sell": 401.26,
+      "ratioPct": 5.87,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "cntt": {
+      "total": 800.09,
+      "buy": 255.91,
+      "sell": 544.18,
+      "ratioPct": 7.57,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "hoa_chat": {
+      "total": 161.43,
+      "buy": 56.8,
+      "sell": 104.63,
+      "ratioPct": 1.53,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "vin": {
+      "total": 841.92,
+      "buy": 344.47,
+      "sell": 497.45,
+      "ratioPct": 7.97,
+      "isClimax": false,
+      "isTrough": false
+    }
+  },
+  {
     "date": "2026-11-17",
     "displayDate": "26-11-17",
     "totalMarket": 8988,
