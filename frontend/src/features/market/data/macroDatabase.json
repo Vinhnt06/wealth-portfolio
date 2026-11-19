@@ -4,7 +4,9 @@
       "period": "Q3/2026",
       "growthRate": 9.95,
       "target": 6.5,
-      "value": "2,580,000 tỷ VNĐ"
+      "value": "2,580,000 tỷ VNĐ",
+      "change": 1.14,
+      "source": "TradingView (tự động)"
     },
     {
       "period": "Q2/2026",
@@ -27,10 +29,17 @@
   ],
   "cpi": [
     {
+      "period": "T10/2026",
+      "yoy": 5.08,
+      "change": 0.2,
+      "target": 4.5,
+      "source": "TradingView (tự động)"
+    },
+    {
       "period": "T9/2026",
-      "yoy": 3.48,
-      "mom": 0.15,
-      "target": 4.5
+      "yoy": 4.88,
+      "target": 4.5,
+      "source": "Suy ra từ TradingView (số mới − chênh lệch)"
     },
     {
       "period": "T8/2026",
@@ -90,44 +99,48 @@
   ],
   "interestRate": [
     {
-      "bank": "Huy động 12T (Bình quân)",
-      "rate": "4.85%",
+      "bank": "Huy động 12T (Trung vị)",
+      "rate": "5.63%",
       "term": "12M",
       "type": "deposit",
       "isCrawled": true,
-      "source": "Biểu lãi suất bình quân hệ thống ngân hàng"
+      "source": "Trung vị 38 ngân hàng (24hMoney)",
+      "updatedAt": "2026-11-19T08:52:09.917Z"
     },
     {
-      "bank": "Liên ngân hàng (ON - Qua đêm)",
-      "rate": "3.50%",
+      "bank": "Liên ngân hàng",
+      "rate": "6.41%",
       "term": "ON",
       "type": "interbank",
       "isCrawled": true,
-      "source": "Thị trường liên ngân hàng 2"
+      "source": "Liên ngân hàng qua TradingView",
+      "updatedAt": "2026-11-19T08:52:09.917Z"
     },
     {
       "bank": "Lãi suất Tái cấp vốn NHNN",
       "rate": "4.50%",
       "term": "Chính sách",
       "doc": "QĐ 1123/QĐ-NHNN",
-      "isCrawled": true
+      "isCrawled": true,
+      "source": "NHNN qua TradingView",
+      "updatedAt": "2026-11-19T08:52:09.917Z"
     },
     {
       "bank": "Lãi suất Tái chiết khấu NHNN",
       "rate": "3.00%",
       "term": "Chính sách",
       "doc": "QĐ 1123/QĐ-NHNN",
-      "isCrawled": true
+      "isCrawled": false
     },
     {
       "bank": "Lãi suất Liên ngân hàng (VNIBOR)",
       "rate": "4.25%",
       "term": "3M",
       "type": "interbank",
-      "isCrawled": true,
+      "isCrawled": false,
       "source": "Thị trường tiền tệ liên ngân hàng"
     }
   ],
-  "interestRateLastCrawled": "19/10/2026 22:29",
+  "interestRateLastCrawled": "19/11/2026 15:52",
   "interestRateSource": "Ngân hàng Nhà nước & Thị trường liên ngân hàng"
 }
