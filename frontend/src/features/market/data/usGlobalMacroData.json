@@ -1,7 +1,7 @@
 {
   "success": true,
-  "timestamp": "2026-11-19T08:45:32.653Z",
-  "updateTime": "15:45:32",
+  "timestamp": "2026-11-19T08:53:19.557Z",
+  "updateTime": "15:53:18",
   "indices": [
     {
       "symbol": "^GSPC",
@@ -30,8 +30,8 @@
       "name": "Dow Jones",
       "category": "equity",
       "region": "us",
-      "price": 50198.2,
-      "change": -561.2,
+      "price": 50198.17,
+      "change": -561.25,
       "changePercent": -1.11,
       "unit": "pts",
       "note": "30 Bluechip lớn nhất sàn New York"
@@ -85,9 +85,9 @@
       "name": "FTSE 100",
       "category": "equity",
       "region": "europe",
-      "price": 10545.78,
-      "change": -5.39,
-      "changePercent": -0.05,
+      "price": 10551.74,
+      "change": 0.57,
+      "changePercent": 0.01,
       "unit": "pts",
       "note": "Chỉ số 100 Bluechip sàn London (Anh)"
     },
@@ -96,9 +96,9 @@
       "name": "DAX 40",
       "category": "equity",
       "region": "europe",
-      "price": 25912.5,
-      "change": 176.26,
-      "changePercent": 0.69,
+      "price": 25940.9,
+      "change": 204.66,
+      "changePercent": 0.8,
       "unit": "pts",
       "note": "Chỉ số 40 cổ phiếu hàng đầu nước Đức"
     },
@@ -107,9 +107,9 @@
       "name": "Vàng Thế Giới",
       "category": "commodity",
       "region": "global",
-      "price": 3736.2,
-      "change": -5.7,
-      "changePercent": -0.15,
+      "price": 3734.2,
+      "change": -7.7,
+      "changePercent": -0.21,
       "unit": "USD/oz",
       "note": "Giá vàng giao ngay quốc tế"
     },
@@ -118,9 +118,9 @@
       "name": "Dầu Brent",
       "category": "commodity",
       "region": "global",
-      "price": 89.51,
-      "change": 0.34,
-      "changePercent": 0.38,
+      "price": 89.61,
+      "change": 0.44,
+      "changePercent": 0.49,
       "unit": "USD/thùng",
       "note": "Dầu thô tiêu chuẩn toàn cầu"
     },
@@ -129,9 +129,9 @@
       "name": "Dầu WTI",
       "category": "commodity",
       "region": "global",
-      "price": 82.34,
-      "change": 0.03,
-      "changePercent": 0.04,
+      "price": 82.5,
+      "change": 0.19,
+      "changePercent": 0.23,
       "unit": "USD/thùng",
       "note": "Dầu thô ngọt nhẹ giao dịch tại NYMEX"
     },
@@ -140,9 +140,9 @@
       "name": "Bạc Thế Giới",
       "category": "commodity",
       "region": "global",
-      "price": 45.19,
-      "change": 0.13,
-      "changePercent": 0.29,
+      "price": 45.12,
+      "change": 0.06,
+      "changePercent": 0.14,
       "unit": "USD/oz",
       "note": "Giá kim loại bạc thế giới"
     },
@@ -151,9 +151,9 @@
       "name": "DXY Index",
       "category": "currency",
       "region": "global",
-      "price": 103.75,
-      "change": -0.11,
-      "changePercent": -0.1,
+      "price": 103.77,
+      "change": -0.1,
+      "changePercent": -0.09,
       "unit": "pts",
       "note": "Chỉ số đo lường sức mạnh đồng USD"
     },
@@ -173,9 +173,9 @@
       "name": "CBOE VIX",
       "category": "volatility",
       "region": "global",
-      "price": 21.93,
-      "change": -2.63,
-      "changePercent": -10.69,
+      "price": 21.85,
+      "change": -2.71,
+      "changePercent": -11.03,
       "unit": "pts",
       "note": "Thước đo mức độ biến động & sợ hãi toàn cầu"
     },
@@ -184,9 +184,9 @@
       "name": "Bitcoin (BTC)",
       "category": "crypto",
       "region": "global",
-      "price": 63545.83,
-      "change": -1064.97,
-      "changePercent": -1.65,
+      "price": 63565.06,
+      "change": -1045.74,
+      "changePercent": -1.62,
       "unit": "USD",
       "note": "Đồng tiền mã hóa vốn hóa lớn nhất"
     },
@@ -195,9 +195,9 @@
       "name": "Ethereum (ETH)",
       "category": "crypto",
       "region": "global",
-      "price": 1798.62,
-      "change": -11.33,
-      "changePercent": -0.63,
+      "price": 1798.94,
+      "change": -11.01,
+      "changePercent": -0.61,
       "unit": "USD",
       "note": "Nền tảng smart contract hàng đầu"
     }
@@ -215,8 +215,8 @@
       "pillar": "Áp Lực Tỷ Giá USD/VND",
       "status": "Trung Lập",
       "statusColor": "amber",
-      "headline": "DXY biến động quanh mức 103.75 điểm",
-      "detail": "Đồng USD neo cao (103.75 điểm) khiến tỷ giá USD/VND chịu áp lực, NHNN cần linh hoạt can thiệp bằng nghiệp vụ OMO và tỷ giá trung tâm."
+      "headline": "DXY biến động quanh mức 103.77 điểm",
+      "detail": "Đồng USD neo cao (103.77 điểm) khiến tỷ giá USD/VND chịu áp lực, NHNN cần linh hoạt can thiệp bằng nghiệp vụ OMO và tỷ giá trung tâm."
     },
     {
       "pillar": "Không Gian Lãi Suất NHNN",
@@ -230,7 +230,7 @@
       "status": "Trung Lập",
       "statusColor": "amber",
       "headline": "Xu hướng dòng vốn ngoại trên TTCK",
-      "detail": "Lợi suất trái phiếu chính phủ Mỹ 10 năm (5.07%) và chỉ số VIX (21.93 điểm) phản ánh khẩu vị rủi ro toàn cầu đang trong tầm kiểm soát (Tâm lý ổn định), tạo điều kiện cân bằng dòng vốn ngoại trên HOSE/HNX."
+      "detail": "Lợi suất trái phiếu chính phủ Mỹ 10 năm (5.07%) và chỉ số VIX (21.85 điểm) phản ánh khẩu vị rủi ro toàn cầu đang trong tầm kiểm soát (Tâm lý ổn định), tạo điều kiện cân bằng dòng vốn ngoại trên HOSE/HNX."
     }
   ]
 }
