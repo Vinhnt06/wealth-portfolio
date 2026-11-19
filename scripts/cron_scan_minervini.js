@@ -213,6 +213,8 @@ async function runMinerviniScan() {
   const activeCutoffSec = nowSec - 45 * 24 * 3600;
 
   const rawResults = [];
+  // Lợi suất 3 tháng của MỌI mã đủ thanh khoản tối thiểu → tính sức mạnh ngành (thuận/ngược gió) trong app
+  const sectorRows = [];
   const listedSharesM = await fetchListedSharesM(uniqueUniverse);
   console.log(`   - Số CP niêm yết thật: ${listedSharesM.size} mã (còn lại dùng bảng ghi cứng)`);
 
@@ -369,6 +371,10 @@ async function runMinerviniScan() {
             minValue5B >= UNIVERSE_RULES.minSessionValue5B &&
             mktCapT >= UNIVERSE_RULES.minMktCapB;
 
+          if (len > 63 && avgValue20B >= UNIVERSE_RULES.sectorMinAvgValue20B && sector && sector !== 'Khác') {
+            sectorRows.push({ symbol: sym, sector, ret3M: Math.round(getRoc(63) * 10000) / 100 });
+          }
+
           if (!isVnLiquidStandard) return;
 
           const p1W = len > 5 ? Math.round(((priceK - d.c[len - 1 - 5]) / d.c[len - 1 - 5]) * 10000) / 100 : chgPct;
@@ -502,6 +508,22 @@ async function runMinerviniScan() {
     };
   });
 
+  // VN-Index 3 tháng (63 phiên) để so sánh sức mạnh ngành
+  let vnindexRet3M = null;
+  try {
+    const r = await fetch(
+      `https://services.entrade.com.vn/chart-api/v2/ohlcs/index?from=${fromSec}&to=${nowSec}&symbol=VNINDEX&resolution=1D`,
+      { headers: { 'User-Agent': 'Mozilla/5.0', Accept: 'application/json' } }
+    );
+    const j = await r.json();
+    if (Array.isArray(j.c) && j.c.length > 64) {
+      const n = j.c.length;
+      vnindexRet3M = Math.round((j.c[n - 1] / j.c[n - 1 - 63] - 1) * 10000) / 100;
+    }
+  } catch (err) {
+    console.warn('⚠️  Không lấy được VN-Index:', err.message);
+  }
+
   const stage2Count = results.filter((s) => s.isStage2).length;
   const nearStage2Count = results.filter((s) => s.score === 7).length;
   const leadersCount = results.filter((s) => s.rsRating >= 90).length;
@@ -517,6 +539,8 @@ async function runMinerviniScan() {
     nearStage2Count,
     leadersCount,
     source: '100% REAL DNSE ENTRADE API (730D IBD PERCENTILE)',
+    vnindexRet3M,
+    sectorUniverse: sectorRows,
     data: results,
   };
 
@@ -535,6 +559,7 @@ async function runMinerviniScan() {
   console.log(`   - Đạt chuẩn Trend Template Stage 2 (8/8): ${stage2Count} mã`);
   console.log(`   - Tiệm cận Stage 2 (7/8): ${nearStage2Count} mã`);
   console.log(`   - Top Leaders (RS >= 90): ${leadersCount} mã`);
+  console.log(`   - Sức mạnh ngành: ${sectorRows.length} mã (GTGD ≥ ${UNIVERSE_RULES.sectorMinAvgValue20B} tỷ), VN-Index 3 tháng: ${vnindexRet3M}%`);
   console.log(`   - Đã lưu file kết quả: ${outputPath}`);
 }
 

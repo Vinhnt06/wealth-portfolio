@@ -10,6 +10,8 @@ import {
   assignCrossSectionalRsAndEvaluate,
   isLastBarInProgress,
 } from '../../../../features/market/utils/minerviniEvaluator';
+import universeRules from '../../../../features/market/data/screenerUniverseRules.json';
+import type { SectorReturnRow } from '../../../../features/market/utils/sectorStrength';
 import { fetchVietcapListedSharesM } from '../../../../features/market/utils/vietcapListedShares';
 import { MinerviniScreenerItem } from '../../../../features/market/types/minervini.types';
 
@@ -57,6 +59,8 @@ export async function GET(request: NextRequest) {
     .filter((sym) => /^[A-Z0-9]{3}$/.test(sym));
   const uniqueUniverse = Array.from(new Set([...SECTOR_LEADER_UNIVERSE, ...allDbSymbols]));
   const rawItems: MinerviniScreenerItem[] = [];
+  // Lợi suất 3 tháng của mọi mã đủ thanh khoản tối thiểu → sức mạnh ngành (thuận/ngược gió)
+  const sectorRows: SectorReturnRow[] = [];
   const batchSize = 60;
   // Số CP niêm yết thật để tính vốn hoá (lỗi thì quay về bảng ghi cứng)
   const listedSharesM = await fetchVietcapListedSharesM(uniqueUniverse);
@@ -98,6 +102,9 @@ export async function GET(request: NextRequest) {
             listedSharesM: listedSharesM.get(sym) ?? null,
             lastBarInProgress: Array.isArray(d.t) ? isLastBarInProgress(d.t[d.t.length - 1]) : false,
           });
+          if (item && d.c.length > 63 && (item.avgVal20B ?? 0) >= universeRules.sectorMinAvgValue20B && sector !== 'Khác') {
+            sectorRows.push({ symbol: sym, sector, ret3M: Math.round((d.c[d.c.length - 1] / d.c[d.c.length - 64] - 1) * 10000) / 100 });
+          }
           if (item && item.isVnLiquidStandard) {
             // Chỉ giữ mã thuộc rổ đủ chuẩn: GTGD đều nhiều phiên & vốn hoá thật ≥ ngưỡng (screenerUniverseRules.json)
             // Loại cổ phiếu bo cung / thanh khoản kém / vốn hoá nhỏ ngay cả khi RS 99
@@ -112,6 +119,22 @@ export async function GET(request: NextRequest) {
 
   // Chuẩn hóa RS Rating theo Percentile (1 - 99) trên toàn thị trường & chấm điểm 8/8 tiêu chí
   const results = assignCrossSectionalRsAndEvaluate(rawItems);
+
+  // VN-Index 3 tháng (63 phiên) để so sánh sức mạnh ngành
+  let vnindexRet3M: number | null = null;
+  try {
+    const r = await fetch(
+      `https://services.entrade.com.vn/chart-api/v2/ohlcs/index?from=${fromSec}&to=${nowSec}&symbol=VNINDEX&resolution=1D`,
+      { headers: { 'User-Agent': 'Mozilla/5.0', Accept: 'application/json' }, cache: 'no-store', signal: AbortSignal.timeout(6000) }
+    );
+    const j = await r.json();
+    if (Array.isArray(j.c) && j.c.length > 64) {
+      const n = j.c.length;
+      vnindexRet3M = Math.round((j.c[n - 1] / j.c[n - 64] - 1) * 10000) / 100;
+    }
+  } catch {
+    // để null: ngành vẫn được xếp hạng với nhau, chỉ thiếu mức so với VN-Index
+  }
   const stage2Count = results.filter((s) => s.isStage2).length;
   const nearStage2Count = results.filter((s) => s.score === 7).length;
   const leadersCount = results.filter((s) => s.rsRating >= 90).length;
@@ -127,6 +150,8 @@ export async function GET(request: NextRequest) {
     nearStage2Count,
     leadersCount,
     source: '100% REAL DNSE ENTRADE API (730D IBD PERCENTILE)',
+    vnindexRet3M,
+    sectorUniverse: sectorRows,
     data: results,
   };
 

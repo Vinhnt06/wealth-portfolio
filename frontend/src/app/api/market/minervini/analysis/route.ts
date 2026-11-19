@@ -5,7 +5,8 @@ import { detectDistribution, buildCycleContext } from '../../../../../features/m
 import { buildDecision } from '../../../../../features/market/utils/decisionEngine';
 import { lookupEvidence } from '../../../../../features/market/utils/decisionEvidence';
 import { assessFundamentals, type QuarterRec, type FundamentalsResult } from '../../../../../features/market/utils/fundamentalsEngine';
-import { sectorTone } from '../../../../../features/market/utils/sectorStrength';
+import { getSectorStrengthTable } from '../../../../../features/market/utils/sectorStrengthServer';
+import { SECTOR_MAPPING } from '../../../../../features/market/data/sectorMapping';
 import { readFinancialsDatabase, fetchStockValuationLive } from '../../../../../features/market/services/financialsSyncService';
 import fs from 'fs';
 import path from 'path';
@@ -372,10 +373,22 @@ export async function GET(request: Request) {
     const rrgDataset = await getLiveRRGDataset('1W', 4, 'VNINDEX');
     const rrgSectorInfo = findMatchingRRGSector(symbol, stockInfo.sector, rrgDataset);
 
-    const matchedSectorName = rrgSectorInfo?.sectorName || stockInfo.sector || 'Chung';
-    const sectorRank = rrgSectorInfo?.sectorRank;
-    const sectorRS = rrgSectorInfo?.sectorRS;
-    const sectorStatus = rrgSectorInfo?.sectorStatus;
+    // Sức mạnh ngành: xếp hạng 20 ngành ICB theo trung vị lợi suất 3 tháng của MỌI mã đủ thanh khoản trong ngành
+    // (utils/sectorStrength.ts). Pha luân chuyển RRG (sectorStatus) là thước đo khác — ngắn hạn, 16 nhóm đại diện.
+    const icbSector = SECTOR_MAPPING[symbol] || stockInfo.sector || '';
+    const sectorStrength = isIndex ? undefined : getSectorStrengthTable().find((s) => s.sector === icbSector);
+    const matchedSectorName = sectorStrength?.sector || rrgSectorInfo?.sectorName || stockInfo.sector || 'Chung';
+    const sectorRank = sectorStrength?.rank ? `Top ${sectorStrength.rank} / ${sectorStrength.total} ngành` : undefined;
+    const sectorRS =
+      sectorStrength?.rank && sectorStrength.total > 1
+        ? Math.round(99 - ((sectorStrength.rank - 1) / (sectorStrength.total - 1)) * 98)
+        : undefined;
+    // Pha RRG chỉ giữ khi mã THỰC SỰ nằm trong nhóm đại diện của RRG; nhóm đoán qua tên ngành dễ lệch
+    // (vd. dệt may bị ghép vào "Thực phẩm & Đồ uống") nên không hiển thị.
+    const rrgGroupHasSymbol = Boolean(
+      rrgSectorInfo && rrgDataset?.sectors.some((s) => s.id === rrgSectorInfo.sectorId && s.symbols.includes(symbol))
+    );
+    const sectorStatus = rrgGroupHasSymbol ? rrgSectorInfo?.sectorStatus : undefined;
 
     // Wyckoff & VSA (Volume Spread Analysis) — logic nằm trong utils/wyckoffEngine.ts (module thuần, kiểm thử được)
     const opens: number[] = Array.isArray(data.o) && data.o.length === count ? data.o : closes;
@@ -439,14 +452,11 @@ export async function GET(request: Request) {
     // Kiểm chứng lịch sử CHƯA kết luận được tác động của hai yếu tố này (xem scripts/validate_quality_factors.mjs),
     // nên chỉ hiển thị và cảnh báo, không dùng làm điều kiện mua/bán.
     const fundamentals = isIndex ? null : await getFundamentals(symbol);
-    const rankMatch = rrgSectorInfo?.sectorRank?.match(/(\d+)\s*\/\s*(\d+)/);
-    const sectorRankNum = rankMatch ? Number(rankMatch[1]) : null;
-    const sectorTotalNum = rankMatch ? Number(rankMatch[2]) : null;
     const sectorInfo = {
-      name: rrgSectorInfo?.sectorName ?? matchedSectorName,
-      rank: sectorRankNum,
-      total: sectorTotalNum,
-      tone: sectorTone(sectorRankNum, sectorTotalNum),
+      name: matchedSectorName,
+      rank: sectorStrength?.rank ?? null,
+      total: sectorStrength?.rank ? sectorStrength.total : null,
+      tone: sectorStrength?.tone ?? ('UNKNOWN' as const),
       status: sectorStatus ?? null,
     };
     const qualityFlags: string[] = [];

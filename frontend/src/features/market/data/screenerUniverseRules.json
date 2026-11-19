@@ -4,5 +4,7 @@
   "minAvgValue10B": 5,
   "minMedianValue10B": 3,
   "minSessionValue5B": 1,
-  "minMktCapB": 1000
+  "minMktCapB": 1000,
+  "sectorMinAvgValue20B": 0.5,
+  "_noteSector": "Sức mạnh ngành (thuận/ngược gió) đo trên mọi mã có GTGD TB20 ≥ sectorMinAvgValue20B tỷ/phiên, rộng hơn rổ bộ lọc."
 }
