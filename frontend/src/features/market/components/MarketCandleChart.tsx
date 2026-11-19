@@ -4429,7 +4429,7 @@ export function MarketCandleChart() {
               floorPrice: Math.round(realPrevVnd * 0.93),
               timestamp: Date.now(),
               matchType: 'B',
-            });
+            }, 'derived');
           }
 
           requestAnimationFrame(() => redrawCanvasRef.current());

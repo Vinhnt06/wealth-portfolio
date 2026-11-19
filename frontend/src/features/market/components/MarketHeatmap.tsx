@@ -316,8 +316,9 @@ export const MarketHeatmap: React.FC = () => {
           }
         });
 
-        // 1 lần set() cho toàn bộ thay đổi thay vì 700+ lần re-render
-        if (changedTicks.length > 0) updateTicks(changedTicks);
+        // 1 lần set() cho toàn bộ thay đổi thay vì 700+ lần re-render.
+        // Dữ liệu dự phòng (stale/snapshot) chỉ để hiển thị heatmap, không được đẩy vào store giá chung.
+        if (changedTicks.length > 0 && !resData.stale) updateTicks(changedTicks, 'derived');
 
         if (hasFlashes) {
           setFlashMap((prev) => ({ ...prev, ...newFlashes }));

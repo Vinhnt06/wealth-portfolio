@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Star, ChartLine, ShieldCheck, Coins, ArrowsLeftRight, Lightning } from '@phosphor-icons/react';
 import { useMarketStore } from '../store/marketStore';
+import { tickSourceFromApi } from '../utils/tickGuard';
 import stockDatabase from '../data/stockDatabase.json';
 import { getStockPriceColor } from '../utils/priceColors';
 
@@ -31,7 +32,8 @@ export const SymbolInfoPanel: React.FC = () => {
       fetch(`/api/market/quote?symbol=${selectedSymbol}`)
         .then((res) => res.json())
         .then((resData) => {
-          if (resData.success && resData.data) {
+          const src = tickSourceFromApi(resData.source);
+          if (resData.success && resData.data && src) {
             const d = resData.data;
             updateTick({
               symbol: d.symbol,
@@ -48,7 +50,7 @@ export const SymbolInfoPanel: React.FC = () => {
               floorPrice: d.floorPrice,
               timestamp: d.timestamp,
               matchType: 'B',
-            });
+            }, src);
           }
         })
         .catch(() => {})

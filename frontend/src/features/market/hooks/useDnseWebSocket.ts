@@ -51,8 +51,13 @@ let globalMqttClient: any = null;
 let globalHeartbeatTimer: NodeJS.Timeout | null = null;
 let globalReconnectTimer: NodeJS.Timeout | null = null;
 let reconnectAttempt = 0;
+// Chỉ cho 1 chu kỳ chạy tại một thời điểm: nếu mạng chậm > 2s, chu kỳ cũ trả về muộn sẽ không còn ghi đè chu kỳ mới
+let streamCycleRunning = false;
+// Seed dữ liệu dựng sẵn chỉ một lần cho cả phiên làm việc (không chạy lại mỗi lần một màn hình mount)
+let hasSeededMarketState = false;
 
 async function executeStreamCycle() {
+  if (streamCycleRunning) return;
   const state = useMarketStore.getState();
   const symbol = state.selectedSymbol;
   if (!symbol) return;
@@ -61,6 +66,16 @@ async function executeStreamCycle() {
   if (typeof document !== 'undefined' && document.hidden) {
     return;
   }
+
+  streamCycleRunning = true;
+  try {
+    await runStreamCycle(state, symbol);
+  } finally {
+    streamCycleRunning = false;
+  }
+}
+
+async function runStreamCycle(state: ReturnType<typeof useMarketStore.getState>, symbol: string) {
 
   // 1. Cập nhật Sổ Lệnh (Order Book Depth) 3 mức giá thật từ sàn Vietcap
   try {
@@ -92,6 +107,7 @@ async function executeStreamCycle() {
           ceilingPrice: d.ceilingPrice,
           floorPrice: d.floorPrice,
           timestamp: d.timestamp || Date.now(),
+          eventTime: typeof d.eventTime === 'number' ? d.eventTime : undefined,
           matchType: 'B',
         });
       }
@@ -264,7 +280,9 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
 
       // 4. Xử lý STOCK_INFO (Giá tham chiếu, trần, sàn, giá khớp, tổng khối lượng)
       if (topic?.includes('/SI/') || data.BasicPrice !== undefined || data.CeilingPrice !== undefined || data.basicPrice !== undefined) {
-        const rawP = Number(data.MatchPrice ?? data.matchPrice ?? data.price ?? data.BasicPrice ?? data.basicPrice ?? 0);
+        // Chỉ lấy GIÁ KHỚP. Trước đây khi bản tin chưa có giá khớp thì lấy luôn giá tham chiếu làm "giá hiện tại"
+        // → giá bị kéo về tham chiếu (0%) rồi nhảy lại ở lần cập nhật sau.
+        const rawP = Number(data.MatchPrice ?? data.matchPrice ?? data.price ?? 0);
         const price = rawP > 0 && rawP < 500 ? Math.round(rawP * 1000) : Math.round(rawP);
         const rawRef = Number(data.BasicPrice ?? data.basicPrice ?? data.referencePrice ?? price);
         const ref = rawRef > 0 && rawRef < 500 ? Math.round(rawRef * 1000) : Math.round(rawRef);
@@ -280,7 +298,12 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
         const change = Number(data.Changed ?? data.change ?? (price - ref));
         const changePercent = Number(data.ChangedRatio ?? data.changePercent ?? (ref > 0 ? (change / ref) * 100 : 0));
         const vol = Number(data.MatchQtty ?? data.matchQtty ?? data.volume ?? 0);
-        const totalVol = Number(data.AccumulatedVol ?? data.totalVolumeTraded ?? data.totalVolume ?? 0);
+        const totalVolRaw = data.AccumulatedVol ?? data.totalVolumeTraded ?? data.totalVolume;
+        // Bản tin không có tổng KL thì giữ KL đang có, đừng ghi 0 làm KL "tụt" về 0
+        const totalVol =
+          totalVolRaw !== undefined && totalVolRaw !== null
+            ? Number(totalVolRaw)
+            : useMarketStore.getState().ticks[rawSymbol]?.totalVolume ?? 0;
 
         if (rawSymbol && price > 0) {
           updateTick({
@@ -298,7 +321,7 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
             floorPrice: floor,
             timestamp: Date.now(),
             matchType: 'B',
-          });
+          }, 'mqtt');
         }
       }
 
@@ -337,6 +360,10 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
 
   // Seed market state with REAL vnstock data
   const seedInitialState = useCallback(() => {
+    // Mỗi màn hình dùng hook này đều mount → trước đây seed chạy lại và ghi đè giá sống bằng snapshot cũ
+    if (hasSeededMarketState) return;
+    hasSeededMarketState = true;
+
     Object.entries(REAL_TICKS).forEach(([sym, val]) => {
       const price = val.price;
       const ref = val.ref || price;
@@ -357,15 +384,21 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
         ceilingPrice: Math.round(ref * 1.07),
         floorPrice: Math.round(ref * 0.93),
         timestamp: Date.now(),
-        matchType: Math.random() > 0.5 ? 'B' : 'S',
-      });
+        matchType: change >= 0 ? 'B' : 'S',
+      }, 'seed');
     });
+
+    // Chỉ seed chỉ số khi store chưa có số liệu thật
+    const seededIndexes = useMarketStore.getState().indexes;
+    const updateIndexIfEmpty = (data: MarketIndexData) => {
+      if (!seededIndexes[data.symbol]) updateIndex(data);
+    };
 
     const isPreMarketVN = isPreMarketResetWindow('VNINDEX');
     const isPreMarketHNX = isPreMarketResetWindow('HNX');
 
     // Seed Real Market Indexes
-    updateIndex({
+    updateIndexIfEmpty({
       symbol: 'VNINDEX',
       name: 'VN-INDEX',
       value: 1740.73,
@@ -379,7 +412,7 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
       timestamp: Date.now(),
     });
 
-    updateIndex({
+    updateIndexIfEmpty({
       symbol: 'VN30',
       name: 'VN30-INDEX',
       value: 1873.43,
@@ -393,7 +426,7 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
       timestamp: Date.now(),
     });
 
-    updateIndex({
+    updateIndexIfEmpty({
       symbol: 'HNX',
       name: 'HNX-INDEX',
       value: 261.60,
@@ -407,7 +440,7 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
       timestamp: Date.now(),
     });
 
-    updateIndex({
+    updateIndexIfEmpty({
       symbol: 'UPCOM',
       name: 'UPCOM-INDEX',
       value: 124.24,

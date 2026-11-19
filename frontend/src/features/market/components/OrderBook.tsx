@@ -10,7 +10,7 @@ import { getMarketSessionInfo } from '../utils/marketHours';
 
 export function OrderBook() {
   const { wsStatus } = useDnseWebSocket();
-  const { selectedSymbol, quotes, ticks, updateQuotes, updateTick } = useMarketStore();
+  const { selectedSymbol, quotes, ticks, updateQuotes } = useMarketStore();
   const [loading, setLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<string>('');
   const prevQuoteTimestampRef = useRef<number>(0);
@@ -47,25 +47,8 @@ export function OrderBook() {
           timestamp: d.timestamp,
         });
 
-        // Also update tick with real prices
-        if (d.price) {
-          updateTick({
-            symbol: d.symbol,
-            price: d.price,
-            change: d.change,
-            changePercent: d.changePercent,
-            volume: d.totalVolume,
-            totalVolume: d.totalVolume,
-            high: d.high,
-            low: d.low,
-            open: d.open,
-            referencePrice: d.referencePrice,
-            ceilingPrice: d.ceilingPrice,
-            floorPrice: d.floorPrice,
-            timestamp: d.timestamp,
-            matchType: 'B',
-          });
-        }
+        // Giá khớp do chu kỳ stream 2s (useDnseWebSocket) ghi vào store; ở đây chỉ cần sổ lệnh,
+        // tránh hai luồng cùng ghi giá cho một mã.
         setLastUpdated(new Date().toLocaleTimeString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh', hour12: false }));
       }
     } catch (err) {
@@ -73,7 +56,7 @@ export function OrderBook() {
     } finally {
       setLoading(false);
     }
-  }, [selectedSymbol, updateQuotes, updateTick]);
+  }, [selectedSymbol, updateQuotes]);
 
   const sessionInfo = getMarketSessionInfo();
 

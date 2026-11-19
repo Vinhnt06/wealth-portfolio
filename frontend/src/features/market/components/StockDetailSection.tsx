@@ -30,6 +30,7 @@ import {
 } from '@phosphor-icons/react';
 import { useMarketStore } from '../store/marketStore';
 import { useDnseWebSocket } from '../hooks/useDnseWebSocket';
+import { tickSourceFromApi } from '../utils/tickGuard';
 import { MarketCandleChart } from './MarketCandleChart';
 import { OrderBook } from './OrderBook';
 import { InvestorFlowAnalysis } from './InvestorFlowAnalysis';
@@ -225,11 +226,14 @@ export const StockDetailSection: React.FC<StockDetailSectionProps> = ({ onBackTo
     setIsLoading(true);
 
     const fetchQuote = () => {
+      // Tab đang ẩn thì không cần gọi (tránh dữ liệu thừa)
+      if (typeof document !== 'undefined' && document.hidden) return;
       fetch(`/api/market/quote?symbol=${selectedSymbol}`)
         .then((res) => res.json())
         .then((resData) => {
-          if (resData.success && resData.data) {
-            updateTick(resData.data);
+          const src = tickSourceFromApi(resData.source);
+          if (resData.success && resData.data && src) {
+            updateTick(resData.data, src);
           }
         })
         .catch(() => {});

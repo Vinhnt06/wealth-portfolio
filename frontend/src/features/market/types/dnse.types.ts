@@ -16,6 +16,8 @@ export interface TickData {
   ceilingPrice: number;
   floorPrice: number;
   timestamp: number;
+  /** Thời điểm sự kiện do nguồn cung cấp (ms) — dùng để loại snapshot cũ; thiếu thì không so sánh theo giờ */
+  eventTime?: number;
   matchType?: 'B' | 'S' | 'U'; // Buy, Sell, Unknown
   totalValue?: number;
 }

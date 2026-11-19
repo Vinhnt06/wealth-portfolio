@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createSnapshotMemory, parseEventTime } from '../../../../features/market/utils/tickGuard';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -26,11 +27,102 @@ interface OrderBookResponse {
   changePercent: number;
   totalVolume: number;
   timestamp: number;
+  /** Thời điểm khớp lệnh gần nhất do sàn ghi nhận (ms) — để client loại snapshot cũ */
+  eventTime?: number;
   source: string;
 }
 
 const memoryCache = new Map<string, { data: OrderBookResponse; expiry: number }>();
 const CACHE_TTL_MS = 1500; // 1.5s cache for fast real-time depth updates
+
+// Bản tốt gần nhất theo mã: Vietcap thỉnh thoảng trả snapshot của phiên trước xen giữa các phản hồi mới.
+const lastGood = createSnapshotMemory<OrderBookResponse>();
+
+async function fetchVietcapOrderBook(symbol: string): Promise<OrderBookResponse> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 3500);
+
+  let res: Response;
+  try {
+    res = await fetch('https://trading.vietcap.com.vn/api/price/symbols/getList', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Origin': 'https://trading.vietcap.com.vn',
+        'Referer': 'https://trading.vietcap.com.vn/',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36',
+      },
+      body: JSON.stringify({ symbols: [symbol] }),
+      signal: controller.signal,
+      cache: 'no-store', // lượt thử lại phải đi thẳng tới nguồn, không được lấy lại bản cache
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
+
+  if (!res.ok) {
+    throw new Error(`Vietcap HTTP ${res.status}`);
+  }
+
+  const list = await res.json();
+  if (!Array.isArray(list) || list.length === 0) {
+    throw new Error(`No data returned for symbol ${symbol}`);
+  }
+
+  const item = list[0];
+  const listing = item.listingInfo || {};
+  const bidAsk = item.bidAsk || {};
+  const match = item.matchPrice || {};
+
+  const rawBids: Array<{ price: number; volume: number }> = bidAsk.bidPrices || [];
+  const rawAsks: Array<{ price: number; volume: number }> = bidAsk.askPrices || [];
+
+  // Filter valid bids & asks
+  const bids: OrderBookLevel[] = rawBids
+    .filter((b) => b && typeof b.price === 'number' && b.price > 0)
+    .map((b) => ({
+      price: b.price,
+      volume: Number(b.volume || 0),
+    }))
+    .slice(0, 3);
+
+  const asks: OrderBookLevel[] = rawAsks
+    .filter((a) => a && typeof a.price === 'number' && a.price > 0)
+    .map((a) => ({
+      price: a.price,
+      volume: Number(a.volume || 0),
+    }))
+    .slice(0, 3);
+
+  const totalBidVol = bids.reduce((acc, b) => acc + b.volume, 0);
+  const totalAskVol = asks.reduce((acc, a) => acc + a.volume, 0);
+
+  const refPrice = Number(listing.refPrice || listing.referencePrice || 0);
+  const price = Number(match.matchPrice || refPrice);
+  const change = refPrice > 0 ? price - refPrice : 0;
+  const changePercent = refPrice > 0 ? (change / refPrice) * 100 : 0;
+
+  return {
+    symbol,
+    bids,
+    asks,
+    totalBidVol,
+    totalAskVol,
+    price,
+    referencePrice: refPrice,
+    ceilingPrice: Number(listing.ceiling || listing.ceilingPrice || 0),
+    floorPrice: Number(listing.floor || listing.floorPrice || 0),
+    open: Number(match.openPrice || price),
+    high: Number(match.highest || price),
+    low: Number(match.lowest || price),
+    change: Number(change.toFixed(2)),
+    changePercent: Number(changePercent.toFixed(2)),
+    totalVolume: Number(match.accumulatedVolume || 0),
+    timestamp: Date.now(),
+    eventTime: parseEventTime(match.time),
+    source: 'vietcap_real',
+  };
+}
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -47,84 +139,18 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 3500);
+    const fetched = await fetchVietcapOrderBook(symbol);
 
-    const res = await fetch('https://trading.vietcap.com.vn/api/price/symbols/getList', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Origin': 'https://trading.vietcap.com.vn',
-        'Referer': 'https://trading.vietcap.com.vn/',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36',
-      },
-      body: JSON.stringify({ symbols: [symbol] }),
-      signal: controller.signal,
-      next: { revalidate: 5 },
+    // Snapshot cũ (thời điểm khớp cũ hơn, KL tụt trong cùng phiên, hoặc giá tham chiếu đổi giữa phiên chưa được
+    // xác nhận) → trả lại bản tốt gần nhất thay vì chuyển tiếp dữ liệu cũ cho trình duyệt.
+    const { value, usedLastGood } = lastGood.resolve(symbol, fetched, {
+      totalVolume: fetched.totalVolume,
+      refPrice: fetched.referencePrice,
+      eventTime: fetched.eventTime,
     });
-    clearTimeout(timeout);
-
-    if (!res.ok) {
-      throw new Error(`Vietcap HTTP ${res.status}`);
-    }
-
-    const list = await res.json();
-    if (!Array.isArray(list) || list.length === 0) {
-      throw new Error(`No data returned for symbol ${symbol}`);
-    }
-
-    const item = list[0];
-    const listing = item.listingInfo || {};
-    const bidAsk = item.bidAsk || {};
-    const match = item.matchPrice || {};
-
-    const rawBids: Array<{ price: number; volume: number }> = bidAsk.bidPrices || [];
-    const rawAsks: Array<{ price: number; volume: number }> = bidAsk.askPrices || [];
-
-    // Filter valid bids & asks
-    const bids: OrderBookLevel[] = rawBids
-      .filter((b) => b && typeof b.price === 'number' && b.price > 0)
-      .map((b) => ({
-        price: b.price,
-        volume: Number(b.volume || 0),
-      }))
-      .slice(0, 3);
-
-    const asks: OrderBookLevel[] = rawAsks
-      .filter((a) => a && typeof a.price === 'number' && a.price > 0)
-      .map((a) => ({
-        price: a.price,
-        volume: Number(a.volume || 0),
-      }))
-      .slice(0, 3);
-
-    const totalBidVol = bids.reduce((acc, b) => acc + b.volume, 0);
-    const totalAskVol = asks.reduce((acc, a) => acc + a.volume, 0);
-
-    const refPrice = Number(listing.refPrice || listing.referencePrice || 0);
-    const price = Number(match.matchPrice || refPrice);
-    const change = refPrice > 0 ? price - refPrice : 0;
-    const changePercent = refPrice > 0 ? (change / refPrice) * 100 : 0;
-
-    const payload: OrderBookResponse = {
-      symbol,
-      bids,
-      asks,
-      totalBidVol,
-      totalAskVol,
-      price,
-      referencePrice: refPrice,
-      ceilingPrice: Number(listing.ceiling || listing.ceilingPrice || 0),
-      floorPrice: Number(listing.floor || listing.floorPrice || 0),
-      open: Number(match.openPrice || price),
-      high: Number(match.highest || price),
-      low: Number(match.lowest || price),
-      change: Number(change.toFixed(2)),
-      changePercent: Number(changePercent.toFixed(2)),
-      totalVolume: Number(match.accumulatedVolume || 0),
-      timestamp: Date.now(),
-      source: 'vietcap_real',
-    };
+    const payload: OrderBookResponse = usedLastGood
+      ? { ...value, timestamp: Date.now(), source: 'vietcap_last_good' }
+      : value;
 
     memoryCache.set(symbol, {
       data: payload,
@@ -133,7 +159,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      source: 'vietcap_real',
+      source: payload.source,
       data: payload,
     });
   } catch (error) {

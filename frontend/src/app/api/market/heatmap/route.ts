@@ -3,6 +3,7 @@ import stockDatabase from '../../../../features/market/data/stockDatabase.json';
 import { SECTOR_MAPPING } from '../../../../features/market/data/sectorMapping';
 import lastMinerviniScanData from '../../../../features/market/data/lastMinerviniScan.json';
 import { isMarketTradingSession } from '../../../../features/market/utils/marketHours';
+import { createSnapshotMemory, parseEventTime } from '../../../../features/market/utils/tickGuard';
 
 // Map dữ liệu quét chốt phiên gần nhất từ bộ lọc Mark Minervini (100% real Entrade)
 const SCAN_CLOSING_MAP = new Map<string, { price: number; changePct: number; volume: number }>();
@@ -141,6 +142,8 @@ async function fetchWithTimeout(url: string, init: RequestInit = {}, timeoutMs =
 const VIETCAP_LIST_URL = 'https://trading.vietcap.com.vn/api/price/symbols/getList';
 const VIETCAP_BOARD_MAP: Record<string, string> = { HSX: 'HOSE', HOSE: 'HOSE', HNX: 'HNX', UPCOM: 'UPCOM' };
 
+const vietcapMemory = createSnapshotMemory<HeatmapStock>();
+
 async function fetchFromVietcap(): Promise<HeatmapStock[] | null> {
   try {
     const res = await fetchWithTimeout(
@@ -198,7 +201,7 @@ async function fetchFromVietcap(): Promise<HeatmapStock[] | null> {
           : Math.round(((sharesFallbackM * price) / 1e6) * 10) / 10;
 
       const meta = STOCK_LOOKUP.get(symbol);
-      items.push({
+      const item: HeatmapStock = {
         symbol,
         name: meta?.name || li.organShortName || li.organName || symbol,
         sector: SECTOR_MAPPING[symbol] || meta?.sector || 'Khác',
@@ -214,7 +217,16 @@ async function fetchFromVietcap(): Promise<HeatmapStock[] | null> {
         high: Number(mp.highest || price),
         low: Number(mp.lowest || price),
         mktCapT,
-      });
+      };
+
+      // Vietcap thỉnh thoảng trả snapshot phiên trước cho một vài mã: giữ bản tốt gần nhất thay vì chuyển tiếp dữ liệu cũ
+      items.push(
+        vietcapMemory.resolve(symbol, item, {
+          totalVolume: volume,
+          refPrice,
+          eventTime: parseEventTime(mp.time),
+        }).value
+      );
     }
 
     if (items.length === 0) throw new Error('không có dữ liệu hợp lệ');

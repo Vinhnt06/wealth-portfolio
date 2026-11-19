@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { MagnifyingGlass, Command, X, TrendUp, Star, ChartLine } from '@phosphor-icons/react';
 import { useMarketStore } from '../store/marketStore';
+import { tickSourceFromApi } from '../utils/tickGuard';
 
 import stockDatabase from '../data/stockDatabase.json';
 import realTicksData from '../data/realTicks.json';
@@ -186,8 +187,9 @@ export const MarketSearch: React.FC = () => {
         fetch(`/api/market/quote?symbol=${sym}`)
           .then((res) => res.json())
           .then((resData) => {
-            if (resData.success && resData.data) {
-              updateTick(resData.data);
+            const src = tickSourceFromApi(resData.source);
+            if (resData.success && resData.data && src) {
+              updateTick(resData.data, src);
             }
           })
           .catch(() => {});
@@ -215,7 +217,8 @@ export const MarketSearch: React.FC = () => {
     fetch(`/api/market/quote?symbol=${s}`)
       .then((res) => res.json())
       .then((resData) => {
-        if (resData.success && resData.data) {
+        const src = tickSourceFromApi(resData.source);
+        if (resData.success && resData.data && src) {
           const d = resData.data;
           updateTick({
             symbol: d.symbol,
@@ -232,7 +235,7 @@ export const MarketSearch: React.FC = () => {
             floorPrice: d.floorPrice,
             timestamp: d.timestamp,
             matchType: 'B',
-          });
+          }, src);
         }
       })
       .catch(() => {});
