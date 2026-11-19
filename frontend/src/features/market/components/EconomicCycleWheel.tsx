@@ -294,6 +294,17 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
   const [showPillarsBreakdown, setShowPillarsBreakdown] = useState<boolean>(false);
 
   // Global Sentiment & US 10Y Yield
+  // Lãi suất Fed (NY Fed EFFR + khung mục tiêu FOMC + kỳ vọng từ hợp đồng tương lai) — /api/macro/fed
+  const [fed, setFed] = useState<{
+    effr: number;
+    effrDate: string;
+    targetLow: number;
+    targetHigh: number;
+    change6m: number | null;
+    moves: { date: string; from: number; to: number }[];
+    futuresImplied: number | null;
+  } | null>(null);
+
   const [globalMacro, setGlobalMacro] = useState<{
     us10Y: number;
     dxy: number;
@@ -324,12 +335,17 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
 
   const fetchMacroData = useCallback(async () => {
     try {
-      const [resInd, resRates, resGlobal, resFx1M] = await Promise.all([
+      const [resInd, resRates, resGlobal, resFx1M, resFed] = await Promise.all([
         fetch('/api/macro/indicators', { cache: 'no-store' }),
         fetch('/api/macro/exchange-rate', { cache: 'no-store' }),
         fetch('/api/macro/us-global', { cache: 'no-store' }),
         fetch('/api/macro/history?symbol=usdvnd&range=1mo', { cache: 'no-store' }),
+        fetch('/api/macro/fed', { cache: 'no-store' }),
       ]);
+      if (resFed.ok) {
+        const fedJson = await resFed.json();
+        if (fedJson.success && fedJson.data && Number.isFinite(fedJson.data.effr)) setFed(fedJson.data);
+      }
       if (resFx1M.ok) {
         const fxJson = await resFx1M.json();
         const pct = Number(fxJson?.stats?.changePercent);
@@ -588,9 +604,28 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
   }, [onRate, rate3M, depositRate]);
 
   // 4. Quantitative 5-Pillar Macroeconomic Engine (GDP 25%, CPI 20%, Rates 20%, FX 15%, Yield Curve 20%)
+  // Biến số thế giới: Fed, chênh lệch lãi suất VND−USD liên ngân hàng, sức mạnh USD (DXY).
+  // Fed thắt chặt / USD mạnh / lãi suất VND thấp hơn USD → áp lực tỷ giá, NHNN khó nới lỏng → bất lợi cho chu kỳ đi lên.
+  const fedFuturesGap = fed && fed.futuresImplied !== null ? Number((fed.futuresImplied - fed.effr).toFixed(2)) : null;
+  const fedStance: 'tightening' | 'easing' | 'hold' | 'unknown' = !fed
+    ? 'unknown'
+    : (fed.change6m ?? 0) > 0 || (fedFuturesGap !== null && fedFuturesGap > 0.15)
+    ? 'tightening'
+    : (fed.change6m ?? 0) < 0 || (fedFuturesGap !== null && fedFuturesGap < -0.15)
+    ? 'easing'
+    : 'hold';
+  const vndUsdGap = fed ? Number((onRate - fed.effr).toFixed(2)) : null; // VND qua đêm − USD (EFFR)
+  const dxyStrong = globalMacro.dxy >= 105;
+  const globalTightness =
+    fedStance === 'unknown'
+      ? null
+      : (fedStance === 'tightening' ? 1 : fedStance === 'easing' ? -1 : 0) +
+        (dxyStrong ? 1 : 0) +
+        (vndUsdGap !== null && vndUsdGap < 0 ? 1 : 0);
+
   const macroPillarScores: Record<
     CyclePhaseKey,
-    { gdp: number; cpi: number; rate: number; fx: number; yield: number; composite: number }
+    { gdp: number; cpi: number; rate: number; fx: number; yield: number; global: number; composite: number }
   > = useMemo(() => {
     // Đồng hồ đầu tư (Merrill Lynch): Phục hồi = tăng trưởng ↑ & lạm phát ↓ · Mở rộng = tăng trưởng ↑ & lạm phát ↑
     //                                  Cuối chu kỳ = tăng trưởng ↓ & lạm phát ↑ · Suy thoái = tăng trưởng ↓ & lạm phát ↓
@@ -626,6 +661,16 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
         ? { expansion: 90, recovery: 85, late: 30, recession: 30 }
         : { late: 85, recession: 75, expansion: 45, recovery: 40 };
 
+    // F. Thế giới (15%): Fed + chênh lệch VND−USD + DXY
+    const globalScores: Record<CyclePhaseKey, number> =
+      globalTightness === null
+        ? { recovery: 50, expansion: 50, late: 50, recession: 50 }
+        : globalTightness <= 0
+        ? { recovery: 90, expansion: 85, late: 30, recession: 35 }
+        : globalTightness === 1
+        ? { expansion: 70, recovery: 60, late: 55, recession: 45 }
+        : { late: 85, recession: 70, expansion: 40, recovery: 30 };
+
     // E. Chênh lệch kỳ hạn VN 12T − qua đêm (20%)
     const yieldScores: Record<CyclePhaseKey, number> =
       yieldCurveData.spread >= 0.75
@@ -638,12 +683,12 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
 
     const res: Record<
       CyclePhaseKey,
-      { gdp: number; cpi: number; rate: number; fx: number; yield: number; composite: number }
+      { gdp: number; cpi: number; rate: number; fx: number; yield: number; global: number; composite: number }
     > = {
-      recovery: { gdp: 0, cpi: 0, rate: 0, fx: 0, yield: 0, composite: 0 },
-      expansion: { gdp: 0, cpi: 0, rate: 0, fx: 0, yield: 0, composite: 0 },
-      late: { gdp: 0, cpi: 0, rate: 0, fx: 0, yield: 0, composite: 0 },
-      recession: { gdp: 0, cpi: 0, rate: 0, fx: 0, yield: 0, composite: 0 },
+      recovery: { gdp: 0, cpi: 0, rate: 0, fx: 0, yield: 0, global: 0, composite: 0 },
+      expansion: { gdp: 0, cpi: 0, rate: 0, fx: 0, yield: 0, global: 0, composite: 0 },
+      late: { gdp: 0, cpi: 0, rate: 0, fx: 0, yield: 0, global: 0, composite: 0 },
+      recession: { gdp: 0, cpi: 0, rate: 0, fx: 0, yield: 0, global: 0, composite: 0 },
     };
 
     (Object.keys(res) as CyclePhaseKey[]).forEach((k) => {
@@ -652,18 +697,20 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
       res[k].rate = rateScores[k];
       res[k].fx = fxScores[k];
       res[k].yield = yieldScores[k];
-      // 5-Pillar Weighted Macro Composite: 25% GDP + 20% CPI + 20% Rates + 15% FX + 20% Yield Curve
+      res[k].global = globalScores[k];
+      // 6 trụ cột: 22% tăng trưởng + 18% lạm phát + 18% lãi suất VN + 12% tỷ giá + 15% kỳ hạn VN + 15% thế giới
       res[k].composite = Math.round(
-        gdpScores[k] * 0.25 +
-        cpiScores[k] * 0.20 +
-        rateScores[k] * 0.20 +
-        fxScores[k] * 0.15 +
-        yieldScores[k] * 0.20
+        gdpScores[k] * 0.22 +
+        cpiScores[k] * 0.18 +
+        rateScores[k] * 0.18 +
+        fxScores[k] * 0.12 +
+        yieldScores[k] * 0.15 +
+        globalScores[k] * 0.15
       );
     });
 
     return res;
-  }, [gdpGrowth, gdpTarget, cpiYoy, cpiTarget, growthDir, inflDir, refRate, onRate, usdVnd1MPct, fxStressed, yieldCurveData.spread]);
+  }, [gdpGrowth, gdpTarget, cpiYoy, cpiTarget, growthDir, inflDir, refRate, onRate, usdVnd1MPct, fxStressed, yieldCurveData.spread, globalTightness]);
 
   // 5. Quantitative Dual-Engine Scoring: 70% Macro Fundamentals + 30% Sector Momentum (RS & Stage 2)
   const phaseScores = useMemo(() => {
@@ -722,8 +769,9 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
       scores[pKey].macroYieldScore = mPillars.yield;
       scores[pKey].macroCompositeScore = mPillars.composite;
 
-      // Institutional Macro Allocation: 70% Macro Fundamentals (Stability Anchor) + 30% Sector Momentum (Confirmation)
-      scores[pKey].score = Math.round((mPillars.composite * 0.70 + momentum * 0.30) * 10) / 10;
+      // Pha chu kỳ CHỈ do số liệu vĩ mô quyết định (số liệu tháng/quý, đổi chậm) → vòng tròn không nhảy pha theo
+      // biến động giá hằng ngày. Xung lực ngành chỉ để đối chiếu "thị trường có xác nhận không".
+      scores[pKey].score = mPillars.composite;
     });
 
     return scores;
@@ -738,6 +786,12 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
     const near = phaseScores[top].score - phaseScores[second].score <= 3 ? second : null;
     return { detectedActivePhaseKey: top, nearPhaseKey: near as CyclePhaseKey | null };
   }, [phaseScores]);
+
+  // Thị trường có xác nhận pha vĩ mô không: pha có xung lực ngành cao nhất có trùng pha vĩ mô?
+  const marketLeaderPhase = (Object.keys(phaseScores) as CyclePhaseKey[]).sort(
+    (a, b) => phaseScores[b].momentumScore - phaseScores[a].momentumScore
+  )[0];
+  const marketConfirms = marketLeaderPhase === detectedActivePhaseKey;
 
   const activePhaseKey = hoveredPhase || pinnedPhase || detectedActivePhaseKey;
   const activeCfg = CYCLE_PHASES[activePhaseKey];
@@ -948,6 +1002,14 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                 <span className="font-mono text-zinc-300 font-semibold text-xs">
                   {phaseScores[detectedActivePhaseKey].score} điểm
                 </span>
+                <span
+                  className={`font-mono text-[10px] px-2 py-0.5 rounded border ${
+                    marketConfirms ? 'text-emerald-300 bg-emerald-500/10 border-emerald-500/20' : 'text-zinc-300 bg-zinc-800/60 border-zinc-700'
+                  }`}
+                  title="So pha vĩ mô với nhóm ngành đang có xung lực giá mạnh nhất"
+                >
+                  {marketConfirms ? 'Thị trường xác nhận' : `Thị trường đang nghiêng về ${CYCLE_PHASES[marketLeaderPhase].title.toLowerCase()}`}
+                </span>
                 {nearPhaseKey && (
                   <span className="font-mono text-amber-300 text-[10px] bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
                     Giao thoa với {CYCLE_PHASES[nearPhaseKey].title} ({phaseScores[nearPhaseKey].score} điểm)
@@ -1025,10 +1087,10 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                     <span>2. Mỏ Neo Vĩ Mô Thực Tế</span>
                   </div>
                   <p className="text-[11px] text-zinc-400 leading-relaxed font-sans">
-                    70% điểm số đến từ vĩ mô: <strong className="text-zinc-200">xu hướng GDP</strong> (tăng tốc hay giảm tốc so với quý trước) và <strong className="text-zinc-200">xu hướng CPI</strong> (theo đồng hồ đầu tư), <strong className="text-zinc-200">lãi suất NHNN ({refRate}%)</strong>, <strong className="text-zinc-200">tỷ giá USD/VND 1 tháng</strong> và <strong className="text-zinc-200">chênh lệch kỳ hạn 12T − qua đêm</strong>.
+                    Pha chu kỳ do <strong className="text-zinc-200">6 trụ cột vĩ mô</strong> quyết định: xu hướng GDP và CPI (đồng hồ đầu tư), lãi suất NHNN ({refRate}%), tỷ giá USD/VND 1 tháng, chênh lệch kỳ hạn 12T − qua đêm, và <strong className="text-zinc-200">Fed &amp; thế giới</strong> (Fed thắt chặt hay nới, chênh lệch lãi suất VND − USD, DXY).
                   </p>
                   <p className="text-[10px] text-zinc-400 leading-relaxed font-sans">
-                    GDP và CPI là số liệu theo quý/tháng nên vòng tròn chỉ đổi khi có số liệu mới; số liệu quá hạn sẽ được cảnh báo.
+                    Không dùng biến động giá hằng ngày để chấm pha, nên vòng tròn chỉ đổi khi số liệu vĩ mô thực sự đổi; số liệu quá hạn sẽ được cảnh báo.
                   </p>
                 </div>
 
@@ -1038,7 +1100,7 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                     <span>3. Xung Lực Ngành (RS Rating)</span>
                   </div>
                   <p className="text-[11px] text-zinc-400 leading-relaxed font-sans">
-                    Xung lực giá cổ phiếu (RS Rating 20 ngành) chỉ đóng vai trò <strong className="text-zinc-200">xác nhận (30%)</strong>.
+                    Xung lực giá ngành <strong className="text-zinc-200">không tính vào điểm pha</strong>, chỉ để đối chiếu: thị trường có đang xác nhận pha vĩ mô hay không.
                   </p>
                   <p className="text-[10px] text-zinc-400 leading-relaxed font-sans">
                     Khi hai pha chênh nhau <strong className="text-amber-300">không quá 3 điểm</strong>, vòng tròn ghi rõ &ldquo;giao thoa&rdquo; thay vì khẳng định một pha.
@@ -1451,18 +1513,20 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                   </div>
                 </div>
 
-                {/* Pillar 6: Global Macro & VIX */}
+                {/* Pillar 6: Fed & thế giới */}
                 <div className="p-2 rounded-lg bg-zinc-950/70 border border-zinc-800/70">
                   <div className="flex items-center justify-between text-zinc-400">
                     <span className="flex items-center gap-1">
                       <ShieldCheck className="w-3 h-3 text-cyan-400" />
-                      <span>Tâm lý Toàn cầu</span>
+                      <span>Fed &amp; thế giới</span>
                     </span>
-                    <span className="text-cyan-400 font-bold">VIX {globalMacro.vix}</span>
+                    <span className="text-cyan-400 font-bold">{fed ? `Fed ${fed.effr}%` : '—'}</span>
                   </div>
-                  <div className="text-[9px] text-zinc-400 mt-1 flex justify-between">
-                    <span>DXY: {globalMacro.dxy} · US10Y: {globalMacro.us10Y}%</span>
-                    <span className="text-zinc-300 font-sans">{globalMacro.vix >= 22 ? 'Căng thẳng' : 'Ổn định'}</span>
+                  <div className="text-[9px] text-zinc-400 mt-1 flex justify-between gap-2">
+                    <span>VND−USD: {vndUsdGap === null ? '—' : `${vndUsdGap >= 0 ? '+' : ''}${vndUsdGap}%`} · DXY {globalMacro.dxy}</span>
+                    <span className="text-zinc-300 font-sans">
+                      {fedStance === 'tightening' ? 'Fed thắt chặt' : fedStance === 'easing' ? 'Fed nới lỏng' : fedStance === 'hold' ? 'Fed giữ nguyên' : 'Chưa có dữ liệu'}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -1528,36 +1592,36 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                     </div>
                     <div className="space-y-1 text-zinc-300">
                       <div className="flex justify-between">
-                        <span className="text-zinc-400">1. Xu hướng GDP (25%):</span>
+                        <span className="text-zinc-400">1. Xu hướng GDP (22%):</span>
                         <span>{macroPillarScores.recovery.gdp} | <strong className="text-emerald-400">{macroPillarScores.expansion.gdp}</strong> | {macroPillarScores.late.gdp} | {macroPillarScores.recession.gdp}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-zinc-400">2. Xu hướng CPI (20%):</span>
+                        <span className="text-zinc-400">2. Xu hướng CPI (18%):</span>
                         <span>{macroPillarScores.recovery.cpi} | <strong className="text-emerald-400">{macroPillarScores.expansion.cpi}</strong> | {macroPillarScores.late.cpi} | {macroPillarScores.recession.cpi}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-zinc-400">3. Lãi suất SBV (20%):</span>
+                        <span className="text-zinc-400">3. Lãi suất NHNN (18%):</span>
                         <span>{macroPillarScores.recovery.rate} | <strong className="text-emerald-400">{macroPillarScores.expansion.rate}</strong> | {macroPillarScores.late.rate} | {macroPillarScores.recession.rate}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-zinc-400">4. Tỷ giá USD/VND 1T (15%):</span>
+                        <span className="text-zinc-400">4. Tỷ giá USD/VND 1T (12%):</span>
                         <span>{macroPillarScores.recovery.fx} | <strong className="text-emerald-400">{macroPillarScores.expansion.fx}</strong> | {macroPillarScores.late.fx} | {macroPillarScores.recession.fx}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-zinc-400">5. Kỳ hạn 12T − ON (20%):</span>
+                        <span className="text-zinc-400">5. Kỳ hạn 12T − ON (15%):</span>
                         <span>{macroPillarScores.recovery.yield} | <strong className="text-emerald-400">{macroPillarScores.expansion.yield}</strong> | {macroPillarScores.late.yield} | {macroPillarScores.recession.yield}</span>
                       </div>
+                      <div className="flex justify-between">
+                        <span className="text-zinc-400">6. Fed &amp; thế giới (15%):</span>
+                        <span>{macroPillarScores.recovery.global} | <strong className="text-emerald-400">{macroPillarScores.expansion.global}</strong> | {macroPillarScores.late.global} | {macroPillarScores.recession.global}</span>
+                      </div>
                       <div className="flex justify-between pt-1 border-t border-zinc-800 font-bold text-zinc-200">
-                        <span className="text-emerald-400">Vĩ Mô Tổng Hợp (70%):</span>
+                        <span className="text-emerald-400">ĐIỂM PHA (100% vĩ mô):</span>
                         <span>{macroPillarScores.recovery.composite} | <strong className="text-emerald-400">{macroPillarScores.expansion.composite}</strong> | {macroPillarScores.late.composite} | {macroPillarScores.recession.composite}</span>
                       </div>
                       <div className="flex justify-between text-zinc-300">
-                        <span className="text-cyan-400">Xung lực Ngành RS (30%):</span>
+                        <span className="text-cyan-400">Xung lực ngành (đối chiếu):</span>
                         <span>{phaseScores.recovery.momentumScore} | <strong className="text-cyan-400">{phaseScores.expansion.momentumScore}</strong> | {phaseScores.late.momentumScore} | {phaseScores.recession.momentumScore}</span>
-                      </div>
-                      <div className="flex justify-between pt-1 border-t border-zinc-800 font-bold text-zinc-100">
-                        <span>ĐIỂM CHUNG CUỘC:</span>
-                        <span>{phaseScores.recovery.score} | <strong className="text-emerald-400">{phaseScores.expansion.score}</strong> | {phaseScores.late.score} | {phaseScores.recession.score}</span>
                       </div>
                     </div>
                   </motion.div>
@@ -1565,7 +1629,32 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
               </AnimatePresence>
 
               <div className="text-[9px] text-zinc-400 leading-tight pt-1 border-t border-zinc-800/60 font-sans">
-                Thuật toán lượng hóa 5 Trụ cột Vĩ mô (GSO, SBV, TPCP) + Xung lực giá RS 20 ngành thực tế.
+                Pha chu kỳ do 6 trụ cột vĩ mô quyết định (GSO, NHNN, tỷ giá, kỳ hạn VN, Fed &amp; thế giới); xung lực giá ngành chỉ dùng để đối chiếu.
+              </div>
+
+              {/* ── Dữ liệu đầu vào: giá trị, kỳ số liệu, nguồn ── */}
+              <div className="p-2.5 rounded-lg bg-zinc-950/90 border border-zinc-800/80 space-y-1 text-[9px] font-mono">
+                <div className="text-[10px] font-bold text-zinc-300 pb-1 border-b border-zinc-800">DỮ LIỆU ĐẦU VÀO</div>
+                {[
+                  ['GDP (tăng trưởng)', `${gdpGrowth}%${gdpTrend !== null ? ` (${gdpTrend >= 0 ? '+' : ''}${gdpTrend}đ vs quý trước)` : ''}`, String(latestGdp?.period ?? '—'), 'GSO (nhập tay)'],
+                  ['CPI (so cùng kỳ)', `${cpiYoy}%${cpiTrend !== null ? ` (${cpiTrend >= 0 ? '+' : ''}${cpiTrend}đ/${cpiTrendMonths}T)` : ''}`, String(latestCpi?.period ?? '—'), 'GSO (nhập tay)'],
+                  ['Tái cấp vốn NHNN', `${refRate}%`, String((macroDatabase as { interestRateLastCrawled?: string }).interestRateLastCrawled ?? '—'), 'NHNN'],
+                  ['Liên NH qua đêm / 3T', `${onRate}% / ${rate3M}%`, String((macroDatabase as { interestRateLastCrawled?: string }).interestRateLastCrawled ?? '—'), 'Liên ngân hàng'],
+                  ['Huy động 12T bình quân', `${depositRate}%`, String((macroDatabase as { interestRateLastCrawled?: string }).interestRateLastCrawled ?? '—'), 'Ngân hàng TM'],
+                  ['USD/VND', `${usdSell > 0 ? usdSell.toLocaleString('vi-VN') : '—'}${usdVnd1MPct !== null ? ` (${usdVnd1MPct >= 0 ? '+' : ''}${usdVnd1MPct}%/1T)` : ''}`, 'Trực tiếp', 'Liên ngân hàng'],
+                  ['Fed funds (EFFR)', fed ? `${fed.effr}% · khung ${fed.targetLow}–${fed.targetHigh}%` : '—', fed?.effrDate ?? '—', 'NY Fed'],
+                  ['Fed đổi lãi suất 6T', fed ? (fed.moves.length ? fed.moves.map((m) => `${m.date}: ${m.from}→${m.to}%`).join(', ') : 'Giữ nguyên') : '—', fed?.effrDate ?? '—', 'FOMC'],
+                  ['Kỳ vọng Fed (futures)', fed?.futuresImplied != null ? `${fed.futuresImplied}%${fedFuturesGap !== null ? ` (${fedFuturesGap >= 0 ? '+' : ''}${fedFuturesGap}đ vs EFFR)` : ''}` : '—', 'Trực tiếp', 'CME ZQ (Yahoo)'],
+                  ['Chênh VND − USD qua đêm', vndUsdGap === null ? '—' : `${vndUsdGap >= 0 ? '+' : ''}${vndUsdGap}%`, 'Tính', 'ON VN − EFFR'],
+                  ['DXY / US10Y / VIX', `${globalMacro.dxy} / ${globalMacro.us10Y}% / ${globalMacro.vix}`, 'Trực tiếp', 'Yahoo Finance'],
+                ].map(([label, value, period, src]) => (
+                  <div key={label} className="flex justify-between gap-2">
+                    <span className="text-zinc-400 shrink-0">{label}</span>
+                    <span className="text-right text-zinc-200">
+                      {value} <span className="text-zinc-500">· {period} · {src}</span>
+                    </span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
