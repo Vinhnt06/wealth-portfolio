@@ -1,80 +1,20 @@
 {
   "success": true,
-  "scannedAt": 1795074168662,
-  "scannedAtText": "14:42:41 19/11/2026",
+  "scannedAt": 1795075008711,
+  "scannedAtText": "14:56:41 19/11/2026",
   "session": "AFTERNOON",
   "sessionLabel": "Phiên Chiều (15:00)",
-  "totalScanned": 157,
+  "totalScanned": 155,
   "stage2Count": 6,
   "nearStage2Count": 10,
-  "leadersCount": 16,
+  "leadersCount": 15,
   "source": "100% REAL DNSE ENTRADE API (730D IBD PERCENTILE)",
   "vnindexRet3M": -1.67,
   "sectorUniverse": [
     {
-      "symbol": "STB",
-      "sector": "Ngân hàng",
-      "ret3M": -6.65
-    },
-    {
-      "symbol": "ACB",
-      "sector": "Ngân hàng",
-      "ret3M": -6.47
-    },
-    {
       "symbol": "TCB",
       "sector": "Ngân hàng",
       "ret3M": 0.88
-    },
-    {
-      "symbol": "SHB",
-      "sector": "Ngân hàng",
-      "ret3M": -9.91
-    },
-    {
-      "symbol": "LPB",
-      "sector": "Ngân hàng",
-      "ret3M": -30
-    },
-    {
-      "symbol": "MBB",
-      "sector": "Ngân hàng",
-      "ret3M": -5.76
-    },
-    {
-      "symbol": "TPB",
-      "sector": "Ngân hàng",
-      "ret3M": 2.57
-    },
-    {
-      "symbol": "CTG",
-      "sector": "Ngân hàng",
-      "ret3M": -3.33
-    },
-    {
-      "symbol": "MSB",
-      "sector": "Ngân hàng",
-      "ret3M": 25.76
-    },
-    {
-      "symbol": "HDB",
-      "sector": "Ngân hàng",
-      "ret3M": 7.33
-    },
-    {
-      "symbol": "VPB",
-      "sector": "Ngân hàng",
-      "ret3M": 6.28
-    },
-    {
-      "symbol": "VCB",
-      "sector": "Ngân hàng",
-      "ret3M": -12.41
-    },
-    {
-      "symbol": "VIB",
-      "sector": "Ngân hàng",
-      "ret3M": 2.28
     },
     {
       "symbol": "BID",
@@ -82,44 +22,54 @@
       "ret3M": -15.56
     },
     {
-      "symbol": "OCB",
+      "symbol": "CTG",
       "sector": "Ngân hàng",
-      "ret3M": -3.2
+      "ret3M": -3.33
     },
     {
-      "symbol": "SSB",
+      "symbol": "VCB",
       "sector": "Ngân hàng",
-      "ret3M": -0.33
+      "ret3M": -12.41
     },
     {
-      "symbol": "SHS",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -7.93
+      "symbol": "HDB",
+      "sector": "Ngân hàng",
+      "ret3M": 7.33
     },
     {
-      "symbol": "VND",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -12.5
+      "symbol": "STB",
+      "sector": "Ngân hàng",
+      "ret3M": -6.65
     },
     {
-      "symbol": "EIB",
+      "symbol": "MSB",
+      "sector": "Ngân hàng",
+      "ret3M": 25.76
+    },
+    {
+      "symbol": "VPB",
+      "sector": "Ngân hàng",
+      "ret3M": 6.28
+    },
+    {
+      "symbol": "ACB",
       "sector": "Ngân hàng",
       "ret3M": -6.47
     },
     {
-      "symbol": "BVB",
+      "symbol": "SHB",
       "sector": "Ngân hàng",
-      "ret3M": -13.17
+      "ret3M": -9.91
     },
     {
-      "symbol": "ABB",
+      "symbol": "TPB",
       "sector": "Ngân hàng",
-      "ret3M": -0.59
+      "ret3M": 2.57
     },
     {
-      "symbol": "NAB",
+      "symbol": "VIB",
       "sector": "Ngân hàng",
-      "ret3M": 7.76
+      "ret3M": 2.28
     },
     {
       "symbol": "VCI",
@@ -127,19 +77,84 @@
       "ret3M": -10.64
     },
     {
-      "symbol": "SSI",
+      "symbol": "TVS",
       "sector": "Dịch vụ tài chính",
-      "ret3M": 0.26
+      "ret3M": -15.93
     },
     {
-      "symbol": "HCM",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -8.37
+      "symbol": "NAB",
+      "sector": "Ngân hàng",
+      "ret3M": 7.76
     },
     {
-      "symbol": "MBS",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -9.36
+      "symbol": "SSB",
+      "sector": "Ngân hàng",
+      "ret3M": -0.33
+    },
+    {
+      "symbol": "MBB",
+      "sector": "Ngân hàng",
+      "ret3M": -5.76
+    },
+    {
+      "symbol": "LPB",
+      "sector": "Ngân hàng",
+      "ret3M": -30
+    },
+    {
+      "symbol": "ABB",
+      "sector": "Ngân hàng",
+      "ret3M": -0.59
+    },
+    {
+      "symbol": "BVB",
+      "sector": "Ngân hàng",
+      "ret3M": -13.17
+    },
+    {
+      "symbol": "NLG",
+      "sector": "Bất động sản",
+      "ret3M": 0.85
+    },
+    {
+      "symbol": "DXG",
+      "sector": "Bất động sản",
+      "ret3M": 0.9
+    },
+    {
+      "symbol": "EIB",
+      "sector": "Ngân hàng",
+      "ret3M": -6.47
+    },
+    {
+      "symbol": "OCB",
+      "sector": "Ngân hàng",
+      "ret3M": -3.2
+    },
+    {
+      "symbol": "IDC",
+      "sector": "Bất động sản",
+      "ret3M": 3.95
+    },
+    {
+      "symbol": "KDH",
+      "sector": "Bất động sản",
+      "ret3M": 0.37
+    },
+    {
+      "symbol": "DIG",
+      "sector": "Bất động sản",
+      "ret3M": 1
+    },
+    {
+      "symbol": "SZC",
+      "sector": "Bất động sản",
+      "ret3M": 5.12
+    },
+    {
+      "symbol": "D2D",
+      "sector": "Bất động sản",
+      "ret3M": -13.55
     },
     {
       "symbol": "BSI",
@@ -152,54 +167,9 @@
       "ret3M": -15.56
     },
     {
-      "symbol": "CTS",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": 6.38
-    },
-    {
-      "symbol": "VIX",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": 1.04
-    },
-    {
-      "symbol": "ORS",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -1.82
-    },
-    {
-      "symbol": "AGR",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -7.18
-    },
-    {
-      "symbol": "VHM",
+      "symbol": "DXS",
       "sector": "Bất động sản",
-      "ret3M": -12.14
-    },
-    {
-      "symbol": "TVS",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -15.93
-    },
-    {
-      "symbol": "KDH",
-      "sector": "Bất động sản",
-      "ret3M": 0.37
-    },
-    {
-      "symbol": "VRE",
-      "sector": "Bất động sản",
-      "ret3M": -2.25
-    },
-    {
-      "symbol": "VIC",
-      "sector": "Bất động sản",
-      "ret3M": 22.5
-    },
-    {
-      "symbol": "NLG",
-      "sector": "Bất động sản",
-      "ret3M": 0.85
+      "ret3M": -18.8
     },
     {
       "symbol": "PDR",
@@ -207,69 +177,24 @@
       "ret3M": -5.39
     },
     {
-      "symbol": "CEO",
-      "sector": "Bất động sản",
-      "ret3M": 0.84
+      "symbol": "AGR",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -7.18
     },
     {
-      "symbol": "DXG",
-      "sector": "Bất động sản",
-      "ret3M": 0.9
+      "symbol": "CTS",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": 6.38
     },
     {
-      "symbol": "KBC",
+      "symbol": "VIC",
       "sector": "Bất động sản",
-      "ret3M": -2.22
+      "ret3M": 22.5
     },
     {
-      "symbol": "DIG",
-      "sector": "Bất động sản",
-      "ret3M": 1
-    },
-    {
-      "symbol": "NVL",
-      "sector": "Bất động sản",
-      "ret3M": -20.99
-    },
-    {
-      "symbol": "TCH",
-      "sector": "Bất động sản",
-      "ret3M": 24.42
-    },
-    {
-      "symbol": "SZC",
-      "sector": "Bất động sản",
-      "ret3M": 5.12
-    },
-    {
-      "symbol": "BCM",
-      "sector": "Bất động sản",
-      "ret3M": -15.96
-    },
-    {
-      "symbol": "HDG",
-      "sector": "Bất động sản",
-      "ret3M": 4.36
-    },
-    {
-      "symbol": "SIP",
-      "sector": "Bất động sản",
-      "ret3M": 0.2
-    },
-    {
-      "symbol": "IDC",
-      "sector": "Bất động sản",
-      "ret3M": 3.95
-    },
-    {
-      "symbol": "D2D",
-      "sector": "Bất động sản",
-      "ret3M": -13.55
-    },
-    {
-      "symbol": "NTL",
-      "sector": "Bất động sản",
-      "ret3M": -5.99
+      "symbol": "HCM",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -8.37
     },
     {
       "symbol": "LHG",
@@ -277,9 +202,34 @@
       "ret3M": -0.57
     },
     {
-      "symbol": "VPI",
+      "symbol": "NVL",
       "sector": "Bất động sản",
-      "ret3M": 14.77
+      "ret3M": -20.99
+    },
+    {
+      "symbol": "NTL",
+      "sector": "Bất động sản",
+      "ret3M": -5.99
+    },
+    {
+      "symbol": "SIP",
+      "sector": "Bất động sản",
+      "ret3M": 0.2
+    },
+    {
+      "symbol": "HDG",
+      "sector": "Bất động sản",
+      "ret3M": 4.36
+    },
+    {
+      "symbol": "VRE",
+      "sector": "Bất động sản",
+      "ret3M": -2.25
+    },
+    {
+      "symbol": "ORS",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -1.82
     },
     {
       "symbol": "VGC",
@@ -287,279 +237,59 @@
       "ret3M": -7.44
     },
     {
-      "symbol": "DXS",
+      "symbol": "SSI",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": 0.26
+    },
+    {
+      "symbol": "KBC",
       "sector": "Bất động sản",
-      "ret3M": -18.8
+      "ret3M": -2.22
     },
     {
-      "symbol": "ASM",
+      "symbol": "BCM",
       "sector": "Bất động sản",
-      "ret3M": -28.69
+      "ret3M": -15.96
     },
     {
-      "symbol": "VNM",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": -12.49
+      "symbol": "VIX",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": 1.04
     },
     {
-      "symbol": "MCH",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": -2.72
+      "symbol": "SHS",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -7.93
     },
     {
-      "symbol": "PVD",
-      "sector": "Năng lượng",
-      "ret3M": -15.41
+      "symbol": "VHM",
+      "sector": "Bất động sản",
+      "ret3M": -12.14
     },
     {
-      "symbol": "PLX",
-      "sector": "Năng lượng",
-      "ret3M": -18.84
+      "symbol": "VND",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -12.5
     },
     {
-      "symbol": "PVP",
-      "sector": "Vận tải",
-      "ret3M": -3.6
+      "symbol": "CEO",
+      "sector": "Bất động sản",
+      "ret3M": 0.84
     },
     {
-      "symbol": "ANV",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": 1.94
+      "symbol": "MBS",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -9.36
     },
     {
-      "symbol": "IDI",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": -4.94
+      "symbol": "TCH",
+      "sector": "Bất động sản",
+      "ret3M": 24.42
     },
     {
-      "symbol": "PGV",
-      "sector": "Tiện ích",
-      "ret3M": -2.33
-    },
-    {
-      "symbol": "DGC",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -8.23
-    },
-    {
-      "symbol": "BCC",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -6.78
-    },
-    {
-      "symbol": "HSG",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -2.83
-    },
-    {
-      "symbol": "GVR",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -13.81
-    },
-    {
-      "symbol": "DDV",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -17.13
-    },
-    {
-      "symbol": "PHR",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -15.93
-    },
-    {
-      "symbol": "DPR",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -4.15
-    },
-    {
-      "symbol": "HT1",
-      "sector": "Nguyên vật liệu",
-      "ret3M": 2.73
-    },
-    {
-      "symbol": "TVN",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -4.05
-    },
-    {
-      "symbol": "HPG",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -2.62
-    },
-    {
-      "symbol": "VGS",
-      "sector": "Nguyên vật liệu",
-      "ret3M": 3.93
-    },
-    {
-      "symbol": "HAG",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": -3.89
-    },
-    {
-      "symbol": "PVC",
-      "sector": "Năng lượng",
-      "ret3M": -17.89
-    },
-    {
-      "symbol": "GEG",
-      "sector": "Tiện ích",
-      "ret3M": -8.06
-    },
-    {
-      "symbol": "OIL",
-      "sector": "Năng lượng",
-      "ret3M": -11.01
-    },
-    {
-      "symbol": "DBC",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": 3.43
-    },
-    {
-      "symbol": "BWE",
-      "sector": "Tiện ích",
-      "ret3M": -3.95
-    },
-    {
-      "symbol": "DPM",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -15.21
-    },
-    {
-      "symbol": "QTP",
-      "sector": "Tiện ích",
-      "ret3M": -0.1
-    },
-    {
-      "symbol": "MSR",
-      "sector": "Nguyên vật liệu",
-      "ret3M": 25.37
-    },
-    {
-      "symbol": "BSR",
-      "sector": "Năng lượng",
-      "ret3M": -11.58
-    },
-    {
-      "symbol": "GEE",
-      "sector": "Tiện ích",
-      "ret3M": -13.02
-    },
-    {
-      "symbol": "BFC",
-      "sector": "Nguyên vật liệu",
-      "ret3M": 15.3
-    },
-    {
-      "symbol": "NTP",
-      "sector": "Nguyên vật liệu",
-      "ret3M": 1.16
-    },
-    {
-      "symbol": "MSN",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": 5.84
-    },
-    {
-      "symbol": "NT2",
-      "sector": "Tiện ích",
-      "ret3M": 17.1
-    },
-    {
-      "symbol": "PVS",
-      "sector": "Năng lượng",
-      "ret3M": -9.58
-    },
-    {
-      "symbol": "POW",
-      "sector": "Tiện ích",
-      "ret3M": 0.37
-    },
-    {
-      "symbol": "GAS",
-      "sector": "Năng lượng",
-      "ret3M": -13.85
-    },
-    {
-      "symbol": "DCM",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -2.61
-    },
-    {
-      "symbol": "TV2",
-      "sector": "Dịch vụ thương mại",
-      "ret3M": 7.75
-    },
-    {
-      "symbol": "BMP",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -7.98
-    },
-    {
-      "symbol": "SAB",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": -7.13
-    },
-    {
-      "symbol": "VSH",
-      "sector": "Tiện ích",
-      "ret3M": -0.96
-    },
-    {
-      "symbol": "VHC",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": -4.49
-    },
-    {
-      "symbol": "KDC",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": -2.72
-    },
-    {
-      "symbol": "REE",
-      "sector": "Tiện ích",
-      "ret3M": 4.08
-    },
-    {
-      "symbol": "PC1",
-      "sector": "Tiện ích",
-      "ret3M": -6.71
-    },
-    {
-      "symbol": "LAS",
-      "sector": "Nguyên vật liệu",
-      "ret3M": 2.35
-    },
-    {
-      "symbol": "FMC",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": 1.49
-    },
-    {
-      "symbol": "PAN",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": -15.78
-    },
-    {
-      "symbol": "BAF",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": 3.49
-    },
-    {
-      "symbol": "SMC",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -11
-    },
-    {
-      "symbol": "NKG",
-      "sector": "Nguyên vật liệu",
-      "ret3M": 13.68
-    },
-    {
-      "symbol": "QNS",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": 6.17
+      "symbol": "VPI",
+      "sector": "Bất động sản",
+      "ret3M": 14.77
     },
     {
       "symbol": "PVB",
@@ -567,9 +297,249 @@
       "ret3M": -16.59
     },
     {
+      "symbol": "HAG",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": -3.89
+    },
+    {
+      "symbol": "MCH",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": -2.72
+    },
+    {
+      "symbol": "NT2",
+      "sector": "Tiện ích",
+      "ret3M": 17.1
+    },
+    {
+      "symbol": "BSR",
+      "sector": "Năng lượng",
+      "ret3M": -11.58
+    },
+    {
+      "symbol": "NTP",
+      "sector": "Nguyên vật liệu",
+      "ret3M": 1.16
+    },
+    {
+      "symbol": "BMP",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -7.98
+    },
+    {
+      "symbol": "MSR",
+      "sector": "Nguyên vật liệu",
+      "ret3M": 25.37
+    },
+    {
+      "symbol": "HPG",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -2.62
+    },
+    {
+      "symbol": "PVP",
+      "sector": "Vận tải",
+      "ret3M": -3.6
+    },
+    {
+      "symbol": "GAS",
+      "sector": "Năng lượng",
+      "ret3M": -13.85
+    },
+    {
+      "symbol": "DPM",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -15.21
+    },
+    {
+      "symbol": "NKG",
+      "sector": "Nguyên vật liệu",
+      "ret3M": 13.68
+    },
+    {
+      "symbol": "VSH",
+      "sector": "Tiện ích",
+      "ret3M": -0.96
+    },
+    {
+      "symbol": "FMC",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": 1.49
+    },
+    {
+      "symbol": "HT1",
+      "sector": "Nguyên vật liệu",
+      "ret3M": 2.73
+    },
+    {
+      "symbol": "VNM",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": -12.49
+    },
+    {
+      "symbol": "DCM",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -2.61
+    },
+    {
+      "symbol": "PAN",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": -15.78
+    },
+    {
+      "symbol": "QTP",
+      "sector": "Tiện ích",
+      "ret3M": -0.1
+    },
+    {
+      "symbol": "SAB",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": -7.13
+    },
+    {
+      "symbol": "PVD",
+      "sector": "Năng lượng",
+      "ret3M": -15.41
+    },
+    {
+      "symbol": "ASM",
+      "sector": "Bất động sản",
+      "ret3M": -28.69
+    },
+    {
+      "symbol": "TV2",
+      "sector": "Dịch vụ thương mại",
+      "ret3M": 7.75
+    },
+    {
+      "symbol": "KDC",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": -2.72
+    },
+    {
+      "symbol": "BWE",
+      "sector": "Tiện ích",
+      "ret3M": -3.95
+    },
+    {
+      "symbol": "ANV",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": 1.94
+    },
+    {
+      "symbol": "OIL",
+      "sector": "Năng lượng",
+      "ret3M": -11.01
+    },
+    {
+      "symbol": "DDV",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -17.13
+    },
+    {
+      "symbol": "TVN",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -4.05
+    },
+    {
+      "symbol": "GVR",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -13.81
+    },
+    {
+      "symbol": "BCC",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -6.78
+    },
+    {
+      "symbol": "PGV",
+      "sector": "Tiện ích",
+      "ret3M": -2.33
+    },
+    {
       "symbol": "PVT",
       "sector": "Vận tải",
       "ret3M": -6.86
+    },
+    {
+      "symbol": "IDI",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": -4.94
+    },
+    {
+      "symbol": "QNS",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": 6.17
+    },
+    {
+      "symbol": "PC1",
+      "sector": "Tiện ích",
+      "ret3M": -6.71
+    },
+    {
+      "symbol": "DPR",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -4.15
+    },
+    {
+      "symbol": "PHR",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -15.93
+    },
+    {
+      "symbol": "DGC",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -8.23
+    },
+    {
+      "symbol": "POW",
+      "sector": "Tiện ích",
+      "ret3M": 0.37
+    },
+    {
+      "symbol": "VGS",
+      "sector": "Nguyên vật liệu",
+      "ret3M": 3.93
+    },
+    {
+      "symbol": "PLX",
+      "sector": "Năng lượng",
+      "ret3M": -18.84
+    },
+    {
+      "symbol": "VHC",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": -4.49
+    },
+    {
+      "symbol": "MSN",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": 5.84
+    },
+    {
+      "symbol": "BAF",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": 3.49
+    },
+    {
+      "symbol": "GEG",
+      "sector": "Tiện ích",
+      "ret3M": -8.06
+    },
+    {
+      "symbol": "DBC",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": 3.43
+    },
+    {
+      "symbol": "LAS",
+      "sector": "Nguyên vật liệu",
+      "ret3M": 2.35
+    },
+    {
+      "symbol": "HSG",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -2.83
     },
     {
       "symbol": "CSV",
@@ -577,29 +547,34 @@
       "ret3M": -4.43
     },
     {
-      "symbol": "PNJ",
-      "sector": "Phân phối, bán lẻ",
-      "ret3M": -60.91
+      "symbol": "GEE",
+      "sector": "Tiện ích",
+      "ret3M": -13.02
     },
     {
-      "symbol": "HHV",
-      "sector": "Vận tải",
-      "ret3M": -6.8
+      "symbol": "SMC",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -11
     },
     {
-      "symbol": "PET",
-      "sector": "Phân phối, bán lẻ",
-      "ret3M": 23.04
+      "symbol": "PVS",
+      "sector": "Năng lượng",
+      "ret3M": -9.58
     },
     {
-      "symbol": "HNG",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": -14.93
+      "symbol": "BFC",
+      "sector": "Nguyên vật liệu",
+      "ret3M": 15.3
     },
     {
-      "symbol": "LCG",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -10.31
+      "symbol": "REE",
+      "sector": "Tiện ích",
+      "ret3M": 4.08
+    },
+    {
+      "symbol": "PVC",
+      "sector": "Năng lượng",
+      "ret3M": -17.89
     },
     {
       "symbol": "FRT",
@@ -607,94 +582,9 @@
       "ret3M": 2.41
     },
     {
-      "symbol": "CMG",
-      "sector": "Phần mềm",
-      "ret3M": -29.94
-    },
-    {
-      "symbol": "VTP",
+      "symbol": "HVN",
       "sector": "Vận tải",
-      "ret3M": -25.36
-    },
-    {
-      "symbol": "MWG",
-      "sector": "Phân phối, bán lẻ",
-      "ret3M": 1.06
-    },
-    {
-      "symbol": "GMD",
-      "sector": "Vận tải",
-      "ret3M": -3.4
-    },
-    {
-      "symbol": "CII",
-      "sector": "Bất động sản",
-      "ret3M": -4.53
-    },
-    {
-      "symbol": "GIL",
-      "sector": "Hàng tiêu dùng",
-      "ret3M": 9.38
-    },
-    {
-      "symbol": "VIP",
-      "sector": "Vận tải",
-      "ret3M": 0.1
-    },
-    {
-      "symbol": "VGI",
-      "sector": "Viễn thông",
-      "ret3M": -17.03
-    },
-    {
-      "symbol": "VOS",
-      "sector": "Vận tải",
-      "ret3M": 0.39
-    },
-    {
-      "symbol": "MSH",
-      "sector": "Hàng tiêu dùng",
-      "ret3M": 17.33
-    },
-    {
-      "symbol": "VTO",
-      "sector": "Vận tải",
-      "ret3M": -1.92
-    },
-    {
-      "symbol": "VSC",
-      "sector": "Vận tải",
-      "ret3M": -10.65
-    },
-    {
-      "symbol": "CTR",
-      "sector": "Viễn thông",
-      "ret3M": -25.03
-    },
-    {
-      "symbol": "C4G",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -18.18
-    },
-    {
-      "symbol": "DBD",
-      "sector": "Dược phẩm",
-      "ret3M": -7.31
-    },
-    {
-      "symbol": "AMV",
-      "sector": "Dịch vụ chăm sóc sức khỏe",
-      "ret3M": -15.38
-    },
-    {
-      "symbol": "CTD",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": 14.63
-    },
-    {
-      "symbol": "FPT",
-      "sector": "Phần mềm",
-      "ret3M": -25.16
+      "ret3M": -2.84
     },
     {
       "symbol": "TCM",
@@ -702,9 +592,74 @@
       "ret3M": -9.82
     },
     {
+      "symbol": "CII",
+      "sector": "Bất động sản",
+      "ret3M": -4.53
+    },
+    {
+      "symbol": "MSH",
+      "sector": "Hàng tiêu dùng",
+      "ret3M": 17.33
+    },
+    {
+      "symbol": "CTD",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": 14.63
+    },
+    {
+      "symbol": "VIP",
+      "sector": "Vận tải",
+      "ret3M": 0.1
+    },
+    {
+      "symbol": "FPT",
+      "sector": "Phần mềm",
+      "ret3M": -25.16
+    },
+    {
+      "symbol": "CMG",
+      "sector": "Phần mềm",
+      "ret3M": -29.94
+    },
+    {
       "symbol": "VJC",
       "sector": "Vận tải",
       "ret3M": 11.9
+    },
+    {
+      "symbol": "MWG",
+      "sector": "Phân phối, bán lẻ",
+      "ret3M": 1.06
+    },
+    {
+      "symbol": "AMV",
+      "sector": "Dịch vụ chăm sóc sức khỏe",
+      "ret3M": -15.38
+    },
+    {
+      "symbol": "GMD",
+      "sector": "Vận tải",
+      "ret3M": -3.4
+    },
+    {
+      "symbol": "DCL",
+      "sector": "Dược phẩm",
+      "ret3M": 8.33
+    },
+    {
+      "symbol": "HAX",
+      "sector": "Ô tô, linh kiện",
+      "ret3M": -11.68
+    },
+    {
+      "symbol": "TNH",
+      "sector": "Dịch vụ chăm sóc sức khỏe",
+      "ret3M": -24.52
+    },
+    {
+      "symbol": "SAM",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": 4.75
     },
     {
       "symbol": "FCN",
@@ -712,14 +667,109 @@
       "ret3M": -4.89
     },
     {
-      "symbol": "SAM",
-      "sector": "Thương mại & Dịch vụ",
-      "ret3M": 4.75
+      "symbol": "DGW",
+      "sector": "Phân phối, bán lẻ",
+      "ret3M": -1.45
     },
     {
-      "symbol": "HVN",
+      "symbol": "VTP",
       "sector": "Vận tải",
-      "ret3M": -2.84
+      "ret3M": -25.36
+    },
+    {
+      "symbol": "VTO",
+      "sector": "Vận tải",
+      "ret3M": -1.92
+    },
+    {
+      "symbol": "HNG",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": -14.93
+    },
+    {
+      "symbol": "VOS",
+      "sector": "Vận tải",
+      "ret3M": 0.39
+    },
+    {
+      "symbol": "TNG",
+      "sector": "Hàng tiêu dùng",
+      "ret3M": 2.88
+    },
+    {
+      "symbol": "LCG",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -10.31
+    },
+    {
+      "symbol": "DHG",
+      "sector": "Dược phẩm",
+      "ret3M": -4.85
+    },
+    {
+      "symbol": "GIL",
+      "sector": "Hàng tiêu dùng",
+      "ret3M": 9.38
+    },
+    {
+      "symbol": "PHP",
+      "sector": "Vận tải",
+      "ret3M": -1.56
+    },
+    {
+      "symbol": "PNJ",
+      "sector": "Phân phối, bán lẻ",
+      "ret3M": -60.91
+    },
+    {
+      "symbol": "VGT",
+      "sector": "Hàng tiêu dùng",
+      "ret3M": -5.17
+    },
+    {
+      "symbol": "GEX",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -19.88
+    },
+    {
+      "symbol": "VSC",
+      "sector": "Vận tải",
+      "ret3M": -10.65
+    },
+    {
+      "symbol": "HHV",
+      "sector": "Vận tải",
+      "ret3M": -6.8
+    },
+    {
+      "symbol": "DVN",
+      "sector": "Dược phẩm",
+      "ret3M": 4.64
+    },
+    {
+      "symbol": "VCG",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -5.7
+    },
+    {
+      "symbol": "CTR",
+      "sector": "Viễn thông",
+      "ret3M": -25.03
+    },
+    {
+      "symbol": "PET",
+      "sector": "Phân phối, bán lẻ",
+      "ret3M": 23.04
+    },
+    {
+      "symbol": "SGP",
+      "sector": "Vận tải",
+      "ret3M": -10.34
+    },
+    {
+      "symbol": "C4G",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -18.18
     },
     {
       "symbol": "ELC",
@@ -732,39 +782,9 @@
       "ret3M": -17.05
     },
     {
-      "symbol": "TNG",
-      "sector": "Hàng tiêu dùng",
-      "ret3M": 2.88
-    },
-    {
-      "symbol": "VGT",
-      "sector": "Hàng tiêu dùng",
-      "ret3M": -5.17
-    },
-    {
-      "symbol": "DGW",
-      "sector": "Phân phối, bán lẻ",
-      "ret3M": -1.45
-    },
-    {
-      "symbol": "GEX",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -19.88
-    },
-    {
-      "symbol": "HAX",
-      "sector": "Ô tô, linh kiện",
-      "ret3M": -11.68
-    },
-    {
-      "symbol": "SGP",
-      "sector": "Vận tải",
-      "ret3M": -10.34
-    },
-    {
-      "symbol": "DHG",
-      "sector": "Dược phẩm",
-      "ret3M": -4.85
+      "symbol": "VGI",
+      "sector": "Viễn thông",
+      "ret3M": -17.03
     },
     {
       "symbol": "HAH",
@@ -772,79 +792,9 @@
       "ret3M": -1.28
     },
     {
-      "symbol": "VCG",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -5.7
-    },
-    {
-      "symbol": "TNH",
-      "sector": "Dịch vụ chăm sóc sức khỏe",
-      "ret3M": -24.52
-    },
-    {
-      "symbol": "DVN",
+      "symbol": "DBD",
       "sector": "Dược phẩm",
-      "ret3M": 4.64
-    },
-    {
-      "symbol": "DCL",
-      "sector": "Dược phẩm",
-      "ret3M": 8.33
-    },
-    {
-      "symbol": "PHP",
-      "sector": "Vận tải",
-      "ret3M": -1.56
-    },
-    {
-      "symbol": "HHS",
-      "sector": "Ô tô, linh kiện",
-      "ret3M": 1.24
-    },
-    {
-      "symbol": "CTF",
-      "sector": "Phân phối, bán lẻ",
-      "ret3M": -17.46
-    },
-    {
-      "symbol": "DRC",
-      "sector": "Ô tô, linh kiện",
-      "ret3M": -16.59
-    },
-    {
-      "symbol": "VNZ",
-      "sector": "Truyền thông, giải trí",
-      "ret3M": -7.29
-    },
-    {
-      "symbol": "YEG",
-      "sector": "Truyền thông, giải trí",
-      "ret3M": -5.93
-    },
-    {
-      "symbol": "BVH",
-      "sector": "Bảo hiểm",
-      "ret3M": -11.7
-    },
-    {
-      "symbol": "ABI",
-      "sector": "Bảo hiểm",
-      "ret3M": 2.67
-    },
-    {
-      "symbol": "PVI",
-      "sector": "Bảo hiểm",
-      "ret3M": -9.66
-    },
-    {
-      "symbol": "CSM",
-      "sector": "Ô tô, linh kiện",
-      "ret3M": -16.43
-    },
-    {
-      "symbol": "VEA",
-      "sector": "Ô tô, linh kiện",
-      "ret3M": -0.7
+      "ret3M": -7.31
     },
     {
       "symbol": "OCH",
@@ -852,14 +802,9 @@
       "ret3M": 20.97
     },
     {
-      "symbol": "LPS",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -52.52
-    },
-    {
-      "symbol": "DVM",
-      "sector": "Dược phẩm",
-      "ret3M": -60.66
+      "symbol": "YEG",
+      "sector": "Truyền thông, giải trí",
+      "ret3M": -5.93
     },
     {
       "symbol": "BMI",
@@ -867,9 +812,44 @@
       "ret3M": 5.51
     },
     {
+      "symbol": "LPS",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -52.52
+    },
+    {
+      "symbol": "ABI",
+      "sector": "Bảo hiểm",
+      "ret3M": 2.67
+    },
+    {
+      "symbol": "VEA",
+      "sector": "Ô tô, linh kiện",
+      "ret3M": -0.7
+    },
+    {
+      "symbol": "PVI",
+      "sector": "Bảo hiểm",
+      "ret3M": -9.66
+    },
+    {
+      "symbol": "CTF",
+      "sector": "Phân phối, bán lẻ",
+      "ret3M": -17.46
+    },
+    {
+      "symbol": "VNZ",
+      "sector": "Truyền thông, giải trí",
+      "ret3M": -7.29
+    },
+    {
       "symbol": "TOS",
       "sector": "Vận tải",
       "ret3M": -22.24
+    },
+    {
+      "symbol": "DRC",
+      "sector": "Ô tô, linh kiện",
+      "ret3M": -16.59
     },
     {
       "symbol": "MIG",
@@ -877,9 +857,29 @@
       "ret3M": -8.75
     },
     {
-      "symbol": "NBC",
-      "sector": "Nguyên vật liệu",
-      "ret3M": 9.33
+      "symbol": "BVH",
+      "sector": "Bảo hiểm",
+      "ret3M": -11.7
+    },
+    {
+      "symbol": "CSM",
+      "sector": "Ô tô, linh kiện",
+      "ret3M": -16.43
+    },
+    {
+      "symbol": "HHS",
+      "sector": "Ô tô, linh kiện",
+      "ret3M": 1.24
+    },
+    {
+      "symbol": "DVM",
+      "sector": "Dược phẩm",
+      "ret3M": -60.66
+    },
+    {
+      "symbol": "ABW",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -5.63
     },
     {
       "symbol": "SAS",
@@ -887,14 +887,14 @@
       "ret3M": -10.18
     },
     {
-      "symbol": "TCI",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -2.08
-    },
-    {
       "symbol": "SJD",
       "sector": "Tiện ích",
       "ret3M": -2.92
+    },
+    {
+      "symbol": "TCD",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -67.03
     },
     {
       "symbol": "PDN",
@@ -907,9 +907,19 @@
       "ret3M": 1.02
     },
     {
-      "symbol": "TCD",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -67.03
+      "symbol": "TT6",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": 3.7
+    },
+    {
+      "symbol": "NBC",
+      "sector": "Nguyên vật liệu",
+      "ret3M": 9.33
+    },
+    {
+      "symbol": "TCI",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -2.08
     },
     {
       "symbol": "HTG",
@@ -917,34 +927,9 @@
       "ret3M": 3.81
     },
     {
-      "symbol": "ABW",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -5.63
-    },
-    {
-      "symbol": "TT6",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": 3.7
-    },
-    {
-      "symbol": "KSF",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -14.05
-    },
-    {
-      "symbol": "TDP",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -3.51
-    },
-    {
-      "symbol": "F88",
-      "sector": "Thương mại & Dịch vụ",
-      "ret3M": -24.69
-    },
-    {
-      "symbol": "QTC",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": 86.08
+      "symbol": "KLB",
+      "sector": "Ngân hàng",
+      "ret3M": -16.67
     },
     {
       "symbol": "CTP",
@@ -952,9 +937,14 @@
       "ret3M": 27.24
     },
     {
-      "symbol": "KLB",
-      "sector": "Ngân hàng",
-      "ret3M": -16.67
+      "symbol": "QTC",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": 86.08
+    },
+    {
+      "symbol": "F88",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -24.69
     },
     {
       "symbol": "MAC",
@@ -962,29 +952,14 @@
       "ret3M": 35.25
     },
     {
-      "symbol": "AAN",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": 1.64
+      "symbol": "TDP",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -3.51
     },
     {
-      "symbol": "NHA",
+      "symbol": "KSF",
       "sector": "Hàng hóa công nghiệp",
-      "ret3M": -9.49
-    },
-    {
-      "symbol": "DHA",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": 14.51
-    },
-    {
-      "symbol": "DST",
-      "sector": "Phân phối, bán lẻ",
-      "ret3M": -58.14
-    },
-    {
-      "symbol": "SBB",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -19.19
+      "ret3M": -14.05
     },
     {
       "symbol": "VGR",
@@ -992,9 +967,14 @@
       "ret3M": 35.42
     },
     {
-      "symbol": "VGP",
-      "sector": "Vận tải",
-      "ret3M": 4.3
+      "symbol": "DHA",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": 14.51
+    },
+    {
+      "symbol": "AAN",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": 1.64
     },
     {
       "symbol": "L40",
@@ -1002,29 +982,29 @@
       "ret3M": -3.14
     },
     {
+      "symbol": "DST",
+      "sector": "Phân phối, bán lẻ",
+      "ret3M": -58.14
+    },
+    {
+      "symbol": "VGP",
+      "sector": "Vận tải",
+      "ret3M": 4.3
+    },
+    {
+      "symbol": "SBB",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -19.19
+    },
+    {
       "symbol": "THD",
       "sector": "Hàng hóa công nghiệp",
       "ret3M": -47.02
     },
     {
-      "symbol": "SHI",
-      "sector": "Hàng tiêu dùng",
-      "ret3M": 1.43
-    },
-    {
-      "symbol": "NTC",
-      "sector": "Bất động sản",
-      "ret3M": 5.34
-    },
-    {
-      "symbol": "HPX",
-      "sector": "Bất động sản",
-      "ret3M": -20.75
-    },
-    {
-      "symbol": "PCB",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -11.76
+      "symbol": "NHA",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -9.49
     },
     {
       "symbol": "SCG",
@@ -1032,9 +1012,9 @@
       "ret3M": -1.08
     },
     {
-      "symbol": "PSI",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -16.85
+      "symbol": "SHI",
+      "sector": "Hàng tiêu dùng",
+      "ret3M": 1.43
     },
     {
       "symbol": "MCM",
@@ -1042,9 +1022,9 @@
       "ret3M": -2.1
     },
     {
-      "symbol": "VCP",
-      "sector": "Tiện ích",
-      "ret3M": 65.33
+      "symbol": "NTC",
+      "sector": "Bất động sản",
+      "ret3M": 5.34
     },
     {
       "symbol": "NCT",
@@ -1052,14 +1032,24 @@
       "ret3M": -9.07
     },
     {
-      "symbol": "HDC",
-      "sector": "Bất động sản",
-      "ret3M": 9.87
+      "symbol": "VCP",
+      "sector": "Tiện ích",
+      "ret3M": 65.33
     },
     {
-      "symbol": "TAB",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": 99.22
+      "symbol": "PSI",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -16.85
+    },
+    {
+      "symbol": "PCB",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -11.76
+    },
+    {
+      "symbol": "HPX",
+      "sector": "Bất động sản",
+      "ret3M": -20.75
     },
     {
       "symbol": "HQC",
@@ -1067,34 +1057,14 @@
       "ret3M": -15.6
     },
     {
-      "symbol": "HII",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -15.7
-    },
-    {
-      "symbol": "SBS",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -13.33
-    },
-    {
-      "symbol": "MML",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": -15.66
-    },
-    {
-      "symbol": "VIW",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -38.15
-    },
-    {
-      "symbol": "PSD",
-      "sector": "Thương mại & Dịch vụ",
-      "ret3M": 10.26
-    },
-    {
       "symbol": "VTZ",
       "sector": "Hàng tiêu dùng",
       "ret3M": 0.5
+    },
+    {
+      "symbol": "HII",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -15.7
     },
     {
       "symbol": "DHC",
@@ -1102,14 +1072,34 @@
       "ret3M": 5.69
     },
     {
-      "symbol": "DPG",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": 4.46
+      "symbol": "PSD",
+      "sector": "Phân phối, bán lẻ",
+      "ret3M": 10.26
     },
     {
-      "symbol": "SGN",
-      "sector": "Vận tải",
-      "ret3M": 8.01
+      "symbol": "HDC",
+      "sector": "Bất động sản",
+      "ret3M": 9.87
+    },
+    {
+      "symbol": "VIW",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -38.15
+    },
+    {
+      "symbol": "TAB",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": 99.22
+    },
+    {
+      "symbol": "MML",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": -15.66
+    },
+    {
+      "symbol": "SBS",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -13.33
     },
     {
       "symbol": "DL1",
@@ -1117,29 +1107,9 @@
       "ret3M": -9.09
     },
     {
-      "symbol": "HDA",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": 48.48
-    },
-    {
-      "symbol": "VC3",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": 2.27
-    },
-    {
-      "symbol": "PPH",
-      "sector": "Hàng tiêu dùng",
-      "ret3M": -1.15
-    },
-    {
-      "symbol": "AMS",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": 45.02
-    },
-    {
-      "symbol": "HSL",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": -16.42
+      "symbol": "SGN",
+      "sector": "Vận tải",
+      "ret3M": 8.01
     },
     {
       "symbol": "SZL",
@@ -1152,9 +1122,19 @@
       "ret3M": -6.38
     },
     {
-      "symbol": "AAS",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": 45.07
+      "symbol": "PPH",
+      "sector": "Hàng tiêu dùng",
+      "ret3M": -1.15
+    },
+    {
+      "symbol": "VC3",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": 2.27
+    },
+    {
+      "symbol": "HDA",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": 48.48
     },
     {
       "symbol": "BGE",
@@ -1167,19 +1147,24 @@
       "ret3M": 14.21
     },
     {
-      "symbol": "KSB",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -12.32
+      "symbol": "HSL",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": -16.42
     },
     {
-      "symbol": "BMS",
+      "symbol": "DPG",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": 4.46
+    },
+    {
+      "symbol": "AAS",
       "sector": "Dịch vụ tài chính",
-      "ret3M": -4.55
+      "ret3M": 45.07
     },
     {
-      "symbol": "ACV",
-      "sector": "Vận tải",
-      "ret3M": -8.03
+      "symbol": "AMS",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": 45.02
     },
     {
       "symbol": "NRC",
@@ -1192,9 +1177,9 @@
       "ret3M": -9.94
     },
     {
-      "symbol": "AIG",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -14.49
+      "symbol": "SJS",
+      "sector": "Bất động sản",
+      "ret3M": 11.18
     },
     {
       "symbol": "TCO",
@@ -1202,19 +1187,24 @@
       "ret3M": 0.47
     },
     {
-      "symbol": "SJS",
-      "sector": "Bất động sản",
-      "ret3M": 11.18
-    },
-    {
-      "symbol": "VSF",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": 19.62
-    },
-    {
-      "symbol": "EVG",
+      "symbol": "AIG",
       "sector": "Hàng hóa công nghiệp",
-      "ret3M": -20.37
+      "ret3M": -14.49
+    },
+    {
+      "symbol": "KSB",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -12.32
+    },
+    {
+      "symbol": "ACV",
+      "sector": "Vận tải",
+      "ret3M": -8.03
+    },
+    {
+      "symbol": "BMS",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -4.55
     },
     {
       "symbol": "BWS",
@@ -1222,34 +1212,14 @@
       "ret3M": -11.21
     },
     {
-      "symbol": "ACC",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -29.78
-    },
-    {
       "symbol": "TV1",
       "sector": "Hàng hóa công nghiệp",
       "ret3M": 39.22
     },
     {
-      "symbol": "HVT",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -20.17
-    },
-    {
-      "symbol": "TIN",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -12.74
-    },
-    {
-      "symbol": "CST",
-      "sector": "Nguyên vật liệu",
-      "ret3M": 39.22
-    },
-    {
-      "symbol": "KHG",
-      "sector": "Bất động sản",
-      "ret3M": -3.14
+      "symbol": "VSF",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": 19.62
     },
     {
       "symbol": "BVS",
@@ -1257,9 +1227,34 @@
       "ret3M": -1.53
     },
     {
-      "symbol": "NNC",
+      "symbol": "CST",
+      "sector": "Nguyên vật liệu",
+      "ret3M": 39.22
+    },
+    {
+      "symbol": "ACC",
       "sector": "Hàng hóa công nghiệp",
-      "ret3M": 19.6
+      "ret3M": -29.78
+    },
+    {
+      "symbol": "TIN",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -12.74
+    },
+    {
+      "symbol": "KHG",
+      "sector": "Bất động sản",
+      "ret3M": -3.14
+    },
+    {
+      "symbol": "HVT",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -20.17
+    },
+    {
+      "symbol": "EVG",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -20.37
     },
     {
       "symbol": "VNE",
@@ -1272,14 +1267,9 @@
       "ret3M": 3.89
     },
     {
-      "symbol": "MCP",
+      "symbol": "NNC",
       "sector": "Hàng hóa công nghiệp",
-      "ret3M": 13.92
-    },
-    {
-      "symbol": "IPA",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -9.63
+      "ret3M": 19.6
     },
     {
       "symbol": "AFX",
@@ -1287,29 +1277,14 @@
       "ret3M": -3.07
     },
     {
-      "symbol": "TAL",
-      "sector": "Bất động sản",
-      "ret3M": 2.3
+      "symbol": "IPA",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -9.63
     },
     {
-      "symbol": "LSG",
-      "sector": "Bất động sản",
-      "ret3M": 2.01
-    },
-    {
-      "symbol": "MVN",
-      "sector": "Vận tải",
-      "ret3M": -14.33
-    },
-    {
-      "symbol": "MST",
+      "symbol": "MCP",
       "sector": "Hàng hóa công nghiệp",
-      "ret3M": -16.67
-    },
-    {
-      "symbol": "PTB",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -8.3
+      "ret3M": 13.92
     },
     {
       "symbol": "DMX",
@@ -1317,9 +1292,34 @@
       "ret3M": -7.23
     },
     {
+      "symbol": "LSG",
+      "sector": "Bất động sản",
+      "ret3M": 2.01
+    },
+    {
+      "symbol": "TAL",
+      "sector": "Bất động sản",
+      "ret3M": 2.3
+    },
+    {
+      "symbol": "MVN",
+      "sector": "Vận tải",
+      "ret3M": -14.33
+    },
+    {
       "symbol": "IDJ",
       "sector": "Bất động sản",
       "ret3M": -37.84
+    },
+    {
+      "symbol": "PTB",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -8.3
+    },
+    {
+      "symbol": "MST",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -16.67
     },
     {
       "symbol": "TLG",
@@ -1332,14 +1332,19 @@
       "ret3M": 0.06
     },
     {
+      "symbol": "VLB",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": 9.07
+    },
+    {
       "symbol": "DTD",
       "sector": "Hàng hóa công nghiệp",
       "ret3M": -17.54
     },
     {
-      "symbol": "SCL",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": 8.32
+      "symbol": "CAP",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -20.59
     },
     {
       "symbol": "HNM",
@@ -1352,24 +1357,14 @@
       "ret3M": -26.39
     },
     {
-      "symbol": "MZG",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -9.92
-    },
-    {
-      "symbol": "VLB",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": 9.07
-    },
-    {
-      "symbol": "BKC",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -14.29
-    },
-    {
       "symbol": "PCH",
       "sector": "Hàng hóa công nghiệp",
       "ret3M": 0.55
+    },
+    {
+      "symbol": "SCL",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": 8.32
     },
     {
       "symbol": "VCK",
@@ -1382,19 +1377,14 @@
       "ret3M": 13.83
     },
     {
-      "symbol": "CAP",
+      "symbol": "MZG",
       "sector": "Nguyên vật liệu",
-      "ret3M": -20.59
+      "ret3M": -9.92
     },
     {
-      "symbol": "DRH",
-      "sector": "Bất động sản",
-      "ret3M": -41.85
-    },
-    {
-      "symbol": "DLG",
-      "sector": "Hàng tiêu dùng",
-      "ret3M": -18.3
+      "symbol": "BKC",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -14.29
     },
     {
       "symbol": "NDN",
@@ -1402,9 +1392,9 @@
       "ret3M": -6.4
     },
     {
-      "symbol": "TLD",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -0.75
+      "symbol": "PPT",
+      "sector": "Tiện ích",
+      "ret3M": -71.71
     },
     {
       "symbol": "TCX",
@@ -1417,9 +1407,34 @@
       "ret3M": -1.64
     },
     {
-      "symbol": "PPT",
-      "sector": "Tiện ích",
-      "ret3M": -71.71
+      "symbol": "TLD",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -0.75
+    },
+    {
+      "symbol": "DLG",
+      "sector": "Hàng tiêu dùng",
+      "ret3M": -18.3
+    },
+    {
+      "symbol": "DRH",
+      "sector": "Bất động sản",
+      "ret3M": -41.85
+    },
+    {
+      "symbol": "BXH",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": 67.79
+    },
+    {
+      "symbol": "SPV",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": 61.71
+    },
+    {
+      "symbol": "HPA",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": -4.4
     },
     {
       "symbol": "PLC",
@@ -1437,64 +1452,19 @@
       "ret3M": -13.22
     },
     {
-      "symbol": "VC7",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": 8.11
-    },
-    {
-      "symbol": "HPA",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": -4.4
-    },
-    {
-      "symbol": "BXH",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": 67.79
-    },
-    {
       "symbol": "DDG",
       "sector": "Hàng hóa công nghiệp",
       "ret3M": -44.44
     },
     {
-      "symbol": "SPV",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": 61.71
-    },
-    {
-      "symbol": "TTF",
-      "sector": "Hàng tiêu dùng",
-      "ret3M": -29.78
-    },
-    {
-      "symbol": "GCF",
-      "sector": "Phân phối, bán lẻ",
-      "ret3M": 8.3
+      "symbol": "VC7",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": 8.11
     },
     {
       "symbol": "OGC",
       "sector": "Bất động sản",
       "ret3M": -0.92
-    },
-    {
-      "symbol": "PIA",
-      "sector": "Phần mềm",
-      "ret3M": 6.86
-    },
-    {
-      "symbol": "GEL",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -17.24
-    },
-    {
-      "symbol": "TRC",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -9.93
-    },
-    {
-      "symbol": "TTA",
-      "sector": "Tiện ích",
-      "ret3M": -9.65
     },
     {
       "symbol": "PPC",
@@ -1507,34 +1477,39 @@
       "ret3M": -55.17
     },
     {
+      "symbol": "GEL",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -17.24
+    },
+    {
+      "symbol": "GCF",
+      "sector": "Phân phối, bán lẻ",
+      "ret3M": 8.3
+    },
+    {
+      "symbol": "TTF",
+      "sector": "Hàng tiêu dùng",
+      "ret3M": -29.78
+    },
+    {
       "symbol": "AGG",
       "sector": "Bất động sản",
       "ret3M": -14.23
     },
     {
-      "symbol": "FIR",
-      "sector": "Bất động sản",
-      "ret3M": -28.24
+      "symbol": "TRC",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -9.93
     },
     {
-      "symbol": "L14",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -21.66
+      "symbol": "PIA",
+      "sector": "Phần mềm",
+      "ret3M": 6.86
     },
     {
-      "symbol": "IJC",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -4.83
-    },
-    {
-      "symbol": "DSE",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -11.51
-    },
-    {
-      "symbol": "HIO",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": 31.43
+      "symbol": "TTA",
+      "sector": "Tiện ích",
+      "ret3M": -9.65
     },
     {
       "symbol": "DSH",
@@ -1542,14 +1517,29 @@
       "ret3M": -3.88
     },
     {
-      "symbol": "GDA",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": 8.94
+      "symbol": "DSE",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -11.51
     },
     {
-      "symbol": "TCL",
-      "sector": "Vận tải",
-      "ret3M": -3.39
+      "symbol": "IJC",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -4.83
+    },
+    {
+      "symbol": "L14",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -21.66
+    },
+    {
+      "symbol": "HIO",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": 31.43
+    },
+    {
+      "symbol": "FIR",
+      "sector": "Bất động sản",
+      "ret3M": -28.24
     },
     {
       "symbol": "VTV",
@@ -1557,14 +1547,14 @@
       "ret3M": -3.47
     },
     {
-      "symbol": "CRE",
-      "sector": "Bất động sản",
-      "ret3M": -46.86
+      "symbol": "TCL",
+      "sector": "Vận tải",
+      "ret3M": -3.39
     },
     {
-      "symbol": "APH",
-      "sector": "Nguyên vật liệu",
-      "ret3M": 7.38
+      "symbol": "GDA",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": 8.94
     },
     {
       "symbol": "VRC",
@@ -1572,14 +1562,14 @@
       "ret3M": 4.27
     },
     {
-      "symbol": "TMB",
-      "sector": "Nguyên vật liệu",
-      "ret3M": 54.08
-    },
-    {
       "symbol": "PIV",
       "sector": "Dịch vụ tài chính",
       "ret3M": 1.54
+    },
+    {
+      "symbol": "CRE",
+      "sector": "Bất động sản",
+      "ret3M": -46.86
     },
     {
       "symbol": "CAT",
@@ -1587,9 +1577,14 @@
       "ret3M": 17.65
     },
     {
-      "symbol": "PVX",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -22.22
+      "symbol": "APH",
+      "sector": "Nguyên vật liệu",
+      "ret3M": 7.38
+    },
+    {
+      "symbol": "TMB",
+      "sector": "Nguyên vật liệu",
+      "ret3M": 54.08
     },
     {
       "symbol": "MVC",
@@ -1597,44 +1592,14 @@
       "ret3M": 18.08
     },
     {
-      "symbol": "AAA",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -4.98
-    },
-    {
-      "symbol": "DXP",
-      "sector": "Vận tải",
-      "ret3M": -6.34
-    },
-    {
       "symbol": "HTN",
       "sector": "Hàng hóa công nghiệp",
       "ret3M": 27.07
     },
     {
-      "symbol": "DC4",
+      "symbol": "PVX",
       "sector": "Hàng hóa công nghiệp",
-      "ret3M": -13.82
-    },
-    {
-      "symbol": "VAB",
-      "sector": "Ngân hàng",
-      "ret3M": -0.55
-    },
-    {
-      "symbol": "HVH",
-      "sector": "Hàng tiêu dùng",
-      "ret3M": 4.6
-    },
-    {
-      "symbol": "G36",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -3.23
-    },
-    {
-      "symbol": "CAR",
-      "sector": "Dịch vụ thương mại",
-      "ret3M": 696.99
+      "ret3M": -22.22
     },
     {
       "symbol": "VPX",
@@ -1642,14 +1607,9 @@
       "ret3M": -7.86
     },
     {
-      "symbol": "APS",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -29.31
-    },
-    {
-      "symbol": "KSV",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -15.15
+      "symbol": "ODE",
+      "sector": "Truyền thông, giải trí",
+      "ret3M": -3.64
     },
     {
       "symbol": "API",
@@ -1657,9 +1617,14 @@
       "ret3M": -31.48
     },
     {
-      "symbol": "SBT",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": -10.76
+      "symbol": "CAR",
+      "sector": "Dịch vụ thương mại",
+      "ret3M": 696.99
+    },
+    {
+      "symbol": "HVH",
+      "sector": "Hàng tiêu dùng",
+      "ret3M": 4.6
     },
     {
       "symbol": "ITC",
@@ -1667,24 +1632,9 @@
       "ret3M": -7.87
     },
     {
-      "symbol": "ODE",
-      "sector": "Truyền thông, giải trí",
-      "ret3M": -3.64
-    },
-    {
-      "symbol": "QCG",
-      "sector": "Bất động sản",
-      "ret3M": 1.97
-    },
-    {
       "symbol": "HUT",
       "sector": "Hàng hóa công nghiệp",
       "ret3M": -6.06
-    },
-    {
-      "symbol": "HID",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": 14.71
     },
     {
       "symbol": "VDS",
@@ -1692,29 +1642,14 @@
       "ret3M": -11.89
     },
     {
-      "symbol": "NVB",
-      "sector": "Ngân hàng",
-      "ret3M": 28.95
-    },
-    {
-      "symbol": "VCS",
+      "symbol": "HID",
       "sector": "Hàng hóa công nghiệp",
-      "ret3M": -11.85
+      "ret3M": 14.71
     },
     {
-      "symbol": "HHP",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -13.33
-    },
-    {
-      "symbol": "CRC",
-      "sector": "Phân phối, bán lẻ",
-      "ret3M": -20.95
-    },
-    {
-      "symbol": "LDG",
+      "symbol": "QCG",
       "sector": "Bất động sản",
-      "ret3M": -16.73
+      "ret3M": 1.97
     },
     {
       "symbol": "HBC",
@@ -1727,9 +1662,9 @@
       "ret3M": -0.1
     },
     {
-      "symbol": "PAC",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -8.74
+      "symbol": "HHP",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -13.33
     },
     {
       "symbol": "RYG",
@@ -1742,14 +1677,59 @@
       "ret3M": -0.91
     },
     {
-      "symbol": "SBG",
+      "symbol": "VCS",
       "sector": "Hàng hóa công nghiệp",
-      "ret3M": 14.17
+      "ret3M": -11.85
+    },
+    {
+      "symbol": "CRC",
+      "sector": "Phân phối, bán lẻ",
+      "ret3M": -20.95
+    },
+    {
+      "symbol": "PAC",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -8.74
+    },
+    {
+      "symbol": "LDG",
+      "sector": "Bất động sản",
+      "ret3M": -16.73
+    },
+    {
+      "symbol": "NVB",
+      "sector": "Ngân hàng",
+      "ret3M": 28.95
+    },
+    {
+      "symbol": "EVS",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -9.62
+    },
+    {
+      "symbol": "VPL",
+      "sector": "Dịch vụ tiêu dùng",
+      "ret3M": 26
+    },
+    {
+      "symbol": "EVF",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -8
+    },
+    {
+      "symbol": "ASP",
+      "sector": "Tiện ích",
+      "ret3M": 3.7
     },
     {
       "symbol": "SVN",
       "sector": "Hàng hóa công nghiệp",
       "ret3M": -27.27
+    },
+    {
+      "symbol": "SBG",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": 14.17
     },
     {
       "symbol": "CQN",
@@ -1762,34 +1742,24 @@
       "ret3M": 0
     },
     {
-      "symbol": "ASP",
-      "sector": "Tiện ích",
-      "ret3M": 3.7
-    },
-    {
-      "symbol": "VPL",
-      "sector": "Dịch vụ tiêu dùng",
-      "ret3M": 26
-    },
-    {
       "symbol": "APG",
       "sector": "Dịch vụ tài chính",
       "ret3M": -22.93
     },
     {
-      "symbol": "EVF",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -8
-    },
-    {
-      "symbol": "EVS",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -9.62
+      "symbol": "SCR",
+      "sector": "Bất động sản",
+      "ret3M": -16.48
     },
     {
       "symbol": "CTI",
       "sector": "Hàng hóa công nghiệp",
       "ret3M": 6.74
+    },
+    {
+      "symbol": "VFS",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -6
     },
     {
       "symbol": "VVS",
@@ -1800,16 +1770,6 @@
       "symbol": "KOS",
       "sector": "Bất động sản",
       "ret3M": -90.66
-    },
-    {
-      "symbol": "VFS",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -6
-    },
-    {
-      "symbol": "SCR",
-      "sector": "Bất động sản",
-      "ret3M": -16.48
     }
   ],
   "data": [
@@ -1859,7 +1819,7 @@
       "dividendYield": null,
       "rsRating": 99,
       "rsRank": 1,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 8,
       "isStage2": true,
       "isStage2Eligible": true,
@@ -1912,7 +1872,7 @@
       "dividendYield": null,
       "rsRating": 98,
       "rsRank": 2,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 7,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -1967,7 +1927,7 @@
       "dividendYield": null,
       "rsRating": 98,
       "rsRank": 3,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 6,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -2023,7 +1983,7 @@
       "dividendYield": null,
       "rsRating": 97,
       "rsRank": 4,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 8,
       "isStage2": true,
       "isStage2Eligible": true,
@@ -2076,7 +2036,7 @@
       "dividendYield": null,
       "rsRating": 96,
       "rsRank": 5,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 8,
       "isStage2": true,
       "isStage2Eligible": true,
@@ -2129,7 +2089,7 @@
       "dividendYield": null,
       "rsRating": 96,
       "rsRank": 6,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 7,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -2184,7 +2144,7 @@
       "dividendYield": null,
       "rsRating": 95,
       "rsRank": 7,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 7,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -2239,7 +2199,7 @@
       "dividendYield": null,
       "rsRating": 95,
       "rsRank": 8,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 8,
       "isStage2": true,
       "isStage2Eligible": true,
@@ -2292,7 +2252,7 @@
       "dividendYield": null,
       "rsRating": 94,
       "rsRank": 9,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 8,
       "isStage2": true,
       "isStage2Eligible": true,
@@ -2345,7 +2305,7 @@
       "dividendYield": null,
       "rsRating": 93,
       "rsRank": 10,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 7,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -2400,7 +2360,7 @@
       "dividendYield": null,
       "rsRating": 93,
       "rsRank": 11,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 8,
       "isStage2": true,
       "isStage2Eligible": true,
@@ -2453,7 +2413,7 @@
       "dividendYield": null,
       "rsRating": 92,
       "rsRank": 12,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 7,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -2508,7 +2468,7 @@
       "dividendYield": null,
       "rsRating": 91,
       "rsRank": 13,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 7,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -2563,7 +2523,7 @@
       "dividendYield": null,
       "rsRating": 91,
       "rsRank": 14,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 7,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -2618,7 +2578,7 @@
       "dividendYield": null,
       "rsRating": 90,
       "rsRank": 15,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 7,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -2671,9 +2631,9 @@
       "epsDiluted": null,
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
-      "rsRating": 90,
+      "rsRating": 89,
       "rsRank": 16,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 6,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -2729,7 +2689,7 @@
       "dividendYield": null,
       "rsRating": 89,
       "rsRank": 17,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 6,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -2785,7 +2745,7 @@
       "dividendYield": null,
       "rsRating": 88,
       "rsRank": 18,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 4,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -2843,7 +2803,7 @@
       "dividendYield": null,
       "rsRating": 88,
       "rsRank": 19,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 6,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -2899,7 +2859,7 @@
       "dividendYield": null,
       "rsRating": 87,
       "rsRank": 20,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 5,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -2956,7 +2916,7 @@
       "dividendYield": null,
       "rsRating": 86,
       "rsRank": 21,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 6,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -3012,7 +2972,7 @@
       "dividendYield": null,
       "rsRating": 86,
       "rsRank": 22,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 4,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -3070,7 +3030,7 @@
       "dividendYield": null,
       "rsRating": 85,
       "rsRank": 23,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 7,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -3123,9 +3083,9 @@
       "epsDiluted": null,
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
-      "rsRating": 85,
+      "rsRating": 84,
       "rsRank": 24,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 7,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -3180,7 +3140,7 @@
       "dividendYield": null,
       "rsRating": 84,
       "rsRank": 25,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 4,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -3238,7 +3198,7 @@
       "dividendYield": null,
       "rsRating": 83,
       "rsRank": 26,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 6,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -3292,9 +3252,9 @@
       "epsDiluted": null,
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
-      "rsRating": 83,
+      "rsRating": 82,
       "rsRank": 27,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 4,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -3352,7 +3312,7 @@
       "dividendYield": null,
       "rsRating": 82,
       "rsRank": 28,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 4,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -3410,7 +3370,7 @@
       "dividendYield": null,
       "rsRating": 81,
       "rsRank": 29,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 4,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -3468,7 +3428,7 @@
       "dividendYield": null,
       "rsRating": 81,
       "rsRank": 30,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 5,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -3525,7 +3485,7 @@
       "dividendYield": null,
       "rsRating": 80,
       "rsRank": 31,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 5,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -3580,9 +3540,9 @@
       "epsDiluted": null,
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
-      "rsRating": 80,
+      "rsRating": 79,
       "rsRank": 32,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 4,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -3640,7 +3600,7 @@
       "dividendYield": null,
       "rsRating": 79,
       "rsRank": 33,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 6,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -3696,7 +3656,7 @@
       "dividendYield": null,
       "rsRating": 78,
       "rsRank": 34,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 4,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -3752,9 +3712,9 @@
       "epsDiluted": null,
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
-      "rsRating": 78,
+      "rsRating": 77,
       "rsRank": 35,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 4,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -3812,7 +3772,7 @@
       "dividendYield": null,
       "rsRating": 77,
       "rsRank": 36,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 2,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -3872,7 +3832,7 @@
       "dividendYield": null,
       "rsRating": 76,
       "rsRank": 37,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 4,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -3928,9 +3888,9 @@
       "epsDiluted": null,
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
-      "rsRating": 76,
+      "rsRating": 75,
       "rsRank": 38,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 4,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -3988,7 +3948,7 @@
       "dividendYield": null,
       "rsRating": 75,
       "rsRank": 39,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 3,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -4045,9 +4005,9 @@
       "epsDiluted": null,
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
-      "rsRating": 75,
+      "rsRating": 74,
       "rsRank": 40,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 5,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -4104,7 +4064,7 @@
       "dividendYield": null,
       "rsRating": 74,
       "rsRank": 41,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 5,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -4161,7 +4121,7 @@
       "dividendYield": null,
       "rsRating": 73,
       "rsRank": 42,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 5,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -4216,9 +4176,9 @@
       "epsDiluted": null,
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
-      "rsRating": 73,
+      "rsRating": 72,
       "rsRank": 43,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 1,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -4279,7 +4239,7 @@
       "dividendYield": null,
       "rsRating": 72,
       "rsRank": 44,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 2,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -4339,7 +4299,7 @@
       "dividendYield": null,
       "rsRating": 71,
       "rsRank": 45,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 2,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -4397,9 +4357,9 @@
       "epsDiluted": null,
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
-      "rsRating": 71,
+      "rsRating": 70,
       "rsRank": 46,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 3,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -4458,7 +4418,7 @@
       "dividendYield": null,
       "rsRating": 70,
       "rsRank": 47,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 3,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -4517,7 +4477,7 @@
       "dividendYield": null,
       "rsRating": 70,
       "rsRank": 48,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 3,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -4574,9 +4534,9 @@
       "epsDiluted": null,
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
-      "rsRating": 69,
+      "rsRating": 68,
       "rsRank": 49,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 2,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -4636,7 +4596,7 @@
       "dividendYield": null,
       "rsRating": 68,
       "rsRank": 50,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 2,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -4694,9 +4654,9 @@
       "epsDiluted": null,
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
-      "rsRating": 68,
+      "rsRating": 67,
       "rsRank": 51,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 3,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -4755,7 +4715,7 @@
       "dividendYield": null,
       "rsRating": 67,
       "rsRank": 52,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 2,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -4815,7 +4775,7 @@
       "dividendYield": null,
       "rsRating": 66,
       "rsRank": 53,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 4,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -4871,9 +4831,9 @@
       "epsDiluted": null,
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
-      "rsRating": 66,
+      "rsRating": 65,
       "rsRank": 54,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 1,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -4934,7 +4894,7 @@
       "dividendYield": null,
       "rsRating": 65,
       "rsRank": 55,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 1,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -4995,7 +4955,7 @@
       "dividendYield": null,
       "rsRating": 64,
       "rsRank": 56,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 1,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -5054,9 +5014,9 @@
       "epsDiluted": null,
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
-      "rsRating": 64,
+      "rsRating": 63,
       "rsRank": 57,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 1,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -5117,7 +5077,7 @@
       "dividendYield": null,
       "rsRating": 63,
       "rsRank": 58,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 2,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -5175,9 +5135,9 @@
       "epsDiluted": null,
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
-      "rsRating": 63,
+      "rsRating": 62,
       "rsRank": 59,
-      "rsUniverseTotal": 157,
+      "rsUniverseTotal": 155,
       "score": 1,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -5189,66 +5149,6 @@
         "4. MA50 > MA150 & MA200",
         "6. Giá ≥ +30% từ đáy 52T",
         "7. Cách đỉnh 52T ≤ 25%",
-        "8. RS Rating ≥ 70"
-      ]
-    },
-    {
-      "symbol": "AAA",
-      "name": "CTCP Nhựa An Phát Xanh",
-      "sector": "Hàng hóa công nghiệp",
-      "exchange": "HOSE",
-      "price": 6680,
-      "changePct": -2.2,
-      "volume": 1185200,
-      "avgVol20": 1143535,
-      "avgVal20B": 8.05,
-      "avgVal10B": 7.69,
-      "listedSharesM": 393.74,
-      "upDownVolRatio": 0.21,
-      "volSignal": "NORMAL",
-      "isVnLiquidStandard": true,
-      "relVol": 1.04,
-      "mktCapT": 2630,
-      "pe": null,
-      "epsDilTTM": null,
-      "epsGrowthYoY": null,
-      "divYieldPct": null,
-      "analystRating": "No rating",
-      "rawRsScore": -0.0692,
-      "q1Perf": -5,
-      "q2Perf": -0.4,
-      "q3Perf": -11.2,
-      "q4Perf": -13,
-      "sma50": 7.17,
-      "sma150": 7.02,
-      "sma200": 7.03,
-      "sma200Past": 7.09,
-      "sma200SlopeUp": false,
-      "high52W": 8.59,
-      "low52W": 6.37,
-      "distHigh": -22.2,
-      "distLow": 4.9,
-      "pctFrom52WHigh": 77.8,
-      "pctAbove52WLow": 104.9,
-      "perf1W": -4.16,
-      "perf1M": -7.09,
-      "perf1Y": -13.02,
-      "epsDiluted": null,
-      "epsDilutedGrowthYoY": null,
-      "dividendYield": null,
-      "rsRating": 62,
-      "rsRank": 60,
-      "rsUniverseTotal": 157,
-      "score": 2,
-      "isStage2": false,
-      "isStage2Eligible": false,
-      "criteriaPassed": 2,
-      "failedCriteria": [
-        "1. Giá > MA150 & MA200",
-        "2. MA150 > MA200",
-        "3. MA200 dốc lên (≥1 tháng)",
-        "5. Giá > MA50",
-        "6. Giá ≥ +30% từ đáy 52T",
         "8. RS Rating ≥ 70"
       ]
     },
@@ -5297,8 +5197,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 61,
-      "rsRank": 61,
-      "rsUniverseTotal": 157,
+      "rsRank": 60,
+      "rsUniverseTotal": 155,
       "score": 2,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -5357,8 +5257,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 61,
-      "rsRank": 62,
-      "rsUniverseTotal": 157,
+      "rsRank": 61,
+      "rsUniverseTotal": 155,
       "score": 1,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -5418,8 +5318,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 60,
-      "rsRank": 63,
-      "rsUniverseTotal": 157,
+      "rsRank": 62,
+      "rsUniverseTotal": 155,
       "score": 0,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -5432,66 +5332,6 @@
         "5. Giá > MA50",
         "6. Giá ≥ +30% từ đáy 52T",
         "7. Cách đỉnh 52T ≤ 25%",
-        "8. RS Rating ≥ 70"
-      ]
-    },
-    {
-      "symbol": "SBT",
-      "name": "CTCP Thành Thành Công - Biên Hòa",
-      "sector": "Thực phẩm, đồ uống",
-      "exchange": "HOSE",
-      "price": 21150,
-      "changePct": -0.24,
-      "volume": 1103100,
-      "avgVol20": 1135140,
-      "avgVal20B": 23.81,
-      "avgVal10B": 23.6,
-      "listedSharesM": 934.63,
-      "upDownVolRatio": 0.9,
-      "volSignal": "NORMAL",
-      "isVnLiquidStandard": true,
-      "relVol": 0.97,
-      "mktCapT": 19768,
-      "pe": null,
-      "epsDilTTM": null,
-      "epsGrowthYoY": null,
-      "divYieldPct": null,
-      "analystRating": "No rating",
-      "rawRsScore": -0.0796,
-      "q1Perf": -10.8,
-      "q2Perf": -2.1,
-      "q3Perf": -5,
-      "q4Perf": -11.2,
-      "sma50": 21.99,
-      "sma150": 21.54,
-      "sma200": 21.55,
-      "sma200Past": 21.77,
-      "sma200SlopeUp": false,
-      "high52W": 24.15,
-      "low52W": 19.15,
-      "distHigh": -12.4,
-      "distLow": 10.4,
-      "pctFrom52WHigh": 87.6,
-      "pctAbove52WLow": 110.4,
-      "perf1W": 0.24,
-      "perf1M": -6,
-      "perf1Y": -11.21,
-      "epsDiluted": null,
-      "epsDilutedGrowthYoY": null,
-      "dividendYield": null,
-      "rsRating": 59,
-      "rsRank": 64,
-      "rsUniverseTotal": 157,
-      "score": 2,
-      "isStage2": false,
-      "isStage2Eligible": false,
-      "criteriaPassed": 2,
-      "failedCriteria": [
-        "1. Giá > MA150 & MA200",
-        "2. MA150 > MA200",
-        "3. MA200 dốc lên (≥1 tháng)",
-        "5. Giá > MA50",
-        "6. Giá ≥ +30% từ đáy 52T",
         "8. RS Rating ≥ 70"
       ]
     },
@@ -5539,9 +5379,9 @@
       "epsDiluted": null,
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
-      "rsRating": 59,
-      "rsRank": 65,
-      "rsUniverseTotal": 157,
+      "rsRating": 60,
+      "rsRank": 63,
+      "rsUniverseTotal": 155,
       "score": 2,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -5599,9 +5439,9 @@
       "epsDiluted": null,
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
-      "rsRating": 58,
-      "rsRank": 66,
-      "rsUniverseTotal": 157,
+      "rsRating": 59,
+      "rsRank": 64,
+      "rsUniverseTotal": 155,
       "score": 1,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -5661,8 +5501,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 58,
-      "rsRank": 67,
-      "rsUniverseTotal": 157,
+      "rsRank": 65,
+      "rsUniverseTotal": 155,
       "score": 1,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -5721,9 +5561,9 @@
       "epsDiluted": null,
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
-      "rsRating": 57,
-      "rsRank": 68,
-      "rsUniverseTotal": 157,
+      "rsRating": 58,
+      "rsRank": 66,
+      "rsUniverseTotal": 155,
       "score": 0,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -5783,9 +5623,9 @@
       "epsDiluted": null,
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
-      "rsRating": 56,
-      "rsRank": 69,
-      "rsUniverseTotal": 157,
+      "rsRating": 57,
+      "rsRank": 67,
+      "rsUniverseTotal": 155,
       "score": 1,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -5845,8 +5685,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 56,
-      "rsRank": 70,
-      "rsUniverseTotal": 157,
+      "rsRank": 68,
+      "rsUniverseTotal": 155,
       "score": 1,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -5905,9 +5745,9 @@
       "epsDiluted": null,
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
-      "rsRating": 55,
-      "rsRank": 71,
-      "rsUniverseTotal": 157,
+      "rsRating": 56,
+      "rsRank": 69,
+      "rsUniverseTotal": 155,
       "score": 3,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -5964,9 +5804,9 @@
       "epsDiluted": null,
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
-      "rsRating": 54,
-      "rsRank": 72,
-      "rsUniverseTotal": 157,
+      "rsRating": 55,
+      "rsRank": 70,
+      "rsUniverseTotal": 155,
       "score": 1,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -6026,8 +5866,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 54,
-      "rsRank": 73,
-      "rsUniverseTotal": 157,
+      "rsRank": 71,
+      "rsUniverseTotal": 155,
       "score": 1,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -6086,9 +5926,9 @@
       "epsDiluted": null,
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
-      "rsRating": 53,
-      "rsRank": 74,
-      "rsUniverseTotal": 157,
+      "rsRating": 54,
+      "rsRank": 72,
+      "rsUniverseTotal": 155,
       "score": 1,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -6148,8 +5988,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 53,
-      "rsRank": 75,
-      "rsUniverseTotal": 157,
+      "rsRank": 73,
+      "rsUniverseTotal": 155,
       "score": 1,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -6208,9 +6048,9 @@
       "epsDiluted": null,
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
-      "rsRating": 52,
-      "rsRank": 76,
-      "rsUniverseTotal": 157,
+      "rsRating": 53,
+      "rsRank": 74,
+      "rsUniverseTotal": 155,
       "score": 0,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -6270,9 +6110,9 @@
       "epsDiluted": null,
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
-      "rsRating": 51,
-      "rsRank": 77,
-      "rsUniverseTotal": 157,
+      "rsRating": 52,
+      "rsRank": 75,
+      "rsUniverseTotal": 155,
       "score": 0,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -6333,8 +6173,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 51,
-      "rsRank": 78,
-      "rsUniverseTotal": 157,
+      "rsRank": 76,
+      "rsUniverseTotal": 155,
       "score": 0,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -6394,9 +6234,9 @@
       "epsDiluted": null,
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
-      "rsRating": 50,
-      "rsRank": 79,
-      "rsUniverseTotal": 157,
+      "rsRating": 51,
+      "rsRank": 77,
+      "rsUniverseTotal": 155,
       "score": 0,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -6456,9 +6296,9 @@
       "epsDiluted": null,
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
-      "rsRating": 49,
-      "rsRank": 80,
-      "rsUniverseTotal": 157,
+      "rsRating": 50,
+      "rsRank": 78,
+      "rsUniverseTotal": 155,
       "score": 0,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -6519,8 +6359,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 49,
-      "rsRank": 81,
-      "rsUniverseTotal": 157,
+      "rsRank": 79,
+      "rsUniverseTotal": 155,
       "score": 0,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -6580,9 +6420,9 @@
       "epsDiluted": null,
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
-      "rsRating": 48,
-      "rsRank": 82,
-      "rsUniverseTotal": 157,
+      "rsRating": 49,
+      "rsRank": 80,
+      "rsUniverseTotal": 155,
       "score": 0,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -6642,9 +6482,9 @@
       "epsDiluted": null,
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
-      "rsRating": 47,
-      "rsRank": 83,
-      "rsUniverseTotal": 157,
+      "rsRating": 48,
+      "rsRank": 81,
+      "rsUniverseTotal": 155,
       "score": 1,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -6704,8 +6544,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 47,
-      "rsRank": 84,
-      "rsUniverseTotal": 157,
+      "rsRank": 82,
+      "rsUniverseTotal": 155,
       "score": 0,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -6765,9 +6605,9 @@
       "epsDiluted": null,
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
-      "rsRating": 46,
-      "rsRank": 85,
-      "rsUniverseTotal": 157,
+      "rsRating": 47,
+      "rsRank": 83,
+      "rsUniverseTotal": 155,
       "score": 0,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -6828,8 +6668,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 46,
-      "rsRank": 86,
-      "rsUniverseTotal": 157,
+      "rsRank": 84,
+      "rsUniverseTotal": 155,
       "score": 0,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -6889,9 +6729,9 @@
       "epsDiluted": null,
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
-      "rsRating": 45,
-      "rsRank": 87,
-      "rsUniverseTotal": 157,
+      "rsRating": 46,
+      "rsRank": 85,
+      "rsUniverseTotal": 155,
       "score": 0,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -6951,9 +6791,9 @@
       "epsDiluted": null,
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
-      "rsRating": 44,
-      "rsRank": 88,
-      "rsUniverseTotal": 157,
+      "rsRating": 45,
+      "rsRank": 86,
+      "rsUniverseTotal": 155,
       "score": 1,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -7013,8 +6853,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 44,
-      "rsRank": 89,
-      "rsUniverseTotal": 157,
+      "rsRank": 87,
+      "rsUniverseTotal": 155,
       "score": 1,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -7073,9 +6913,9 @@
       "epsDiluted": null,
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
-      "rsRating": 43,
-      "rsRank": 90,
-      "rsUniverseTotal": 157,
+      "rsRating": 44,
+      "rsRank": 88,
+      "rsUniverseTotal": 155,
       "score": 1,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -7134,9 +6974,9 @@
       "epsDiluted": null,
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
-      "rsRating": 42,
-      "rsRank": 91,
-      "rsUniverseTotal": 157,
+      "rsRating": 43,
+      "rsRank": 89,
+      "rsUniverseTotal": 155,
       "score": 1,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -7196,8 +7036,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 42,
-      "rsRank": 92,
-      "rsUniverseTotal": 157,
+      "rsRank": 90,
+      "rsUniverseTotal": 155,
       "score": 1,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -7256,9 +7096,9 @@
       "epsDiluted": null,
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
-      "rsRating": 41,
-      "rsRank": 93,
-      "rsUniverseTotal": 157,
+      "rsRating": 42,
+      "rsRank": 91,
+      "rsUniverseTotal": 155,
       "score": 0,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -7319,8 +7159,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 41,
-      "rsRank": 94,
-      "rsUniverseTotal": 157,
+      "rsRank": 92,
+      "rsUniverseTotal": 155,
       "score": 1,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -7380,8 +7220,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 40,
-      "rsRank": 95,
-      "rsUniverseTotal": 157,
+      "rsRank": 93,
+      "rsUniverseTotal": 155,
       "score": 1,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -7440,9 +7280,9 @@
       "epsDiluted": null,
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
-      "rsRating": 39,
-      "rsRank": 96,
-      "rsUniverseTotal": 157,
+      "rsRating": 40,
+      "rsRank": 94,
+      "rsUniverseTotal": 155,
       "score": 1,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -7502,8 +7342,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 39,
-      "rsRank": 97,
-      "rsUniverseTotal": 157,
+      "rsRank": 95,
+      "rsUniverseTotal": 155,
       "score": 1,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -7562,9 +7402,9 @@
       "epsDiluted": null,
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
-      "rsRating": 38,
-      "rsRank": 98,
-      "rsUniverseTotal": 157,
+      "rsRating": 39,
+      "rsRank": 96,
+      "rsUniverseTotal": 155,
       "score": 2,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -7622,9 +7462,9 @@
       "epsDiluted": null,
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
-      "rsRating": 37,
-      "rsRank": 99,
-      "rsUniverseTotal": 157,
+      "rsRating": 38,
+      "rsRank": 97,
+      "rsUniverseTotal": 155,
       "score": 1,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -7684,8 +7524,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 37,
-      "rsRank": 100,
-      "rsUniverseTotal": 157,
+      "rsRank": 98,
+      "rsUniverseTotal": 155,
       "score": 1,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -7744,9 +7584,9 @@
       "epsDiluted": null,
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
-      "rsRating": 36,
-      "rsRank": 101,
-      "rsUniverseTotal": 157,
+      "rsRating": 37,
+      "rsRank": 99,
+      "rsUniverseTotal": 155,
       "score": 0,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -7807,8 +7647,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 36,
-      "rsRank": 102,
-      "rsUniverseTotal": 157,
+      "rsRank": 100,
+      "rsUniverseTotal": 155,
       "score": 0,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -7869,8 +7709,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 35,
-      "rsRank": 103,
-      "rsUniverseTotal": 157,
+      "rsRank": 101,
+      "rsUniverseTotal": 155,
       "score": 1,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -7929,9 +7769,9 @@
       "epsDiluted": null,
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
-      "rsRating": 34,
-      "rsRank": 104,
-      "rsUniverseTotal": 157,
+      "rsRating": 35,
+      "rsRank": 102,
+      "rsUniverseTotal": 155,
       "score": 2,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -7990,8 +7830,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 34,
-      "rsRank": 105,
-      "rsUniverseTotal": 157,
+      "rsRank": 103,
+      "rsUniverseTotal": 155,
       "score": 0,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -8052,8 +7892,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 33,
-      "rsRank": 106,
-      "rsUniverseTotal": 157,
+      "rsRank": 104,
+      "rsUniverseTotal": 155,
       "score": 0,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -8113,9 +7953,9 @@
       "epsDiluted": null,
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
-      "rsRating": 32,
-      "rsRank": 107,
-      "rsUniverseTotal": 157,
+      "rsRating": 33,
+      "rsRank": 105,
+      "rsUniverseTotal": 155,
       "score": 0,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -8176,8 +8016,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 32,
-      "rsRank": 108,
-      "rsUniverseTotal": 157,
+      "rsRank": 106,
+      "rsUniverseTotal": 155,
       "score": 0,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -8237,9 +8077,9 @@
       "epsDiluted": null,
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
-      "rsRating": 31,
-      "rsRank": 109,
-      "rsUniverseTotal": 157,
+      "rsRating": 32,
+      "rsRank": 107,
+      "rsUniverseTotal": 155,
       "score": 1,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -8299,8 +8139,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 31,
-      "rsRank": 110,
-      "rsUniverseTotal": 157,
+      "rsRank": 108,
+      "rsUniverseTotal": 155,
       "score": 1,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -8360,8 +8200,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 30,
-      "rsRank": 111,
-      "rsUniverseTotal": 157,
+      "rsRank": 109,
+      "rsUniverseTotal": 155,
       "score": 1,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -8420,9 +8260,9 @@
       "epsDiluted": null,
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
-      "rsRating": 29,
-      "rsRank": 112,
-      "rsUniverseTotal": 157,
+      "rsRating": 30,
+      "rsRank": 110,
+      "rsUniverseTotal": 155,
       "score": 0,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -8483,8 +8323,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 29,
-      "rsRank": 113,
-      "rsUniverseTotal": 157,
+      "rsRank": 111,
+      "rsUniverseTotal": 155,
       "score": 0,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -8545,8 +8385,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 28,
-      "rsRank": 114,
-      "rsUniverseTotal": 157,
+      "rsRank": 112,
+      "rsUniverseTotal": 155,
       "score": 1,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -8605,9 +8445,9 @@
       "epsDiluted": null,
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
-      "rsRating": 27,
-      "rsRank": 115,
-      "rsUniverseTotal": 157,
+      "rsRating": 28,
+      "rsRank": 113,
+      "rsUniverseTotal": 155,
       "score": 0,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -8668,8 +8508,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 27,
-      "rsRank": 116,
-      "rsUniverseTotal": 157,
+      "rsRank": 114,
+      "rsUniverseTotal": 155,
       "score": 0,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -8730,8 +8570,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 26,
-      "rsRank": 117,
-      "rsUniverseTotal": 157,
+      "rsRank": 115,
+      "rsUniverseTotal": 155,
       "score": 0,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -8792,8 +8632,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 26,
-      "rsRank": 118,
-      "rsUniverseTotal": 157,
+      "rsRank": 116,
+      "rsUniverseTotal": 155,
       "score": 0,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -8854,8 +8694,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 25,
-      "rsRank": 119,
-      "rsUniverseTotal": 157,
+      "rsRank": 117,
+      "rsUniverseTotal": 155,
       "score": 0,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -8915,9 +8755,9 @@
       "epsDiluted": null,
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
-      "rsRating": 24,
-      "rsRank": 120,
-      "rsUniverseTotal": 157,
+      "rsRating": 25,
+      "rsRank": 118,
+      "rsUniverseTotal": 155,
       "score": 0,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -8978,8 +8818,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 24,
-      "rsRank": 121,
-      "rsUniverseTotal": 157,
+      "rsRank": 119,
+      "rsUniverseTotal": 155,
       "score": 0,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -9040,8 +8880,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 23,
-      "rsRank": 122,
-      "rsUniverseTotal": 157,
+      "rsRank": 120,
+      "rsUniverseTotal": 155,
       "score": 1,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -9100,9 +8940,9 @@
       "epsDiluted": null,
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
-      "rsRating": 22,
-      "rsRank": 123,
-      "rsUniverseTotal": 157,
+      "rsRating": 23,
+      "rsRank": 121,
+      "rsUniverseTotal": 155,
       "score": 1,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -9162,8 +9002,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 22,
-      "rsRank": 124,
-      "rsUniverseTotal": 157,
+      "rsRank": 122,
+      "rsUniverseTotal": 155,
       "score": 1,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -9223,8 +9063,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 21,
-      "rsRank": 125,
-      "rsUniverseTotal": 157,
+      "rsRank": 123,
+      "rsUniverseTotal": 155,
       "score": 0,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -9284,9 +9124,9 @@
       "epsDiluted": null,
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
-      "rsRating": 20,
-      "rsRank": 126,
-      "rsUniverseTotal": 157,
+      "rsRating": 21,
+      "rsRank": 124,
+      "rsUniverseTotal": 155,
       "score": 0,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -9347,8 +9187,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 20,
-      "rsRank": 127,
-      "rsUniverseTotal": 157,
+      "rsRank": 125,
+      "rsUniverseTotal": 155,
       "score": 1,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -9408,8 +9248,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 19,
-      "rsRank": 128,
-      "rsUniverseTotal": 157,
+      "rsRank": 126,
+      "rsUniverseTotal": 155,
       "score": 0,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -9470,8 +9310,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 19,
-      "rsRank": 129,
-      "rsUniverseTotal": 157,
+      "rsRank": 127,
+      "rsUniverseTotal": 155,
       "score": 0,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -9532,8 +9372,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 18,
-      "rsRank": 130,
-      "rsUniverseTotal": 157,
+      "rsRank": 128,
+      "rsUniverseTotal": 155,
       "score": 1,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -9592,9 +9432,9 @@
       "epsDiluted": null,
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
-      "rsRating": 17,
-      "rsRank": 131,
-      "rsUniverseTotal": 157,
+      "rsRating": 18,
+      "rsRank": 129,
+      "rsUniverseTotal": 155,
       "score": 1,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -9654,8 +9494,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 17,
-      "rsRank": 132,
-      "rsUniverseTotal": 157,
+      "rsRank": 130,
+      "rsUniverseTotal": 155,
       "score": 1,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -9715,8 +9555,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 16,
-      "rsRank": 133,
-      "rsUniverseTotal": 157,
+      "rsRank": 131,
+      "rsUniverseTotal": 155,
       "score": 1,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -9775,9 +9615,9 @@
       "epsDiluted": null,
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
-      "rsRating": 15,
-      "rsRank": 134,
-      "rsUniverseTotal": 157,
+      "rsRating": 16,
+      "rsRank": 132,
+      "rsUniverseTotal": 155,
       "score": 0,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -9796,7 +9636,7 @@
     {
       "symbol": "F88",
       "name": "CTCP Đầu tư F88",
-      "sector": "Thương mại & Dịch vụ",
+      "sector": "Dịch vụ tài chính",
       "exchange": "UPCOM",
       "price": 49100,
       "changePct": -2.58,
@@ -9838,8 +9678,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 15,
-      "rsRank": 135,
-      "rsUniverseTotal": 157,
+      "rsRank": 133,
+      "rsUniverseTotal": 155,
       "score": 0,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -9900,8 +9740,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 14,
-      "rsRank": 136,
-      "rsUniverseTotal": 157,
+      "rsRank": 134,
+      "rsUniverseTotal": 155,
       "score": 0,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -9962,8 +9802,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 14,
-      "rsRank": 137,
-      "rsUniverseTotal": 157,
+      "rsRank": 135,
+      "rsUniverseTotal": 155,
       "score": 0,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -10024,8 +9864,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 13,
-      "rsRank": 138,
-      "rsUniverseTotal": 157,
+      "rsRank": 136,
+      "rsUniverseTotal": 155,
       "score": 0,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -10086,8 +9926,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 12,
-      "rsRank": 139,
-      "rsUniverseTotal": 157,
+      "rsRank": 137,
+      "rsUniverseTotal": 155,
       "score": 0,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -10148,8 +9988,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 12,
-      "rsRank": 140,
-      "rsUniverseTotal": 157,
+      "rsRank": 138,
+      "rsUniverseTotal": 155,
       "score": 0,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -10210,8 +10050,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 11,
-      "rsRank": 141,
-      "rsUniverseTotal": 157,
+      "rsRank": 139,
+      "rsUniverseTotal": 155,
       "score": 0,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -10271,9 +10111,9 @@
       "epsDiluted": null,
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
-      "rsRating": 10,
-      "rsRank": 142,
-      "rsUniverseTotal": 157,
+      "rsRating": 11,
+      "rsRank": 140,
+      "rsUniverseTotal": 155,
       "score": 1,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -10333,8 +10173,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 10,
-      "rsRank": 143,
-      "rsUniverseTotal": 157,
+      "rsRank": 141,
+      "rsUniverseTotal": 155,
       "score": 0,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -10395,8 +10235,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 9,
-      "rsRank": 144,
-      "rsUniverseTotal": 157,
+      "rsRank": 142,
+      "rsUniverseTotal": 155,
       "score": 1,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -10456,8 +10296,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 9,
-      "rsRank": 145,
-      "rsUniverseTotal": 157,
+      "rsRank": 143,
+      "rsUniverseTotal": 155,
       "score": 0,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -10518,8 +10358,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 9,
-      "rsRank": 146,
-      "rsUniverseTotal": 157,
+      "rsRank": 144,
+      "rsUniverseTotal": 155,
       "score": 0,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -10580,8 +10420,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 7,
-      "rsRank": 147,
-      "rsUniverseTotal": 157,
+      "rsRank": 145,
+      "rsUniverseTotal": 155,
       "score": 1,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -10641,8 +10481,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 7,
-      "rsRank": 148,
-      "rsUniverseTotal": 157,
+      "rsRank": 146,
+      "rsUniverseTotal": 155,
       "score": 0,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -10703,8 +10543,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 6,
-      "rsRank": 149,
-      "rsUniverseTotal": 157,
+      "rsRank": 147,
+      "rsUniverseTotal": 155,
       "score": 0,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -10765,8 +10605,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 5,
-      "rsRank": 150,
-      "rsUniverseTotal": 157,
+      "rsRank": 148,
+      "rsUniverseTotal": 155,
       "score": 0,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -10827,8 +10667,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 5,
-      "rsRank": 151,
-      "rsUniverseTotal": 157,
+      "rsRank": 149,
+      "rsUniverseTotal": 155,
       "score": 0,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -10889,8 +10729,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 4,
-      "rsRank": 152,
-      "rsUniverseTotal": 157,
+      "rsRank": 150,
+      "rsUniverseTotal": 155,
       "score": 0,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -10951,8 +10791,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 4,
-      "rsRank": 153,
-      "rsUniverseTotal": 157,
+      "rsRank": 151,
+      "rsUniverseTotal": 155,
       "score": 0,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -11013,8 +10853,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 3,
-      "rsRank": 154,
-      "rsUniverseTotal": 157,
+      "rsRank": 152,
+      "rsUniverseTotal": 155,
       "score": 0,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -11075,8 +10915,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 2,
-      "rsRank": 155,
-      "rsUniverseTotal": 157,
+      "rsRank": 153,
+      "rsUniverseTotal": 155,
       "score": 0,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -11137,8 +10977,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 2,
-      "rsRank": 156,
-      "rsUniverseTotal": 157,
+      "rsRank": 154,
+      "rsUniverseTotal": 155,
       "score": 0,
       "isStage2": false,
       "isStage2Eligible": false,
@@ -11199,8 +11039,8 @@
       "epsDilutedGrowthYoY": null,
       "dividendYield": null,
       "rsRating": 1,
-      "rsRank": 157,
-      "rsUniverseTotal": 157,
+      "rsRank": 155,
+      "rsUniverseTotal": 155,
       "score": 0,
       "isStage2": false,
       "isStage2Eligible": false,
