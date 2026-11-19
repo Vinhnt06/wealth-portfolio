@@ -2,7 +2,6 @@ import fs from 'fs';
 import path from 'path';
 import sectorMapping from '../data/sectorFullMapping.json';
 import stockDatabase from '../data/stockDatabase.json';
-import { getSectorBenchmark } from '../constants/sectorBenchmarks';
 import { isMarketIndex } from '../constants/marketIndexes';
 import {
   QuarterlyFinancialRecord,
@@ -88,6 +87,24 @@ export function writeFinancialsDatabase(db: FinancialsDatabaseFile): boolean {
   }
 }
 
+/**
+ * P/E, P/B chuẩn của ngành = TRUNG VỊ của các mã cùng ngành trong dữ liệu tài chính đã đồng bộ (số thật từ báo cáo),
+ * không dùng bảng số ghi tay. Ngành có dưới 3 mã hợp lệ → không so sánh (null).
+ */
+function computeSectorBenchmark(sectorName: string): { pe: number | null; pb: number | null; count: number } {
+  const db = readFinancialsDatabase();
+  const rows = db ? Object.values(db.data).filter((r) => r.sector === sectorName) : [];
+  const med = (arr: number[]) => {
+    if (arr.length < 3) return null;
+    const s = [...arr].sort((a, b) => a - b);
+    const m = Math.floor(s.length / 2);
+    return Number((s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2).toFixed(2));
+  };
+  const pes = rows.map((r) => r.pe).filter((v): v is number => typeof v === 'number' && v > 0 && v < 200);
+  const pbs = rows.map((r) => r.pb).filter((v): v is number => typeof v === 'number' && v > 0 && v < 50);
+  return { pe: med(pes), pb: med(pbs), count: rows.length };
+}
+
 export async function fetchStockValuationLive(symbol: string): Promise<StockValuationData | null> {
   const upperSymbol = symbol.toUpperCase().trim();
   if (isMarketIndex(upperSymbol)) return null;
@@ -99,7 +116,7 @@ export async function fetchStockValuationLive(symbol: string): Promise<StockValu
     sector: sectorMap[upperSymbol] || 'Doanh nghiệp niêm yết',
   };
   const sectorName = sectorMap[upperSymbol] || meta.sector || 'Chung';
-  const benchmark = getSectorBenchmark(sectorName);
+  const benchmark = computeSectorBenchmark(sectorName);
 
   const headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
@@ -350,8 +367,8 @@ export async function fetchStockValuationLive(symbol: string): Promise<StockValu
   // 5. Industry Comparisons
   const sectorPe = benchmark.pe;
   const sectorPb = benchmark.pb;
-  const peVsSectorPercent = pe !== null ? Number((((pe - sectorPe) / sectorPe) * 100).toFixed(1)) : null;
-  const pbVsSectorPercent = pb !== null ? Number((((pb - sectorPb) / sectorPb) * 100).toFixed(1)) : null;
+  const peVsSectorPercent = pe !== null && sectorPe !== null ? Number((((pe - sectorPe) / sectorPe) * 100).toFixed(1)) : null;
+  const pbVsSectorPercent = pb !== null && sectorPb !== null ? Number((((pb - sectorPb) / sectorPb) * 100).toFixed(1)) : null;
 
   // 6. Comprehensive Valuation Evaluation
   let valuationStatus: ValuationStatus = 'FAIR';

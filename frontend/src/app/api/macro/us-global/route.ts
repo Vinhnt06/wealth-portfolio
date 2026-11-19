@@ -1,6 +1,4 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -18,12 +16,37 @@ export interface MarketIndexItem {
 }
 
 export interface UsInflationData {
-  period: string;
-  cpiYoY: number;
-  cpiMoM: number;
-  coreCpiYoY: number;
+  /** Ngày nguồn cập nhật số mới nhất (dd/mm/yyyy) */
+  updatedAt: string | null;
+  cpiYoY: number | null;
+  /** Chênh lệch CPI so cùng kỳ so với tháng trước (điểm %) */
+  cpiChange: number | null;
+  coreCpiYoY: number | null;
+  /** Mục tiêu lạm phát chính thức của Fed (2%) */
   fedTarget: number;
-  nextReleaseDate: string;
+  source: string;
+}
+
+async function fetchTvEconomic(symbol: string): Promise<{ value: number; change: number | null; updatedAt: string | null } | null> {
+  try {
+    const res = await fetch(
+      `https://scanner.tradingview.com/symbol?symbol=${encodeURIComponent(symbol)}&fields=close,change_abs,last_bar_update_time`,
+      { headers: { 'User-Agent': 'Mozilla/5.0' }, cache: 'no-store', signal: AbortSignal.timeout(8_000) }
+    );
+    if (!res.ok) return null;
+    const j = await res.json();
+    const value = Number(j?.close);
+    if (!Number.isFinite(value)) return null;
+    const change = Number(j?.change_abs);
+    const ts = Number(j?.last_bar_update_time);
+    return {
+      value: Number(value.toFixed(2)),
+      change: Number.isFinite(change) ? Number(change.toFixed(2)) : null,
+      updatedAt: Number.isFinite(ts) && ts > 0 ? new Date(ts * 1000).toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }) : null,
+    };
+  } catch {
+    return null;
+  }
 }
 
 export interface VietnamImpactItem {
@@ -139,61 +162,72 @@ export async function GET() {
     .map((cfg) => fetchedIndices.find((i) => i.symbol === cfg.symbol))
     .filter((item): item is MarketIndexItem => Boolean(item));
 
-  // 2. Official US Inflation (BLS Latest Official Release)
+  // 2. Lạm phát Mỹ — số công bố mới nhất (BLS) qua TradingView; không có số thì để trống, không ghi cứng
+  const [usCpi, usCore] = await Promise.all([fetchTvEconomic('ECONOMICS:USIRYY'), fetchTvEconomic('ECONOMICS:USCIR')]);
   const usInflation: UsInflationData = {
-    period: 'T9/2026',
-    cpiYoY: 2.4,
-    cpiMoM: 0.2,
-    coreCpiYoY: 3.3,
+    updatedAt: usCpi?.updatedAt ?? null,
+    cpiYoY: usCpi?.value ?? null,
+    cpiChange: usCpi?.change ?? null,
+    coreCpiYoY: usCore?.value ?? null,
     fedTarget: 2.0,
-    nextReleaseDate: '13/11/2026',
+    source: 'BLS qua TradingView (ECONOMICS:USIRYY, USCIR)',
   };
 
-  // 3. Dynamic Vietnam Macro Impact Assessment Matrix based directly on real-time DXY & US10Y
-  const dxyPrice = sortedIndices.find((i) => i.symbol === 'DX-Y.NYB')?.price ?? 101.78;
-  const us10yPrice = sortedIndices.find((i) => i.symbol === '^TNX')?.price ?? 5.10;
-  const vixPrice = sortedIndices.find((i) => i.symbol === '^VIX')?.price ?? 19.99;
-
-  const dxyStatus: 'Tích Cực' | 'Trung Lập' | 'Thận Trọng' =
-    dxyPrice <= 102.5 ? 'Tích Cực' : dxyPrice <= 104.5 ? 'Trung Lập' : 'Thận Trọng';
-  const dxyColor = dxyStatus === 'Tích Cực' ? 'emerald' : dxyStatus === 'Trung Lập' ? 'amber' : 'rose';
-
-  const sbvStatus: 'Tích Cực' | 'Trung Lập' | 'Thận Trọng' =
-    dxyPrice <= 103.0 && us10yPrice <= 5.2 ? 'Tích Cực' : 'Trung Lập';
-  const sbvColor = sbvStatus === 'Tích Cực' ? 'emerald' : 'amber';
-
-  const fiiStatus: 'Tích Cực' | 'Trung Lập' | 'Thận Trọng' =
-    vixPrice < 22 && us10yPrice <= 5.2 ? 'Trung Lập' : 'Thận Trọng';
-  const fiiColor = fiiStatus === 'Trung Lập' ? 'amber' : 'rose';
+  // 3. Tác động tới Việt Nam — chỉ đánh giá khi có số thật
+  const dxyPrice = sortedIndices.find((i) => i.symbol === 'DX-Y.NYB')?.price ?? null;
+  const us10yPrice = sortedIndices.find((i) => i.symbol === '^TNX')?.price ?? null;
+  const vixPrice = sortedIndices.find((i) => i.symbol === '^VIX')?.price ?? null;
+  const noData = (pillar: string): VietnamImpactItem => ({
+    pillar,
+    status: 'Trung Lập',
+    statusColor: 'amber',
+    headline: 'Chưa có dữ liệu',
+    detail: 'Nguồn dữ liệu quốc tế chưa trả số liệu; không đánh giá khi thiếu số thật.',
+  });
 
   const vietnamImpact: VietnamImpactItem[] = [
-    {
-      pillar: 'Áp Lực Tỷ Giá USD/VND',
-      status: dxyStatus,
-      statusColor: dxyColor,
-      headline: `DXY biến động quanh mức ${dxyPrice.toFixed(2)} điểm`,
-      detail:
-        dxyStatus === 'Tích Cực'
-          ? `Chỉ số DXY hạ nhiệt quanh ${dxyPrice.toFixed(2)} giúp thu hẹp chênh lệch USD-VND, giảm áp lực bán can thiệp ngoại tệ của NHNN và hạn chế rủi ro tỷ giá nhập khẩu.`
-          : `Đồng USD neo cao (${dxyPrice.toFixed(2)} điểm) khiến tỷ giá USD/VND chịu áp lực, NHNN cần linh hoạt can thiệp bằng nghiệp vụ OMO và tỷ giá trung tâm.`,
-    },
-    {
-      pillar: 'Không Gian Lãi Suất NHNN',
-      status: sbvStatus,
-      statusColor: sbvColor,
-      headline: 'Dư địa duy trì chính sách tiền tệ nới lỏng',
-      detail:
-        sbvStatus === 'Tích Cực'
-          ? `Lợi suất TPCP Mỹ 10 năm ở mức ${us10yPrice.toFixed(2)}% giúp Ngân hàng Nhà nước có thêm điều kiện duy trì mặt bằng lãi suất điều hành thấp (4.5%) nhằm kích cầu tín dụng hỗ trợ tăng trưởng kinh tế.`
-          : `Lợi suất trái phiếu quốc tế neo cao, NHNN cần cân đối thận trọng giữa mục tiêu giữ lãi suất thấp và ổn định giá trị đồng nội tệ.`,
-    },
-    {
-      pillar: 'Dòng Vốn Khối Ngoại (FII)',
-      status: fiiStatus,
-      statusColor: fiiColor,
-      headline: 'Xu hướng dòng vốn ngoại trên TTCK',
-      detail: `Lợi suất trái phiếu chính phủ Mỹ 10 năm (${us10yPrice.toFixed(2)}%) và chỉ số VIX (${vixPrice.toFixed(2)} điểm) phản ánh khẩu vị rủi ro toàn cầu đang trong tầm kiểm soát (${vixPrice < 22 ? 'Tâm lý ổn định' : 'Rủi ro cao'}), tạo điều kiện cân bằng dòng vốn ngoại trên HOSE/HNX.`,
-    },
+    dxyPrice === null
+      ? noData('Áp Lực Tỷ Giá USD/VND')
+      : (() => {
+          const status: VietnamImpactItem['status'] = dxyPrice <= 102.5 ? 'Tích Cực' : dxyPrice <= 104.5 ? 'Trung Lập' : 'Thận Trọng';
+          return {
+            pillar: 'Áp Lực Tỷ Giá USD/VND',
+            status,
+            statusColor: status === 'Tích Cực' ? 'emerald' : status === 'Trung Lập' ? 'amber' : 'rose',
+            headline: `DXY ở mức ${dxyPrice.toFixed(2)} điểm`,
+            detail:
+              status === 'Tích Cực'
+                ? `USD yếu (DXY ${dxyPrice.toFixed(2)}) giảm áp lực lên tỷ giá USD/VND.`
+                : `USD mạnh (DXY ${dxyPrice.toFixed(2)}) gây áp lực lên tỷ giá USD/VND.`,
+          };
+        })(),
+    us10yPrice === null || dxyPrice === null
+      ? noData('Không Gian Lãi Suất NHNN')
+      : (() => {
+          const status: VietnamImpactItem['status'] = dxyPrice <= 103.0 && us10yPrice <= 4.5 ? 'Tích Cực' : us10yPrice <= 5.2 ? 'Trung Lập' : 'Thận Trọng';
+          return {
+            pillar: 'Không Gian Lãi Suất NHNN',
+            status,
+            statusColor: status === 'Tích Cực' ? 'emerald' : status === 'Trung Lập' ? 'amber' : 'rose',
+            headline: `Lợi suất TPCP Mỹ 10 năm ${us10yPrice.toFixed(2)}%`,
+            detail:
+              status === 'Tích Cực'
+                ? 'Lãi suất USD thấp và USD yếu cho NHNN thêm dư địa giữ lãi suất thấp.'
+                : 'Lãi suất USD cao khiến NHNN phải cân đối giữa hỗ trợ tăng trưởng và ổn định tỷ giá.',
+          };
+        })(),
+    vixPrice === null || us10yPrice === null
+      ? noData('Dòng Vốn Khối Ngoại (FII)')
+      : (() => {
+          const status: VietnamImpactItem['status'] = vixPrice < 22 && us10yPrice <= 5.2 ? 'Trung Lập' : 'Thận Trọng';
+          return {
+            pillar: 'Dòng Vốn Khối Ngoại (FII)',
+            status,
+            statusColor: status === 'Trung Lập' ? 'amber' : 'rose',
+            headline: `VIX ${vixPrice.toFixed(2)} · US10Y ${us10yPrice.toFixed(2)}%`,
+            detail: `Khẩu vị rủi ro toàn cầu: ${vixPrice < 22 ? 'ổn định' : 'căng thẳng'} (VIX ${vixPrice.toFixed(2)}); lợi suất USD ${us10yPrice.toFixed(2)}%.`,
+          };
+        })(),
   ];
 
   const payload: USGlobalMacroResponse = {
@@ -209,14 +243,6 @@ export async function GET() {
     timestamp: now,
     payload,
   };
-
-  // Save local cache snapshot
-  try {
-    const dataFilePath = path.join(process.cwd(), 'src', 'features', 'market', 'data', 'usGlobalMacroData.json');
-    fs.writeFileSync(dataFilePath, JSON.stringify(payload, null, 2), 'utf-8');
-  } catch (e) {
-    // Non-blocking in serverless Vercel
-  }
 
   return NextResponse.json(payload, {
     headers: {

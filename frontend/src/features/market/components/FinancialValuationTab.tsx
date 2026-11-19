@@ -285,7 +285,7 @@ export const FinancialValuationTab: React.FC<FinancialValuationTabProps> = ({
                 {pe !== null ? `${pe}x` : 'N/A'}
               </span>
               <span className="text-xs font-mono text-zinc-500">
-                / Ngành: <strong className="text-zinc-300">{sectorPe}x</strong>
+                / Ngành: <strong className="text-zinc-300">{sectorPe !== null ? `${sectorPe}x` : '—'}</strong>
               </span>
             </div>
 
@@ -337,7 +337,7 @@ export const FinancialValuationTab: React.FC<FinancialValuationTabProps> = ({
                 {pb !== null ? `${pb}x` : 'N/A'}
               </span>
               <span className="text-xs font-mono text-zinc-500">
-                / Ngành: <strong className="text-zinc-300">{sectorPb}x</strong>
+                / Ngành: <strong className="text-zinc-300">{sectorPb !== null ? `${sectorPb}x` : '—'}</strong>
               </span>
             </div>
 

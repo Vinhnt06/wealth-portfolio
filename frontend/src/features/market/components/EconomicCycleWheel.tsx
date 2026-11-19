@@ -323,9 +323,9 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
     dxy: number;
     vix: number;
   }>({
-    us10Y: 4.93,
-    dxy: 101.96,
-    vix: 19.42,
+    us10Y: Number.NaN,
+    dxy: Number.NaN,
+    vix: Number.NaN,
   });
 
   // % thay đổi USD/VND trong 1 tháng (dương = VND mất giá) — đo áp lực tỷ giá, thay cho biến động 1 phiên
@@ -342,7 +342,7 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
     gdp: macroDatabase.gdp as MacroGdpRecord[],
     cpi: macroDatabase.cpi as MacroCpiRecord[],
     interestRate: macroDatabase.interestRate as MacroRateRecord[],
-    exchangeRate: macroDatabase.exchangeRate as MacroExchangeRecord[],
+    exchangeRate: [] as MacroExchangeRecord[],
     updatedAt: 'Kỳ Q3/2026 (GSO & SBV)',
   });
 
@@ -397,9 +397,9 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
           const dxyItem = gJson.indices.find((i: any) => i.symbol === 'DX-Y.NYB');
           const vixItem = gJson.indices.find((i: any) => i.symbol === '^VIX');
           setGlobalMacro({
-            us10Y: tnx?.price || 4.93,
-            dxy: dxyItem?.price || 101.96,
-            vix: vixItem?.price || 19.42,
+            us10Y: Number.isFinite(tnx?.price) ? tnx.price : Number.NaN,
+            dxy: Number.isFinite(dxyItem?.price) ? dxyItem.price : Number.NaN,
+            vix: Number.isFinite(vixItem?.price) ? vixItem.price : Number.NaN,
           });
         }
       }
@@ -500,13 +500,14 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
   // 2. Quantitative Macro Fundamentals Extraction (Real Data)
   const latestGdp = macroData.gdp?.[0] || macroDatabase.gdp[0];
   const gdpLive = vnLive?.gdpYoY ?? null;
-  const gdpGrowth = gdpLive ? gdpLive.value : latestGdp?.growthRate ?? 9.95;
-  const gdpTarget = latestGdp?.target ?? 6.5;
+  // Không có số giả: nguồn sống → số thật đã lưu (có nguồn, ngày) → NaN (hiển thị "—", trụ cột trung tính)
+  const gdpGrowth = gdpLive ? gdpLive.value : latestGdp?.growthRate ?? Number.NaN;
+  const gdpTarget = latestGdp?.target ?? Number.NaN;
 
   const latestCpi = macroData.cpi?.[0] || macroDatabase.cpi[0];
   const cpiLive = vnLive?.cpiYoY ?? null;
-  const cpiYoy = cpiLive ? cpiLive.value : latestCpi?.yoy ?? 3.48;
-  const cpiTarget = latestCpi?.target ?? 4.5;
+  const cpiYoy = cpiLive ? cpiLive.value : latestCpi?.yoy ?? Number.NaN;
+  const cpiTarget = latestCpi?.target ?? Number.NaN;
 
   // Xu hướng (đồng hồ đầu tư): tăng trưởng & lạm phát đang TĂNG TỐC hay GIẢM TỐC — không chỉ nhìn mức
   // Số liệu sống: `change` = so với kỳ công bố trước (GDP: quý trước, CPI: tháng trước)
@@ -528,6 +529,7 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
   const growthDir: -1 | 0 | 1 = gdpTrend === null ? 0 : r2(gdpTrend) >= 0.3 ? 1 : r2(gdpTrend) <= -0.3 ? -1 : 0;
   const inflDir: -1 | 0 | 1 = cpiTrend === null ? 0 : r2(cpiTrend) >= 0.2 ? 1 : r2(cpiTrend) <= -0.2 ? -1 : 0;
 
+  const nf = (v: number) => (Number.isFinite(v) ? v : '—');
   const fmtUpd = (v?: { updatedAt: string | null } | null) => (v?.updatedAt ? new Date(v.updatedAt).toLocaleDateString('vi-VN') : '—');
 
   // Độ mới của số liệu: GDP/CPI do GSO công bố khoảng ngày 6 tháng sau kỳ
@@ -537,7 +539,7 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
     const m = vn.getUTCMonth() + 1;
     const d = vn.getUTCDate();
     const notes: string[] = [];
-    if (!vnLive) notes.push('chưa lấy được số liệu Việt Nam tự động, đang dùng số lưu sẵn');
+    if (!vnLive) notes.push('chưa lấy được số liệu Việt Nam tự động, đang dùng số thật đã lưu');
     const cpiM = vnLive?.cpiYoY ? null : /T(\d{1,2})\/(\d{4})/.exec(String(latestCpi?.period || ''));
     if (cpiM) {
       const months = (y - Number(cpiM[2])) * 12 + (m - Number(cpiM[1]));
@@ -564,19 +566,30 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
   const refRateItem = macroData.interestRate?.find(
     (r: MacroRateRecord) => r.term === 'Chính sách' || (typeof r.bank === 'string' && r.bank.includes('Tái cấp vốn'))
   );
-  const refRate = vnLive?.policyRate?.value ?? parseFloat(refRateItem?.rate?.replace('%', '') || '4.5');
+  const refRate = vnLive?.policyRate?.value ?? parseFloat(refRateItem?.rate?.replace('%', '') || 'NaN');
 
   const onRateItem = macroData.interestRate?.find(
     (r: MacroRateRecord) => r.term === 'ON' || (typeof r.bank === 'string' && r.bank.includes('Qua đêm'))
   );
-  const onRate = vnLive?.interbankRate?.value ?? parseFloat(onRateItem?.rate?.replace('%', '') || '3.5');
+  const onRate = vnLive?.interbankRate?.value ?? parseFloat(onRateItem?.rate?.replace('%', '') || 'NaN');
   const bond5Y = vnLive?.bond5Y?.value ?? null;
   const bond10Y = vnLive?.bond10Y?.value ?? null;
 
   const depositRateItem = macroData.interestRate?.find(
     (r: MacroRateRecord) => r.type === 'deposit' || (typeof r.bank === 'string' && r.bank.includes('Huy động'))
   );
-  const depositRate = vnLive?.deposit12M?.value ?? parseFloat(depositRateItem?.rate?.replace('%', '') || '4.85');
+  const depositRate = vnLive?.deposit12M?.value ?? parseFloat(depositRateItem?.rate?.replace('%', '') || 'NaN');
+
+  // Thiếu số liệu nào thì nói rõ (không thay bằng số giả)
+  const missingInputs = [
+    ['GDP', gdpGrowth],
+    ['CPI', cpiYoy],
+    ['lãi suất điều hành', refRate],
+    ['liên ngân hàng', onRate],
+    ['huy động 12T', depositRate],
+  ]
+    .filter(([, v]) => !Number.isFinite(v as number))
+    .map(([k]) => k as string);
 
   const usdItem = macroData.exchangeRate?.find(
     (e: MacroExchangeRecord) =>
@@ -602,25 +615,25 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
     if (spread >= 0.75) {
       slopeType = 'steep';
       slopeLabel = 'Dốc lên tích cực (Normal Steep)';
-      slopeDesc = `${longLabel} (${longRate}%) cao hơn liên ngân hàng (${onRate}%) ${spread}% — thanh khoản hệ thống dồi dào, vốn ngắn hạn rẻ`;
+      slopeDesc = `${longLabel} (${longRate}%) cao hơn liên ngân hàng (${nf(onRate)}%) ${spread}% — thanh khoản hệ thống dồi dào, vốn ngắn hạn rẻ`;
       slopeColor = 'text-emerald-400';
       slopeBadge = 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30';
     } else if (spread >= 0.2) {
       slopeType = 'moderate';
       slopeLabel = 'Dốc vừa phải (Moderate)';
-      slopeDesc = `Liên ngân hàng (${onRate}%) thấp hơn ${longLabel} (${longRate}%) ${spread}% — thanh khoản bình thường`;
+      slopeDesc = `Liên ngân hàng (${nf(onRate)}%) thấp hơn ${longLabel} (${longRate}%) ${spread}% — thanh khoản bình thường`;
       slopeColor = 'text-cyan-400';
       slopeBadge = 'bg-cyan-500/15 text-cyan-400 border-cyan-500/30';
     } else if (spread >= -0.1) {
       slopeType = 'flat';
       slopeLabel = 'Đường cong phẳng (Flattening)';
-      slopeDesc = `Liên ngân hàng (${onRate}%) đã ngang ${longLabel} (${longRate}%) — chi phí vốn ngắn hạn tăng, cảnh báo thắt chặt`;
+      slopeDesc = `Liên ngân hàng (${nf(onRate)}%) đã ngang ${longLabel} (${longRate}%) — chi phí vốn ngắn hạn tăng, cảnh báo thắt chặt`;
       slopeColor = 'text-amber-400';
       slopeBadge = 'bg-amber-500/15 text-amber-400 border-amber-500/30';
     } else {
       slopeType = 'inverted';
       slopeLabel = 'Đường cong đảo ngược (Inverted)';
-      slopeDesc = `Liên ngân hàng (${onRate}%) cao hơn ${longLabel} (${longRate}%) — thanh khoản hệ thống căng, tín hiệu thắt chặt mạnh`;
+      slopeDesc = `Liên ngân hàng (${nf(onRate)}%) cao hơn ${longLabel} (${longRate}%) — thanh khoản hệ thống căng, tín hiệu thắt chặt mạnh`;
       slopeColor = 'text-rose-400';
       slopeBadge = 'bg-rose-500/15 text-rose-400 border-rose-500/30';
     }
@@ -671,8 +684,9 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
     const clamp = (v: number) => Math.max(0, Math.min(100, Math.round(v)));
     const wantsGrowthUp: Record<CyclePhaseKey, 1 | -1> = { recovery: 1, expansion: 1, late: -1, recession: -1 };
     const wantsInflationUp: Record<CyclePhaseKey, 1 | -1> = { recovery: -1, expansion: 1, late: 1, recession: -1 };
-    const growthLevel = gdpGrowth >= gdpTarget ? 1 : -1;
-    const inflationLevel = cpiYoy >= cpiTarget ? 1 : -1;
+    // Thiếu số → 0 (không nghiêng pha nào)
+    const growthLevel = !Number.isFinite(gdpGrowth) || !Number.isFinite(gdpTarget) ? 0 : gdpGrowth >= gdpTarget ? 1 : -1;
+    const inflationLevel = !Number.isFinite(cpiYoy) || !Number.isFinite(cpiTarget) ? 0 : cpiYoy >= cpiTarget ? 1 : -1;
 
     // A. Tăng trưởng (25%): GDP đang tăng tốc hay giảm tốc so với quý trước
     const gdpScores = {} as Record<CyclePhaseKey, number>;
@@ -685,7 +699,9 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
 
     // C. Interest Rates Pillar (20% weight)
     const rateScores: Record<CyclePhaseKey, number> =
-      refRate <= 4.5 && onRate <= 4.0
+      !Number.isFinite(refRate) || !Number.isFinite(onRate)
+        ? { recovery: 50, expansion: 50, late: 50, recession: 50 }
+        : refRate <= 4.5 && onRate <= 4.0
         ? { recovery: 95, expansion: 92, late: 20, recession: 25 }
         : refRate <= 5.0 && onRate <= 5.5
         ? { expansion: 85, late: 60, recovery: 70, recession: 35 }
@@ -711,7 +727,9 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
 
     // E. Chênh lệch kỳ hạn VN 12T − qua đêm (20%)
     const yieldScores: Record<CyclePhaseKey, number> =
-      yieldCurveData.spread >= 0.75
+      !Number.isFinite(yieldCurveData.spread)
+        ? { recovery: 50, expansion: 50, late: 50, recession: 50 }
+        : yieldCurveData.spread >= 0.75
         ? { expansion: 96, recovery: 88, late: 35, recession: 15 }
         : yieldCurveData.spread >= 0.2
         ? { recovery: 92, expansion: 82, late: 55, recession: 25 }
@@ -842,7 +860,7 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
     if (!isDynamicAllocation) return baseList;
 
     const currentScore = phaseScores[activePhaseKey]?.score ?? 70;
-    const vix = globalMacro.vix || 19.42;
+    const vix = globalMacro.vix; // NaN khi chưa có số → mọi so sánh đều false, không điều chỉnh
     const spread = yieldCurveData.spread;
 
     // Calculate dynamic weights for the 4 asset classes based on riskAppetite, phaseScore, VIX, Yield Spread
@@ -959,18 +977,18 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
       },
       {
         factor: 'Lạm phát (CPI)',
-        status: cpiYoy < 4.0 ? `${cpiYoy}% (Ổn định)` : 'Căng (>4.0%)',
+        status: cpiYoy < 4.0 ? `${nf(cpiYoy)}% (Ổn định)` : 'Căng (>4.0%)',
         isTriggered: cpiYoy >= 4.0,
       },
       {
         factor: 'Lãi suất qua đêm',
-        status: onRate < 4.5 ? `${onRate}% (Dồi dào)` : 'Thắt chặt (>4.5%)',
+        status: onRate < 4.5 ? `${nf(onRate)}% (Dồi dào)` : 'Thắt chặt (>4.5%)',
         isTriggered: onRate >= 4.5,
       },
       {
         factor: 'Tâm lý (VIX)',
-        status: (globalMacro.vix || 19) < 22 ? `${globalMacro.vix || 19.4} (Bình ổn)` : 'Biến động (>22)',
-        isTriggered: (globalMacro.vix || 19) >= 22,
+        status: !Number.isFinite(globalMacro.vix) ? 'Chưa có dữ liệu' : globalMacro.vix < 22 ? `${nf(globalMacro.vix)} (Bình ổn)` : `${nf(globalMacro.vix)} (Biến động)`,
+        isTriggered: Number.isFinite(globalMacro.vix) && globalMacro.vix >= 22,
       },
     ];
 
@@ -1055,16 +1073,19 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                 )}
               </div>
               <div className="flex items-center gap-2 text-[10px] text-zinc-400 font-mono mt-1 flex-wrap">
-                <span>GDP +{gdpGrowth}%</span>
+                <span>GDP +{nf(gdpGrowth)}%</span>
                 <span className="text-zinc-600">•</span>
-                <span>CPI {cpiYoy}%</span>
+                <span>CPI {nf(cpiYoy)}%</span>
                 <span className="text-zinc-600">•</span>
-                <span>Điều hành {refRate}% · Liên NH {onRate}%</span>
+                <span>Điều hành {nf(refRate)}% · Liên NH {nf(onRate)}%</span>
                 <span className="text-zinc-600">•</span>
                 <span>USD {usdSell > 0 ? `${usdSell.toLocaleString('vi-VN')}đ` : 'Đang tải...'}</span>
               </div>
               {staleNotes.length > 0 && (
                 <div className="text-[10px] text-amber-300/90 mt-1">⚠ Số liệu cũ: {staleNotes.join(' · ')}</div>
+              )}
+              {missingInputs.length > 0 && (
+                <div className="text-[10px] text-rose-300/90 mt-1">⚠ Thiếu số liệu: {missingInputs.join(', ')} — trụ cột tương ứng tính trung tính</div>
               )}
             </div>
 
@@ -1125,7 +1146,7 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                     <span>2. Mỏ Neo Vĩ Mô Thực Tế</span>
                   </div>
                   <p className="text-[11px] text-zinc-400 leading-relaxed font-sans">
-                    Pha chu kỳ do <strong className="text-zinc-200">6 trụ cột vĩ mô</strong> quyết định: xu hướng GDP và CPI (đồng hồ đầu tư), lãi suất NHNN ({refRate}%), tỷ giá USD/VND 1 tháng, đường cong lợi suất VN (TPCP 10 năm − liên ngân hàng), và <strong className="text-zinc-200">Fed &amp; thế giới</strong> (Fed thắt chặt hay nới, chênh lệch lãi suất VND − USD, DXY).
+                    Pha chu kỳ do <strong className="text-zinc-200">6 trụ cột vĩ mô</strong> quyết định: xu hướng GDP và CPI (đồng hồ đầu tư), lãi suất NHNN ({nf(refRate)}%), tỷ giá USD/VND 1 tháng, đường cong lợi suất VN (TPCP 10 năm − liên ngân hàng), và <strong className="text-zinc-200">Fed &amp; thế giới</strong> (Fed thắt chặt hay nới, chênh lệch lãi suất VND − USD, DXY).
                   </p>
                   <p className="text-[10px] text-zinc-400 leading-relaxed font-sans">
                     Không dùng biến động giá hằng ngày để chấm pha, nên vòng tròn chỉ đổi khi số liệu vĩ mô thực sự đổi; số liệu quá hạn sẽ được cảnh báo.
@@ -1477,10 +1498,10 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                       <ChartLineUp className="w-3 h-3 text-emerald-400" />
                       <span>Tăng trưởng GDP</span>
                     </span>
-                    <span className="text-emerald-400 font-bold">+{gdpGrowth}%</span>
+                    <span className="text-emerald-400 font-bold">+{nf(gdpGrowth)}%</span>
                   </div>
                   <div className="text-[9px] text-zinc-400 mt-1 flex justify-between">
-                    <span>Mục tiêu: {gdpTarget}%</span>
+                    <span>Mục tiêu: {nf(gdpTarget)}%</span>
                     <span className="text-zinc-300 font-sans">
                       {gdpTrend === null ? '—' : growthDir === 1 ? `Tăng tốc (+${gdpTrend}đ)` : growthDir === -1 ? `Giảm tốc (${gdpTrend}đ)` : 'Đi ngang'}
                     </span>
@@ -1494,10 +1515,10 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                       <Scales className="w-3 h-3 text-amber-400" />
                       <span>Lạm phát CPI</span>
                     </span>
-                    <span className="text-zinc-200 font-bold">{cpiYoy}%</span>
+                    <span className="text-zinc-200 font-bold">{nf(cpiYoy)}%</span>
                   </div>
                   <div className="text-[9px] text-zinc-400 mt-1 flex justify-between">
-                    <span>Trần: &lt;{cpiTarget}%</span>
+                    <span>Trần: &lt;{nf(cpiTarget)}%</span>
                     <span className="text-zinc-300 font-sans">
                       {cpiTrend === null ? '—' : `${inflDir === 1 ? 'Đang tăng' : inflDir === -1 ? 'Đang giảm' : 'Đi ngang'} (${cpiTrend >= 0 ? '+' : ''}${cpiTrend}đ/${cpiTrendMonths}T)`}
                     </span>
@@ -1511,10 +1532,10 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                       <Bank className="w-3 h-3 text-cyan-400" />
                       <span>Lãi suất điều hành</span>
                     </span>
-                    <span className="text-cyan-400 font-bold">{refRate}%</span>
+                    <span className="text-cyan-400 font-bold">{nf(refRate)}%</span>
                   </div>
                   <div className="text-[9px] text-zinc-400 mt-1 flex justify-between">
-                    <span>HĐ 12T: {depositRate}% • Liên NH: {onRate}%</span>
+                    <span>HĐ 12T: {nf(depositRate)}% • Liên NH: {nf(onRate)}%</span>
                     <span className="text-cyan-400/90 font-sans">{refRate <= 4.5 && onRate <= 4.0 ? 'Nới lỏng' : refRate <= 5.0 && onRate <= 5.5 ? 'Trung tính' : 'Thắt chặt'}</span>
                   </div>
                 </div>
@@ -1561,7 +1582,7 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                     <span className="text-cyan-400 font-bold">{fed ? `Fed ${fed.effr}%` : '—'}</span>
                   </div>
                   <div className="text-[9px] text-zinc-400 mt-1 flex justify-between gap-2">
-                    <span>VND−USD: {vndUsdGap === null ? '—' : `${vndUsdGap >= 0 ? '+' : ''}${vndUsdGap}%`} · DXY {globalMacro.dxy}</span>
+                    <span>VND−USD: {vndUsdGap === null ? '—' : `${vndUsdGap >= 0 ? '+' : ''}${vndUsdGap}%`} · DXY {nf(globalMacro.dxy)}</span>
                     <span className="text-zinc-300 font-sans">
                       {fedStance === 'tightening' ? 'Fed thắt chặt' : fedStance === 'easing' ? 'Fed nới lỏng' : fedStance === 'hold' ? 'Fed giữ nguyên' : 'Chưa có dữ liệu'}
                     </span>
@@ -1674,18 +1695,18 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
               <div className="p-2.5 rounded-lg bg-zinc-950/90 border border-zinc-800/80 space-y-1 text-[9px] font-mono">
                 <div className="text-[10px] font-bold text-zinc-300 pb-1 border-b border-zinc-800">DỮ LIỆU ĐẦU VÀO</div>
                 {[
-                  ['GDP (so cùng kỳ)', `${gdpGrowth}%${gdpTrend !== null ? ` (${gdpTrend >= 0 ? '+' : ''}${gdpTrend}đ vs quý trước)` : ''}`, gdpLive ? fmtUpd(gdpLive) : String(latestGdp?.period ?? '—'), gdpLive ? 'GSO qua TradingView (tự động)' : 'Lưu sẵn'],
-                  ['CPI (so cùng kỳ)', `${cpiYoy}%${cpiTrend !== null ? ` (${cpiTrend >= 0 ? '+' : ''}${cpiTrend}đ/${cpiTrendMonths}T)` : ''}`, cpiLive ? fmtUpd(cpiLive) : String(latestCpi?.period ?? '—'), cpiLive ? 'GSO qua TradingView (tự động)' : 'Lưu sẵn'],
-                  ['Lãi suất điều hành NHNN', `${refRate}%`, vnLive?.policyRate ? fmtUpd(vnLive.policyRate) : '—', vnLive?.policyRate ? 'NHNN qua TradingView' : 'Lưu sẵn'],
-                  ['Lãi suất liên ngân hàng', `${onRate}%`, vnLive?.interbankRate ? fmtUpd(vnLive.interbankRate) : '—', vnLive?.interbankRate ? 'TradingView' : 'Lưu sẵn'],
-                  ['Huy động 12T (trung vị)', `${depositRate}%${vnLive?.deposit12M ? ` · ${vnLive.deposit12M.banks} NH` : ''}`, vnLive?.deposit12M?.updatedAt ?? '—', vnLive?.deposit12M ? '24hMoney' : 'Lưu sẵn'],
+                  ['GDP (so cùng kỳ)', `${nf(gdpGrowth)}%${gdpTrend !== null ? ` (${gdpTrend >= 0 ? '+' : ''}${gdpTrend}đ vs quý trước)` : ''}`, gdpLive ? fmtUpd(gdpLive) : String(latestGdp?.period ?? '—'), gdpLive ? 'GSO qua TradingView (tự động)' : 'Lưu sẵn'],
+                  ['CPI (so cùng kỳ)', `${nf(cpiYoy)}%${cpiTrend !== null ? ` (${cpiTrend >= 0 ? '+' : ''}${cpiTrend}đ/${cpiTrendMonths}T)` : ''}`, cpiLive ? fmtUpd(cpiLive) : String(latestCpi?.period ?? '—'), cpiLive ? 'GSO qua TradingView (tự động)' : 'Lưu sẵn'],
+                  ['Lãi suất điều hành NHNN', `${nf(refRate)}%`, vnLive?.policyRate ? fmtUpd(vnLive.policyRate) : '—', vnLive?.policyRate ? 'NHNN qua TradingView' : 'Lưu sẵn'],
+                  ['Lãi suất liên ngân hàng', `${nf(onRate)}%`, vnLive?.interbankRate ? fmtUpd(vnLive.interbankRate) : '—', vnLive?.interbankRate ? 'TradingView' : 'Lưu sẵn'],
+                  ['Huy động 12T (trung vị)', `${nf(depositRate)}%${vnLive?.deposit12M ? ` · ${vnLive.deposit12M.banks} NH` : ''}`, vnLive?.deposit12M?.updatedAt ?? '—', vnLive?.deposit12M ? '24hMoney' : 'Lưu sẵn'],
                   ['TPCP VN 5 / 10 năm', bond10Y !== null ? `${bond5Y?.toFixed(2) ?? '—'}% / ${bond10Y.toFixed(2)}%` : '—', vnLive?.bond10Y ? fmtUpd(vnLive.bond10Y) : '—', 'TradingView'],
                   ['USD/VND', `${usdSell > 0 ? usdSell.toLocaleString('vi-VN') : '—'}${usdVnd1MPct !== null ? ` (${usdVnd1MPct >= 0 ? '+' : ''}${usdVnd1MPct}%/1T)` : ''}`, 'Trực tiếp', 'Liên ngân hàng'],
                   ['Fed funds (EFFR)', fed ? `${fed.effr}% · khung ${fed.targetLow}–${fed.targetHigh}%` : '—', fed?.effrDate ?? '—', 'NY Fed'],
                   ['Fed đổi lãi suất 6T', fed ? (fed.moves.length ? fed.moves.map((m) => `${m.date}: ${m.from}→${m.to}%`).join(', ') : 'Giữ nguyên') : '—', fed?.effrDate ?? '—', 'FOMC'],
                   ['Kỳ vọng Fed (futures)', fed?.futuresImplied != null ? `${fed.futuresImplied}%${fedFuturesGap !== null ? ` (${fedFuturesGap >= 0 ? '+' : ''}${fedFuturesGap}đ vs EFFR)` : ''}` : '—', 'Trực tiếp', 'CME ZQ (Yahoo)'],
                   ['Chênh VND − USD', vndUsdGap === null ? '—' : `${vndUsdGap >= 0 ? '+' : ''}${vndUsdGap}%`, 'Tính', 'Liên NH VN − EFFR'],
-                  ['DXY / US10Y / VIX', `${globalMacro.dxy} / ${globalMacro.us10Y}% / ${globalMacro.vix}`, 'Trực tiếp', 'Yahoo Finance'],
+                  ['DXY / US10Y / VIX', `${nf(globalMacro.dxy)} / ${nf(globalMacro.us10Y)}% / ${nf(globalMacro.vix)}`, 'Trực tiếp', 'Yahoo Finance'],
                 ].map(([label, value, period, src]) => (
                   <div key={label} className="flex justify-between gap-2">
                     <span className="text-zinc-400 shrink-0">{label}</span>
@@ -1741,7 +1762,7 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                       <span>Tăng trưởng GDP</span>
                     </div>
                     <span className="text-zinc-200 font-medium block truncate mt-0.5">{activeCfg.growthStatus}</span>
-                    <span className="text-[9px] font-mono text-emerald-400 block mt-0.5">+{gdpGrowth}% (Q3/2026)</span>
+                    <span className="text-[9px] font-mono text-emerald-400 block mt-0.5">+{nf(gdpGrowth)}% (Q3/2026)</span>
                   </div>
                   <div className="border-l border-zinc-800/80 pl-2.5">
                     <div className="flex items-center gap-1 text-[10px] text-zinc-400 font-medium">
@@ -1749,7 +1770,7 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                       <span>Lạm phát CPI</span>
                     </div>
                     <span className="text-zinc-200 font-medium block truncate mt-0.5">{activeCfg.inflationStatus}</span>
-                    <span className="text-[9px] font-mono text-zinc-300 block mt-0.5">{cpiYoy}% YoY ({cpiYoy >= cpiTarget ? `vượt trần ${cpiTarget}%` : `dưới trần ${cpiTarget}%`})</span>
+                    <span className="text-[9px] font-mono text-zinc-300 block mt-0.5">{nf(cpiYoy)}% YoY ({cpiYoy >= cpiTarget ? `vượt trần ${nf(cpiTarget)}%` : `dưới trần ${nf(cpiTarget)}%`})</span>
                   </div>
                   <div className="border-l border-zinc-800/80 pl-2.5">
                     <div className="flex items-center gap-1 text-[10px] text-zinc-400 font-medium">
@@ -1757,7 +1778,7 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                       <span>Lãi suất SBV</span>
                     </div>
                     <span className="text-zinc-200 font-medium block truncate mt-0.5">{activeCfg.interestRateStatus}</span>
-                    <span className="text-[9px] font-mono text-cyan-400 block mt-0.5">Điều hành {refRate}% | Liên NH {onRate}%</span>
+                    <span className="text-[9px] font-mono text-cyan-400 block mt-0.5">Điều hành {nf(refRate)}% | Liên NH {nf(onRate)}%</span>
                   </div>
                   <div className="border-l border-zinc-800/80 pl-2.5">
                     <div className="flex items-center gap-1 text-[10px] text-zinc-400 font-medium">

@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import realTicks from '../../../../features/market/data/realTicks.json';
 import { isPreMarketResetWindow } from '../../../../features/market/utils/marketHours';
 
 export const runtime = 'nodejs';
@@ -152,7 +151,6 @@ export async function GET() {
       timestamp: Date.now(),
       source: 'live_vietcap_entrade',
       indexes: validIndexes,
-      data: realTicks,
     });
   } catch (error) {
     return NextResponse.json(

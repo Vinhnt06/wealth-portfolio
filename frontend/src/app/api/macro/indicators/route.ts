@@ -9,7 +9,10 @@ interface GdpItem {
   period: string;
   growthRate: number;
   target: number;
-  value: string;
+  /** Quy mô GDP danh nghĩa (chỉ khi có nguồn) */
+  value?: string;
+  change?: number;
+  source?: string;
 }
 
 interface CpiItem {

@@ -106,6 +106,9 @@ interface HeatmapStock {
   low: number;
   mktCapT: number;
   rsRating?: number;
+  /** Giá trị mua / bán của khối ngoại trong phiên (VND) — chỉ có khi nguồn Vietcap trả */
+  foreignBuyValue?: number;
+  foreignSellValue?: number;
 }
 
 type UpstreamSource = 'vietcap' | 'ssi_iboard';
@@ -217,6 +220,8 @@ async function fetchFromVietcap(): Promise<HeatmapStock[] | null> {
         high: Number(mp.highest || price),
         low: Number(mp.lowest || price),
         mktCapT,
+        foreignBuyValue: Number.isFinite(Number(mp.foreignBuyValue)) ? Number(mp.foreignBuyValue) : undefined,
+        foreignSellValue: Number.isFinite(Number(mp.foreignSellValue)) ? Number(mp.foreignSellValue) : undefined,
       };
 
       // Vietcap thỉnh thoảng trả snapshot phiên trước cho một vài mã: giữ bản tốt gần nhất thay vì chuyển tiếp dữ liệu cũ
@@ -351,7 +356,7 @@ function getSnapshotData(): HeatmapStock[] {
         low: price,
         mktCapT:
           Math.round(((sharesM * price) / 1e6) * 10) / 10,
-        rsRating: item.rsRating || 50,
+        rsRating: typeof item.rsRating === 'number' ? item.rsRating : undefined,
       } as HeatmapStock;
     });
   } catch (e) {

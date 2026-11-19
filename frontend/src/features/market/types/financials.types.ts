@@ -54,8 +54,9 @@ export interface StockValuationData {
   outlierInfo?: OutlierQuarterInfo | null;
   
   // Industry Benchmark Comparison
-  sectorPe: number;
-  sectorPb: number;
+  /** Trung vị P/E, P/B của ngành (null khi ngành có dưới 3 mã) */
+  sectorPe: number | null;
+  sectorPb: number | null;
   peVsSectorPercent: number | null; // % difference from industry PE
   pbVsSectorPercent: number | null; // % difference from industry PB
   

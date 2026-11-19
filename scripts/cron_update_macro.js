@@ -454,7 +454,8 @@ async function crawlSbvInterestRates() {
   if (fs.existsSync(macroJsonPath)) {
     try {
       const macroData = JSON.parse(fs.readFileSync(macroJsonPath, 'utf8'));
-      macroData.interestRate = rates;
+      // Chỉ lưu số thật lấy được; không giữ dòng chưa có nguồn
+      macroData.interestRate = rates.filter((r) => r.isCrawled);
       macroData.interestRateLastCrawled = nowTimeStr;
 
       // GDP & CPI tự động (không nhập tay)

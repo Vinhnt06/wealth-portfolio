@@ -1,9 +1,8 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { TrendUp, TrendDown, Lightning, Globe, Sparkle, Fire } from '@phosphor-icons/react';
 import { useMarketStore } from '../store/marketStore';
-import realTicksData from '../data/realTicks.json';
 import stockDatabase from '../data/stockDatabase.json';
 
 interface StockMetadata {
@@ -22,41 +21,70 @@ export const MarketSummaryBar: React.FC = () => {
   const { ticks, setSelectedSymbol, selectedSymbol, setViewMode } = useMarketStore();
   const [activeTab, setActiveTab] = useState<'gainers' | 'losers' | 'volume' | 'foreign'>('gainers');
 
-  // Compute all stocks dynamically
+  // Toàn bộ dữ liệu từ nguồn sống (/api/market/heatmap, ~700 mã) + tick realtime trong store.
+  // Không dùng bảng giá cũ hay số giả; chưa có dữ liệu thì danh sách rỗng.
+  const [board, setBoard] = useState<
+    {
+      symbol: string;
+      name: string;
+      exchange: string;
+      price: number;
+      refPrice: number;
+      volume: number;
+      rsRating?: number;
+      foreignBuyValue?: number;
+      foreignSellValue?: number;
+    }[]
+  >([]);
+  const [boardStale, setBoardStale] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    const load = async () => {
+      try {
+        const res = await fetch('/api/market/heatmap');
+        const json = await res.json();
+        if (alive && json.success && Array.isArray(json.data)) {
+          setBoard(json.data);
+          setBoardStale(Boolean(json.stale));
+        }
+      } catch {
+        // giữ dữ liệu đang có
+      }
+    };
+    load();
+    const id = setInterval(load, 15000);
+    return () => {
+      alive = false;
+      clearInterval(id);
+    };
+  }, []);
+
   const stockList = useMemo(() => {
-    const rawList = Object.entries(realTicksData).map(([sym, baseData]) => {
-      const liveTick = ticks[sym];
-      const price = liveTick?.price ?? baseData.price;
-      const ref = liveTick?.referencePrice ?? baseData.ref;
-      const change = liveTick?.change ?? (price - ref);
+    return board.map((b) => {
+      const liveTick = ticks[b.symbol];
+      const price = liveTick?.price ?? b.price;
+      const ref = liveTick?.referencePrice ?? b.refPrice;
+      const change = liveTick?.change ?? price - ref;
       const changePct = liveTick?.changePercent ?? (ref > 0 ? ((price - ref) / ref) * 100 : 0);
-      const volume = liveTick?.totalVolume ?? baseData.volume;
-      const meta = STOCK_LOOKUP.get(sym) || {
-        symbol: sym,
-        name: sym,
-        exchange: 'HOSE',
-        sector: 'Cổ phiếu',
-      };
-
-      // Pseudo-RS based on performance and liquidity
-      const rawRs = Math.min(99, Math.max(35, Math.round(50 + changePct * 6 + (volume > 10000000 ? 15 : 5))));
-
+      const volume = liveTick?.totalVolume ?? b.volume;
+      const meta = STOCK_LOOKUP.get(b.symbol);
       return {
-        symbol: sym,
-        name: meta.name,
-        exchange: meta.exchange,
-        sector: meta.sector,
+        symbol: b.symbol,
+        name: meta?.name || b.name || b.symbol,
+        exchange: meta?.exchange || b.exchange,
+        sector: meta?.sector || '',
         price,
         ref,
         change,
         changePct,
         volume,
-        rsRating: rawRs,
+        rsRating: b.rsRating,
+        foreignBuyValue: b.foreignBuyValue,
+        foreignSellValue: b.foreignSellValue,
       };
     });
-
-    return rawList;
-  }, [ticks]);
+  }, [board, ticks]);
 
   // Top Gainers
   const topGainers = useMemo(() => {
@@ -81,17 +109,36 @@ export const MarketSummaryBar: React.FC = () => {
       .slice(0, 6);
   }, [stockList]);
 
-  // Foreign Trade summary
+  // Tổng giá trị ròng của khối ngoại trên toàn bộ các mã có dữ liệu (tỷ đồng)
+  const { foreignTotalNet, foreignCount } = useMemo(() => {
+    let net = 0;
+    let n = 0;
+    for (const s of stockList) {
+      if (typeof s.foreignBuyValue === 'number' && typeof s.foreignSellValue === 'number') {
+        net += s.foreignBuyValue - s.foreignSellValue;
+        n++;
+      }
+    }
+    return { foreignTotalNet: Math.round((net / 1e9) * 10) / 10, foreignCount: n };
+  }, [stockList]);
+
+  // Khối ngoại: giá trị mua/bán thật trong phiên (VND → tỷ đồng), top theo giá trị ròng tuyệt đối
   const foreignFlow = useMemo(() => {
-    return [
-      { symbol: 'HPG', buyVal: 285.4, sellVal: 95.2, netVal: 190.2, price: 20100, changePct: -0.25 },
-      { symbol: 'SSI', buyVal: 210.8, sellVal: 68.4, netVal: 142.4, price: 19000, changePct: -0.26 },
-      { symbol: 'TCB', buyVal: 175.0, sellVal: 82.5, netVal: 92.5, price: 32350, changePct: 1.41 },
-      { symbol: 'VCB', buyVal: 145.2, sellVal: 72.0, netVal: 73.2, price: 56700, changePct: 0.18 },
-      { symbol: 'VHM', buyVal: 64.0, sellVal: 182.5, netVal: -118.5, price: 41500, changePct: -1.19 },
-      { symbol: 'MWG', buyVal: 45.0, sellVal: 128.0, netVal: -83.0, price: 64200, changePct: -1.23 },
-    ];
-  }, []);
+    const toB = (v: number) => Math.round((v / 1e9) * 10) / 10;
+    return stockList
+      .filter((s) => typeof s.foreignBuyValue === 'number' && typeof s.foreignSellValue === 'number')
+      .map((s) => ({
+        symbol: s.symbol,
+        buyVal: toB(s.foreignBuyValue as number),
+        sellVal: toB(s.foreignSellValue as number),
+        netVal: toB((s.foreignBuyValue as number) - (s.foreignSellValue as number)),
+        price: s.price,
+        changePct: Number(s.changePct.toFixed(2)),
+      }))
+      .filter((f) => f.buyVal + f.sellVal > 0)
+      .sort((a, b) => Math.abs(b.netVal) - Math.abs(a.netVal))
+      .slice(0, 6);
+  }, [stockList]);
 
   return (
     <div className="bg-zinc-950/90 border border-zinc-800/80 rounded-2xl p-4 sm:p-5 shadow-2xl backdrop-blur-xl flex flex-col h-full">
@@ -151,6 +198,15 @@ export const MarketSummaryBar: React.FC = () => {
 
       {/* Tab Content Display */}
       <div className="space-y-2 flex-1">
+        {board.length === 0 && (
+          <p className="text-[11px] font-mono text-zinc-500 py-6 text-center">Đang tải dữ liệu bảng giá…</p>
+        )}
+        {boardStale && board.length > 0 && (
+          <p className="text-[10px] font-mono text-amber-300/90">⚠ Nguồn giá đang lỗi — hiển thị bản chốt gần nhất</p>
+        )}
+        {activeTab === 'foreign' && board.length > 0 && foreignFlow.length === 0 && (
+          <p className="text-[11px] font-mono text-zinc-500 py-6 text-center">Nguồn hiện tại không có dữ liệu khối ngoại</p>
+        )}
         {/* TAB 1: TOP GAINERS */}
         {activeTab === 'gainers' && (
           <div className="space-y-1.5">
@@ -185,9 +241,11 @@ export const MarketSummaryBar: React.FC = () => {
                           {item.exchange}
                         </span>
                         {/* Prominent RS indicator */}
-                        <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-400 border border-amber-500/30">
-                          RS {item.rsRating}
-                        </span>
+                        {typeof item.rsRating === 'number' && (
+                          <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                            RS {item.rsRating}
+                          </span>
+                        )}
                       </div>
                       <p className="text-[10px] text-zinc-400 truncate max-w-[140px] font-sans">
                         {item.name}
@@ -242,9 +300,11 @@ export const MarketSummaryBar: React.FC = () => {
                         <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-zinc-800 text-zinc-400">
                           {item.exchange}
                         </span>
-                        <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-400 border border-amber-500/30">
-                          RS {item.rsRating}
-                        </span>
+                        {typeof item.rsRating === 'number' && (
+                          <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                            RS {item.rsRating}
+                          </span>
+                        )}
                       </div>
                       <p className="text-[10px] text-zinc-400 truncate max-w-[140px] font-sans">
                         {item.name}
@@ -333,8 +393,10 @@ export const MarketSummaryBar: React.FC = () => {
           <div className="space-y-1.5">
             <div className="p-2.5 rounded-xl bg-zinc-900/80 border border-zinc-800/80 mb-2 flex items-center justify-between text-xs font-mono">
               <span className="text-zinc-400">Toàn thị trường:</span>
-              <span className="font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-                +428.5 Tỷ (Mua Ròng)
+              <span className={`font-bold ${foreignTotalNet >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                {foreignCount > 0
+                  ? `${foreignTotalNet >= 0 ? '+' : ''}${foreignTotalNet} Tỷ (${foreignTotalNet >= 0 ? 'Mua ròng' : 'Bán ròng'}, ${foreignCount} mã)`
+                  : '—'}
               </span>
             </div>
             {foreignFlow.map((item, idx) => {

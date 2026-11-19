@@ -2,9 +2,6 @@
 
 import { useEffect, useRef, useCallback } from 'react';
 import { useMarketStore } from '../store/marketStore';
-import { TickData, QuotesData, MarketIndexData } from '../types/dnse.types';
-import realTicksData from '../data/realTicks.json';
-import { isPreMarketResetWindow } from '../utils/marketHours';
 
 const WS_URL = 'wss://ws-openapi.dnse.com.vn';
 
@@ -29,16 +26,6 @@ const DEFAULT_SYMBOLS = [
   'GEX', 'VSC', 'GMD', 'HAH', 'VCG', 'HHV', 'CII', 'VJC'
 ];
 
-interface RealTickEntry {
-  price: number;
-  ref: number;
-  open: number;
-  high: number;
-  low: number;
-  volume: number;
-}
-
-const REAL_TICKS: Record<string, RealTickEntry> = realTicksData as unknown as Record<string, RealTickEntry>;
 
 // Global Singleton Streaming Manager across all hook instances
 let activeHookCount = 0;
@@ -53,8 +40,6 @@ let globalReconnectTimer: NodeJS.Timeout | null = null;
 let reconnectAttempt = 0;
 // Chỉ cho 1 chu kỳ chạy tại một thời điểm: nếu mạng chậm > 2s, chu kỳ cũ trả về muộn sẽ không còn ghi đè chu kỳ mới
 let streamCycleRunning = false;
-// Seed dữ liệu dựng sẵn chỉ một lần cho cả phiên làm việc (không chạy lại mỗi lần một màn hình mount)
-let hasSeededMarketState = false;
 
 async function executeStreamCycle() {
   if (streamCycleRunning) return;
@@ -358,107 +343,7 @@ export function useDnseWebSocket(symbols: string[] = DEFAULT_SYMBOLS) {
     }
   }, [updateTick, updateQuotes, updateIndex, setLastHeartbeat, setLastTradeTick]);
 
-  // Seed market state with REAL vnstock data
-  const seedInitialState = useCallback(() => {
-    // Mỗi màn hình dùng hook này đều mount → trước đây seed chạy lại và ghi đè giá sống bằng snapshot cũ
-    if (hasSeededMarketState) return;
-    hasSeededMarketState = true;
-
-    Object.entries(REAL_TICKS).forEach(([sym, val]) => {
-      const price = val.price;
-      const ref = val.ref || price;
-      const change = price - ref;
-      const changePercent = ref ? (change / ref) * 100 : 0;
-
-      updateTick({
-        symbol: sym,
-        price: price,
-        change: Number(change.toFixed(2)),
-        changePercent: Number(changePercent.toFixed(2)),
-        volume: Math.floor((val.volume || 1000000) / 10),
-        totalVolume: val.volume || 5000000,
-        high: val.high || Math.round(price * 1.01),
-        low: val.low || Math.round(price * 0.99),
-        open: val.open || ref,
-        referencePrice: ref,
-        ceilingPrice: Math.round(ref * 1.07),
-        floorPrice: Math.round(ref * 0.93),
-        timestamp: Date.now(),
-        matchType: change >= 0 ? 'B' : 'S',
-      }, 'seed');
-    });
-
-    // Chỉ seed chỉ số khi store chưa có số liệu thật
-    const seededIndexes = useMarketStore.getState().indexes;
-    const updateIndexIfEmpty = (data: MarketIndexData) => {
-      if (!seededIndexes[data.symbol]) updateIndex(data);
-    };
-
-    const isPreMarketVN = isPreMarketResetWindow('VNINDEX');
-    const isPreMarketHNX = isPreMarketResetWindow('HNX');
-
-    // Seed Real Market Indexes
-    updateIndexIfEmpty({
-      symbol: 'VNINDEX',
-      name: 'VN-INDEX',
-      value: 1740.73,
-      change: isPreMarketVN ? 0 : 7.71,
-      changePercent: isPreMarketVN ? 0 : 0.44,
-      totalVolume: isPreMarketVN ? 0 : 911324549,
-      totalValue: isPreMarketVN ? 0 : 22450000000000,
-      advances: isPreMarketVN ? 0 : 168,
-      declines: isPreMarketVN ? 0 : 242,
-      noChanges: isPreMarketVN ? 0 : 74,
-      timestamp: Date.now(),
-    });
-
-    updateIndexIfEmpty({
-      symbol: 'VN30',
-      name: 'VN30-INDEX',
-      value: 1873.43,
-      change: isPreMarketVN ? 0 : -3.57,
-      changePercent: isPreMarketVN ? 0 : -0.19,
-      totalVolume: isPreMarketVN ? 0 : 468198975,
-      totalValue: isPreMarketVN ? 0 : 13200000000000,
-      advances: isPreMarketVN ? 0 : 11,
-      declines: isPreMarketVN ? 0 : 16,
-      noChanges: isPreMarketVN ? 0 : 3,
-      timestamp: Date.now(),
-    });
-
-    updateIndexIfEmpty({
-      symbol: 'HNX',
-      name: 'HNX-INDEX',
-      value: 261.60,
-      change: isPreMarketHNX ? 0 : 1.15,
-      changePercent: isPreMarketHNX ? 0 : 0.44,
-      totalVolume: isPreMarketHNX ? 0 : 70117939,
-      totalValue: isPreMarketHNX ? 0 : 1620000000000,
-      advances: isPreMarketHNX ? 0 : 92,
-      declines: isPreMarketHNX ? 0 : 81,
-      noChanges: isPreMarketHNX ? 0 : 55,
-      timestamp: Date.now(),
-    });
-
-    updateIndexIfEmpty({
-      symbol: 'UPCOM',
-      name: 'UPCOM-INDEX',
-      value: 124.24,
-      change: isPreMarketHNX ? 0 : -0.97,
-      changePercent: isPreMarketHNX ? 0 : -0.77,
-      totalVolume: isPreMarketHNX ? 0 : 37646708,
-      totalValue: isPreMarketHNX ? 0 : 650000000000,
-      advances: isPreMarketHNX ? 0 : 145,
-      declines: isPreMarketHNX ? 0 : 120,
-      noChanges: isPreMarketHNX ? 0 : 88,
-      timestamp: Date.now(),
-    });
-  }, [updateTick, updateQuotes, updateIndex]);
-
-  // Seed 1 lần khi mount
-  useEffect(() => {
-    seedInitialState();
-  }, [seedInitialState]);
+  // Không nạp sẵn dữ liệu cũ/giả vào store: giá & chỉ số chỉ đến từ nguồn sống (REST, MQTT, heatmap).
 
   // Khi selectedSymbol thay đổi, kích hoạt ngay 1 chu kỳ stream để cập nhật ngay lập tức & subscribe MQTT topic
   useEffect(() => {

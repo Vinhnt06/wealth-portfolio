@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import realTicksData from '../../../../features/market/data/realTicks.json';
 import stockDatabase from '../../../../features/market/data/stockDatabase.json';
 import { calculateExchangeCeilFloor } from '../../../../features/market/utils/priceColors';
 import { isMarketTradingSession, isPreMarketResetWindow } from '../../../../features/market/utils/marketHours';
@@ -414,68 +413,9 @@ export async function GET(req: NextRequest) {
     });
   }
 
-  // 5. TERTIARY SOURCE: Pre-warmed snapshot
-  const vnstockTick = (realTicksData as Record<string, any>)[symbol];
-  if (vnstockTick) {
-    const ref = vnstockTick.ref || vnstockTick.price;
-    const { ceilingPrice, floorPrice } = calculateExchangeCeilFloor(ref, meta.exchange);
-    const p = vnstockTick.price;
-    const chg = p - ref;
-    const chgPct = ref ? (chg / ref) * 100 : 0;
-
-    const result = {
-      symbol,
-      name: meta.name,
-      exchange: meta.exchange,
-      sector: meta.sector,
-      price: p,
-      referencePrice: ref,
-      ceilingPrice,
-      floorPrice,
-      open: vnstockTick.open || p,
-      high: vnstockTick.high || p,
-      low: vnstockTick.low || p,
-      change: Number(chg.toFixed(2)),
-      changePercent: Number(chgPct.toFixed(2)),
-      volume: vnstockTick.volume || 1000000,
-      totalVolume: vnstockTick.volume || 1000000,
-      totalValue: p * (vnstockTick.volume || 1000000),
-      dataSource: 'vnstock_snapshot',
-      timestamp: Date.now(),
-    };
-
-    return NextResponse.json({
-      success: true,
-      source: 'vnstock_snapshot',
-      data: result,
-    });
-  }
-
-  // 6. Final safety fallback
-  const fallbackPrice = 25000;
-  const { ceilingPrice, floorPrice } = calculateExchangeCeilFloor(fallbackPrice, meta.exchange);
-  return NextResponse.json({
-    success: true,
-    source: 'fallback',
-    data: {
-      symbol,
-      name: meta.name,
-      exchange: meta.exchange,
-      sector: meta.sector,
-      price: fallbackPrice,
-      referencePrice: fallbackPrice,
-      ceilingPrice,
-      floorPrice,
-      open: fallbackPrice,
-      high: fallbackPrice,
-      low: fallbackPrice,
-      change: 0,
-      changePercent: 0,
-      volume: 100000,
-      totalVolume: 100000,
-      totalValue: fallbackPrice * 100000,
-      dataSource: 'fallback',
-      timestamp: Date.now(),
-    },
-  });
+  // Không có nguồn sống nào trả số → báo không có dữ liệu (không dùng snapshot cũ hay giá bịa)
+  return NextResponse.json(
+    { success: false, error: `Không lấy được giá thời gian thực cho ${symbol}` },
+    { status: 502 }
+  );
 }

@@ -4,7 +4,6 @@
       "period": "Q3/2026",
       "growthRate": 9.95,
       "target": 6.5,
-      "value": "2,580,000 tỷ VNĐ",
       "change": 1.14,
       "source": "TradingView (tự động)"
     },
@@ -12,19 +11,7 @@
       "period": "Q2/2026",
       "growthRate": 8.81,
       "target": 6.5,
-      "value": "2,240,000 tỷ VNĐ"
-    },
-    {
-      "period": "Q1/2026",
-      "growthRate": 8.15,
-      "target": 6.5,
-      "value": "2,010,000 tỷ VNĐ"
-    },
-    {
-      "period": "Q4/2025",
-      "growthRate": 7.15,
-      "target": 6.5,
-      "value": "2,450,000 tỷ VNĐ"
+      "source": "Suy ra từ TradingView (số mới − chênh lệch)"
     }
   ],
   "cpi": [
@@ -40,61 +27,6 @@
       "yoy": 4.88,
       "target": 4.5,
       "source": "Suy ra từ TradingView (số mới − chênh lệch)"
-    },
-    {
-      "period": "T8/2026",
-      "yoy": 3.45,
-      "mom": 0.12,
-      "target": 4.5
-    },
-    {
-      "period": "T7/2026",
-      "yoy": 3.52,
-      "mom": 0.18,
-      "target": 4.5
-    }
-  ],
-  "exchangeRate": [
-    {
-      "pair": "USD/VND",
-      "buy": 25240,
-      "sell": 25420,
-      "change": 15
-    },
-    {
-      "pair": "EUR/VND",
-      "buy": 27150,
-      "sell": 27480,
-      "change": -30
-    },
-    {
-      "pair": "JPY/VND",
-      "buy": 164.2,
-      "sell": 167.5,
-      "change": 0.4
-    }
-  ],
-  "commodities": [
-    {
-      "item": "Vàng SJC (Triệu/Lượng)",
-      "buy": 84.5,
-      "sell": 86.5,
-      "change": 0.5
-    },
-    {
-      "item": "Vàng Thế Giới (USD/Oz)",
-      "price": 2514.8,
-      "change": 12.4
-    },
-    {
-      "item": "Dầu Brent (USD/Thùng)",
-      "price": 78.42,
-      "change": -0.85
-    },
-    {
-      "item": "Thép HRC (USD/Tấn)",
-      "price": 542,
-      "change": 4.5
     }
   ],
   "interestRate": [
@@ -120,27 +52,12 @@
       "bank": "Lãi suất Tái cấp vốn NHNN",
       "rate": "4.50%",
       "term": "Chính sách",
-      "doc": "QĐ 1123/QĐ-NHNN",
       "isCrawled": true,
       "source": "NHNN qua TradingView",
       "updatedAt": "2026-11-19T08:52:09.917Z"
-    },
-    {
-      "bank": "Lãi suất Tái chiết khấu NHNN",
-      "rate": "3.00%",
-      "term": "Chính sách",
-      "doc": "QĐ 1123/QĐ-NHNN",
-      "isCrawled": false
-    },
-    {
-      "bank": "Lãi suất Liên ngân hàng (VNIBOR)",
-      "rate": "4.25%",
-      "term": "3M",
-      "type": "interbank",
-      "isCrawled": false,
-      "source": "Thị trường tiền tệ liên ngân hàng"
     }
   ],
   "interestRateLastCrawled": "19/11/2026 15:52",
-  "interestRateSource": "Ngân hàng Nhà nước & Thị trường liên ngân hàng"
+  "interestRateSource": "Ngân hàng Nhà nước & Thị trường liên ngân hàng",
+  "_note": "Chỉ chứa số liệu thật có nguồn (cập nhật tự động bởi scripts/cron_update_macro.js). Không có số nhập tay / giả lập."
 }

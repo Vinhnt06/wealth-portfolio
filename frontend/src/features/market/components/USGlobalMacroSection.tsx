@@ -22,12 +22,12 @@ interface MarketIndexItem {
 }
 
 interface UsInflationData {
-  period: string;
-  cpiYoY: number;
-  cpiMoM: number;
-  coreCpiYoY: number;
+  updatedAt: string | null;
+  cpiYoY: number | null;
+  cpiChange: number | null;
+  coreCpiYoY: number | null;
   fedTarget: number;
-  nextReleaseDate: string;
+  source: string;
 }
 
 interface VietnamImpactItem {
@@ -323,18 +323,22 @@ export const USGlobalMacroSection: React.FC = memo(() => {
               {/* US Inflation Summary */}
               <div className="p-3 rounded-xl bg-zinc-950/80 border border-zinc-800/80 font-mono text-xs space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-zinc-400 text-[11px]">Lạm phát CPI Mỹ ({usInflation.period}):</span>
-                  <span className="text-white font-bold">{usInflation.cpiYoY}% (Lõi: {usInflation.coreCpiYoY}%)</span>
+                  <span className="text-zinc-400 text-[11px]">Lạm phát CPI Mỹ{usInflation.updatedAt ? ` (cập nhật ${usInflation.updatedAt})` : ''}:</span>
+                  <span className="text-white font-bold">
+                    {usInflation.cpiYoY !== null ? `${usInflation.cpiYoY}%` : '—'} (Lõi: {usInflation.coreCpiYoY !== null ? `${usInflation.coreCpiYoY}%` : '—'})
+                  </span>
                 </div>
                 <div className="w-full bg-zinc-800 h-1.5 rounded-full overflow-hidden">
                   <div
                     className="bg-blue-500 h-full rounded-full"
-                    style={{ width: `${Math.min(100, (usInflation.fedTarget / usInflation.cpiYoY) * 100)}%` }}
+                    style={{ width: `${usInflation.cpiYoY ? Math.min(100, (usInflation.fedTarget / usInflation.cpiYoY) * 100) : 0}%` }}
                   />
                 </div>
                 <div className="flex justify-between text-[10px] text-zinc-500">
                   <span>Mục tiêu Fed: {usInflation.fedTarget}%</span>
-                  <span>Kỳ ra CPI tới: {usInflation.nextReleaseDate}</span>
+                  <span>
+                    {usInflation.cpiChange !== null ? `So tháng trước: ${usInflation.cpiChange >= 0 ? '+' : ''}${usInflation.cpiChange}đ` : ''}
+                  </span>
                 </div>
               </div>
 

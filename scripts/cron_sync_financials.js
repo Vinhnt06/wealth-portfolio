@@ -50,45 +50,26 @@ const CORE_FINANCIAL_UNIVERSE = [
   'GMD', 'HAH', 'VSC', 'VJC', 'HVN', 'VCG', 'CTD', 'HHV', 'CII'
 ];
 
-// Định giá trung vị ngành chuẩn ICB
-const SECTOR_BENCHMARKS = {
-  'Ngân hàng': { pe: 9.8, pb: 1.45 },
-  'Chứng khoán': { pe: 14.5, pb: 1.75 },
-  'Bất động sản': { pe: 16.2, pb: 1.55 },
-  'Bất động sản Khu công nghiệp': { pe: 12.8, pb: 1.85 },
-  'Thép & Kim loại': { pe: 10.5, pb: 1.35 },
-  'Công nghệ thông tin': { pe: 18.5, pb: 3.8 },
-  'Dầu khí': { pe: 13.2, pb: 1.5 },
-  'Năng lượng & Tiện ích': { pe: 12.5, pb: 1.4 },
-  'Hóa chất & Phân bón': { pe: 10.2, pb: 1.65 },
-  'Bán lẻ & Hàng tiêu dùng': { pe: 17.5, pb: 3.2 },
-  'Thủy sản & Nông nghiệp': { pe: 11.8, pb: 1.45 },
-  'Cảng biển & Vận tải': { pe: 12.0, pb: 1.8 },
-  'Xây dựng & Vật liệu': { pe: 13.5, pb: 1.25 },
-  'Dệt may': { pe: 10.8, pb: 1.2 },
-  'Dược phẩm & Y tế': { pe: 15.0, pb: 2.1 },
-  'Bảo hiểm': { pe: 11.5, pb: 1.3 },
-};
-
+// P/E, P/B chuẩn ngành = TRUNG VỊ của các mã cùng ngành trong financialsDatabase.json (số thật từ báo cáo tài chính).
+// Không dùng bảng số ghi tay. Ngành có dưới 3 mã hợp lệ → không so sánh (null).
 function getBenchmark(sectorName) {
-  if (!sectorName) return { pe: 13.5, pb: 1.65 };
-  const clean = sectorName.toLowerCase();
-  for (const [key, val] of Object.entries(SECTOR_BENCHMARKS)) {
-    if (clean.includes(key.toLowerCase()) || key.toLowerCase().includes(clean)) return val;
+  try {
+    const dbPath = path.resolve(__dirname, '../frontend/src/features/market/data/financialsDatabase.json');
+    const db = JSON.parse(fs.readFileSync(dbPath, 'utf8'));
+    const rows = Object.values(db.data || {}).filter((r) => r.sector === sectorName);
+    const med = (arr) => {
+      if (arr.length < 3) return null;
+      const s = [...arr].sort((a, b) => a - b);
+      const m = Math.floor(s.length / 2);
+      return Number((s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2).toFixed(2));
+    };
+    return {
+      pe: med(rows.map((r) => r.pe).filter((v) => typeof v === 'number' && v > 0 && v < 200)),
+      pb: med(rows.map((r) => r.pb).filter((v) => typeof v === 'number' && v > 0 && v < 50)),
+    };
+  } catch {
+    return { pe: null, pb: null };
   }
-  if (clean.includes('ngân hàng') || clean.includes('bank')) return SECTOR_BENCHMARKS['Ngân hàng'];
-  if (clean.includes('chứng khoán')) return SECTOR_BENCHMARKS['Chứng khoán'];
-  if (clean.includes('bất động sản')) return SECTOR_BENCHMARKS['Bất động sản'];
-  if (clean.includes('thép')) return SECTOR_BENCHMARKS['Thép & Kim loại'];
-  if (clean.includes('công nghệ')) return SECTOR_BENCHMARKS['Công nghệ thông tin'];
-  if (clean.includes('dầu khí')) return SECTOR_BENCHMARKS['Dầu khí'];
-  if (clean.includes('điện') || clean.includes('năng lượng')) return SECTOR_BENCHMARKS['Năng lượng & Tiện ích'];
-  if (clean.includes('hóa chất') || clean.includes('phân bón')) return SECTOR_BENCHMARKS['Hóa chất & Phân bón'];
-  if (clean.includes('bán lẻ') || clean.includes('tiêu dùng')) return SECTOR_BENCHMARKS['Bán lẻ & Hàng tiêu dùng'];
-  if (clean.includes('thủy sản') || clean.includes('nông nghiệp')) return SECTOR_BENCHMARKS['Thủy sản & Nông nghiệp'];
-  if (clean.includes('cảng') || clean.includes('vận tải')) return SECTOR_BENCHMARKS['Cảng biển & Vận tải'];
-  if (clean.includes('xây dựng')) return SECTOR_BENCHMARKS['Xây dựng & Vật liệu'];
-  return { pe: 13.5, pb: 1.65 };
 }
 
 async function fetchStockValuation(symbol) {
@@ -331,8 +312,8 @@ async function fetchStockValuation(symbol) {
 
   const sectorPe = benchmark.pe;
   const sectorPb = benchmark.pb;
-  const peVsSectorPercent = pe !== null ? Number((((pe - sectorPe) / sectorPe) * 100).toFixed(1)) : null;
-  const pbVsSectorPercent = pb !== null ? Number((((pb - sectorPb) / sectorPb) * 100).toFixed(1)) : null;
+  const peVsSectorPercent = pe !== null && sectorPe !== null ? Number((((pe - sectorPe) / sectorPe) * 100).toFixed(1)) : null;
+  const pbVsSectorPercent = pb !== null && sectorPb !== null ? Number((((pb - sectorPb) / sectorPb) * 100).toFixed(1)) : null;
 
   let valuationStatus = 'FAIR';
   let valuationLabel = 'Định giá Hợp lý';

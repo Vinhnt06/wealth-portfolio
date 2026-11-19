@@ -14,6 +14,7 @@ import { HeroIndexChart, type Candle, type ChartKind } from './HeroIndexChart';
 import { useLanguage } from '../../../app/components/LanguageContext';
 import { sectorLabel, VALUATION_STATUS_EN } from '../i18n/sectors';
 import vnindexCandles from '../data/vnindexHistory.json';
+import financialsDb from '../data/financialsDatabase.json';
 import lastScan from '../data/lastMinerviniScan.json';
 
 interface IndexMeta {
@@ -30,69 +31,36 @@ interface IndexMeta {
   totalValue: number;
 }
 
+// Chỉ khai báo mã/tên; số liệu luôn đến từ /api/market/quotes (NaN = chưa có số → hiển thị "—")
+const EMPTY_VALUES = { value: NaN, change: NaN, percentChange: NaN, open: NaN, high: NaN, low: NaN, volume: NaN, totalValue: NaN };
 const DEFAULT_INDEXES: IndexMeta[] = [
-  {
-    symbol: 'VNINDEX',
-    name: 'VN-Index',
-    exchange: 'HOSE',
-    value: 1759.82,
-    change: -6.83,
-    percentChange: -0.39,
-    open: 1769.55,
-    high: 1769.55,
-    low: 1759.22,
-    volume: 191331368,
-    totalValue: 4383213554850,
-  },
-  {
-    symbol: 'VN30',
-    name: 'VN30-Index',
-    exchange: 'HOSE',
-    value: 1880.37,
-    change: -9.85,
-    percentChange: -0.52,
-    open: 1893.34,
-    high: 1893.39,
-    low: 1877.69,
-    volume: 75290352,
-    totalValue: 2444740598400,
-  },
-  {
-    symbol: 'HNX',
-    name: 'HNX-Index',
-    exchange: 'HNX',
-    value: 258.29,
-    change: -1.57,
-    percentChange: -0.6,
-    open: 260.65,
-    high: 261.74,
-    low: 257.77,
-    volume: 8227560,
-    totalValue: 130997978700,
-  },
-  {
-    symbol: 'UPCOM',
-    name: 'UPCOM-Index',
-    exchange: 'UPCOM',
-    value: 125.74,
-    change: -0.35,
-    percentChange: -0.28,
-    open: 126.06,
-    high: 126.44,
-    low: 125.61,
-    volume: 23744628,
-    totalValue: 310500000000,
-  },
+  { symbol: 'VNINDEX', name: 'VN-Index', exchange: 'HOSE', ...EMPTY_VALUES },
+  { symbol: 'VN30', name: 'VN30-Index', exchange: 'HOSE', ...EMPTY_VALUES },
+  { symbol: 'HNX', name: 'HNX-Index', exchange: 'HNX', ...EMPTY_VALUES },
+  { symbol: 'UPCOM', name: 'UPCOM-Index', exchange: 'UPCOM', ...EMPTY_VALUES },
 ];
 
-// Curated high-conviction real valuation gems from our live audited engine
-const REAL_VALUATION_OPPORTUNITIES = [
-  { symbol: 'HPG', name: 'Tập đoàn Hòa Phát', sector: 'Thép', pe: 7.56, pb: 1.25, peg: 0.10, growth: 72.8, status: 'Rẻ' },
-  { symbol: 'FPT', name: 'Tập đoàn FPT', sector: 'Công nghệ', pe: 10.72, pb: 2.69, peg: 0.67, growth: 16.1, status: 'Hấp dẫn' },
-  { symbol: 'VCB', name: 'Vietcombank', sector: 'Ngân hàng', pe: 11.30, pb: 1.89, peg: 0.56, growth: 20.2, status: 'Tăng trưởng' },
-  { symbol: 'MWG', name: 'Thế Giới Di Động', sector: 'Bán lẻ', pe: 10.06, pb: 2.38, peg: 0.11, growth: 92.4, status: 'Rẻ' },
-  { symbol: 'VHM', name: 'Vinhomes', sector: 'Bất động sản', pe: 6.27, pb: 1.90, peg: 0.04, growth: 164.5, status: 'Chiết khấu' },
-];
+// Cơ hội định giá: tính từ dữ liệu tài chính thật (financialsDatabase.json, đồng bộ từ báo cáo tài chính),
+// không dùng danh sách chọn tay. PEG = P/E ÷ tăng trưởng LN; chỉ lấy mã có P/E > 0 và tăng trưởng > 0.
+const REAL_VALUATION_OPPORTUNITIES = Object.values(
+  (financialsDb as unknown as { data: Record<string, { symbol: string; name: string; sector: string; pe: number | null; pb: number | null; peg: number | null; earningsGrowthYoY: number | null; hasOutlierProfit?: boolean }> }).data
+)
+  .filter(
+    (f): f is { symbol: string; name: string; sector: string; pe: number; pb: number; peg: number; earningsGrowthYoY: number; hasOutlierProfit?: boolean } =>
+      (f.pe ?? 0) > 0 && (f.peg ?? 0) > 0 && (f.earningsGrowthYoY ?? 0) > 0 && typeof f.pb === 'number' && !f.hasOutlierProfit
+  )
+  .sort((a, b) => a.peg - b.peg)
+  .slice(0, 8)
+  .map((f) => ({
+    symbol: f.symbol,
+    name: f.name,
+    sector: f.sector,
+    pe: Number(f.pe.toFixed(2)),
+    pb: Number(f.pb.toFixed(2)),
+    peg: Number(f.peg.toFixed(2)),
+    growth: Number(f.earningsGrowthYoY.toFixed(1)),
+    status: f.peg < 0.5 ? 'Rẻ' : f.peg < 1 ? 'Hấp dẫn' : 'Hợp lý',
+  }));
 
 
 const TIMEFRAMES: { key: string; label: string; bars: number }[] = [
@@ -313,8 +281,7 @@ export const HeroMarketBento: React.FC = () => {
                   >
                     <span>{idx.name}</span>
                     <span className={`ml-1.5 text-[10px] font-semibold ${pctCls(idx.change)} ${isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity`}>
-                      {idx.percentChange > 0 ? '+' : ''}
-                      {idx.percentChange.toFixed(2)}%
+                      {Number.isFinite(idx.percentChange) ? `${idx.percentChange > 0 ? '+' : ''}${idx.percentChange.toFixed(2)}%` : '—'}
                     </span>
                     {isActive && (
                       <span className="absolute bottom-[-13px] left-0 right-0 h-[2px] bg-[#10b981]" />
@@ -349,12 +316,12 @@ export const HeroMarketBento: React.FC = () => {
                   flash === 'up' ? 'bg-[#10b981]/20' : flash === 'down' ? 'bg-[#e5484d]/20' : ''
                 }`}
               >
-                {shownValue.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                {Number.isFinite(shownValue) ? shownValue.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—'}
               </span>
               <span className={`text-sm font-mono font-bold ${valCls}`}>
-                {shownChange > 0 ? '+' : ''}
-                {shownChange.toFixed(2)} ({shownPct > 0 ? '+' : ''}
-                {shownPct.toFixed(2)}%)
+                {Number.isFinite(shownChange) && Number.isFinite(shownPct)
+                  ? `${shownChange > 0 ? '+' : ''}${shownChange.toFixed(2)} (${shownPct > 0 ? '+' : ''}${shownPct.toFixed(2)}%)`
+                  : tr('Đang tải…', 'Loading…')}
               </span>
               {hover && (
                 <span className="text-[11px] font-mono text-[#777]">
@@ -367,22 +334,22 @@ export const HeroMarketBento: React.FC = () => {
               <div>
                 <span className="text-[#555555]">{tr('Đáy', 'Low')}: </span>
                 <span className="text-[#e5484d] font-semibold">
-                  {activeIndex.low.toLocaleString(locale, { minimumFractionDigits: 1 })}
+                  {Number.isFinite(activeIndex.low) ? activeIndex.low.toLocaleString(locale, { minimumFractionDigits: 1 }) : '—'}
                 </span>
               </div>
               <div>
                 <span className="text-[#555555]">{tr('Đỉnh', 'High')}: </span>
                 <span className="text-[#10b981] font-semibold">
-                  {activeIndex.high.toLocaleString(locale, { minimumFractionDigits: 1 })}
+                  {Number.isFinite(activeIndex.high) ? activeIndex.high.toLocaleString(locale, { minimumFractionDigits: 1 }) : '—'}
                 </span>
               </div>
               <div>
                 <span className="text-[#555555]">{tr('Khối lượng', 'Volume')}: </span>
-                <span className="text-zinc-200 font-semibold">{(activeIndex.volume / 1_000_000).toFixed(1)}M {tr('cp', 'shares')}</span>
+                <span className="text-zinc-200 font-semibold">{Number.isFinite(activeIndex.volume) ? `${(activeIndex.volume / 1_000_000).toFixed(1)}M ${tr('cp', 'shares')}` : '—'}</span>
               </div>
               <div>
                 <span className="text-[#555555]">{tr('Giá trị', 'Value')}: </span>
-                <span className="text-zinc-200 font-semibold">{formatBillion(activeIndex.totalValue)}</span>
+                <span className="text-zinc-200 font-semibold">{Number.isFinite(activeIndex.totalValue) ? formatBillion(activeIndex.totalValue) : '—'}</span>
               </div>
             </div>
           </div>

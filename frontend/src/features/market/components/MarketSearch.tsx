@@ -7,7 +7,6 @@ import { useMarketStore } from '../store/marketStore';
 import { tickSourceFromApi } from '../utils/tickGuard';
 
 import stockDatabase from '../data/stockDatabase.json';
-import realTicksData from '../data/realTicks.json';
 import { getStockPriceColor } from '../utils/priceColors';
 import { isMarketTradingSession } from '../utils/marketHours';
 import { VN_MARKET_INDEXES, isMarketIndex, getMarketIndexMeta } from '../constants/marketIndexes';
@@ -27,10 +26,6 @@ const VN_STOCK_DATABASE = stockDatabase as Array<{
   sector: string;
 }>;
 
-const REAL_TICKS_MAP = realTicksData as Record<
-  string,
-  { price: number; ref: number; open: number; high: number; low: number; volume: number }
->;
 
 // Popular market leaders for auto-suggestion when search query is empty
 const POPULAR_LEADER_SYMBOLS = ['HPG', 'VCB', 'FPT', 'SSI', 'TCB', 'VHM', 'MBB', 'MWG', 'VNM', 'STB', 'DGC', 'GAS'];
@@ -327,12 +322,11 @@ export const MarketSearch: React.FC = () => {
     // Dữ liệu cổ phiếu thông thường
     const liveTick = ticks[item.symbol];
     const screenerItem = screenerMap[item.symbol];
-    const baseTick = REAL_TICKS_MAP[item.symbol];
 
-    const rawPrice = liveTick?.price ?? (screenerItem ? screenerItem.price : (baseTick?.price ?? null));
+    const rawPrice = liveTick?.price ?? (screenerItem ? screenerItem.price : null);
     const price = normalizeToVnd(rawPrice);
 
-    const rawRef = liveTick?.referencePrice ?? (screenerItem && price ? Math.round(price / (1 + (screenerItem.changePercent || 0) / 100)) : (baseTick?.ref ?? price));
+    const rawRef = liveTick?.referencePrice ?? (screenerItem && price ? Math.round(price / (1 + (screenerItem.changePercent || 0) / 100)) : price);
     const ref = normalizeToVnd(rawRef);
 
     const isOutsideHours = !isMarketTradingSession();

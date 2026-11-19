@@ -30,21 +30,22 @@ interface MarketAsset {
     iconColor: string;
 }
 
-// ── Fallback Data ──────────────────────────────────────────
+// ── Danh sách tài sản (chỉ nhãn; giá luôn lấy từ nguồn sống, NaN = chưa có số → hiển thị "—") ──
+const EMPTY_ASSET = { price: NaN, change24h: NaN, changePercent: NaN, marketCap: '' };
 const FALLBACK_ASSETS: MarketAsset[] = [
-    { symbol: 'XAU', ticker: 'Gold', name: 'Gold Futures', price: 2384.50, change24h: 10.02, changePercent: 0.42, marketCap: '$14.2T', icon: CurrencyCircleDollar, iconColor: 'text-yellow-500' },
-    { symbol: 'BTC', ticker: 'Bitcoin', name: 'Bitcoin', price: 79217.00, change24h: 1856.99, changePercent: 2.40, marketCap: '$1.26T', icon: CurrencyBtc, iconColor: 'text-amber-500' },
-    { symbol: 'WTI', ticker: 'Crude Oil', name: 'Crude Oil', price: 81.24, change24h: -0.94, changePercent: -1.15, marketCap: '$2.4B Vol', icon: Drop, iconColor: 'text-zinc-400' },
-    { symbol: 'ETH', ticker: 'Ethereum', name: 'Ethereum', price: 3482.12, change24h: 38.72, changePercent: 1.12, marketCap: '$418.4B', icon: CurrencyEth, iconColor: 'text-blue-400' },
-    { symbol: 'XAG', ticker: 'Silver', name: 'Silver Futures', price: 29.15, change24h: -0.25, changePercent: -0.84, marketCap: '$1.5T', icon: Coin, iconColor: 'text-slate-400' },
+    { symbol: 'XAU', ticker: 'Gold', name: 'Gold Futures', ...EMPTY_ASSET, icon: CurrencyCircleDollar, iconColor: 'text-yellow-500' },
+    { symbol: 'BTC', ticker: 'Bitcoin', name: 'Bitcoin', ...EMPTY_ASSET, icon: CurrencyBtc, iconColor: 'text-amber-500' },
+    { symbol: 'WTI', ticker: 'Crude Oil', name: 'Crude Oil', ...EMPTY_ASSET, icon: Drop, iconColor: 'text-zinc-400' },
+    { symbol: 'ETH', ticker: 'Ethereum', name: 'Ethereum', ...EMPTY_ASSET, icon: CurrencyEth, iconColor: 'text-blue-400' },
+    { symbol: 'XAG', ticker: 'Silver', name: 'Silver Futures', ...EMPTY_ASSET, icon: Coin, iconColor: 'text-slate-400' },
 ];
 
 // ── Formatters ─────────────────────────────────────────────
 const fmtPrice = (v: number) =>
-    v.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 });
+    Number.isFinite(v) ? v.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }) : '—';
 
 const fmtPercent = (v: number) =>
-    `${v >= 0 ? '+' : ''}${v.toFixed(2)}%`;
+    Number.isFinite(v) ? `${v >= 0 ? '+' : ''}${v.toFixed(2)}%` : '—';
 
 // ── Animation Variants ─────────────────────────────────────
 const containerVariants = {
@@ -124,7 +125,7 @@ export function MarketSection() {
                     price: typeof goldItem?.price === 'number' ? goldItem.price : (Number(goldItem?.price) || FALLBACK_ASSETS[0].price),
                     change24h: typeof goldItem?.change === 'number' ? goldItem.change : FALLBACK_ASSETS[0].change24h,
                     changePercent: typeof goldItem?.changePercent === 'number' ? goldItem.changePercent : FALLBACK_ASSETS[0].changePercent,
-                    marketCap: '$14.2T',
+                    marketCap: '',
                     icon: CurrencyCircleDollar,
                     iconColor: 'text-yellow-500',
                 },
@@ -135,7 +136,7 @@ export function MarketSection() {
                     price: btcData?.success && typeof btcData?.data?.price === 'number' ? btcData.data.price : FALLBACK_ASSETS[1].price,
                     change24h: btcData?.success && typeof btcData?.data?.change24h === 'number' ? btcData.data.change24h : FALLBACK_ASSETS[1].change24h,
                     changePercent: btcData?.success && typeof btcData?.data?.changePercent === 'number' ? btcData.data.changePercent : FALLBACK_ASSETS[1].changePercent,
-                    marketCap: '$1.26T',
+                    marketCap: '',
                     icon: CurrencyBtc,
                     iconColor: 'text-amber-500',
                 },
@@ -146,7 +147,7 @@ export function MarketSection() {
                     price: typeof wtiItem?.price === 'number' ? wtiItem.price : (Number(wtiItem?.price) || FALLBACK_ASSETS[2].price),
                     change24h: typeof wtiItem?.change === 'number' ? wtiItem.change : FALLBACK_ASSETS[2].change24h,
                     changePercent: typeof wtiItem?.changePercent === 'number' ? wtiItem.changePercent : FALLBACK_ASSETS[2].changePercent,
-                    marketCap: '$2.4B Vol',
+                    marketCap: '',
                     icon: Drop,
                     iconColor: 'text-zinc-400',
                 },
@@ -157,7 +158,7 @@ export function MarketSection() {
                     price: ethData?.success && typeof ethData?.data?.price === 'number' ? ethData.data.price : FALLBACK_ASSETS[3].price,
                     change24h: ethData?.success && typeof ethData?.data?.change24h === 'number' ? ethData.data.change24h : FALLBACK_ASSETS[3].change24h,
                     changePercent: ethData?.success && typeof ethData?.data?.changePercent === 'number' ? ethData.data.changePercent : FALLBACK_ASSETS[3].changePercent,
-                    marketCap: '$418.4B',
+                    marketCap: '',
                     icon: CurrencyEth,
                     iconColor: 'text-blue-400',
                 },
@@ -168,7 +169,7 @@ export function MarketSection() {
                     price: typeof silverItem?.price === 'number' ? silverItem.price : (Number(silverItem?.price) || FALLBACK_ASSETS[4].price),
                     change24h: typeof silverItem?.change === 'number' ? silverItem.change : FALLBACK_ASSETS[4].change24h,
                     changePercent: typeof silverItem?.changePercent === 'number' ? silverItem.changePercent : FALLBACK_ASSETS[4].changePercent,
-                    marketCap: '$1.5T',
+                    marketCap: '',
                     icon: Coin,
                     iconColor: 'text-slate-400',
                 },

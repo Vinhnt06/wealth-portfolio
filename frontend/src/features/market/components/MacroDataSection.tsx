@@ -33,7 +33,7 @@ export const MacroDataSection: React.FC = () => {
     source: 'GSO & SBV',
   });
 
-  const [liveExchangeRates, setLiveExchangeRates] = useState<any[]>(macroDatabase.exchangeRate);
+  const [liveExchangeRates, setLiveExchangeRates] = useState<any[]>([]); // chỉ dùng tỷ giá sống, không có số lưu sẵn
   const [exchangeUpdateTime, setExchangeUpdateTime] = useState<string>('Trực tiếp');
   const [isLiveRates, setIsLiveRates] = useState<boolean>(false);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
@@ -77,7 +77,7 @@ export const MacroDataSection: React.FC = () => {
 
   const currentGdp = macroData.gdp?.[0] || macroDatabase.gdp[0];
   const currentCpi = macroData.cpi?.[0] || macroDatabase.cpi[0];
-  const currentUsd = liveExchangeRates[0] || macroDatabase.exchangeRate[0];
+  const currentUsd = liveExchangeRates[0] ?? { pair: 'USD/VND', change: Number.NaN, sell: Number.NaN };
   const depositRate = macroData.interestRate?.find((r: any) => r.type === 'deposit' || r.bank?.includes('Huy động')) || { rate: '4.85%' };
   const onRate = macroData.interestRate?.find((r: any) => r.term === 'ON' || r.bank?.includes('Qua đêm')) || { rate: '3.50%' };
   const refRate = macroData.interestRate?.find((r: any) => (r.term === 'Chính sách' || !r.term) && r.bank?.includes('Tái cấp vốn')) || { rate: '4.50%' };
@@ -168,7 +168,9 @@ export const MacroDataSection: React.FC = () => {
             <div className="space-y-1.5 pt-2">
               <div className="flex justify-between text-[11px] font-mono text-zinc-400">
                 <span>Diễn biến 4 quý gần nhất</span>
-                <span className="text-zinc-300 font-bold">Quy mô: {currentGdp.value}</span>
+                <span className="text-zinc-300 font-bold">
+                  {(currentGdp as { value?: string }).value ? `Quy mô: ${(currentGdp as { value?: string }).value}` : (currentGdp as { source?: string }).source ?? ''}
+                </span>
               </div>
               <div className="grid grid-cols-4 gap-1.5 pt-1">
                 {(macroData.gdp || macroDatabase.gdp).slice(0, 4).map((item: any, idx: number) => (
@@ -324,11 +326,11 @@ export const MacroDataSection: React.FC = () => {
               <div className="flex items-center justify-between text-xs font-mono">
                 <span className="text-zinc-200 font-bold">{currentUsd.pair}</span>
                 <span className={`font-bold ${currentUsd.change >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                  {currentUsd.change >= 0 ? `+${currentUsd.change}` : currentUsd.change}đ
+                  {Number.isFinite(currentUsd.change) ? `${currentUsd.change >= 0 ? '+' : ''}${currentUsd.change}đ` : '—'}
                 </span>
               </div>
               <div className="text-2xl font-black text-white font-mono">
-                {Number(currentUsd.sell).toLocaleString('vi-VN')} <span className="text-xs text-zinc-400 font-normal">đ</span>
+                {Number.isFinite(Number(currentUsd.sell)) ? Number(currentUsd.sell).toLocaleString('vi-VN') : 'Đang tải…'} <span className="text-xs text-zinc-400 font-normal">đ</span>
               </div>
               <div className="text-[10px] text-zinc-400 font-mono flex justify-between">
                 <span>Nguồn tham chiếu:</span>
