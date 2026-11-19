@@ -6,6 +6,9 @@ on:
     - cron: '12 0,11,13 * * *'
   workflow_dispatch: # Cho phép trigger thủ công từ GitHub UI
 
+permissions:
+  contents: write
+
 jobs:
   sync-macro:
     name: 🌐 Crawl & Sync Macro Data to Supabase
@@ -32,3 +35,16 @@ jobs:
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
         run: |
           node scripts/cron_update_macro.js || echo "Sync completed with warnings"
+
+      - name: Commit updated macroDatabase.json
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add frontend/src/features/market/data/macroDatabase.json
+          if git diff --staged --quiet; then
+            echo "Không có số liệu vĩ mô mới."
+          else
+            git commit -m "chore(data): auto-sync Vietnam macro (GDP, CPI, rates)"
+            git pull --rebase origin main || true
+            git push origin main
+          fi

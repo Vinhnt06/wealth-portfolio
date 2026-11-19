@@ -15,8 +15,12 @@ interface GdpItem {
 interface CpiItem {
   period: string;
   yoy: number;
-  mom: number;
+  /** So với tháng trước (chỉ có ở số cũ) */
+  mom?: number;
+  /** Chênh lệch CPI so cùng kỳ so với kỳ trước (điểm %) — từ nguồn tự động */
+  change?: number;
   target: number;
+  source?: string;
 }
 
 interface InterestRateItem {

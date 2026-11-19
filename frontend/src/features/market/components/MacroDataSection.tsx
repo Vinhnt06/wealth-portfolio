@@ -214,8 +214,16 @@ export const MacroDataSection: React.FC = () => {
                 {currentCpi.yoy}%
               </span>
               <div className="text-right font-mono">
-                <span className="text-[11px] text-zinc-400 block">MoM: +{currentCpi.mom}%</span>
-                <span className="text-[11px] text-blue-400 font-bold">Dưới trần {currentCpi.target}%</span>
+                <span className="text-[11px] text-zinc-400 block">
+                  {typeof (currentCpi as { change?: number }).change === 'number'
+                    ? `So tháng trước: ${(currentCpi as { change?: number }).change! >= 0 ? '+' : ''}${(currentCpi as { change?: number }).change}đ`
+                    : typeof (currentCpi as { mom?: number }).mom === 'number'
+                    ? `MoM: +${(currentCpi as { mom?: number }).mom}%`
+                    : ''}
+                </span>
+                <span className={`text-[11px] font-bold ${currentCpi.yoy >= currentCpi.target ? 'text-rose-400' : 'text-blue-400'}`}>
+                  {currentCpi.yoy >= currentCpi.target ? 'Vượt trần' : 'Dưới trần'} {currentCpi.target}%
+                </span>
               </div>
             </div>
 
@@ -223,7 +231,7 @@ export const MacroDataSection: React.FC = () => {
             <div className="w-full bg-zinc-800 h-1.5 rounded-full overflow-hidden">
               <div 
                 className="bg-blue-500 h-full rounded-full transition-all duration-1000"
-                style={{ width: `${(currentCpi.yoy / currentCpi.target) * 100}%` }}
+                style={{ width: `${Math.min(100, (currentCpi.yoy / currentCpi.target) * 100)}%` }}
               />
             </div>
           </motion.div>

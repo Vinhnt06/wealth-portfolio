@@ -179,6 +179,78 @@ async function fetchCommodities() {
   return items.length;
 }
 
+// Bảng lãi suất tiết kiệm lấy được ở bước fetchBankRates — dùng tính trung vị lãi suất huy động 12T
+let lastBankRates = [];
+
+// TradingView (dữ liệu kinh tế GSO/NHNN): close = số mới nhất, change_abs = chênh lệch so với kỳ công bố trước
+async function fetchTvIndicator(symbol) {
+  try {
+    const res = await fetch(
+      `https://scanner.tradingview.com/symbol?symbol=${encodeURIComponent(symbol)}&fields=close,change_abs,last_bar_update_time,update_time`,
+      { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(10000) }
+    );
+    if (!res.ok) return null;
+    const j = await res.json();
+    const value = Number(j && j.close);
+    if (!Number.isFinite(value)) return null;
+    const change = Number(j.change_abs);
+    return { value: Number(value.toFixed(4)), change: Number.isFinite(change) ? Number(change.toFixed(2)) : null };
+  } catch (e) {
+    console.log(`  - Lỗi TradingView ${symbol}:`, e.message);
+    return null;
+  }
+}
+
+// Kỳ số liệu mới nhất đã công bố: GSO công bố CPI tháng & GDP quý vào khoảng ngày 6 tháng sau
+function latestReleasedPeriods(now = new Date()) {
+  const vn = new Date(now.getTime() + 7 * 3600000 - 6 * 86400000); // lùi 6 ngày công bố
+  let y = vn.getUTCFullYear();
+  let m = vn.getUTCMonth(); // 0-11, tức tháng trước của tháng (đã lùi) hiện tại
+  if (m === 0) { m = 12; y -= 1; }
+  const cpiPeriod = `T${m}/${y}`;
+  const q = Math.floor((vn.getUTCMonth()) / 3); // quý đã kết thúc gần nhất (0 = Q4 năm trước)
+  const gdpPeriod = q === 0 ? `Q4/${vn.getUTCFullYear() - 1}` : `Q${q}/${vn.getUTCFullYear()}`;
+  return { cpiPeriod, gdpPeriod };
+}
+
+// Ghi số GDP/CPI mới vào lịch sử: chỉ tạo kỳ mới khi số liệu đổi (tránh gán nhầm kỳ khi nguồn chưa cập nhật)
+function previousPeriod(period) {
+  let m = /^T(\d{1,2})\/(\d{4})$/.exec(period);
+  if (m) return Number(m[1]) === 1 ? `T12/${Number(m[2]) - 1}` : `T${Number(m[1]) - 1}/${m[2]}`;
+  m = /^Q([1-4])\/(\d{4})$/.exec(period);
+  if (m) return Number(m[1]) === 1 ? `Q4/${Number(m[2]) - 1}` : `Q${Number(m[1]) - 1}/${m[2]}`;
+  return null;
+}
+
+function upsertSeries(list, period, valueKey, live, target) {
+  const arr = Array.isArray(list) ? [...list] : [];
+  const head = arr[0];
+  if (head && head[valueKey] === live.value && (head.change ?? null) === live.change) {
+    return arr; // nguồn chưa có số mới
+  }
+  if (head && head.period === period) {
+    arr[0] = { ...head, [valueKey]: live.value, change: live.change, source: 'TradingView (tự động)' };
+  } else {
+    arr.unshift({ period, [valueKey]: live.value, change: live.change, target, source: 'TradingView (tự động)' });
+  }
+  // Kỳ liền trước = số mới − chênh lệch mà nguồn công bố (sửa số nhập tay cũ nếu lệch)
+  const prev = previousPeriod(period);
+  if (live.change !== null && prev) {
+    const prevValue = Number((live.value - live.change).toFixed(2));
+    const idx = arr.findIndex((r) => r.period === prev);
+    if (idx >= 0) {
+      if (arr[idx][valueKey] !== prevValue) {
+        const { mom: _staleMom, ...rest } = arr[idx]; // số tháng/tháng cũ đi kèm số nhập tay sai → bỏ
+        void _staleMom;
+        arr[idx] = { ...rest, [valueKey]: prevValue, source: 'Suy ra từ TradingView (số mới − chênh lệch)' };
+      }
+    } else {
+      arr.splice(1, 0, { period: prev, [valueKey]: prevValue, target, source: 'Suy ra từ TradingView (số mới − chênh lệch)' });
+    }
+  }
+  return arr.slice(0, 12);
+}
+
 async function fetchBankRates() {
   console.log('[2/2] Đang cào bảng Lãi Suất Tiết Kiệm 38 Ngân Hàng...');
   const rates = [];
@@ -246,6 +318,7 @@ async function fetchBankRates() {
     console.error('  - Lỗi fetch lãi suất ngân hàng:', e.message);
   }
 
+  lastBankRates = rates;
   // Lưu vào Supabase
   if (rates.length > 0) {
     const { error } = await supabase.from('macro_bank_rates').upsert(rates, { onConflict: 'id' });
@@ -262,46 +335,52 @@ async function crawlSbvInterestRates() {
   console.log(`\n[3/4] Đang cào dữ liệu Lãi Suất Liên Ngân Hàng & Điều Hành NHNN...`);
   const macroJsonPath = path.resolve(__dirname, '../frontend/src/features/market/data/macroDatabase.json');
   
+  // Bắt đầu từ số đã lưu (KHÔNG gán cứng số liệu); chỉ ghi đè bằng số thật lấy được ở dưới
+  let stored = [];
+  try {
+    stored = JSON.parse(fs.readFileSync(macroJsonPath, 'utf8')).interestRate || [];
+  } catch {}
+  const pick = (pred, fallback) => ({ ...(stored.find(pred) || fallback) });
   let rates = [
-    {
-      bank: "Huy động 12T (Bình quân)",
-      rate: "4.85%",
-      term: "12M",
-      type: "deposit",
-      isCrawled: true,
-      source: "Biểu lãi suất bình quân hệ thống ngân hàng"
-    },
-    {
-      bank: "Liên ngân hàng (ON - Qua đêm)",
-      rate: "3.50%",
-      term: "ON",
-      type: "interbank",
-      isCrawled: true,
-      source: "Thị trường liên ngân hàng 2"
-    },
-    {
-      bank: "Lãi suất Tái cấp vốn NHNN",
-      rate: "4.50%",
-      term: "Chính sách",
-      doc: "QĐ 1123/QĐ-NHNN",
-      isCrawled: true
-    },
-    {
-      bank: "Lãi suất Tái chiết khấu NHNN",
-      rate: "3.00%",
-      term: "Chính sách",
-      doc: "QĐ 1123/QĐ-NHNN",
-      isCrawled: true
-    },
-    {
-      bank: "Lãi suất Liên ngân hàng (VNIBOR)",
-      rate: "4.95%",
-      term: "3M",
-      type: "interbank",
-      isCrawled: true,
-      source: "Thị trường tiền tệ liên ngân hàng"
+    pick((r) => r.term === '12M', { bank: 'Huy động 12T (Trung vị)', rate: '-', term: '12M', type: 'deposit' }),
+    pick((r) => r.term === 'ON', { bank: 'Liên ngân hàng', rate: '-', term: 'ON', type: 'interbank' }),
+    pick((r) => r.bank && r.bank.includes('Tái cấp vốn'), { bank: 'Lãi suất Tái cấp vốn NHNN', rate: '-', term: 'Chính sách' }),
+    pick((r) => r.bank && r.bank.includes('Tái chiết khấu'), { bank: 'Lãi suất Tái chiết khấu NHNN', rate: '-', term: 'Chính sách' }),
+    pick((r) => r.term === '3M', { bank: 'Lãi suất Liên ngân hàng (VNIBOR)', rate: '-', term: '3M', type: 'interbank' }),
+  ].map((r) => ({ ...r, isCrawled: false }));
+  const nowIso = new Date().toISOString();
+  const setRate = (pred, value, source) => {
+    const item = rates.find(pred);
+    if (item && Number.isFinite(value)) {
+      item.rate = `${Number(value).toFixed(2)}%`;
+      item.isCrawled = true;
+      item.source = source;
+      item.updatedAt = nowIso;
     }
-  ];
+  };
+
+  // 0. Số chính thức qua TradingView: lãi suất điều hành (tái cấp vốn) & liên ngân hàng
+  const tvPolicy = await fetchTvIndicator('ECONOMICS:VNINTR');
+  if (tvPolicy) setRate((r) => r.bank.includes('Tái cấp vốn'), tvPolicy.value, 'NHNN qua TradingView');
+  const tvInterbank = await fetchTvIndicator('ECONOMICS:VNINBR');
+  if (tvInterbank) {
+    setRate((r) => r.term === 'ON', tvInterbank.value, 'Liên ngân hàng qua TradingView');
+    const on = rates.find((r) => r.term === 'ON');
+    if (on) on.bank = 'Liên ngân hàng';
+  }
+  // Huy động 12T: trung vị lãi suất tại quầy của các ngân hàng vừa cào ở bước trước
+  const dep12 = lastBankRates
+    .filter((r) => r.type === 'counter')
+    .map((r) => Number(String(r.rate_12m).replace(',', '.')))
+    .filter((v) => Number.isFinite(v) && v > 0 && v < 20)
+    .sort((a, b) => a - b);
+  if (dep12.length >= 5) {
+    const mid = Math.floor(dep12.length / 2);
+    const median = dep12.length % 2 ? dep12[mid] : (dep12[mid - 1] + dep12[mid]) / 2;
+    setRate((r) => r.term === '12M', median, `Trung vị ${dep12.length} ngân hàng (24hMoney)`);
+    const dep = rates.find((r) => r.term === '12M');
+    if (dep) dep.bank = 'Huy động 12T (Trung vị)';
+  }
 
   // 1. Cào Lãi suất liên ngân hàng VNIBOR từ Simplize Macro (__NEXT_DATA__)
   try {
@@ -315,10 +394,17 @@ async function crawlSbvInterestRates() {
         const json = JSON.parse(match[1]);
         const interbankData = json?.props?.pageProps?.data;
         const vniborItem = rates.find((r) => r.bank.includes('VNIBOR'));
-        if (vniborItem && interbankData && interbankData.current) {
-          vniborItem.rate = `${interbankData.current}%`;
-          console.log(`  ✓ Đã cào Lãi suất Liên ngân hàng (VNIBOR) từ Simplize: ${interbankData.current}%`);
+        // Trang này là chuỗi "Lãi suất liên ngân hàng" (cùng chuỗi ECONOMICS:VNINBR), KHÔNG phải VNIBOR 3 tháng.
+        // Chỉ dùng làm dự phòng cho dòng liên ngân hàng khi TradingView lỗi.
+        const onItem = rates.find((r) => r.term === 'ON');
+        if (onItem && !onItem.isCrawled && interbankData && interbankData.current) {
+          onItem.rate = `${interbankData.current}%`;
+          onItem.isCrawled = true;
+          onItem.updatedAt = nowIso;
+          onItem.source = 'Liên ngân hàng qua Simplize';
+          console.log(`  ✓ Lãi suất liên ngân hàng (dự phòng Simplize): ${interbankData.current}%`);
         }
+        void vniborItem;
       }
     }
   } catch (e) {
@@ -338,11 +424,16 @@ async function crawlSbvInterestRates() {
       const refItem = rates.find((r) => r.bank.includes('Tái cấp vốn'));
       const discItem = rates.find((r) => r.bank.includes('Tái chiết khấu'));
 
-      if (refItem && refMatch && refMatch[1]) {
+      // Chỉ dùng 24hMoney khi TradingView không có số điều hành
+      if (refItem && refMatch && refMatch[1] && !refItem.isCrawled) {
         refItem.rate = `${refMatch[1].replace(',', '.')}%`;
+        refItem.isCrawled = true;
+        refItem.updatedAt = nowIso;
       }
       if (discItem && discMatch && discMatch[1]) {
         discItem.rate = `${discMatch[1].replace(',', '.')}%`;
+        discItem.isCrawled = true;
+        discItem.updatedAt = nowIso;
       }
     }
   } catch (e) {
@@ -365,6 +456,19 @@ async function crawlSbvInterestRates() {
       const macroData = JSON.parse(fs.readFileSync(macroJsonPath, 'utf8'));
       macroData.interestRate = rates;
       macroData.interestRateLastCrawled = nowTimeStr;
+
+      // GDP & CPI tự động (không nhập tay)
+      const { cpiPeriod, gdpPeriod } = latestReleasedPeriods();
+      const tvCpi = await fetchTvIndicator('ECONOMICS:VNIRYY');
+      if (tvCpi) {
+        macroData.cpi = upsertSeries(macroData.cpi, cpiPeriod, 'yoy', tvCpi, (macroData.cpi && macroData.cpi[0] && macroData.cpi[0].target) || 4.5);
+        console.log(`  ✓ CPI: ${tvCpi.value}% (Δ ${tvCpi.change}) — kỳ ${macroData.cpi[0].period}`);
+      }
+      const tvGdp = await fetchTvIndicator('ECONOMICS:VNGDPYY');
+      if (tvGdp) {
+        macroData.gdp = upsertSeries(macroData.gdp, gdpPeriod, 'growthRate', tvGdp, (macroData.gdp && macroData.gdp[0] && macroData.gdp[0].target) || 6.5);
+        console.log(`  ✓ GDP: ${tvGdp.value}% (Δ ${tvGdp.change}) — kỳ ${macroData.gdp[0].period}`);
+      }
       macroData.interestRateSource = 'Ngân hàng Nhà nước & Thị trường liên ngân hàng';
       fs.writeFileSync(macroJsonPath, JSON.stringify(macroData, null, 2), 'utf8');
       console.log(`  ✓ Đã cào & cập nhật Lãi suất liên ngân hàng & điều hành vào macroDatabase.json (${nowTimeStr})!`);
