@@ -36,9 +36,13 @@ export const RelativeRotationGraphCard: React.FC<RelativeRotationGraphCardProps>
     setError(null);
 
     try {
-      const res = await fetch(
-        `/api/market/rrg?timeframe=${timeframe}&tail=${tailLength}&benchmark=VNINDEX&group=${group}`
-      );
+      const url = `/api/market/rrg?timeframe=${timeframe}&tail=${tailLength}&benchmark=VNINDEX&group=${group}`;
+      let res = await fetch(url);
+      // Nguồn nến lỗi tạm thời (502/503/504) → thử lại 1 lần sau 1,5 giây
+      if (!res.ok && res.status >= 500) {
+        await new Promise((r) => setTimeout(r, 1500));
+        res = await fetch(url);
+      }
       if (!res.ok) {
         throw new Error(`Lỗi tải dữ liệu RRG: HTTP ${res.status}`);
       }

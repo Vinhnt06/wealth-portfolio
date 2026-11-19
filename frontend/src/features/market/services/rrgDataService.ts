@@ -120,9 +120,12 @@ export async function getLiveRRGDataset(
   }
 
   try {
-    // 1. Fetch Benchmark (VNINDEX) candles
+    // 1. Fetch Benchmark (VNINDEX) candles — lỗi tạm thời thì trả bản gần nhất (đánh dấu stale) thay vì báo lỗi
     const benchCandles = await fetchEntradeCandles(benchmark, true, timeframe);
-    if (!benchCandles.length) return null;
+    if (!benchCandles.length) {
+      const last = cacheStore[cacheKey]?.data;
+      return last ? { ...last, stale: true } : null;
+    }
 
     // A. XỬ LÝ THEO TỪNG NHÓM NGÀNH / RỔ CỔ PHIẾU CỤ THỂ
     const selectedGroupOption = RRG_GROUP_OPTIONS.find((g) => g.id === group);
@@ -366,7 +369,8 @@ export async function getLiveRRGDataset(
     return dataset;
   } catch (error) {
     console.error('getLiveRRGDataset error:', error);
-    return null;
+    const last = cacheStore[cacheKey]?.data;
+    return last ? { ...last, stale: true } : null;
   }
 }
 

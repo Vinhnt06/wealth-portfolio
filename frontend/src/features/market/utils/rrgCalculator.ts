@@ -42,6 +42,8 @@ export interface RRGSectorData {
 }
 
 export interface RRGDataset {
+  /** true = nguồn lỗi tạm thời, đang hiển thị bản tính gần nhất */
+  stale?: boolean;
   sectors: RRGSectorData[];
   benchmark: string;
   dateRange: {

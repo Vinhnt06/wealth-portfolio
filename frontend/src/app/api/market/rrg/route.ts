@@ -3,6 +3,9 @@ import { getLiveRRGDataset } from '@/features/market/services/rrgDataService';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+// Nguồn nến (Entrade) ở Việt Nam: chạy gần nguồn như các API thị trường khác, và đủ thời gian tải ~100 mã
+export const preferredRegion = 'sin1';
+export const maxDuration = 30;
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
