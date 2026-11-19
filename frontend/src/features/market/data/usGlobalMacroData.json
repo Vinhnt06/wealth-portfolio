@@ -1,7 +1,7 @@
 {
   "success": true,
-  "timestamp": "2026-11-19T08:33:01.109Z",
-  "updateTime": "15:33:00",
+  "timestamp": "2026-11-19T08:45:32.653Z",
+  "updateTime": "15:45:32",
   "indices": [
     {
       "symbol": "^GSPC",
@@ -85,9 +85,9 @@
       "name": "FTSE 100",
       "category": "equity",
       "region": "europe",
-      "price": 10549.23,
-      "change": -1.94,
-      "changePercent": -0.02,
+      "price": 10545.78,
+      "change": -5.39,
+      "changePercent": -0.05,
       "unit": "pts",
       "note": "Chỉ số 100 Bluechip sàn London (Anh)"
     },
@@ -96,8 +96,8 @@
       "name": "DAX 40",
       "category": "equity",
       "region": "europe",
-      "price": 25913.72,
-      "change": 177.48,
+      "price": 25912.5,
+      "change": 176.26,
       "changePercent": 0.69,
       "unit": "pts",
       "note": "Chỉ số 40 cổ phiếu hàng đầu nước Đức"
@@ -107,9 +107,9 @@
       "name": "Vàng Thế Giới",
       "category": "commodity",
       "region": "global",
-      "price": 3735.8,
-      "change": -6.1,
-      "changePercent": -0.16,
+      "price": 3736.2,
+      "change": -5.7,
+      "changePercent": -0.15,
       "unit": "USD/oz",
       "note": "Giá vàng giao ngay quốc tế"
     },
@@ -118,9 +118,9 @@
       "name": "Dầu Brent",
       "category": "commodity",
       "region": "global",
-      "price": 89.47,
-      "change": 0.3,
-      "changePercent": 0.34,
+      "price": 89.51,
+      "change": 0.34,
+      "changePercent": 0.38,
       "unit": "USD/thùng",
       "note": "Dầu thô tiêu chuẩn toàn cầu"
     },
@@ -140,9 +140,9 @@
       "name": "Bạc Thế Giới",
       "category": "commodity",
       "region": "global",
-      "price": 45.17,
-      "change": 0.11,
-      "changePercent": 0.25,
+      "price": 45.19,
+      "change": 0.13,
+      "changePercent": 0.29,
       "unit": "USD/oz",
       "note": "Giá kim loại bạc thế giới"
     },
@@ -151,9 +151,9 @@
       "name": "DXY Index",
       "category": "currency",
       "region": "global",
-      "price": 103.77,
-      "change": -0.1,
-      "changePercent": -0.09,
+      "price": 103.75,
+      "change": -0.11,
+      "changePercent": -0.1,
       "unit": "pts",
       "note": "Chỉ số đo lường sức mạnh đồng USD"
     },
@@ -173,9 +173,9 @@
       "name": "CBOE VIX",
       "category": "volatility",
       "region": "global",
-      "price": 21.99,
-      "change": -2.57,
-      "changePercent": -10.46,
+      "price": 21.93,
+      "change": -2.63,
+      "changePercent": -10.69,
       "unit": "pts",
       "note": "Thước đo mức độ biến động & sợ hãi toàn cầu"
     },
@@ -184,9 +184,9 @@
       "name": "Bitcoin (BTC)",
       "category": "crypto",
       "region": "global",
-      "price": 63629.79,
-      "change": -981.01,
-      "changePercent": -1.52,
+      "price": 63545.83,
+      "change": -1064.97,
+      "changePercent": -1.65,
       "unit": "USD",
       "note": "Đồng tiền mã hóa vốn hóa lớn nhất"
     },
@@ -195,9 +195,9 @@
       "name": "Ethereum (ETH)",
       "category": "crypto",
       "region": "global",
-      "price": 1803.15,
-      "change": -6.8,
-      "changePercent": -0.38,
+      "price": 1798.62,
+      "change": -11.33,
+      "changePercent": -0.63,
       "unit": "USD",
       "note": "Nền tảng smart contract hàng đầu"
     }
@@ -215,8 +215,8 @@
       "pillar": "Áp Lực Tỷ Giá USD/VND",
       "status": "Trung Lập",
       "statusColor": "amber",
-      "headline": "DXY biến động quanh mức 103.77 điểm",
-      "detail": "Đồng USD neo cao (103.77 điểm) khiến tỷ giá USD/VND chịu áp lực, NHNN cần linh hoạt can thiệp bằng nghiệp vụ OMO và tỷ giá trung tâm."
+      "headline": "DXY biến động quanh mức 103.75 điểm",
+      "detail": "Đồng USD neo cao (103.75 điểm) khiến tỷ giá USD/VND chịu áp lực, NHNN cần linh hoạt can thiệp bằng nghiệp vụ OMO và tỷ giá trung tâm."
     },
     {
       "pillar": "Không Gian Lãi Suất NHNN",
@@ -230,7 +230,7 @@
       "status": "Trung Lập",
       "statusColor": "amber",
       "headline": "Xu hướng dòng vốn ngoại trên TTCK",
-      "detail": "Lợi suất trái phiếu chính phủ Mỹ 10 năm (5.07%) và chỉ số VIX (21.99 điểm) phản ánh khẩu vị rủi ro toàn cầu đang trong tầm kiểm soát (Tâm lý ổn định), tạo điều kiện cân bằng dòng vốn ngoại trên HOSE/HNX."
+      "detail": "Lợi suất trái phiếu chính phủ Mỹ 10 năm (5.07%) và chỉ số VIX (21.93 điểm) phản ánh khẩu vị rủi ro toàn cầu đang trong tầm kiểm soát (Tâm lý ổn định), tạo điều kiện cân bằng dòng vốn ngoại trên HOSE/HNX."
     }
   ]
 }
