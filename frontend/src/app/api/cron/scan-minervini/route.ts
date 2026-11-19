@@ -8,7 +8,9 @@ import financialsData from '../../../../features/market/data/financialsDatabase.
 import {
   analyzeRawStockCandles,
   assignCrossSectionalRsAndEvaluate,
+  isLastBarInProgress,
 } from '../../../../features/market/utils/minerviniEvaluator';
+import { fetchVietcapListedSharesM } from '../../../../features/market/utils/vietcapListedShares';
 import { MinerviniScreenerItem } from '../../../../features/market/types/minervini.types';
 
 export const dynamic = 'force-dynamic';
@@ -56,6 +58,8 @@ export async function GET(request: NextRequest) {
   const uniqueUniverse = Array.from(new Set([...SECTOR_LEADER_UNIVERSE, ...allDbSymbols]));
   const rawItems: MinerviniScreenerItem[] = [];
   const batchSize = 60;
+  // Số CP niêm yết thật để tính vốn hoá (lỗi thì quay về bảng ghi cứng)
+  const listedSharesM = await fetchVietcapListedSharesM(uniqueUniverse);
 
   for (let i = 0; i < uniqueUniverse.length; i += batchSize) {
     const batch = uniqueUniverse.slice(i, i + batchSize);
@@ -91,10 +95,12 @@ export async function GET(request: NextRequest) {
             volumes: d.v,
             pe: fin?.pe ?? null,
             epsGrowthYoY: fin?.earningsGrowthYoY ?? null,
+            listedSharesM: listedSharesM.get(sym) ?? null,
+            lastBarInProgress: Array.isArray(d.t) ? isLastBarInProgress(d.t[d.t.length - 1]) : false,
           });
           if (item && item.isVnLiquidStandard) {
-            // Bắt buộc KL TB 20N & 10N >= 100.000 CP đều nhiều phiên VÀ Vốn hóa thực tế >= 1.000 Tỷ VNĐ
-            // Loại bỏ triệt để cổ phiếu bo cung/thanh khoản kém/vốn hóa nhỏ (SPV, HDA, HIO, CTP...) ngay cả khi RS 99
+            // Chỉ giữ mã thuộc rổ đủ chuẩn: GTGD đều nhiều phiên & vốn hoá thật ≥ ngưỡng (screenerUniverseRules.json)
+            // Loại cổ phiếu bo cung / thanh khoản kém / vốn hoá nhỏ ngay cả khi RS 99
             rawItems.push(item);
           }
         } catch {

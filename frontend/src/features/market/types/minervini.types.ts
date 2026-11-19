@@ -212,6 +212,8 @@ export interface MinerviniScreenerItem {
   volume: number;
   avgVol20?: number;
   avgVal20B?: number;         // Giá trị giao dịch TB 20 phiên (Tỷ VNĐ/phiên)
+  avgVal10B?: number;         // Giá trị giao dịch TB 10 phiên (Tỷ VNĐ/phiên)
+  listedSharesM?: number;     // Số CP niêm yết thật (triệu CP) lấy từ nguồn giá sống
   upDownVolRatio?: number;    // Tỷ lệ Tổng Vol phiên tăng / Tổng Vol phiên giảm (20 phiên)
   volSignal?: 'BREAKOUT' | 'POCKET_PIVOT' | 'VCP_DRYUP' | 'NORMAL' | 'DISTRIBUTION';
   isVnLiquidStandard?: boolean; // Đạt chuẩn chất lượng & thanh khoản TTCK Việt Nam

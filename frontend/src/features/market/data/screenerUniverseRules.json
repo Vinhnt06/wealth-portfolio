@@ -1,0 +1,8 @@
+{
+  "_note": "Rổ cổ phiếu đủ chuẩn cho bộ lọc Minervini (dùng chung cho app và scripts/cron_scan_minervini.js). Thanh khoản đo bằng GIÁ TRỊ giao dịch (tỷ VND/phiên), không đo bằng số cổ phiếu, để mã giá thấp không lọt và mã giá cao không bị loại oan.",
+  "minAvgValue20B": 5,
+  "minAvgValue10B": 5,
+  "minMedianValue10B": 3,
+  "minSessionValue5B": 1,
+  "minMktCapB": 1000
+}

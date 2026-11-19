@@ -22,6 +22,50 @@ const finMap = financialsData.data || {};
 const stockMap = new Map();
 stockDatabase.forEach((s) => stockMap.set(s.symbol.toUpperCase(), s));
 
+// Ngưỡng rổ đủ chuẩn — dùng chung với app (frontend/src/features/market/utils/minerviniEvaluator.ts)
+const UNIVERSE_RULES = JSON.parse(
+  fs.readFileSync(path.resolve(__dirname, '../frontend/src/features/market/data/screenerUniverseRules.json'), 'utf8')
+);
+
+// Số CP niêm yết thật (triệu CP) từ bảng giá Vietcap; lỗi thì Map rỗng → dùng bảng ghi cứng OUTSTANDING_SHARES_M
+async function fetchListedSharesM(symbols) {
+  const out = new Map();
+  try {
+    const res = await fetch('https://trading.vietcap.com.vn/api/price/symbols/getList', {
+      method: 'POST',
+      headers: {
+        'User-Agent': 'Mozilla/5.0',
+        'Content-Type': 'application/json',
+        Origin: 'https://trading.vietcap.com.vn',
+        Referer: 'https://trading.vietcap.com.vn/',
+      },
+      body: JSON.stringify({ symbols }),
+      signal: AbortSignal.timeout(15000),
+    });
+    if (!res.ok) return out;
+    const list = await res.json();
+    if (!Array.isArray(list)) return out;
+    for (const it of list) {
+      const sym = String((it && it.listingInfo && it.listingInfo.symbol) || '').toUpperCase();
+      const listed = Number((it && it.listingInfo && it.listingInfo.listedShare) || 0);
+      if (sym && listed > 0) out.set(sym, listed / 1e6);
+    }
+  } catch (err) {
+    console.warn('⚠️  Không lấy được số CP niêm yết từ Vietcap, dùng bảng ghi cứng:', err.message);
+  }
+  return out;
+}
+
+// Nến cuối có phải phiên hôm nay chưa đóng cửa (trước 15:00 giờ VN) không — khớp isLastBarInProgress của app
+function isLastBarInProgress(lastBarTimeSec) {
+  if (!lastBarTimeSec) return false;
+  const vnDay = (ms) => new Date(ms + 7 * 3600000).toISOString().slice(0, 10);
+  const now = Date.now();
+  if (vnDay(lastBarTimeSec * 1000) !== vnDay(now)) return false;
+  const vnMinutes = Math.floor(((now + 7 * 3600000) % 86400000) / 60000);
+  return vnMinutes < 15 * 60;
+}
+
 // Danh sách 188 mã cổ phiếu thanh khoản hàng đầu đại diện đầy đủ 20 ngành ICB
 const SECTOR_LEADER_UNIVERSE = [
   // 1. Ngân hàng
@@ -139,7 +183,7 @@ const CRITERIA_LABELS = [
   '1. Giá > MA150 & MA200',
   '2. MA150 > MA200',
   '3. MA200 dốc lên (≥1 tháng)',
-  '4. MA50 > MA150 > MA200',
+  '4. MA50 > MA150 & MA200',
   '5. Giá > MA50',
   '6. Giá ≥ +30% từ đáy 52T',
   '7. Cách đỉnh 52T ≤ 25%',
@@ -169,6 +213,8 @@ async function runMinerviniScan() {
   const activeCutoffSec = nowSec - 45 * 24 * 3600;
 
   const rawResults = [];
+  const listedSharesM = await fetchListedSharesM(uniqueUniverse);
+  console.log(`   - Số CP niêm yết thật: ${listedSharesM.size} mã (còn lại dùng bảng ghi cứng)`);
 
   const batchSize = 60;
   for (let i = 0; i < uniqueUniverse.length; i += batchSize) {
@@ -252,13 +298,11 @@ async function runMinerviniScan() {
           const volSlice = d.v.slice(start20);
           const avgVol20 = volSlice.reduce((a, b) => a + b, 0) / Math.max(1, volSlice.length);
           const relVol = avgVol20 > 0 ? Math.round((vol / avgVol20) * 100) / 100 : 1;
-          const avgVal20B = Math.round(((avgVol20 * priceK) / 1000000) * 100) / 100;
 
           let upVolSum = 0;
           let downVolSum = 0;
           let maxDownVol10 = 0;
           const start10 = Math.max(1, len - 10);
-          let noZeroVol10D = true;
 
           for (let idx = Math.max(1, start20); idx < len; idx++) {
             const v = d.v[idx] || 0;
@@ -267,7 +311,6 @@ async function runMinerviniScan() {
             else if (diff < 0) downVolSum += v;
 
             if (idx >= start10) {
-              if (v <= 0) noZeroVol10D = false;
               if (diff < 0 && idx < len - 1 && v > maxDownVol10) {
                 maxDownVol10 = v;
               }
@@ -293,29 +336,38 @@ async function runMinerviniScan() {
               : 'NORMAL';
 
           const priceVnd = Math.round(priceK * 1000);
-          // Vốn hóa thị trường thực tế (Tỷ VNĐ): sharesM (triệu CP từ Vietcap IQ) * priceK (nghìn đồng) = Tỷ đồng
-          // Tuyệt đối không dùng fallback 100 triệu CP cho mã nhỏ chưa xác thực để tránh vốn hóa ảo!
-          const sharesM = OUTSTANDING_SHARES_M[sym] || 15;
+          // Vốn hoá thật (tỷ VND) = số CP niêm yết (triệu, từ Vietcap) × giá (nghìn đồng).
+          // Nguồn lỗi → bảng ghi cứng; mã lạ → 15 triệu CP (cố tình nhỏ, tránh vốn hoá ảo)
+          const listedM = listedSharesM.get(sym) || 0;
+          const sharesM = listedM > 0 ? listedM : OUTSTANDING_SHARES_M[sym] || 15;
           const mktCapT = Math.round(sharesM * priceK);
 
-          // BẮT BUỘC KIỂM TRA KHỐI LƯỢNG DUY TRÌ NHIỀU PHIÊN & VỐN HÓA LỚN CHỐNG THAO TÚNG:
-          // 1. KL TB 20 phiên >= 100.000 CP VÀ KL TB 10 phiên >= 100.000 CP
-          // 2. Trung vị KL 10 phiên >= 60.000 CP & Phiên thấp nhất trong 5 phiên gần nhất >= 20.000 CP (Loại bỏ mã quay tay 1 phiên rồi tắt vol như SPV, HIO)
-          // 3. Vốn hóa thị trường thực tế >= 1.000 Tỷ VNĐ (Loại bỏ triệt để cổ phiếu bé/bo cung dễ thao túng như SPV 237 Tỷ, HDA 307 Tỷ, HIO 483 Tỷ, CTP 113 Tỷ)
-          const volSlice10 = d.v.slice(Math.max(0, len - 10));
-          const avgVol10 = volSlice10.reduce((a, b) => a + b, 0) / Math.max(1, volSlice10.length);
-          const sortedVol10 = [...volSlice10].sort((a, b) => a - b);
-          const medianVol10 = sortedVol10[Math.floor(sortedVol10.length / 2)] || 0;
-          const volSlice5 = d.v.slice(Math.max(0, len - 5));
-          const minVol5 = volSlice5.length > 0 ? Math.min(...volSlice5) : 0;
+          // RỔ ĐỦ CHUẨN CHỐNG THAO TÚNG — đo bằng GIÁ TRỊ giao dịch (tỷ VND/phiên), đặc thù TTCK Việt Nam
+          // (đo bằng số CP thì mã penny dễ lọt, mã giá cao bị loại oan). Ngưỡng: screenerUniverseRules.json
+          // Phiên hôm nay chưa đóng cửa thì không tính vào thanh khoản.
+          const liqEnd = isLastBarInProgress(d.t && d.t[len - 1]) && len > 21 ? len - 1 : len;
+          const dayValueB = (idx) => ((d.v[idx] || 0) * d.c[idx]) / 1e6;
+          const valuesOver = (n) => {
+            const out = [];
+            for (let idx = Math.max(0, liqEnd - n); idx < liqEnd; idx++) out.push(dayValueB(idx));
+            return out;
+          };
+          const mean = (arr) => arr.reduce((a, b) => a + b, 0) / Math.max(1, arr.length);
+          const val10 = valuesOver(10);
+          const avgValue20B = mean(valuesOver(20));
+          const avgValue10B = mean(val10);
+          const medianValue10B = [...val10].sort((a, b) => a - b)[Math.floor(val10.length / 2)] || 0;
+          const minValue5B = Math.min(...valuesOver(5));
+          let noZeroVolLiq = true;
+          for (let idx = Math.max(0, liqEnd - 10); idx < liqEnd; idx++) if ((d.v[idx] || 0) <= 0) noZeroVolLiq = false;
 
           const isVnLiquidStandard =
-            noZeroVol10D &&
-            avgVol20 >= 100000 &&
-            avgVol10 >= 100000 &&
-            medianVol10 >= 60000 &&
-            minVol5 >= 20000 &&
-            mktCapT >= 1000;
+            noZeroVolLiq &&
+            avgValue20B >= UNIVERSE_RULES.minAvgValue20B &&
+            avgValue10B >= UNIVERSE_RULES.minAvgValue10B &&
+            medianValue10B >= UNIVERSE_RULES.minMedianValue10B &&
+            minValue5B >= UNIVERSE_RULES.minSessionValue5B &&
+            mktCapT >= UNIVERSE_RULES.minMktCapB;
 
           if (!isVnLiquidStandard) return;
 
@@ -336,7 +388,9 @@ async function runMinerviniScan() {
             changePct: chgPct,
             volume: vol,
             avgVol20: Math.round(avgVol20),
-            avgVal20B,
+            avgVal20B: Math.round(avgValue20B * 100) / 100,
+            avgVal10B: Math.round(avgValue10B * 100) / 100,
+            listedSharesM: listedM > 0 ? Math.round(listedM * 100) / 100 : undefined,
             upDownVolRatio,
             volSignal,
             isVnLiquidStandard,
@@ -377,14 +431,10 @@ async function runMinerviniScan() {
     );
   }
 
-  // Bước 2: Xếp hạng chéo toàn thị trường (Cross-Sectional Percentile Rank 1 - 99) theo chuẩn William O'Neil / IBD
-  // Dùng rổ cổ phiếu có thanh khoản thật (KL TB 20N >= 30,000 CP hoặc GTGD >= 0.5 Tỷ/phiên & Giá >= 5,000đ)
-  // làm Rổ Chuẩn (Benchmark Universe) để chống nhiễu từ các mã bo cung 100 CP trên UPCoM
+  // Bước 2: Xếp hạng chéo (Cross-Sectional Percentile Rank 1 - 99) theo chuẩn William O'Neil / IBD,
+  // so với chính rổ đủ chuẩn (mọi mã trong rawResults đã qua lọc GTGD & vốn hoá) — khớp cách app xếp hạng
   rawResults.sort((a, b) => b.rawRsScore - a.rawRsScore);
-  const benchmarkScores = rawResults
-    .filter((it) => it.price >= 5000 && (it.avgVol20 >= 30000 || it.avgVal20B >= 0.5))
-    .map((it) => it.rawRsScore);
-  const refScores = benchmarkScores.length >= 50 ? benchmarkScores : rawResults.map((it) => it.rawRsScore);
+  const refScores = rawResults.map((it) => it.rawRsScore);
   const refTotal = refScores.length;
   const total = rawResults.length;
   const todayStr = new Date().toISOString().slice(0, 10);

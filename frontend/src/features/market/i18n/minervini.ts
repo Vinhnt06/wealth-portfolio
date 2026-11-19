@@ -8,7 +8,7 @@ export const TREND_LABEL_EN: Record<number, string> = {
   1: 'Price > MA150 and > MA200',
   2: 'MA150 > MA200',
   3: 'MA200 rising (≥ 1 month)',
-  4: 'MA50 > MA150 > MA200',
+  4: 'MA50 above MA150 and MA200',
   5: 'Price > MA50',
   6: 'Price ≥ 30% above 52-week low',
   7: 'Price within 25% of 52-week high',

@@ -15,7 +15,10 @@ import {
   calcMarketCapT,
   computePercentileRsAgainstUniverse,
   evaluateMinerviniCriteria,
+  isLastBarInProgress,
+  passesVnInvestableUniverse,
 } from '../../../../../features/market/utils/minerviniEvaluator';
+import { createSnapshotMemory, parseEventTime } from '../../../../../features/market/utils/tickGuard';
 
 export const runtime = 'nodejs';
 export const preferredRegion = 'sin1';
@@ -96,6 +99,17 @@ interface LiveTick {
 let ssiCache: { timestamp: number; map: Map<string, LiveTick> } | null = null;
 const SSI_CACHE_TTL_MS = 3000; // 3 seconds TTL
 
+// Giá sống có thể là snapshot của phiên trước (Vietcap thỉnh thoảng trả về) → giữ bản tốt gần nhất theo mã
+const liveTickMemory = createSnapshotMemory<LiveTick>();
+// Số CP niêm yết thật (triệu CP) theo mã, lấy từ Vietcap; dùng tính vốn hoá thay cho bảng ghi cứng
+const listedSharesM = new Map<string, number>();
+
+/** Gắn số CP niêm yết thật (nếu đã biết) vào bản ghi để mọi phép tính vốn hoá dùng cùng một số */
+function withListedShares<T extends { symbol: string; listedSharesM?: number }>(item: T): T {
+  const shares = listedSharesM.get(item.symbol.toUpperCase());
+  return shares ? { ...item, listedSharesM: shares } : item;
+}
+
 async function getLiveSsiTicks(): Promise<Map<string, LiveTick>> {
   if (ssiCache && Date.now() - ssiCache.timestamp < SSI_CACHE_TTL_MS) {
     return ssiCache.map;
@@ -122,12 +136,20 @@ async function getLiveSsiTicks(): Promise<Map<string, LiveTick>> {
         for (const it of list) {
           const sym = it?.listingInfo?.symbol;
           if (!sym) continue;
+          const key = sym.toUpperCase();
           const ref = Number(it.listingInfo?.refPrice || 0);
           const matched = Number(it.matchPrice?.matchPrice || 0);
           const price = matched > 0 ? matched : ref;
           const changePct = ref > 0 ? Number((((price - ref) / ref) * 100).toFixed(2)) : 0;
           const volume = Number(it.matchPrice?.accumulatedVolume || 0);
-          map.set(sym.toUpperCase(), { price, changePct, volume });
+          const listed = Number(it.listingInfo?.listedShare || 0);
+          if (listed > 0) listedSharesM.set(key, listed / 1_000_000);
+          const { value } = liveTickMemory.resolve(
+            key,
+            { price, changePct, volume },
+            { totalVolume: volume, refPrice: ref, eventTime: parseEventTime(it.matchPrice?.time) }
+          );
+          map.set(key, value);
         }
         if (map.size > 0) {
           ssiCache = { timestamp: Date.now(), map };
@@ -163,7 +185,9 @@ async function getLiveSsiTicks(): Promise<Map<string, LiveTick>> {
             ? Number(it.priceChangePercent)
             : 0;
         const volume = Number(it.nmTotalTradedQty || it.stockVol || 0);
-        map.set(it.stockSymbol.toUpperCase(), { price, changePct, volume });
+        const key = it.stockSymbol.toUpperCase();
+        const { value } = liveTickMemory.resolve(key, { price, changePct, volume }, { totalVolume: volume, refPrice: ref });
+        map.set(key, value);
       }
     }
     if (map.size > 0) {
@@ -195,7 +219,8 @@ function enrichWithLiveTicks(
         ? live.changePct
         : item.changePct;
     const volume = live && live.volume > 0 ? live.volume : item.volume;
-    const mktCapT = calcMarketCapT(sym, priceK);
+    const shares = listedSharesM.get(sym) ?? item.listedSharesM;
+    const mktCapT = calcMarketCapT(sym, priceK, shares);
 
     // Đánh giá lại cả 8 tiêu chí hoàn toàn xác định (deterministic) dựa trên giá thực tế hiện tại
     const evalResult = evaluateMinerviniCriteria({
@@ -221,6 +246,7 @@ function enrichWithLiveTicks(
       changePct,
       volume,
       mktCapT,
+      listedSharesM: shares,
       pe: item.pe ?? fin?.pe ?? null,
       epsGrowthYoY: item.epsGrowthYoY ?? fin?.earningsGrowthYoY ?? null,
       score: evalResult.score,
@@ -267,19 +293,18 @@ function upsertScanFile(itemsToUpsert: MinerviniScreenerItem[]): {
     }
     const existingList: MinerviniScreenerItem[] = Array.isArray(fileJson.data) ? fileJson.data : [];
     const itemMap = new Map<string, MinerviniScreenerItem>();
-    existingList.forEach((it) => {
-      const sym = it.symbol.toUpperCase();
-      const realMktCap = calcMarketCapT(sym, (it.price || 0) / 1000);
-      const avgVol = it.avgVol20 ?? it.volume ?? 0;
-      if (avgVol >= 100000 && realMktCap >= 1000) {
-        itemMap.set(sym, { ...it, mktCapT: realMktCap });
+    existingList.forEach((raw) => {
+      const it = withListedShares(raw);
+      if (passesVnInvestableUniverse(it)) {
+        const sym = it.symbol.toUpperCase();
+        itemMap.set(sym, { ...it, mktCapT: calcMarketCapT(sym, (it.price || 0) / 1000, it.listedSharesM) });
       }
     });
-    itemsToUpsert.forEach((it) => {
-      const sym = it.symbol.toUpperCase();
-      const realMktCap = calcMarketCapT(sym, (it.price || 0) / 1000);
-      if (it.isVnLiquidStandard && (it.avgVol20 ?? 0) >= 100000 && realMktCap >= 1000) {
-        itemMap.set(sym, { ...it, mktCapT: realMktCap });
+    itemsToUpsert.forEach((raw) => {
+      const it = withListedShares(raw);
+      if (it.isVnLiquidStandard) {
+        const sym = it.symbol.toUpperCase();
+        itemMap.set(sym, { ...it, mktCapT: calcMarketCapT(sym, (it.price || 0) / 1000, it.listedSharesM) });
       }
     });
 
@@ -359,24 +384,25 @@ export async function GET(request: Request) {
       let universeItems: MinerviniScreenerItem[] = [];
       let metaObj: any = null;
 
+      // Lấy giá sống trước: đồng thời nạp số CP niêm yết thật để tính vốn hoá
+      const liveMap = await getLiveSsiTicks();
+
       if (cachedUniverseData && Date.now() - cachedUniverseData.timestamp < CACHE_TTL_MS) {
         universeItems = cachedUniverseData.items;
         metaObj = cachedUniverseData.meta;
       } else {
         const loaded = loadExistingScanData();
         if (loaded.items.length > 0) {
-          // Đảm bảo dữ liệu có đầy đủ RS Percentile và điểm tiêu chí chuẩn
-          const hasRawScores = loaded.items.some((x) => typeof x.rawRsScore === 'number');
-          universeItems = hasRawScores
-            ? assignCrossSectionalRsAndEvaluate(loaded.items)
-            : loaded.items;
+          // Áp lại luật rổ hiện hành (GTGD & vốn hoá thật) cho dữ liệu đã lưu, rồi chuẩn hoá RS Percentile
+          const eligible = loaded.items.map(withListedShares).filter(passesVnInvestableUniverse);
+          const hasRawScores = eligible.some((x) => typeof x.rawRsScore === 'number');
+          universeItems = hasRawScores ? assignCrossSectionalRsAndEvaluate(eligible) : eligible;
           metaObj = loaded.meta;
           cachedUniverseData = { timestamp: Date.now(), items: universeItems, meta: metaObj };
         }
       }
 
       if (universeItems.length > 0) {
-        const liveMap = await getLiveSsiTicks();
         const enrichedAll = enrichWithLiveTicks(universeItems, liveMap, finMap);
         const stage2Total = enrichedAll.filter((s) => s.isStage2).length;
         const nearStage2Total = enrichedAll.filter((s) => s.score === 7).length;
@@ -431,6 +457,9 @@ export async function GET(request: Request) {
     const dbMap = new Map<string, any>();
     (stockDatabase as any[]).forEach((s) => dbMap.set(s.symbol.toUpperCase(), s));
 
+    // Nạp số CP niêm yết thật trước khi quét (vốn hoá là một điều kiện của rổ)
+    await getLiveSsiTicks();
+
     const nowSec = Math.floor(Date.now() / 1000);
     // Bắt buộc lấy đủ 730 ngày (2 năm = ~500 phiên giao dịch) để tính chính xác MA200 + độ dốc MA200 + 52W High/Low
     const fromSec = nowSec - 730 * 24 * 3600;
@@ -476,11 +505,13 @@ export async function GET(request: Request) {
               volumes: d.v,
               pe: fin?.pe ?? null,
               epsGrowthYoY: fin?.earningsGrowthYoY ?? null,
+              listedSharesM: listedSharesM.get(sym) ?? null,
+              lastBarInProgress: Array.isArray(d.t) ? isLastBarInProgress(d.t[d.t.length - 1]) : false,
             });
 
             if (item) {
-              // Khi quét toàn thị trường, bắt buộc KL TB 20N & 10N >= 100.000 CP đều nhiều phiên VÀ Vốn hóa thực tế >= 1.000 Tỷ VNĐ
-              // Loại bỏ triệt để các mã thanh khoản kém/vốn hóa nhỏ dễ bị thao túng (như SPV, HDA, HIO, CTP) dù RS có 99
+              // Khi quét toàn thị trường chỉ giữ mã thuộc rổ đủ chuẩn (GTGD đều nhiều phiên & vốn hoá thật ≥ ngưỡng),
+              // loại mã thanh khoản kém / vốn hoá nhỏ dễ bị thao túng dù RS có 99
               if (customSymbolsParam || item.isVnLiquidStandard) {
                 rawScannedItems.push(item);
               }

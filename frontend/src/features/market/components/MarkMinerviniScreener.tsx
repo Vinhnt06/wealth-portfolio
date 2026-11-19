@@ -34,6 +34,8 @@ import {
   evaluateMinerviniCriteria,
   calcMarketCapT,
   MINERVINI_8_CRITERIA_META,
+  VN_UNIVERSE_RULES,
+  passesVnInvestableUniverse,
 } from '../utils/minerviniEvaluator';
 import { getStockPriceColor } from '../utils/priceColors';
 import { SECTOR_MAPPING, ICB_20_SECTORS } from '../data/sectorMapping';
@@ -60,12 +62,14 @@ export const MarkMinerviniScreener: React.FC = () => {
   const [mainViewMode, setMainViewMode] = useState<ViewMode>('table');
   const [sectorSortBy, setSectorSortBy] = useState<SectorSortOption>('rs');
 
-  // Filter states (Mặc định chống thao túng TTCK Việt Nam: KL TB 20N >= 100.000 CP & Vốn hóa thực tế >= 1.000 Tỷ VNĐ)
+  // Filter states (Mặc định chống thao túng TTCK Việt Nam: GTGD TB 20 phiên ≥ 5 tỷ/phiên & Vốn hóa thật ≥ 1.000 Tỷ VNĐ)
+  const DEFAULT_MIN_VALUE_B = VN_UNIVERSE_RULES.minAvgValue20B;
+  const DEFAULT_MIN_CAP_B = VN_UNIVERSE_RULES.minMktCapB;
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSector, setSelectedSector] = useState<string>('all');
   const [selectedExchange, setSelectedExchange] = useState<string>('all');
-  const [minAvgVol20, setMinAvgVol20] = useState<number>(100000);
-  const [minMktCapT, setMinMktCapT] = useState<number>(1000);
+  const [minAvgVal20B, setMinAvgVal20B] = useState<number>(DEFAULT_MIN_VALUE_B);
+  const [minMktCapT, setMinMktCapT] = useState<number>(DEFAULT_MIN_CAP_B);
   const [volSignalFilter, setVolSignalFilter] = useState<string>('all');
   const [minRs, setMinRs] = useState<number>(70);
   const [minScore, setMinScore] = useState<number>(7);
@@ -111,7 +115,7 @@ export const MarkMinerviniScreener: React.FC = () => {
           sector: SECTOR_MAPPING[it.symbol] || it.sector || 'Khác',
         }));
 
-        // Restore and merge custom scanned symbols from localStorage (chỉ giữ các mã đạt chuẩn KL >= 100K & Vốn hóa >= 1.000 Tỷ)
+        // Restore and merge custom scanned symbols from localStorage (chỉ giữ các mã thuộc rổ đủ chuẩn GTGD & vốn hoá)
         try {
           if (typeof window !== 'undefined') {
             const saved: string[] = JSON.parse(localStorage.getItem('yourfin_minervini_custom_scans') || '[]');
@@ -127,12 +131,11 @@ export const MarkMinerviniScreener: React.FC = () => {
                       sector: SECTOR_MAPPING[it.symbol] || it.sector || 'Khác',
                     }))
                     .filter(
-                      (it: MinerviniScreenerItem) =>
-                        it.isVnLiquidStandard && (it.avgVol20 ?? 0) >= 100000 && (it.mktCapT ?? 0) >= 1000
+                      (it: MinerviniScreenerItem) => Boolean(it.isVnLiquidStandard) && passesVnInvestableUniverse(it)
                     );
                   enrichedItems = [...extraItems, ...enrichedItems];
                   const validSavedSymbols = saved.filter((s) =>
-                    enrichedItems.some((it: any) => it.symbol === s && (it.avgVol20 ?? 0) >= 100000 && (it.mktCapT ?? 0) >= 1000)
+                    enrichedItems.some((it: MinerviniScreenerItem) => it.symbol === s && passesVnInvestableUniverse(it))
                   );
                   localStorage.setItem('yourfin_minervini_custom_scans', JSON.stringify(validSavedSymbols));
                 }
@@ -193,10 +196,7 @@ export const MarkMinerviniScreener: React.FC = () => {
           ...raw,
           sector: SECTOR_MAPPING[sym] || raw.sector || 'Khác',
         };
-        const passesLiquidityAndCap =
-          Boolean(newItem.isVnLiquidStandard) &&
-          (newItem.avgVol20 ?? 0) >= 100000 &&
-          (newItem.mktCapT ?? 0) >= 1000;
+        const passesLiquidityAndCap = Boolean(newItem.isVnLiquidStandard) && passesVnInvestableUniverse(newItem);
 
         if (passesLiquidityAndCap) {
           setItems((prev) => {
@@ -205,7 +205,7 @@ export const MarkMinerviniScreener: React.FC = () => {
           });
           setSearchQuery(sym);
 
-          // Chỉ lưu vào bộ lọc đối với cổ phiếu đạt chuẩn KL TB >= 100K & Vốn hóa >= 1.000 Tỷ
+          // Chỉ lưu vào bộ lọc đối với cổ phiếu thuộc rổ đủ chuẩn (GTGD & vốn hoá)
           try {
             if (typeof window !== 'undefined') {
               const saved: string[] = JSON.parse(localStorage.getItem('yourfin_minervini_custom_scans') || '[]');
@@ -217,14 +217,13 @@ export const MarkMinerviniScreener: React.FC = () => {
         }
 
         if (!passesLiquidityAndCap) {
-          const avgVolK = Math.round(((newItem.avgVol20 ?? newItem.volume ?? 0) / 1000) * 10) / 10;
           setScanFeedback({
             symbol: sym,
             type: 'warning',
             score: newItem.criteriaPassed,
             rsRating: newItem.rsRating,
             isStage2: false,
-            message: `🚫 LOẠI KHỎI BỘ LỌC CHỐNG THAO TÚNG — Mã [${sym}] có KL TB 20N = ${avgVolK}K CP (Hôm nay: ${(newItem.volume || 0).toLocaleString('vi-VN')} CP) và Vốn hóa = ${(newItem.mktCapT || 0).toLocaleString('vi-VN')} Tỷ VNĐ. Yêu cầu tối thiểu: KL TB >= 100.000 CP duy trì đều & Vốn hóa >= 1.000 Tỷ VNĐ (Điểm kỹ thuật tham khảo: ${newItem.criteriaPassed}/8, RS ${newItem.rsRating}).`,
+            message: `🚫 LOẠI KHỎI BỘ LỌC CHỐNG THAO TÚNG — Mã [${sym}] có GTGD TB 20 phiên = ${(newItem.avgVal20B ?? 0).toLocaleString('vi-VN')} tỷ/phiên và Vốn hóa = ${(newItem.mktCapT || 0).toLocaleString('vi-VN')} Tỷ VNĐ. Yêu cầu tối thiểu: GTGD ≥ ${DEFAULT_MIN_VALUE_B} tỷ/phiên duy trì đều nhiều phiên & Vốn hóa ≥ ${DEFAULT_MIN_CAP_B.toLocaleString('vi-VN')} Tỷ VNĐ (Điểm kỹ thuật tham khảo: ${newItem.criteriaPassed}/8, RS ${newItem.rsRating}).`,
           });
         } else if (newItem.isStage2Eligible) {
           setScanFeedback({
@@ -233,7 +232,7 @@ export const MarkMinerviniScreener: React.FC = () => {
             score: newItem.criteriaPassed,
             rsRating: newItem.rsRating,
             isStage2: true,
-            message: `🎉 ĐẠT CHUẨN STAGE 2 (8/8) — Nhóm ngành [${newItem.sector}]: Cổ phiếu [${sym}] đạt 8/8 tiêu chí Trend Template, RS Rating: ${newItem.rsRating}/99, KL TB 20N: ${Math.round((newItem.avgVol20 || 0) / 1000)}K CP, Vốn hóa: ${(newItem.mktCapT || 0).toLocaleString('vi-VN')} Tỷ.`,
+            message: `🎉 ĐẠT CHUẨN STAGE 2 (8/8) — Nhóm ngành [${newItem.sector}]: Cổ phiếu [${sym}] đạt 8/8 tiêu chí Trend Template, RS Rating: ${newItem.rsRating}/99, GTGD TB 20N: ${(newItem.avgVal20B ?? 0).toLocaleString('vi-VN')} tỷ/phiên, Vốn hóa: ${(newItem.mktCapT || 0).toLocaleString('vi-VN')} Tỷ.`,
           });
         } else {
           const failedText =
@@ -357,7 +356,7 @@ export const MarkMinerviniScreener: React.FC = () => {
         pctAbove52WLow = evalResult.pctAbove52WLow;
       }
 
-      const mktCapT = calcMarketCapT(sym, livePriceK);
+      const mktCapT = calcMarketCapT(sym, livePriceK, item.listedSharesM);
 
       return {
         ...item,
@@ -378,13 +377,14 @@ export const MarkMinerviniScreener: React.FC = () => {
         epsGrowthYoY: item.epsGrowthYoY ?? fin?.earningsGrowthYoY ?? null,
       };
     }).filter((item) => {
-      // Loại bỏ triệt để cổ phiếu thanh khoản thấp (< 100K CP) hoặc vốn hóa nhỏ (< 1.000 Tỷ VNĐ) khỏi toàn bộ Bộ lọc, Top Leaders & Top Ngành (ngay cả khi RS = 99)
-      const avgVol = item.avgVol20 !== undefined ? item.avgVol20 : item.volume;
-      if (minAvgVol20 > 0 && avgVol < minAvgVol20) return false;
+      // Loại bỏ cổ phiếu GTGD thấp hoặc vốn hóa nhỏ khỏi toàn bộ Bộ lọc, Top Leaders & Top Ngành (ngay cả khi RS = 99)
+      const avgValueB =
+        typeof item.avgVal20B === 'number' ? item.avgVal20B : ((item.avgVol20 ?? 0) * (item.price / 1000)) / 1_000_000;
+      if (minAvgVal20B > 0 && avgValueB < minAvgVal20B) return false;
       if (minMktCapT > 0 && (item.mktCapT || 0) < minMktCapT) return false;
       return true;
     });
-  }, [items, ticks, minAvgVol20, minMktCapT]);
+  }, [items, ticks, minAvgVal20B, minMktCapT]);
 
   // Handle column header click to auto-sort
   const handleSort = (key: string) => {
@@ -1212,16 +1212,16 @@ export const MarkMinerviniScreener: React.FC = () => {
               <button
                 onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-bold transition-all border cursor-pointer ${
-                  showAdvancedFilters || selectedExchange !== 'all' || minAvgVol20 !== 100000 || minMktCapT !== 1000 || volSignalFilter !== 'all' || minRs !== 70 || (!onlyStage2 && minScore !== 7)
+                  showAdvancedFilters || selectedExchange !== 'all' || minAvgVal20B !== DEFAULT_MIN_VALUE_B || minMktCapT !== DEFAULT_MIN_CAP_B || volSignalFilter !== 'all' || minRs !== 70 || (!onlyStage2 && minScore !== 7)
                     ? 'bg-amber-400/15 text-amber-300 border-amber-400/40 shadow-sm'
                     : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-zinc-200'
                 }`}
-                title="Mở tuỳ chỉnh nâng cao (Khối lượng, Vốn hóa, RS, Điểm tiêu chí, Sàn, Dòng tiền)"
+                title="Mở tuỳ chỉnh nâng cao (Giá trị giao dịch, Vốn hóa, RS, Điểm tiêu chí, Sàn, Dòng tiền)"
               >
                 <Funnel className="w-3.5 h-3.5" />
                 <span>Tuỳ chỉnh lọc</span>
                 <span className="text-[10px] opacity-75">
-                  ({onlyStage2 ? '8/8' : `≥${minScore}/8`} · RS≥{minRs} · KL≥{Math.round(minAvgVol20 / 1000)}K · V.Hoá≥{(minMktCapT / 1000).toFixed(0)}kTỷ)
+                  ({onlyStage2 ? '8/8' : `≥${minScore}/8`} · RS≥{minRs} · GTGD≥{minAvgVal20B}tỷ · V.Hoá≥{(minMktCapT / 1000).toFixed(0)}kTỷ)
                 </span>
               </button>
             </div>
@@ -1236,19 +1236,19 @@ export const MarkMinerviniScreener: React.FC = () => {
                   Tuỳ chỉnh nâng cao:
                 </span>
 
-                {/* Minimum 20-Day Average Liquidity Filter */}
+                {/* Minimum 20-Day Average Traded Value Filter (tỷ VND/phiên) */}
                 <div className="flex items-center gap-1.5 bg-zinc-900 border border-zinc-800 px-2.5 py-1 rounded-xl">
-                  <span className="text-zinc-500">KL TB &gt;=</span>
+                  <span className="text-zinc-500">GTGD TB20 &gt;=</span>
                   <select
-                    value={minAvgVol20}
-                    onChange={(e) => setMinAvgVol20(Number(e.target.value))}
+                    value={minAvgVal20B}
+                    onChange={(e) => setMinAvgVal20B(Number(e.target.value))}
                     className="bg-transparent text-cyan-400 font-bold focus:outline-none cursor-pointer"
                   >
-                    <option value="100000">100.000 CP (Mặc định)</option>
-                    <option value="200000">200.000 CP</option>
-                    <option value="300000">300.000 CP</option>
-                    <option value="500000">500.000 CP</option>
-                    <option value="1000000">1.000.000 CP</option>
+                    <option value={DEFAULT_MIN_VALUE_B}>{DEFAULT_MIN_VALUE_B} tỷ/phiên (Mặc định)</option>
+                    <option value="10">10 tỷ/phiên</option>
+                    <option value="20">20 tỷ/phiên</option>
+                    <option value="50">50 tỷ/phiên</option>
+                    <option value="100">100 tỷ/phiên</option>
                   </select>
                 </div>
 
@@ -1336,8 +1336,8 @@ export const MarkMinerviniScreener: React.FC = () => {
               <button
                 onClick={() => {
                   setSelectedExchange('all');
-                  setMinAvgVol20(100000);
-                  setMinMktCapT(1000);
+                  setMinAvgVal20B(DEFAULT_MIN_VALUE_B);
+                  setMinMktCapT(DEFAULT_MIN_CAP_B);
                   setVolSignalFilter('all');
                   setMinRs(70);
                   setMinScore(7);
@@ -1633,13 +1633,13 @@ export const MarkMinerviniScreener: React.FC = () => {
                                 <span>Bấm vào đây để Quét & Xét chuẩn Minervini cho mã [{searchQuery.toUpperCase()}] ngay ⚡</span>
                               </button>
                             )}
-                            {(selectedSector !== 'all' || selectedExchange !== 'all' || minAvgVol20 !== 50000 || volSignalFilter !== 'all' || minRs !== 70 || minScore !== 7 || onlyStage2 || searchQuery) && (
+                            {(selectedSector !== 'all' || selectedExchange !== 'all' || minAvgVal20B !== DEFAULT_MIN_VALUE_B || volSignalFilter !== 'all' || minRs !== 70 || minScore !== 7 || onlyStage2 || searchQuery) && (
                               <div className="flex flex-wrap items-center justify-center gap-2">
                                 <button
                                   onClick={() => {
                                     setSelectedSector('all');
                                     setSelectedExchange('all');
-                                    setMinAvgVol20(50000);
+                                    setMinAvgVal20B(DEFAULT_MIN_VALUE_B);
                                     setVolSignalFilter('all');
                                     setMinRs(70);
                                     setMinScore(7);
@@ -1648,13 +1648,13 @@ export const MarkMinerviniScreener: React.FC = () => {
                                   }}
                                   className="px-3.5 py-1.5 rounded-xl bg-amber-400/10 border border-amber-400/30 text-amber-300 text-xs font-bold hover:bg-amber-400/20 transition-all inline-flex items-center gap-1.5 cursor-pointer"
                                 >
-                                  <span>Đặt lại mặc định (Điểm &gt;= 7/8, RS &gt;= 70, KL &gt;= 50K)</span>
+                                  <span>Đặt lại mặc định (Điểm &gt;= 7/8, RS &gt;= 70, GTGD &gt;= {DEFAULT_MIN_VALUE_B} tỷ)</span>
                                 </button>
                                 <button
                                   onClick={() => {
                                     setSelectedSector('all');
                                     setSelectedExchange('all');
-                                    setMinAvgVol20(30000);
+                                    setMinAvgVal20B(DEFAULT_MIN_VALUE_B);
                                     setVolSignalFilter('all');
                                     setMinRs(0);
                                     setMinScore(0);

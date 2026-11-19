@@ -1,4 +1,14 @@
 import { MinerviniScreenerItem } from '../types/minervini.types';
+import universeRules from '../data/screenerUniverseRules.json';
+
+/** Ngưỡng rổ cổ phiếu đủ chuẩn (dùng chung với scripts/cron_scan_minervini.js) */
+export const VN_UNIVERSE_RULES = {
+  minAvgValue20B: universeRules.minAvgValue20B,
+  minAvgValue10B: universeRules.minAvgValue10B,
+  minMedianValue10B: universeRules.minMedianValue10B,
+  minSessionValue5B: universeRules.minSessionValue5B,
+  minMktCapB: universeRules.minMktCapB,
+};
 
 // Real Shares Outstanding (in millions of shares) verified from Vietcap IQ (numberOfSharesMktCap)
 export const OUTSTANDING_SHARES_M: Record<string, number> = {
@@ -77,18 +87,43 @@ export const MINERVINI_8_CRITERIA_META = [
   { id: 1, shortLabel: '1. Giá > MA150 & MA200', fullLabel: 'Giá hiện tại nằm trên cả MA150 và MA200' },
   { id: 2, shortLabel: '2. MA150 > MA200', fullLabel: 'Đường MA150 nằm trên đường MA200' },
   { id: 3, shortLabel: '3. MA200 dốc lên (≥1 tháng)', fullLabel: 'Đường MA200 đang hướng lên tối thiểu 22 phiên giao dịch' },
-  { id: 4, shortLabel: '4. MA50 > MA150 > MA200', fullLabel: 'Đường MA50 nằm trên cả MA150 và MA200' },
+  { id: 4, shortLabel: '4. MA50 > MA150 & MA200', fullLabel: 'Đường MA50 nằm trên cả MA150 và MA200' },
   { id: 5, shortLabel: '5. Giá > MA50', fullLabel: 'Giá hiện tại nằm trên đường MA50' },
   { id: 6, shortLabel: '6. Giá ≥ +30% từ đáy 52T', fullLabel: 'Giá hiện tại cao hơn tối thiểu 30% so với đáy 52 tuần' },
   { id: 7, shortLabel: '7. Cách đỉnh 52T ≤ 25%', fullLabel: 'Giá hiện tại nằm trong vùng 25% tính từ đỉnh 52 tuần' },
   { id: 8, shortLabel: '8. RS Rating ≥ 70', fullLabel: 'Chỉ số Sức mạnh giá tương đối (IBD Percentile 1-99) đạt từ 70 trở lên' },
 ] as const;
 
-export function calcMarketCapT(symbol: string, priceK: number): number {
+/**
+ * Vốn hoá (tỷ VND) = số CP (triệu) × giá (nghìn đồng).
+ * Ưu tiên số CP niêm yết thật từ nguồn giá sống (`listedSharesM`); bảng ghi cứng chỉ là dự phòng khi nguồn lỗi.
+ * Mã không có trong cả hai → 15 triệu CP (cố tình nhỏ để không phóng đại vốn hoá ảo).
+ */
+export function calcMarketCapT(symbol: string, priceK: number, listedSharesM?: number | null): number {
   if (!priceK || priceK <= 0) return 0;
-  // Tuyệt đối không dùng fallback 100 triệu CP cho các mã nhỏ chưa xác thực để tránh phóng đại vốn hóa ảo!
-  const sharesM = OUTSTANDING_SHARES_M[symbol.toUpperCase()] || 15;
+  const sharesM =
+    listedSharesM && listedSharesM > 0 ? listedSharesM : OUTSTANDING_SHARES_M[symbol.toUpperCase()] || 15;
   return Math.round(sharesM * priceK);
+}
+
+/** Mã có thuộc rổ đủ chuẩn (GTGD TB20 và vốn hoá) không — dùng cho dữ liệu đã lưu không còn nến gốc. */
+export function passesVnInvestableUniverse(
+  item: Pick<MinerviniScreenerItem, 'symbol' | 'price' | 'avgVol20' | 'avgVal20B' | 'listedSharesM'>
+): boolean {
+  const priceK = (item.price || 0) / 1000;
+  const avgValue20B =
+    typeof item.avgVal20B === 'number' ? item.avgVal20B : ((item.avgVol20 ?? 0) * priceK) / 1_000_000;
+  const mktCap = calcMarketCapT(item.symbol, priceK, item.listedSharesM);
+  return avgValue20B >= VN_UNIVERSE_RULES.minAvgValue20B && mktCap >= VN_UNIVERSE_RULES.minMktCapB;
+}
+
+/** Nến cuối có phải phiên HÔM NAY đang giao dịch dở (chưa đóng cửa) không */
+export function isLastBarInProgress(lastBarTimeSec: number | undefined, nowMs = Date.now()): boolean {
+  if (!lastBarTimeSec) return false;
+  const vnDay = (ms: number) => new Date(ms + 7 * 3600_000).toISOString().slice(0, 10);
+  if (vnDay(lastBarTimeSec * 1000) !== vnDay(nowMs)) return false;
+  const vnMinutes = Math.floor(((nowMs + 7 * 3600_000) % 86_400_000) / 60_000);
+  return vnMinutes < 15 * 60; // trước 15:00 phiên chưa chốt (ATC 14:45, thoả thuận đến 15:00)
 }
 
 export function calcStrictSMA(closes: number[], period: number, endIdx: number = closes.length - 1): number {
@@ -211,7 +246,9 @@ export function evaluateMinerviniCriteria(params: {
   const c2 = sma150 > 0 && sma200 > 0 && sma150 > sma200;
   // Fallback nếu bản ghi cũ chưa lưu boolean sma200SlopeUp nhưng đã có sma150 > sma200
   const c3 = Boolean(sma200SlopeUp);
-  const c4 = sma50 > 0 && sma150 > 0 && sma200 > 0 && sma50 > sma150 && sma150 > sma200;
+  // Đúng nguyên bản Minervini: MA50 nằm trên CẢ MA150 và MA200 (thứ tự MA150 > MA200 đã là tiêu chí 2,
+  // ghép vào đây sẽ trừ điểm 2 lần cho cùng một lỗi)
+  const c4 = sma50 > 0 && sma150 > 0 && sma200 > 0 && sma50 > sma150 && sma50 > sma200;
   const c5 = sma50 > 0 && priceK > sma50;
   const c6 = distLow >= 30;
   const c7 = distHigh >= -25;
@@ -256,8 +293,25 @@ export function analyzeRawStockCandles(params: {
   volumes: number[];
   pe?: number | null;
   epsGrowthYoY?: number | null;
+  /** Số CP niêm yết thật (triệu CP); thiếu thì dùng bảng ghi cứng */
+  listedSharesM?: number | null;
+  /** true = nến cuối là phiên hôm nay chưa đóng cửa → không dùng nó để đo thanh khoản */
+  lastBarInProgress?: boolean;
 }): MinerviniScreenerItem | null {
-  const { symbol, name, sector, exchange, closes, highs, lows, volumes, pe = null, epsGrowthYoY = null } = params;
+  const {
+    symbol,
+    name,
+    sector,
+    exchange,
+    closes,
+    highs,
+    lows,
+    volumes,
+    pe = null,
+    epsGrowthYoY = null,
+    listedSharesM = null,
+    lastBarInProgress = false,
+  } = params;
   const len = closes.length;
   if (len < 50) return null;
 
@@ -292,15 +346,12 @@ export function analyzeRawStockCandles(params: {
   const volSlice = volumes.slice(start20);
   const avgVol20 = volSlice.reduce((a, b) => a + b, 0) / Math.max(1, volSlice.length);
   const relVol = avgVol20 > 0 ? Math.round((vol / avgVol20) * 100) / 100 : 1;
-  // Giá trị giao dịch TB 20 phiên (Tỷ VNĐ/phiên): avgVol20 * priceK (nghìn đồng) / 1,000,000 = Tỷ đồng
-  const avgVal20B = Math.round(((avgVol20 * priceK) / 1000000) * 100) / 100;
 
   // Tỷ lệ Khối lượng Phiên Tăng / Phiên Giảm trong 20 phiên (Up/Down Volume Ratio) & Pocket Pivot
   let upVolSum = 0;
   let downVolSum = 0;
   let maxDownVol10 = 0;
   const start10 = Math.max(1, len - 10);
-  let noZeroVol10D = true;
 
   for (let idx = Math.max(1, start20); idx < len; idx++) {
     const v = volumes[idx] || 0;
@@ -309,7 +360,6 @@ export function analyzeRawStockCandles(params: {
     else if (diff < 0) downVolSum += v;
 
     if (idx >= start10) {
-      if (v <= 0) noZeroVol10D = false;
       if (diff < 0 && idx < len - 1 && v > maxDownVol10) {
         maxDownVol10 = v;
       }
@@ -335,26 +385,40 @@ export function analyzeRawStockCandles(params: {
       : 'NORMAL';
 
   const priceVnd = Math.round(priceK * 1000);
-  const mktCapT = calcMarketCapT(symbol, priceK);
+  const mktCapT = calcMarketCapT(symbol, priceK, listedSharesM);
 
-  // Kiểm tra Khối lượng duy trì đều nhiều phiên & Vốn hóa thực tế chống thao túng:
-  // - KL TB 20 phiên >= 100.000 CP VÀ KL TB 10 phiên >= 100.000 CP
-  // - Trung vị KL 10 phiên >= 60.000 CP & Phiên thấp nhất trong 5 phiên gần nhất >= 20.000 CP (Loại bỏ mã quay tay 1 phiên rồi tắt vol như SPV, HIO)
-  // - Vốn hóa thị trường thực tế >= 1.000 Tỷ VNĐ (Loại bỏ cổ phiếu penny/bo cung vốn hóa bé như SPV 237 Tỷ, HDA 307 Tỷ, HIO 483 Tỷ, CTP 113 Tỷ)
-  const volSlice10 = volumes.slice(Math.max(0, len - 10));
-  const avgVol10 = volSlice10.reduce((a, b) => a + b, 0) / Math.max(1, volSlice10.length);
-  const sortedVol10 = [...volSlice10].sort((a, b) => a - b);
-  const medianVol10 = sortedVol10[Math.floor(sortedVol10.length / 2)] || 0;
-  const volSlice5 = volumes.slice(Math.max(0, len - 5));
-  const minVol5 = volSlice5.length > 0 ? Math.min(...volSlice5) : 0;
+  // Rổ đủ chuẩn chống thao túng, đo bằng GIÁ TRỊ giao dịch (tỷ VND/phiên) — đặc thù TTCK Việt Nam:
+  // đo bằng số CP thì mã penny vài nghìn đồng dễ lọt, còn mã giá cao (ít CP/phiên) bị loại oan.
+  // - GTGD TB 20 phiên và TB 10 phiên ≥ minAvgValue
+  // - Trung vị 10 phiên ≥ minMedianValue10B và phiên thấp nhất trong 5 phiên ≥ minSessionValue5B
+  //   (loại mã quay tay 1-2 phiên rồi tắt thanh khoản)
+  // - Vốn hoá thật ≥ minMktCapB
+  // Phiên hôm nay chưa đóng cửa thì không tính (giá trị buổi sáng luôn nhỏ, sẽ loại oan).
+  const liqEnd = lastBarInProgress && len > 21 ? len - 1 : len;
+  const dayValueB = (idx: number) => ((volumes[idx] || 0) * closes[idx]) / 1_000_000;
+  const valuesOver = (n: number) => {
+    const out: number[] = [];
+    for (let idx = Math.max(0, liqEnd - n); idx < liqEnd; idx++) out.push(dayValueB(idx));
+    return out;
+  };
+  const mean = (arr: number[]) => arr.reduce((a, b) => a + b, 0) / Math.max(1, arr.length);
+  const val20 = valuesOver(20);
+  const val10 = valuesOver(10);
+  const avgValue20B = mean(val20);
+  const avgValue10B = mean(val10);
+  const medianValue10B = [...val10].sort((a, b) => a - b)[Math.floor(val10.length / 2)] || 0;
+  const minValue5B = Math.min(...valuesOver(5));
+  let noZeroVolLiq = true;
+  for (let idx = Math.max(0, liqEnd - 10); idx < liqEnd; idx++) if ((volumes[idx] || 0) <= 0) noZeroVolLiq = false;
 
+  const R = VN_UNIVERSE_RULES;
   const isVnLiquidStandard =
-    noZeroVol10D &&
-    avgVol20 >= 100000 &&
-    avgVol10 >= 100000 &&
-    medianVol10 >= 60000 &&
-    minVol5 >= 20000 &&
-    mktCapT >= 1000;
+    noZeroVolLiq &&
+    avgValue20B >= R.minAvgValue20B &&
+    avgValue10B >= R.minAvgValue10B &&
+    medianValue10B >= R.minMedianValue10B &&
+    minValue5B >= R.minSessionValue5B &&
+    mktCapT >= R.minMktCapB;
 
   const p1W = len > 5 ? Math.round(((priceK - closes[len - 1 - 5]) / closes[len - 1 - 5]) * 10000) / 100 : chgPct;
   const p1M = len > 22 ? Math.round(((priceK - closes[len - 1 - 22]) / closes[len - 1 - 22]) * 10000) / 100 : 0;
@@ -387,7 +451,9 @@ export function analyzeRawStockCandles(params: {
     changePct: chgPct,
     volume: vol,
     avgVol20: Math.round(avgVol20),
-    avgVal20B,
+    avgVal20B: Math.round(avgValue20B * 100) / 100,
+    avgVal10B: Math.round(avgValue10B * 100) / 100,
+    listedSharesM: listedSharesM && listedSharesM > 0 ? Math.round(listedSharesM * 100) / 100 : undefined,
     upDownVolRatio,
     volSignal,
     isVnLiquidStandard,
@@ -446,15 +512,9 @@ export function assignCrossSectionalRsAndEvaluate(items: MinerviniScreenerItem[]
 
   withRaw.sort((a, b) => (b.rawRsScore ?? 0) - (a.rawRsScore ?? 0));
 
-  // Sử dụng rổ cổ phiếu chuẩn tổ chức (KL TB 20N >= 100,000 CP & Vốn hóa >= 1.000 Tỷ VNĐ)
-  // làm Rổ Chuẩn (Benchmark Universe) để tính phân vị RS Rating 1-99, chống nhiễu từ các mã bo cung/vốn hóa nhỏ
-  const benchmarkScores = withRaw
-    .filter((it) => {
-      const avgVol = it.avgVol20 ?? it.volume ?? 0;
-      const mktCap = it.mktCapT ?? calcMarketCapT(it.symbol, (it.price || 0) / 1000);
-      return avgVol >= 100000 && mktCap >= 1000;
-    })
-    .map((it) => it.rawRsScore ?? 0);
+  // Rổ chuẩn (Benchmark Universe) để tính phân vị RS Rating 1-99: chỉ các mã đủ GTGD & vốn hoá
+  // (chống nhiễu từ các mã bo cung / vốn hoá nhỏ)
+  const benchmarkScores = withRaw.filter((it) => passesVnInvestableUniverse(it)).map((it) => it.rawRsScore ?? 0);
 
   const referenceScores =
     benchmarkScores.length >= 50 ? benchmarkScores : withRaw.map((it) => it.rawRsScore ?? 0);

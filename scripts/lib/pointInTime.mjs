@@ -89,7 +89,7 @@ export function ttCount(d, i, rs) {
   let hi = -Infinity, lo = Infinity;
   for (let k = i - 251; k <= i; k++) { hi = Math.max(hi, d.h[k]); lo = Math.min(lo, d.l[k]); }
   hi = Math.max(hi, p); lo = Math.min(lo, p);
-  const flags = [p > m150 && p > m200, m150 > m200, slope, m50 > m150 && m150 > m200, p > m50, ((p - lo) / lo) * 100 >= 30, ((p - hi) / hi) * 100 >= -25, rs >= 70];
+  const flags = [p > m150 && p > m200, m150 > m200, slope, m50 > m150 && m50 > m200, p > m50, ((p - lo) / lo) * 100 >= 30, ((p - hi) / hi) * 100 >= -25, rs >= 70];
   return flags.filter(Boolean).length;
 }
 

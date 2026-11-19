@@ -209,7 +209,7 @@ export const SHORT_TT_NAME: Record<number, T> = {
   1: { vi: 'giá trên MA150 & MA200', en: 'price above MA150 & MA200' },
   2: { vi: 'MA150 trên MA200', en: 'MA150 above MA200' },
   3: { vi: 'MA200 dốc lên', en: 'MA200 rising' },
-  4: { vi: 'MA50 > MA150 > MA200', en: 'MA50 > MA150 > MA200' },
+  4: { vi: 'MA50 trên MA150 & MA200', en: 'MA50 above MA150 & MA200' },
   5: { vi: 'giá trên MA50', en: 'price above MA50' },
   6: { vi: 'cao hơn đáy 52 tuần ≥ 30%', en: '≥ 30% above 52-week low' },
   7: { vi: 'gần đỉnh 52 tuần', en: 'near the 52-week high' },

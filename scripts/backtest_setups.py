@@ -218,7 +218,7 @@ def main():
             p > s150 and p > s200,
             s150 > s200,
             bool(slope),
-            s50 > s150 > s200,
+            s50 > s150 and s50 > s200,
             p > s50,
             (p - lo) / lo * 100 >= 30,
             (p - hi) / hi * 100 >= -25,

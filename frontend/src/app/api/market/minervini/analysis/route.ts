@@ -312,9 +312,9 @@ export async function GET(request: Request) {
       },
       {
         id: 4,
-        label: 'MA50 > MA150 > MA200',
+        label: 'MA50 > MA150 & MA200',
         description: 'Đường MA 50 ngày phải nằm trên cả đường MA 150 ngày và MA 200 ngày',
-        passed: sma50 > 0 && sma150 > 0 && sma200 > 0 && sma50 > sma150 && sma150 > sma200,
+        passed: sma50 > 0 && sma150 > 0 && sma200 > 0 && sma50 > sma150 && sma50 > sma200,
         value: sma50 > 0 && sma150 > 0 && sma200 > 0
           ? `MA50(${sma50}) vs MA150(${sma150}) & MA200(${sma200})`
           : 'Chưa đủ dữ liệu nến (cần ≥ 200 phiên)',
