@@ -22,7 +22,15 @@ interface RRGCacheItem {
 const cacheStore: Record<string, RRGCacheItem> = {};
 const CACHE_TTL_MS = 60 * 1000; // 60 seconds cache
 
+/** Tải nến; thử lại 1 lần nếu lỗi/hết giờ — thiếu một mã sẽ làm lệch chỉ số ngành */
 async function fetchEntradeCandles(symbol: string, isIndex: boolean, resolution: string = '1D'): Promise<CandlePoint[]> {
+  const first = await fetchEntradeCandlesOnce(symbol, isIndex, resolution);
+  if (first.length > 0) return first;
+  await new Promise((r) => setTimeout(r, 300));
+  return fetchEntradeCandlesOnce(symbol, isIndex, resolution);
+}
+
+async function fetchEntradeCandlesOnce(symbol: string, isIndex: boolean, resolution: string = '1D'): Promise<CandlePoint[]> {
   const type = isIndex ? 'index' : 'stock';
   const now = Math.floor(Date.now() / 1000);
   const daysBack = resolution === '1W' ? 730 : 180;
@@ -30,7 +38,7 @@ async function fetchEntradeCandles(symbol: string, isIndex: boolean, resolution:
 
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 4000);
+    const timeout = setTimeout(() => controller.abort(), 8000);
 
     const res = await fetch(
       `https://services.entrade.com.vn/chart-api/v2/ohlcs/${type}?from=${from}&to=${now}&symbol=${encodeURIComponent(
@@ -57,6 +65,41 @@ async function fetchEntradeCandles(symbol: string, isIndex: boolean, resolution:
   } catch {
     return [];
   }
+}
+
+/**
+ * Chỉ số ngành CÂN BẰNG TỶ TRỌNG, nối chuỗi theo lợi suất từng phiên (chain-linked):
+ * level(t) = level(t-1) × (1 + trung bình lợi suất phiên t của các mã có giá cả 2 phiên).
+ * Không chuẩn hoá theo giá phiên đầu tiên của từng mã — cách cũ làm chỉ số ngành nhảy bậc khi một mã
+ * bắt đầu/ngừng có dữ liệu (mới niêm yết, tạm ngừng giao dịch).
+ */
+function buildEqualWeightIndex(members: CandlePoint[][], dateList: string[]): CandlePoint[] {
+  const maps = members.map((candles) => {
+    const m = new Map<string, number>();
+    candles.forEach((c) => {
+      if (c.close > 0) m.set(c.date, c.close);
+    });
+    return m;
+  });
+  const out: CandlePoint[] = [];
+  let level = 100;
+  let prevDate: string | null = null;
+  for (const d of dateList) {
+    const hasAny = maps.some((m) => m.has(d));
+    if (!hasAny) continue;
+    if (prevDate !== null) {
+      const rets: number[] = [];
+      for (const m of maps) {
+        const p0 = m.get(prevDate);
+        const p1 = m.get(d);
+        if (p0 && p1) rets.push(p1 / p0 - 1);
+      }
+      if (rets.length > 0) level *= 1 + rets.reduce((a, b) => a + b, 0) / rets.length;
+    }
+    out.push({ date: d, close: level });
+    prevDate = d;
+  }
+  return out;
 }
 
 /**
@@ -195,10 +238,11 @@ export async function getLiveRRGDataset(
       return dataset;
     }
 
-    // B. XỬ LÝ TOÀN BỘ 16 NHÓM NGÀNH (MẶC ĐỊNH)
+    // B. XỬ LÝ TOÀN BỘ 16 NHÓM NGÀNH (MẶC ĐỊNH) — dùng MỌI mã đại diện của nhóm (trước chỉ lấy 5 mã đầu
+    //    trong khi bảng và phần ghép mã → nhóm lại dùng cả danh sách)
     const symbolsToFetch = new Set<string>();
     RRG_SECTOR_CONFIGS.forEach((sector) => {
-      sector.symbols.slice(0, 5).forEach((s) => symbolsToFetch.add(s));
+      sector.symbols.forEach((s) => symbolsToFetch.add(s));
     });
 
     const symbolArray = Array.from(symbolsToFetch);
@@ -228,39 +272,12 @@ export async function getLiveRRGDataset(
 
     for (const config of RRG_SECTOR_CONFIGS) {
       const validStockCandles = config.symbols
-        .slice(0, 5)
         .map((s) => symbolCandleMap.get(s))
         .filter((c): c is CandlePoint[] => !!c && c.length >= 20);
 
       if (!validStockCandles.length) continue;
 
-      const stockPriceMaps = validStockCandles.map((candles) => {
-        const map = new Map<string, number>();
-        candles.forEach((c) => map.set(c.date, c.close));
-        return {
-          basePrice: candles[0]?.close || 1,
-          map,
-        };
-      });
-
-      const sectorPrices: CandlePoint[] = [];
-      for (const d of dateList) {
-        let normalizedSum = 0;
-        let count = 0;
-        for (const item of stockPriceMaps) {
-          const price = item.map.get(d);
-          if (price !== undefined && price > 0) {
-            normalizedSum += (price / item.basePrice) * 100;
-            count++;
-          }
-        }
-        if (count > 0) {
-          sectorPrices.push({
-            date: d,
-            close: normalizedSum / count,
-          });
-        }
-      }
+      const sectorPrices = buildEqualWeightIndex(validStockCandles, dateList);
 
       if (sectorPrices.length < 28) continue;
 
@@ -311,6 +328,7 @@ export async function getLiveRRGDataset(
         shortName: config.shortName,
         color: config.color,
         symbols: config.symbols,
+        memberCount: validStockCandles.length,
         points,
         currentPoint,
         quadrant,

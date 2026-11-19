@@ -67,6 +67,8 @@ export const RelativeRotationGraphCanvas = forwardRef<
 
   // Dynamic span around 100 for isotropic 1:1 scaling
   const spanRef = useRef<number>(6.0);
+  // Vị trí nhãn tên ngành đã vẽ (toạ độ màn hình) — dùng chung cho vẽ và bắt chuột
+  const labelBoxesRef = useRef<Map<string, { x: number; y: number; w: number; h: number }>>(new Map());
 
   useEffect(() => {
     if (!sectors || sectors.length === 0) return;
@@ -381,6 +383,49 @@ export const RelativeRotationGraphCanvas = forwardRef<
       return 0;
     });
 
+    // 7-pre. Xếp chỗ nhãn tên ngành tránh chồng nhau: thử lần lượt các vị trí quanh điểm đầu,
+    // chọn vị trí không đè lên nhãn đã đặt / điểm đầu của ngành khác / mép khung.
+    const LABEL_H = 14;
+    const headScreens = sectors
+      .filter((sec) => sec.points.length > 0)
+      .map((sec) => {
+        const hp = sec.points[sec.points.length - 1];
+        return { id: sec.id, pt: worldToScreen(hp.rsRatio, hp.rsMomentum, width, height, zoom, pan) };
+      });
+    const placedBoxes: { x: number; y: number; w: number; h: number }[] = [];
+    const labelPlacements = new Map<string, { textX: number; textY: number; align: CanvasTextAlign; box: { x: number; y: number; w: number; h: number }; moved: boolean }>();
+    const overlapArea = (a: { x: number; y: number; w: number; h: number }, b: { x: number; y: number; w: number; h: number }) =>
+      Math.max(0, Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x)) * Math.max(0, Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y));
+    const CANDIDATES: [number, number, CanvasTextAlign][] = [
+      [9, 0, 'left'], [-9, 0, 'right'], [9, -13, 'left'], [9, 13, 'left'], [-9, -13, 'right'], [-9, 13, 'right'],
+      [0, -16, 'center'], [0, 16, 'center'], [9, -26, 'left'], [9, 26, 'left'], [-9, -26, 'right'], [-9, 26, 'right'],
+    ];
+    const placementOrder = [...headScreens].sort((a, b) => (a.id === activeSectorId ? -1 : b.id === activeSectorId ? 1 : a.pt.y - b.pt.y));
+    for (const { id, pt } of placementOrder) {
+      const sec = sectors.find((x) => x.id === id);
+      if (!sec) continue;
+      ctx.font = `${id === activeSectorId ? 'bold 12px' : '600 11px'} "Geist", -apple-system, sans-serif`;
+      const w = ctx.measureText(sec.shortName).width;
+      let best: { textX: number; textY: number; align: CanvasTextAlign; box: { x: number; y: number; w: number; h: number }; score: number; moved: boolean } | null = null;
+      for (const [dx, dy, align] of CANDIDATES) {
+        const textX = pt.x + dx;
+        const textY = pt.y + dy;
+        const left = align === 'left' ? textX : align === 'right' ? textX - w : textX - w / 2;
+        const box = { x: left - 2, y: textY - LABEL_H / 2, w: w + 4, h: LABEL_H };
+        let score = 0;
+        for (const b of placedBoxes) score += overlapArea(box, b);
+        for (const h of headScreens) if (h.id !== id) score += overlapArea(box, { x: h.pt.x - 6, y: h.pt.y - 6, w: 12, h: 12 });
+        if (box.x < 50 || box.x + box.w > width - 4 || box.y < 4 || box.y + box.h > height - 30) score += 10_000;
+        if (!best || score < best.score) best = { textX, textY, align, box, score, moved: Math.abs(dy) > 13 };
+        if (score === 0) break;
+      }
+      if (best) {
+        placedBoxes.push(best.box);
+        labelPlacements.set(id, best);
+      }
+    }
+    labelBoxesRef.current = new Map([...labelPlacements].map(([id, p]) => [id, p.box]));
+
     sortedSectors.forEach((sec) => {
       const isCurrentActive = activeSectorId === sec.id;
       // Dim inactive rays down to 0.12 so the focused ray is unmistakably clear
@@ -509,21 +554,31 @@ export const RelativeRotationGraphCanvas = forwardRef<
       ctx.fillStyle = trailColor;
       ctx.fill();
 
-      // 7d. Clean Stock Symbol Label (Matching sample image: pure text in quadrant color)
+      // 7d. Nhãn tên ngành tại vị trí đã xếp (tránh chồng nhau); nếu phải dời xa thì có đường dẫn mảnh
       const labelText = sec.shortName;
       ctx.font = `${isCurrentActive ? 'bold 12px' : '600 11px'} "Geist", -apple-system, sans-serif`;
-      const textWidth = ctx.measureText(labelText).width;
-
-      const placeLeft = headPt.x > width - 80;
-      const textX = placeLeft ? headPt.x - 8 : headPt.x + 8;
-      ctx.textAlign = placeLeft ? 'right' : 'left';
+      const place = labelPlacements.get(sec.id);
+      const textX = place ? place.textX : headPt.x + 8;
+      const textY = place ? place.textY : headPt.y;
+      ctx.textAlign = place ? place.align : 'left';
       ctx.textBaseline = 'middle';
+
+      if (place?.moved) {
+        ctx.beginPath();
+        ctx.strokeStyle = trailColor;
+        ctx.globalAlpha = opacity * 0.45;
+        ctx.lineWidth = 0.8;
+        ctx.moveTo(headPt.x, headPt.y);
+        ctx.lineTo(textX, textY + (textY > headPt.y ? -LABEL_H / 2 : LABEL_H / 2));
+        ctx.stroke();
+        ctx.globalAlpha = opacity;
+      }
 
       // Subtle shadow for legibility over grid lines
       ctx.shadowColor = '#000000';
       ctx.shadowBlur = 4;
       ctx.fillStyle = isCurrentActive ? '#ffffff' : trailColor;
-      ctx.fillText(labelText, textX, headPt.y);
+      ctx.fillText(labelText, textX, textY);
       ctx.shadowBlur = 0;
 
       ctx.restore();
@@ -574,18 +629,9 @@ export const RelativeRotationGraphCanvas = forwardRef<
         const distHead = Math.hypot(mouseX - sPos.x, mouseY - sPos.y);
         if (distHead < 26) return sec;
 
-        // Pill box hit-test
-        const labelText = sec.shortName;
-        const textWidth = labelText.length * 7.5 + 12;
-        const placeLeft = sPos.x > width - 120;
-        const pillX = placeLeft ? sPos.x - textWidth - 10 : sPos.x + 10;
-        const pillY = sPos.y - 10;
-        if (
-          mouseX >= pillX - 4 &&
-          mouseX <= pillX + textWidth + 4 &&
-          mouseY >= pillY - 4 &&
-          mouseY <= pillY + 24
-        ) {
+        // Bắt chuột trên nhãn tên ngành (đúng vị trí đã vẽ)
+        const box = labelBoxesRef.current.get(sec.id);
+        if (box && mouseX >= box.x - 3 && mouseX <= box.x + box.w + 3 && mouseY >= box.y - 3 && mouseY <= box.y + box.h + 3) {
           return sec;
         }
       }

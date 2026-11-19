@@ -18,7 +18,8 @@ export const RelativeRotationGraphCard: React.FC<RelativeRotationGraphCardProps>
   defaultHeight = 620,
 }) => {
   const [group, setGroup] = useState<string>('all');
-  const [timeframe, setTimeframe] = useState<'1D' | '1W'>('1D');
+  // Mặc định khung TUẦN: chuẩn gốc của RRG (JdK) và khớp với pha ngành hiển thị ở trang phân tích cổ phiếu
+  const [timeframe, setTimeframe] = useState<'1D' | '1W'>('1W');
   const [tailLength, setTailLength] = useState<number>(4);
   const [showGrid, setShowGrid] = useState<boolean>(true);
   const [selectedSectorId, setSelectedSectorId] = useState<string | null>(null);
@@ -153,6 +154,7 @@ export const RelativeRotationGraphCard: React.FC<RelativeRotationGraphCardProps>
           sectors={dataset.sectors}
           selectedSectorId={selectedSectorId}
           onSelectSector={setSelectedSectorId}
+          timeframe={timeframe}
         />
       )}
 

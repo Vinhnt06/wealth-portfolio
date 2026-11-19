@@ -135,7 +135,7 @@ export const RRGControlBar: React.FC<RRGControlBarProps> = ({
 
         {/* Items count */}
         <span className="text-zinc-300 text-[11px] font-medium">
-          {dataset?.sectors?.length ? `${dataset.sectors.length} mã` : group === 'all' ? '16 ngành' : 'Đang tải...'}
+          {dataset?.sectors?.length ? `${dataset.sectors.length} ${group === 'all' ? 'ngành' : 'mã'}` : group === 'all' ? '16 ngành' : 'Đang tải...'}
         </span>
         <span className="text-zinc-700">·</span>
 
@@ -182,10 +182,10 @@ export const RRGControlBar: React.FC<RRGControlBarProps> = ({
         {dataset?.dateRange && (
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-zinc-900 border border-zinc-800 text-zinc-300 text-[11px]">
             <CalendarBlank className="w-3.5 h-3.5 text-zinc-400" />
-            <span className="text-zinc-400">Phiên:</span>
+            <span className="text-zinc-400">{timeframe === '1W' ? 'Tuần từ:' : 'Phiên:'}</span>
             <span className="font-semibold text-emerald-400 font-mono">{formatDateDisplay(dataset.dateRange.end)}</span>
             <span className="text-zinc-600">·</span>
-            <span className="text-zinc-400 text-[10px]">Chốt phiên EOD</span>
+            <span className="text-zinc-400 text-[10px]">{timeframe === '1W' ? 'Nến tuần, cập nhật theo phiên' : 'Chốt phiên EOD'}</span>
           </div>
         )}
       </div>

@@ -127,6 +127,7 @@ export const RelativeRotationGraphModal: React.FC<RelativeRotationGraphModalProp
         sectors={dataset?.sectors || []}
         selectedSectorId={selectedSectorId}
         onSelectSector={onSelectSector}
+        timeframe={timeframe}
       />
     </div>
   );

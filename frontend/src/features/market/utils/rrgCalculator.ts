@@ -29,6 +29,8 @@ export interface RRGSectorData {
   shortName: string;
   color: string;
   symbols: string[];
+  /** Số mã thực sự có dữ liệu và được dùng để dựng chỉ số ngành */
+  memberCount?: number;
   points: RRGPoint[];          // Đuôi lịch sử (Tail)
   currentPoint: RRGPoint;      // Tọa độ hiện tại
   quadrant: RRGQuadrant;

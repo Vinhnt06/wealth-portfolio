@@ -8,12 +8,14 @@ interface RRGSectorRankingTableProps {
   sectors: RRGSectorData[];
   selectedSectorId: string | null;
   onSelectSector: (sectorId: string | null) => void;
+  timeframe?: '1D' | '1W';
 }
 
 export const RRGSectorRankingTable: React.FC<RRGSectorRankingTableProps> = ({
   sectors,
   selectedSectorId,
   onSelectSector,
+  timeframe = '1D',
 }) => {
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
   const [sortBy, setSortBy] = useState<'momentum' | 'ratio' | 'velocity' | 'change'>('momentum');
@@ -88,7 +90,7 @@ export const RRGSectorRankingTable: React.FC<RRGSectorRankingTableProps> = ({
                   onClick={() => handleSort('change')}
                   className="py-2 px-2 font-medium text-right cursor-pointer hover:text-zinc-200"
                 >
-                  % 1D {sortBy === 'change' ? (sortAsc ? '↑' : '↓') : ''}
+                  {timeframe === '1W' ? '% 1 tuần' : '% 1 phiên'} {sortBy === 'change' ? (sortAsc ? '↑' : '↓') : ''}
                 </th>
               </tr>
             </thead>
