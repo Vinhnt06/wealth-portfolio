@@ -5,6 +5,7 @@
 import fs from 'fs';
 import path from 'path';
 import { computeSectorStrength, SectorReturnRow, SectorStrengthRow } from './sectorStrength';
+import { ICB_20_SECTORS } from '../data/sectorMapping';
 
 let cache: { key: string; table: SectorStrengthRow[] } | null = null;
 
@@ -27,7 +28,7 @@ export function getSectorStrengthTable(): SectorStrengthRow[] {
     const parsed = JSON.parse(fs.readFileSync(file, 'utf8'));
     const rows: SectorReturnRow[] = Array.isArray(parsed.sectorUniverse) ? parsed.sectorUniverse : [];
     const indexRet = typeof parsed.vnindexRet3M === 'number' ? parsed.vnindexRet3M : null;
-    const table = rows.length > 0 ? computeSectorStrength(rows, indexRet) : [];
+    const table = rows.length > 0 ? computeSectorStrength(rows, indexRet, ICB_20_SECTORS) : [];
     cache = { key, table };
     return table;
   } catch {

@@ -54,10 +54,17 @@ function toneWithIndex(byRank: SectorTone, medianRet3M: number, indexRet3M: numb
   return byRank;
 }
 
-export function computeSectorStrength(rows: SectorReturnRow[], indexRet3M: number | null): SectorStrengthRow[] {
+export function computeSectorStrength(
+  rows: SectorReturnRow[],
+  indexRet3M: number | null,
+  /** Chỉ xếp hạng các ngành chuẩn (20 ngành ICB); nhãn ngoài danh sách là mã chưa được phân ngành */
+  allowedSectors?: readonly string[]
+): SectorStrengthRow[] {
+  const allowed = allowedSectors ? new Set(allowedSectors) : null;
   const bySector = new Map<string, number[]>();
   for (const r of rows) {
     if (!r.sector || r.sector === 'Khác' || !Number.isFinite(r.ret3M)) continue;
+    if (allowed && !allowed.has(r.sector)) continue;
     const list = bySector.get(r.sector) ?? [];
     list.push(r.ret3M);
     bySector.set(r.sector, list);
