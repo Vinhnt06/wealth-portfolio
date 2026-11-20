@@ -59,5 +59,13 @@
   ],
   "interestRateLastCrawled": "19/11/2026 15:52",
   "interestRateSource": "Ngân hàng Nhà nước & Thị trường liên ngân hàng",
-  "_note": "Chỉ chứa số liệu thật có nguồn (cập nhật tự động bởi scripts/cron_update_macro.js). Không có số nhập tay / giả lập."
+  "_note": "Chỉ chứa số liệu thật có nguồn (cập nhật tự động bởi scripts/cron_update_macro.js). Không có số nhập tay / giả lập.",
+  "capitalHistory": [
+    {
+      "date": "2026-11-19",
+      "interbank": 6.41,
+      "deposit12M": 5.63,
+      "policy": 4.5
+    }
+  ]
 }
