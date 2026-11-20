@@ -458,6 +458,27 @@ async function crawlSbvInterestRates() {
       macroData.interestRate = rates.filter((r) => r.isCrawled);
       macroData.interestRateLastCrawled = nowTimeStr;
 
+      // Lịch sử điều kiện vốn theo ngày (cho câu hỏi "Vốn nới hay chặt" ở vòng tròn vĩ mô)
+      const vnToday = new Date(Date.now() + 7 * 3600000).toISOString().slice(0, 10);
+      const rateOf = (pred) => {
+        const r = rates.find(pred);
+        const v = r && r.isCrawled ? parseFloat(String(r.rate).replace('%', '')) : NaN;
+        return Number.isFinite(v) ? v : null;
+      };
+      const point = {
+        date: vnToday,
+        interbank: rateOf((r) => r.term === 'ON'),
+        deposit12M: rateOf((r) => r.term === '12M'),
+        policy: rateOf((r) => r.bank && r.bank.includes('Tái cấp vốn')),
+      };
+      if (point.interbank !== null || point.deposit12M !== null) {
+        const hist = Array.isArray(macroData.capitalHistory) ? macroData.capitalHistory.filter((h) => h.date !== vnToday) : [];
+        hist.push(point);
+        hist.sort((a, b) => a.date.localeCompare(b.date));
+        macroData.capitalHistory = hist.slice(-500);
+        console.log(`  ✓ Lịch sử vốn: ${macroData.capitalHistory.length} ngày (liên NH ${point.interbank}%, gửi 12T ${point.deposit12M}%)`);
+      }
+
       // GDP & CPI tự động (không nhập tay)
       const { cpiPeriod, gdpPeriod } = latestReleasedPeriods();
       const tvCpi = await fetchTvIndicator('ECONOMICS:VNIRYY');

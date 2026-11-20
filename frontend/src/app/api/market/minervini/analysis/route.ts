@@ -5,6 +5,7 @@ import { detectDistribution, buildCycleContext } from '../../../../../features/m
 import { buildDecision } from '../../../../../features/market/utils/decisionEngine';
 import { lookupEvidence } from '../../../../../features/market/utils/decisionEvidence';
 import { assessFundamentals, type QuarterRec, type FundamentalsResult } from '../../../../../features/market/utils/fundamentalsEngine';
+import { MARKET_STATE_EVIDENCE, MarketStateKey } from '../../../../../features/market/utils/marketState';
 import { getSectorStrengthTable } from '../../../../../features/market/utils/sectorStrengthServer';
 import { SECTOR_MAPPING } from '../../../../../features/market/data/sectorMapping';
 import { readFinancialsDatabase, fetchStockValuationLive } from '../../../../../features/market/services/financialsSyncService';
@@ -465,6 +466,22 @@ export async function GET(request: Request) {
       if (sectorInfo.tone === 'HEADWIND') qualityFlags.push('SECTOR_HEADWIND');
     }
 
+    // ── Trạng thái thị trường (MA200 · độ rộng · biến động) — cổng tỷ trọng mua, đã kiểm chứng (utils/marketState.ts) ──
+    let marketState: { state: MarketStateKey; date: string; provisional: boolean; buySize: number } | null = null;
+    try {
+      const ms = await fetch(`${new URL(request.url).origin}/api/market/state`, { cache: 'no-store', signal: AbortSignal.timeout(60_000) }).then((r) => r.json());
+      const cur = ms?.data?.current;
+      if (ms?.success && cur?.state) {
+        marketState = { state: cur.state, date: cur.date, provisional: Boolean(cur.provisional), buySize: MARKET_STATE_EVIDENCE[cur.state as MarketStateKey].buySize };
+      }
+    } catch {
+      // không có trạng thái thì không gắn cờ
+    }
+    if (marketState && (decision.newBuyer.action === 'BUY' || decision.drivers.stage === 'OK')) {
+      if (marketState.state === 'UNFAVORABLE') qualityFlags.unshift('MARKET_UNFAVORABLE');
+      else if (marketState.state === 'NEUTRAL') qualityFlags.unshift('MARKET_NEUTRAL');
+    }
+
     // ── Indicators for Heat & Extended Analysis (RSI, MACD) ──
     // 1. RSI(14) - Wilder smoothing (khớp với RSI trên chart)
     const rsiPeriod = 14;
@@ -919,6 +936,7 @@ export async function GET(request: Request) {
       cycle: cycleContext,
       fundamentals,
       sectorInfo,
+      marketState,
       qualityFlags,
       decision: { ...decision, evidence: decisionEvidence, marketUp },
       passedCount,

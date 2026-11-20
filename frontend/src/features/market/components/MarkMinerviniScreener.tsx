@@ -40,6 +40,7 @@ import {
 import { getStockPriceColor } from '../utils/priceColors';
 import { SECTOR_MAPPING, ICB_20_SECTORS } from '../data/sectorMapping';
 import { EconomicCycleWheel } from './EconomicCycleWheel';
+import { MarketStateBanner } from './MarketStateBanner';
 import { isMarketTradingSession } from '../utils/marketHours';
 import financialsDatabase from '../data/financialsDatabase.json';
 
@@ -566,6 +567,8 @@ export const MarkMinerviniScreener: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Cổng thị trường: tỷ trọng mua theo trạng thái (đã kiểm chứng trên dữ liệu VN) */}
+      <MarketStateBanner />
       {/* ── Top Header Banner: Minervini Pro Screener ─────────────────── */}
       <div className="p-6 bg-zinc-950/90 border border-zinc-800/80 rounded-2xl shadow-2xl backdrop-blur-xl relative overflow-hidden">
         <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />

@@ -23,6 +23,7 @@ import {
   QUALITY_FLAG_TEXT,
   fmtGrowth,
 } from '../i18n/decision';
+import { MARKET_STATE_TEXT } from '../utils/marketState';
 import {
   TREND_LABEL_EN,
   WYCKOFF_LABEL_EN,
@@ -457,7 +458,7 @@ const SummaryCard: React.FC<{ data: MinerviniAnalysisResult }> = ({ data }) => {
           </p>
         )}
       </div>
-      {(data.fundamentals || data.sectorInfo) && (
+      {(data.fundamentals || data.sectorInfo || data.marketState) && (
         <div className="space-y-1.5 border-t border-white/[0.05] px-4 py-3 text-[11.5px]">
           {data.fundamentals && (
             <div className="flex items-baseline justify-between gap-3">
@@ -476,6 +477,25 @@ const SummaryCard: React.FC<{ data: MinerviniAnalysisResult }> = ({ data }) => {
                     {tr('LN', 'Profit')} {fmtGrowth(data.fundamentals.netProfitYoY, language)} · {tr('DT', 'Rev')} {fmtGrowth(data.fundamentals.revenueYoY, language)}
                   </span>
                 )}
+              </span>
+            </div>
+          )}
+          {data.marketState && (
+            <div className="flex items-baseline justify-between gap-3">
+              <span className="text-zinc-500">{tr('Thị trường', 'Market')}</span>
+              <span className="text-right text-zinc-200">
+                <span
+                  className={cx(
+                    'font-medium',
+                    data.marketState.state === 'FAVORABLE' ? 'text-emerald-300' : data.marketState.state === 'UNFAVORABLE' ? 'text-rose-300' : 'text-zinc-200'
+                  )}
+                >
+                  {MARKET_STATE_TEXT[data.marketState.state][language === 'en' ? 'en' : 'vi']}
+                </span>
+                <span className="ml-1.5 text-zinc-500 tabular-nums">
+                  {tr('tỷ trọng mua', 'buy size')} {Math.round(data.marketState.buySize * 100)}%
+                  {data.marketState.provisional ? tr(' · tạm tính', ' · provisional') : ''}
+                </span>
               </span>
             </div>
           )}

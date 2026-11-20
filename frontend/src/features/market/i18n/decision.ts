@@ -260,6 +260,14 @@ export const QUALITY_FLAG_TEXT: Record<string, T> = {
   FUND_LOSS_MAKING: { vi: 'Doanh nghiệp đang lỗ — kiểm tra kỹ trước khi mua.', en: 'The company is loss-making — check carefully before buying.' },
   FUND_PROFIT_FALLING: { vi: 'Lợi nhuận đang giảm so cùng kỳ — kiểm tra kỹ trước khi mua.', en: 'Profit is falling year over year — check carefully before buying.' },
   SECTOR_HEADWIND: { vi: 'Ngành đang yếu hơn thị trường (ngược gió).', en: 'The sector is lagging the market (headwind).' },
+  MARKET_UNFAVORABLE: {
+    vi: 'Thị trường Bất lợi (VN-Index dưới MA200, biến động cao): không mở vị thế mới. Lịch sử: tín hiệu Trend Template chỉ +1%/20 phiên, 49% chạm cắt lỗ 7%.',
+    en: 'Unfavorable market (VN-Index below MA200, high volatility): no new positions. History: Trend Template signals only +1%/20 sessions, 49% hit a 7% stop.',
+  },
+  MARKET_NEUTRAL: {
+    vi: 'Thị trường Trung tính: chỉ mua tối đa nửa tỷ trọng.',
+    en: 'Neutral market: buy at most half size.',
+  },
 };
 
 /** Tăng trưởng quá lớn do nền thấp thì hiển thị ">300%" thay vì con số vô nghĩa */

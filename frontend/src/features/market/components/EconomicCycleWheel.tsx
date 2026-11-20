@@ -23,6 +23,8 @@ import {
 } from '@phosphor-icons/react';
 import { MinerviniScreenerItem } from '../types/minervini.types';
 import { SECTOR_MAPPING } from '../data/sectorMapping';
+import { CapitalContextPanel } from './CapitalContextPanel';
+import { MarketStateBanner } from './MarketStateBanner';
 import macroDatabase from '../data/macroDatabase.json';
 
 export type RiskAppetite = 'aggressive' | 'balanced' | 'conservative';
@@ -754,14 +756,15 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
       res[k].fx = fxScores[k];
       res[k].yield = yieldScores[k];
       res[k].global = globalScores[k];
-      // 6 trụ cột: 22% tăng trưởng + 18% lạm phát + 18% lãi suất VN + 12% tỷ giá + 15% kỳ hạn VN + 15% thế giới
+      // Điều kiện vốn quyết định định giá hơn GDP (khung Lợi nhuận × Vốn): giảm GDP, tăng các trụ cột vốn.
+      // 10% tăng trưởng + 15% lạm phát + 25% lãi suất VN + 12% tỷ giá + 20% đường cong VN + 18% Fed & thế giới
       res[k].composite = Math.round(
-        gdpScores[k] * 0.22 +
-        cpiScores[k] * 0.18 +
-        rateScores[k] * 0.18 +
+        gdpScores[k] * 0.1 +
+        cpiScores[k] * 0.15 +
+        rateScores[k] * 0.25 +
         fxScores[k] * 0.12 +
-        yieldScores[k] * 0.15 +
-        globalScores[k] * 0.15
+        yieldScores[k] * 0.2 +
+        globalScores[k] * 0.18
       );
     });
 
@@ -1025,6 +1028,9 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
 
   return (
     <div className="space-y-6">
+      {/* ── 0. Quyết định chính: Lợi nhuận × Vốn (tỷ trọng) + Trạng thái thị trường (rủi ro) ── */}
+      <CapitalContextPanel />
+      <MarketStateBanner />
       {/* ── 1. Hero Header & Macro Research Synthesis ─────────────────────── */}
       <div className="p-6 rounded-2xl bg-zinc-950/95 border border-zinc-800/80 backdrop-blur-xl shadow-2xl relative overflow-hidden">
         <div className="absolute -right-24 -top-24 w-80 h-80 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
@@ -1651,15 +1657,15 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                     </div>
                     <div className="space-y-1 text-zinc-300">
                       <div className="flex justify-between">
-                        <span className="text-zinc-400">1. Xu hướng GDP (22%):</span>
+                        <span className="text-zinc-400">1. Xu hướng GDP (10%):</span>
                         <span>{macroPillarScores.recovery.gdp} | <strong className="text-emerald-400">{macroPillarScores.expansion.gdp}</strong> | {macroPillarScores.late.gdp} | {macroPillarScores.recession.gdp}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-zinc-400">2. Xu hướng CPI (18%):</span>
+                        <span className="text-zinc-400">2. Xu hướng CPI (15%):</span>
                         <span>{macroPillarScores.recovery.cpi} | <strong className="text-emerald-400">{macroPillarScores.expansion.cpi}</strong> | {macroPillarScores.late.cpi} | {macroPillarScores.recession.cpi}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-zinc-400">3. Lãi suất NHNN (18%):</span>
+                        <span className="text-zinc-400">3. Lãi suất NHNN (25%):</span>
                         <span>{macroPillarScores.recovery.rate} | <strong className="text-emerald-400">{macroPillarScores.expansion.rate}</strong> | {macroPillarScores.late.rate} | {macroPillarScores.recession.rate}</span>
                       </div>
                       <div className="flex justify-between">
@@ -1667,11 +1673,11 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                         <span>{macroPillarScores.recovery.fx} | <strong className="text-emerald-400">{macroPillarScores.expansion.fx}</strong> | {macroPillarScores.late.fx} | {macroPillarScores.recession.fx}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-zinc-400">5. Đường cong VN (15%):</span>
+                        <span className="text-zinc-400">5. Đường cong VN (20%):</span>
                         <span>{macroPillarScores.recovery.yield} | <strong className="text-emerald-400">{macroPillarScores.expansion.yield}</strong> | {macroPillarScores.late.yield} | {macroPillarScores.recession.yield}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-zinc-400">6. Fed &amp; thế giới (15%):</span>
+                        <span className="text-zinc-400">6. Fed &amp; thế giới (18%):</span>
                         <span>{macroPillarScores.recovery.global} | <strong className="text-emerald-400">{macroPillarScores.expansion.global}</strong> | {macroPillarScores.late.global} | {macroPillarScores.recession.global}</span>
                       </div>
                       <div className="flex justify-between pt-1 border-t border-zinc-800 font-bold text-zinc-200">

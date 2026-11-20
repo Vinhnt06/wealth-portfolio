@@ -87,6 +87,8 @@ export interface MinerviniAnalysisResult {
   /** Vị thế ngành theo xếp hạng sức mạnh tương đối 3 tháng */
   sectorInfo?: { name: string; rank: number | null; total: number | null; tone: SectorTone; status: string | null };
   /** Cờ cảnh báo chất lượng khi Stage đã cho phép mua */
+  /** Trạng thái thị trường & hệ số tỷ trọng mua (1 / 0,5 / 0) */
+  marketState?: { state: 'FAVORABLE' | 'NEUTRAL' | 'UNFAVORABLE'; date: string; provisional: boolean; buySize: number } | null;
   qualityFlags?: string[];
   /** Quyết định hợp nhất Stage × Wyckoff */
   decision?: Decision & { evidence: DecisionEvidence; marketUp: boolean | null };
