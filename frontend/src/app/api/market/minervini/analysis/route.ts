@@ -414,7 +414,20 @@ export async function GET(request: Request) {
     // rồi hợp nhất với Trend Template thành MỘT quyết định, xem utils/decisionEngine.ts để biết quy tắc ưu tiên khi hai khung lệch nhau.
     const dist = detectDistribution({ opens, highs, lows, closes, volumes });
     const cycleContext = buildCycleContext({ stage: stageResult, wy, dist });
-    const marketUp = isIndex ? null : await getMarketUp();
+    // ── Trạng thái thị trường (MA200 · độ rộng · biến động) — cổng tỷ trọng mua, đã kiểm chứng (utils/marketState.ts) ──
+    // Một cổng duy nhất: Bất lợi → không mở vị thế mới; Thuận lợi/Trung tính → mua theo điểm mua.
+    let marketState: { state: MarketStateKey; date: string; provisional: boolean; buySize: number } | null = null;
+    try {
+      const ms = await fetch(`${new URL(request.url).origin}/api/market/state`, { cache: 'no-store', signal: AbortSignal.timeout(60_000) }).then((r) => r.json());
+      const cur = ms?.data?.current;
+      if (ms?.success && cur?.state) {
+        marketState = { state: cur.state, date: cur.date, provisional: Boolean(cur.provisional), buySize: MARKET_STATE_EVIDENCE[cur.state as MarketStateKey].buySize };
+      }
+    } catch {
+      // không có trạng thái thì không gắn cờ
+    }
+    // Nguồn trạng thái lỗi thì dùng tạm quy tắc đơn giản: VN-Index dưới MA50/MA200 coi như bất lợi
+    const marketUp = isIndex ? null : marketState ? marketState.state !== 'UNFAVORABLE' : await getMarketUp();
     const decision = buildDecision({
       stage: stageResult,
       ttPassed: passedCount,
@@ -436,14 +449,18 @@ export async function GET(request: Request) {
     // Giữ nguyên chẩn đoán pha & nhãn tín hiệu để người dùng vẫn thấy, nhưng không để hai nơi nói hai điều khác nhau.
     const buyBlocked = isBuyPhase && decision.newBuyer.action !== 'BUY';
     const buyBlockedReason = buyBlocked
-      ? decision.drivers.stage !== 'OK'
+      ? decision.headline === 'WAIT_MARKET'
+        ? 'Cổ phiếu đạt chuẩn nhưng thị trường đang Bất lợi. Chưa mở vị thế mới.'
+        : decision.drivers.stage !== 'OK'
         ? `Chưa đạt Trend Template (${passedCount}/8 · Stage ${stage}). Chỉ theo dõi, chưa giải ngân.`
         : 'Stage 2 đủ chuẩn nhưng Wyckoff chưa tới điểm vào hoặc đang có dấu hiệu phân phối. Chỉ theo dõi, chưa giải ngân.'
       : undefined;
     if (buyBlocked) {
       isBuyPhase = false;
       actionAdvice =
-        decision.drivers.stage !== 'OK'
+        decision.headline === 'WAIT_MARKET'
+          ? 'Chỉ theo dõi — chờ thị trường thoát trạng thái Bất lợi'
+          : decision.drivers.stage !== 'OK'
           ? 'Chỉ theo dõi — chờ đủ 8/8 Trend Template (Stage 2) trước khi giải ngân'
           : 'Chỉ theo dõi — chờ Wyckoff xác nhận điểm vào (Phase D/E) và hết dấu hiệu phân phối';
     }
@@ -466,21 +483,7 @@ export async function GET(request: Request) {
       if (sectorInfo.tone === 'HEADWIND') qualityFlags.push('SECTOR_HEADWIND');
     }
 
-    // ── Trạng thái thị trường (MA200 · độ rộng · biến động) — cổng tỷ trọng mua, đã kiểm chứng (utils/marketState.ts) ──
-    let marketState: { state: MarketStateKey; date: string; provisional: boolean; buySize: number } | null = null;
-    try {
-      const ms = await fetch(`${new URL(request.url).origin}/api/market/state`, { cache: 'no-store', signal: AbortSignal.timeout(60_000) }).then((r) => r.json());
-      const cur = ms?.data?.current;
-      if (ms?.success && cur?.state) {
-        marketState = { state: cur.state, date: cur.date, provisional: Boolean(cur.provisional), buySize: MARKET_STATE_EVIDENCE[cur.state as MarketStateKey].buySize };
-      }
-    } catch {
-      // không có trạng thái thì không gắn cờ
-    }
-    if (marketState && (decision.newBuyer.action === 'BUY' || decision.drivers.stage === 'OK')) {
-      if (marketState.state === 'UNFAVORABLE') qualityFlags.unshift('MARKET_UNFAVORABLE');
-      else if (marketState.state === 'NEUTRAL') qualityFlags.unshift('MARKET_NEUTRAL');
-    }
+    if (marketState?.state === 'UNFAVORABLE' && decision.drivers.stage === 'OK') qualityFlags.unshift('MARKET_UNFAVORABLE');
 
     // ── Indicators for Heat & Extended Analysis (RSI, MACD) ──
     // 1. RSI(14) - Wilder smoothing (khớp với RSI trên chart)

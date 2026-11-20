@@ -73,6 +73,7 @@ export interface DecisionInput {
   /** Đáy nền để đặt cắt lỗ (nếu có) */
   baseLow: number | null;
   distFromSMA20Pct: number;
+  /** false = trạng thái thị trường Bất lợi → không mở vị thế mới; true/null = được mua (utils/marketState.ts) */
   marketUp: boolean | null;
 }
 
@@ -120,10 +121,16 @@ export function buildDecision(inp: DecisionInput): Decision {
       headline = 'WAIT_NO_CHASE';
       entryReasons.push('STAGE_OK', 'EXTENDED_NO_CHASE');
     } else if (wyDriver === 'OK') {
-      entry = 'BUY';
-      headline = 'BUY_ALIGNED';
       entryReasons.push('STAGE_OK', 'WYCKOFF_TIMING_OK');
-      size = marketUp === false || caution ? 'HALF' : 'FULL';
+      if (marketUp === false) {
+        // Thị trường Bất lợi: không mở vị thế mới (utils/marketState.ts)
+        entry = 'WAIT';
+        headline = 'WAIT_MARKET';
+      } else {
+        entry = 'BUY';
+        headline = 'BUY_ALIGNED';
+        size = caution ? 'HALF' : 'FULL';
+      }
     } else {
       entry = 'WAIT';
       headline = 'WAIT_PIVOT';
@@ -133,7 +140,6 @@ export function buildDecision(inp: DecisionInput): Decision {
 
   const sizeNotes: string[] = [];
   if (entry === 'BUY') {
-    if (marketUp === false) sizeNotes.push('MARKET_WEAK_HALF');
     if (caution) sizeNotes.push('DISTRIBUTION_CAUTION_HALF');
   }
 

@@ -50,6 +50,7 @@ export const HEADLINE_TEXT: Record<string, T> = {
   BUY_ALIGNED: { vi: 'Có thể mua: Stage 2 đủ chuẩn và Wyckoff tới điểm vào', en: 'Can buy: Stage 2 qualifies and Wyckoff is at an entry' },
   WAIT_PIVOT: { vi: 'Chờ điểm vào: xu hướng đạt chuẩn nhưng chưa tới pivot', en: 'Wait for the entry: trend qualifies but price has not reached the pivot' },
   WAIT_NO_CHASE: { vi: 'Đã chạy xa, không mua đuổi: chờ nhịp chỉnh', en: 'Extended — do not chase: wait for a pullback' },
+  WAIT_MARKET: { vi: 'Cổ phiếu đạt chuẩn nhưng thị trường Bất lợi: chưa mở vị thế mới', en: 'Stock qualifies but the market is Unfavorable: no new positions yet' },
   WAIT_STAGE_CONFIRM: { vi: 'Chờ Stage xác nhận: Wyckoff đã sẵn sàng sớm', en: 'Wait for Stage to confirm: Wyckoff is ready early' },
   WAIT_BASE_FORMING: { vi: 'Chờ nền hình thành: chưa có xác nhận từ cả hai khung', en: 'Wait for the base to form: neither framework confirms yet' },
   AVOID_WYCKOFF_WARNS: { vi: 'Không mua: Wyckoff cảnh báo phân phối', en: 'Do not buy: Wyckoff warns of distribution' },
@@ -98,7 +99,6 @@ export const REASON_TEXT: Record<string, T> = {
   STAGE2_NOT_CONFIRMED_TIGHTEN: { vi: 'Stage 2 chưa đủ 8/8: giữ nhưng siết cắt lỗ.', en: 'Stage 2 below 8/8: hold but tighten the stop.' },
   DISTRIBUTION_CAUTION_TIGHTEN: { vi: 'Có ≥ 2 dấu hiệu phân phối nhẹ: giữ nhưng siết cắt lỗ.', en: '2+ mild distribution signs: hold but tighten the stop.' },
   TREND_INTACT_HOLD: { vi: 'Xu hướng nguyên vẹn, không có cảnh báo: tiếp tục giữ.', en: 'Trend intact and no warnings: keep holding.' },
-  MARKET_WEAK_HALF: { vi: 'VN-Index đang dưới MA50/MA200: giảm còn nửa tỷ trọng.', en: 'VN-Index is below its MA50/MA200: halve the position size.' },
   DISTRIBUTION_CAUTION_HALF: { vi: 'Có ≥ 2 dấu hiệu phân phối nhẹ: giảm còn nửa tỷ trọng.', en: '2+ mild distribution signs: halve the position size.' },
 };
 
@@ -152,7 +152,7 @@ export function triggerText(tr: Trigger, lang: Lang, labelOf: (id: number) => st
     case 'PULLBACK_TO_MA20_50': return vi ? `Chờ nhịp chỉnh về vùng MA20–MA50 (MA50 ≈ ${fmtK(tr.value)}) rồi mới xét lại` : `Wait for a pullback toward the MA20–MA50 zone (MA50 ≈ ${fmtK(tr.value)}) before reconsidering`;
     case 'BREAK_PIVOT_WITH_VOLUME': return vi ? `Vượt pivot ${fmtK(tr.value)} (${pctS(tr.pct)}) với khối lượng ≥ ${tr.extra}× trung bình, hoặc LPS giữ vững MA20/MA50` : `Break the pivot ${fmtK(tr.value)} (${pctS(tr.pct)}) on volume ≥ ${tr.extra}× average, or an LPS that holds the MA20/MA50`;
     case 'DISTRIBUTION_CLEARS': return vi ? `${tr.extra} phiên liên tiếp không có thêm nến SOW / Upthrust` : `${tr.extra} sessions in a row without new SOW / upthrust bars`;
-    case 'MARKET_RECOVERS': return vi ? 'VN-Index lấy lại MA50 và MA200 (khi đó dùng quy mô đầy đủ)' : 'VN-Index regains its MA50 and MA200 (then use full size)';
+    case 'MARKET_RECOVERS': return vi ? 'Thị trường thoát trạng thái Bất lợi (VN-Index lấy lại MA200 hoặc biến động hạ nhiệt)' : 'The market leaves the Unfavorable state (VN-Index regains its MA200 or volatility cools)';
     case 'CLOSE_BELOW_MA20': return vi ? `Đóng cửa dưới MA20 (${fmtK(tr.value)}, ${pctS(tr.pct)}) — mức chặn lãi gần nhất` : `Close below the MA20 (${fmtK(tr.value)}, ${pctS(tr.pct)}) — nearest trailing level`;
     case 'CLOSE_BELOW_MA50': return vi ? `Đóng cửa dưới MA50 (${fmtK(tr.value)}, ${pctS(tr.pct)})` : `Close below the MA50 (${fmtK(tr.value)}, ${pctS(tr.pct)})`;
     case 'CLOSE_BELOW_MA150': return vi ? `Đóng cửa dưới MA150 (${fmtK(tr.value)}, ${pctS(tr.pct)})` : `Close below the MA150 (${fmtK(tr.value)}, ${pctS(tr.pct)})`;
@@ -171,6 +171,7 @@ export const SHORT_HEADLINE: Record<string, T> = {
   BUY_ALIGNED: { vi: 'Có thể mua', en: 'OK to buy' },
   WAIT_PIVOT: { vi: 'Chờ điểm vào', en: 'Wait for the entry' },
   WAIT_NO_CHASE: { vi: 'Đã chạy xa, đợi nhịp chỉnh', en: 'Extended — wait for a pullback' },
+  WAIT_MARKET: { vi: 'Chờ thị trường hết Bất lợi', en: 'Wait for the market to improve' },
   WAIT_STAGE_CONFIRM: { vi: 'Chờ xu hướng xác nhận', en: 'Wait for the trend to confirm' },
   WAIT_BASE_FORMING: { vi: 'Chờ nền hình thành', en: 'Wait for a base to form' },
   AVOID_WYCKOFF_WARNS: { vi: 'Không mua — có dấu hiệu xả hàng', en: 'Do not buy — distribution signs' },
@@ -227,7 +228,7 @@ export function shortTrigger(tr: Trigger, lang: Lang): string {
     case 'PULLBACK_TO_MA20_50': return vi ? 'Đợi nhịp chỉnh về MA20–MA50' : 'Wait for a pullback to MA20–MA50';
     case 'BREAK_PIVOT_WITH_VOLUME': return vi ? `Vượt ${fmtK(tr.value)} kèm khối lượng lớn` : `Break ${fmtK(tr.value)} on heavy volume`;
     case 'DISTRIBUTION_CLEARS': return vi ? 'Hết dấu hiệu xả hàng' : 'Distribution signs fade';
-    case 'MARKET_RECOVERS': return vi ? 'VN-Index trên MA50 & MA200' : 'VN-Index above MA50 & MA200';
+    case 'MARKET_RECOVERS': return vi ? 'Thị trường hết Bất lợi' : 'Market no longer Unfavorable';
     case 'CLOSE_BELOW_MA20': return vi ? `Đóng cửa dưới MA20 (${fmtK(tr.value)})` : `Close below MA20 (${fmtK(tr.value)})`;
     case 'CLOSE_BELOW_MA50': return vi ? `Đóng cửa dưới MA50 (${fmtK(tr.value)})` : `Close below MA50 (${fmtK(tr.value)})`;
     case 'CLOSE_BELOW_MA150': return vi ? `Đóng cửa dưới MA150 (${fmtK(tr.value)})` : `Close below MA150 (${fmtK(tr.value)})`;
@@ -263,10 +264,6 @@ export const QUALITY_FLAG_TEXT: Record<string, T> = {
   MARKET_UNFAVORABLE: {
     vi: 'Thị trường Bất lợi (VN-Index dưới MA200, biến động cao): không mở vị thế mới. Lịch sử: tín hiệu Trend Template chỉ +1%/20 phiên, 49% chạm cắt lỗ 7%.',
     en: 'Unfavorable market (VN-Index below MA200, high volatility): no new positions. History: Trend Template signals only +1%/20 sessions, 49% hit a 7% stop.',
-  },
-  MARKET_NEUTRAL: {
-    vi: 'Thị trường Trung tính: chỉ mua tối đa nửa tỷ trọng.',
-    en: 'Neutral market: buy at most half size.',
   },
 };
 

@@ -8,9 +8,11 @@
  * BẤT LỢI : VN-Index < MA200 VÀ biến động 20 phiên > trung vị 1 năm.
  * TRUNG TÍNH: còn lại. Trạng thái xác định ở giá đóng cửa cuối tuần.
  *
- * Kiểm chứng trên dữ liệu của app (447 tuần, 2018 → 11/2026, 100 mã lớn hiện tại): tuần kế tiếp giảm > 3%
- * ở 6% / 8% / 18% số tuần (Thuận lợi / Trung tính / Bất lợi); độ lệch chuẩn 2,1% / 2,3% / 3,7%.
- * Trend Template trong 100 mã lớn: lợi suất 20 phiên TB +3,7% / +2,0% / +1,0%; chạm cắt lỗ 7%: 41% / 44% / 49%.
+ * Kiểm chứng (Entrade, 485 tuần 06/2017 → 11/2026, 100 mã lớn hiện tại): tuần kế tiếp giảm > 3% ở 5% / 8% / 18%
+ * số tuần (Thuận lợi / Trung tính / Bất lợi); Trung tính ≈ mức chung của thị trường (8,3%).
+ * Tỷ trọng mua 100% / 100% / 0% (mua & giữ VN-Index theo trạng thái, tiền mặt 4,5%/năm): +13,2%/năm, sụt tối đa −20%,
+ * so với mua & giữ +8,7%/năm, sụt −42%; bản 100/50/0 kém hơn ở cả 2017–2022 lẫn 2023–2026 nên đã bỏ.
+ * Hạn chế: ngoài mẫu 2023–2026 trạng thái Bất lợi chỉ có 18 tuần và chưa báo đúng (thị trường hồi nhanh).
  */
 
 export type MarketStateKey = 'FAVORABLE' | 'NEUTRAL' | 'UNFAVORABLE';
@@ -104,13 +106,13 @@ export function computeWeeklyStates(vni: Series, stocks: Series[]): WeeklyState[
 
 /** Bằng chứng lịch sử (kiểm chứng trên dữ liệu app, xem chú thích đầu file) để hiển thị kèm trạng thái */
 export const MARKET_STATE_EVIDENCE: Record<MarketStateKey, { drop3Pct: number; sd: number; ttReturn20d: number; ttStopHit: number; buySize: number }> = {
-  FAVORABLE: { drop3Pct: 6, sd: 2.1, ttReturn20d: 3.7, ttStopHit: 41, buySize: 1 },
-  NEUTRAL: { drop3Pct: 8, sd: 2.3, ttReturn20d: 2.0, ttStopHit: 44, buySize: 0.5 },
+  FAVORABLE: { drop3Pct: 5, sd: 2.1, ttReturn20d: 3.7, ttStopHit: 41, buySize: 1 },
+  NEUTRAL: { drop3Pct: 8, sd: 2.4, ttReturn20d: 2.0, ttStopHit: 44, buySize: 1 },
   UNFAVORABLE: { drop3Pct: 18, sd: 3.7, ttReturn20d: 1.0, ttStopHit: 49, buySize: 0 },
 };
 
 export const MARKET_STATE_TEXT: Record<MarketStateKey, { vi: string; en: string; action: string }> = {
   FAVORABLE: { vi: 'Thuận lợi', en: 'Favorable', action: 'Mua đủ tỷ trọng khi có điểm mua' },
-  NEUTRAL: { vi: 'Trung tính', en: 'Neutral', action: 'Mua tối đa nửa tỷ trọng' },
+  NEUTRAL: { vi: 'Trung tính', en: 'Neutral', action: 'Mua theo điểm mua' },
   UNFAVORABLE: { vi: 'Bất lợi', en: 'Unfavorable', action: 'Không mở vị thế mới, chỉ theo dõi' },
 };
