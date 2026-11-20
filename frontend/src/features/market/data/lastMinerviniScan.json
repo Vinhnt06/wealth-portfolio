@@ -1,9 +1,9 @@
 {
   "success": true,
-  "scannedAt": 1795193904787,
-  "scannedAtText": "23:58:10 20/11/2026",
-  "session": "AFTERNOON",
-  "sessionLabel": "Phiên Chiều (15:00)",
+  "scannedAt": 1795194862127,
+  "scannedAtText": "00:14:08 21/11/2026",
+  "session": "MORNING",
+  "sessionLabel": "Phiên Sáng (11:30)",
   "totalScanned": 156,
   "stage2Count": 6,
   "nearStage2Count": 8,
@@ -12,24 +12,9 @@
   "vnindexRet3M": -2.62,
   "sectorUniverse": [
     {
-      "symbol": "MBB",
-      "sector": "Ngân hàng",
-      "ret3M": -10.1
-    },
-    {
       "symbol": "VCB",
       "sector": "Ngân hàng",
       "ret3M": -13.15
-    },
-    {
-      "symbol": "VPB",
-      "sector": "Ngân hàng",
-      "ret3M": 3.74
-    },
-    {
-      "symbol": "CTG",
-      "sector": "Ngân hàng",
-      "ret3M": -4.14
     },
     {
       "symbol": "BID",
@@ -37,14 +22,19 @@
       "ret3M": -16.18
     },
     {
-      "symbol": "ACB",
-      "sector": "Ngân hàng",
-      "ret3M": -10.71
-    },
-    {
       "symbol": "TCB",
       "sector": "Ngân hàng",
       "ret3M": 2.56
+    },
+    {
+      "symbol": "CTG",
+      "sector": "Ngân hàng",
+      "ret3M": -4.14
+    },
+    {
+      "symbol": "ACB",
+      "sector": "Ngân hàng",
+      "ret3M": -10.71
     },
     {
       "symbol": "HDB",
@@ -52,29 +42,19 @@
       "ret3M": 5.57
     },
     {
+      "symbol": "MBB",
+      "sector": "Ngân hàng",
+      "ret3M": -10.1
+    },
+    {
+      "symbol": "VPB",
+      "sector": "Ngân hàng",
+      "ret3M": 3.74
+    },
+    {
       "symbol": "STB",
       "sector": "Ngân hàng",
       "ret3M": -4.97
-    },
-    {
-      "symbol": "LPB",
-      "sector": "Ngân hàng",
-      "ret3M": -31.5
-    },
-    {
-      "symbol": "MSB",
-      "sector": "Ngân hàng",
-      "ret3M": 26.14
-    },
-    {
-      "symbol": "TPB",
-      "sector": "Ngân hàng",
-      "ret3M": 1.48
-    },
-    {
-      "symbol": "SHB",
-      "sector": "Ngân hàng",
-      "ret3M": -9.91
     },
     {
       "symbol": "EIB",
@@ -82,9 +62,19 @@
       "ret3M": -6.8
     },
     {
-      "symbol": "SSI",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": 3.09
+      "symbol": "SHB",
+      "sector": "Ngân hàng",
+      "ret3M": -9.91
+    },
+    {
+      "symbol": "TPB",
+      "sector": "Ngân hàng",
+      "ret3M": 1.48
+    },
+    {
+      "symbol": "LPB",
+      "sector": "Ngân hàng",
+      "ret3M": -31.5
     },
     {
       "symbol": "OCB",
@@ -92,34 +82,14 @@
       "ret3M": -2.75
     },
     {
-      "symbol": "ABB",
-      "sector": "Ngân hàng",
-      "ret3M": -0.59
-    },
-    {
-      "symbol": "BVB",
-      "sector": "Ngân hàng",
-      "ret3M": -12.86
-    },
-    {
-      "symbol": "NAB",
-      "sector": "Ngân hàng",
-      "ret3M": 12.55
-    },
-    {
-      "symbol": "VND",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -6.96
-    },
-    {
       "symbol": "VIB",
       "sector": "Ngân hàng",
       "ret3M": 1.52
     },
     {
-      "symbol": "VCI",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -9.66
+      "symbol": "MSB",
+      "sector": "Ngân hàng",
+      "ret3M": 26.14
     },
     {
       "symbol": "SSB",
@@ -127,24 +97,39 @@
       "ret3M": -1.32
     },
     {
-      "symbol": "SHS",
+      "symbol": "BVB",
+      "sector": "Ngân hàng",
+      "ret3M": -12.86
+    },
+    {
+      "symbol": "ABB",
+      "sector": "Ngân hàng",
+      "ret3M": -0.59
+    },
+    {
+      "symbol": "NAB",
+      "sector": "Ngân hàng",
+      "ret3M": 12.55
+    },
+    {
+      "symbol": "SSI",
       "sector": "Dịch vụ tài chính",
-      "ret3M": -6.52
+      "ret3M": 3.09
+    },
+    {
+      "symbol": "VCI",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -9.66
+    },
+    {
+      "symbol": "VND",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -6.96
     },
     {
       "symbol": "MBS",
       "sector": "Dịch vụ tài chính",
       "ret3M": -8.28
-    },
-    {
-      "symbol": "BSI",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -1.81
-    },
-    {
-      "symbol": "CTS",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": 7.34
     },
     {
       "symbol": "HCM",
@@ -157,29 +142,9 @@
       "ret3M": -15.78
     },
     {
-      "symbol": "ORS",
+      "symbol": "SHS",
       "sector": "Dịch vụ tài chính",
-      "ret3M": -1.1
-    },
-    {
-      "symbol": "VIC",
-      "sector": "Bất động sản",
-      "ret3M": 19.75
-    },
-    {
-      "symbol": "VHM",
-      "sector": "Bất động sản",
-      "ret3M": -13.09
-    },
-    {
-      "symbol": "TVS",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -21.48
-    },
-    {
-      "symbol": "VIX",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": 0.4
+      "ret3M": -6.52
     },
     {
       "symbol": "AGR",
@@ -187,9 +152,44 @@
       "ret3M": -8.15
     },
     {
+      "symbol": "VIX",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": 0.4
+    },
+    {
+      "symbol": "ORS",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -1.1
+    },
+    {
+      "symbol": "TVS",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -21.48
+    },
+    {
       "symbol": "VRE",
       "sector": "Bất động sản",
       "ret3M": -2.69
+    },
+    {
+      "symbol": "CTS",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": 7.34
+    },
+    {
+      "symbol": "BSI",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -1.81
+    },
+    {
+      "symbol": "VHM",
+      "sector": "Bất động sản",
+      "ret3M": -13.09
+    },
+    {
+      "symbol": "NLG",
+      "sector": "Bất động sản",
+      "ret3M": -1.07
     },
     {
       "symbol": "KDH",
@@ -197,14 +197,14 @@
       "ret3M": -1.22
     },
     {
-      "symbol": "CEO",
+      "symbol": "PDR",
       "sector": "Bất động sản",
-      "ret3M": -0.86
+      "ret3M": -5.51
     },
     {
-      "symbol": "DIG",
+      "symbol": "VIC",
       "sector": "Bất động sản",
-      "ret3M": 2.88
+      "ret3M": 19.75
     },
     {
       "symbol": "DXG",
@@ -217,29 +217,14 @@
       "ret3M": 31.75
     },
     {
-      "symbol": "SZC",
-      "sector": "Bất động sản",
-      "ret3M": 5.95
-    },
-    {
       "symbol": "KBC",
       "sector": "Bất động sản",
       "ret3M": -2.58
     },
     {
-      "symbol": "PDR",
+      "symbol": "DIG",
       "sector": "Bất động sản",
-      "ret3M": -5.51
-    },
-    {
-      "symbol": "LHG",
-      "sector": "Bất động sản",
-      "ret3M": 0.96
-    },
-    {
-      "symbol": "HDG",
-      "sector": "Bất động sản",
-      "ret3M": 2.22
+      "ret3M": 2.88
     },
     {
       "symbol": "NVL",
@@ -247,14 +232,9 @@
       "ret3M": -22.7
     },
     {
-      "symbol": "NLG",
+      "symbol": "CEO",
       "sector": "Bất động sản",
-      "ret3M": -1.07
-    },
-    {
-      "symbol": "IDC",
-      "sector": "Bất động sản",
-      "ret3M": 7.55
+      "ret3M": -0.86
     },
     {
       "symbol": "NTL",
@@ -262,14 +242,29 @@
       "ret3M": -1.2
     },
     {
-      "symbol": "VPI",
+      "symbol": "SIP",
       "sector": "Bất động sản",
-      "ret3M": 12.8
+      "ret3M": -4.06
     },
     {
-      "symbol": "DXS",
+      "symbol": "LHG",
       "sector": "Bất động sản",
-      "ret3M": -16.81
+      "ret3M": 0.96
+    },
+    {
+      "symbol": "SZC",
+      "sector": "Bất động sản",
+      "ret3M": 5.95
+    },
+    {
+      "symbol": "HDG",
+      "sector": "Bất động sản",
+      "ret3M": 2.22
+    },
+    {
+      "symbol": "IDC",
+      "sector": "Bất động sản",
+      "ret3M": 7.55
     },
     {
       "symbol": "BCM",
@@ -277,14 +272,19 @@
       "ret3M": -11.33
     },
     {
-      "symbol": "SIP",
-      "sector": "Bất động sản",
-      "ret3M": -4.06
-    },
-    {
       "symbol": "VGC",
       "sector": "Bất động sản",
       "ret3M": -5.92
+    },
+    {
+      "symbol": "DXS",
+      "sector": "Bất động sản",
+      "ret3M": -16.81
+    },
+    {
+      "symbol": "VPI",
+      "sector": "Bất động sản",
+      "ret3M": 12.8
     },
     {
       "symbol": "D2D",
@@ -292,29 +292,9 @@
       "ret3M": -13.57
     },
     {
-      "symbol": "VGS",
-      "sector": "Nguyên vật liệu",
-      "ret3M": 7.87
-    },
-    {
-      "symbol": "HT1",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -2.49
-    },
-    {
-      "symbol": "VHC",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": -3.81
-    },
-    {
       "symbol": "PVS",
       "sector": "Năng lượng",
       "ret3M": -13.4
-    },
-    {
-      "symbol": "TVN",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -2.11
     },
     {
       "symbol": "SMC",
@@ -322,24 +302,9 @@
       "ret3M": -11.56
     },
     {
-      "symbol": "IDI",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": -5.42
-    },
-    {
-      "symbol": "ASM",
-      "sector": "Bất động sản",
-      "ret3M": -30.22
-    },
-    {
       "symbol": "GVR",
       "sector": "Nguyên vật liệu",
       "ret3M": -11.99
-    },
-    {
-      "symbol": "KDC",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": -3.29
     },
     {
       "symbol": "DDV",
@@ -347,14 +312,39 @@
       "ret3M": -17.98
     },
     {
+      "symbol": "VSH",
+      "sector": "Tiện ích",
+      "ret3M": -3.17
+    },
+    {
       "symbol": "LAS",
       "sector": "Nguyên vật liệu",
       "ret3M": -7.67
     },
     {
-      "symbol": "PVB",
+      "symbol": "OIL",
       "sector": "Năng lượng",
-      "ret3M": -17.15
+      "ret3M": -9.65
+    },
+    {
+      "symbol": "BFC",
+      "sector": "Nguyên vật liệu",
+      "ret3M": 23.43
+    },
+    {
+      "symbol": "GAS",
+      "sector": "Năng lượng",
+      "ret3M": -13.11
+    },
+    {
+      "symbol": "PLX",
+      "sector": "Năng lượng",
+      "ret3M": -18.98
+    },
+    {
+      "symbol": "CSV",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -3.1
     },
     {
       "symbol": "PC1",
@@ -367,24 +357,14 @@
       "ret3M": 2.64
     },
     {
-      "symbol": "GAS",
-      "sector": "Năng lượng",
-      "ret3M": -13.11
-    },
-    {
-      "symbol": "PGV",
+      "symbol": "POW",
       "sector": "Tiện ích",
-      "ret3M": -4.83
+      "ret3M": -0.75
     },
     {
-      "symbol": "DPR",
+      "symbol": "DGC",
       "sector": "Nguyên vật liệu",
-      "ret3M": -5.87
-    },
-    {
-      "symbol": "BSR",
-      "sector": "Năng lượng",
-      "ret3M": -12.59
+      "ret3M": -9.67
     },
     {
       "symbol": "TV2",
@@ -392,39 +372,9 @@
       "ret3M": 11.59
     },
     {
-      "symbol": "VNM",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": -16.07
-    },
-    {
-      "symbol": "SAB",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": -9.29
-    },
-    {
-      "symbol": "DCM",
+      "symbol": "NTP",
       "sector": "Nguyên vật liệu",
-      "ret3M": -2.88
-    },
-    {
-      "symbol": "PVC",
-      "sector": "Năng lượng",
-      "ret3M": -16.81
-    },
-    {
-      "symbol": "ANV",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": -0.32
-    },
-    {
-      "symbol": "MSR",
-      "sector": "Nguyên vật liệu",
-      "ret3M": 20.69
-    },
-    {
-      "symbol": "BFC",
-      "sector": "Nguyên vật liệu",
-      "ret3M": 23.43
+      "ret3M": 4.13
     },
     {
       "symbol": "NKG",
@@ -432,34 +382,19 @@
       "ret3M": 14.62
     },
     {
-      "symbol": "NT2",
-      "sector": "Tiện ích",
-      "ret3M": 17.08
-    },
-    {
-      "symbol": "PHR",
+      "symbol": "DPM",
       "sector": "Nguyên vật liệu",
-      "ret3M": -15.54
+      "ret3M": -15.6
     },
     {
-      "symbol": "DBC",
+      "symbol": "PVB",
+      "sector": "Năng lượng",
+      "ret3M": -17.15
+    },
+    {
+      "symbol": "IDI",
       "sector": "Thực phẩm, đồ uống",
-      "ret3M": 2.52
-    },
-    {
-      "symbol": "HPG",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -3.31
-    },
-    {
-      "symbol": "REE",
-      "sector": "Tiện ích",
-      "ret3M": 2.08
-    },
-    {
-      "symbol": "HAG",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": -3.91
+      "ret3M": -5.42
     },
     {
       "symbol": "PVT",
@@ -472,49 +407,9 @@
       "ret3M": -8.03
     },
     {
-      "symbol": "GEE",
-      "sector": "Tiện ích",
-      "ret3M": -6.48
-    },
-    {
-      "symbol": "VSH",
-      "sector": "Tiện ích",
-      "ret3M": -3.17
-    },
-    {
-      "symbol": "HSG",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -3.33
-    },
-    {
-      "symbol": "DGC",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -9.67
-    },
-    {
-      "symbol": "QTP",
-      "sector": "Tiện ích",
-      "ret3M": -1.07
-    },
-    {
-      "symbol": "PVP",
-      "sector": "Vận tải",
-      "ret3M": -1.35
-    },
-    {
-      "symbol": "OIL",
-      "sector": "Năng lượng",
-      "ret3M": -9.65
-    },
-    {
-      "symbol": "PLX",
-      "sector": "Năng lượng",
-      "ret3M": -18.98
-    },
-    {
-      "symbol": "POW",
-      "sector": "Tiện ích",
-      "ret3M": -0.75
+      "symbol": "HAG",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": -3.91
     },
     {
       "symbol": "MCH",
@@ -522,39 +417,14 @@
       "ret3M": -4.35
     },
     {
-      "symbol": "PAN",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": -17.69
+      "symbol": "BSR",
+      "sector": "Năng lượng",
+      "ret3M": -12.59
     },
     {
-      "symbol": "BMP",
+      "symbol": "HPG",
       "sector": "Nguyên vật liệu",
-      "ret3M": -6.09
-    },
-    {
-      "symbol": "CSV",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -3.1
-    },
-    {
-      "symbol": "BWE",
-      "sector": "Tiện ích",
-      "ret3M": -4.22
-    },
-    {
-      "symbol": "NTP",
-      "sector": "Nguyên vật liệu",
-      "ret3M": 4.13
-    },
-    {
-      "symbol": "FMC",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": 0
-    },
-    {
-      "symbol": "DPM",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -15.6
+      "ret3M": -3.31
     },
     {
       "symbol": "QNS",
@@ -562,9 +432,89 @@
       "ret3M": 4.35
     },
     {
+      "symbol": "REE",
+      "sector": "Tiện ích",
+      "ret3M": 2.08
+    },
+    {
+      "symbol": "BMP",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -6.09
+    },
+    {
+      "symbol": "FMC",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": 0
+    },
+    {
+      "symbol": "DCM",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -2.88
+    },
+    {
+      "symbol": "GEE",
+      "sector": "Tiện ích",
+      "ret3M": -6.48
+    },
+    {
+      "symbol": "KDC",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": -3.29
+    },
+    {
+      "symbol": "VGS",
+      "sector": "Nguyên vật liệu",
+      "ret3M": 7.87
+    },
+    {
+      "symbol": "TVN",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -2.11
+    },
+    {
+      "symbol": "PHR",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -15.54
+    },
+    {
       "symbol": "BAF",
       "sector": "Thực phẩm, đồ uống",
       "ret3M": 0.92
+    },
+    {
+      "symbol": "ANV",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": -0.32
+    },
+    {
+      "symbol": "SAB",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": -9.29
+    },
+    {
+      "symbol": "PGV",
+      "sector": "Tiện ích",
+      "ret3M": -4.83
+    },
+    {
+      "symbol": "ASM",
+      "sector": "Bất động sản",
+      "ret3M": -30.22
+    },
+    {
+      "symbol": "PAN",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": -17.69
+    },
+    {
+      "symbol": "MSR",
+      "sector": "Nguyên vật liệu",
+      "ret3M": 20.69
+    },
+    {
+      "symbol": "NT2",
+      "sector": "Tiện ích",
+      "ret3M": 17.08
     },
     {
       "symbol": "PVD",
@@ -572,109 +522,54 @@
       "ret3M": -11.72
     },
     {
-      "symbol": "PHP",
+      "symbol": "PVP",
       "sector": "Vận tải",
-      "ret3M": -1.09
+      "ret3M": -1.35
     },
     {
-      "symbol": "PET",
-      "sector": "Phân phối, bán lẻ",
-      "ret3M": 25.77
+      "symbol": "DBC",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": 2.52
     },
     {
-      "symbol": "GMD",
-      "sector": "Vận tải",
-      "ret3M": -2.59
+      "symbol": "VNM",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": -16.07
     },
     {
-      "symbol": "FPT",
-      "sector": "Phần mềm",
-      "ret3M": -29.08
+      "symbol": "PVC",
+      "sector": "Năng lượng",
+      "ret3M": -16.81
     },
     {
-      "symbol": "TNH",
-      "sector": "Dịch vụ chăm sóc sức khỏe",
-      "ret3M": -25.42
+      "symbol": "HT1",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -2.49
     },
     {
-      "symbol": "DHG",
-      "sector": "Dược phẩm",
-      "ret3M": -6.13
+      "symbol": "DPR",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -5.87
     },
     {
-      "symbol": "VSC",
-      "sector": "Vận tải",
-      "ret3M": -9.44
+      "symbol": "BWE",
+      "sector": "Tiện ích",
+      "ret3M": -4.22
     },
     {
-      "symbol": "FOX",
-      "sector": "Viễn thông",
-      "ret3M": -17.13
+      "symbol": "VHC",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": -3.81
     },
     {
-      "symbol": "VTO",
-      "sector": "Vận tải",
-      "ret3M": -0.48
+      "symbol": "HSG",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -3.33
     },
     {
-      "symbol": "GEX",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -18.53
-    },
-    {
-      "symbol": "VOS",
-      "sector": "Vận tải",
-      "ret3M": 2.77
-    },
-    {
-      "symbol": "VCG",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -6.45
-    },
-    {
-      "symbol": "VJC",
-      "sector": "Vận tải",
-      "ret3M": 11.26
-    },
-    {
-      "symbol": "VIP",
-      "sector": "Vận tải",
-      "ret3M": -0.72
-    },
-    {
-      "symbol": "CII",
-      "sector": "Bất động sản",
-      "ret3M": -6.36
-    },
-    {
-      "symbol": "TCM",
-      "sector": "Hàng tiêu dùng",
-      "ret3M": -10.03
-    },
-    {
-      "symbol": "ELC",
-      "sector": "Phần mềm",
-      "ret3M": -31.48
-    },
-    {
-      "symbol": "CTD",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": 18.37
-    },
-    {
-      "symbol": "SAM",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": 2.5
-    },
-    {
-      "symbol": "C4G",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -20
-    },
-    {
-      "symbol": "SGP",
-      "sector": "Vận tải",
-      "ret3M": -12.75
+      "symbol": "QTP",
+      "sector": "Tiện ích",
+      "ret3M": -1.07
     },
     {
       "symbol": "TNG",
@@ -682,99 +577,19 @@
       "ret3M": 2.91
     },
     {
-      "symbol": "HHV",
+      "symbol": "VOS",
       "sector": "Vận tải",
-      "ret3M": -7.45
+      "ret3M": 2.77
     },
     {
-      "symbol": "VGI",
-      "sector": "Viễn thông",
-      "ret3M": -20.5
-    },
-    {
-      "symbol": "FRT",
-      "sector": "Phân phối, bán lẻ",
-      "ret3M": 2.07
-    },
-    {
-      "symbol": "HNG",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": -13.64
-    },
-    {
-      "symbol": "MWG",
-      "sector": "Phân phối, bán lẻ",
-      "ret3M": -0.06
-    },
-    {
-      "symbol": "DVN",
-      "sector": "Dược phẩm",
-      "ret3M": 4.03
-    },
-    {
-      "symbol": "DCL",
-      "sector": "Dược phẩm",
-      "ret3M": -8.63
-    },
-    {
-      "symbol": "HAH",
-      "sector": "Vận tải",
-      "ret3M": -3.79
-    },
-    {
-      "symbol": "CTR",
-      "sector": "Viễn thông",
-      "ret3M": -24.48
-    },
-    {
-      "symbol": "FCN",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -5.38
-    },
-    {
-      "symbol": "LCG",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -11.55
-    },
-    {
-      "symbol": "HVN",
-      "sector": "Vận tải",
-      "ret3M": 1.1
-    },
-    {
-      "symbol": "CMG",
+      "symbol": "ELC",
       "sector": "Phần mềm",
-      "ret3M": -31.5
+      "ret3M": -31.48
     },
     {
-      "symbol": "PNJ",
-      "sector": "Phân phối, bán lẻ",
-      "ret3M": -63.81
-    },
-    {
-      "symbol": "VTP",
+      "symbol": "PHP",
       "sector": "Vận tải",
-      "ret3M": -26.54
-    },
-    {
-      "symbol": "VGT",
-      "sector": "Hàng tiêu dùng",
-      "ret3M": -5.26
-    },
-    {
-      "symbol": "DBD",
-      "sector": "Dược phẩm",
-      "ret3M": -7.26
-    },
-    {
-      "symbol": "GIL",
-      "sector": "Hàng tiêu dùng",
-      "ret3M": 9.88
-    },
-    {
-      "symbol": "MSH",
-      "sector": "Hàng tiêu dùng",
-      "ret3M": 16.67
+      "ret3M": -1.09
     },
     {
       "symbol": "DGW",
@@ -782,34 +597,199 @@
       "ret3M": -6.73
     },
     {
+      "symbol": "VJC",
+      "sector": "Vận tải",
+      "ret3M": 11.26
+    },
+    {
+      "symbol": "VCG",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -6.45
+    },
+    {
+      "symbol": "GEX",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -18.53
+    },
+    {
+      "symbol": "FOX",
+      "sector": "Viễn thông",
+      "ret3M": -17.13
+    },
+    {
+      "symbol": "VSC",
+      "sector": "Vận tải",
+      "ret3M": -9.44
+    },
+    {
+      "symbol": "HHV",
+      "sector": "Vận tải",
+      "ret3M": -7.45
+    },
+    {
+      "symbol": "HAH",
+      "sector": "Vận tải",
+      "ret3M": -3.79
+    },
+    {
+      "symbol": "HNG",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": -13.64
+    },
+    {
+      "symbol": "TCM",
+      "sector": "Hàng tiêu dùng",
+      "ret3M": -10.03
+    },
+    {
+      "symbol": "TNH",
+      "sector": "Dịch vụ chăm sóc sức khỏe",
+      "ret3M": -25.42
+    },
+    {
+      "symbol": "VGI",
+      "sector": "Viễn thông",
+      "ret3M": -20.5
+    },
+    {
+      "symbol": "VTP",
+      "sector": "Vận tải",
+      "ret3M": -26.54
+    },
+    {
+      "symbol": "DCL",
+      "sector": "Dược phẩm",
+      "ret3M": -8.63
+    },
+    {
+      "symbol": "VTO",
+      "sector": "Vận tải",
+      "ret3M": -0.48
+    },
+    {
+      "symbol": "DBD",
+      "sector": "Dược phẩm",
+      "ret3M": -7.26
+    },
+    {
+      "symbol": "VGT",
+      "sector": "Hàng tiêu dùng",
+      "ret3M": -5.26
+    },
+    {
+      "symbol": "DVN",
+      "sector": "Dược phẩm",
+      "ret3M": 4.03
+    },
+    {
+      "symbol": "HVN",
+      "sector": "Vận tải",
+      "ret3M": 1.1
+    },
+    {
+      "symbol": "FRT",
+      "sector": "Phân phối, bán lẻ",
+      "ret3M": 2.07
+    },
+    {
+      "symbol": "PET",
+      "sector": "Phân phối, bán lẻ",
+      "ret3M": 25.77
+    },
+    {
+      "symbol": "DHG",
+      "sector": "Dược phẩm",
+      "ret3M": -6.13
+    },
+    {
+      "symbol": "LCG",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -11.55
+    },
+    {
+      "symbol": "PNJ",
+      "sector": "Phân phối, bán lẻ",
+      "ret3M": -63.81
+    },
+    {
+      "symbol": "FPT",
+      "sector": "Phần mềm",
+      "ret3M": -29.08
+    },
+    {
       "symbol": "HAX",
       "sector": "Ô tô, linh kiện",
       "ret3M": -11.78
     },
     {
-      "symbol": "YEG",
-      "sector": "Truyền thông, giải trí",
-      "ret3M": -7.06
+      "symbol": "SGP",
+      "sector": "Vận tải",
+      "ret3M": -12.75
     },
     {
-      "symbol": "LPS",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -51.3
+      "symbol": "VIP",
+      "sector": "Vận tải",
+      "ret3M": -0.72
     },
     {
-      "symbol": "VEA",
-      "sector": "Ô tô, linh kiện",
-      "ret3M": 0.63
+      "symbol": "CMG",
+      "sector": "Phần mềm",
+      "ret3M": -31.5
+    },
+    {
+      "symbol": "MSH",
+      "sector": "Hàng tiêu dùng",
+      "ret3M": 16.67
+    },
+    {
+      "symbol": "SAM",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": 2.5
+    },
+    {
+      "symbol": "MWG",
+      "sector": "Phân phối, bán lẻ",
+      "ret3M": -0.06
+    },
+    {
+      "symbol": "GIL",
+      "sector": "Hàng tiêu dùng",
+      "ret3M": 9.88
+    },
+    {
+      "symbol": "CII",
+      "sector": "Bất động sản",
+      "ret3M": -6.36
+    },
+    {
+      "symbol": "C4G",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -20
+    },
+    {
+      "symbol": "CTR",
+      "sector": "Viễn thông",
+      "ret3M": -24.48
+    },
+    {
+      "symbol": "GMD",
+      "sector": "Vận tải",
+      "ret3M": -2.59
+    },
+    {
+      "symbol": "CTD",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": 18.37
+    },
+    {
+      "symbol": "FCN",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -5.38
     },
     {
       "symbol": "BMI",
       "sector": "Bảo hiểm",
       "ret3M": 4.26
-    },
-    {
-      "symbol": "OCH",
-      "sector": "Bất động sản",
-      "ret3M": 14.52
     },
     {
       "symbol": "PVI",
@@ -822,39 +802,9 @@
       "ret3M": -60.66
     },
     {
-      "symbol": "CTF",
-      "sector": "Phân phối, bán lẻ",
-      "ret3M": -9.52
-    },
-    {
-      "symbol": "CSM",
-      "sector": "Ô tô, linh kiện",
-      "ret3M": -16.85
-    },
-    {
-      "symbol": "VNZ",
+      "symbol": "YEG",
       "sector": "Truyền thông, giải trí",
-      "ret3M": 0
-    },
-    {
-      "symbol": "MIG",
-      "sector": "Bảo hiểm",
-      "ret3M": -9.38
-    },
-    {
-      "symbol": "DRC",
-      "sector": "Ô tô, linh kiện",
-      "ret3M": -16.65
-    },
-    {
-      "symbol": "TOS",
-      "sector": "Vận tải",
-      "ret3M": -24.58
-    },
-    {
-      "symbol": "HHS",
-      "sector": "Ô tô, linh kiện",
-      "ret3M": -1.02
+      "ret3M": -7.06
     },
     {
       "symbol": "BVH",
@@ -862,44 +812,54 @@
       "ret3M": -12.91
     },
     {
-      "symbol": "TCD",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -67.51
+      "symbol": "HHS",
+      "sector": "Ô tô, linh kiện",
+      "ret3M": -1.02
     },
     {
-      "symbol": "TT6",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": -23.68
+      "symbol": "OCH",
+      "sector": "Bất động sản",
+      "ret3M": 14.52
     },
     {
-      "symbol": "HTG",
-      "sector": "Hàng tiêu dùng",
-      "ret3M": 1.87
-    },
-    {
-      "symbol": "PDN",
-      "sector": "Vận tải",
-      "ret3M": -14.25
-    },
-    {
-      "symbol": "ABW",
+      "symbol": "LPS",
       "sector": "Dịch vụ tài chính",
-      "ret3M": -2.76
+      "ret3M": -51.3
     },
     {
-      "symbol": "SAS",
+      "symbol": "TOS",
       "sector": "Vận tải",
-      "ret3M": -8.21
+      "ret3M": -24.58
     },
     {
-      "symbol": "SJD",
-      "sector": "Tiện ích",
-      "ret3M": -4.94
+      "symbol": "DRC",
+      "sector": "Ô tô, linh kiện",
+      "ret3M": -16.65
     },
     {
-      "symbol": "NBC",
-      "sector": "Nguyên vật liệu",
-      "ret3M": 6.67
+      "symbol": "MIG",
+      "sector": "Bảo hiểm",
+      "ret3M": -9.38
+    },
+    {
+      "symbol": "CTF",
+      "sector": "Phân phối, bán lẻ",
+      "ret3M": -9.52
+    },
+    {
+      "symbol": "VNZ",
+      "sector": "Truyền thông, giải trí",
+      "ret3M": 0
+    },
+    {
+      "symbol": "CSM",
+      "sector": "Ô tô, linh kiện",
+      "ret3M": -16.85
+    },
+    {
+      "symbol": "VEA",
+      "sector": "Ô tô, linh kiện",
+      "ret3M": 0.63
     },
     {
       "symbol": "DRI",
@@ -907,14 +867,44 @@
       "ret3M": -1.33
     },
     {
-      "symbol": "F88",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -25.94
+      "symbol": "TCD",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -67.51
     },
     {
-      "symbol": "QTC",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": 86.08
+      "symbol": "ABW",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -2.76
+    },
+    {
+      "symbol": "PDN",
+      "sector": "Vận tải",
+      "ret3M": -14.25
+    },
+    {
+      "symbol": "HTG",
+      "sector": "Hàng tiêu dùng",
+      "ret3M": 1.87
+    },
+    {
+      "symbol": "SJD",
+      "sector": "Tiện ích",
+      "ret3M": -4.94
+    },
+    {
+      "symbol": "TT6",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": -23.68
+    },
+    {
+      "symbol": "NBC",
+      "sector": "Nguyên vật liệu",
+      "ret3M": 6.67
+    },
+    {
+      "symbol": "SAS",
+      "sector": "Vận tải",
+      "ret3M": -8.21
     },
     {
       "symbol": "KLB",
@@ -922,14 +912,9 @@
       "ret3M": -17.74
     },
     {
-      "symbol": "TDP",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -1.56
-    },
-    {
-      "symbol": "MAC",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": 13.22
+      "symbol": "F88",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -25.94
     },
     {
       "symbol": "CTP",
@@ -942,9 +927,19 @@
       "ret3M": -14.21
     },
     {
-      "symbol": "NHA",
+      "symbol": "QTC",
       "sector": "Hàng hóa công nghiệp",
-      "ret3M": -8.62
+      "ret3M": 86.08
+    },
+    {
+      "symbol": "TDP",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -1.56
+    },
+    {
+      "symbol": "MAC",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": 13.22
     },
     {
       "symbol": "DHA",
@@ -952,19 +947,19 @@
       "ret3M": 18.66
     },
     {
-      "symbol": "SBB",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -23.15
-    },
-    {
       "symbol": "L40",
       "sector": "Hàng hóa công nghiệp",
       "ret3M": -1.33
     },
     {
-      "symbol": "VGP",
-      "sector": "Vận tải",
-      "ret3M": 7.91
+      "symbol": "NHA",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -8.62
+    },
+    {
+      "symbol": "DST",
+      "sector": "Phân phối, bán lẻ",
+      "ret3M": -63.95
     },
     {
       "symbol": "AAN",
@@ -977,39 +972,19 @@
       "ret3M": 39.13
     },
     {
+      "symbol": "SBB",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -23.15
+    },
+    {
+      "symbol": "VGP",
+      "sector": "Vận tải",
+      "ret3M": 7.91
+    },
+    {
       "symbol": "THD",
       "sector": "Hàng hóa công nghiệp",
       "ret3M": -55
-    },
-    {
-      "symbol": "DST",
-      "sector": "Phân phối, bán lẻ",
-      "ret3M": -63.95
-    },
-    {
-      "symbol": "HPX",
-      "sector": "Bất động sản",
-      "ret3M": -26.75
-    },
-    {
-      "symbol": "SCG",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": 0
-    },
-    {
-      "symbol": "SHI",
-      "sector": "Hàng tiêu dùng",
-      "ret3M": 1.79
-    },
-    {
-      "symbol": "NCT",
-      "sector": "Vận tải",
-      "ret3M": -8.35
-    },
-    {
-      "symbol": "PCB",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -10
     },
     {
       "symbol": "NTC",
@@ -1017,39 +992,34 @@
       "ret3M": 5.42
     },
     {
+      "symbol": "HPX",
+      "sector": "Bất động sản",
+      "ret3M": -26.75
+    },
+    {
+      "symbol": "SHI",
+      "sector": "Hàng tiêu dùng",
+      "ret3M": 1.79
+    },
+    {
+      "symbol": "PCB",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -10
+    },
+    {
       "symbol": "VCP",
       "sector": "Tiện ích",
       "ret3M": 66.22
     },
     {
-      "symbol": "TAB",
+      "symbol": "SCG",
       "sector": "Hàng hóa công nghiệp",
-      "ret3M": 133.87
+      "ret3M": 0
     },
     {
-      "symbol": "HQC",
-      "sector": "Bất động sản",
-      "ret3M": -17.13
-    },
-    {
-      "symbol": "HDC",
-      "sector": "Bất động sản",
-      "ret3M": 10.78
-    },
-    {
-      "symbol": "SBS",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -15.56
-    },
-    {
-      "symbol": "MML",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": -16.79
-    },
-    {
-      "symbol": "HII",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -17.63
+      "symbol": "NCT",
+      "sector": "Vận tải",
+      "ret3M": -8.35
     },
     {
       "symbol": "VTZ",
@@ -1057,9 +1027,9 @@
       "ret3M": 0.49
     },
     {
-      "symbol": "PSD",
-      "sector": "Phân phối, bán lẻ",
-      "ret3M": 7.63
+      "symbol": "VIW",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -38.46
     },
     {
       "symbol": "DHC",
@@ -1067,19 +1037,39 @@
       "ret3M": -0.31
     },
     {
-      "symbol": "VIW",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -38.46
+      "symbol": "HQC",
+      "sector": "Bất động sản",
+      "ret3M": -17.13
     },
     {
-      "symbol": "DPG",
+      "symbol": "TAB",
       "sector": "Hàng hóa công nghiệp",
-      "ret3M": 11.03
+      "ret3M": 133.87
     },
     {
-      "symbol": "BGE",
-      "sector": "Tiện ích",
-      "ret3M": -50
+      "symbol": "PSD",
+      "sector": "Phân phối, bán lẻ",
+      "ret3M": 7.63
+    },
+    {
+      "symbol": "HDC",
+      "sector": "Bất động sản",
+      "ret3M": 10.78
+    },
+    {
+      "symbol": "MML",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": -16.79
+    },
+    {
+      "symbol": "SBS",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -15.56
+    },
+    {
+      "symbol": "HII",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -17.63
     },
     {
       "symbol": "PPH",
@@ -1092,14 +1082,9 @@
       "ret3M": 0.17
     },
     {
-      "symbol": "BIG",
+      "symbol": "SZL",
       "sector": "Bất động sản",
-      "ret3M": -12.5
-    },
-    {
-      "symbol": "DL1",
-      "sector": "Vận tải",
-      "ret3M": -9.3
+      "ret3M": -4.55
     },
     {
       "symbol": "HDA",
@@ -1107,19 +1092,24 @@
       "ret3M": 45.45
     },
     {
-      "symbol": "CDC",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": 14.1
+      "symbol": "BGE",
+      "sector": "Tiện ích",
+      "ret3M": -50
     },
     {
-      "symbol": "SZL",
+      "symbol": "DL1",
+      "sector": "Vận tải",
+      "ret3M": -9.3
+    },
+    {
+      "symbol": "AAS",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": 38.89
+    },
+    {
+      "symbol": "BIG",
       "sector": "Bất động sản",
-      "ret3M": -4.55
-    },
-    {
-      "symbol": "AMS",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": 42.64
+      "ret3M": -12.5
     },
     {
       "symbol": "SGN",
@@ -1132,14 +1122,19 @@
       "ret3M": -26.36
     },
     {
-      "symbol": "AAS",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": 38.89
+      "symbol": "CDC",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": 14.1
     },
     {
-      "symbol": "FIT",
-      "sector": "Bất động sản",
-      "ret3M": -12.9
+      "symbol": "AMS",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": 42.64
+    },
+    {
+      "symbol": "DPG",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": 11.03
     },
     {
       "symbol": "NRC",
@@ -1152,9 +1147,19 @@
       "ret3M": -17.1
     },
     {
+      "symbol": "SJS",
+      "sector": "Bất động sản",
+      "ret3M": 10.17
+    },
+    {
       "symbol": "BMS",
       "sector": "Dịch vụ tài chính",
       "ret3M": -5.3
+    },
+    {
+      "symbol": "FIT",
+      "sector": "Bất động sản",
+      "ret3M": -12.9
     },
     {
       "symbol": "ACV",
@@ -1167,49 +1172,9 @@
       "ret3M": -11.48
     },
     {
-      "symbol": "SJS",
-      "sector": "Bất động sản",
-      "ret3M": 10.17
-    },
-    {
       "symbol": "TCO",
       "sector": "Vận tải",
       "ret3M": -8.04
-    },
-    {
-      "symbol": "ACC",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -34.41
-    },
-    {
-      "symbol": "KHG",
-      "sector": "Bất động sản",
-      "ret3M": -6.08
-    },
-    {
-      "symbol": "TV1",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": 30.39
-    },
-    {
-      "symbol": "HVT",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -22.65
-    },
-    {
-      "symbol": "TIN",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -20.16
-    },
-    {
-      "symbol": "VSF",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": 20.38
-    },
-    {
-      "symbol": "BVS",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -0.39
     },
     {
       "symbol": "BWS",
@@ -1217,14 +1182,49 @@
       "ret3M": -11.01
     },
     {
+      "symbol": "TV1",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": 30.39
+    },
+    {
+      "symbol": "KHG",
+      "sector": "Bất động sản",
+      "ret3M": -6.08
+    },
+    {
       "symbol": "EVG",
       "sector": "Hàng hóa công nghiệp",
       "ret3M": -22.82
     },
     {
+      "symbol": "HVT",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -22.65
+    },
+    {
+      "symbol": "VSF",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": 20.38
+    },
+    {
+      "symbol": "ACC",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -34.41
+    },
+    {
       "symbol": "CST",
       "sector": "Nguyên vật liệu",
       "ret3M": 38.24
+    },
+    {
+      "symbol": "BVS",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -0.39
+    },
+    {
+      "symbol": "TIN",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -20.16
     },
     {
       "symbol": "POS",
@@ -1237,6 +1237,11 @@
       "ret3M": 18.89
     },
     {
+      "symbol": "IPA",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -10.98
+    },
+    {
       "symbol": "AFX",
       "sector": "Thực phẩm, đồ uống",
       "ret3M": -2.59
@@ -1247,14 +1252,14 @@
       "ret3M": 13.92
     },
     {
-      "symbol": "IPA",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -10.98
+      "symbol": "PTB",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -6.13
     },
     {
-      "symbol": "LSG",
-      "sector": "Bất động sản",
-      "ret3M": 1.43
+      "symbol": "MVN",
+      "sector": "Vận tải",
+      "ret3M": -13.64
     },
     {
       "symbol": "IDJ",
@@ -1267,14 +1272,14 @@
       "ret3M": -6.97
     },
     {
+      "symbol": "LSG",
+      "sector": "Bất động sản",
+      "ret3M": 1.43
+    },
+    {
       "symbol": "MST",
       "sector": "Hàng hóa công nghiệp",
       "ret3M": -14
-    },
-    {
-      "symbol": "MVN",
-      "sector": "Vận tải",
-      "ret3M": -13.64
     },
     {
       "symbol": "TAL",
@@ -1282,19 +1287,14 @@
       "ret3M": 4.26
     },
     {
-      "symbol": "PTB",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -6.13
+      "symbol": "TLG",
+      "sector": "Hàng tiêu dùng",
+      "ret3M": 1.93
     },
     {
-      "symbol": "VCK",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -8.42
-    },
-    {
-      "symbol": "CAP",
+      "symbol": "MZG",
       "sector": "Nguyên vật liệu",
-      "ret3M": -21.97
+      "ret3M": -16.74
     },
     {
       "symbol": "HNM",
@@ -1302,34 +1302,9 @@
       "ret3M": 5.33
     },
     {
-      "symbol": "BKC",
+      "symbol": "CAP",
       "sector": "Nguyên vật liệu",
-      "ret3M": -20.3
-    },
-    {
-      "symbol": "DTD",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -17.7
-    },
-    {
-      "symbol": "VMS",
-      "sector": "Vận tải",
-      "ret3M": -26.39
-    },
-    {
-      "symbol": "TLG",
-      "sector": "Hàng tiêu dùng",
-      "ret3M": 1.93
-    },
-    {
-      "symbol": "C69",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -1.73
-    },
-    {
-      "symbol": "VLB",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": 3.87
+      "ret3M": -21.97
     },
     {
       "symbol": "CLI",
@@ -1337,14 +1312,39 @@
       "ret3M": 13.37
     },
     {
+      "symbol": "VCK",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -8.42
+    },
+    {
       "symbol": "SCL",
       "sector": "Hàng hóa công nghiệp",
       "ret3M": 4.98
     },
     {
-      "symbol": "MZG",
+      "symbol": "DTD",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -17.7
+    },
+    {
+      "symbol": "VLB",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": 3.87
+    },
+    {
+      "symbol": "VMS",
+      "sector": "Vận tải",
+      "ret3M": -26.39
+    },
+    {
+      "symbol": "BKC",
       "sector": "Nguyên vật liệu",
-      "ret3M": -16.74
+      "ret3M": -20.3
+    },
+    {
+      "symbol": "C69",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -1.73
     },
     {
       "symbol": "PCH",
@@ -1357,24 +1357,9 @@
       "ret3M": -1.49
     },
     {
-      "symbol": "TLD",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -3.9
-    },
-    {
-      "symbol": "PPT",
-      "sector": "Tiện ích",
-      "ret3M": -71.71
-    },
-    {
-      "symbol": "NDN",
-      "sector": "Bất động sản",
-      "ret3M": -6.6
-    },
-    {
-      "symbol": "DRH",
-      "sector": "Bất động sản",
-      "ret3M": -41.85
+      "symbol": "TCX",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -15.55
     },
     {
       "symbol": "DLG",
@@ -1382,24 +1367,44 @@
       "ret3M": -17.51
     },
     {
+      "symbol": "DRH",
+      "sector": "Bất động sản",
+      "ret3M": -41.85
+    },
+    {
       "symbol": "VTD",
       "sector": "Dịch vụ tiêu dùng",
       "ret3M": -37.5
     },
     {
-      "symbol": "TCX",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -15.55
+      "symbol": "NDN",
+      "sector": "Bất động sản",
+      "ret3M": -6.6
+    },
+    {
+      "symbol": "PPT",
+      "sector": "Tiện ích",
+      "ret3M": -71.71
+    },
+    {
+      "symbol": "TLD",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -3.9
+    },
+    {
+      "symbol": "VC7",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": 1.37
+    },
+    {
+      "symbol": "HPA",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": -7.11
     },
     {
       "symbol": "SCS",
       "sector": "Vận tải",
       "ret3M": -13.45
-    },
-    {
-      "symbol": "POM",
-      "sector": "Nguyên vật liệu",
-      "ret3M": 12.5
     },
     {
       "symbol": "DDG",
@@ -1412,9 +1417,14 @@
       "ret3M": 61.71
     },
     {
-      "symbol": "VC7",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": 1.37
+      "symbol": "PLC",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -7.46
+    },
+    {
+      "symbol": "POM",
+      "sector": "Nguyên vật liệu",
+      "ret3M": 12.5
     },
     {
       "symbol": "BXH",
@@ -1422,24 +1432,9 @@
       "ret3M": 67.79
     },
     {
-      "symbol": "HPA",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": -7.11
-    },
-    {
-      "symbol": "PLC",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -7.46
-    },
-    {
       "symbol": "TRC",
       "sector": "Nguyên vật liệu",
       "ret3M": -10.95
-    },
-    {
-      "symbol": "PIA",
-      "sector": "Phần mềm",
-      "ret3M": 6.86
     },
     {
       "symbol": "GCF",
@@ -1447,29 +1442,9 @@
       "ret3M": 15.56
     },
     {
-      "symbol": "TIG",
-      "sector": "Bất động sản",
-      "ret3M": -56.14
-    },
-    {
-      "symbol": "PPC",
-      "sector": "Tiện ích",
-      "ret3M": -5.21
-    },
-    {
-      "symbol": "OGC",
-      "sector": "Bất động sản",
-      "ret3M": -6.98
-    },
-    {
-      "symbol": "TTF",
-      "sector": "Hàng tiêu dùng",
-      "ret3M": -37.85
-    },
-    {
-      "symbol": "GEL",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -17.24
+      "symbol": "PIA",
+      "sector": "Phần mềm",
+      "ret3M": 6.86
     },
     {
       "symbol": "TTA",
@@ -1482,44 +1457,34 @@
       "ret3M": -14.5
     },
     {
+      "symbol": "OGC",
+      "sector": "Bất động sản",
+      "ret3M": -6.98
+    },
+    {
+      "symbol": "GEL",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -17.24
+    },
+    {
+      "symbol": "PPC",
+      "sector": "Tiện ích",
+      "ret3M": -5.21
+    },
+    {
+      "symbol": "TTF",
+      "sector": "Hàng tiêu dùng",
+      "ret3M": -37.85
+    },
+    {
+      "symbol": "TIG",
+      "sector": "Bất động sản",
+      "ret3M": -56.14
+    },
+    {
       "symbol": "VTV",
       "sector": "Hàng hóa công nghiệp",
       "ret3M": -20.83
-    },
-    {
-      "symbol": "HIO",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": 17.89
-    },
-    {
-      "symbol": "DSH",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -7.85
-    },
-    {
-      "symbol": "TCL",
-      "sector": "Vận tải",
-      "ret3M": -3.9
-    },
-    {
-      "symbol": "IJC",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -4.74
-    },
-    {
-      "symbol": "GDA",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": 7.2
-    },
-    {
-      "symbol": "DSE",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -12.28
-    },
-    {
-      "symbol": "L14",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -17.56
     },
     {
       "symbol": "FIR",
@@ -1527,9 +1492,49 @@
       "ret3M": -26.12
     },
     {
-      "symbol": "CAT",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": 16.79
+      "symbol": "TCL",
+      "sector": "Vận tải",
+      "ret3M": -3.9
+    },
+    {
+      "symbol": "L14",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -17.56
+    },
+    {
+      "symbol": "DSE",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -12.28
+    },
+    {
+      "symbol": "GDA",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": 7.2
+    },
+    {
+      "symbol": "HIO",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": 17.89
+    },
+    {
+      "symbol": "IJC",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -4.74
+    },
+    {
+      "symbol": "DSH",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -7.85
+    },
+    {
+      "symbol": "TMB",
+      "sector": "Nguyên vật liệu",
+      "ret3M": 53.1
+    },
+    {
+      "symbol": "CRE",
+      "sector": "Bất động sản",
+      "ret3M": -49.28
     },
     {
       "symbol": "APH",
@@ -1542,24 +1547,9 @@
       "ret3M": -12.12
     },
     {
-      "symbol": "CRE",
-      "sector": "Bất động sản",
-      "ret3M": -49.28
-    },
-    {
-      "symbol": "TMB",
-      "sector": "Nguyên vật liệu",
-      "ret3M": 53.1
-    },
-    {
-      "symbol": "MVC",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": 9.85
-    },
-    {
-      "symbol": "DXP",
-      "sector": "Vận tải",
-      "ret3M": -6.9
+      "symbol": "CAT",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": 16.79
     },
     {
       "symbol": "PVX",
@@ -1572,54 +1562,19 @@
       "ret3M": -4.06
     },
     {
+      "symbol": "MVC",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": 9.85
+    },
+    {
+      "symbol": "DXP",
+      "sector": "Vận tải",
+      "ret3M": -6.9
+    },
+    {
       "symbol": "HTN",
       "sector": "Hàng hóa công nghiệp",
       "ret3M": 19.82
-    },
-    {
-      "symbol": "CAR",
-      "sector": "Dịch vụ thương mại",
-      "ret3M": 809.09
-    },
-    {
-      "symbol": "HVH",
-      "sector": "Hàng tiêu dùng",
-      "ret3M": -7.93
-    },
-    {
-      "symbol": "SBT",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": -11.34
-    },
-    {
-      "symbol": "DC4",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -13.99
-    },
-    {
-      "symbol": "ODE",
-      "sector": "Truyền thông, giải trí",
-      "ret3M": -3.43
-    },
-    {
-      "symbol": "G36",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -3.23
-    },
-    {
-      "symbol": "KSV",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -14.73
-    },
-    {
-      "symbol": "API",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -30.19
-    },
-    {
-      "symbol": "APS",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -31.58
     },
     {
       "symbol": "ITC",
@@ -1627,9 +1582,14 @@
       "ret3M": -7.97
     },
     {
-      "symbol": "VAB",
-      "sector": "Ngân hàng",
-      "ret3M": -0.55
+      "symbol": "HVH",
+      "sector": "Hàng tiêu dùng",
+      "ret3M": -7.93
+    },
+    {
+      "symbol": "ODE",
+      "sector": "Truyền thông, giải trí",
+      "ret3M": -3.43
     },
     {
       "symbol": "VPX",
@@ -1637,19 +1597,44 @@
       "ret3M": -8.13
     },
     {
-      "symbol": "HID",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": 16.86
+      "symbol": "API",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -30.19
     },
     {
-      "symbol": "QCG",
-      "sector": "Bất động sản",
-      "ret3M": 2.91
+      "symbol": "DC4",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -13.99
     },
     {
-      "symbol": "HUT",
+      "symbol": "CAR",
+      "sector": "Dịch vụ thương mại",
+      "ret3M": 809.09
+    },
+    {
+      "symbol": "KSV",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -14.73
+    },
+    {
+      "symbol": "G36",
       "sector": "Hàng hóa công nghiệp",
-      "ret3M": -3.88
+      "ret3M": -3.23
+    },
+    {
+      "symbol": "SBT",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": -11.34
+    },
+    {
+      "symbol": "VAB",
+      "sector": "Ngân hàng",
+      "ret3M": -0.55
+    },
+    {
+      "symbol": "APS",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -31.58
     },
     {
       "symbol": "VDS",
@@ -1657,49 +1642,19 @@
       "ret3M": -12.32
     },
     {
-      "symbol": "DVP",
-      "sector": "Vận tải",
-      "ret3M": -0.49
+      "symbol": "QCG",
+      "sector": "Bất động sản",
+      "ret3M": 2.91
     },
     {
-      "symbol": "HHP",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -24.67
-    },
-    {
-      "symbol": "HBC",
+      "symbol": "HID",
       "sector": "Hàng hóa công nghiệp",
-      "ret3M": -30
+      "ret3M": 16.86
     },
     {
-      "symbol": "PAC",
+      "symbol": "HUT",
       "sector": "Hàng hóa công nghiệp",
-      "ret3M": -9.84
-    },
-    {
-      "symbol": "NVB",
-      "sector": "Ngân hàng",
-      "ret3M": 22.69
-    },
-    {
-      "symbol": "CRC",
-      "sector": "Phân phối, bán lẻ",
-      "ret3M": -18.81
-    },
-    {
-      "symbol": "NAF",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": 0.21
-    },
-    {
-      "symbol": "RYG",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -17.24
-    },
-    {
-      "symbol": "VCS",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -11.11
+      "ret3M": -3.88
     },
     {
       "symbol": "LDG",
@@ -1707,19 +1662,74 @@
       "ret3M": -16.48
     },
     {
+      "symbol": "VCS",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -11.11
+    },
+    {
+      "symbol": "RYG",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -17.24
+    },
+    {
+      "symbol": "NVB",
+      "sector": "Ngân hàng",
+      "ret3M": 22.69
+    },
+    {
+      "symbol": "NAF",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": 0.21
+    },
+    {
+      "symbol": "CRC",
+      "sector": "Phân phối, bán lẻ",
+      "ret3M": -18.81
+    },
+    {
+      "symbol": "PAC",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -9.84
+    },
+    {
+      "symbol": "HHP",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -24.67
+    },
+    {
+      "symbol": "DVP",
+      "sector": "Vận tải",
+      "ret3M": -0.49
+    },
+    {
+      "symbol": "HBC",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -30
+    },
+    {
       "symbol": "ASP",
       "sector": "Tiện ích",
       "ret3M": -1.59
     },
     {
-      "symbol": "CQN",
-      "sector": "Vận tải",
-      "ret3M": 1.31
+      "symbol": "LLM",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -0.88
     },
     {
-      "symbol": "VPL",
-      "sector": "Dịch vụ tiêu dùng",
-      "ret3M": 28
+      "symbol": "EVF",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -8.13
+    },
+    {
+      "symbol": "EVS",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -9.43
+    },
+    {
+      "symbol": "SVN",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -33.33
     },
     {
       "symbol": "SBG",
@@ -1732,24 +1742,14 @@
       "ret3M": -28.03
     },
     {
-      "symbol": "EVS",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -9.43
+      "symbol": "VPL",
+      "sector": "Dịch vụ tiêu dùng",
+      "ret3M": 28
     },
     {
-      "symbol": "LLM",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -0.88
-    },
-    {
-      "symbol": "SVN",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -33.33
-    },
-    {
-      "symbol": "EVF",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -8.13
+      "symbol": "CQN",
+      "sector": "Vận tải",
+      "ret3M": 1.31
     },
     {
       "symbol": "KOS",
@@ -1757,9 +1757,9 @@
       "ret3M": -91.82
     },
     {
-      "symbol": "CTI",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": 7.69
+      "symbol": "SCR",
+      "sector": "Bất động sản",
+      "ret3M": -16.7
     },
     {
       "symbol": "VVS",
@@ -1767,14 +1767,14 @@
       "ret3M": -33
     },
     {
-      "symbol": "SCR",
-      "sector": "Bất động sản",
-      "ret3M": -16.7
-    },
-    {
       "symbol": "VFS",
       "sector": "Dịch vụ tài chính",
       "ret3M": -7.14
+    },
+    {
+      "symbol": "CTI",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": 7.69
     }
   ],
   "data": [
