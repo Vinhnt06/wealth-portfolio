@@ -32,64 +32,60 @@ export async function GET() {
     });
   }
 
-  const pairs = [
-    { symbol: 'USDVND=X', pair: 'USD/VND', name: 'Đô la Mỹ' },
-    { symbol: 'EURVND=X', pair: 'EUR/VND', name: 'Euro' },
-    { symbol: 'JPYVND=X', pair: 'JPY/VND', name: 'Yên Nhật' },
-    { symbol: 'GBPVND=X', pair: 'GBP/VND', name: 'Bảng Anh' },
-    { symbol: 'CNYVND=X', pair: 'CNY/VND', name: 'Nhân dân tệ' },
-  ];
-
   const results: ExchangeRateItem[] = [];
   const updateTime = new Date().toLocaleTimeString('vi-VN', {
     timeZone: 'Asia/Ho_Chi_Minh',
     hour12: false,
   });
 
-  await Promise.all(
-    pairs.map(async (p) => {
-      try {
-        const res = await fetch(
-          `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(p.symbol)}?interval=1d&range=1d`,
-          {
-            headers: {
-              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko)',
-              Accept: 'application/json',
-            },
-            next: { revalidate: 60 },
-          }
-        );
+  // Giá hiện tại & đóng cửa phiên trước của một cặp Yahoo (nến ngày 5 phiên)
+  type Quote = { price: number; prev: number; time: number };
+  const quote = async (symbol: string): Promise<Quote | null> => {
+    try {
+      const res = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=5d`, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko)', Accept: 'application/json' },
+        cache: 'no-store',
+        signal: AbortSignal.timeout(8_000),
+      });
+      if (!res.ok) return null;
+      const r = (await res.json())?.chart?.result?.[0];
+      const closes: number[] = (r?.indicators?.quote?.[0]?.close || []).filter((v: unknown) => typeof v === 'number' && v > 0);
+      const price = r?.meta?.regularMarketPrice ?? closes[closes.length - 1];
+      const prev = closes.length >= 2 ? closes[closes.length - 2] : r?.meta?.chartPreviousClose;
+      if (!(price > 0) || !(prev > 0)) return null;
+      return { price, prev, time: r?.meta?.regularMarketTime ?? 0 };
+    } catch {
+      return null;
+    }
+  };
 
-        if (res.ok) {
-          const json = await res.json();
-          const meta = json?.chart?.result?.[0]?.meta;
-          if (meta) {
-            const rawPrice = meta.regularMarketPrice ?? meta.chartPreviousClose ?? 0;
-            const change = meta.fulldayChange ?? meta.regularMarketChange ?? 0;
-            const changePercent = meta.regularMarketChangePercent ?? meta.fulldayChangePercent ?? 0;
-
-            if (rawPrice > 0) {
-              const roundedPrice = Math.round(rawPrice * 10) / 10;
-
-              results.push({
-                pair: p.pair,
-                name: p.name,
-                rate: roundedPrice,
-                buy: roundedPrice,
-                sell: roundedPrice,
-                change: Math.round(change * 10) / 10,
-                changePercent: Math.round(changePercent * 100) / 100,
-                updatedAt: updateTime,
-                sourceNote: 'Tỷ giá liên ngân hàng (Interbank Spot Rate)',
-              });
-            }
-          }
-        }
-      } catch (err) {
-        console.error(`Error fetching exchange rate for ${p.symbol}:`, err);
-      }
-    })
-  );
+  // USD/VND lấy trực tiếp; các đồng khác tính CHÉO qua cặp USD thanh khoản cao
+  // (chuỗi lịch sử EURVND/GBPVND... của Yahoo có phiên sai lệch vài %, không dùng trực tiếp được).
+  const [usd, eur, jpy, gbp, cny] = await Promise.all(['USDVND=X', 'EURUSD=X', 'USDJPY=X', 'GBPUSD=X', 'USDCNY=X'].map(quote));
+  if (usd) {
+    const fmtTime = (t: number) =>
+      t ? new Date(t * 1000).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh', hour12: false }) : updateTime;
+    const push = (pair: string, name: string, price: number, prev: number, time: number, note: string) => {
+      const rate = Math.round(price * 10) / 10;
+      results.push({
+        pair,
+        name,
+        rate,
+        buy: rate,
+        sell: rate,
+        change: Math.round((price - prev) * 10) / 10,
+        changePercent: Math.round(((price - prev) / prev) * 10000) / 100,
+        updatedAt: fmtTime(time),
+        sourceNote: note,
+      });
+    };
+    push('USD/VND', 'Đô la Mỹ', usd.price, usd.prev, usd.time, 'Yahoo Finance USDVND');
+    const t = (q: Quote) => Math.min(usd.time || q.time, q.time || usd.time);
+    if (eur) push('EUR/VND', 'Euro', eur.price * usd.price, eur.prev * usd.prev, t(eur), 'Tính chéo EUR/USD × USD/VND');
+    if (jpy) push('JPY/VND', 'Yên Nhật', usd.price / jpy.price, usd.prev / jpy.prev, t(jpy), 'Tính chéo USD/VND ÷ USD/JPY');
+    if (gbp) push('GBP/VND', 'Bảng Anh', gbp.price * usd.price, gbp.prev * usd.prev, t(gbp), 'Tính chéo GBP/USD × USD/VND');
+    if (cny) push('CNY/VND', 'Nhân dân tệ', usd.price / cny.price, usd.prev / cny.prev, t(cny), 'Tính chéo USD/VND ÷ USD/CNY');
+  }
 
   // Không có tỷ giá thực -> báo lỗi, tuyệt đối không trả số liệu dựng sẵn
   if (results.length === 0) {
