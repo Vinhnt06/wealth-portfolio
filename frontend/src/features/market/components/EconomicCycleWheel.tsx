@@ -1029,8 +1029,10 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
   return (
     <div className="space-y-6">
       {/* ── 0. Quyết định chính: Lợi nhuận × Vốn (tỷ trọng) + Trạng thái thị trường (rủi ro) ── */}
-      <CapitalContextPanel />
-      <MarketStateBanner />
+      <div className="space-y-2">
+        <CapitalContextPanel />
+        <MarketStateBanner />
+      </div>
       {/* ── 1. Hero Header & Macro Research Synthesis ─────────────────────── */}
       <div className="p-6 rounded-2xl bg-zinc-950/95 border border-zinc-800/80 backdrop-blur-xl shadow-2xl relative overflow-hidden">
         <div className="absolute -right-24 -top-24 w-80 h-80 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
