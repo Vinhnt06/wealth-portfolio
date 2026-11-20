@@ -331,6 +331,64 @@ async function fetchBankRates() {
   return rates.length;
 }
 
+// ─── Lãi suất huy động 12T (trung vị) ───
+const UA_HDR = { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko)' };
+const medianOf = (a) => {
+  const s = [...a].sort((x, y) => x - y);
+  const m = Math.floor(s.length / 2);
+  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+};
+async function fetchCafef12M() {
+  try {
+    const res = await fetch('https://cafef.vn/du-lieu/lai-suat-ngan-hang.chn', { headers: UA_HDR, signal: AbortSignal.timeout(15000) });
+    if (!res.ok) return null;
+    const html = await res.text();
+    const out = {};
+    const re = /"name":"([^"]+)","symbol":"([^"]*)","icon":"[^"]*","interestRates":\[(.*?)\]\}/g;
+    for (const m of html.matchAll(re)) {
+      const v = /"time":"12T","deposit":12,"value":([0-9.]+)/.exec(m[3]);
+      const rate = v ? Number(v[1]) : NaN;
+      if (Number.isFinite(rate) && rate > 0 && rate < 20) out[m[2] || m[1]] = rate;
+    }
+    return Object.keys(out).length >= 15 ? out : null;
+  } catch {
+    return null;
+  }
+}
+async function fetchVcb12M() {
+  try {
+    const res = await fetch('https://www.vietcombank.com.vn/vi-VN/api/interestrates?accountType=Personal', {
+      headers: { ...UA_HDR, Accept: 'application/json' },
+      signal: AbortSignal.timeout(15000),
+    });
+    if (!res.ok) return null;
+    const j = await res.json();
+    const row = (j.Data || []).find((r) => r.tenor === '12-months' && r.currencyCode === 'VND');
+    const value = row ? Number((row.rates * 100).toFixed(2)) : NaN;
+    return Number.isFinite(value) && value > 0 ? { value, updatedAt: j.UpdatedDate } : null;
+  } catch {
+    return null;
+  }
+}
+async function fetchDeposit12MMedian() {
+  const [cafef, vcb] = await Promise.all([fetchCafef12M(), fetchVcb12M()]);
+  if (cafef) {
+    const stale = vcb && typeof cafef.VCB === 'number' && Math.abs(cafef.VCB - vcb.value) > 0.3;
+    if (!stale) {
+      const rates = Object.values(cafef);
+      return { value: Number(medianOf(rates).toFixed(2)), source: `CafeF, trung vị ${rates.length} ngân hàng${vcb ? ` (khớp Vietcombank ${vcb.value}%)` : ''}` };
+    }
+    console.log('  - CafeF lệch Vietcombank chính thức > 0,3 điểm: bỏ qua bảng CafeF');
+  }
+  // Dự phòng: bảng 24hMoney vừa cào ở bước trước
+  const dep12 = lastBankRates
+    .filter((r) => r.type === 'counter')
+    .map((r) => Number(String(r.rate_12m).replace(',', '.')))
+    .filter((v) => Number.isFinite(v) && v > 0 && v < 20);
+  if (dep12.length >= 5) return { value: Number(medianOf(dep12).toFixed(2)), source: `24hMoney (dự phòng), trung vị ${dep12.length} ngân hàng` };
+  return null;
+}
+
 async function crawlSbvInterestRates() {
   console.log(`\n[3/4] Đang cào dữ liệu Lãi Suất Liên Ngân Hàng & Điều Hành NHNN...`);
   const macroJsonPath = path.resolve(__dirname, '../frontend/src/features/market/data/macroDatabase.json');
@@ -368,18 +426,14 @@ async function crawlSbvInterestRates() {
     const on = rates.find((r) => r.term === 'ON');
     if (on) on.bank = 'Liên ngân hàng';
   }
-  // Huy động 12T: trung vị lãi suất tại quầy của các ngân hàng vừa cào ở bước trước
-  const dep12 = lastBankRates
-    .filter((r) => r.type === 'counter')
-    .map((r) => Number(String(r.rate_12m).replace(',', '.')))
-    .filter((v) => Number.isFinite(v) && v > 0 && v < 20)
-    .sort((a, b) => a - b);
-  if (dep12.length >= 5) {
-    const mid = Math.floor(dep12.length / 2);
-    const median = dep12.length % 2 ? dep12[mid] : (dep12[mid - 1] + dep12[mid]) / 2;
-    setRate((r) => r.term === '12M', median, `Trung vị ${dep12.length} ngân hàng (24hMoney)`);
-    const dep = rates.find((r) => r.term === '12M');
-    if (dep) dep.bank = 'Huy động 12T (Trung vị)';
+  // Huy động 12T: trung vị CafeF (đối chiếu Vietcombank chính thức), dự phòng 24hMoney
+  // (cùng cách tính với frontend/src/features/market/services/depositRates.ts)
+  const dep = await fetchDeposit12MMedian();
+  if (dep) {
+    setRate((r) => r.term === '12M', dep.value, dep.source);
+    const item = rates.find((r) => r.term === '12M');
+    if (item) item.bank = 'Huy động 12T (Trung vị)';
+    console.log(`  ✓ Huy động 12T: ${dep.value}% — ${dep.source}`);
   }
 
   // 1. Cào Lãi suất liên ngân hàng VNIBOR từ Simplize Macro (__NEXT_DATA__)

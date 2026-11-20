@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
+import { fetchDeposit12M as fetchDepositRates } from '../../../../features/market/services/depositRates';
 
 /**
  * Vĩ mô Việt Nam TỰ ĐỘNG (không nhập tay):
  *  - TradingView (dữ liệu kinh tế theo Trading Economics/GSO/NHNN): GDP YoY, lạm phát CPI YoY,
  *    lãi suất điều hành, lãi suất liên ngân hàng, lợi suất TPCP VN 5 & 10 năm.
  *    `change_abs` = chênh lệch so với kỳ công bố trước (CPI: tháng trước, GDP: quý trước).
- *  - Lãi suất huy động 12 tháng: trung vị các ngân hàng từ /api/macro/bank-rates (24hMoney).
+ *  - Lãi suất huy động 12 tháng: trung vị các ngân hàng (CafeF, đối chiếu Vietcombank) — xem services/depositRates.ts.
  * Cache 3 giờ; nguồn lỗi thì trả bản gần nhất (stale).
  */
 export const runtime = 'nodejs';
@@ -68,26 +69,8 @@ async function fetchTv(symbol: string): Promise<VnIndicator | null> {
 }
 
 async function fetchDeposit12M(origin: string): Promise<VnMacroLive['deposit12M']> {
-  try {
-    const res = await fetch(`${origin}/api/macro/bank-rates`, { cache: 'no-store', signal: AbortSignal.timeout(10_000) });
-    if (!res.ok) return null;
-    const j = await res.json();
-    const rows: { rate12M?: string }[] = Array.isArray(j?.data?.counter) ? j.data.counter : [];
-    const rates = rows.map((r) => Number(r.rate12M)).filter((v) => Number.isFinite(v) && v > 0 && v < 20);
-    if (rates.length < 5) return null;
-    rates.sort((a, b) => a - b);
-    const mid = Math.floor(rates.length / 2);
-    const median = rates.length % 2 ? rates[mid] : (rates[mid - 1] + rates[mid]) / 2;
-    return {
-      value: Number(median.toFixed(2)),
-      change: null,
-      updatedAt: j?.data?.updateTime ? String(j.data.updateTime) : null,
-      source: '24hMoney (trung vị lãi suất tại quầy 12T)',
-      banks: rates.length,
-    };
-  } catch {
-    return null;
-  }
+  const d = await fetchDepositRates(origin);
+  return d ? { value: d.value, change: null, updatedAt: d.updatedAt, source: d.source, banks: d.banks } : null;
 }
 
 export async function GET(req: Request) {

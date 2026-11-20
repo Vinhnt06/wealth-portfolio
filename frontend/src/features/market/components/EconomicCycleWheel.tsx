@@ -1707,7 +1707,7 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                   ['CPI (so cùng kỳ)', `${nf(cpiYoy)}%${cpiTrend !== null ? ` (${cpiTrend >= 0 ? '+' : ''}${cpiTrend}đ/${cpiTrendMonths}T)` : ''}`, cpiLive ? fmtUpd(cpiLive) : String(latestCpi?.period ?? '—'), cpiLive ? 'GSO qua TradingView (tự động)' : 'Lưu sẵn'],
                   ['Lãi suất điều hành NHNN', `${nf(refRate)}%`, vnLive?.policyRate ? fmtUpd(vnLive.policyRate) : '—', vnLive?.policyRate ? 'NHNN qua TradingView' : 'Lưu sẵn'],
                   ['Lãi suất liên ngân hàng', `${nf(onRate)}%`, vnLive?.interbankRate ? fmtUpd(vnLive.interbankRate) : '—', vnLive?.interbankRate ? 'TradingView' : 'Lưu sẵn'],
-                  ['Huy động 12T (trung vị)', `${nf(depositRate)}%${vnLive?.deposit12M ? ` · ${vnLive.deposit12M.banks} NH` : ''}`, vnLive?.deposit12M?.updatedAt ?? '—', vnLive?.deposit12M ? '24hMoney' : 'Lưu sẵn'],
+                  ['Huy động 12T (trung vị)', `${nf(depositRate)}%${vnLive?.deposit12M ? ` · ${vnLive.deposit12M.banks} NH` : ''}`, vnLive?.deposit12M?.updatedAt ?? '—', vnLive?.deposit12M ? vnLive.deposit12M.source.split(',')[0] : 'Lưu sẵn'],
                   ['TPCP VN 5 / 10 năm', bond10Y !== null ? `${bond5Y?.toFixed(2) ?? '—'}% / ${bond10Y.toFixed(2)}%` : '—', vnLive?.bond10Y ? fmtUpd(vnLive.bond10Y) : '—', 'TradingView'],
                   ['USD/VND', `${usdSell > 0 ? usdSell.toLocaleString('vi-VN') : '—'}${usdVnd1MPct !== null ? ` (${usdVnd1MPct >= 0 ? '+' : ''}${usdVnd1MPct}%/1T)` : ''}`, 'Trực tiếp', 'Liên ngân hàng'],
                   ['Fed funds (EFFR)', fed ? `${fed.effr}% · khung ${fed.targetLow}–${fed.targetHigh}%` : '—', fed?.effrDate ?? '—', 'NY Fed'],
