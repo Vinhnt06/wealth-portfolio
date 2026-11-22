@@ -7,7 +7,6 @@ import {
   TrendUp,
   TrendDown,
   Flame,
-  Coins,
   ChartLineUp,
   Info,
   Scales,
@@ -17,9 +16,7 @@ import {
   Globe,
   CurrencyCircleDollar,
   Waveform,
-  SlidersHorizontal,
   ShieldCheck,
-  Lightning,
 } from '@phosphor-icons/react';
 import { MinerviniScreenerItem } from '../types/minervini.types';
 import { SECTOR_MAPPING } from '../data/sectorMapping';
@@ -38,7 +35,7 @@ export interface YieldCurvePoint {
 export interface YieldCurveData {
   points: YieldCurvePoint[];
   spread: number;
-  slopeType: 'steep' | 'moderate' | 'flat' | 'inverted';
+  slopeType: 'steep' | 'moderate' | 'flat' | 'inverted' | 'unknown';
   slopeLabel: string;
   slopeDesc: string;
   slopeColor: string;
@@ -291,14 +288,24 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
   const [isClient, setIsClient] = useState<boolean>(false);
 
   // Dynamic Portfolio Controls
-  const [riskAppetite, setRiskAppetite] = useState<RiskAppetite>('balanced');
-  const [isDynamicAllocation, setIsDynamicAllocation] = useState<boolean>(true);
   const [showPillarsBreakdown, setShowPillarsBreakdown] = useState<boolean>(false);
 
   // Global Sentiment & US 10Y Yield
   // Vĩ mô Việt Nam lấy TỰ ĐỘNG (/api/macro/vn): GDP, CPI, lãi suất điều hành, liên ngân hàng, TPCP 5/10 năm,
   // huy động 12T. Khi nguồn lỗi mới dùng số trong macroDatabase.json.
   type VnInd = { value: number; change: number | null; updatedAt: string | null; source: string };
+  // Hướng điều kiện vốn (nới / thắt / chưa rõ) từ khung Lợi nhuận × Vốn — dùng cho trụ lãi suất
+  const [capitalDir, setCapitalDir] = useState<'UP' | 'DOWN' | 'UNCLEAR' | null>(null);
+  useEffect(() => {
+    let alive = true;
+    fetch('/api/macro/context')
+      .then((r) => r.json())
+      .then((j) => alive && setCapitalDir(j?.data?.capital?.direction ?? null))
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, []);
   const [vnLive, setVnLive] = useState<{
     gdpYoY: VnInd | null;
     cpiYoY: VnInd | null;
@@ -574,6 +581,10 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
     (r: MacroRateRecord) => r.term === 'ON' || (typeof r.bank === 'string' && r.bank.includes('Qua đêm'))
   );
   const onRate = vnLive?.interbankRate?.value ?? parseFloat(onRateItem?.rate?.replace('%', '') || 'NaN');
+  // Lãi QUA ĐÊM đáng tin: CHƯA CÓ NGUỒN. Chuỗi liên ngân hàng của TradingView (ECONOMICS:VNINBR, 6,41% ngày 18/11/2026)
+  // không phải kỳ hạn qua đêm (NHNN công bố qua đêm 4,68% cùng ngày) và API của NHNN chặn truy cập tự động.
+  // Mọi phép tính cần lãi qua đêm (đường cong, chênh lệch VND−USD) để trung tính thay vì dùng số sai.
+  const overnightRate = NaN;
   const bond5Y = vnLive?.bond5Y?.value ?? null;
   const bond10Y = vnLive?.bond10Y?.value ?? null;
 
@@ -607,8 +618,23 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
   const longRate = bond10Y ?? depositRate;
   const longLabel = bond10Y !== null ? 'TPCP 10 năm' : '12 tháng';
   const yieldCurveData: YieldCurveData = useMemo(() => {
-    const spread = Number((longRate - onRate).toFixed(2));
-    let slopeType: 'steep' | 'moderate' | 'flat' | 'inverted' = 'steep';
+    const spread = Number((longRate - overnightRate).toFixed(2));
+    if (!Number.isFinite(spread)) {
+      return {
+        points: [
+          { term: 'HĐ12T', label: 'Huy động 12T', rate: depositRate },
+          ...(bond5Y !== null ? [{ term: '5Y', label: 'TPCP 5 năm', rate: Number(bond5Y.toFixed(2)) }] : []),
+          ...(bond10Y !== null ? [{ term: '10Y', label: 'TPCP 10 năm', rate: Number(bond10Y.toFixed(2)) }] : []),
+        ],
+        spread: NaN,
+        slopeType: 'unknown' as const,
+        slopeLabel: 'Tạm trung tính (chưa có lãi qua đêm)',
+        slopeDesc: 'Chưa có nguồn lãi suất qua đêm đáng tin nên trụ đường cong không nghiêng về pha nào.',
+        slopeColor: 'text-zinc-400',
+        slopeBadge: 'bg-zinc-800 text-zinc-300 border-zinc-700',
+      };
+    }
+    let slopeType: 'steep' | 'moderate' | 'flat' | 'inverted' | 'unknown' = 'steep';
     let slopeLabel = 'Dốc lên tích cực (Normal Steep)';
     let slopeDesc = 'Chi phí vốn ngắn hạn rẻ, biên lãi ngân hàng mở rộng, kích thích tăng trưởng mở rộng';
     let slopeColor = 'text-emerald-400';
@@ -617,32 +643,32 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
     if (spread >= 0.75) {
       slopeType = 'steep';
       slopeLabel = 'Dốc lên tích cực (Normal Steep)';
-      slopeDesc = `${longLabel} (${longRate}%) cao hơn liên ngân hàng (${nf(onRate)}%) ${spread}% — thanh khoản hệ thống dồi dào, vốn ngắn hạn rẻ`;
+      slopeDesc = `${longLabel} (${longRate}%) cao hơn liên ngân hàng (${nf(overnightRate)}%) ${spread}% — thanh khoản hệ thống dồi dào, vốn ngắn hạn rẻ`;
       slopeColor = 'text-emerald-400';
       slopeBadge = 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30';
     } else if (spread >= 0.2) {
       slopeType = 'moderate';
       slopeLabel = 'Dốc vừa phải (Moderate)';
-      slopeDesc = `Liên ngân hàng (${nf(onRate)}%) thấp hơn ${longLabel} (${longRate}%) ${spread}% — thanh khoản bình thường`;
+      slopeDesc = `Liên ngân hàng (${nf(overnightRate)}%) thấp hơn ${longLabel} (${longRate}%) ${spread}% — thanh khoản bình thường`;
       slopeColor = 'text-cyan-400';
       slopeBadge = 'bg-cyan-500/15 text-cyan-400 border-cyan-500/30';
     } else if (spread >= -0.1) {
       slopeType = 'flat';
       slopeLabel = 'Đường cong phẳng (Flattening)';
-      slopeDesc = `Liên ngân hàng (${nf(onRate)}%) đã ngang ${longLabel} (${longRate}%) — chi phí vốn ngắn hạn tăng, cảnh báo thắt chặt`;
+      slopeDesc = `Liên ngân hàng (${nf(overnightRate)}%) đã ngang ${longLabel} (${longRate}%) — chi phí vốn ngắn hạn tăng, cảnh báo thắt chặt`;
       slopeColor = 'text-amber-400';
       slopeBadge = 'bg-amber-500/15 text-amber-400 border-amber-500/30';
     } else {
       slopeType = 'inverted';
       slopeLabel = 'Đường cong đảo ngược (Inverted)';
-      slopeDesc = `Liên ngân hàng (${nf(onRate)}%) cao hơn ${longLabel} (${longRate}%) — thanh khoản hệ thống căng, tín hiệu thắt chặt mạnh`;
+      slopeDesc = `Liên ngân hàng (${nf(overnightRate)}%) cao hơn ${longLabel} (${longRate}%) — thanh khoản hệ thống căng, tín hiệu thắt chặt mạnh`;
       slopeColor = 'text-rose-400';
       slopeBadge = 'bg-rose-500/15 text-rose-400 border-rose-500/30';
     }
 
     return {
       points: [
-        { term: 'LNH', label: 'Liên ngân hàng', rate: onRate },
+        { term: 'LNH', label: 'Liên ngân hàng', rate: overnightRate },
         { term: 'HĐ12T', label: 'Huy động 12T', rate: depositRate },
         ...(bond5Y !== null ? [{ term: '5Y', label: 'TPCP 5 năm', rate: Number(bond5Y.toFixed(2)) }] : []),
         ...(bond10Y !== null ? [{ term: '10Y', label: 'TPCP 10 năm', rate: Number(bond10Y.toFixed(2)) }] : []),
@@ -654,7 +680,7 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
       slopeColor,
       slopeBadge,
     };
-  }, [onRate, depositRate, bond5Y, bond10Y, longRate, longLabel]);
+  }, [overnightRate, depositRate, bond5Y, bond10Y, longRate, longLabel]);
 
   // 4. Quantitative 5-Pillar Macroeconomic Engine (GDP 25%, CPI 20%, Rates 20%, FX 15%, Yield Curve 20%)
   // Biến số thế giới: Fed, chênh lệch lãi suất VND−USD liên ngân hàng, sức mạnh USD (DXY).
@@ -667,7 +693,7 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
     : (fed.change6m ?? 0) < 0 || (fedFuturesGap !== null && fedFuturesGap < -0.15)
     ? 'easing'
     : 'hold';
-  const vndUsdGap = fed ? Number((onRate - fed.effr).toFixed(2)) : null; // VND qua đêm − USD (EFFR)
+  const vndUsdGap = fed && Number.isFinite(overnightRate) ? Number((overnightRate - fed.effr).toFixed(2)) : null; // VND qua đêm − USD (EFFR)
   const dxyStrong = globalMacro.dxy >= 105;
   const globalTightness =
     fedStance === 'unknown'
@@ -699,15 +725,15 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
       cpiScores[k] = clamp(50 + 35 * inflDir * wantsInflationUp[k] + 15 * inflationLevel * wantsInflationUp[k]);
     });
 
-    // C. Interest Rates Pillar (20% weight)
+    // C. Lãi suất (25%): CHIỀU của điều kiện vốn, không phải mức (khung Lợi nhuận × Vốn, utils/capitalContext.ts).
+    //    Nới lỏng (lãi gửi & liên ngân hàng cùng giảm đủ 3 tháng) → phục hồi; thắt chặt → cuối chu kỳ.
+    //    Chưa đủ dữ liệu để kết luận → trung tính, không nghiêng pha nào.
     const rateScores: Record<CyclePhaseKey, number> =
-      !Number.isFinite(refRate) || !Number.isFinite(onRate)
-        ? { recovery: 50, expansion: 50, late: 50, recession: 50 }
-        : refRate <= 4.5 && onRate <= 4.0
-        ? { recovery: 95, expansion: 92, late: 20, recession: 25 }
-        : refRate <= 5.0 && onRate <= 5.5
-        ? { expansion: 85, late: 60, recovery: 70, recession: 35 }
-        : { late: 92, recession: 80, expansion: 35, recovery: 25 };
+      capitalDir === 'UP'
+        ? { recovery: 92, expansion: 75, recession: 60, late: 25 }
+        : capitalDir === 'DOWN'
+        ? { late: 92, expansion: 55, recession: 45, recovery: 20 }
+        : { recovery: 50, expansion: 50, late: 50, recession: 50 };
 
     // D. Tỷ giá USD/VND (15%): mức mất giá của VND trong 1 tháng
     const fxScores: Record<CyclePhaseKey, number> =
@@ -769,7 +795,7 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
     });
 
     return res;
-  }, [gdpGrowth, gdpTarget, cpiYoy, cpiTarget, growthDir, inflDir, refRate, onRate, usdVnd1MPct, fxStressed, yieldCurveData.spread, globalTightness]);
+  }, [gdpGrowth, gdpTarget, cpiYoy, cpiTarget, growthDir, inflDir, capitalDir, usdVnd1MPct, fxStressed, yieldCurveData.spread, globalTightness]);
 
   // 5. Quantitative Dual-Engine Scoring: 70% Macro Fundamentals + 30% Sector Momentum (RS & Stage 2)
   const phaseScores = useMemo(() => {
@@ -857,80 +883,6 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
   const detectedCfg = CYCLE_PHASES[detectedActivePhaseKey];
   const topLeadingSectors = sectorLiveStats.slice(0, 5);
 
-  // 6. Dynamic Asset Allocation Engine (Institutional Quantitative Optimization)
-  const dynamicPriorityAssets = useMemo(() => {
-    const baseList = activeCfg.priorityAssets;
-    if (!isDynamicAllocation) return baseList;
-
-    const currentScore = phaseScores[activePhaseKey]?.score ?? 70;
-    const vix = globalMacro.vix; // NaN khi chưa có số → mọi so sánh đều false, không điều chỉnh
-    const spread = yieldCurveData.spread;
-
-    // Calculate dynamic weights for the 4 asset classes based on riskAppetite, phaseScore, VIX, Yield Spread
-    const adjusted = baseList.map((item) => {
-      let dynamicPct = item.weightPct;
-
-      if (activePhaseKey === 'expansion') {
-        if (item.asset.includes('Cổ phiếu')) {
-          if (riskAppetite === 'aggressive') dynamicPct = Math.min(88, item.weightPct + 8);
-          else if (riskAppetite === 'conservative') dynamicPct = Math.max(55, item.weightPct - 15);
-          else dynamicPct = item.weightPct + (currentScore >= 75 ? 3 : 0) - (vix >= 22 ? 4 : 0);
-        } else if (item.asset.includes('Hàng hóa')) {
-          if (riskAppetite === 'aggressive') dynamicPct = Math.min(20, item.weightPct + 3);
-          else if (riskAppetite === 'conservative') dynamicPct = Math.max(8, item.weightPct - 5);
-        } else if (item.asset.includes('Tiền mặt')) {
-          if (riskAppetite === 'aggressive') dynamicPct = Math.max(3, item.weightPct - 5);
-          else if (riskAppetite === 'conservative') dynamicPct = item.weightPct + 12;
-          else if (vix >= 22) dynamicPct = item.weightPct + 4;
-        } else if (item.asset.includes('Trái phiếu')) {
-          if (riskAppetite === 'aggressive') dynamicPct = Math.max(1, item.weightPct - 1);
-          else if (riskAppetite === 'conservative') dynamicPct = item.weightPct + 8;
-        }
-      } else if (activePhaseKey === 'recovery') {
-        if (item.asset.includes('Cổ phiếu')) {
-          if (riskAppetite === 'aggressive') dynamicPct = Math.min(85, item.weightPct + 8);
-          else if (riskAppetite === 'conservative') dynamicPct = Math.max(50, item.weightPct - 15);
-        } else if (item.asset.includes('Bất động sản')) {
-          if (riskAppetite === 'aggressive') dynamicPct = Math.min(25, item.weightPct + 4);
-          else if (riskAppetite === 'conservative') dynamicPct = Math.max(10, item.weightPct - 5);
-        } else if (item.asset.includes('Tiền mặt')) {
-          if (riskAppetite === 'conservative') dynamicPct = item.weightPct + 10;
-        }
-      } else if (activePhaseKey === 'late') {
-        if (item.asset.includes('Hàng hóa')) {
-          if (riskAppetite === 'aggressive') dynamicPct = Math.min(50, item.weightPct + 8);
-        } else if (item.asset.includes('Tiền mặt')) {
-          if (riskAppetite === 'conservative') dynamicPct = item.weightPct + 10;
-        }
-      } else if (activePhaseKey === 'recession') {
-        if (item.asset.includes('Tiền mặt')) {
-          if (riskAppetite === 'conservative') dynamicPct = Math.min(80, item.weightPct + 10);
-        } else if (item.asset.includes('Trái phiếu')) {
-          if (riskAppetite === 'conservative') dynamicPct = item.weightPct + 5;
-        }
-      }
-
-      return { ...item, dynamicPct };
-    });
-
-    // Normalize so total sum is exactly 100%
-    const totalSum = adjusted.reduce((acc, cur) => acc + cur.dynamicPct, 0) || 100;
-    return adjusted.map((item, idx) => {
-      const normalizedPct = Math.round((item.dynamicPct / totalSum) * 100);
-      let status: 'overweight' | 'neutral' | 'underweight' = item.status;
-      if (normalizedPct >= 35) status = 'overweight';
-      else if (normalizedPct <= 10) status = 'underweight';
-      else status = 'neutral';
-
-      return {
-        ...item,
-        weightPct: normalizedPct,
-        weight: `${normalizedPct}%`,
-        status,
-      };
-    });
-  }, [activeCfg, isDynamicAllocation, riskAppetite, phaseScores, activePhaseKey, globalMacro.vix, yieldCurveData.spread]);
-
   // 7. Cycle Transition Readiness & Imminent Phase Radar
   const transitionRadar = useMemo(() => {
     const sequenceMap: Record<CyclePhaseKey, CyclePhaseKey> = {
@@ -975,8 +927,10 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
     const triggers = [
       {
         factor: `Đường cong VN (${longLabel === 'TPCP 10 năm' ? '10N' : '12T'} − liên NH)`,
-        status: `${yieldCurveData.spread >= 0 ? '+' : ''}${yieldCurveData.spread}% (${yieldCurveData.slopeLabel.split(' (')[0]})`,
-        isTriggered: yieldCurveData.spread <= 0.75,
+        status: Number.isFinite(yieldCurveData.spread)
+          ? `${yieldCurveData.spread >= 0 ? '+' : ''}${yieldCurveData.spread}% (${yieldCurveData.slopeLabel.split(' (')[0]})`
+          : 'Chưa có lãi qua đêm',
+        isTriggered: Number.isFinite(yieldCurveData.spread) && yieldCurveData.spread <= 0.75,
       },
       {
         factor: 'Lạm phát (CPI)',
@@ -985,8 +939,8 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
       },
       {
         factor: 'Lãi suất qua đêm',
-        status: onRate < 4.5 ? `${nf(onRate)}% (Dồi dào)` : 'Thắt chặt (>4.5%)',
-        isTriggered: onRate >= 4.5,
+        status: !Number.isFinite(overnightRate) ? 'Chưa có nguồn' : overnightRate < 4.5 ? `${nf(overnightRate)}% (Dồi dào)` : 'Thắt chặt (>4.5%)',
+        isTriggered: Number.isFinite(overnightRate) && overnightRate >= 4.5,
       },
       {
         factor: 'Tâm lý (VIX)',
@@ -1008,7 +962,7 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
       statusBadge,
       triggers,
     };
-  }, [detectedActivePhaseKey, phaseScores, yieldCurveData, globalMacro.vix, cpiYoy, onRate]);
+  }, [detectedActivePhaseKey, phaseScores, yieldCurveData, globalMacro.vix, cpiYoy, overnightRate]);
 
   const [showCycleGuide, setShowCycleGuide] = useState<boolean>(false);
   const [needleDisplayAngle, setNeedleDisplayAngle] = useState<number>(() => {
@@ -1544,7 +1498,7 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                   </div>
                   <div className="text-[9px] text-zinc-400 mt-1 flex justify-between">
                     <span>HĐ 12T: {nf(depositRate)}% • Liên NH: {nf(onRate)}%</span>
-                    <span className="text-cyan-400/90 font-sans">{refRate <= 4.5 && onRate <= 4.0 ? 'Nới lỏng' : refRate <= 5.0 && onRate <= 5.5 ? 'Trung tính' : 'Thắt chặt'}</span>
+                    <span className="text-cyan-400/90 font-sans">{capitalDir === 'UP' ? 'Vốn nới lỏng' : capitalDir === 'DOWN' ? 'Vốn thắt chặt' : 'Vốn chưa rõ'}</span>
                   </div>
                 </div>
 
@@ -1570,8 +1524,8 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                       <Waveform className="w-3 h-3 text-emerald-400" />
                       <span>Kỳ hạn VN</span>
                     </span>
-                    <span className={`font-bold ${yieldCurveData.spread >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                      {yieldCurveData.spread >= 0 ? '+' : ''}{yieldCurveData.spread}%
+                    <span className={`font-bold ${!Number.isFinite(yieldCurveData.spread) ? 'text-zinc-400' : yieldCurveData.spread >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                      {Number.isFinite(yieldCurveData.spread) ? `${yieldCurveData.spread >= 0 ? '+' : ''}${yieldCurveData.spread}%` : '—'}
                     </span>
                   </div>
                   <div className="text-[9px] text-zinc-400 mt-1 flex justify-between">
@@ -1667,7 +1621,7 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                         <span>{macroPillarScores.recovery.cpi} | <strong className="text-emerald-400">{macroPillarScores.expansion.cpi}</strong> | {macroPillarScores.late.cpi} | {macroPillarScores.recession.cpi}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-zinc-400">3. Lãi suất NHNN (25%):</span>
+                        <span className="text-zinc-400">3. Chiều vốn: nới / thắt (25%):</span>
                         <span>{macroPillarScores.recovery.rate} | <strong className="text-emerald-400">{macroPillarScores.expansion.rate}</strong> | {macroPillarScores.late.rate} | {macroPillarScores.recession.rate}</span>
                       </div>
                       <div className="flex justify-between">
@@ -1706,7 +1660,7 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                   ['GDP (so cùng kỳ)', `${nf(gdpGrowth)}%${gdpTrend !== null ? ` (${gdpTrend >= 0 ? '+' : ''}${gdpTrend}đ vs quý trước)` : ''}`, gdpLive ? fmtUpd(gdpLive) : String(latestGdp?.period ?? '—'), gdpLive ? 'GSO qua TradingView (tự động)' : 'Lưu sẵn'],
                   ['CPI (so cùng kỳ)', `${nf(cpiYoy)}%${cpiTrend !== null ? ` (${cpiTrend >= 0 ? '+' : ''}${cpiTrend}đ/${cpiTrendMonths}T)` : ''}`, cpiLive ? fmtUpd(cpiLive) : String(latestCpi?.period ?? '—'), cpiLive ? 'GSO qua TradingView (tự động)' : 'Lưu sẵn'],
                   ['Lãi suất điều hành NHNN', `${nf(refRate)}%`, vnLive?.policyRate ? fmtUpd(vnLive.policyRate) : '—', vnLive?.policyRate ? 'NHNN qua TradingView' : 'Lưu sẵn'],
-                  ['Lãi suất liên ngân hàng', `${nf(onRate)}%`, vnLive?.interbankRate ? fmtUpd(vnLive.interbankRate) : '—', vnLive?.interbankRate ? 'TradingView' : 'Lưu sẵn'],
+                  ['Lãi suất liên ngân hàng', `${nf(onRate)}%`, vnLive?.interbankRate ? fmtUpd(vnLive.interbankRate) : '—', vnLive?.interbankRate ? 'TradingView VNINBR (không phải qua đêm)' : 'Lưu sẵn'],
                   ['Huy động 12T (trung vị)', `${nf(depositRate)}%${vnLive?.deposit12M ? ` · ${vnLive.deposit12M.banks} NH` : ''}`, vnLive?.deposit12M?.updatedAt ?? '—', vnLive?.deposit12M ? vnLive.deposit12M.source.split(',')[0] : 'Lưu sẵn'],
                   ['TPCP VN 5 / 10 năm', bond10Y !== null ? `${bond5Y?.toFixed(2) ?? '—'}% / ${bond10Y.toFixed(2)}%` : '—', vnLive?.bond10Y ? fmtUpd(vnLive.bond10Y) : '—', 'TradingView'],
                   ['USD/VND', `${usdSell > 0 ? usdSell.toLocaleString('vi-VN') : '—'}${usdVnd1MPct !== null ? ` (${usdVnd1MPct >= 0 ? '+' : ''}${usdVnd1MPct}%/1T)` : ''}`, 'Trực tiếp', 'Liên ngân hàng'],
@@ -1879,208 +1833,6 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                   </div>
                 </div>
 
-                {/* ── Asset Allocation Strategy & Top Priority Assets (Fidelity & Merrill Lynch Model) ── */}
-                <div className="p-4 rounded-2xl bg-zinc-950/90 border border-zinc-800/80 text-xs font-mono mb-3 space-y-3.5 shadow-lg">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-zinc-800/80 gap-3">
-                    <div className="flex items-center gap-2">
-                      <div className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300">
-                        <Scales className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <span className="font-semibold text-zinc-100 text-xs block">
-                          Phân bổ tài sản khuyến nghị
-                        </span>
-                        <span className="text-[11px] text-zinc-500 font-sans block">
-                          Tối ưu hóa đa yếu tố theo chu kỳ kinh tế
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Risk Appetite Selector & Dynamic Engine Toggle */}
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <div className="flex items-center bg-zinc-900/90 p-1 rounded-xl border border-zinc-800 text-[11px] font-sans">
-                        <button
-                          type="button"
-                          onClick={() => setRiskAppetite('aggressive')}
-                          className={`flex items-center gap-1 px-2.5 py-1 rounded-lg transition-all ${
-                            riskAppetite === 'aggressive'
-                              ? 'bg-rose-500/20 text-rose-400 font-semibold border border-rose-500/40 shadow-sm'
-                              : 'text-zinc-400 hover:text-zinc-200'
-                          }`}
-                        >
-                          <Lightning className="w-3.5 h-3.5" />
-                          <span>Tấn công</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setRiskAppetite('balanced')}
-                          className={`flex items-center gap-1 px-2.5 py-1 rounded-lg transition-all ${
-                            riskAppetite === 'balanced'
-                              ? 'bg-cyan-500/20 text-cyan-400 font-semibold border border-cyan-500/40 shadow-sm'
-                              : 'text-zinc-400 hover:text-zinc-200'
-                          }`}
-                        >
-                          <Scales className="w-3.5 h-3.5" />
-                          <span>Cân bằng</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setRiskAppetite('conservative')}
-                          className={`flex items-center gap-1 px-2.5 py-1 rounded-lg transition-all ${
-                            riskAppetite === 'conservative'
-                              ? 'bg-emerald-500/20 text-emerald-400 font-semibold border border-emerald-500/40 shadow-sm'
-                              : 'text-zinc-400 hover:text-zinc-200'
-                          }`}
-                        >
-                          <ShieldCheck className="w-3.5 h-3.5" />
-                          <span>Phòng thủ</span>
-                        </button>
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={() => setIsDynamicAllocation((prev) => !prev)}
-                        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-[11px] font-sans transition-all ${
-                          isDynamicAllocation
-                            ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30'
-                            : 'bg-zinc-900 text-zinc-500 border-zinc-800 hover:text-zinc-300'
-                        }`}
-                        title="Bật/tắt thuật toán phân bổ động theo điểm số chu kỳ thực tế, VIX và độ dốc đường cong lợi suất"
-                      >
-                        <SlidersHorizontal className="w-3.5 h-3.5" />
-                        <span>{isDynamicAllocation ? 'Phân bổ Động' : 'Tĩnh (Chuẩn)'}</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Top Priority Asset Highlight Banner */}
-                  <div className="p-3 rounded-xl bg-zinc-900/40 border border-zinc-800 flex items-start gap-3">
-                    <div className="p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300 shrink-0 mt-0.5">
-                      <Coins className="w-4 h-4" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                        <span className="text-[10px] text-zinc-400 font-medium uppercase tracking-wider">
-                          Tài sản dẫn đầu
-                        </span>
-                        {isDynamicAllocation && (
-                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 font-mono">
-                            Khẩu vị: {riskAppetite === 'aggressive' ? 'Tấn công (+Beta)' : riskAppetite === 'conservative' ? 'Phòng thủ (+Cash/Bond)' : 'Cân bằng'}
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-sm font-semibold text-zinc-100 leading-tight">
-                        {activeCfg.topPriorityAsset}
-                      </div>
-                      <p className="text-[11px] text-zinc-400 mt-1 font-sans leading-relaxed">
-                        {activeCfg.fidelityAssetAlloc}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Stacked Percentage Visual Bar (Mini Allocation Chart) */}
-                  <div className="space-y-1.5 p-3 rounded-xl bg-zinc-900/40 border border-zinc-800/60">
-                    <div className="flex items-center justify-between text-[10px] text-zinc-400">
-                      <span className="font-bold flex items-center gap-1.5 text-zinc-300">
-                        <ChartLineUp className="w-3.5 h-3.5 text-cyan-400" />
-                        TỶ TRỌNG PHÂN BỔ {isDynamicAllocation ? 'ĐỘNG (QUANT ENGINE)' : 'MÔ PHỎNG'} (%)
-                      </span>
-                      <span>Tổng: 100%</span>
-                    </div>
-                    <div className="h-3 w-full bg-zinc-900 rounded-lg overflow-hidden flex gap-0.5 p-0.5 border border-zinc-800">
-                      {dynamicPriorityAssets.map((item, idx) => {
-                        const colors = [
-                          'bg-cyan-400',
-                          'bg-emerald-400',
-                          'bg-amber-400',
-                          'bg-rose-400',
-                        ];
-                        return (
-                          <div
-                            key={idx}
-                            style={{ width: `${item.weightPct}%` }}
-                            className={`h-full ${colors[idx % colors.length]} rounded-sm transition-all duration-500`}
-                            title={`${item.asset}: ${item.weight}`}
-                          />
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* 4 Asset Classes Cards Grid (Cân đối, không đè chữ, có mini-bar) */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
-                    {dynamicPriorityAssets.map((item) => {
-                      const isTop1 = item.rank === 1;
-                      const statusColor = 
-                        item.status === 'overweight' 
-                          ? { badge: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30', bar: 'bg-emerald-400', text: 'Tăng Tỷ Trọng' }
-                          : item.status === 'neutral'
-                          ? { badge: 'bg-amber-500/15 text-amber-400 border-amber-500/30', bar: 'bg-amber-400', text: 'Trung Lập' }
-                          : { badge: 'bg-rose-500/15 text-rose-400 border-rose-500/30', bar: 'bg-rose-400', text: 'Hạ Tỷ Trọng' };
-
-                      return (
-                        <div
-                          key={item.asset}
-                          className={`p-3 rounded-xl border flex flex-col justify-between transition-all relative overflow-hidden group ${
-                            isTop1
-                              ? 'bg-cyan-500/10 border-cyan-500/40 shadow-md shadow-cyan-500/5'
-                              : 'bg-zinc-900/60 border-zinc-800/80 hover:border-zinc-700'
-                          }`}
-                        >
-                          <div className="space-y-2">
-                            {/* Card Top: Rank + Tỷ trọng (Tách riêng biệt) */}
-                            <div className="flex items-center justify-between gap-1.5">
-                              <span
-                                className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 ${
-                                  isTop1
-                                    ? 'bg-cyan-400 text-zinc-950 shadow-sm shadow-cyan-400/30'
-                                    : 'bg-zinc-800 text-zinc-300 border border-zinc-700'
-                                }`}
-                              >
-                                {item.rank}
-                              </span>
-                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border shrink-0 font-mono ${statusColor.badge}`}>
-                                {item.weight}
-                              </span>
-                            </div>
-
-                            {/* Asset Name */}
-                            <h5 className="text-xs font-bold text-zinc-100 leading-snug line-clamp-1" title={item.asset}>
-                              {item.asset}
-                            </h5>
-
-                            {/* Mini Allocation Progress Meter */}
-                            <div className="w-full bg-zinc-950 h-1.5 rounded-full overflow-hidden border border-zinc-800/80">
-                              <div
-                                className={`h-full ${isTop1 ? 'bg-cyan-400' : statusColor.bar} rounded-full transition-all duration-700`}
-                                style={{ width: `${item.weightPct}%` }}
-                              />
-                            </div>
-
-                            {/* Description text */}
-                            <p className="text-[10px] text-zinc-400 leading-relaxed font-sans line-clamp-3">
-                              {item.desc}
-                            </p>
-                          </div>
-
-                          {/* Card Footer: Vị thế khuyến nghị */}
-                          <div className="mt-3 pt-2 border-t border-zinc-800/60 flex items-center justify-between text-[10px]">
-                            <span className="text-zinc-500">Khuyến nghị:</span>
-                            <span className={`font-bold ${
-                              item.status === 'overweight'
-                                ? 'text-emerald-400'
-                                : item.status === 'neutral'
-                                ? 'text-amber-400'
-                                : 'text-rose-400'
-                            }`}>
-                              {statusColor.text}
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
 
                 {/* Mark Minervini Playbook */}
                 <div className="p-3.5 rounded-xl bg-zinc-950/80 border border-zinc-800/80 text-xs font-mono">
