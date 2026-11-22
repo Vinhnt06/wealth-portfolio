@@ -37,7 +37,7 @@
       "type": "deposit",
       "isCrawled": true,
       "source": "CafeF, trung vị 27 ngân hàng (khớp Vietcombank 5.4%)",
-      "updatedAt": "2026-11-22T02:48:55.144Z"
+      "updatedAt": "2026-11-22T06:35:29.552Z"
     },
     {
       "bank": "Liên ngân hàng",
@@ -46,7 +46,7 @@
       "type": "interbank",
       "isCrawled": true,
       "source": "Liên ngân hàng qua TradingView",
-      "updatedAt": "2026-11-22T02:48:55.144Z"
+      "updatedAt": "2026-11-22T06:35:29.552Z"
     },
     {
       "bank": "Lãi suất Tái cấp vốn NHNN",
@@ -54,10 +54,10 @@
       "term": "Chính sách",
       "isCrawled": true,
       "source": "NHNN qua TradingView",
-      "updatedAt": "2026-11-22T02:48:55.144Z"
+      "updatedAt": "2026-11-22T06:35:29.552Z"
     }
   ],
-  "interestRateLastCrawled": "22/11/2026 09:48",
+  "interestRateLastCrawled": "22/11/2026 13:35",
   "interestRateSource": "Ngân hàng Nhà nước & Thị trường liên ngân hàng",
   "_note": "Chỉ chứa số liệu thật có nguồn (cập nhật tự động bởi scripts/cron_update_macro.js). Không có số nhập tay / giả lập.",
   "capitalHistory": [
