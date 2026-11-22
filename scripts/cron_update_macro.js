@@ -48,12 +48,10 @@ loadEnv();
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://rtuqzohnkknjaquxsupj.supabase.co';
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-if (!supabaseKey) {
-  console.error('[ERROR] Chưa tìm thấy SUPABASE API KEY!');
-  process.exit(1);
-}
-
-const supabase = createClient(supabaseUrl, supabaseKey);
+// Supabase là TUỲ CHỌN: không có khoá thì vẫn cập nhật macroDatabase.json (nguồn dữ liệu của app),
+// chỉ bỏ qua bước đẩy lên Supabase.
+const supabase = supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
+if (!supabase) console.log('[INFO] Không có khoá Supabase: chỉ cập nhật macroDatabase.json, bỏ qua Supabase.');
 
 async function fetchCommodities() {
   console.log('[1/2] Đang cào dữ liệu Dầu thô & Giá Vàng...');
@@ -168,7 +166,7 @@ async function fetchCommodities() {
   }
 
   // C. Lưu vào Supabase
-  if (items.length > 0) {
+  if (supabase && items.length > 0) {
     const { error } = await supabase.from('macro_commodities').upsert(items, { onConflict: 'id' });
     if (error) {
       console.error('  [ERROR] Lỗi lưu macro_commodities vào Supabase:', error);
@@ -320,7 +318,7 @@ async function fetchBankRates() {
 
   lastBankRates = rates;
   // Lưu vào Supabase
-  if (rates.length > 0) {
+  if (supabase && rates.length > 0) {
     const { error } = await supabase.from('macro_bank_rates').upsert(rates, { onConflict: 'id' });
     if (error) {
       console.error('  [ERROR] Lỗi lưu macro_bank_rates vào Supabase:', error);
@@ -557,6 +555,10 @@ async function crawlSbvInterestRates() {
 
 async function syncMacroIndicators() {
   console.log(`\n[4/4] Đang đồng bộ chỉ số vĩ mô vào Supabase...`);
+  if (!supabase) {
+    console.log('  - Bỏ qua (không có khoá Supabase).');
+    return;
+  }
   try {
     const macroJsonPath = path.resolve(__dirname, '../frontend/src/features/market/data/macroDatabase.json');
     if (fs.existsSync(macroJsonPath)) {
