@@ -32,12 +32,12 @@
   "interestRate": [
     {
       "bank": "Huy động 12T (Trung vị)",
-      "rate": "5.63%",
+      "rate": "5.60%",
       "term": "12M",
       "type": "deposit",
       "isCrawled": true,
-      "source": "Trung vị 38 ngân hàng (24hMoney)",
-      "updatedAt": "2026-11-19T08:52:09.917Z"
+      "source": "CafeF, trung vị 27 ngân hàng (khớp Vietcombank 5.4%)",
+      "updatedAt": "2026-11-22T02:48:55.144Z"
     },
     {
       "bank": "Liên ngân hàng",
@@ -46,7 +46,7 @@
       "type": "interbank",
       "isCrawled": true,
       "source": "Liên ngân hàng qua TradingView",
-      "updatedAt": "2026-11-19T08:52:09.917Z"
+      "updatedAt": "2026-11-22T02:48:55.144Z"
     },
     {
       "bank": "Lãi suất Tái cấp vốn NHNN",
@@ -54,10 +54,10 @@
       "term": "Chính sách",
       "isCrawled": true,
       "source": "NHNN qua TradingView",
-      "updatedAt": "2026-11-19T08:52:09.917Z"
+      "updatedAt": "2026-11-22T02:48:55.144Z"
     }
   ],
-  "interestRateLastCrawled": "19/11/2026 15:52",
+  "interestRateLastCrawled": "22/11/2026 09:48",
   "interestRateSource": "Ngân hàng Nhà nước & Thị trường liên ngân hàng",
   "_note": "Chỉ chứa số liệu thật có nguồn (cập nhật tự động bởi scripts/cron_update_macro.js). Không có số nhập tay / giả lập.",
   "capitalHistory": [
@@ -65,6 +65,12 @@
       "date": "2026-11-19",
       "interbank": 6.41,
       "deposit12M": null,
+      "policy": 4.5
+    },
+    {
+      "date": "2026-11-22",
+      "interbank": 6.41,
+      "deposit12M": 5.6,
       "policy": 4.5
     }
   ]
