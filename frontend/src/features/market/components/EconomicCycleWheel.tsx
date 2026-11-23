@@ -607,6 +607,20 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
   })();
   const overnightRate = dailyFresh && daily?.rates ? daily.rates.on : short1W && short1WFresh ? short1W.value : NaN;
   const shortTermLabel = dailyFresh ? 'qua đêm' : '1 tuần';
+  // OMO: phiên mới nhất + tổng 10 phiên gần nhất (lịch sử từ bản tin ngày VIRA do cron ghi trong macroDatabase.json)
+  const omoText = (() => {
+    const hist = ((macroDatabase as { nhnnHistory?: { date: string; omoNet: number | null }[] }).nhnnHistory ?? []).filter((r) => r.omoNet !== null);
+    const c = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(daily?.sessionDate ?? '');
+    const live = c && daily?.omo ? { date: `${c[3]}-${c[2]}-${c[1]}`, omoNet: daily.omo.netVnd } : null;
+    const rows = live ? [...hist.filter((r) => r.date !== live.date), live] : hist;
+    rows.sort((a, b) => a.date.localeCompare(b.date));
+    const last = rows.slice(-10);
+    if (!last.length) return '—';
+    const fmt = (v: number) => `${v >= 0 ? 'Bơm' : 'Hút'} ròng ${Math.abs(Math.round(v)).toLocaleString('vi-VN')} tỷ`;
+    const sum = last.reduce((t, r) => t + (r.omoNet as number), 0);
+    const rate = daily?.omo?.rate;
+    return `${fmt(last[last.length - 1].omoNet as number)}${rate != null ? ` · lãi ${nf(rate)}%` : ''} · ${last.length} phiên: ${fmt(sum).toLowerCase()}`;
+  })();
   const bond5Y = vnLive?.bond5Y?.value ?? null;
   const bond10Y = vnLive?.bond10Y?.value ?? null;
 
@@ -1684,7 +1698,7 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                   ['Lãi suất điều hành NHNN', `${nf(refRate)}%`, vnLive?.policyRate ? fmtUpd(vnLive.policyRate) : '—', vnLive?.policyRate ? 'NHNN qua TradingView' : 'Lưu sẵn'],
                   ['Lãi suất liên ngân hàng', `${nf(onRate)}%`, vnLive?.interbankRate ? fmtUpd(vnLive.interbankRate) : '—', vnLive?.interbankRate ? 'TradingView VNINBR (không phải qua đêm)' : 'Lưu sẵn'],
                   ['Liên NH qua đêm (BQ phiên)', daily?.rates ? `${nf(daily.rates.on)}%${dailyFresh ? '' : ' (cũ, không dùng)'}` : '—', daily?.sessionDate ?? '—', 'VIRA (thực tế)'],
-                  ['NHNN thị trường mở (OMO)', daily?.omo ? `${daily.omo.netVnd >= 0 ? 'Bơm' : 'Hút'} ròng ${Math.abs(daily.omo.netVnd).toLocaleString('vi-VN')} tỷ${daily.omo.rate !== null ? ` · lãi ${nf(daily.omo.rate)}%` : ''}` : '—', daily?.sessionDate ?? '—', 'VIRA (thực tế)'],
+                  ['NHNN thị trường mở (OMO)', omoText, daily?.sessionDate ?? '—', 'VIRA (thực tế)'],
                   ['Liên NH 1 tuần (BQ tháng)', short1W ? `${nf(short1W.value)}%${short1WFresh ? '' : ' (cũ, không dùng)'}` : '—', short1W ? `T${short1W.period}` : '—', 'VIRA (thực tế)'],
                   ['Huy động 12T (trung vị)', `${nf(depositRate)}%${vnLive?.deposit12M ? ` · ${vnLive.deposit12M.banks} NH` : ''}`, vnLive?.deposit12M?.updatedAt ?? '—', vnLive?.deposit12M ? vnLive.deposit12M.source.split(',')[0] : 'Lưu sẵn'],
                   ['TPCP VN 5 / 10 năm', bond10Y !== null ? `${bond5Y?.toFixed(2) ?? '—'}% / ${bond10Y.toFixed(2)}%` : '—', vnLive?.bond10Y ? fmtUpd(vnLive.bond10Y) : '—', 'TradingView'],

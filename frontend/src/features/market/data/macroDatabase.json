@@ -79,5 +79,807 @@
       "deposit12M": 5.6,
       "policy": 4.5
     }
+  ],
+  "nhnnHistory": [
+    {
+      "date": "2026-06-25",
+      "on": 3.2,
+      "w1": 7.75,
+      "w2": 7.8,
+      "m1": 7.8,
+      "omoNet": -2087.4,
+      "omoOutstanding": 232204.46,
+      "omoRate": 4.5
+    },
+    {
+      "date": "2026-06-29",
+      "on": 3.6,
+      "w1": 8.5,
+      "w2": 8,
+      "m1": 7.6,
+      "omoNet": 1199.67,
+      "omoOutstanding": 230851.65,
+      "omoRate": 4.5
+    },
+    {
+      "date": "2026-06-30",
+      "on": 13,
+      "w1": 8.5,
+      "w2": 8,
+      "m1": 8.1,
+      "omoNet": 14551.12,
+      "omoOutstanding": 245402.77,
+      "omoRate": 4.5
+    },
+    {
+      "date": "2026-07-01",
+      "on": 6,
+      "w1": 6.4,
+      "w2": 7.4,
+      "m1": 7.5,
+      "omoNet": -7000,
+      "omoOutstanding": 238402.77,
+      "omoRate": 4.5
+    },
+    {
+      "date": "2026-07-02",
+      "on": 6.7,
+      "w1": 6.8,
+      "w2": 7.1,
+      "m1": 7.5,
+      "omoNet": 5466.63,
+      "omoOutstanding": 243869.4,
+      "omoRate": 4.5
+    },
+    {
+      "date": "2026-07-06",
+      "on": 6,
+      "w1": 6.4,
+      "w2": 6.6,
+      "m1": 7.45,
+      "omoNet": -4180.07,
+      "omoOutstanding": 235019.31,
+      "omoRate": 4.5
+    },
+    {
+      "date": "2026-07-07",
+      "on": 5.9,
+      "w1": 6.3,
+      "w2": 6.55,
+      "m1": 7.7,
+      "omoNet": -15964.07,
+      "omoOutstanding": 219055.24,
+      "omoRate": 4.5
+    },
+    {
+      "date": "2026-07-08",
+      "on": 5.3,
+      "w1": 6,
+      "w2": 6.5,
+      "m1": 7.5,
+      "omoNet": -1438.1,
+      "omoOutstanding": 217617.1,
+      "omoRate": 4.5
+    },
+    {
+      "date": "2026-07-09",
+      "on": 4.7,
+      "w1": 5.4,
+      "w2": 5.95,
+      "m1": 7.5,
+      "omoNet": -6521.45,
+      "omoOutstanding": 211095.65,
+      "omoRate": 4.5
+    },
+    {
+      "date": "2026-07-13",
+      "on": 4.2,
+      "w1": 4.8,
+      "w2": 5.7,
+      "m1": 7.2,
+      "omoNet": -11729.43,
+      "omoOutstanding": 196090.35,
+      "omoRate": 4.5
+    },
+    {
+      "date": "2026-07-14",
+      "on": 4.2,
+      "w1": 4.8,
+      "w2": 5.55,
+      "m1": 7.2,
+      "omoNet": -3481.23,
+      "omoOutstanding": 192609.12,
+      "omoRate": 4.5
+    },
+    {
+      "date": "2026-07-15",
+      "on": 4.2,
+      "w1": 4.8,
+      "w2": 5.9,
+      "m1": 7.2,
+      "omoNet": -2561.86,
+      "omoOutstanding": 190047.26,
+      "omoRate": 4.5
+    },
+    {
+      "date": "2026-07-16",
+      "on": 4.1,
+      "w1": 4.7,
+      "w2": 5.75,
+      "m1": 7.2,
+      "omoNet": -2149.07,
+      "omoOutstanding": 187898.19,
+      "omoRate": 4.5
+    },
+    {
+      "date": "2026-07-20",
+      "on": 3.7,
+      "w1": 4.6,
+      "w2": 5.9,
+      "m1": 7.1,
+      "omoNet": -4569.67,
+      "omoOutstanding": 181990.46,
+      "omoRate": 4.5
+    },
+    {
+      "date": "2026-07-21",
+      "on": 3.5,
+      "w1": 4.3,
+      "w2": 5.5,
+      "m1": 7.3,
+      "omoNet": -5812.08,
+      "omoOutstanding": 176178.38,
+      "omoRate": 4.5
+    },
+    {
+      "date": "2026-07-22",
+      "on": 3.3,
+      "w1": 4.1,
+      "w2": 5.7,
+      "m1": 7.2,
+      "omoNet": -13102.13,
+      "omoOutstanding": 163076.25,
+      "omoRate": 4.5
+    },
+    {
+      "date": "2026-07-23",
+      "on": 3,
+      "w1": 4,
+      "w2": 5.4,
+      "m1": 6.8,
+      "omoNet": -3660.43,
+      "omoOutstanding": 159415.82,
+      "omoRate": 4.5
+    },
+    {
+      "date": "2026-07-27",
+      "on": 2.4,
+      "w1": 4.6,
+      "w2": 5.6,
+      "m1": 7.25,
+      "omoNet": -14187.42,
+      "omoOutstanding": 146020,
+      "omoRate": 4.5
+    },
+    {
+      "date": "2026-07-28",
+      "on": 2.2,
+      "w1": 4.55,
+      "w2": 5.3,
+      "m1": 6.9,
+      "omoNet": -1961.37,
+      "omoOutstanding": 144058.63,
+      "omoRate": 4.5
+    },
+    {
+      "date": "2026-07-29",
+      "on": 1.3,
+      "w1": 4.6,
+      "w2": 5.7,
+      "m1": 6.9,
+      "omoNet": 283.71,
+      "omoOutstanding": 144342.34,
+      "omoRate": 4.5
+    },
+    {
+      "date": "2026-07-30",
+      "on": 0.7,
+      "w1": 4.5,
+      "w2": 5.5,
+      "m1": 6.9,
+      "omoNet": 4900.21,
+      "omoOutstanding": 149242.55,
+      "omoRate": 4.5
+    },
+    {
+      "date": "2026-08-03",
+      "on": 6.3,
+      "w1": 6.5,
+      "w2": 6.4,
+      "m1": 7,
+      "omoNet": 15067.19,
+      "omoOutstanding": 187597.55,
+      "omoRate": 4.5
+    },
+    {
+      "date": "2026-08-04",
+      "on": 6.4,
+      "w1": 6.4,
+      "w2": 6.4,
+      "m1": 7.3,
+      "omoNet": 7116.9,
+      "omoOutstanding": 194714.45,
+      "omoRate": 4.5
+    },
+    {
+      "date": "2026-08-05",
+      "on": 4.8,
+      "w1": 5.6,
+      "w2": 6.25,
+      "m1": 7.3,
+      "omoNet": -975.75,
+      "omoOutstanding": 193738.7,
+      "omoRate": 4.5
+    },
+    {
+      "date": "2026-08-06",
+      "on": 4.6,
+      "w1": 5.2,
+      "w2": 5.9,
+      "m1": 6.9,
+      "omoNet": -3211.44,
+      "omoOutstanding": 190527.26,
+      "omoRate": 4.5
+    },
+    {
+      "date": "2026-08-11",
+      "on": 5.3,
+      "w1": 6,
+      "w2": 5.9,
+      "m1": 6.75,
+      "omoNet": 380.95,
+      "omoOutstanding": 187107.81,
+      "omoRate": 4.5
+    },
+    {
+      "date": "2026-08-12",
+      "on": 4.5,
+      "w1": 5.2,
+      "w2": 5.8,
+      "m1": 6.5,
+      "omoNet": -2251.18,
+      "omoOutstanding": 184856.63,
+      "omoRate": 4.5
+    },
+    {
+      "date": "2026-08-13",
+      "on": 4.4,
+      "w1": 4.8,
+      "w2": 5.15,
+      "m1": 6.5,
+      "omoNet": null,
+      "omoOutstanding": null,
+      "omoRate": null
+    },
+    {
+      "date": "2026-08-17",
+      "on": 5.8,
+      "w1": 5.85,
+      "w2": 5.8,
+      "m1": 6.95,
+      "omoNet": -4978.7,
+      "omoOutstanding": 180685.61,
+      "omoRate": 4.5
+    },
+    {
+      "date": "2026-08-18",
+      "on": 4.9,
+      "w1": 5.4,
+      "w2": 6,
+      "m1": 7.03,
+      "omoNet": 304.63,
+      "omoOutstanding": 180990.24,
+      "omoRate": 4.5
+    },
+    {
+      "date": "2026-08-19",
+      "on": 4,
+      "w1": 4.3,
+      "w2": 5.9,
+      "m1": 7,
+      "omoNet": -1380.43,
+      "omoOutstanding": 179609.81,
+      "omoRate": 4.5
+    },
+    {
+      "date": "2026-08-20",
+      "on": 3,
+      "w1": 3.55,
+      "w2": 5.6,
+      "m1": 7.03,
+      "omoNet": 1224.14,
+      "omoOutstanding": 180833.95,
+      "omoRate": null
+    },
+    {
+      "date": "2026-08-24",
+      "on": 4,
+      "w1": 4.5,
+      "w2": 6.13,
+      "m1": 7.2,
+      "omoNet": -762.01,
+      "omoOutstanding": 181589.57,
+      "omoRate": null
+    },
+    {
+      "date": "2026-08-25",
+      "on": 2.5,
+      "w1": 6.3,
+      "w2": 6.35,
+      "m1": 7.05,
+      "omoNet": 6481.27,
+      "omoOutstanding": 188070.84,
+      "omoRate": null
+    },
+    {
+      "date": "2026-08-26",
+      "on": 2,
+      "w1": 6.3,
+      "w2": 6.4,
+      "m1": 6.9,
+      "omoNet": 3315.31,
+      "omoOutstanding": 191386.15,
+      "omoRate": null
+    },
+    {
+      "date": "2026-08-27",
+      "on": 1.2,
+      "w1": 6.3,
+      "w2": 6.6,
+      "m1": 6.55,
+      "omoNet": 9596.25,
+      "omoOutstanding": 200982.4,
+      "omoRate": null
+    },
+    {
+      "date": "2026-09-03",
+      "on": 6,
+      "w1": 6.35,
+      "w2": 6.5,
+      "m1": 6.5,
+      "omoNet": null,
+      "omoOutstanding": null,
+      "omoRate": null
+    },
+    {
+      "date": "2026-09-04",
+      "on": 4.6,
+      "w1": 5.15,
+      "w2": 6.5,
+      "m1": 6.3,
+      "omoNet": 5625.56,
+      "omoOutstanding": 248031.84,
+      "omoRate": null
+    },
+    {
+      "date": "2026-09-07",
+      "on": 3.5,
+      "w1": 4.4,
+      "w2": 5.65,
+      "m1": 6,
+      "omoNet": 2713.42,
+      "omoOutstanding": 250745.26,
+      "omoRate": null
+    },
+    {
+      "date": "2026-09-08",
+      "on": 2.5,
+      "w1": 3.5,
+      "w2": 4.7,
+      "m1": 6.15,
+      "omoNet": -1411.82,
+      "omoOutstanding": 249333.44,
+      "omoRate": null
+    },
+    {
+      "date": "2026-09-09",
+      "on": 1.5,
+      "w1": 2.9,
+      "w2": 3.53,
+      "m1": 5.5,
+      "omoNet": 5893.29,
+      "omoOutstanding": 255226.73,
+      "omoRate": null
+    },
+    {
+      "date": "2026-09-10",
+      "on": 1.5,
+      "w1": 3,
+      "w2": 3.8,
+      "m1": 5.5,
+      "omoNet": -2577.59,
+      "omoOutstanding": 252649.14,
+      "omoRate": null
+    },
+    {
+      "date": "2026-09-14",
+      "on": 5.2,
+      "w1": 5.3,
+      "w2": 4.2,
+      "m1": 6,
+      "omoNet": -24884.16,
+      "omoOutstanding": 190147.03,
+      "omoRate": null
+    },
+    {
+      "date": "2026-09-15",
+      "on": 4.4,
+      "w1": 4.5,
+      "w2": 5,
+      "m1": 6.03,
+      "omoNet": -14266.03,
+      "omoOutstanding": 175881,
+      "omoRate": null
+    },
+    {
+      "date": "2026-09-16",
+      "on": 3.6,
+      "w1": 4.2,
+      "w2": 4.85,
+      "m1": 6,
+      "omoNet": -12829.17,
+      "omoOutstanding": 163051.83,
+      "omoRate": null
+    },
+    {
+      "date": "2026-09-17",
+      "on": 3.2,
+      "w1": 3.9,
+      "w2": 5.5,
+      "m1": 6,
+      "omoNet": -11853.57,
+      "omoOutstanding": 151198.26,
+      "omoRate": null
+    },
+    {
+      "date": "2026-09-21",
+      "on": 7,
+      "w1": 4.8,
+      "w2": 6,
+      "m1": 6.5,
+      "omoNet": 47915.02,
+      "omoOutstanding": 200403.11,
+      "omoRate": null
+    },
+    {
+      "date": "2026-09-22",
+      "on": 4.4,
+      "w1": 5.6,
+      "w2": 5.8,
+      "m1": 6.6,
+      "omoNet": -650.22,
+      "omoOutstanding": 199752.89,
+      "omoRate": null
+    },
+    {
+      "date": "2026-09-23",
+      "on": 2.5,
+      "w1": 5.55,
+      "w2": 5.43,
+      "m1": 6.6,
+      "omoNet": -3115.5,
+      "omoOutstanding": 196637.39,
+      "omoRate": null
+    },
+    {
+      "date": "2026-09-24",
+      "on": 1,
+      "w1": 5.1,
+      "w2": 5.2,
+      "m1": 6.15,
+      "omoNet": -4518.46,
+      "omoOutstanding": 192118.93,
+      "omoRate": null
+    },
+    {
+      "date": "2026-09-28",
+      "on": 0.5,
+      "w1": 6.5,
+      "w2": 5.9,
+      "m1": 6.3,
+      "omoNet": -44793.22,
+      "omoOutstanding": 142023.91,
+      "omoRate": null
+    },
+    {
+      "date": "2026-09-29",
+      "on": 0.2,
+      "w1": 6.5,
+      "w2": 6.1,
+      "m1": 6.3,
+      "omoNet": -1564.97,
+      "omoOutstanding": 140458.94,
+      "omoRate": null
+    },
+    {
+      "date": "2026-09-30",
+      "on": 7,
+      "w1": 7,
+      "w2": 6.4,
+      "m1": 6.3,
+      "omoNet": 10038,
+      "omoOutstanding": 150496.94,
+      "omoRate": null
+    },
+    {
+      "date": "2026-10-01",
+      "on": 4.3,
+      "w1": 7,
+      "w2": 5.4,
+      "m1": 6.3,
+      "omoNet": -584.43,
+      "omoOutstanding": 149912.51,
+      "omoRate": null
+    },
+    {
+      "date": "2026-10-05",
+      "on": 2,
+      "w1": 3.1,
+      "w2": 4.15,
+      "m1": 5.8,
+      "omoNet": -18377.37,
+      "omoOutstanding": 114964.56,
+      "omoRate": null
+    },
+    {
+      "date": "2026-10-06",
+      "on": 1,
+      "w1": 2.8,
+      "w2": 4,
+      "m1": 5.2,
+      "omoNet": -11555.34,
+      "omoOutstanding": 103409.22,
+      "omoRate": null
+    },
+    {
+      "date": "2026-10-07",
+      "on": 0.6,
+      "w1": 2.3,
+      "w2": 3.8,
+      "m1": 5.2,
+      "omoNet": -9195.95,
+      "omoOutstanding": 94213.27,
+      "omoRate": null
+    },
+    {
+      "date": "2026-10-08",
+      "on": 0.8,
+      "w1": 2.5,
+      "w2": 3.8,
+      "m1": 5,
+      "omoNet": -668.82,
+      "omoOutstanding": 93544.45,
+      "omoRate": null
+    },
+    {
+      "date": "2026-10-12",
+      "on": 4.8,
+      "w1": 4.8,
+      "w2": 5.5,
+      "m1": 5.7,
+      "omoNet": 2943.4,
+      "omoOutstanding": 99687.75,
+      "omoRate": null
+    },
+    {
+      "date": "2026-10-13",
+      "on": 4.8,
+      "w1": 4.9,
+      "w2": 5.5,
+      "m1": 5.7,
+      "omoNet": 11999.38,
+      "omoOutstanding": 111687.13,
+      "omoRate": null
+    },
+    {
+      "date": "2026-10-14",
+      "on": 3.5,
+      "w1": 4.7,
+      "w2": 5.5,
+      "m1": 5.3,
+      "omoNet": -764.91,
+      "omoOutstanding": 110922.22,
+      "omoRate": null
+    },
+    {
+      "date": "2026-10-15",
+      "on": 3.1,
+      "w1": 3.3,
+      "w2": 4.6,
+      "m1": 5.2,
+      "omoNet": -847.37,
+      "omoOutstanding": 110074.85,
+      "omoRate": null
+    },
+    {
+      "date": "2026-10-19",
+      "on": 4.4,
+      "w1": 4.6,
+      "w2": 5.2,
+      "m1": 5.6,
+      "omoNet": -1276.84,
+      "omoOutstanding": 103656.14,
+      "omoRate": null
+    },
+    {
+      "date": "2026-10-20",
+      "on": 3.6,
+      "w1": 3.98,
+      "w2": 5,
+      "m1": 5.35,
+      "omoNet": -5414.77,
+      "omoOutstanding": 98241.37,
+      "omoRate": null
+    },
+    {
+      "date": "2026-10-21",
+      "on": 3.3,
+      "w1": 3.7,
+      "w2": 4.9,
+      "m1": 5.35,
+      "omoNet": -513.75,
+      "omoOutstanding": 97727.62,
+      "omoRate": null
+    },
+    {
+      "date": "2026-10-22",
+      "on": 4.3,
+      "w1": 4.3,
+      "w2": 5,
+      "m1": 5.38,
+      "omoNet": -1729.85,
+      "omoOutstanding": 95997.77,
+      "omoRate": null
+    },
+    {
+      "date": "2026-10-26",
+      "on": 4.2,
+      "w1": 5.1,
+      "w2": 5.2,
+      "m1": 5.5,
+      "omoNet": -5064.26,
+      "omoOutstanding": 90000.66,
+      "omoRate": null
+    },
+    {
+      "date": "2026-10-27",
+      "on": 4.9,
+      "w1": 5.6,
+      "w2": 5.5,
+      "m1": 5.65,
+      "omoNet": 6357.46,
+      "omoOutstanding": 96358.12,
+      "omoRate": null
+    },
+    {
+      "date": "2026-10-28",
+      "on": 4.1,
+      "w1": 5.3,
+      "w2": 5.5,
+      "m1": 5.7,
+      "omoNet": 8050.42,
+      "omoOutstanding": 104408.54,
+      "omoRate": null
+    },
+    {
+      "date": "2026-10-29",
+      "on": 3.7,
+      "w1": 5.28,
+      "w2": 5.43,
+      "m1": 5.6,
+      "omoNet": 2749.4,
+      "omoOutstanding": 107157.94,
+      "omoRate": null
+    },
+    {
+      "date": "2026-11-02",
+      "on": 4.8,
+      "w1": 5.3,
+      "w2": 5.4,
+      "m1": 5.6,
+      "omoNet": 993.77,
+      "omoOutstanding": 124220.39,
+      "omoRate": null
+    },
+    {
+      "date": "2026-11-03",
+      "on": 3.7,
+      "w1": 4.3,
+      "w2": 5,
+      "m1": 5.5,
+      "omoNet": -7839.15,
+      "omoOutstanding": 116381.24,
+      "omoRate": 4.5
+    },
+    {
+      "date": "2026-11-05",
+      "on": 4.5,
+      "w1": 5,
+      "w2": 5.05,
+      "m1": 5.4,
+      "omoNet": -3646.28,
+      "omoOutstanding": 105591.75,
+      "omoRate": 4.5
+    },
+    {
+      "date": "2026-11-09",
+      "on": 4.6,
+      "w1": 4.95,
+      "w2": 5.1,
+      "m1": 5.5,
+      "omoNet": 5648.19,
+      "omoOutstanding": 124861.59,
+      "omoRate": 4.5
+    },
+    {
+      "date": "2026-11-10",
+      "on": 4.4,
+      "w1": 4.8,
+      "w2": 5.1,
+      "m1": 5.4,
+      "omoNet": -9360.98,
+      "omoOutstanding": 115500.61,
+      "omoRate": 4.5
+    },
+    {
+      "date": "2026-11-11",
+      "on": 4.3,
+      "w1": 4.6,
+      "w2": 5.1,
+      "m1": 5.4,
+      "omoNet": -2892.19,
+      "omoOutstanding": 112608.42,
+      "omoRate": 4.5
+    },
+    {
+      "date": "2026-11-12",
+      "on": 4.8,
+      "w1": 4.8,
+      "w2": 5.2,
+      "m1": 5.5,
+      "omoNet": -477.34,
+      "omoOutstanding": 112131.08,
+      "omoRate": 4.5
+    },
+    {
+      "date": "2026-11-17",
+      "on": 4.9,
+      "w1": 5.1,
+      "w2": 5.5,
+      "m1": 5.5,
+      "omoNet": -640.27,
+      "omoOutstanding": 98599.5,
+      "omoRate": 4.5
+    },
+    {
+      "date": "2026-11-18",
+      "on": 4.5,
+      "w1": 4.8,
+      "w2": 5.4,
+      "m1": 5.58,
+      "omoNet": -97.01,
+      "omoOutstanding": 98502.49,
+      "omoRate": 4.5
+    },
+    {
+      "date": "2026-11-19",
+      "on": 4.7,
+      "w1": 4.95,
+      "w2": 5.4,
+      "m1": 5.5,
+      "omoNet": 890,
+      "omoOutstanding": 99393,
+      "omoRate": 4.5
+    }
   ]
 }

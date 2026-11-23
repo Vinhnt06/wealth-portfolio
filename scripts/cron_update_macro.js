@@ -9,6 +9,7 @@
  */
 
 const fs = require('fs');
+const { syncNhnnHistory } = require('./vira_daily');
 const path = require('path');
 
 let createClient;
@@ -529,6 +530,15 @@ async function crawlSbvInterestRates() {
         hist.sort((a, b) => a.date.localeCompare(b.date));
         macroData.capitalHistory = hist.slice(-500);
         console.log(`  ✓ Lịch sử vốn: ${macroData.capitalHistory.length} ngày (liên NH ${point.interbank}%, gửi 12T ${point.deposit12M}%)`);
+      }
+
+      // Động thái NHNN theo phiên (bản tin ngày VIRA): lãi liên NH ON/1W/2W/1M + bơm/hút ròng OMO
+      try {
+        const n = await syncNhnnHistory(macroData, { limit: 6, pages: 1 });
+        const last = macroData.nhnnHistory[macroData.nhnnHistory.length - 1];
+        console.log(`  ✓ Động thái NHNN: ${macroData.nhnnHistory.length} phiên (${n} dòng mới/cập nhật), gần nhất ${last ? `${last.date} ON ${last.on}%, OMO ${last.omoNet}` : '—'}`);
+      } catch (e) {
+        console.log('  - Giữ nguyên lịch sử động thái NHNN:', e.message);
       }
 
       // GDP & CPI tự động (không nhập tay)
