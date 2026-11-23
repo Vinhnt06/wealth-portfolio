@@ -1,7 +1,7 @@
 {
   "success": true,
-  "scannedAt": 1795468944725,
-  "scannedAtText": "04:22:11 24/11/2026",
+  "scannedAt": 1795470034176,
+  "scannedAtText": "04:40:13 24/11/2026",
   "session": "MORNING",
   "sessionLabel": "Phiên Sáng (11:30)",
   "totalScanned": 155,
@@ -12,9 +12,9 @@
   "vnindexRet3M": -4.01,
   "sectorUniverse": [
     {
-      "symbol": "VCB",
+      "symbol": "TCB",
       "sector": "Ngân hàng",
-      "ret3M": -14.89
+      "ret3M": -1.66
     },
     {
       "symbol": "BID",
@@ -22,14 +22,14 @@
       "ret3M": -18.43
     },
     {
+      "symbol": "VCB",
+      "sector": "Ngân hàng",
+      "ret3M": -14.89
+    },
+    {
       "symbol": "CTG",
       "sector": "Ngân hàng",
       "ret3M": -5.6
-    },
-    {
-      "symbol": "TCB",
-      "sector": "Ngân hàng",
-      "ret3M": -1.66
     },
     {
       "symbol": "MBB",
@@ -42,24 +42,29 @@
       "ret3M": -13.19
     },
     {
-      "symbol": "LPB",
-      "sector": "Ngân hàng",
-      "ret3M": -31.5
-    },
-    {
       "symbol": "VPB",
       "sector": "Ngân hàng",
       "ret3M": 0.29
     },
     {
-      "symbol": "SHB",
+      "symbol": "HDB",
       "sector": "Ngân hàng",
-      "ret3M": -11.76
+      "ret3M": 3.81
+    },
+    {
+      "symbol": "LPB",
+      "sector": "Ngân hàng",
+      "ret3M": -31.5
     },
     {
       "symbol": "STB",
       "sector": "Ngân hàng",
       "ret3M": -6.69
+    },
+    {
+      "symbol": "SHB",
+      "sector": "Ngân hàng",
+      "ret3M": -11.76
     },
     {
       "symbol": "TPB",
@@ -70,11 +75,6 @@
       "symbol": "MSB",
       "sector": "Ngân hàng",
       "ret3M": 24.15
-    },
-    {
-      "symbol": "HDB",
-      "sector": "Ngân hàng",
-      "ret3M": 3.81
     },
     {
       "symbol": "VIB",
@@ -102,14 +102,14 @@
       "ret3M": -2.29
     },
     {
-      "symbol": "ABB",
-      "sector": "Ngân hàng",
-      "ret3M": 1.18
-    },
-    {
       "symbol": "BVB",
       "sector": "Ngân hàng",
       "ret3M": -14.98
+    },
+    {
+      "symbol": "ABB",
+      "sector": "Ngân hàng",
+      "ret3M": 1.18
     },
     {
       "symbol": "SSI",
@@ -122,6 +122,16 @@
       "ret3M": -14.5
     },
     {
+      "symbol": "VCI",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -14.93
+    },
+    {
+      "symbol": "SHS",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -12.25
+    },
+    {
       "symbol": "HCM",
       "sector": "Dịch vụ tài chính",
       "ret3M": -12.55
@@ -132,44 +142,9 @@
       "ret3M": -14.36
     },
     {
-      "symbol": "SHS",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -12.25
-    },
-    {
-      "symbol": "FTS",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -18.48
-    },
-    {
       "symbol": "CTS",
       "sector": "Dịch vụ tài chính",
       "ret3M": 3.65
-    },
-    {
-      "symbol": "VCI",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -14.93
-    },
-    {
-      "symbol": "BSI",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -6.3
-    },
-    {
-      "symbol": "AGR",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -11.95
-    },
-    {
-      "symbol": "ORS",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -7.56
-    },
-    {
-      "symbol": "TVS",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -22.42
     },
     {
       "symbol": "VIX",
@@ -177,29 +152,29 @@
       "ret3M": -6.3
     },
     {
-      "symbol": "VRE",
-      "sector": "Bất động sản",
-      "ret3M": -7.31
+      "symbol": "BSI",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -6.3
     },
     {
-      "symbol": "VIC",
-      "sector": "Bất động sản",
-      "ret3M": 19.85
+      "symbol": "FTS",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -18.48
     },
     {
-      "symbol": "DXG",
-      "sector": "Bất động sản",
-      "ret3M": -6.06
+      "symbol": "AGR",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -11.95
     },
     {
-      "symbol": "SZC",
-      "sector": "Bất động sản",
-      "ret3M": 1.66
+      "symbol": "TVS",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -22.42
     },
     {
-      "symbol": "TCH",
-      "sector": "Bất động sản",
-      "ret3M": 18.01
+      "symbol": "ORS",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -7.56
     },
     {
       "symbol": "VHM",
@@ -207,29 +182,9 @@
       "ret3M": -14.23
     },
     {
-      "symbol": "KBC",
+      "symbol": "VRE",
       "sector": "Bất động sản",
-      "ret3M": -3.11
-    },
-    {
-      "symbol": "PDR",
-      "sector": "Bất động sản",
-      "ret3M": -8.94
-    },
-    {
-      "symbol": "NVL",
-      "sector": "Bất động sản",
-      "ret3M": -25.36
-    },
-    {
-      "symbol": "DIG",
-      "sector": "Bất động sản",
-      "ret3M": -4.82
-    },
-    {
-      "symbol": "NLG",
-      "sector": "Bất động sản",
-      "ret3M": -1.46
+      "ret3M": -7.31
     },
     {
       "symbol": "KDH",
@@ -237,14 +192,14 @@
       "ret3M": -6.17
     },
     {
+      "symbol": "VIC",
+      "sector": "Bất động sản",
+      "ret3M": 19.85
+    },
+    {
       "symbol": "CEO",
       "sector": "Bất động sản",
       "ret3M": -8.73
-    },
-    {
-      "symbol": "IDC",
-      "sector": "Bất động sản",
-      "ret3M": 5.45
     },
     {
       "symbol": "BCM",
@@ -252,9 +207,64 @@
       "ret3M": -15.24
     },
     {
+      "symbol": "PDR",
+      "sector": "Bất động sản",
+      "ret3M": -8.94
+    },
+    {
+      "symbol": "HDG",
+      "sector": "Bất động sản",
+      "ret3M": 2.45
+    },
+    {
+      "symbol": "TCH",
+      "sector": "Bất động sản",
+      "ret3M": 18.01
+    },
+    {
+      "symbol": "SZC",
+      "sector": "Bất động sản",
+      "ret3M": 1.66
+    },
+    {
+      "symbol": "DIG",
+      "sector": "Bất động sản",
+      "ret3M": -4.82
+    },
+    {
+      "symbol": "DXG",
+      "sector": "Bất động sản",
+      "ret3M": -6.06
+    },
+    {
+      "symbol": "IDC",
+      "sector": "Bất động sản",
+      "ret3M": 5.45
+    },
+    {
+      "symbol": "NLG",
+      "sector": "Bất động sản",
+      "ret3M": -1.46
+    },
+    {
+      "symbol": "NTL",
+      "sector": "Bất động sản",
+      "ret3M": 0.8
+    },
+    {
+      "symbol": "NVL",
+      "sector": "Bất động sản",
+      "ret3M": -25.36
+    },
+    {
       "symbol": "SIP",
       "sector": "Bất động sản",
       "ret3M": -6.53
+    },
+    {
+      "symbol": "KBC",
+      "sector": "Bất động sản",
+      "ret3M": -3.11
     },
     {
       "symbol": "VGC",
@@ -277,219 +287,14 @@
       "ret3M": 0.97
     },
     {
-      "symbol": "NTL",
-      "sector": "Bất động sản",
-      "ret3M": 0.8
-    },
-    {
       "symbol": "D2D",
       "sector": "Bất động sản",
       "ret3M": -14.57
     },
     {
-      "symbol": "HDG",
-      "sector": "Bất động sản",
-      "ret3M": 2.45
-    },
-    {
-      "symbol": "PC1",
-      "sector": "Tiện ích",
-      "ret3M": -8.71
-    },
-    {
-      "symbol": "BFC",
+      "symbol": "DPM",
       "sector": "Nguyên vật liệu",
-      "ret3M": 22.28
-    },
-    {
-      "symbol": "PVS",
-      "sector": "Năng lượng",
-      "ret3M": -12.75
-    },
-    {
-      "symbol": "GVR",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -12.03
-    },
-    {
-      "symbol": "POW",
-      "sector": "Tiện ích",
-      "ret3M": 0.74
-    },
-    {
-      "symbol": "MSN",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": -1
-    },
-    {
-      "symbol": "DBC",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": -0.3
-    },
-    {
-      "symbol": "DPR",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -7.77
-    },
-    {
-      "symbol": "GEE",
-      "sector": "Tiện ích",
-      "ret3M": -10.73
-    },
-    {
-      "symbol": "OIL",
-      "sector": "Năng lượng",
-      "ret3M": -10.26
-    },
-    {
-      "symbol": "VGS",
-      "sector": "Nguyên vật liệu",
-      "ret3M": 4.95
-    },
-    {
-      "symbol": "GAS",
-      "sector": "Năng lượng",
-      "ret3M": -14.59
-    },
-    {
-      "symbol": "HPG",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -5.99
-    },
-    {
-      "symbol": "VHC",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": -5.28
-    },
-    {
-      "symbol": "BWE",
-      "sector": "Tiện ích",
-      "ret3M": -3.99
-    },
-    {
-      "symbol": "LAS",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -5.23
-    },
-    {
-      "symbol": "REE",
-      "sector": "Tiện ích",
-      "ret3M": 0.87
-    },
-    {
-      "symbol": "NTP",
-      "sector": "Nguyên vật liệu",
-      "ret3M": 2.75
-    },
-    {
-      "symbol": "NKG",
-      "sector": "Nguyên vật liệu",
-      "ret3M": 11.47
-    },
-    {
-      "symbol": "PVC",
-      "sector": "Năng lượng",
-      "ret3M": -19.01
-    },
-    {
-      "symbol": "IDI",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": -8.35
-    },
-    {
-      "symbol": "CSV",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -6.24
-    },
-    {
-      "symbol": "PGV",
-      "sector": "Tiện ích",
-      "ret3M": -5.94
-    },
-    {
-      "symbol": "DCM",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -2.71
-    },
-    {
-      "symbol": "MSR",
-      "sector": "Nguyên vật liệu",
-      "ret3M": 17.11
-    },
-    {
-      "symbol": "PHR",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -15.99
-    },
-    {
-      "symbol": "QNS",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": 2.8
-    },
-    {
-      "symbol": "ASM",
-      "sector": "Bất động sản",
-      "ret3M": -30.17
-    },
-    {
-      "symbol": "SMC",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -18.51
-    },
-    {
-      "symbol": "HSG",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -6.45
-    },
-    {
-      "symbol": "HAG",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": -2.12
-    },
-    {
-      "symbol": "PVT",
-      "sector": "Vận tải",
-      "ret3M": -7.82
-    },
-    {
-      "symbol": "FMC",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": 0
-    },
-    {
-      "symbol": "GEG",
-      "sector": "Tiện ích",
-      "ret3M": -10.24
-    },
-    {
-      "symbol": "PVD",
-      "sector": "Năng lượng",
-      "ret3M": -12.37
-    },
-    {
-      "symbol": "PVB",
-      "sector": "Năng lượng",
-      "ret3M": -18.87
-    },
-    {
-      "symbol": "QTP",
-      "sector": "Tiện ích",
-      "ret3M": 0
-    },
-    {
-      "symbol": "PAN",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": -20.55
-    },
-    {
-      "symbol": "VNM",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": -14.33
-    },
-    {
-      "symbol": "PLX",
-      "sector": "Năng lượng",
-      "ret3M": -19.1
+      "ret3M": -17.57
     },
     {
       "symbol": "HT1",
@@ -502,19 +307,34 @@
       "ret3M": -5.17
     },
     {
+      "symbol": "VHC",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": -5.28
+    },
+    {
       "symbol": "PVP",
       "sector": "Vận tải",
       "ret3M": -3.3
     },
     {
-      "symbol": "DDV",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -20.33
+      "symbol": "GEG",
+      "sector": "Tiện ích",
+      "ret3M": -10.24
     },
     {
-      "symbol": "KDC",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": -3.29
+      "symbol": "PVS",
+      "sector": "Năng lượng",
+      "ret3M": -12.75
+    },
+    {
+      "symbol": "PVD",
+      "sector": "Năng lượng",
+      "ret3M": -12.37
+    },
+    {
+      "symbol": "LAS",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -5.23
     },
     {
       "symbol": "BSR",
@@ -522,24 +342,14 @@
       "ret3M": -12.48
     },
     {
-      "symbol": "SAB",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": -8.12
-    },
-    {
       "symbol": "BAF",
       "sector": "Thực phẩm, đồ uống",
       "ret3M": -0.03
     },
     {
-      "symbol": "NT2",
-      "sector": "Tiện ích",
-      "ret3M": 16.04
-    },
-    {
-      "symbol": "ANV",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": -4.13
+      "symbol": "BFC",
+      "sector": "Nguyên vật liệu",
+      "ret3M": 22.28
     },
     {
       "symbol": "DGC",
@@ -547,14 +357,14 @@
       "ret3M": -14.38
     },
     {
-      "symbol": "VSH",
-      "sector": "Tiện ích",
-      "ret3M": -3.91
+      "symbol": "ANV",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": -4.13
     },
     {
-      "symbol": "TV2",
-      "sector": "Dịch vụ thương mại",
-      "ret3M": 8.21
+      "symbol": "PVC",
+      "sector": "Năng lượng",
+      "ret3M": -19.01
     },
     {
       "symbol": "BMP",
@@ -562,139 +372,204 @@
       "ret3M": -6.23
     },
     {
+      "symbol": "SAB",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": -8.12
+    },
+    {
+      "symbol": "CSV",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -6.24
+    },
+    {
+      "symbol": "BWE",
+      "sector": "Tiện ích",
+      "ret3M": -3.99
+    },
+    {
+      "symbol": "HAG",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": -2.12
+    },
+    {
+      "symbol": "VNM",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": -14.33
+    },
+    {
+      "symbol": "PC1",
+      "sector": "Tiện ích",
+      "ret3M": -8.71
+    },
+    {
+      "symbol": "DDV",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -20.33
+    },
+    {
+      "symbol": "PLX",
+      "sector": "Năng lượng",
+      "ret3M": -19.1
+    },
+    {
       "symbol": "MCH",
       "sector": "Thực phẩm, đồ uống",
       "ret3M": -4.8
     },
     {
-      "symbol": "DPM",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -17.57
+      "symbol": "GAS",
+      "sector": "Năng lượng",
+      "ret3M": -14.59
     },
     {
-      "symbol": "VGI",
-      "sector": "Viễn thông",
-      "ret3M": -16.64
-    },
-    {
-      "symbol": "DBD",
-      "sector": "Dược phẩm",
-      "ret3M": -11.92
-    },
-    {
-      "symbol": "CMG",
-      "sector": "Phần mềm",
-      "ret3M": -32.04
-    },
-    {
-      "symbol": "PNJ",
-      "sector": "Phân phối, bán lẻ",
-      "ret3M": -68.42
-    },
-    {
-      "symbol": "HHV",
+      "symbol": "PVT",
       "sector": "Vận tải",
-      "ret3M": -9.26
+      "ret3M": -7.82
     },
     {
-      "symbol": "FOX",
-      "sector": "Viễn thông",
-      "ret3M": -16.2
+      "symbol": "PVB",
+      "sector": "Năng lượng",
+      "ret3M": -18.87
     },
     {
-      "symbol": "HVN",
-      "sector": "Vận tải",
-      "ret3M": 3.04
-    },
-    {
-      "symbol": "CTR",
-      "sector": "Viễn thông",
-      "ret3M": -21.43
-    },
-    {
-      "symbol": "HAH",
-      "sector": "Vận tải",
-      "ret3M": -4.55
-    },
-    {
-      "symbol": "FRT",
-      "sector": "Phân phối, bán lẻ",
-      "ret3M": 3.14
-    },
-    {
-      "symbol": "PET",
-      "sector": "Phân phối, bán lẻ",
-      "ret3M": 23.41
-    },
-    {
-      "symbol": "CII",
-      "sector": "Bất động sản",
-      "ret3M": -9.18
-    },
-    {
-      "symbol": "VCG",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -8.81
-    },
-    {
-      "symbol": "SGP",
-      "sector": "Vận tải",
-      "ret3M": -15.46
-    },
-    {
-      "symbol": "DGW",
-      "sector": "Phân phối, bán lẻ",
-      "ret3M": -7.87
-    },
-    {
-      "symbol": "VOS",
-      "sector": "Vận tải",
-      "ret3M": -0.48
-    },
-    {
-      "symbol": "MSH",
-      "sector": "Hàng tiêu dùng",
-      "ret3M": 15.23
-    },
-    {
-      "symbol": "GMD",
-      "sector": "Vận tải",
-      "ret3M": 0.58
-    },
-    {
-      "symbol": "C4G",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -21.43
-    },
-    {
-      "symbol": "DHG",
-      "sector": "Dược phẩm",
-      "ret3M": -6.93
-    },
-    {
-      "symbol": "HNG",
+      "symbol": "IDI",
       "sector": "Thực phẩm, đồ uống",
-      "ret3M": -14.93
+      "ret3M": -8.35
     },
     {
-      "symbol": "HAX",
-      "sector": "Ô tô, linh kiện",
-      "ret3M": -13.43
+      "symbol": "PGV",
+      "sector": "Tiện ích",
+      "ret3M": -5.94
     },
     {
-      "symbol": "DCL",
-      "sector": "Dược phẩm",
-      "ret3M": -14.29
+      "symbol": "GEE",
+      "sector": "Tiện ích",
+      "ret3M": -10.73
     },
     {
-      "symbol": "VJC",
-      "sector": "Vận tải",
-      "ret3M": 10.28
+      "symbol": "VGS",
+      "sector": "Nguyên vật liệu",
+      "ret3M": 4.95
     },
     {
-      "symbol": "FPT",
-      "sector": "Phần mềm",
-      "ret3M": -28.42
+      "symbol": "DPR",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -7.77
+    },
+    {
+      "symbol": "QTP",
+      "sector": "Tiện ích",
+      "ret3M": 0
+    },
+    {
+      "symbol": "TV2",
+      "sector": "Dịch vụ thương mại",
+      "ret3M": 8.21
+    },
+    {
+      "symbol": "MSN",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": -1
+    },
+    {
+      "symbol": "ASM",
+      "sector": "Bất động sản",
+      "ret3M": -30.17
+    },
+    {
+      "symbol": "POW",
+      "sector": "Tiện ích",
+      "ret3M": 0.74
+    },
+    {
+      "symbol": "NTP",
+      "sector": "Nguyên vật liệu",
+      "ret3M": 2.75
+    },
+    {
+      "symbol": "DCM",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -2.71
+    },
+    {
+      "symbol": "OIL",
+      "sector": "Năng lượng",
+      "ret3M": -10.26
+    },
+    {
+      "symbol": "MSR",
+      "sector": "Nguyên vật liệu",
+      "ret3M": 17.11
+    },
+    {
+      "symbol": "DBC",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": -0.3
+    },
+    {
+      "symbol": "NT2",
+      "sector": "Tiện ích",
+      "ret3M": 16.04
+    },
+    {
+      "symbol": "PAN",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": -20.55
+    },
+    {
+      "symbol": "VSH",
+      "sector": "Tiện ích",
+      "ret3M": -3.91
+    },
+    {
+      "symbol": "REE",
+      "sector": "Tiện ích",
+      "ret3M": 0.87
+    },
+    {
+      "symbol": "QNS",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": 2.8
+    },
+    {
+      "symbol": "SMC",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -18.51
+    },
+    {
+      "symbol": "GVR",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -12.03
+    },
+    {
+      "symbol": "KDC",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": -3.29
+    },
+    {
+      "symbol": "FMC",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": 0
+    },
+    {
+      "symbol": "HPG",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -5.99
+    },
+    {
+      "symbol": "NKG",
+      "sector": "Nguyên vật liệu",
+      "ret3M": 11.47
+    },
+    {
+      "symbol": "PHR",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -15.99
+    },
+    {
+      "symbol": "HSG",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -6.45
     },
     {
       "symbol": "SAM",
@@ -702,59 +577,14 @@
       "ret3M": 2.83
     },
     {
-      "symbol": "PHP",
-      "sector": "Vận tải",
-      "ret3M": -6.39
-    },
-    {
-      "symbol": "TCM",
-      "sector": "Hàng tiêu dùng",
-      "ret3M": -10.3
-    },
-    {
-      "symbol": "FCN",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -5.36
-    },
-    {
-      "symbol": "ELC",
-      "sector": "Phần mềm",
-      "ret3M": -28.42
-    },
-    {
-      "symbol": "VSC",
-      "sector": "Vận tải",
-      "ret3M": -14.38
-    },
-    {
-      "symbol": "GIL",
-      "sector": "Hàng tiêu dùng",
-      "ret3M": 8.75
-    },
-    {
-      "symbol": "VTP",
-      "sector": "Vận tải",
-      "ret3M": -22.71
-    },
-    {
       "symbol": "TNH",
       "sector": "Dịch vụ chăm sóc sức khỏe",
       "ret3M": -25.3
     },
     {
-      "symbol": "LCG",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -12.95
-    },
-    {
-      "symbol": "VGT",
-      "sector": "Hàng tiêu dùng",
-      "ret3M": -5.17
-    },
-    {
-      "symbol": "TNG",
-      "sector": "Hàng tiêu dùng",
-      "ret3M": 1.64
+      "symbol": "CII",
+      "sector": "Bất động sản",
+      "ret3M": -9.18
     },
     {
       "symbol": "MWG",
@@ -762,19 +592,79 @@
       "ret3M": -4.2
     },
     {
+      "symbol": "HAH",
+      "sector": "Vận tải",
+      "ret3M": -4.55
+    },
+    {
+      "symbol": "DHG",
+      "sector": "Dược phẩm",
+      "ret3M": -6.93
+    },
+    {
+      "symbol": "PNJ",
+      "sector": "Phân phối, bán lẻ",
+      "ret3M": -68.42
+    },
+    {
       "symbol": "CTD",
       "sector": "Hàng hóa công nghiệp",
       "ret3M": 17.12
     },
     {
-      "symbol": "DVN",
-      "sector": "Dược phẩm",
-      "ret3M": 3.45
+      "symbol": "CMG",
+      "sector": "Phần mềm",
+      "ret3M": -32.04
     },
     {
-      "symbol": "VTO",
+      "symbol": "VOS",
       "sector": "Vận tải",
-      "ret3M": -2.38
+      "ret3M": -0.48
+    },
+    {
+      "symbol": "VSC",
+      "sector": "Vận tải",
+      "ret3M": -14.38
+    },
+    {
+      "symbol": "VTP",
+      "sector": "Vận tải",
+      "ret3M": -22.71
+    },
+    {
+      "symbol": "FCN",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -5.36
+    },
+    {
+      "symbol": "TNG",
+      "sector": "Hàng tiêu dùng",
+      "ret3M": 1.64
+    },
+    {
+      "symbol": "FOX",
+      "sector": "Viễn thông",
+      "ret3M": -16.2
+    },
+    {
+      "symbol": "VGT",
+      "sector": "Hàng tiêu dùng",
+      "ret3M": -5.17
+    },
+    {
+      "symbol": "DGW",
+      "sector": "Phân phối, bán lẻ",
+      "ret3M": -7.87
+    },
+    {
+      "symbol": "ELC",
+      "sector": "Phần mềm",
+      "ret3M": -28.42
+    },
+    {
+      "symbol": "GIL",
+      "sector": "Hàng tiêu dùng",
+      "ret3M": 8.75
     },
     {
       "symbol": "GEX",
@@ -782,44 +672,114 @@
       "ret3M": -24.38
     },
     {
-      "symbol": "BMI",
-      "sector": "Bảo hiểm",
-      "ret3M": 2.68
-    },
-    {
-      "symbol": "PVI",
-      "sector": "Bảo hiểm",
-      "ret3M": -10.45
-    },
-    {
-      "symbol": "VNZ",
-      "sector": "Truyền thông, giải trí",
-      "ret3M": -2.48
-    },
-    {
-      "symbol": "HHS",
-      "sector": "Ô tô, linh kiện",
-      "ret3M": -8.52
-    },
-    {
-      "symbol": "TOS",
-      "sector": "Vận tải",
-      "ret3M": -24.9
-    },
-    {
-      "symbol": "MIG",
-      "sector": "Bảo hiểm",
-      "ret3M": -10.49
-    },
-    {
-      "symbol": "DRC",
-      "sector": "Ô tô, linh kiện",
-      "ret3M": -18.2
-    },
-    {
-      "symbol": "DVM",
+      "symbol": "DCL",
       "sector": "Dược phẩm",
-      "ret3M": -60.66
+      "ret3M": -14.29
+    },
+    {
+      "symbol": "VGI",
+      "sector": "Viễn thông",
+      "ret3M": -16.64
+    },
+    {
+      "symbol": "C4G",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -21.43
+    },
+    {
+      "symbol": "HAX",
+      "sector": "Ô tô, linh kiện",
+      "ret3M": -13.43
+    },
+    {
+      "symbol": "SGP",
+      "sector": "Vận tải",
+      "ret3M": -15.46
+    },
+    {
+      "symbol": "HNG",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": -14.93
+    },
+    {
+      "symbol": "VTO",
+      "sector": "Vận tải",
+      "ret3M": -2.38
+    },
+    {
+      "symbol": "DBD",
+      "sector": "Dược phẩm",
+      "ret3M": -11.92
+    },
+    {
+      "symbol": "FRT",
+      "sector": "Phân phối, bán lẻ",
+      "ret3M": 3.14
+    },
+    {
+      "symbol": "HVN",
+      "sector": "Vận tải",
+      "ret3M": 3.04
+    },
+    {
+      "symbol": "PHP",
+      "sector": "Vận tải",
+      "ret3M": -6.39
+    },
+    {
+      "symbol": "HHV",
+      "sector": "Vận tải",
+      "ret3M": -9.26
+    },
+    {
+      "symbol": "FPT",
+      "sector": "Phần mềm",
+      "ret3M": -28.42
+    },
+    {
+      "symbol": "CTR",
+      "sector": "Viễn thông",
+      "ret3M": -21.43
+    },
+    {
+      "symbol": "PET",
+      "sector": "Phân phối, bán lẻ",
+      "ret3M": 23.41
+    },
+    {
+      "symbol": "GMD",
+      "sector": "Vận tải",
+      "ret3M": 0.58
+    },
+    {
+      "symbol": "TCM",
+      "sector": "Hàng tiêu dùng",
+      "ret3M": -10.3
+    },
+    {
+      "symbol": "DVN",
+      "sector": "Dược phẩm",
+      "ret3M": 3.45
+    },
+    {
+      "symbol": "MSH",
+      "sector": "Hàng tiêu dùng",
+      "ret3M": 15.23
+    },
+    {
+      "symbol": "VCG",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -8.81
+    },
+    {
+      "symbol": "VJC",
+      "sector": "Vận tải",
+      "ret3M": 10.28
+    },
+    {
+      "symbol": "LCG",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -12.95
     },
     {
       "symbol": "LPS",
@@ -827,24 +787,34 @@
       "ret3M": -48.82
     },
     {
+      "symbol": "YEG",
+      "sector": "Truyền thông, giải trí",
+      "ret3M": -8.1
+    },
+    {
+      "symbol": "HHS",
+      "sector": "Ô tô, linh kiện",
+      "ret3M": -8.52
+    },
+    {
       "symbol": "OCH",
       "sector": "Bất động sản",
       "ret3M": 14.29
     },
     {
-      "symbol": "VEA",
-      "sector": "Ô tô, linh kiện",
-      "ret3M": 1.02
+      "symbol": "TOS",
+      "sector": "Vận tải",
+      "ret3M": -24.9
     },
     {
-      "symbol": "BVH",
+      "symbol": "BMI",
       "sector": "Bảo hiểm",
-      "ret3M": -11.99
+      "ret3M": 2.68
     },
     {
-      "symbol": "YEG",
-      "sector": "Truyền thông, giải trí",
-      "ret3M": -8.1
+      "symbol": "MIG",
+      "sector": "Bảo hiểm",
+      "ret3M": -10.49
     },
     {
       "symbol": "CTF",
@@ -857,24 +827,34 @@
       "ret3M": -19.35
     },
     {
-      "symbol": "HTG",
-      "sector": "Hàng tiêu dùng",
-      "ret3M": 0.43
+      "symbol": "DVM",
+      "sector": "Dược phẩm",
+      "ret3M": -60.66
     },
     {
-      "symbol": "SJD",
-      "sector": "Tiện ích",
-      "ret3M": -4.94
+      "symbol": "DRC",
+      "sector": "Ô tô, linh kiện",
+      "ret3M": -18.2
     },
     {
-      "symbol": "TCD",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -67.51
+      "symbol": "VEA",
+      "sector": "Ô tô, linh kiện",
+      "ret3M": 1.02
     },
     {
-      "symbol": "PDN",
-      "sector": "Vận tải",
-      "ret3M": -13.31
+      "symbol": "VNZ",
+      "sector": "Truyền thông, giải trí",
+      "ret3M": -2.48
+    },
+    {
+      "symbol": "PVI",
+      "sector": "Bảo hiểm",
+      "ret3M": -10.45
+    },
+    {
+      "symbol": "BVH",
+      "sector": "Bảo hiểm",
+      "ret3M": -11.99
     },
     {
       "symbol": "TT6",
@@ -882,14 +862,24 @@
       "ret3M": -36.75
     },
     {
+      "symbol": "NBC",
+      "sector": "Nguyên vật liệu",
+      "ret3M": 8
+    },
+    {
+      "symbol": "HTG",
+      "sector": "Hàng tiêu dùng",
+      "ret3M": 0.43
+    },
+    {
+      "symbol": "PDN",
+      "sector": "Vận tải",
+      "ret3M": -13.31
+    },
+    {
       "symbol": "DRI",
       "sector": "Nguyên vật liệu",
       "ret3M": -5.63
-    },
-    {
-      "symbol": "ABW",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -4.05
     },
     {
       "symbol": "SAS",
@@ -897,19 +887,19 @@
       "ret3M": -11.82
     },
     {
-      "symbol": "NBC",
-      "sector": "Nguyên vật liệu",
-      "ret3M": 8
+      "symbol": "TCD",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -67.51
     },
     {
-      "symbol": "F88",
+      "symbol": "SJD",
+      "sector": "Tiện ích",
+      "ret3M": -4.94
+    },
+    {
+      "symbol": "ABW",
       "sector": "Dịch vụ tài chính",
-      "ret3M": -24.92
-    },
-    {
-      "symbol": "TDP",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -0.85
+      "ret3M": -4.05
     },
     {
       "symbol": "QTC",
@@ -917,19 +907,9 @@
       "ret3M": 86.08
     },
     {
-      "symbol": "CTP",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": 25.46
-    },
-    {
-      "symbol": "KLB",
-      "sector": "Ngân hàng",
-      "ret3M": -18.73
-    },
-    {
-      "symbol": "KSF",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -14.65
+      "symbol": "TDP",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -0.85
     },
     {
       "symbol": "MAC",
@@ -937,29 +917,24 @@
       "ret3M": 14.41
     },
     {
-      "symbol": "VGP",
-      "sector": "Vận tải",
-      "ret3M": 8.67
+      "symbol": "KLB",
+      "sector": "Ngân hàng",
+      "ret3M": -18.73
     },
     {
-      "symbol": "VGR",
-      "sector": "Vận tải",
-      "ret3M": 39.14
+      "symbol": "CTP",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": 25.46
     },
     {
-      "symbol": "NHA",
+      "symbol": "KSF",
       "sector": "Hàng hóa công nghiệp",
-      "ret3M": -12.08
+      "ret3M": -14.65
     },
     {
-      "symbol": "THD",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -60.07
-    },
-    {
-      "symbol": "SBB",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -26.47
+      "symbol": "F88",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -24.92
     },
     {
       "symbol": "DST",
@@ -967,9 +942,9 @@
       "ret3M": -63.33
     },
     {
-      "symbol": "AAN",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": -5.81
+      "symbol": "THD",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -60.07
     },
     {
       "symbol": "L40",
@@ -977,24 +952,34 @@
       "ret3M": -4.39
     },
     {
+      "symbol": "NHA",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -12.08
+    },
+    {
+      "symbol": "VGP",
+      "sector": "Vận tải",
+      "ret3M": 8.67
+    },
+    {
+      "symbol": "AAN",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": -5.81
+    },
+    {
+      "symbol": "VGR",
+      "sector": "Vận tải",
+      "ret3M": 39.14
+    },
+    {
+      "symbol": "SBB",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -26.47
+    },
+    {
       "symbol": "DHA",
       "sector": "Hàng hóa công nghiệp",
       "ret3M": 17.2
-    },
-    {
-      "symbol": "VCP",
-      "sector": "Tiện ích",
-      "ret3M": 79.29
-    },
-    {
-      "symbol": "PCB",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -10
-    },
-    {
-      "symbol": "SCG",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -0.62
     },
     {
       "symbol": "HPX",
@@ -1007,19 +992,29 @@
       "ret3M": -7.71
     },
     {
+      "symbol": "PCB",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -10
+    },
+    {
       "symbol": "SHI",
       "sector": "Hàng tiêu dùng",
       "ret3M": 2.86
     },
     {
+      "symbol": "SCG",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -0.62
+    },
+    {
+      "symbol": "VCP",
+      "sector": "Tiện ích",
+      "ret3M": 79.29
+    },
+    {
       "symbol": "NTC",
       "sector": "Bất động sản",
       "ret3M": 5.42
-    },
-    {
-      "symbol": "MML",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": -17.25
     },
     {
       "symbol": "TAB",
@@ -1032,29 +1027,9 @@
       "ret3M": -18.26
     },
     {
-      "symbol": "VIW",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -38.78
-    },
-    {
       "symbol": "PSD",
       "sector": "Phân phối, bán lẻ",
       "ret3M": 5.04
-    },
-    {
-      "symbol": "HDC",
-      "sector": "Bất động sản",
-      "ret3M": 5.35
-    },
-    {
-      "symbol": "SBS",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -17.02
-    },
-    {
-      "symbol": "HII",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -17.42
     },
     {
       "symbol": "DHC",
@@ -1062,19 +1037,54 @@
       "ret3M": -0.76
     },
     {
+      "symbol": "HII",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -17.42
+    },
+    {
+      "symbol": "SBS",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -17.02
+    },
+    {
+      "symbol": "MML",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": -17.25
+    },
+    {
+      "symbol": "VIW",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -38.78
+    },
+    {
       "symbol": "VTZ",
       "sector": "Hàng tiêu dùng",
       "ret3M": 0
     },
     {
-      "symbol": "BIG",
+      "symbol": "HDC",
       "sector": "Bất động sản",
-      "ret3M": -10.64
+      "ret3M": 5.35
+    },
+    {
+      "symbol": "HDA",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": 43.28
     },
     {
       "symbol": "PPH",
       "sector": "Hàng tiêu dùng",
       "ret3M": -0.77
+    },
+    {
+      "symbol": "HSL",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": -35.85
+    },
+    {
+      "symbol": "BGE",
+      "sector": "Tiện ích",
+      "ret3M": -50
     },
     {
       "symbol": "SZL",
@@ -1092,14 +1102,24 @@
       "ret3M": 12.37
     },
     {
+      "symbol": "BIG",
+      "sector": "Bất động sản",
+      "ret3M": -10.64
+    },
+    {
+      "symbol": "VC3",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": 0.21
+    },
+    {
       "symbol": "SGN",
       "sector": "Vận tải",
       "ret3M": 8.6
     },
     {
-      "symbol": "BGE",
-      "sector": "Tiện ích",
-      "ret3M": -50
+      "symbol": "DPG",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": 6.67
     },
     {
       "symbol": "AMS",
@@ -1112,29 +1132,19 @@
       "ret3M": -13.33
     },
     {
-      "symbol": "HSL",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": -35.85
-    },
-    {
-      "symbol": "HDA",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": 43.28
-    },
-    {
-      "symbol": "DPG",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": 6.67
-    },
-    {
-      "symbol": "VC3",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": 0.21
+      "symbol": "SJS",
+      "sector": "Bất động sản",
+      "ret3M": 9.47
     },
     {
       "symbol": "AIG",
       "sector": "Hàng hóa công nghiệp",
       "ret3M": -19
+    },
+    {
+      "symbol": "TCO",
+      "sector": "Vận tải",
+      "ret3M": -15.85
     },
     {
       "symbol": "KSB",
@@ -1147,19 +1157,9 @@
       "ret3M": -3.03
     },
     {
-      "symbol": "NRC",
-      "sector": "Bất động sản",
-      "ret3M": -16
-    },
-    {
       "symbol": "FIT",
       "sector": "Bất động sản",
       "ret3M": -13.61
-    },
-    {
-      "symbol": "TCO",
-      "sector": "Vận tải",
-      "ret3M": -15.85
     },
     {
       "symbol": "ACV",
@@ -1167,24 +1167,9 @@
       "ret3M": -10.84
     },
     {
-      "symbol": "SJS",
+      "symbol": "NRC",
       "sector": "Bất động sản",
-      "ret3M": 9.47
-    },
-    {
-      "symbol": "ACC",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -36.02
-    },
-    {
-      "symbol": "TV1",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": 32
-    },
-    {
-      "symbol": "HVT",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -22.36
+      "ret3M": -16
     },
     {
       "symbol": "VSF",
@@ -1192,9 +1177,9 @@
       "ret3M": 20.38
     },
     {
-      "symbol": "KHG",
-      "sector": "Bất động sản",
-      "ret3M": -8.04
+      "symbol": "TV1",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": 32
     },
     {
       "symbol": "EVG",
@@ -1202,14 +1187,14 @@
       "ret3M": -25.58
     },
     {
+      "symbol": "HVT",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -22.36
+    },
+    {
       "symbol": "BVS",
       "sector": "Dịch vụ tài chính",
       "ret3M": -5.11
-    },
-    {
-      "symbol": "TIN",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -9.91
     },
     {
       "symbol": "BWS",
@@ -1217,19 +1202,24 @@
       "ret3M": -11.01
     },
     {
+      "symbol": "KHG",
+      "sector": "Bất động sản",
+      "ret3M": -8.04
+    },
+    {
+      "symbol": "TIN",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -9.91
+    },
+    {
       "symbol": "CST",
       "sector": "Nguyên vật liệu",
       "ret3M": 38.24
     },
     {
-      "symbol": "NNC",
+      "symbol": "ACC",
       "sector": "Hàng hóa công nghiệp",
-      "ret3M": 19.43
-    },
-    {
-      "symbol": "MCP",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": 12.96
+      "ret3M": -36.02
     },
     {
       "symbol": "POS",
@@ -1237,19 +1227,34 @@
       "ret3M": 7.67
     },
     {
-      "symbol": "IPA",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -9.42
-    },
-    {
       "symbol": "AFX",
       "sector": "Thực phẩm, đồ uống",
       "ret3M": -2.79
     },
     {
-      "symbol": "LSG",
-      "sector": "Bất động sản",
-      "ret3M": 2.87
+      "symbol": "IPA",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -9.42
+    },
+    {
+      "symbol": "MCP",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": 12.96
+    },
+    {
+      "symbol": "NNC",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": 19.43
+    },
+    {
+      "symbol": "MST",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -14.85
+    },
+    {
+      "symbol": "PTB",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -8.06
     },
     {
       "symbol": "DMX",
@@ -1262,9 +1267,9 @@
       "ret3M": 0.82
     },
     {
-      "symbol": "MST",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -14.85
+      "symbol": "LSG",
+      "sector": "Bất động sản",
+      "ret3M": 2.87
     },
     {
       "symbol": "MVN",
@@ -1277,14 +1282,19 @@
       "ret3M": -37.84
     },
     {
-      "symbol": "PTB",
+      "symbol": "PCH",
       "sector": "Hàng hóa công nghiệp",
-      "ret3M": -8.06
+      "ret3M": -2.16
     },
     {
-      "symbol": "MZG",
+      "symbol": "CAP",
       "sector": "Nguyên vật liệu",
-      "ret3M": -15.82
+      "ret3M": -15.23
+    },
+    {
+      "symbol": "C69",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -4.2
     },
     {
       "symbol": "HNM",
@@ -1297,9 +1307,9 @@
       "ret3M": 5.15
     },
     {
-      "symbol": "VCK",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -12.83
+      "symbol": "DTD",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -19.3
     },
     {
       "symbol": "TLG",
@@ -1307,34 +1317,14 @@
       "ret3M": 0
     },
     {
+      "symbol": "MZG",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -15.82
+    },
+    {
       "symbol": "SCL",
       "sector": "Hàng hóa công nghiệp",
       "ret3M": 2.08
-    },
-    {
-      "symbol": "VMS",
-      "sector": "Vận tải",
-      "ret3M": -26.39
-    },
-    {
-      "symbol": "C69",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -4.2
-    },
-    {
-      "symbol": "PCH",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -2.16
-    },
-    {
-      "symbol": "CLI",
-      "sector": "Nguyên vật liệu",
-      "ret3M": 14.14
-    },
-    {
-      "symbol": "DTD",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -19.3
     },
     {
       "symbol": "BKC",
@@ -1342,29 +1332,24 @@
       "ret3M": -14.96
     },
     {
-      "symbol": "CAP",
+      "symbol": "VMS",
+      "sector": "Vận tải",
+      "ret3M": -26.39
+    },
+    {
+      "symbol": "CLI",
       "sector": "Nguyên vật liệu",
-      "ret3M": -15.23
+      "ret3M": 14.14
+    },
+    {
+      "symbol": "VCK",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -12.83
     },
     {
       "symbol": "NAG",
       "sector": "Hàng tiêu dùng",
       "ret3M": -2.99
-    },
-    {
-      "symbol": "PPT",
-      "sector": "Tiện ích",
-      "ret3M": -73.03
-    },
-    {
-      "symbol": "DLG",
-      "sector": "Hàng tiêu dùng",
-      "ret3M": -20.35
-    },
-    {
-      "symbol": "TLD",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -1.76
     },
     {
       "symbol": "TCX",
@@ -1377,34 +1362,19 @@
       "ret3M": -42
     },
     {
-      "symbol": "POM",
-      "sector": "Nguyên vật liệu",
-      "ret3M": 12.5
-    },
-    {
-      "symbol": "HPA",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": -9.74
-    },
-    {
-      "symbol": "SCS",
-      "sector": "Vận tải",
-      "ret3M": -14.29
-    },
-    {
-      "symbol": "VC7",
+      "symbol": "TLD",
       "sector": "Hàng hóa công nghiệp",
-      "ret3M": 1.35
+      "ret3M": -1.76
     },
     {
-      "symbol": "PLC",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -7.39
+      "symbol": "DLG",
+      "sector": "Hàng tiêu dùng",
+      "ret3M": -20.35
     },
     {
-      "symbol": "SPV",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": 61.71
+      "symbol": "PPT",
+      "sector": "Tiện ích",
+      "ret3M": -73.03
     },
     {
       "symbol": "DDG",
@@ -1412,19 +1382,34 @@
       "ret3M": -50
     },
     {
-      "symbol": "OGC",
-      "sector": "Bất động sản",
-      "ret3M": -6.48
+      "symbol": "PLC",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -7.39
     },
     {
-      "symbol": "TTF",
-      "sector": "Hàng tiêu dùng",
-      "ret3M": -36.52
+      "symbol": "SCS",
+      "sector": "Vận tải",
+      "ret3M": -14.29
     },
     {
-      "symbol": "AGG",
-      "sector": "Bất động sản",
-      "ret3M": -14.93
+      "symbol": "POM",
+      "sector": "Nguyên vật liệu",
+      "ret3M": 12.5
+    },
+    {
+      "symbol": "SPV",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": 61.71
+    },
+    {
+      "symbol": "HPA",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": -9.74
+    },
+    {
+      "symbol": "VC7",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": 1.35
     },
     {
       "symbol": "PIA",
@@ -1432,9 +1417,9 @@
       "ret3M": 6.86
     },
     {
-      "symbol": "PPC",
-      "sector": "Tiện ích",
-      "ret3M": -5.04
+      "symbol": "TTF",
+      "sector": "Hàng tiêu dùng",
+      "ret3M": -36.52
     },
     {
       "symbol": "GEL",
@@ -1442,9 +1427,19 @@
       "ret3M": -20.95
     },
     {
+      "symbol": "TTA",
+      "sector": "Tiện ích",
+      "ret3M": -10.78
+    },
+    {
       "symbol": "GCF",
       "sector": "Phân phối, bán lẻ",
       "ret3M": 8.75
+    },
+    {
+      "symbol": "AGG",
+      "sector": "Bất động sản",
+      "ret3M": -14.93
     },
     {
       "symbol": "TIG",
@@ -1452,39 +1447,19 @@
       "ret3M": -52.63
     },
     {
+      "symbol": "OGC",
+      "sector": "Bất động sản",
+      "ret3M": -6.48
+    },
+    {
       "symbol": "TRC",
       "sector": "Nguyên vật liệu",
       "ret3M": -8.73
     },
     {
-      "symbol": "TTA",
+      "symbol": "PPC",
       "sector": "Tiện ích",
-      "ret3M": -10.78
-    },
-    {
-      "symbol": "DSH",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -6.53
-    },
-    {
-      "symbol": "IJC",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -6.58
-    },
-    {
-      "symbol": "VTV",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -26.95
-    },
-    {
-      "symbol": "GDA",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": 8.51
-    },
-    {
-      "symbol": "DSE",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -14.94
+      "ret3M": -5.04
     },
     {
       "symbol": "TCL",
@@ -1492,9 +1467,29 @@
       "ret3M": -3.72
     },
     {
+      "symbol": "IJC",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -6.58
+    },
+    {
       "symbol": "FIR",
       "sector": "Bất động sản",
       "ret3M": -26.35
+    },
+    {
+      "symbol": "DSE",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -14.94
+    },
+    {
+      "symbol": "GDA",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": 8.51
+    },
+    {
+      "symbol": "DSH",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -6.53
     },
     {
       "symbol": "L14",
@@ -1507,9 +1502,14 @@
       "ret3M": 12.96
     },
     {
-      "symbol": "PIV",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -15.38
+      "symbol": "VTV",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -26.95
+    },
+    {
+      "symbol": "CRE",
+      "sector": "Bất động sản",
+      "ret3M": -49.78
     },
     {
       "symbol": "TMB",
@@ -1527,14 +1527,9 @@
       "ret3M": 15.83
     },
     {
-      "symbol": "CRE",
-      "sector": "Bất động sản",
-      "ret3M": -49.78
-    },
-    {
-      "symbol": "PVX",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -33.33
+      "symbol": "PIV",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -15.38
     },
     {
       "symbol": "HPP",
@@ -1547,9 +1542,14 @@
       "ret3M": 17.55
     },
     {
-      "symbol": "AAA",
+      "symbol": "MVC",
       "sector": "Hàng hóa công nghiệp",
-      "ret3M": -7.44
+      "ret3M": 9.06
+    },
+    {
+      "symbol": "PVX",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -33.33
     },
     {
       "symbol": "DXP",
@@ -1557,29 +1557,9 @@
       "ret3M": -8.84
     },
     {
-      "symbol": "MVC",
+      "symbol": "AAA",
       "sector": "Hàng hóa công nghiệp",
-      "ret3M": 9.06
-    },
-    {
-      "symbol": "SBT",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": -11.13
-    },
-    {
-      "symbol": "HVH",
-      "sector": "Hàng tiêu dùng",
-      "ret3M": -6.25
-    },
-    {
-      "symbol": "ODE",
-      "sector": "Truyền thông, giải trí",
-      "ret3M": -3.01
-    },
-    {
-      "symbol": "VAB",
-      "sector": "Ngân hàng",
-      "ret3M": -2.07
+      "ret3M": -7.44
     },
     {
       "symbol": "APS",
@@ -1592,14 +1572,34 @@
       "ret3M": 800
     },
     {
-      "symbol": "DC4",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -14.81
+      "symbol": "VAB",
+      "sector": "Ngân hàng",
+      "ret3M": -2.07
     },
     {
       "symbol": "KSV",
       "sector": "Nguyên vật liệu",
       "ret3M": -16.46
+    },
+    {
+      "symbol": "HVH",
+      "sector": "Hàng tiêu dùng",
+      "ret3M": -6.25
+    },
+    {
+      "symbol": "DC4",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -14.81
+    },
+    {
+      "symbol": "ODE",
+      "sector": "Truyền thông, giải trí",
+      "ret3M": -3.01
+    },
+    {
+      "symbol": "SBT",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": -11.13
     },
     {
       "symbol": "VPX",
@@ -1612,9 +1612,9 @@
       "ret3M": -7.76
     },
     {
-      "symbol": "HUT",
+      "symbol": "HID",
       "sector": "Hàng hóa công nghiệp",
-      "ret3M": -3.88
+      "ret3M": 21.18
     },
     {
       "symbol": "VDS",
@@ -1622,9 +1622,9 @@
       "ret3M": -17.66
     },
     {
-      "symbol": "HID",
+      "symbol": "HUT",
       "sector": "Hàng hóa công nghiệp",
-      "ret3M": 21.18
+      "ret3M": -3.88
     },
     {
       "symbol": "QCG",
@@ -1632,9 +1632,29 @@
       "ret3M": 0
     },
     {
-      "symbol": "VCS",
+      "symbol": "DVP",
+      "sector": "Vận tải",
+      "ret3M": 0.44
+    },
+    {
+      "symbol": "LDG",
+      "sector": "Bất động sản",
+      "ret3M": -18.32
+    },
+    {
+      "symbol": "HHP",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -30.13
+    },
+    {
+      "symbol": "HBC",
       "sector": "Hàng hóa công nghiệp",
-      "ret3M": -11.46
+      "ret3M": -31.71
+    },
+    {
+      "symbol": "NVB",
+      "sector": "Ngân hàng",
+      "ret3M": 19.67
     },
     {
       "symbol": "CRC",
@@ -1652,39 +1672,9 @@
       "ret3M": -12.74
     },
     {
-      "symbol": "NVB",
-      "sector": "Ngân hàng",
-      "ret3M": 19.67
-    },
-    {
-      "symbol": "DVP",
-      "sector": "Vận tải",
-      "ret3M": 0.44
-    },
-    {
-      "symbol": "HHP",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -30.13
-    },
-    {
-      "symbol": "LDG",
-      "sector": "Bất động sản",
-      "ret3M": -18.32
-    },
-    {
-      "symbol": "HBC",
+      "symbol": "VCS",
       "sector": "Hàng hóa công nghiệp",
-      "ret3M": -31.71
-    },
-    {
-      "symbol": "VPL",
-      "sector": "Dịch vụ tiêu dùng",
-      "ret3M": 24.84
-    },
-    {
-      "symbol": "LLM",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": 2.31
+      "ret3M": -11.46
     },
     {
       "symbol": "ASP",
@@ -1702,14 +1692,24 @@
       "ret3M": -9.96
     },
     {
-      "symbol": "EVS",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -14.29
-    },
-    {
       "symbol": "APG",
       "sector": "Dịch vụ tài chính",
       "ret3M": -31.9
+    },
+    {
+      "symbol": "VPL",
+      "sector": "Dịch vụ tiêu dùng",
+      "ret3M": 24.84
+    },
+    {
+      "symbol": "LLM",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": 2.31
+    },
+    {
+      "symbol": "EVS",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -14.29
     },
     {
       "symbol": "SBG",
@@ -1722,24 +1722,24 @@
       "ret3M": -92.07
     },
     {
-      "symbol": "VFS",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -12.5
-    },
-    {
       "symbol": "SCR",
       "sector": "Bất động sản",
       "ret3M": -18.02
     },
     {
-      "symbol": "VVS",
-      "sector": "Ô tô, linh kiện",
-      "ret3M": -38.49
+      "symbol": "VFS",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -12.5
     },
     {
       "symbol": "CTI",
       "sector": "Hàng hóa công nghiệp",
       "ret3M": 7.02
+    },
+    {
+      "symbol": "VVS",
+      "sector": "Ô tô, linh kiện",
+      "ret3M": -38.49
     }
   ],
   "data": [
@@ -1754,6 +1754,7 @@
       "avgVol20": 307145,
       "avgVal20B": 10.76,
       "avgVal10B": 13.96,
+      "listedSharesM": 83.79,
       "upDownVolRatio": 4.26,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
@@ -1806,11 +1807,12 @@
       "avgVol20": 416405,
       "avgVal20B": 21.01,
       "avgVal10B": 13.15,
+      "listedSharesM": 155.36,
       "upDownVolRatio": 0.58,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.36,
-      "mktCapT": 7503,
+      "mktCapT": 7535,
       "pe": 27.84,
       "epsDilTTM": null,
       "epsGrowthYoY": -24.84,
@@ -1860,11 +1862,12 @@
       "avgVol20": 1865145,
       "avgVal20B": 449.8,
       "avgVal10B": 406.91,
+      "listedSharesM": 7762.19,
       "upDownVolRatio": 1.49,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.72,
-      "mktCapT": 1907173,
+      "mktCapT": 1907169,
       "pe": 44.09,
       "epsDilTTM": null,
       "epsGrowthYoY": 384.91,
@@ -1912,11 +1915,12 @@
       "avgVol20": 1798195,
       "avgVal20B": 105.84,
       "avgVal10B": 74.27,
+      "listedSharesM": 1104.97,
       "upDownVolRatio": 0.47,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.59,
-      "mktCapT": 53482,
+      "mktCapT": 53481,
       "pe": null,
       "epsDilTTM": null,
       "epsGrowthYoY": null,
@@ -1967,6 +1971,7 @@
       "avgVol20": 8155425,
       "avgVal20B": 132.42,
       "avgVal10B": 113.54,
+      "listedSharesM": 3744,
       "upDownVolRatio": 1.98,
       "volSignal": "VCP_DRYUP",
       "isVnLiquidStandard": true,
@@ -2019,6 +2024,7 @@
       "avgVol20": 629925,
       "avgVal20B": 10.75,
       "avgVal10B": 9.64,
+      "listedSharesM": 1606.78,
       "upDownVolRatio": 0.75,
       "volSignal": "POCKET_PIVOT",
       "isVnLiquidStandard": true,
@@ -2073,11 +2079,12 @@
       "avgVol20": 175305,
       "avgVal20B": 5.01,
       "avgVal10B": 8.89,
+      "listedSharesM": 109.92,
       "upDownVolRatio": 1.1,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 2.17,
-      "mktCapT": 3220,
+      "mktCapT": 3221,
       "pe": null,
       "epsDilTTM": null,
       "epsGrowthYoY": null,
@@ -2130,6 +2137,7 @@
       "avgVol20": 744765,
       "avgVal20B": 68.16,
       "avgVal10B": 47.29,
+      "listedSharesM": 1793.3,
       "upDownVolRatio": 2.5,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
@@ -2184,11 +2192,12 @@
       "avgVol20": 312360,
       "avgVal20B": 7.07,
       "avgVal10B": 6.66,
+      "listedSharesM": 105.55,
       "upDownVolRatio": 0.5,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.75,
-      "mktCapT": 2347,
+      "mktCapT": 2348,
       "pe": null,
       "epsDilTTM": null,
       "epsGrowthYoY": null,
@@ -2236,11 +2245,12 @@
       "avgVol20": 1050975,
       "avgVal20B": 15.96,
       "avgVal10B": 13.28,
+      "listedSharesM": 2924.63,
       "upDownVolRatio": 0.96,
       "volSignal": "VCP_DRYUP",
       "isVnLiquidStandard": true,
       "relVol": 0.47,
-      "mktCapT": 42699,
+      "mktCapT": 42700,
       "pe": null,
       "epsDilTTM": null,
       "epsGrowthYoY": null,
@@ -2288,11 +2298,12 @@
       "avgVol20": 1634815,
       "avgVal20B": 90.75,
       "avgVal10B": 70.48,
+      "listedSharesM": 352.05,
       "upDownVolRatio": 1.61,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.83,
-      "mktCapT": 20457,
+      "mktCapT": 20454,
       "pe": null,
       "epsDilTTM": null,
       "epsGrowthYoY": null,
@@ -2340,11 +2351,12 @@
       "avgVol20": 487165,
       "avgVal20B": 21.46,
       "avgVal10B": 20.77,
+      "listedSharesM": 326.96,
       "upDownVolRatio": 0.94,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.52,
-      "mktCapT": 14846,
+      "mktCapT": 14844,
       "pe": null,
       "epsDilTTM": null,
       "epsGrowthYoY": null,
@@ -2394,6 +2406,7 @@
       "avgVol20": 908480,
       "avgVal20B": 9.27,
       "avgVal10B": 8.97,
+      "listedSharesM": 230,
       "upDownVolRatio": 0.68,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
@@ -2449,6 +2462,7 @@
       "avgVol20": 2858325,
       "avgVal20B": 36.66,
       "avgVal10B": 43.93,
+      "listedSharesM": 2158.82,
       "upDownVolRatio": 2.19,
       "volSignal": "POCKET_PIVOT",
       "isVnLiquidStandard": true,
@@ -2501,11 +2515,12 @@
       "avgVol20": 258730,
       "avgVal20B": 12.43,
       "avgVal10B": 12.52,
+      "listedSharesM": 61.18,
       "upDownVolRatio": 1.83,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 1.33,
-      "mktCapT": 2953,
+      "mktCapT": 2952,
       "pe": null,
       "epsDilTTM": null,
       "epsGrowthYoY": null,
@@ -2556,11 +2571,12 @@
       "avgVol20": 448685,
       "avgVal20B": 16.39,
       "avgVal10B": 11.74,
+      "listedSharesM": 106.25,
       "upDownVolRatio": 0.39,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.71,
-      "mktCapT": 3744,
+      "mktCapT": 3745,
       "pe": null,
       "epsDilTTM": null,
       "epsGrowthYoY": null,
@@ -2611,11 +2627,12 @@
       "avgVol20": 2768485,
       "avgVal20B": 190.9,
       "avgVal10B": 184.47,
+      "listedSharesM": 1885.22,
       "upDownVolRatio": 2.34,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.38,
-      "mktCapT": 131398,
+      "mktCapT": 131400,
       "pe": 86.76,
       "epsDilTTM": null,
       "epsGrowthYoY": -87.59,
@@ -2666,6 +2683,7 @@
       "avgVol20": 14477930,
       "avgVal20B": 322.75,
       "avgVal10B": 298.02,
+      "listedSharesM": 6506.86,
       "upDownVolRatio": 0.8,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
@@ -2721,11 +2739,12 @@
       "avgVol20": 175920,
       "avgVal20B": 9.36,
       "avgVal10B": 5.78,
+      "listedSharesM": 96.53,
       "upDownVolRatio": 0.45,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.37,
-      "mktCapT": 5076,
+      "mktCapT": 5077,
       "pe": null,
       "epsDilTTM": null,
       "epsGrowthYoY": null,
@@ -2776,11 +2795,12 @@
       "avgVol20": 1666820,
       "avgVal20B": 51.38,
       "avgVal10B": 50.84,
+      "listedSharesM": 364.82,
       "upDownVolRatio": 1.49,
       "volSignal": "VCP_DRYUP",
       "isVnLiquidStandard": true,
       "relVol": 0.65,
-      "mktCapT": 12486,
+      "mktCapT": 11237,
       "pe": 123.78,
       "epsDilTTM": null,
       "epsGrowthYoY": -80.15,
@@ -2830,11 +2850,12 @@
       "avgVol20": 2350045,
       "avgVal20B": 123.48,
       "avgVal10B": 140.34,
+      "listedSharesM": 649.34,
       "upDownVolRatio": 1.28,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 1.01,
-      "mktCapT": 33699,
+      "mktCapT": 33701,
       "pe": 12.24,
       "epsDilTTM": null,
       "epsGrowthYoY": 93.28,
@@ -2884,6 +2905,7 @@
       "avgVol20": 1035190,
       "avgVal20B": 18.81,
       "avgVal10B": 12.67,
+      "listedSharesM": 103.7,
       "upDownVolRatio": 0.31,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
@@ -2941,11 +2963,12 @@
       "avgVol20": 1078690,
       "avgVal20B": 25.04,
       "avgVal10B": 26.74,
+      "listedSharesM": 287.88,
       "upDownVolRatio": 0.84,
       "volSignal": "VCP_DRYUP",
       "isVnLiquidStandard": true,
       "relVol": 0.41,
-      "mktCapT": 6852,
+      "mktCapT": 6851,
       "pe": null,
       "epsDilTTM": null,
       "epsGrowthYoY": null,
@@ -2998,6 +3021,7 @@
       "avgVol20": 193600,
       "avgVal20B": 5.36,
       "avgVal10B": 6,
+      "listedSharesM": 103.07,
       "upDownVolRatio": 1.14,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
@@ -3054,11 +3078,12 @@
       "avgVol20": 985145,
       "avgVal20B": 133.49,
       "avgVal10B": 136.54,
+      "listedSharesM": 769.09,
       "upDownVolRatio": 1.71,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.89,
-      "mktCapT": 105597,
+      "mktCapT": 105596,
       "pe": 48.22,
       "epsDilTTM": null,
       "epsGrowthYoY": 36.66,
@@ -3110,11 +3135,12 @@
       "avgVol20": 398735,
       "avgVal20B": 57.94,
       "avgVal10B": 44.85,
+      "listedSharesM": 178.82,
       "upDownVolRatio": 0.96,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.92,
-      "mktCapT": 26462,
+      "mktCapT": 26465,
       "pe": 19.56,
       "epsDilTTM": null,
       "epsGrowthYoY": 120.4,
@@ -3164,11 +3190,12 @@
       "avgVol20": 158760,
       "avgVal20B": 8.57,
       "avgVal10B": 6.76,
+      "listedSharesM": 205.25,
       "upDownVolRatio": 0.83,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.54,
-      "mktCapT": 10752,
+      "mktCapT": 10755,
       "pe": null,
       "epsDilTTM": null,
       "epsGrowthYoY": null,
@@ -3219,11 +3246,12 @@
       "avgVol20": 822670,
       "avgVal20B": 57.98,
       "avgVal10B": 67.94,
+      "listedSharesM": 114.03,
       "upDownVolRatio": 2.83,
       "volSignal": "VCP_DRYUP",
       "isVnLiquidStandard": true,
       "relVol": 0.64,
-      "mktCapT": 8184,
+      "mktCapT": 8347,
       "pe": 9.87,
       "epsDilTTM": null,
       "epsGrowthYoY": 21.41,
@@ -3275,6 +3303,7 @@
       "avgVol20": 778840,
       "avgVal20B": 15.8,
       "avgVal10B": 13.87,
+      "listedSharesM": 76.16,
       "upDownVolRatio": 1.17,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
@@ -3330,6 +3359,7 @@
       "avgVol20": 8459640,
       "avgVal20B": 109.43,
       "avgVal10B": 151.23,
+      "listedSharesM": 3067.85,
       "upDownVolRatio": 2.3,
       "volSignal": "POCKET_PIVOT",
       "isVnLiquidStandard": true,
@@ -3387,6 +3417,7 @@
       "avgVol20": 2051330,
       "avgVal20B": 21.89,
       "avgVal10B": 11.68,
+      "listedSharesM": 3062.51,
       "upDownVolRatio": 0.81,
       "volSignal": "VCP_DRYUP",
       "isVnLiquidStandard": true,
@@ -3442,11 +3473,12 @@
       "avgVol20": 2265450,
       "avgVal20B": 34.3,
       "avgVal10B": 34.3,
+      "listedSharesM": 3428.8,
       "upDownVolRatio": 0.72,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.86,
-      "mktCapT": 51859,
+      "mktCapT": 51261,
       "pe": null,
       "epsDilTTM": null,
       "epsGrowthYoY": null,
@@ -3499,11 +3531,12 @@
       "avgVol20": 5301480,
       "avgVal20B": 329.33,
       "avgVal10B": 243.12,
+      "listedSharesM": 8214.82,
       "upDownVolRatio": 0.83,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.76,
-      "mktCapT": 505210,
+      "mktCapT": 505212,
       "pe": 5.05,
       "epsDilTTM": null,
       "epsGrowthYoY": 272.62,
@@ -3556,11 +3589,12 @@
       "avgVol20": 3930325,
       "avgVal20B": 91.91,
       "avgVal10B": 90.2,
+      "listedSharesM": 1372.79,
       "upDownVolRatio": 0.8,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.65,
-      "mktCapT": 31554,
+      "mktCapT": 31574,
       "pe": 21.78,
       "epsDilTTM": null,
       "epsGrowthYoY": 8.6,
@@ -3612,11 +3646,12 @@
       "avgVol20": 2307780,
       "avgVal20B": 52.63,
       "avgVal10B": 53.86,
+      "listedSharesM": 272.24,
       "upDownVolRatio": 1.43,
       "volSignal": "POCKET_PIVOT",
       "isVnLiquidStandard": true,
       "relVol": 1.48,
-      "mktCapT": 6574,
+      "mktCapT": 6575,
       "pe": null,
       "epsDilTTM": null,
       "epsGrowthYoY": null,
@@ -3668,6 +3703,7 @@
       "avgVol20": 657250,
       "avgVal20B": 20.99,
       "avgVal10B": 20.14,
+      "listedSharesM": 1328.8,
       "upDownVolRatio": 0.57,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
@@ -3725,6 +3761,7 @@
       "avgVol20": 7219555,
       "avgVal20B": 186.95,
       "avgVal10B": 163.82,
+      "listedSharesM": 5007.3,
       "upDownVolRatio": 0.27,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
@@ -3782,6 +3819,7 @@
       "avgVol20": 4971515,
       "avgVal20B": 103.14,
       "avgVal10B": 78.47,
+      "listedSharesM": 516.92,
       "upDownVolRatio": 0.3,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
@@ -3840,6 +3878,7 @@
       "avgVol20": 10141075,
       "avgVal20B": 132.17,
       "avgVal10B": 122.41,
+      "listedSharesM": 1003.31,
       "upDownVolRatio": 1.94,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
@@ -3897,11 +3936,12 @@
       "avgVol20": 6594895,
       "avgVal20B": 80.29,
       "avgVal10B": 73.92,
+      "listedSharesM": 492.32,
       "upDownVolRatio": 0.8,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 1.15,
-      "mktCapT": 5981,
+      "mktCapT": 5982,
       "pe": 24.39,
       "epsDilTTM": null,
       "epsGrowthYoY": 8.14,
@@ -3953,6 +3993,7 @@
       "avgVol20": 319005,
       "avgVal20B": 5.61,
       "avgVal10B": 6.7,
+      "listedSharesM": 69.3,
       "upDownVolRatio": 2.34,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
@@ -4011,11 +4052,12 @@
       "avgVol20": 753420,
       "avgVal20B": 26.29,
       "avgVal10B": 26.1,
+      "listedSharesM": 417.45,
       "upDownVolRatio": 0.5,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 1.02,
-      "mktCapT": 14526,
+      "mktCapT": 14527,
       "pe": 7.83,
       "epsDilTTM": null,
       "epsGrowthYoY": -0.96,
@@ -4069,11 +4111,12 @@
       "avgVol20": 4039290,
       "avgVal20B": 58.35,
       "avgVal10B": 32.48,
+      "listedSharesM": 623.93,
       "upDownVolRatio": 0.61,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.34,
-      "mktCapT": 8391,
+      "mktCapT": 8392,
       "pe": null,
       "epsDilTTM": null,
       "epsGrowthYoY": null,
@@ -4125,6 +4168,7 @@
       "avgVol20": 1106895,
       "avgVal20B": 24.81,
       "avgVal10B": 30.93,
+      "listedSharesM": 3111.5,
       "upDownVolRatio": 2.69,
       "volSignal": "BREAKOUT",
       "isVnLiquidStandard": true,
@@ -4182,6 +4226,7 @@
       "avgVol20": 13745385,
       "avgVal20B": 301.34,
       "avgVal10B": 253.99,
+      "listedSharesM": 10000,
       "upDownVolRatio": 0.45,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
@@ -4239,6 +4284,7 @@
       "avgVol20": 1555965,
       "avgVal20B": 36.3,
       "avgVal10B": 32.06,
+      "listedSharesM": 148.8,
       "upDownVolRatio": 1.24,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
@@ -4297,11 +4343,12 @@
       "avgVol20": 451890,
       "avgVal20B": 19.26,
       "avgVal10B": 18.18,
+      "listedSharesM": 1282.56,
       "upDownVolRatio": 1.56,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.97,
-      "mktCapT": 55152,
+      "mktCapT": 55150,
       "pe": 11.87,
       "epsDilTTM": null,
       "epsGrowthYoY": 7.39,
@@ -4355,11 +4402,12 @@
       "avgVol20": 102345,
       "avgVal20B": 7.78,
       "avgVal10B": 9.45,
+      "listedSharesM": 1267.72,
       "upDownVolRatio": 1.3,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 1.16,
-      "mktCapT": 1139,
+      "mktCapT": 96220,
       "pe": null,
       "epsDilTTM": null,
       "epsGrowthYoY": null,
@@ -4414,11 +4462,12 @@
       "avgVol20": 813715,
       "avgVal20B": 14.32,
       "avgVal10B": 8.93,
+      "listedSharesM": 128.73,
       "upDownVolRatio": 0.42,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.28,
-      "mktCapT": 2149,
+      "mktCapT": 2150,
       "pe": null,
       "epsDilTTM": null,
       "epsGrowthYoY": null,
@@ -4475,11 +4524,12 @@
       "avgVol20": 13499040,
       "avgVal20B": 292.42,
       "avgVal10B": 218.62,
+      "listedSharesM": 7086.24,
       "upDownVolRatio": 0.44,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.8,
-      "mktCapT": 220560,
+      "mktCapT": 147039,
       "pe": 7.7,
       "epsDilTTM": null,
       "epsGrowthYoY": 30.26,
@@ -4533,6 +4583,7 @@
       "avgVol20": 298950,
       "avgVal20B": 39.11,
       "avgVal10B": 48.74,
+      "listedSharesM": 1307.4,
       "upDownVolRatio": 0.85,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
@@ -4594,6 +4645,7 @@
       "avgVol20": 369045,
       "avgVal20B": 10.22,
       "avgVal10B": 10.04,
+      "listedSharesM": 67.53,
       "upDownVolRatio": 1.32,
       "volSignal": "VCP_DRYUP",
       "isVnLiquidStandard": true,
@@ -4654,11 +4706,12 @@
       "avgVol20": 3778910,
       "avgVal20B": 270.03,
       "avgVal10B": 198.49,
+      "listedSharesM": 1460.37,
       "upDownVolRatio": 0.71,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.5,
-      "mktCapT": 100914,
+      "mktCapT": 100912,
       "pe": 11.32,
       "epsDilTTM": null,
       "epsGrowthYoY": 186.16,
@@ -4714,6 +4767,7 @@
       "avgVol20": 5466670,
       "avgVal20B": 75.8,
       "avgVal10B": 57.09,
+      "listedSharesM": 3735.39,
       "upDownVolRatio": 0.79,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
@@ -4774,11 +4828,12 @@
       "avgVol20": 58650,
       "avgVal20B": 7.63,
       "avgVal10B": 5.46,
+      "listedSharesM": 81.86,
       "upDownVolRatio": 0.6,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 1.05,
-      "mktCapT": 10647,
+      "mktCapT": 10642,
       "pe": null,
       "epsDilTTM": null,
       "epsGrowthYoY": null,
@@ -4833,11 +4888,12 @@
       "avgVol20": 1122805,
       "avgVal20B": 23.58,
       "avgVal10B": 23.73,
+      "listedSharesM": 934.63,
       "upDownVolRatio": 1.24,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 1.02,
-      "mktCapT": 19767,
+      "mktCapT": 19768,
       "pe": null,
       "epsDilTTM": null,
       "epsGrowthYoY": null,
@@ -4891,6 +4947,7 @@
       "avgVol20": 14524520,
       "avgVal20B": 185.56,
       "avgVal10B": 161.06,
+      "listedSharesM": 3190.13,
       "upDownVolRatio": 0.75,
       "volSignal": "VCP_DRYUP",
       "isVnLiquidStandard": true,
@@ -4950,6 +5007,7 @@
       "avgVol20": 716455,
       "avgVal20B": 34.29,
       "avgVal10B": 52.13,
+      "listedSharesM": 623.4,
       "upDownVolRatio": 1.99,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
@@ -5010,11 +5068,12 @@
       "avgVol20": 1094490,
       "avgVal20B": 7.63,
       "avgVal10B": 6.03,
+      "listedSharesM": 393.74,
       "upDownVolRatio": 0.14,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.53,
-      "mktCapT": 2594,
+      "mktCapT": 2595,
       "pe": null,
       "epsDilTTM": null,
       "epsGrowthYoY": null,
@@ -5069,11 +5128,12 @@
       "avgVol20": 1345430,
       "avgVal20B": 54.4,
       "avgVal10B": 30.53,
+      "listedSharesM": 223.52,
       "upDownVolRatio": 0.59,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.57,
-      "mktCapT": 8657,
+      "mktCapT": 8661,
       "pe": 9.37,
       "epsDilTTM": null,
       "epsGrowthYoY": 78.83,
@@ -5129,6 +5189,7 @@
       "avgVol20": 8371820,
       "avgVal20B": 171.65,
       "avgVal10B": 151.52,
+      "listedSharesM": 5804.42,
       "upDownVolRatio": 0.55,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
@@ -5188,11 +5249,12 @@
       "avgVol20": 2637820,
       "avgVal20B": 194.2,
       "avgVal10B": 144.2,
+      "listedSharesM": 1477.04,
       "upDownVolRatio": 0.63,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.93,
-      "mktCapT": 104627,
+      "mktCapT": 104722,
       "pe": 9.61,
       "epsDilTTM": null,
       "epsGrowthYoY": 92.36,
@@ -5248,6 +5310,7 @@
       "avgVol20": 651030,
       "avgVal20B": 17.58,
       "avgVal10B": 14.35,
+      "listedSharesM": 72.2,
       "upDownVolRatio": 1,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
@@ -5309,11 +5372,12 @@
       "avgVol20": 7117665,
       "avgVal20B": 220.45,
       "avgVal10B": 175.74,
+      "listedSharesM": 7766.94,
       "upDownVolRatio": 1.26,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.64,
-      "mktCapT": 235725,
+      "mktCapT": 235727,
       "pe": 5.57,
       "epsDilTTM": null,
       "epsGrowthYoY": 27.67,
@@ -5370,6 +5434,7 @@
       "avgVol20": 1688685,
       "avgVal20B": 53.26,
       "avgVal10B": 51.24,
+      "listedSharesM": 529.4,
       "upDownVolRatio": 0.46,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
@@ -5431,11 +5496,12 @@
       "avgVol20": 490435,
       "avgVal20B": 20.25,
       "avgVal10B": 9.37,
+      "listedSharesM": 448.35,
       "upDownVolRatio": 0.22,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.29,
-      "mktCapT": 17219,
+      "mktCapT": 17217,
       "pe": 9.32,
       "epsDilTTM": null,
       "epsGrowthYoY": 29.53,
@@ -5491,11 +5557,12 @@
       "avgVol20": 136195,
       "avgVal20B": 6.1,
       "avgVal10B": 6.72,
+      "listedSharesM": 242.11,
       "upDownVolRatio": 0.59,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.76,
-      "mktCapT": 10265,
+      "mktCapT": 10266,
       "pe": null,
       "epsDilTTM": null,
       "epsGrowthYoY": null,
@@ -5552,11 +5619,12 @@
       "avgVol20": 2171075,
       "avgVal20B": 30.08,
       "avgVal10B": 27.82,
+      "listedSharesM": 1267.47,
       "upDownVolRatio": 0.82,
       "volSignal": "BREAKOUT",
       "isVnLiquidStandard": true,
       "relVol": 2.88,
-      "mktCapT": 17553,
+      "mktCapT": 17554,
       "pe": 5.22,
       "epsDilTTM": null,
       "epsGrowthYoY": 127.31,
@@ -5613,11 +5681,12 @@
       "avgVol20": 185580,
       "avgVal20B": 12.77,
       "avgVal10B": 11.89,
+      "listedSharesM": 43.05,
       "upDownVolRatio": 0.38,
       "volSignal": "DISTRIBUTION",
       "isVnLiquidStandard": true,
       "relVol": 1.72,
-      "mktCapT": 2418,
+      "mktCapT": 2415,
       "pe": null,
       "epsDilTTM": null,
       "epsGrowthYoY": null,
@@ -5671,11 +5740,12 @@
       "avgVol20": 3910460,
       "avgVal20B": 66.12,
       "avgVal10B": 67.4,
+      "listedSharesM": 928.16,
       "upDownVolRatio": 0.43,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.54,
-      "mktCapT": 15122,
+      "mktCapT": 15129,
       "pe": 16.04,
       "epsDilTTM": null,
       "epsGrowthYoY": 1.67,
@@ -5732,11 +5802,12 @@
       "avgVol20": 267350,
       "avgVal20B": 13.29,
       "avgVal10B": 12.27,
+      "listedSharesM": 209.45,
       "upDownVolRatio": 0.84,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.4,
-      "mktCapT": 10517,
+      "mktCapT": 10515,
       "pe": 9.27,
       "epsDilTTM": null,
       "epsGrowthYoY": -20.97,
@@ -5793,11 +5864,12 @@
       "avgVol20": 1992105,
       "avgVal20B": 21.07,
       "avgVal10B": 21.43,
+      "listedSharesM": 128.16,
       "upDownVolRatio": 0.7,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.37,
-      "mktCapT": 1582,
+      "mktCapT": 1282,
       "pe": null,
       "epsDilTTM": null,
       "epsGrowthYoY": null,
@@ -5851,6 +5923,7 @@
       "avgVol20": 1396230,
       "avgVal20B": 17.53,
       "avgVal10B": 13.83,
+      "listedSharesM": 1034.23,
       "upDownVolRatio": 0.48,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
@@ -5912,11 +5985,12 @@
       "avgVol20": 1063775,
       "avgVal20B": 12.43,
       "avgVal10B": 11.81,
+      "listedSharesM": 760.57,
       "upDownVolRatio": 0.61,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.76,
-      "mktCapT": 8595,
+      "mktCapT": 8594,
       "pe": null,
       "epsDilTTM": null,
       "epsGrowthYoY": null,
@@ -5972,11 +6046,12 @@
       "avgVol20": 647455,
       "avgVal20B": 8.41,
       "avgVal10B": 5.08,
+      "listedSharesM": 381.59,
       "upDownVolRatio": 1.13,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.37,
-      "mktCapT": 4656,
+      "mktCapT": 4655,
       "pe": null,
       "epsDilTTM": null,
       "epsGrowthYoY": null,
@@ -6033,11 +6108,12 @@
       "avgVol20": 19167270,
       "avgVal20B": 402.93,
       "avgVal10B": 290.18,
+      "listedSharesM": 8442.96,
       "upDownVolRatio": 0.77,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.63,
-      "mktCapT": 172237,
+      "mktCapT": 172236,
       "pe": 6.29,
       "epsDilTTM": null,
       "epsGrowthYoY": 90.63,
@@ -6093,11 +6169,12 @@
       "avgVol20": 696780,
       "avgVal20B": 44.87,
       "avgVal10B": 30.38,
+      "listedSharesM": 742.32,
       "upDownVolRatio": 0.59,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.43,
-      "mktCapT": 43053,
+      "mktCapT": 43055,
       "pe": null,
       "epsDilTTM": null,
       "epsGrowthYoY": null,
@@ -6154,11 +6231,12 @@
       "avgVol20": 2527230,
       "avgVal20B": 136.33,
       "avgVal10B": 130.97,
+      "listedSharesM": 2089.96,
       "upDownVolRatio": 0.81,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.84,
-      "mktCapT": 109307,
+      "mktCapT": 109305,
       "pe": 9.53,
       "epsDilTTM": null,
       "epsGrowthYoY": 31.14,
@@ -6215,6 +6293,7 @@
       "avgVol20": 336000,
       "avgVal20B": 12,
       "avgVal10B": 9.4,
+      "listedSharesM": 86.89,
       "upDownVolRatio": 0.75,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
@@ -6276,11 +6355,12 @@
       "avgVol20": 11213935,
       "avgVal20B": 213.43,
       "avgVal10B": 181.22,
+      "listedSharesM": 9263.25,
       "upDownVolRatio": 0.66,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 1.1,
-      "mktCapT": 182243,
+      "mktCapT": 167665,
       "pe": 5.36,
       "epsDilTTM": null,
       "epsGrowthYoY": 33.93,
@@ -6336,6 +6416,7 @@
       "avgVol20": 802770,
       "avgVal20B": 25.58,
       "avgVal10B": 23.44,
+      "listedSharesM": 118.59,
       "upDownVolRatio": 1.6,
       "volSignal": "VCP_DRYUP",
       "isVnLiquidStandard": true,
@@ -6396,11 +6477,12 @@
       "avgVol20": 812635,
       "avgVal20B": 60.07,
       "avgVal10B": 50.23,
+      "listedSharesM": 2412.95,
       "upDownVolRatio": 0.38,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.47,
-      "mktCapT": 167214,
+      "mktCapT": 167217,
       "pe": 11.44,
       "epsDilTTM": null,
       "epsGrowthYoY": 21.86,
@@ -6457,6 +6539,7 @@
       "avgVol20": 487815,
       "avgVal20B": 9.37,
       "avgVal10B": 8.63,
+      "listedSharesM": 61.52,
       "upDownVolRatio": 1.55,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
@@ -6516,6 +6599,7 @@
       "avgVol20": 1702115,
       "avgVal20B": 39.6,
       "avgVal10B": 46.54,
+      "listedSharesM": 485.1,
       "upDownVolRatio": 1.97,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
@@ -6576,11 +6660,12 @@
       "avgVol20": 19580295,
       "avgVal20B": 391.05,
       "avgVal10B": 335.4,
+      "listedSharesM": 3003.29,
       "upDownVolRatio": 0.74,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.78,
-      "mktCapT": 59276,
+      "mktCapT": 59315,
       "pe": 12.57,
       "epsDilTTM": null,
       "epsGrowthYoY": 27.97,
@@ -6637,6 +6722,7 @@
       "avgVol20": 1802120,
       "avgVal20B": 10.5,
       "avgVal10B": 12.26,
+      "listedSharesM": 1108.55,
       "upDownVolRatio": 2.1,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
@@ -6697,11 +6783,12 @@
       "avgVol20": 315745,
       "avgVal20B": 15.18,
       "avgVal10B": 10.1,
+      "listedSharesM": 191.84,
       "upDownVolRatio": 0.43,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.63,
-      "mktCapT": 8861,
+      "mktCapT": 8863,
       "pe": 6.34,
       "epsDilTTM": null,
       "epsGrowthYoY": 10.95,
@@ -6758,6 +6845,7 @@
       "avgVol20": 281965,
       "avgVal20B": 6.6,
       "avgVal10B": 7.31,
+      "listedSharesM": 504,
       "upDownVolRatio": 1.54,
       "volSignal": "VCP_DRYUP",
       "isVnLiquidStandard": true,
@@ -6818,11 +6906,12 @@
       "avgVol20": 642350,
       "avgVal20B": 10.56,
       "avgVal10B": 10.07,
+      "listedSharesM": 411.29,
       "upDownVolRatio": 1.09,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.56,
-      "mktCapT": 7734,
+      "mktCapT": 6725,
       "pe": 7.04,
       "epsDilTTM": null,
       "epsGrowthYoY": 96.35,
@@ -6879,11 +6968,12 @@
       "avgVol20": 1092290,
       "avgVal20B": 29.24,
       "avgVal10B": 26.42,
+      "listedSharesM": 941.75,
       "upDownVolRatio": 1.07,
       "volSignal": "VCP_DRYUP",
       "isVnLiquidStandard": true,
       "relVol": 0.56,
-      "mktCapT": 24958,
+      "mktCapT": 24957,
       "pe": 14.23,
       "epsDilTTM": null,
       "epsGrowthYoY": 14.77,
@@ -6939,6 +7029,7 @@
       "avgVol20": 3347105,
       "avgVal20B": 36.05,
       "avgVal10B": 28.88,
+      "listedSharesM": 807.26,
       "upDownVolRatio": 0.84,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
@@ -7000,6 +7091,7 @@
       "avgVol20": 1346630,
       "avgVal20B": 39.64,
       "avgVal10B": 25.18,
+      "listedSharesM": 4000,
       "upDownVolRatio": 0.48,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
@@ -7061,6 +7153,7 @@
       "avgVol20": 550115,
       "avgVal20B": 7.02,
       "avgVal10B": 9.83,
+      "listedSharesM": 121.98,
       "upDownVolRatio": 1.15,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
@@ -7121,11 +7214,12 @@
       "avgVol20": 425035,
       "avgVal20B": 8.42,
       "avgVal10B": 8.58,
+      "listedSharesM": 428.25,
       "upDownVolRatio": 0.65,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.85,
-      "mktCapT": 8414,
+      "mktCapT": 8415,
       "pe": null,
       "epsDilTTM": null,
       "epsGrowthYoY": null,
@@ -7181,6 +7275,7 @@
       "avgVol20": 2312515,
       "avgVal20B": 66.7,
       "avgVal10B": 66.6,
+      "listedSharesM": 613.7,
       "upDownVolRatio": 0.33,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
@@ -7242,6 +7337,7 @@
       "avgVol20": 737265,
       "avgVal20B": 20.76,
       "avgVal10B": 17.49,
+      "listedSharesM": 269.9,
       "upDownVolRatio": 1.18,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
@@ -7302,11 +7398,12 @@
       "avgVol20": 2159895,
       "avgVal20B": 35.02,
       "avgVal10B": 44.32,
+      "listedSharesM": 431.05,
       "upDownVolRatio": 1.06,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.89,
-      "mktCapT": 7068,
+      "mktCapT": 7069,
       "pe": 7.07,
       "epsDilTTM": null,
       "epsGrowthYoY": -36.64,
@@ -7362,6 +7459,7 @@
       "avgVol20": 2080885,
       "avgVal20B": 57.8,
       "avgVal10B": 60.84,
+      "listedSharesM": 2434.92,
       "upDownVolRatio": 0.58,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
@@ -7423,11 +7521,12 @@
       "avgVol20": 656945,
       "avgVal20B": 7.2,
       "avgVal10B": 7.06,
+      "listedSharesM": 157.44,
       "upDownVolRatio": 1,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.65,
-      "mktCapT": 1668,
+      "mktCapT": 1669,
       "pe": null,
       "epsDilTTM": null,
       "epsGrowthYoY": null,
@@ -7484,6 +7583,7 @@
       "avgVol20": 417375,
       "avgVal20B": 12.26,
       "avgVal10B": 9.18,
+      "listedSharesM": 243.9,
       "upDownVolRatio": 0.59,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
@@ -7545,11 +7645,12 @@
       "avgVol20": 3119425,
       "avgVal20B": 74.57,
       "avgVal10B": 77.67,
+      "listedSharesM": 2328.82,
       "upDownVolRatio": 0.74,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 1.02,
-      "mktCapT": 53285,
+      "mktCapT": 54611,
       "pe": 7.33,
       "epsDilTTM": null,
       "epsGrowthYoY": 51.79,
@@ -7605,6 +7706,7 @@
       "avgVol20": 2517415,
       "avgVal20B": 31.49,
       "avgVal10B": 34.99,
+      "listedSharesM": 1068.29,
       "upDownVolRatio": 0.29,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
@@ -7666,11 +7768,12 @@
       "avgVol20": 83500,
       "avgVal20B": 5.78,
       "avgVal10B": 5.06,
+      "listedSharesM": 899.79,
       "upDownVolRatio": 0.36,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.8,
-      "mktCapT": 1005,
+      "mktCapT": 60286,
       "pe": null,
       "epsDilTTM": null,
       "epsGrowthYoY": null,
@@ -7726,6 +7829,7 @@
       "avgVol20": 4574175,
       "avgVal20B": 69.77,
       "avgVal10B": 80.78,
+      "listedSharesM": 698.18,
       "upDownVolRatio": 1.2,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
@@ -7787,6 +7891,7 @@
       "avgVol20": 3323980,
       "avgVal20B": 41.67,
       "avgVal10B": 35.31,
+      "listedSharesM": 229.71,
       "upDownVolRatio": 1.27,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
@@ -7846,11 +7951,12 @@
       "avgVol20": 12496750,
       "avgVal20B": 134.47,
       "avgVal10B": 114.59,
+      "listedSharesM": 1269.85,
       "upDownVolRatio": 1.3,
       "volSignal": "VCP_DRYUP",
       "isVnLiquidStandard": true,
       "relVol": 0.36,
-      "mktCapT": 13759,
+      "mktCapT": 13778,
       "pe": 121.67,
       "epsDilTTM": null,
       "epsGrowthYoY": -70.13,
@@ -7906,11 +8012,12 @@
       "avgVol20": 5014860,
       "avgVal20B": 268.58,
       "avgVal10B": 222.29,
+      "listedSharesM": 8355.68,
       "upDownVolRatio": 0.35,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.75,
-      "mktCapT": 420292,
+      "mktCapT": 420290,
       "pe": 10.19,
       "epsDilTTM": null,
       "epsGrowthYoY": 18.65,
@@ -7967,6 +8074,7 @@
       "avgVol20": 1877275,
       "avgVal20B": 30.46,
       "avgVal10B": 39.16,
+      "listedSharesM": 406.96,
       "upDownVolRatio": 1.9,
       "volSignal": "POCKET_PIVOT",
       "isVnLiquidStandard": true,
@@ -8027,6 +8135,7 @@
       "avgVol20": 3211090,
       "avgVal20B": 30.68,
       "avgVal10B": 35.27,
+      "listedSharesM": 574.51,
       "upDownVolRatio": 0.58,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
@@ -8088,6 +8197,7 @@
       "avgVol20": 12734050,
       "avgVal20B": 181.94,
       "avgVal10B": 158.93,
+      "listedSharesM": 1522.3,
       "upDownVolRatio": 1.76,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
@@ -8148,6 +8258,7 @@
       "avgVol20": 1410200,
       "avgVal20B": 13.73,
       "avgVal10B": 11.73,
+      "listedSharesM": 431.99,
       "upDownVolRatio": 1.5,
       "volSignal": "VCP_DRYUP",
       "isVnLiquidStandard": true,
@@ -8208,6 +8319,7 @@
       "avgVol20": 941655,
       "avgVal20B": 18.84,
       "avgVal10B": 16.97,
+      "listedSharesM": 179.99,
       "upDownVolRatio": 0.92,
       "volSignal": "VCP_DRYUP",
       "isVnLiquidStandard": true,
@@ -8268,11 +8380,12 @@
       "avgVol20": 712020,
       "avgVal20B": 7.36,
       "avgVal10B": 5.27,
+      "listedSharesM": 640.82,
       "upDownVolRatio": 0.88,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.77,
-      "mktCapT": 9708,
+      "mktCapT": 6472,
       "pe": null,
       "epsDilTTM": null,
       "epsGrowthYoY": null,
@@ -8329,6 +8442,7 @@
       "avgVol20": 535190,
       "avgVal20B": 12.36,
       "avgVal10B": 11.81,
+      "listedSharesM": 1875,
       "upDownVolRatio": 0.49,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
@@ -8390,6 +8504,7 @@
       "avgVol20": 453685,
       "avgVal20B": 10.1,
       "avgVal10B": 7.98,
+      "listedSharesM": 110.5,
       "upDownVolRatio": 0.46,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
@@ -8451,11 +8566,12 @@
       "avgVol20": 152630,
       "avgVal20B": 11.1,
       "avgVal10B": 10.7,
+      "listedSharesM": 3043.81,
       "upDownVolRatio": 0.35,
       "volSignal": "BREAKOUT",
       "isVnLiquidStandard": true,
       "relVol": 1.67,
-      "mktCapT": 214588,
+      "mktCapT": 214589,
       "pe": 18.43,
       "epsDilTTM": null,
       "epsGrowthYoY": 23.95,
@@ -8512,11 +8628,12 @@
       "avgVol20": 588075,
       "avgVal20B": 22.93,
       "avgVal10B": 22.21,
+      "listedSharesM": 3582.32,
       "upDownVolRatio": 0.5,
       "volSignal": "POCKET_PIVOT",
       "isVnLiquidStandard": true,
       "relVol": 1.66,
-      "mktCapT": 132545,
+      "mktCapT": 132546,
       "pe": null,
       "epsDilTTM": null,
       "epsGrowthYoY": null,
@@ -8573,11 +8690,12 @@
       "avgVol20": 1784105,
       "avgVal20B": 34.97,
       "avgVal10B": 25.55,
+      "listedSharesM": 679.99,
       "upDownVolRatio": 0.19,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.66,
-      "mktCapT": 12442,
+      "mktCapT": 12444,
       "pe": 7.93,
       "epsDilTTM": null,
       "epsGrowthYoY": 91.34,
@@ -8634,6 +8752,7 @@
       "avgVol20": 5351355,
       "avgVal20B": 24.35,
       "avgVal10B": 27.41,
+      "listedSharesM": 449.44,
       "upDownVolRatio": 0.77,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
@@ -8695,11 +8814,12 @@
       "avgVol20": 3611085,
       "avgVal20B": 58.73,
       "avgVal10B": 44.08,
+      "listedSharesM": 1868.81,
       "upDownVolRatio": 0.31,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.66,
-      "mktCapT": 29617,
+      "mktCapT": 29714,
       "pe": null,
       "epsDilTTM": null,
       "epsGrowthYoY": null,
@@ -8756,11 +8876,12 @@
       "avgVol20": 2965785,
       "avgVal20B": 83.46,
       "avgVal10B": 55.44,
+      "listedSharesM": 3329.34,
       "upDownVolRatio": 1.08,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.6,
-      "mktCapT": 92555,
+      "mktCapT": 92556,
       "pe": null,
       "epsDilTTM": null,
       "epsGrowthYoY": null,
@@ -8817,6 +8938,7 @@
       "avgVol20": 3584700,
       "avgVal20B": 56.95,
       "avgVal10B": 56.89,
+      "listedSharesM": 1000.93,
       "upDownVolRatio": 1,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
@@ -8878,11 +9000,12 @@
       "avgVol20": 1931055,
       "avgVal20B": 63.95,
       "avgVal10B": 47.69,
+      "listedSharesM": 1293.88,
       "upDownVolRatio": 0.38,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.37,
-      "mktCapT": 39723,
+      "mktCapT": 39722,
       "pe": 10.19,
       "epsDilTTM": null,
       "epsGrowthYoY": 44.68,
@@ -8939,6 +9062,7 @@
       "avgVol20": 38050310,
       "avgVal20B": 488.05,
       "avgVal10B": 398.75,
+      "listedSharesM": 2572.79,
       "upDownVolRatio": 1.3,
       "volSignal": "VCP_DRYUP",
       "isVnLiquidStandard": true,
@@ -8999,11 +9123,12 @@
       "avgVol20": 4153945,
       "avgVal20B": 132.89,
       "avgVal10B": 115.46,
+      "listedSharesM": 7778.23,
       "upDownVolRatio": 0.54,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.8,
-      "mktCapT": 234124,
+      "mktCapT": 234125,
       "pe": 6.72,
       "epsDilTTM": null,
       "epsGrowthYoY": 31.39,
@@ -9060,6 +9185,7 @@
       "avgVol20": 10176415,
       "avgVal20B": 133.47,
       "avgVal10B": 120.2,
+      "listedSharesM": 899.46,
       "upDownVolRatio": 1.71,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
@@ -9120,11 +9246,12 @@
       "avgVol20": 8396590,
       "avgVal20B": 163.94,
       "avgVal10B": 128.92,
+      "listedSharesM": 1152.23,
       "upDownVolRatio": 1.08,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.58,
-      "mktCapT": 21661,
+      "mktCapT": 21662,
       "pe": 15.13,
       "epsDilTTM": null,
       "epsGrowthYoY": 25.44,
@@ -9181,11 +9308,12 @@
       "avgVol20": 1009820,
       "avgVal20B": 7.13,
       "avgVal10B": 7.85,
+      "listedSharesM": 629.58,
       "upDownVolRatio": 0.4,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.79,
-      "mktCapT": 4288,
+      "mktCapT": 4287,
       "pe": null,
       "epsDilTTM": null,
       "epsGrowthYoY": null,
@@ -9242,11 +9370,12 @@
       "avgVol20": 31914775,
       "avgVal20B": 341.65,
       "avgVal10B": 339.79,
+      "listedSharesM": 4594.2,
       "upDownVolRatio": 1.21,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.93,
-      "mktCapT": 56109,
+      "mktCapT": 48239,
       "pe": 3.59,
       "epsDilTTM": null,
       "epsGrowthYoY": 15.38,
@@ -9303,11 +9432,12 @@
       "avgVol20": 964125,
       "avgVal20B": 16.35,
       "avgVal10B": 12.68,
+      "listedSharesM": 266.67,
       "upDownVolRatio": 0.67,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.45,
-      "mktCapT": 4141,
+      "mktCapT": 4147,
       "pe": 5.49,
       "epsDilTTM": null,
       "epsGrowthYoY": 4.67,
@@ -9364,6 +9494,7 @@
       "avgVol20": 5981155,
       "avgVal20B": 60.58,
       "avgVal10B": 54.31,
+      "listedSharesM": 844.19,
       "upDownVolRatio": 1.07,
       "volSignal": "VCP_DRYUP",
       "isVnLiquidStandard": true,
@@ -9424,11 +9555,12 @@
       "avgVol20": 957765,
       "avgVal20B": 12.05,
       "avgVal10B": 9.02,
+      "listedSharesM": 114.78,
       "upDownVolRatio": 0.41,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.31,
-      "mktCapT": 1367,
+      "mktCapT": 1372,
       "pe": null,
       "epsDilTTM": null,
       "epsGrowthYoY": null,
@@ -9485,11 +9617,12 @@
       "avgVol20": 224365,
       "avgVal20B": 14.09,
       "avgVal10B": 14.85,
+      "listedSharesM": 128.11,
       "upDownVolRatio": 0.36,
       "volSignal": "BREAKOUT",
       "isVnLiquidStandard": true,
       "relVol": 1.51,
-      "mktCapT": 7750,
+      "mktCapT": 7751,
       "pe": 11.07,
       "epsDilTTM": null,
       "epsGrowthYoY": 14.06,
@@ -9546,6 +9679,7 @@
       "avgVol20": 605775,
       "avgVal20B": 5.71,
       "avgVal10B": 6.28,
+      "listedSharesM": 153.96,
       "upDownVolRatio": 0.46,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
@@ -9607,6 +9741,7 @@
       "avgVol20": 11274410,
       "avgVal20B": 154.26,
       "avgVal10B": 152.3,
+      "listedSharesM": 671.99,
       "upDownVolRatio": 0.92,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
@@ -9667,11 +9802,12 @@
       "avgVol20": 15687455,
       "avgVal20B": 163.31,
       "avgVal10B": 155.98,
+      "listedSharesM": 2403.81,
       "upDownVolRatio": 0.56,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.6,
-      "mktCapT": 31693,
+      "mktCapT": 23774,
       "pe": 4.09,
       "epsDilTTM": null,
       "epsGrowthYoY": 100,
@@ -9727,6 +9863,7 @@
       "avgVol20": 11237265,
       "avgVal20B": 169.82,
       "avgVal10B": 207.12,
+      "listedSharesM": 1245.3,
       "upDownVolRatio": 1.33,
       "volSignal": "VCP_DRYUP",
       "isVnLiquidStandard": true,
@@ -9787,11 +9924,12 @@
       "avgVol20": 985950,
       "avgVal20B": 18.82,
       "avgVal10B": 17.07,
+      "listedSharesM": 381.15,
       "upDownVolRatio": 0.76,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.99,
-      "mktCapT": 7142,
+      "mktCapT": 7146,
       "pe": 17.5,
       "epsDilTTM": null,
       "epsGrowthYoY": -6.16,
@@ -9848,11 +9986,12 @@
       "avgVol20": 799265,
       "avgVal20B": 12.1,
       "avgVal10B": 10.67,
+      "listedSharesM": 117.74,
       "upDownVolRatio": 0.68,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.97,
-      "mktCapT": 1740,
+      "mktCapT": 1743,
       "pe": null,
       "epsDilTTM": null,
       "epsGrowthYoY": null,
@@ -9909,11 +10048,12 @@
       "avgVol20": 8203100,
       "avgVal20B": 97.11,
       "avgVal10B": 86.96,
+      "listedSharesM": 595.78,
       "upDownVolRatio": 1.08,
       "volSignal": "VCP_DRYUP",
       "isVnLiquidStandard": true,
       "relVol": 0.48,
-      "mktCapT": 6852,
+      "mktCapT": 6851,
       "pe": null,
       "epsDilTTM": null,
       "epsGrowthYoY": null,
@@ -9969,6 +10109,7 @@
       "avgVol20": 1320295,
       "avgVal20B": 34.88,
       "avgVal10B": 22.63,
+      "listedSharesM": 890,
       "upDownVolRatio": 0.31,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
@@ -10030,6 +10171,7 @@
       "avgVol20": 5290305,
       "avgVal20B": 60.79,
       "avgVal10B": 54.91,
+      "listedSharesM": 997.81,
       "upDownVolRatio": 0.62,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
@@ -10091,11 +10233,12 @@
       "avgVol20": 846455,
       "avgVal20B": 14.33,
       "avgVal10B": 12.11,
+      "listedSharesM": 258.07,
       "upDownVolRatio": 0.24,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 2.1,
-      "mktCapT": 3974,
+      "mktCapT": 4090,
       "pe": null,
       "epsDilTTM": null,
       "epsGrowthYoY": null,
@@ -10152,11 +10295,12 @@
       "avgVol20": 2052220,
       "avgVal20B": 73.73,
       "avgVal10B": 77.38,
+      "listedSharesM": 2987.28,
       "upDownVolRatio": 0.58,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.43,
-      "mktCapT": 102315,
+      "mktCapT": 102314,
       "pe": 8.65,
       "epsDilTTM": null,
       "epsGrowthYoY": 16.7,
@@ -10212,6 +10356,7 @@
       "avgVol20": 1120055,
       "avgVal20B": 72.22,
       "avgVal10B": 56.05,
+      "listedSharesM": 640.5,
       "upDownVolRatio": 0.53,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
@@ -10273,6 +10418,7 @@
       "avgVol20": 378205,
       "avgVal20B": 16.86,
       "avgVal10B": 17.18,
+      "listedSharesM": 201.89,
       "upDownVolRatio": 0.44,
       "volSignal": "BREAKOUT",
       "isVnLiquidStandard": true,
@@ -10334,6 +10480,7 @@
       "avgVol20": 438060,
       "avgVal20B": 16.64,
       "avgVal10B": 12.03,
+      "listedSharesM": 1035,
       "upDownVolRatio": 0.28,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
@@ -10395,11 +10542,12 @@
       "avgVol20": 8843055,
       "avgVal20B": 191.62,
       "avgVal10B": 195.56,
+      "listedSharesM": 1308.47,
       "upDownVolRatio": 0.36,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.87,
-      "mktCapT": 25974,
+      "mktCapT": 25973,
       "pe": null,
       "epsDilTTM": null,
       "epsGrowthYoY": null,
@@ -10455,11 +10603,12 @@
       "avgVol20": 9991595,
       "avgVal20B": 135.16,
       "avgVal10B": 91.09,
+      "listedSharesM": 374.37,
       "upDownVolRatio": 0.36,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.35,
-      "mktCapT": 4905,
+      "mktCapT": 4904,
       "pe": 19.1,
       "epsDilTTM": null,
       "epsGrowthYoY": -42.79,
@@ -10516,11 +10665,12 @@
       "avgVol20": 310865,
       "avgVal20B": 10.14,
       "avgVal10B": 9.44,
+      "listedSharesM": 379.78,
       "upDownVolRatio": 0.65,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.91,
-      "mktCapT": 11603,
+      "mktCapT": 11602,
       "pe": 6.51,
       "epsDilTTM": null,
       "epsGrowthYoY": -41.14,
@@ -10577,6 +10727,7 @@
       "avgVol20": 2493355,
       "avgVal20B": 12.11,
       "avgVal10B": 10.03,
+      "listedSharesM": 579.1,
       "upDownVolRatio": 0.72,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
@@ -10638,11 +10789,12 @@
       "avgVol20": 11490285,
       "avgVal20B": 572.96,
       "avgVal10B": 621.48,
+      "listedSharesM": 1885.73,
       "upDownVolRatio": 0.37,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 1.48,
-      "mktCapT": 88345,
+      "mktCapT": 88346,
       "pe": 8.57,
       "epsDilTTM": null,
       "epsGrowthYoY": 14.8,
@@ -10699,11 +10851,12 @@
       "avgVol20": 591855,
       "avgVal20B": 6.22,
       "avgVal10B": 6.05,
+      "listedSharesM": 117.79,
       "upDownVolRatio": 0.47,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.87,
-      "mktCapT": 1177,
+      "mktCapT": 1178,
       "pe": null,
       "epsDilTTM": null,
       "epsGrowthYoY": null,
@@ -10760,11 +10913,12 @@
       "avgVol20": 1318065,
       "avgVal20B": 20.77,
       "avgVal10B": 6.93,
+      "listedSharesM": 1408.67,
       "upDownVolRatio": 0.13,
       "volSignal": "NORMAL",
       "isVnLiquidStandard": true,
       "relVol": 0.18,
-      "mktCapT": 21342,
+      "mktCapT": 21341,
       "pe": null,
       "epsDilTTM": null,
       "epsGrowthYoY": null,
@@ -10821,11 +10975,12 @@
       "avgVol20": 8178625,
       "avgVal20B": 120.6,
       "avgVal10B": 106.43,
+      "listedSharesM": 511.89,
       "upDownVolRatio": 0.59,
       "volSignal": "DISTRIBUTION",
       "isVnLiquidStandard": true,
       "relVol": 1.98,
-      "mktCapT": 6447,
+      "mktCapT": 6450,
       "pe": 4.15,
       "epsDilTTM": null,
       "epsGrowthYoY": -27.83,
