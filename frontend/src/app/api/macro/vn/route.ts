@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { fetchDeposit12M as fetchDepositRates } from '../../../../features/market/services/depositRates';
+import { fetchViraDaily, type ViraDaily } from '../../../../features/market/services/viraDaily';
 import { fetchViraInterbank1W, type ViraInterbank } from '../../../../features/market/services/viraInterbank';
 
 /**
@@ -8,6 +9,7 @@ import { fetchViraInterbank1W, type ViraInterbank } from '../../../../features/m
  *    lãi suất điều hành, lãi suất liên ngân hàng, lợi suất TPCP VN 5 & 10 năm.
  *    `change_abs` = chênh lệch so với kỳ công bố trước (CPI: tháng trước, GDP: quý trước).
  *  - Lãi liên ngân hàng 1 tuần bình quân tháng (thực tế): VIRA — xem services/viraInterbank.ts.
+ *  - Lãi liên NH theo ngày (ON/1W/2W/1M) + nghiệp vụ thị trường mở (bơm/hút ròng): bản tin ngày VIRA — services/viraDaily.ts.
  *  - Lãi suất huy động 12 tháng: trung vị các ngân hàng (CafeF, đối chiếu Vietcombank) — xem services/depositRates.ts.
  * Cache 3 giờ; nguồn lỗi thì trả bản gần nhất (stale).
  */
@@ -33,6 +35,7 @@ export interface VnMacroLive {
   bond10Y: VnIndicator | null;
   deposit12M: (VnIndicator & { banks: number }) | null;
   interbank1W: ViraInterbank | null;
+  daily: ViraDaily | null;
   fetchedAt: string;
 }
 
@@ -81,7 +84,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ success: true, cached: true, data: cache.data });
   }
   const origin = new URL(req.url).origin;
-  const [gdpYoY, cpiYoY, policyRate, interbankRate, bond5Y, bond10Y, deposit12M, interbank1W] = await Promise.all([
+  const [gdpYoY, cpiYoY, policyRate, interbankRate, bond5Y, bond10Y, deposit12M, interbank1W, daily] = await Promise.all([
     fetchTv(TV_SYMBOLS.gdpYoY),
     fetchTv(TV_SYMBOLS.cpiYoY),
     fetchTv(TV_SYMBOLS.policyRate),
@@ -90,8 +93,9 @@ export async function GET(req: Request) {
     fetchTv(TV_SYMBOLS.bond10Y),
     fetchDeposit12M(origin),
     fetchViraInterbank1W(),
+    fetchViraDaily(),
   ]);
-  const data: VnMacroLive = { gdpYoY, cpiYoY, policyRate, interbankRate, bond5Y, bond10Y, deposit12M, interbank1W, fetchedAt: new Date().toISOString() };
+  const data: VnMacroLive = { gdpYoY, cpiYoY, policyRate, interbankRate, bond5Y, bond10Y, deposit12M, interbank1W, daily, fetchedAt: new Date().toISOString() };
 
   if (!gdpYoY && !cpiYoY && !interbankRate) {
     if (cache) return NextResponse.json({ success: true, stale: true, data: cache.data });

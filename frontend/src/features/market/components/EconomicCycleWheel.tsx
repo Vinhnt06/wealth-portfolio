@@ -315,6 +315,13 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
     bond10Y: VnInd | null;
     deposit12M: (VnInd & { banks: number }) | null;
     interbank1W: { value: number; bond10Y: number | null; period: string; source: string } | null;
+    daily: {
+      sessionDate: string | null;
+      bulletinDate: string;
+      rates: { on: number; w1: number | null; w2: number | null; m1: number | null } | null;
+      omo: { netVnd: number; outstanding: number | null; rate: number | null } | null;
+      source: string;
+    } | null;
   } | null>(null);
 
   // Lãi suất Fed (NY Fed EFFR + khung mục tiêu FOMC + kỳ vọng từ hợp đồng tương lai) — /api/macro/fed
@@ -582,9 +589,15 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
     (r: MacroRateRecord) => r.term === 'ON' || (typeof r.bank === 'string' && r.bank.includes('Qua đêm'))
   );
   const onRate = vnLive?.interbankRate?.value ?? parseFloat(onRateItem?.rate?.replace('%', '') || 'NaN');
-  // Lãi NGẮN HẠN cho đường cong & chênh VND−USD: liên ngân hàng 1 TUẦN bình quân tháng (thực tế, VIRA).
-  // Không dùng TradingView VNINBR (6,41% ngày 18/11/2026, không phải kỳ hạn ngắn; NHNN công bố qua đêm 4,68% cùng ngày)
-  // và NHNN chặn truy cập tự động. Số VIRA cũ hơn 2 tháng → bỏ, các phép tính liên quan về trung tính.
+  // Lãi NGẮN HẠN cho đường cong & chênh VND−USD, ưu tiên: (1) QUA ĐÊM bình quân phiên gần nhất từ bản tin ngày VIRA
+  // (≤ 7 ngày; 19/11/2026: 4,70% so với 4,68% NHNN công bố), (2) liên NH 1 tuần bình quân tháng (VIRA, ≤ 2 tháng),
+  // (3) không có → trung tính. Không dùng TradingView VNINBR (6,41% cùng ngày, không phải kỳ hạn ngắn).
+  const daily = vnLive?.daily ?? null;
+  const dailyFresh = (() => {
+    const c = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(daily?.sessionDate ?? '');
+    if (!c || !daily?.rates) return false;
+    return (Date.now() - Date.UTC(Number(c[3]), Number(c[2]) - 1, Number(c[1]))) / 86_400_000 <= 7;
+  })();
   const short1W = vnLive?.interbank1W ?? null;
   const short1WFresh = (() => {
     const c = /^(\d{2})\/(\d{4})$/.exec(short1W?.period ?? '');
@@ -592,7 +605,8 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
     const now = new Date();
     return (now.getFullYear() - Number(c[2])) * 12 + (now.getMonth() + 1 - Number(c[1])) <= 2;
   })();
-  const overnightRate = short1W && short1WFresh ? short1W.value : NaN;
+  const overnightRate = dailyFresh && daily?.rates ? daily.rates.on : short1W && short1WFresh ? short1W.value : NaN;
+  const shortTermLabel = dailyFresh ? 'qua đêm' : '1 tuần';
   const bond5Y = vnLive?.bond5Y?.value ?? null;
   const bond10Y = vnLive?.bond10Y?.value ?? null;
 
@@ -676,7 +690,7 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
 
     return {
       points: [
-        { term: '1W', label: 'Liên NH 1 tuần', rate: overnightRate },
+        { term: dailyFresh ? 'ON' : '1W', label: `Liên NH ${shortTermLabel}`, rate: overnightRate },
         { term: 'HĐ12T', label: 'Huy động 12T', rate: depositRate },
         ...(bond5Y !== null ? [{ term: '5Y', label: 'TPCP 5 năm', rate: Number(bond5Y.toFixed(2)) }] : []),
         ...(bond10Y !== null ? [{ term: '10Y', label: 'TPCP 10 năm', rate: Number(bond10Y.toFixed(2)) }] : []),
@@ -688,7 +702,7 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
       slopeColor,
       slopeBadge,
     };
-  }, [overnightRate, depositRate, bond5Y, bond10Y, longRate, longLabel]);
+  }, [overnightRate, shortTermLabel, depositRate, bond5Y, bond10Y, longRate, longLabel]);
 
   // 4. Quantitative 5-Pillar Macroeconomic Engine (GDP 25%, CPI 20%, Rates 20%, FX 15%, Yield Curve 20%)
   // Biến số thế giới: Fed, chênh lệch lãi suất VND−USD liên ngân hàng, sức mạnh USD (DXY).
@@ -946,7 +960,7 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
         isTriggered: cpiYoy >= 4.0,
       },
       {
-        factor: `Liên NH 1 tuần${short1W ? ` (T${short1W.period.slice(0, 2)})` : ''}`,
+        factor: dailyFresh ? `Liên NH qua đêm (${(daily?.sessionDate ?? '').slice(0, 5)})` : `Liên NH 1 tuần${short1W ? ` (T${short1W.period.slice(0, 2)})` : ''}`,
         status: !Number.isFinite(overnightRate) ? 'Chưa có nguồn' : overnightRate < 4.5 ? `${nf(overnightRate)}% (Dồi dào)` : 'Thắt chặt (>4.5%)',
         isTriggered: Number.isFinite(overnightRate) && overnightRate >= 4.5,
       },
@@ -1669,6 +1683,8 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                   ['CPI (so cùng kỳ)', `${nf(cpiYoy)}%${cpiTrend !== null ? ` (${cpiTrend >= 0 ? '+' : ''}${cpiTrend}đ/${cpiTrendMonths}T)` : ''}`, cpiLive ? fmtUpd(cpiLive) : String(latestCpi?.period ?? '—'), cpiLive ? 'GSO qua TradingView (tự động)' : 'Lưu sẵn'],
                   ['Lãi suất điều hành NHNN', `${nf(refRate)}%`, vnLive?.policyRate ? fmtUpd(vnLive.policyRate) : '—', vnLive?.policyRate ? 'NHNN qua TradingView' : 'Lưu sẵn'],
                   ['Lãi suất liên ngân hàng', `${nf(onRate)}%`, vnLive?.interbankRate ? fmtUpd(vnLive.interbankRate) : '—', vnLive?.interbankRate ? 'TradingView VNINBR (không phải qua đêm)' : 'Lưu sẵn'],
+                  ['Liên NH qua đêm (BQ phiên)', daily?.rates ? `${nf(daily.rates.on)}%${dailyFresh ? '' : ' (cũ, không dùng)'}` : '—', daily?.sessionDate ?? '—', 'VIRA (thực tế)'],
+                  ['NHNN thị trường mở (OMO)', daily?.omo ? `${daily.omo.netVnd >= 0 ? 'Bơm' : 'Hút'} ròng ${Math.abs(daily.omo.netVnd).toLocaleString('vi-VN')} tỷ${daily.omo.rate !== null ? ` · lãi ${nf(daily.omo.rate)}%` : ''}` : '—', daily?.sessionDate ?? '—', 'VIRA (thực tế)'],
                   ['Liên NH 1 tuần (BQ tháng)', short1W ? `${nf(short1W.value)}%${short1WFresh ? '' : ' (cũ, không dùng)'}` : '—', short1W ? `T${short1W.period}` : '—', 'VIRA (thực tế)'],
                   ['Huy động 12T (trung vị)', `${nf(depositRate)}%${vnLive?.deposit12M ? ` · ${vnLive.deposit12M.banks} NH` : ''}`, vnLive?.deposit12M?.updatedAt ?? '—', vnLive?.deposit12M ? vnLive.deposit12M.source.split(',')[0] : 'Lưu sẵn'],
                   ['TPCP VN 5 / 10 năm', bond10Y !== null ? `${bond5Y?.toFixed(2) ?? '—'}% / ${bond10Y.toFixed(2)}%` : '—', vnLive?.bond10Y ? fmtUpd(vnLive.bond10Y) : '—', 'TradingView'],
@@ -1676,7 +1692,7 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                   ['Fed funds (EFFR)', fed ? `${fed.effr}% · khung ${fed.targetLow}–${fed.targetHigh}%` : '—', fed?.effrDate ?? '—', 'NY Fed'],
                   ['Fed đổi lãi suất 6T', fed ? (fed.moves.length ? fed.moves.map((m) => `${m.date}: ${m.from}→${m.to}%`).join(', ') : 'Giữ nguyên') : '—', fed?.effrDate ?? '—', 'FOMC'],
                   ['Kỳ vọng Fed (futures)', fed?.futuresImplied != null ? `${fed.futuresImplied}%${fedFuturesGap !== null ? ` (${fedFuturesGap >= 0 ? '+' : ''}${fedFuturesGap}đ vs EFFR)` : ''}` : '—', 'Trực tiếp', 'CME ZQ (Yahoo)'],
-                  ['Chênh VND − USD', vndUsdGap === null ? '—' : `${vndUsdGap >= 0 ? '+' : ''}${vndUsdGap}%`, 'Tính', 'Liên NH 1 tuần − EFFR'],
+                  ['Chênh VND − USD', vndUsdGap === null ? '—' : `${vndUsdGap >= 0 ? '+' : ''}${vndUsdGap}%`, 'Tính', `Liên NH ${shortTermLabel} − EFFR`],
                   ['DXY / US10Y / VIX', `${nf(globalMacro.dxy)} / ${nf(globalMacro.us10Y)}% / ${nf(globalMacro.vix)}`, 'Trực tiếp', 'Yahoo Finance'],
                 ].map(([label, value, period, src]) => (
                   <div key={label} className="flex justify-between gap-2">
