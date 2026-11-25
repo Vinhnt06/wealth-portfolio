@@ -1,5 +1,98 @@
 [
   {
+    "date": "2026-11-25",
+    "displayDate": "26-11-25",
+    "totalMarket": 7937,
+    "bds": {
+      "total": 944.71,
+      "buy": 344.48,
+      "sell": 600.24,
+      "ratioPct": 11.9,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "nh": {
+      "total": 1931.47,
+      "buy": 785.68,
+      "sell": 1145.8,
+      "ratioPct": 24.34,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "ck": {
+      "total": 1254.4,
+      "buy": 396.16,
+      "sell": 858.23,
+      "ratioPct": 15.8,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "thep": {
+      "total": 344.37,
+      "buy": 118.46,
+      "sell": 225.91,
+      "ratioPct": 4.34,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "thuc_pham": {
+      "total": 692.75,
+      "buy": 326.84,
+      "sell": 365.92,
+      "ratioPct": 8.73,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "cong_nghiep": {
+      "total": 536.03,
+      "buy": 239.04,
+      "sell": 296.99,
+      "ratioPct": 6.75,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "ban_le": {
+      "total": 367.13,
+      "buy": 180.48,
+      "sell": 186.64,
+      "ratioPct": 4.63,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "dau_khi": {
+      "total": 366.91,
+      "buy": 127.81,
+      "sell": 239.09,
+      "ratioPct": 4.62,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "cntt": {
+      "total": 448.8,
+      "buy": 136.54,
+      "sell": 312.26,
+      "ratioPct": 5.65,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "hoa_chat": {
+      "total": 97.78,
+      "buy": 41.94,
+      "sell": 55.84,
+      "ratioPct": 1.23,
+      "isClimax": false,
+      "isTrough": false
+    },
+    "vin": {
+      "total": 655.18,
+      "buy": 280.91,
+      "sell": 374.27,
+      "ratioPct": 8.25,
+      "isClimax": false,
+      "isTrough": false
+    }
+  },
+  {
     "date": "2026-11-23",
     "displayDate": "26-11-23",
     "totalMarket": 8228,
