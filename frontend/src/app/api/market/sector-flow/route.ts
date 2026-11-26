@@ -1,5 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
+import fs from 'fs';
+import path from 'path';
 import sectorFlowHistory from '@/features/market/data/sector_flow_history.json';
+
+function loadSectorFlowHistory(): SessionSectorFlow[] {
+  try {
+    const possiblePaths = [
+      path.resolve(process.cwd(), 'src/features/market/data/sector_flow_history.json'),
+      path.resolve(process.cwd(), 'frontend/src/features/market/data/sector_flow_history.json'),
+    ];
+    for (const p of possiblePaths) {
+      if (fs.existsSync(p)) {
+        return JSON.parse(fs.readFileSync(p, 'utf-8'));
+      }
+    }
+  } catch {
+    // Fallback to static import
+  }
+  return JSON.parse(JSON.stringify(sectorFlowHistory));
+}
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -270,9 +289,12 @@ async function fetchLiveFromSsi(): Promise<SessionSectorFlow | null> {
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const limit = parseInt(searchParams.get('limit') || '30', 10);
+    const limitParam = searchParams.get('limit');
+    const limit = limitParam !== null ? parseInt(limitParam, 10) : 30;
+    const startDate = searchParams.get('startDate');
+    const endDate = searchParams.get('endDate');
 
-    const history: SessionSectorFlow[] = JSON.parse(JSON.stringify(sectorFlowHistory));
+    const history: SessionSectorFlow[] = loadSectorFlowHistory();
 
     const todayDateStr = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' });
     const vnHour = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' })).getHours();
@@ -292,7 +314,16 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    const sliced = limit > 0 ? history.slice(0, limit) : history;
+    let filtered = history;
+    if (startDate || endDate) {
+      filtered = history.filter((item) => {
+        if (startDate && item.date < startDate) return false;
+        if (endDate && item.date > endDate) return false;
+        return true;
+      });
+    }
+
+    const sliced = !startDate && !endDate && limit > 0 ? filtered.slice(0, limit) : filtered;
 
     // Calculate current market warnings/climax
     const latest = sliced[0];
@@ -312,6 +343,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       success: true,
       count: sliced.length,
+      totalAvailable: history.length,
       latestDate: latest?.date,
       warnings,
       data: sliced,
@@ -323,11 +355,12 @@ export async function GET(req: NextRequest) {
         vin: { climax: 15, trough: 5 },
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Failed to fetch sector money flow';
     return NextResponse.json(
       {
         success: false,
-        error: error.message || 'Failed to fetch sector money flow',
+        error: message,
         data: [],
       },
       { status: 500 }

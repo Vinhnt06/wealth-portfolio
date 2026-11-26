@@ -3,9 +3,9 @@ const path = require('path');
 
 const SECTORS = {
   bds: ['VHM', 'NVL', 'PDR', 'DIG', 'DXG', 'CEO', 'KDH', 'NLG', 'TCH', 'KBC', 'IDC', 'SZC', 'BCM', 'HDG', 'NTL'],
-  nh: ['VCB', 'BID', 'CTG', 'TCB', 'MBB', 'ACB', 'VPB', 'HDB', 'STB', 'LPB', 'SHB', 'TPB', 'VIB', 'MSB', 'OCB', 'SSB', 'EIB', 'NAB'],
-  ck: ['SSI', 'VND', 'VCI', 'HCM', 'SHS', 'MBS', 'FTS', 'BSI', 'CTS', 'VIX', 'AGR', 'ORS'],
-  thep: ['HPG', 'HSG', 'NKG', 'VGS', 'TLH', 'SMC'],
+  nh: ['VCB', 'BID', 'CTG', 'TCB', 'MBB', 'ACB', 'VPB', 'HDB', 'STB', 'LPB', 'SHB', 'TPB', 'VIB', 'MSB', 'OCB', 'SSB', 'EIB', 'NAB', 'ABB', 'BVB'],
+  ck: ['SSI', 'VND', 'VCI', 'HCM', 'SHS', 'MBS', 'FTS', 'BSI', 'CTS', 'VIX', 'AGR', 'ORS', 'TVS', 'PHS'],
+  thep: ['HPG', 'HSG', 'NKG', 'VGS', 'TLH', 'SMC', 'TVN'],
   thuc_pham: ['VNM', 'MSN', 'SAB', 'DBC', 'HAG', 'BAF', 'VHC', 'ANV', 'PAN'],
   cong_nghiep: ['VCG', 'HHV', 'CII', 'CTD', 'FCN', 'LCG', 'GEX', 'GMD', 'HAH'],
   ban_le: ['MWG', 'FRT', 'DGW', 'PET', 'PNJ'],
@@ -36,7 +36,7 @@ async function sleep(ms) {
 async function main() {
   console.log('Fetching historical daily sessions from Entrade...');
   const nowSec = Math.floor(Date.now() / 1000);
-  const fromSec = nowSec - 60 * 86400; // last 60 calendar days (~42 sessions)
+  const fromSec = nowSec - 730 * 86400; // last 2 years (~500 trading sessions)
 
   // 1. Fetch VNINDEX
   const vnData = await fetchCandles('VNINDEX', true, fromSec, nowSec);
@@ -59,13 +59,41 @@ async function main() {
   console.log(`Fetching candles for ${symbolList.length} sector tickers...`);
 
   const candleMap = {};
+  const dateIndexMap = {};
+  const toVnDateStr = ts => new Date(ts * 1000).toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' });
+
   for (let i = 0; i < symbolList.length; i += 12) {
     const batch = symbolList.slice(i, i + 12);
     const results = await Promise.all(batch.map(sym => fetchCandles(sym, false, fromSec, nowSec)));
     batch.forEach((sym, idx) => {
-      if (results[idx]) candleMap[sym] = results[idx];
+      if (results[idx] && Array.isArray(results[idx].t)) {
+        candleMap[sym] = results[idx];
+        const map = new Map();
+        results[idx].t.forEach((ts, barIdx) => {
+          map.set(toVnDateStr(ts), barIdx);
+        });
+        dateIndexMap[sym] = map;
+      }
     });
     await sleep(150);
+  }
+
+  // Retry any symbols that failed in the initial batch
+  const missingSymbols = symbolList.filter(sym => !candleMap[sym]);
+  if (missingSymbols.length > 0) {
+    console.log(`Retrying ${missingSymbols.length} missing symbols...`);
+    for (const sym of missingSymbols) {
+      const res = await fetchCandles(sym, false, fromSec, nowSec);
+      if (res && Array.isArray(res.t)) {
+        candleMap[sym] = res;
+        const map = new Map();
+        res.t.forEach((ts, barIdx) => {
+          map.set(toVnDateStr(ts), barIdx);
+        });
+        dateIndexMap[sym] = map;
+      }
+      await sleep(100);
+    }
   }
 
   // 3. Aggregate each session
@@ -73,8 +101,7 @@ async function main() {
 
   for (let sIdx = 0; sIdx < sessionsCount; sIdx++) {
     const timestamp = sessionTimestamps[sIdx];
-    const dateObj = new Date(timestamp * 1000);
-    const dateStr = dateObj.toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' }); // YYYY-MM-DD
+    const dateStr = toVnDateStr(timestamp); // YYYY-MM-DD
     const displayDate = dateStr.slice(2); // YY-MM-DD
 
     // Sector values for this session
@@ -86,11 +113,12 @@ async function main() {
     for (const [secKey, syms] of Object.entries(SECTORS)) {
       for (const sym of syms) {
         const cData = candleMap[sym];
-        if (!cData) continue;
-        const matchIdx = cData.t.indexOf(timestamp);
-        if (matchIdx !== -1) {
+        const idxMap = dateIndexMap[sym];
+        if (!cData || !idxMap) continue;
+        const matchIdx = idxMap.get(dateStr);
+        if (matchIdx !== undefined) {
           const closeP = cData.c[matchIdx];
-          const openP = cData.o[matchIdx];
+          const openP = cData.o[matchIdx] || closeP || 1;
           const vol = cData.v[matchIdx] || 0;
           const valBillion = (closeP * vol) / 1e6; // in Billion VND
 

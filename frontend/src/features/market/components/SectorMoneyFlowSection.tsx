@@ -301,6 +301,7 @@ export function SectorMoneyFlowSection() {
             variant="core"
             title="Biểu Đồ Luân Chuyển Dòng Tiền 5 Nhóm Trụ Cột"
             subtitle="Quan sát sự dịch chuyển thanh khoản giữa các nhóm dẫn dắt (Nhấp vào ngành trên thanh legend để Focus làm nổi bật đường)"
+            enableCustomTimeframe={true}
           />
         </section>
       )}
@@ -321,6 +322,7 @@ export function SectorMoneyFlowSection() {
             variant="full"
             title="Biểu Đồ Luân Chuyển Toàn Bộ 11 Nhóm Ngành"
             subtitle="Phản ánh chuyển động thanh khoản trên toàn bộ 11 phân ngành thị trường (Nhấp vào ngành để bật sáng và làm mờ các ngành khác)"
+            enableCustomTimeframe={true}
           />
 
           {/* Bản Đồ Nhiệt Ma Trận % 11 Ngành Thị Trường */}
