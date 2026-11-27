@@ -52,11 +52,21 @@ jobs:
         run: |
           node scripts/cron_scan_minervini.js
 
+      # Ghi tín hiệu MUA của phiên đã đóng để kiểm chứng về sau (tự bỏ qua nếu đã ghi hoặc dữ liệu chưa đủ).
+      # continue-on-error: lỗi ở đây không được chặn việc đẩy dữ liệu sau phiên; bước cuối sẽ báo đỏ.
+      - name: 📝 Ghi Tín Hiệu MUA Của Phiên
+        id: signal_log
+        continue-on-error: true
+        run: |
+          # Chỉ cần typescript để nạp module của app; --no-save để không làm bẩn package-lock trước bước git pull
+          (cd frontend && { npm ci --ignore-scripts --no-audit --no-fund || npm install --legacy-peer-deps --ignore-scripts --no-audit --no-fund --no-save --no-package-lock; })
+          node scripts/log_buy_signals.mjs
+
       - name: 💾 Commit & Push Dữ Liệu Sau Phiên Lên Repository
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add frontend/src/features/market/data/sector_flow_history.json frontend/src/features/market/data/lastMinerviniScan.json data/stock_rs_ratings.json
+          git add frontend/src/features/market/data/sector_flow_history.json frontend/src/features/market/data/lastMinerviniScan.json data/stock_rs_ratings.json data/forward_test
           if git diff --staged --quiet; then
             echo "✅ Dữ liệu đã là mới nhất, không có thay đổi cần commit."
           else
@@ -65,3 +75,9 @@ jobs:
             git push origin main
             echo "🚀 Đã cập nhật và đẩy dữ liệu chốt phiên thành công lên production!"
           fi
+
+      - name: ⚠️ Báo Lỗi Nếu Không Ghi Được Tín Hiệu
+        if: steps.signal_log.outcome == 'failure'
+        run: |
+          echo "::error::Ghi tín hiệu MUA thất bại — xem log bước 'Ghi Tín Hiệu MUA Của Phiên'."
+          exit 1
