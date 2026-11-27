@@ -3,26 +3,17 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   Sparkle,
-  TrendUp,
-  TrendDown,
   Funnel,
   ArrowClockwise,
   CheckCircle,
-  XCircle,
   MagnifyingGlass,
-  ChartLineUp,
-  Coins,
-  Gauge,
-  Tag,
   ArrowRight,
   ShieldCheck,
-  Flame,
   Buildings,
   Compass,
   CaretUp,
   CaretDown,
   CaretUpDown,
-  SquaresFour,
   Table as TableIcon,
   X,
   Warning,
@@ -37,16 +28,11 @@ import {
   VN_UNIVERSE_RULES,
   passesVnInvestableUniverse,
 } from '../utils/minerviniEvaluator';
-import {
-  evaluateScreenerActionPlan,
-  recomputeLiveVolMetrics,
-  ScreenerActionPlan,
-} from '../utils/screenerActionPlanner';
+import { recomputeLiveVolMetrics } from '../utils/screenerActionPlanner';
 import { MarketStateKey } from '../utils/marketState';
-import {
-  ScreenerActionSummaryPanel,
-  ActionQuickFilter,
-} from './ScreenerActionSummaryPanel';
+import { DECISION_MIN_CRITERIA, ScreenerDecision, toScreenerDecision } from '../utils/screenerDecision';
+import { useScreenerDecisions } from '../hooks/useScreenerDecisions';
+import { ScreenerDecisionSummary, DecisionFilter, STATUS_TONE } from './ScreenerDecisionSummary';
 import { getStockPriceColor } from '../utils/priceColors';
 import { SECTOR_MAPPING, ICB_20_SECTORS } from '../data/sectorMapping';
 import { EconomicCycleWheel } from './EconomicCycleWheel';
@@ -63,7 +49,6 @@ type SectorSortOption = 'rs' | 'change' | 'stage2' | 'name';
 export const MarkMinerviniScreener: React.FC = () => {
   const { setSelectedSymbol, setViewMode } = useMarketStore();
   const ticks = useMarketStore((state) => state.ticks);
-  const wsStatus = useMarketStore((state) => state.wsStatus);
 
   const [items, setItems] = useState<MinerviniScreenerItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -86,14 +71,14 @@ export const MarkMinerviniScreener: React.FC = () => {
   const [minScore, setMinScore] = useState<number>(7);
   const [onlyStage2, setOnlyStage2] = useState<boolean>(false);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState<boolean>(false);
-  const [actionFilter, setActionFilter] = useState<ActionQuickFilter>('ALL');
+  const [actionFilter, setActionFilter] = useState<DecisionFilter>('ALL');
   const [marketStateInfo, setMarketStateInfo] = useState<{
-    state: MarketStateKey;
+    state: MarketStateKey | null;
     provisional?: boolean;
-  }>({ state: 'NEUTRAL', provisional: false });
+  }>({ state: null, provisional: false });
 
   // Sorting state (Auto-sorts dynamically when clicked)
-  const [sortKey, setSortKey] = useState<string>('score');
+  const [sortKey, setSortKey] = useState<string>('decisionPriority');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
 
   const [scanFeedback, setScanFeedback] = useState<{
@@ -168,7 +153,7 @@ export const MarkMinerviniScreener: React.FC = () => {
           new Date().toLocaleTimeString('vi-VN', {
             hour12: false,
             timeZone: 'Asia/Ho_Chi_Minh',
-          }) + ' (SSI trực tiếp)'
+          })
         );
       }
     } catch (err) {
@@ -208,7 +193,7 @@ export const MarkMinerviniScreener: React.FC = () => {
       setScanFeedback({
         symbol: sym || '---',
         type: 'warning',
-        message: 'Vui lòng nhập đúng mã cổ phiếu gồm 3 ký tự (Ví dụ: ABB, MSR, VND, DIG).',
+        message: 'Mã cổ phiếu gồm 3 ký tự, ví dụ FPT, HPG.',
       });
       return;
     }
@@ -251,7 +236,7 @@ export const MarkMinerviniScreener: React.FC = () => {
             score: newItem.criteriaPassed,
             rsRating: newItem.rsRating,
             isStage2: false,
-            message: `🚫 LOẠI KHỎI BỘ LỌC CHỐNG THAO TÚNG — Mã [${sym}] có GTGD TB 20 phiên = ${(newItem.avgVal20B ?? 0).toLocaleString('vi-VN')} tỷ/phiên và Vốn hóa = ${(newItem.mktCapT || 0).toLocaleString('vi-VN')} Tỷ VNĐ. Yêu cầu tối thiểu: GTGD ≥ ${DEFAULT_MIN_VALUE_B} tỷ/phiên duy trì đều nhiều phiên & Vốn hóa ≥ ${DEFAULT_MIN_CAP_B.toLocaleString('vi-VN')} Tỷ VNĐ (Điểm kỹ thuật tham khảo: ${newItem.criteriaPassed}/8, RS ${newItem.rsRating}).`,
+            message: `${sym} không đưa vào bộ lọc vì thanh khoản hoặc vốn hoá thấp: giao dịch TB 20 phiên ${(newItem.avgVal20B ?? 0).toLocaleString('vi-VN')} tỷ/phiên, vốn hoá ${(newItem.mktCapT || 0).toLocaleString('vi-VN')} tỷ (cần từ ${DEFAULT_MIN_VALUE_B} tỷ/phiên và ${DEFAULT_MIN_CAP_B.toLocaleString('vi-VN')} tỷ).`,
           });
         } else if (newItem.isStage2Eligible) {
           setScanFeedback({
@@ -260,12 +245,12 @@ export const MarkMinerviniScreener: React.FC = () => {
             score: newItem.criteriaPassed,
             rsRating: newItem.rsRating,
             isStage2: true,
-            message: `🎉 ĐẠT CHUẨN STAGE 2 (8/8) — Nhóm ngành [${newItem.sector}]: Cổ phiếu [${sym}] đạt 8/8 tiêu chí Trend Template, RS Rating: ${newItem.rsRating}/99, GTGD TB 20N: ${(newItem.avgVal20B ?? 0).toLocaleString('vi-VN')} tỷ/phiên, Vốn hóa: ${(newItem.mktCapT || 0).toLocaleString('vi-VN')} Tỷ.`,
+            message: `${sym} đạt đủ 8/8 tiêu chí xu hướng (RS ${newItem.rsRating}). Xem cột Quyết định để biết đã mua được chưa.`,
           });
         } else {
           const failedText =
             Array.isArray(newItem.failedCriteria) && newItem.failedCriteria.length > 0
-              ? ` | Thiếu: ${newItem.failedCriteria.join(', ')}`
+              ? ` Còn thiếu: ${newItem.failedCriteria.map((c) => c.replace(/^\d+\.\s*/, '')).join('; ')}.`
               : '';
           setScanFeedback({
             symbol: sym,
@@ -273,21 +258,21 @@ export const MarkMinerviniScreener: React.FC = () => {
             score: newItem.criteriaPassed,
             rsRating: newItem.rsRating,
             isStage2: false,
-            message: `⚠️ CHƯA ĐẠT STAGE 2 (${newItem.criteriaPassed}/8) — Nhóm ngành [${newItem.sector}]: Cổ phiếu [${sym}] đạt ${newItem.criteriaPassed}/8 tiêu chí, RS Rating: ${newItem.rsRating}/99${failedText}.`,
+            message: `${sym} đạt ${newItem.criteriaPassed}/8 tiêu chí, chưa vào xu hướng tăng chuẩn.${failedText}`,
           });
         }
       } else {
         setScanFeedback({
           symbol: sym,
           type: 'error',
-          message: `Không tìm thấy dữ liệu giao dịch cho mã [${sym}] trên sàn HOSE/HNX/UPCoM. Vui lòng kiểm tra lại mã.`,
+          message: `Không tìm thấy dữ liệu giao dịch của mã ${sym}. Bạn kiểm tra lại mã nhé.`,
         });
       }
-    } catch (err: any) {
+    } catch {
       setScanFeedback({
         symbol: sym,
         type: 'error',
-        message: `Lỗi khi quét mã [${sym}]: ${err.message || 'Không thể kết nối API'}`,
+        message: `Chưa kiểm tra được mã ${sym}, bạn thử lại sau.`,
       });
     } finally {
       setIsSearchingOnDemand(false);
@@ -321,7 +306,7 @@ export const MarkMinerviniScreener: React.FC = () => {
   useDnseWebSocket(screenerSymbols.length > 0 ? screenerSymbols : undefined);
 
   // Live merge of real-time trade ticks & audited Vietcap financials
-  const liveEnrichedItems = useMemo(() => {
+  const liveEnrichedBase = useMemo(() => {
     return items.map((item) => {
       const sym = item.symbol.toUpperCase();
       const live = ticks[sym];
@@ -417,16 +402,7 @@ export const MarkMinerviniScreener: React.FC = () => {
         epsGrowthYoY: item.epsGrowthYoY ?? fin?.earningsGrowthYoY ?? null,
       };
 
-      const actionPlan: ScreenerActionPlan = evaluateScreenerActionPlan(
-        mergedItem,
-        marketStateInfo.state
-      );
-
-      return {
-        ...mergedItem,
-        actionPlan,
-        actionPriority: actionPlan.priorityScore,
-      };
+      return mergedItem;
     }).filter((item) => {
       // Loại bỏ cổ phiếu GTGD thấp hoặc vốn hóa nhỏ khỏi toàn bộ Bộ lọc, Top Leaders & Top Ngành (ngay cả khi RS = 99)
       const avgValueB =
@@ -435,7 +411,22 @@ export const MarkMinerviniScreener: React.FC = () => {
       if (minMktCapT > 0 && (item.mktCapT || 0) < minMktCapT) return false;
       return true;
     });
-  }, [items, ticks, minAvgVal20B, minMktCapT, marketStateInfo.state]);
+  }, [items, ticks, minAvgVal20B, minMktCapT]);
+
+  // Quyết định mua lấy từ CÙNG nguồn với trang chi tiết mã (utils/screenerDecision.ts), chỉ cho mã từ 7/8 trở lên
+  const decisionSymbols = useMemo(
+    () => liveEnrichedBase.filter((it) => (it.criteriaPassed ?? 0) >= DECISION_MIN_CRITERIA).map((it) => it.symbol),
+    [liveEnrichedBase]
+  );
+  const { decisions, pending: decisionsPending } = useScreenerDecisions(decisionSymbols);
+  const liveEnrichedItems = useMemo(
+    () =>
+      liveEnrichedBase.map((it) => {
+        const decision: ScreenerDecision = toScreenerDecision(it.criteriaPassed ?? 0, decisions[it.symbol]);
+        return { ...it, decision, decisionPriority: decision.priority };
+      }),
+    [liveEnrichedBase, decisions]
+  );
 
   // Handle column header click to auto-sort
   const handleSort = (key: string) => {
@@ -492,22 +483,8 @@ export const MarkMinerviniScreener: React.FC = () => {
       }
 
       if (actionFilter !== 'ALL') {
-        if (actionFilter === 'BUY_NEW' && item.actionPlan.signal !== 'BUY_NEW') return false;
-        if (actionFilter === 'SCALE_UP' && item.actionPlan.signal !== 'SCALE_UP') return false;
-        if (
-          actionFilter === 'READY_ADD' &&
-          !(item.actionPlan.signal !== 'SCALE_UP' && item.actionPlan.isReadyToScaleUpSoon)
-        ) {
-          return false;
-        }
-        if (
-          actionFilter === 'STAGE2_WAIT' &&
-          item.actionPlan.signal !== 'HOLD_WAIT' &&
-          item.actionPlan.signal !== 'EXTENDED' &&
-          item.actionPlan.signal !== 'CAUTION_DIST'
-        ) {
-          return false;
-        }
+        // Lọc theo nhóm quyết định: bỏ qua ngưỡng RS / số tiêu chí để thấy đủ các mã của nhóm
+        return item.decision.status === actionFilter;
       }
 
       if (item.rsRating < minRs) {
@@ -538,23 +515,22 @@ export const MarkMinerviniScreener: React.FC = () => {
       if (diff !== 0) return diff;
 
       // Tie-breaker: if sorting by score, tie-break by rsRating desc; otherwise tie-break by score desc
-      if (sortKey === 'score') {
+      if (sortKey === 'score' || sortKey === 'decisionPriority') {
         return (b.rsRating || 0) - (a.rsRating || 0);
       }
       return (b.score || 0) - (a.score || 0);
     });
   }, [liveEnrichedItems, searchQuery, selectedSector, selectedExchange, volSignalFilter, actionFilter, minRs, minScore, onlyStage2, sortKey, sortDir]);
 
-  const handleSelectActionFilter = (next: ActionQuickFilter) => {
+  const handleSelectActionFilter = (next: DecisionFilter) => {
     setActionFilter(next);
     if (next !== 'ALL') {
       setSearchQuery('');
       setSelectedSector('all');
       setSelectedExchange('all');
       setVolSignalFilter('all');
-      if (minRs > 70) setMinRs(70);
       setMainViewMode('table');
-      setSortKey('actionPriority');
+      setSortKey('decisionPriority');
       setSortDir('desc');
     }
   };
@@ -611,11 +587,6 @@ export const MarkMinerviniScreener: React.FC = () => {
   // Summary counts
   const stage2Count = useMemo(() => liveEnrichedItems.filter((x) => x.criteriaPassed === 8).length, [liveEnrichedItems]);
   const nearStage2Count = useMemo(() => liveEnrichedItems.filter((x) => x.criteriaPassed === 7).length, [liveEnrichedItems]);
-  const leadersCount = useMemo(() => liveEnrichedItems.filter((x) => x.rsRating >= 90).length, [liveEnrichedItems]);
-  const topSectors = useMemo(() => {
-    return sectorGroups.slice(0, 3).map((g) => g.sector);
-  }, [sectorGroups]);
-
   // Real-time pass statistics for each of the 8 official Mark Minervini Trend Template criteria
   const criteriaPassStats = useMemo(() => {
     const total = liveEnrichedItems.length || 1;
@@ -652,176 +623,84 @@ export const MarkMinerviniScreener: React.FC = () => {
     <div className="space-y-6">
       {/* Cổng thị trường: tỷ trọng mua theo trạng thái (đã kiểm chứng trên dữ liệu VN) */}
       <MarketStateBanner />
-      {/* ── Top Header Banner: Minervini Pro Screener ─────────────────── */}
-      <div className="p-6 bg-zinc-950/90 border border-zinc-800/80 rounded-2xl shadow-2xl backdrop-blur-xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="relative z-10 flex flex-wrap items-center justify-between gap-4">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="p-2 rounded-xl bg-amber-400/10 border border-amber-400/30 text-amber-400">
-                <Sparkle className="w-5 h-5" weight="fill" />
-              </span>
-              <h2 className="text-xl font-mono font-black text-zinc-100 tracking-tight">
-                BỘ LỌC CỔ PHIẾU MARK MINERVINI
-              </h2>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-400/10 text-amber-400 border border-amber-400/20">
-                TREND TEMPLATE STAGE 2
-              </span>
-              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                {wsStatus === 'connected' ? 'ĐANG NHẬN GIÁ TRỰC TIẾP' : 'ĐỒNG BỘ THỜI GIAN THỰC'}
-              </span>
-            </div>
-            <p className="text-xs text-zinc-400">
-              Chiến lược tìm kiếm siêu cổ phiếu tăng trưởng đột biến (SEPA) & Xếp hạng Sức mạnh Giá Tương đối (RS Rating 1-99)
+      {/* ── Đầu trang: tên, chế độ xem, quét lại ── */}
+      <div className="rounded-2xl border border-zinc-800/80 bg-zinc-950/90 p-4 sm:p-5">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h2 className="text-lg font-bold text-zinc-100">Bộ lọc cổ phiếu xu hướng tăng</h2>
+            <p className="mt-1 text-xs text-zinc-400">
+              {scanMeta?.scannedAtText ? `Quét lúc ${scanMeta.scannedAtText}` : 'Đang tải bản quét'}
+              {' · '}
+              <span className="text-emerald-300 font-semibold">{stage2Count} mã đạt 8/8</span>
+              {' · '}
+              {nearStage2Count} mã đạt 7/8 · trong {liveEnrichedItems.length} mã đủ thanh khoản
+              {lastUpdated ? ` · Giá cập nhật ${lastUpdated}` : ''}
             </p>
           </div>
-
-          <div className="flex items-center gap-3">
-            {/* View Mode Toggle: Table vs Sectors vs Cycle */}
-            <div className="flex items-center bg-zinc-900 p-1 rounded-xl border border-zinc-800 font-mono text-xs">
-              <button
-                onClick={() => setMainViewMode('table')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition-all ${
-                  mainViewMode === 'table'
-                    ? 'bg-amber-400 text-zinc-950 shadow-sm'
-                    : 'text-zinc-400 hover:text-zinc-200'
-                }`}
-              >
-                <TableIcon className="w-4 h-4" />
-                <span>Bảng Lọc Chi Tiết</span>
-              </button>
-              <button
-                onClick={() => setMainViewMode('sectors')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition-all ${
-                  mainViewMode === 'sectors'
-                    ? 'bg-amber-400 text-zinc-950 shadow-sm'
-                    : 'text-zinc-400 hover:text-zinc-200'
-                }`}
-              >
-                <Buildings className="w-4 h-4" />
-                <span>Top CP Theo Ngành</span>
-              </button>
-              <button
-                onClick={() => setMainViewMode('cycle')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition-all ${
-                  mainViewMode === 'cycle'
-                    ? 'bg-emerald-400 text-zinc-950 shadow-sm'
-                    : 'text-zinc-400 hover:text-zinc-200'
-                }`}
-              >
-                <Compass className="w-4 h-4" />
-                <span>Vòng Tròn Chu Kỳ</span>
-              </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center rounded-xl border border-zinc-800 bg-zinc-900 p-1 text-xs" role="tablist" aria-label="Chế độ xem">
+              {(
+                [
+                  ['table', 'Bảng', TableIcon],
+                  ['sectors', 'Theo ngành', Buildings],
+                  ['cycle', 'Chu kỳ kinh tế', Compass],
+                ] as const
+              ).map(([mode, label, Icon]) => (
+                <button
+                  key={mode}
+                  role="tab"
+                  aria-selected={mainViewMode === mode}
+                  onClick={() => setMainViewMode(mode)}
+                  className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-semibold transition-colors ${
+                    mainViewMode === mode ? 'bg-amber-400 text-zinc-950' : 'text-zinc-400 hover:text-zinc-200'
+                  }`}
+                >
+                  <Icon className="h-4 w-4" />
+                  <span>{label}</span>
+                </button>
+              ))}
             </div>
-
-            {/* Quick Scan Button */}
             <button
               onClick={() => fetchScreenerData(true)}
               disabled={isLoading}
-              title="Quét lại 182 mã thị trường thật qua DNSE"
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-rose-600 hover:from-amber-400 hover:via-orange-400 hover:to-rose-500 text-zinc-950 font-mono font-black text-xs transition-all shadow-lg shadow-amber-500/25 active:scale-95 border border-amber-300/40 cursor-pointer disabled:opacity-50"
+              title="Tính lại danh sách theo giá mới nhất"
+              className="flex items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-xs font-semibold text-zinc-200 transition-colors hover:border-amber-400/60 hover:text-amber-300 disabled:opacity-60"
             >
-              <ArrowClockwise className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} weight="bold" />
-              <span>{isLoading ? 'ĐANG QUÉT THẬT...' : '⚡ QUÉT LẠI'}</span>
+              <ArrowClockwise className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} weight="bold" />
+              <span>{isLoading ? 'Đang quét…' : 'Quét lại'}</span>
             </button>
           </div>
         </div>
 
-        {/* ── Metric Summary Cards ───────────────────────────────────── */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-6 pt-6 border-t border-zinc-800/80">
-          <div className="p-3.5 rounded-xl bg-zinc-900/60 border border-zinc-800">
-            <div className="flex items-center justify-between text-zinc-400 text-xs font-mono mb-1">
-              <span>Đạt Trend Template (8/8)</span>
-              <ShieldCheck className="w-4 h-4 text-emerald-400" />
-            </div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-mono font-black text-emerald-400">{stage2Count}</span>
-              <span className="text-xs font-mono text-amber-400 font-bold">(+{nearStage2Count} mã 7/8)</span>
-              <span className="text-xs font-mono text-zinc-500">/ {items.length} mã</span>
-            </div>
-          </div>
-
-          <div className="p-3.5 rounded-xl bg-zinc-900/60 border border-zinc-800">
-            <div className="flex items-center justify-between text-zinc-400 text-xs font-mono mb-1">
-              <span>Top Leaders (RS &gt;= 90)</span>
-              <Flame className="w-4 h-4 text-amber-400" />
-            </div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-mono font-black text-amber-400">{leadersCount}</span>
-              <span className="text-xs font-mono text-zinc-500">cổ phiếu siêu sao</span>
-            </div>
-          </div>
-
-          <div className="p-3.5 rounded-xl bg-zinc-900/60 border border-zinc-800">
-            <div className="flex items-center justify-between text-zinc-400 text-xs font-mono mb-1">
-              <span>Top Ngành Dẫn Sóng</span>
-              <TrendUp className="w-4 h-4 text-cyan-400" />
-            </div>
-            <div className="text-xs font-mono font-bold text-zinc-200 truncate mt-1">
-              {topSectors.length > 0 ? topSectors.join(' · ') : 'Chứng khoán, Thép, Công nghệ'}
-            </div>
-          </div>
-
-          <div className="p-3.5 rounded-xl bg-zinc-900/60 border border-zinc-800">
-            <div className="flex items-center justify-between text-zinc-400 text-xs font-mono mb-1">
-              <span>Lịch Quét Tự Động</span>
-              <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-1.5 py-0.2 rounded border border-emerald-500/20">
-                2 LẦN/NGÀY
-              </span>
-            </div>
-            <div className="text-xs font-mono text-zinc-200 mt-1 flex flex-col gap-0.5">
-              <span className="font-semibold text-zinc-100">{scanMeta?.sessionLabel || 'Phiên Sáng (11:30) & Chiều (15:00)'}</span>
-              <span className="text-[10px] text-zinc-400">
-                {scanMeta?.scannedAtText ? `Lúc: ${scanMeta.scannedAtText}` : 'Nguồn 100% Real DNSE'}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* ── Active 8 Official Trend Template Criteria Chips ─────────────────── */}
-        <div className="mt-4 pt-4 border-t border-zinc-800/80">
-          <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-            <div className="flex items-center gap-2">
-              <Funnel className="w-3.5 h-3.5 text-amber-400" />
-              <span className="text-xs font-mono font-bold text-zinc-300 uppercase tracking-wider">
-                8 Tiêu Chí Chuẩn Mark Minervini SEPA Trend Template (Stage 2 Uptrend):
-              </span>
-            </div>
-            <span className="text-[11px] font-mono text-zinc-400">
-              Đang hiển thị: <strong className="text-amber-400">{filteredAndSortedItems.length}</strong> / {liveEnrichedItems.length} mã quét thực tế
-            </span>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+        {/* 8 tiêu chí: gập lại mặc định, mở khi cần */}
+        <details className="group mt-3 border-t border-zinc-800/80 pt-3">
+          <summary className="flex cursor-pointer list-none items-center gap-1.5 text-xs text-zinc-400 hover:text-zinc-200">
+            <CaretDown className="h-3.5 w-3.5 transition-transform group-open:rotate-180" />
+            Xem 8 tiêu chí xu hướng và số mã đạt từng tiêu chí
+          </summary>
+          <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
             {criteriaPassStats.map((stat) => (
               <div
                 key={stat.id}
                 title={stat.fullLabel}
-                className="flex items-center justify-between gap-2 px-3 py-1.5 rounded-xl bg-zinc-900/90 border border-amber-500/25 text-[11px] font-mono shadow-sm hover:border-amber-400/60 transition-all"
+                className="flex items-center justify-between gap-2 rounded-lg border border-zinc-800 bg-zinc-900/80 px-3 py-1.5 text-[11px]"
               >
-                <div className="flex items-center gap-1.5 min-w-0">
-                  <span className="px-1.5 py-0.5 rounded bg-amber-400/15 text-amber-300 font-black text-[10px] shrink-0">
-                    C{stat.id}
-                  </span>
-                  <span className="text-zinc-200 font-semibold truncate">{stat.shortLabel}</span>
-                </div>
-                <span className="text-[10px] text-emerald-400 font-bold shrink-0">
-                  {stat.passedCount}/{stat.total} ({stat.pct}%)
+                <span className="truncate text-zinc-200">{stat.shortLabel}</span>
+                <span className="shrink-0 font-mono text-zinc-400">
+                  {stat.passedCount}/{stat.total}
                 </span>
               </div>
             ))}
           </div>
-        </div>
+        </details>
       </div>
 
-      {/* ── BẢNG TỔNG KẾT VỊ THẾ: MÃ MUA MỚI (30%) & MÃ GIA TĂNG VỊ THẾ (+40%) ── */}
-      <ScreenerActionSummaryPanel
-        rows={liveEnrichedItems.map((it) => ({ item: it, plan: it.actionPlan }))}
+      {/* ── Kết luận: nhóm quyết định (giống trang chi tiết mã) ── */}
+      <ScreenerDecisionSummary
+        rows={liveEnrichedItems.map((it) => ({ symbol: it.symbol, decision: it.decision }))}
         marketState={marketStateInfo.state}
-        marketProvisional={marketStateInfo.provisional}
+        pending={decisionsPending}
         activeFilter={actionFilter}
-        lastUpdated={lastUpdated}
-        wsStatus={wsStatus}
         onSelectFilter={handleSelectActionFilter}
         onSelectStock={handleSelectStock}
       />
@@ -1217,7 +1096,7 @@ export const MarkMinerviniScreener: React.FC = () => {
                   <MagnifyingGlass className="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
-                    placeholder="Mã CP (vd: ABB, MSR)..."
+                    placeholder="Tìm mã, vd: FPT"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onKeyDown={(e) => {
@@ -1244,14 +1123,14 @@ export const MarkMinerviniScreener: React.FC = () => {
                   onClick={() => handleScanCustomSymbol(searchQuery)}
                   disabled={isSearchingOnDemand}
                   className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-zinc-950 font-mono font-black text-xs transition-all shadow-sm active:scale-95 cursor-pointer disabled:opacity-50"
-                  title="Quét và kiểm tra cổ phiếu theo chuẩn Minervini"
+                  title="Kiểm tra một mã theo 8 tiêu chí xu hướng"
                 >
                   {isSearchingOnDemand ? (
                     <ArrowClockwise className="w-3.5 h-3.5 animate-spin text-zinc-950" />
                   ) : (
                     <Sparkle className="w-3.5 h-3.5 text-zinc-950" weight="fill" />
                   )}
-                  <span>{isSearchingOnDemand ? 'ĐANG QUÉT...' : '⚡ QUÉT MÃ'}</span>
+                  <span>{isSearchingOnDemand ? 'Đang kiểm tra…' : 'Kiểm tra mã'}</span>
                 </button>
               </div>
 
@@ -1475,79 +1354,34 @@ export const MarkMinerviniScreener: React.FC = () => {
             </div>
           )}
 
-          {/* ── Quick Sort Shortcuts Ribbon ───────────────────────────────── */}
-          <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 rounded-xl bg-zinc-950/80 border border-zinc-800/80 text-xs font-mono text-zinc-400">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-zinc-500 font-bold uppercase text-[10px]">Sắp Xếp Nhanh:</span>
+          {/* ── Sắp xếp nhanh ── */}
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            <span className="text-zinc-500">Sắp xếp:</span>
+            {(
+              [
+                ['decisionPriority', 'Theo quyết định'],
+                ['rsRating', 'RS cao nhất'],
+                ['changePct', 'Tăng mạnh nhất'],
+                ['volume', 'Khối lượng lớn'],
+                ['score', 'Số tiêu chí đạt'],
+              ] as const
+            ).map(([key, label]) => (
               <button
+                key={key}
                 onClick={() => {
-                  setSortKey('actionPriority');
+                  setSortKey(key);
                   setSortDir('desc');
                 }}
-                className={`px-2.5 py-1 rounded-lg border transition-all cursor-pointer ${
-                  sortKey === 'actionPriority'
-                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 font-black'
-                    : 'bg-zinc-900 border-zinc-800 hover:text-zinc-200'
+                aria-pressed={sortKey === key}
+                className={`rounded-lg border px-2.5 py-1 transition-colors ${
+                  sortKey === key
+                    ? 'border-amber-400/50 bg-amber-400/15 font-semibold text-amber-200'
+                    : 'border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-200'
                 }`}
               >
-                🎯 Ưu Tiên Mua &amp; Gia Tăng
+                {label}
               </button>
-              <button
-                onClick={() => {
-                  setSortKey('rsRating');
-                  setSortDir('desc');
-                }}
-                className={`px-2.5 py-1 rounded-lg border transition-all ${
-                  sortKey === 'rsRating'
-                    ? 'bg-amber-400/20 text-amber-300 border-amber-400/40 font-black'
-                    : 'bg-zinc-900 border-zinc-800 hover:text-zinc-200'
-                }`}
-              >
-                🔥 RS Rating cao nhất
-              </button>
-              <button
-                onClick={() => {
-                  setSortKey('changePct');
-                  setSortDir('desc');
-                }}
-                className={`px-2.5 py-1 rounded-lg border transition-all ${
-                  sortKey === 'changePct'
-                    ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40 font-black'
-                    : 'bg-zinc-900 border-zinc-800 hover:text-zinc-200'
-                }`}
-              >
-                % Tăng Mạnh Nhất
-              </button>
-              <button
-                onClick={() => {
-                  setSortKey('volume');
-                  setSortDir('desc');
-                }}
-                className={`px-2.5 py-1 rounded-lg border transition-all ${
-                  sortKey === 'volume'
-                    ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/40 font-black'
-                    : 'bg-zinc-900 border-zinc-800 hover:text-zinc-200'
-                }`}
-              >
-                ⚡ Khối Lượng Cao
-              </button>
-              <button
-                onClick={() => {
-                  setSortKey('score');
-                  setSortDir('desc');
-                }}
-                className={`px-2.5 py-1 rounded-lg border transition-all ${
-                  sortKey === 'score'
-                    ? 'bg-amber-500/20 text-amber-400 border-amber-500/40 font-black'
-                    : 'bg-zinc-900 border-zinc-800 hover:text-zinc-200'
-                }`}
-              >
-                🛡️ Tiêu Chí 8/8
-              </button>
-            </div>
-            <div className="text-[11px] text-zinc-500">
-              Bấm vào bất kỳ tiêu đề cột nào để tự động đảo chiều sắp xếp (↑ / ↓)
-            </div>
+            ))}
           </div>
 
           {/* ── Screener Data Table ───────────────────────────────────────── */}
@@ -1717,12 +1551,14 @@ export const MarkMinerviniScreener: React.FC = () => {
                       Stage 2 {renderSortIcon('score')}
                     </th>
                     <th
-                      onClick={() => handleSort('actionPriority')}
-                      className="py-3 px-3 text-left cursor-pointer hover:bg-zinc-800/80 hover:text-emerald-300 transition-colors bg-emerald-500/5"
+                      onClick={() => handleSort('decisionPriority')}
+                      className="py-3 px-3 text-left cursor-pointer hover:bg-zinc-800/80 hover:text-zinc-100 transition-colors"
                     >
-                      Khuyến Nghị Vị Thế {renderSortIcon('actionPriority')}
+                      Quyết định {renderSortIcon('decisionPriority')}
                     </th>
-                    <th className="py-3 px-4 text-center">Hành động</th>
+                    <th className="py-3 px-4 text-center">
+                      <span className="sr-only">Chi tiết</span>
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-900">
@@ -2056,47 +1892,15 @@ export const MarkMinerviniScreener: React.FC = () => {
                             )}
                           </td>
 
-                          {/* Position Action & Scale-Up Plan */}
-                          <td className="py-3 px-3 text-left tabular-nums">
-                            <div className="flex flex-col items-start gap-1 min-w-[185px]">
-                              <div className="flex flex-wrap items-center gap-1">
-                                <span
-                                  className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold border ${
-                                    item.actionPlan.signal === 'BUY_NEW'
-                                      ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/35'
-                                      : item.actionPlan.signal === 'SCALE_UP'
-                                      ? 'bg-cyan-500/15 text-cyan-300 border-cyan-500/40'
-                                      : item.actionPlan.signal === 'HOLD_WAIT'
-                                      ? 'bg-zinc-800 text-zinc-200 border-zinc-700'
-                                      : item.actionPlan.signal === 'EXTENDED'
-                                      ? 'bg-amber-500/15 text-amber-300 border-amber-500/35'
-                                      : item.actionPlan.signal === 'CAUTION_DIST'
-                                      ? 'bg-rose-500/15 text-rose-300 border-rose-500/35'
-                                      : item.actionPlan.signal === 'WATCH_NEAR'
-                                      ? 'bg-amber-500/10 text-amber-300 border-amber-500/25'
-                                      : 'bg-zinc-900 text-zinc-500 border-zinc-800'
-                                  }`}
-                                >
-                                  {item.actionPlan.badgeLabel}
-                                </span>
-                                {item.actionPlan.isReadyToScaleUpSoon && item.actionPlan.signal !== 'SCALE_UP' && (
-                                  <span
-                                    title={item.actionPlan.nextScaleUpLabel}
-                                    className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30"
-                                  >
-                                    Sẵn sàng bồi
-                                  </span>
-                                )}
-                              </div>
-                              <span className="text-[10px] font-mono text-zinc-300 truncate max-w-[215px]">
-                                {item.actionPlan.actionZoneLabel}
+                          {/* Quyết định (giống trang chi tiết mã) */}
+                          <td className="py-3 px-3 text-left">
+                            <div className="flex min-w-[170px] flex-col items-start gap-1">
+                              <span className={`rounded-md border px-2 py-0.5 text-[11px] font-semibold ${STATUS_TONE[item.decision.status]}`}>
+                                {item.decision.label}
                               </span>
-                              {item.actionPlan.stopLossVnd && (
-                                <span className="text-[9px] font-mono text-zinc-500 truncate max-w-[215px]">
-                                  SL: <span className="text-rose-400">{item.actionPlan.stopLossVnd.toLocaleString('vi-VN')}</span>
-                                  {item.actionPlan.pivotVnd && item.actionPlan.signal === 'BUY_NEW' && (
-                                    <> · Bồi &gt;{item.actionPlan.pivotVnd.toLocaleString('vi-VN')}</>
-                                  )}
+                              {item.decision.detail && (
+                                <span className="max-w-[230px] truncate text-[10px] text-zinc-400" title={item.decision.detail}>
+                                  {item.decision.detail}
                                 </span>
                               )}
                             </div>
@@ -2111,7 +1915,7 @@ export const MarkMinerviniScreener: React.FC = () => {
                               }}
                               className="px-2.5 py-1 rounded-lg bg-amber-400/10 hover:bg-amber-400 text-amber-400 hover:text-zinc-950 border border-amber-400/20 text-[11px] font-mono font-bold transition-all inline-flex items-center gap-1"
                             >
-                              <span>Xem biểu đồ</span>
+                              <span>Chi tiết</span>
                               <ArrowRight className="w-3 h-3" />
                             </button>
                           </td>

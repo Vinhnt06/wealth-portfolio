@@ -15,7 +15,9 @@
  *  3) GIẢM / THOÁT chỉ cần MỘT trong hai cảnh báo (phép HOẶC): bảo toàn vốn quan trọng hơn bắt đủ sóng.
  *     Wyckoff thường lộ phân phối trước khi MA kịp quay đầu; Stage hỏng thì cấu trúc xu hướng đã gãy dù Wyckoff còn "đẹp".
  *
- *  4) Chế độ thị trường và dấu hiệu phân phối nhẹ KHÔNG đổi hướng quyết định, chỉ giảm quy mô vị thế (HALF).
+ *  4) Thị trường Bất lợi (utils/marketState.ts) chặn mở vị thế mới: điểm mua thành CHỜ THỊ TRƯỜNG.
+ *     Dấu hiệu phân phối nhẹ không đổi hướng quyết định, chỉ giảm quy mô vị thế (HALF).
+ *     Bộ lọc cổ phiếu hiển thị đúng quyết định này (utils/screenerDecision.ts), không có quy tắc mua riêng.
  */
 import type { StageResult } from './stageEngine';
 import type { CycleContext } from './wyckoffContext';
