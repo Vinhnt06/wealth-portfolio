@@ -37,6 +37,16 @@ import {
   VN_UNIVERSE_RULES,
   passesVnInvestableUniverse,
 } from '../utils/minerviniEvaluator';
+import {
+  evaluateScreenerActionPlan,
+  recomputeLiveVolMetrics,
+  ScreenerActionPlan,
+} from '../utils/screenerActionPlanner';
+import { MarketStateKey } from '../utils/marketState';
+import {
+  ScreenerActionSummaryPanel,
+  ActionQuickFilter,
+} from './ScreenerActionSummaryPanel';
 import { getStockPriceColor } from '../utils/priceColors';
 import { SECTOR_MAPPING, ICB_20_SECTORS } from '../data/sectorMapping';
 import { EconomicCycleWheel } from './EconomicCycleWheel';
@@ -76,6 +86,11 @@ export const MarkMinerviniScreener: React.FC = () => {
   const [minScore, setMinScore] = useState<number>(7);
   const [onlyStage2, setOnlyStage2] = useState<boolean>(false);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState<boolean>(false);
+  const [actionFilter, setActionFilter] = useState<ActionQuickFilter>('ALL');
+  const [marketStateInfo, setMarketStateInfo] = useState<{
+    state: MarketStateKey;
+    provisional?: boolean;
+  }>({ state: 'NEUTRAL', provisional: false });
 
   // Sorting state (Auto-sorts dynamically when clicked)
   const [sortKey, setSortKey] = useState<string>('score');
@@ -167,6 +182,18 @@ export const MarkMinerviniScreener: React.FC = () => {
 
   useEffect(() => {
     fetchScreenerData();
+    fetch('/api/market/state')
+      .then((r) => r.json())
+      .then((j) => {
+        if (j?.success && j?.data?.current?.state) {
+          setMarketStateInfo({
+            state: j.data.current.state as MarketStateKey,
+            provisional: Boolean(j.data.current.provisional),
+          });
+        }
+      })
+      .catch(() => {});
+
     // Auto-refresh realtime market data from SSI every 10 seconds during trading sessions
     const interval = setInterval(() => {
       fetchScreenerData(false, true);
@@ -358,12 +385,24 @@ export const MarkMinerviniScreener: React.FC = () => {
       }
 
       const mktCapT = calcMarketCapT(sym, livePriceK, item.listedSharesM);
+      const { relVol: liveRelVol, volSignal: liveVolSignal } = recomputeLiveVolMetrics({
+        priceK: livePriceK,
+        changePct: currentChangePct,
+        volume: currentVolume,
+        avgVol20: item.avgVol20,
+        maxDownVol10: item.maxDownVol10,
+        sma50: item.sma50,
+        fallbackRelVol: item.relVol,
+        fallbackSignal: item.volSignal,
+      });
 
-      return {
+      const mergedItem: MinerviniScreenerItem = {
         ...item,
         price: currentPrice,
         changePct: currentChangePct,
         volume: currentVolume,
+        relVol: liveRelVol,
+        volSignal: liveVolSignal,
         mktCapT,
         failedCriteria,
         distHigh,
@@ -377,6 +416,17 @@ export const MarkMinerviniScreener: React.FC = () => {
         pe: item.pe ?? fin?.pe ?? null,
         epsGrowthYoY: item.epsGrowthYoY ?? fin?.earningsGrowthYoY ?? null,
       };
+
+      const actionPlan: ScreenerActionPlan = evaluateScreenerActionPlan(
+        mergedItem,
+        marketStateInfo.state
+      );
+
+      return {
+        ...mergedItem,
+        actionPlan,
+        actionPriority: actionPlan.priorityScore,
+      };
     }).filter((item) => {
       // Loại bỏ cổ phiếu GTGD thấp hoặc vốn hóa nhỏ khỏi toàn bộ Bộ lọc, Top Leaders & Top Ngành (ngay cả khi RS = 99)
       const avgValueB =
@@ -385,7 +435,7 @@ export const MarkMinerviniScreener: React.FC = () => {
       if (minMktCapT > 0 && (item.mktCapT || 0) < minMktCapT) return false;
       return true;
     });
-  }, [items, ticks, minAvgVal20B, minMktCapT]);
+  }, [items, ticks, minAvgVal20B, minMktCapT, marketStateInfo.state]);
 
   // Handle column header click to auto-sort
   const handleSort = (key: string) => {
@@ -441,6 +491,25 @@ export const MarkMinerviniScreener: React.FC = () => {
         }
       }
 
+      if (actionFilter !== 'ALL') {
+        if (actionFilter === 'BUY_NEW' && item.actionPlan.signal !== 'BUY_NEW') return false;
+        if (actionFilter === 'SCALE_UP' && item.actionPlan.signal !== 'SCALE_UP') return false;
+        if (
+          actionFilter === 'READY_ADD' &&
+          !(item.actionPlan.signal !== 'SCALE_UP' && item.actionPlan.isReadyToScaleUpSoon)
+        ) {
+          return false;
+        }
+        if (
+          actionFilter === 'STAGE2_WAIT' &&
+          item.actionPlan.signal !== 'HOLD_WAIT' &&
+          item.actionPlan.signal !== 'EXTENDED' &&
+          item.actionPlan.signal !== 'CAUTION_DIST'
+        ) {
+          return false;
+        }
+      }
+
       if (item.rsRating < minRs) {
         return false;
       }
@@ -474,7 +543,21 @@ export const MarkMinerviniScreener: React.FC = () => {
       }
       return (b.score || 0) - (a.score || 0);
     });
-  }, [liveEnrichedItems, searchQuery, selectedSector, selectedExchange, volSignalFilter, minRs, minScore, onlyStage2, sortKey, sortDir]);
+  }, [liveEnrichedItems, searchQuery, selectedSector, selectedExchange, volSignalFilter, actionFilter, minRs, minScore, onlyStage2, sortKey, sortDir]);
+
+  const handleSelectActionFilter = (next: ActionQuickFilter) => {
+    setActionFilter(next);
+    if (next !== 'ALL') {
+      setSearchQuery('');
+      setSelectedSector('all');
+      setSelectedExchange('all');
+      setVolSignalFilter('all');
+      if (minRs > 70) setMinRs(70);
+      setMainViewMode('table');
+      setSortKey('actionPriority');
+      setSortDir('desc');
+    }
+  };
 
   // Sector groups for "Top cổ phiếu theo nhóm ngành"
   const sectorGroups = useMemo(() => {
@@ -730,6 +813,18 @@ export const MarkMinerviniScreener: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* ── BẢNG TỔNG KẾT VỊ THẾ: MÃ MUA MỚI (30%) & MÃ GIA TĂNG VỊ THẾ (+40%) ── */}
+      <ScreenerActionSummaryPanel
+        rows={liveEnrichedItems.map((it) => ({ item: it, plan: it.actionPlan }))}
+        marketState={marketStateInfo.state}
+        marketProvisional={marketStateInfo.provisional}
+        activeFilter={actionFilter}
+        lastUpdated={lastUpdated}
+        wsStatus={wsStatus}
+        onSelectFilter={handleSelectActionFilter}
+        onSelectStock={handleSelectStock}
+      />
 
       {/* ═══════════════════════════════════════════════════════════════ */}
       {/* VIEW MODE 1: TOP CỔ PHIẾU THEO NHÓM NGÀNH (SECTOR LEADERS)   */}
@@ -1342,6 +1437,7 @@ export const MarkMinerviniScreener: React.FC = () => {
                   setMinAvgVal20B(DEFAULT_MIN_VALUE_B);
                   setMinMktCapT(DEFAULT_MIN_CAP_B);
                   setVolSignalFilter('all');
+                  setActionFilter('ALL');
                   setMinRs(70);
                   setMinScore(7);
                   setOnlyStage2(false);
@@ -1381,8 +1477,21 @@ export const MarkMinerviniScreener: React.FC = () => {
 
           {/* ── Quick Sort Shortcuts Ribbon ───────────────────────────────── */}
           <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 rounded-xl bg-zinc-950/80 border border-zinc-800/80 text-xs font-mono text-zinc-400">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <span className="text-zinc-500 font-bold uppercase text-[10px]">Sắp Xếp Nhanh:</span>
+              <button
+                onClick={() => {
+                  setSortKey('actionPriority');
+                  setSortDir('desc');
+                }}
+                className={`px-2.5 py-1 rounded-lg border transition-all cursor-pointer ${
+                  sortKey === 'actionPriority'
+                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 font-black'
+                    : 'bg-zinc-900 border-zinc-800 hover:text-zinc-200'
+                }`}
+              >
+                🎯 Ưu Tiên Mua &amp; Gia Tăng
+              </button>
               <button
                 onClick={() => {
                   setSortKey('rsRating');
@@ -1607,13 +1716,19 @@ export const MarkMinerviniScreener: React.FC = () => {
                     >
                       Stage 2 {renderSortIcon('score')}
                     </th>
+                    <th
+                      onClick={() => handleSort('actionPriority')}
+                      className="py-3 px-3 text-left cursor-pointer hover:bg-zinc-800/80 hover:text-emerald-300 transition-colors bg-emerald-500/5"
+                    >
+                      Khuyến Nghị Vị Thế {renderSortIcon('actionPriority')}
+                    </th>
                     <th className="py-3 px-4 text-center">Hành động</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-900">
                   {filteredAndSortedItems.length === 0 ? (
                     <tr>
-                      <td colSpan={14} className="py-12 text-center text-zinc-500 font-mono">
+                      <td colSpan={15} className="py-12 text-center text-zinc-500 font-mono">
                         {isLoading || isSearchingOnDemand ? (
                           <div className="flex items-center justify-center gap-2 text-amber-400">
                             <ArrowClockwise className="w-5 h-5 animate-spin" />
@@ -1636,7 +1751,7 @@ export const MarkMinerviniScreener: React.FC = () => {
                                 <span>Bấm vào đây để Quét & Xét chuẩn Minervini cho mã [{searchQuery.toUpperCase()}] ngay ⚡</span>
                               </button>
                             )}
-                            {(selectedSector !== 'all' || selectedExchange !== 'all' || minAvgVal20B !== DEFAULT_MIN_VALUE_B || volSignalFilter !== 'all' || minRs !== 70 || minScore !== 7 || onlyStage2 || searchQuery) && (
+                            {(selectedSector !== 'all' || selectedExchange !== 'all' || minAvgVal20B !== DEFAULT_MIN_VALUE_B || volSignalFilter !== 'all' || actionFilter !== 'ALL' || minRs !== 70 || minScore !== 7 || onlyStage2 || searchQuery) && (
                               <div className="flex flex-wrap items-center justify-center gap-2">
                                 <button
                                   onClick={() => {
@@ -1644,6 +1759,7 @@ export const MarkMinerviniScreener: React.FC = () => {
                                     setSelectedExchange('all');
                                     setMinAvgVal20B(DEFAULT_MIN_VALUE_B);
                                     setVolSignalFilter('all');
+                                    setActionFilter('ALL');
                                     setMinRs(70);
                                     setMinScore(7);
                                     setOnlyStage2(false);
@@ -1659,6 +1775,7 @@ export const MarkMinerviniScreener: React.FC = () => {
                                     setSelectedExchange('all');
                                     setMinAvgVal20B(DEFAULT_MIN_VALUE_B);
                                     setVolSignalFilter('all');
+                                    setActionFilter('ALL');
                                     setMinRs(0);
                                     setMinScore(0);
                                     setOnlyStage2(false);
@@ -1937,6 +2054,52 @@ export const MarkMinerviniScreener: React.FC = () => {
                                 </span>
                               </div>
                             )}
+                          </td>
+
+                          {/* Position Action & Scale-Up Plan */}
+                          <td className="py-3 px-3 text-left tabular-nums">
+                            <div className="flex flex-col items-start gap-1 min-w-[185px]">
+                              <div className="flex flex-wrap items-center gap-1">
+                                <span
+                                  className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold border ${
+                                    item.actionPlan.signal === 'BUY_NEW'
+                                      ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/35'
+                                      : item.actionPlan.signal === 'SCALE_UP'
+                                      ? 'bg-cyan-500/15 text-cyan-300 border-cyan-500/40'
+                                      : item.actionPlan.signal === 'HOLD_WAIT'
+                                      ? 'bg-zinc-800 text-zinc-200 border-zinc-700'
+                                      : item.actionPlan.signal === 'EXTENDED'
+                                      ? 'bg-amber-500/15 text-amber-300 border-amber-500/35'
+                                      : item.actionPlan.signal === 'CAUTION_DIST'
+                                      ? 'bg-rose-500/15 text-rose-300 border-rose-500/35'
+                                      : item.actionPlan.signal === 'WATCH_NEAR'
+                                      ? 'bg-amber-500/10 text-amber-300 border-amber-500/25'
+                                      : 'bg-zinc-900 text-zinc-500 border-zinc-800'
+                                  }`}
+                                >
+                                  {item.actionPlan.badgeLabel}
+                                </span>
+                                {item.actionPlan.isReadyToScaleUpSoon && item.actionPlan.signal !== 'SCALE_UP' && (
+                                  <span
+                                    title={item.actionPlan.nextScaleUpLabel}
+                                    className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30"
+                                  >
+                                    Sẵn sàng bồi
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-[10px] font-mono text-zinc-300 truncate max-w-[215px]">
+                                {item.actionPlan.actionZoneLabel}
+                              </span>
+                              {item.actionPlan.stopLossVnd && (
+                                <span className="text-[9px] font-mono text-zinc-500 truncate max-w-[215px]">
+                                  SL: <span className="text-rose-400">{item.actionPlan.stopLossVnd.toLocaleString('vi-VN')}</span>
+                                  {item.actionPlan.pivotVnd && item.actionPlan.signal === 'BUY_NEW' && (
+                                    <> · Bồi &gt;{item.actionPlan.pivotVnd.toLocaleString('vi-VN')}</>
+                                  )}
+                                </span>
+                              )}
+                            </div>
                           </td>
 
                           {/* Action */}

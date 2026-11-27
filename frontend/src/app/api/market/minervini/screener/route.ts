@@ -18,6 +18,7 @@ import {
   isLastBarInProgress,
   passesVnInvestableUniverse,
 } from '../../../../../features/market/utils/minerviniEvaluator';
+import { recomputeLiveVolMetrics } from '../../../../../features/market/utils/screenerActionPlanner';
 import { createSnapshotMemory, parseEventTime } from '../../../../../features/market/utils/tickGuard';
 
 export const runtime = 'nodejs';
@@ -221,6 +222,16 @@ function enrichWithLiveTicks(
     const volume = live && live.volume > 0 ? live.volume : item.volume;
     const shares = listedSharesM.get(sym) ?? item.listedSharesM;
     const mktCapT = calcMarketCapT(sym, priceK, shares);
+    const { relVol, volSignal } = recomputeLiveVolMetrics({
+      priceK,
+      changePct,
+      volume,
+      avgVol20: item.avgVol20,
+      maxDownVol10: item.maxDownVol10,
+      sma50: item.sma50,
+      fallbackRelVol: item.relVol,
+      fallbackSignal: item.volSignal,
+    });
 
     // Đánh giá lại cả 8 tiêu chí hoàn toàn xác định (deterministic) dựa trên giá thực tế hiện tại
     const evalResult = evaluateMinerviniCriteria({
@@ -245,6 +256,8 @@ function enrichWithLiveTicks(
       price: effectivePriceVnd,
       changePct,
       volume,
+      relVol,
+      volSignal,
       mktCapT,
       listedSharesM: shares,
       pe: item.pe ?? fin?.pe ?? null,

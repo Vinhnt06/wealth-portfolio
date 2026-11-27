@@ -323,9 +323,17 @@ export function analyzeRawStockCandles(params: {
   const vol = volumes[len - 1] || 0;
 
   // Các đường SMA chuẩn (yêu cầu đủ số phiên lịch sử, tuyệt đối không rút ngắn chu kỳ MA)
+  const sma20 = len >= 20 ? calcStrictSMA(closes, 20, len - 1) : 0;
   const sma50 = len >= 50 ? calcStrictSMA(closes, 50, len - 1) : 0;
   const sma150 = len >= 150 ? calcStrictSMA(closes, 150, len - 1) : 0;
   const sma200 = len >= 200 ? calcStrictSMA(closes, 200, len - 1) : 0;
+
+  // Kháng cự đỉnh nền 20 phiên liền trước (không tính nến hiện tại để bắt đúng điểm Breakout vượt nền) & Đáy 15 phiên
+  const priorEnd = Math.max(1, len - 1);
+  const priorHighSlice = highs.slice(Math.max(0, priorEnd - 20), priorEnd);
+  const pivot20 = priorHighSlice.length > 0 ? Math.max(...priorHighSlice) : 0;
+  const recentLowSlice = lows.slice(Math.max(0, len - 15), len);
+  const swingLow15 = recentLowSlice.length > 0 ? Math.min(...recentLowSlice) : 0;
 
   // Kiểm tra độ dốc MA200 (tăng trưởng tối thiểu 1 tháng = 22 phiên giao dịch và không gãy trong 11 phiên gần nhất)
   const sma200Past = len >= 222 ? calcStrictSMA(closes, 200, len - 1 - 22) : 0;
@@ -475,11 +483,15 @@ export function analyzeRawStockCandles(params: {
     isStage2Eligible: evalResult.isStage2Eligible,
     criteriaPassed: evalResult.criteriaPassed,
     failedCriteria: evalResult.failedCriteria,
+    sma20: sma20 > 0 ? Math.round(sma20 * 100) / 100 : undefined,
     sma50: Math.round(sma50 * 100) / 100,
     sma150: Math.round(sma150 * 100) / 100,
     sma200: Math.round(sma200 * 100) / 100,
     sma200Past: Math.round(sma200Past * 100) / 100,
     sma200SlopeUp,
+    pivot20: pivot20 > 0 ? Math.round(pivot20 * 100) / 100 : undefined,
+    swingLow15: swingLow15 > 0 ? Math.round(swingLow15 * 100) / 100 : undefined,
+    maxDownVol10: maxDownVol10 > 0 ? Math.round(maxDownVol10) : undefined,
     high52W: Math.round(high52W * 100) / 100,
     low52W: Math.round(low52W * 100) / 100,
     distHigh: evalResult.distHigh,

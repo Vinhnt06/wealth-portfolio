@@ -258,6 +258,7 @@ async function runMinerviniScan() {
             return sum / period;
           };
 
+          const rawSma20 = len >= 20 ? calcSMA(20, len - 1) : 0;
           const rawSma50 = len >= 50 ? calcSMA(50, len - 1) : 0;
           const rawSma150 = len >= 150 ? calcSMA(150, len - 1) : 0;
           const rawSma200 = len >= 200 ? calcSMA(200, len - 1) : 0;
@@ -270,10 +271,18 @@ async function runMinerviniScan() {
             rawSma200 > rawSma200Past &&
             (rawSma200Mid === 0 || rawSma200 >= rawSma200Mid * 0.999);
 
+          const sma20 = rawSma20 > 0 ? Math.round(rawSma20 * 100) / 100 : undefined;
           const sma50 = Math.round(rawSma50 * 100) / 100;
           const sma150 = Math.round(rawSma150 * 100) / 100;
           const sma200 = Math.round(rawSma200 * 100) / 100;
           const sma200Past = Math.round(rawSma200Past * 100) / 100;
+
+          // Kháng cự đỉnh nền 20 phiên liền trước & Đáy hỗ trợ 15 phiên gần nhất
+          const priorEnd = Math.max(1, len - 1);
+          const priorHighSlice = d.h.slice(Math.max(0, priorEnd - 20), priorEnd);
+          const pivot20 = priorHighSlice.length > 0 ? Math.round(Math.max(...priorHighSlice) * 100) / 100 : undefined;
+          const recentLowSlice = d.l.slice(Math.max(0, len - 15), len);
+          const swingLow15 = recentLowSlice.length > 0 ? Math.round(Math.min(...recentLowSlice) * 100) / 100 : undefined;
 
           // Đỉnh / Đáy 52 tuần (252 phiên giao dịch)
           const lookback = Math.min(252, len);
@@ -412,11 +421,15 @@ async function runMinerviniScan() {
             q2Perf: Math.round(q2 * 1000) / 10,
             q3Perf: Math.round(q3 * 1000) / 10,
             q4Perf: Math.round(q4 * 1000) / 10,
+            sma20,
             sma50,
             sma150,
             sma200,
             sma200Past,
             sma200SlopeUp,
+            pivot20,
+            swingLow15,
+            maxDownVol10: maxDownVol10 > 0 ? Math.round(maxDownVol10) : undefined,
             high52W,
             low52W,
             distHigh,

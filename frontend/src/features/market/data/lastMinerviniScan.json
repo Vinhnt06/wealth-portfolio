@@ -1,7 +1,7 @@
 {
   "success": true,
-  "scannedAt": 1795737133984,
-  "scannedAtText": "06:51:59 27/11/2026",
+  "scannedAt": 1795757448161,
+  "scannedAtText": "12:30:41 27/11/2026",
   "session": "MORNING",
   "sessionLabel": "Phiên Sáng (11:30)",
   "totalScanned": 154,
@@ -17,24 +17,14 @@
       "ret3M": -17.59
     },
     {
-      "symbol": "TCB",
-      "sector": "Ngân hàng",
-      "ret3M": -5.85
-    },
-    {
       "symbol": "MBB",
       "sector": "Ngân hàng",
       "ret3M": -14.29
     },
     {
-      "symbol": "ACB",
+      "symbol": "TCB",
       "sector": "Ngân hàng",
-      "ret3M": -12.16
-    },
-    {
-      "symbol": "BID",
-      "sector": "Ngân hàng",
-      "ret3M": -20.71
+      "ret3M": -5.85
     },
     {
       "symbol": "CTG",
@@ -42,9 +32,14 @@
       "ret3M": -6.67
     },
     {
-      "symbol": "HDB",
+      "symbol": "BID",
       "sector": "Ngân hàng",
-      "ret3M": 3.03
+      "ret3M": -20.71
+    },
+    {
+      "symbol": "ACB",
+      "sector": "Ngân hàng",
+      "ret3M": -12.16
     },
     {
       "symbol": "VPB",
@@ -67,24 +62,9 @@
       "ret3M": -16.18
     },
     {
-      "symbol": "LPB",
+      "symbol": "HDB",
       "sector": "Ngân hàng",
-      "ret3M": -35.74
-    },
-    {
-      "symbol": "VIB",
-      "sector": "Ngân hàng",
-      "ret3M": -2.84
-    },
-    {
-      "symbol": "EIB",
-      "sector": "Ngân hàng",
-      "ret3M": -14.49
-    },
-    {
-      "symbol": "NAB",
-      "sector": "Ngân hàng",
-      "ret3M": 9.01
+      "ret3M": 3.03
     },
     {
       "symbol": "SSB",
@@ -97,14 +77,39 @@
       "ret3M": -1.76
     },
     {
+      "symbol": "MSB",
+      "sector": "Ngân hàng",
+      "ret3M": 26.15
+    },
+    {
       "symbol": "OCB",
       "sector": "Ngân hàng",
       "ret3M": -5.02
     },
     {
-      "symbol": "MSB",
+      "symbol": "VIB",
       "sector": "Ngân hàng",
-      "ret3M": 26.15
+      "ret3M": -2.84
+    },
+    {
+      "symbol": "LPB",
+      "sector": "Ngân hàng",
+      "ret3M": -35.74
+    },
+    {
+      "symbol": "NAB",
+      "sector": "Ngân hàng",
+      "ret3M": 9.01
+    },
+    {
+      "symbol": "EIB",
+      "sector": "Ngân hàng",
+      "ret3M": -14.49
+    },
+    {
+      "symbol": "SSI",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -11.06
     },
     {
       "symbol": "VND",
@@ -122,9 +127,9 @@
       "ret3M": -17.22
     },
     {
-      "symbol": "SSI",
+      "symbol": "ORS",
       "sector": "Dịch vụ tài chính",
-      "ret3M": -11.06
+      "ret3M": -7.47
     },
     {
       "symbol": "VCI",
@@ -132,14 +137,9 @@
       "ret3M": -17.63
     },
     {
-      "symbol": "HCM",
+      "symbol": "BSI",
       "sector": "Dịch vụ tài chính",
-      "ret3M": -15.24
-    },
-    {
-      "symbol": "VRE",
-      "sector": "Bất động sản",
-      "ret3M": -8.53
+      "ret3M": -13.64
     },
     {
       "symbol": "CTS",
@@ -147,14 +147,14 @@
       "ret3M": -5.24
     },
     {
-      "symbol": "BSI",
+      "symbol": "HCM",
       "sector": "Dịch vụ tài chính",
-      "ret3M": -13.64
+      "ret3M": -15.24
     },
     {
-      "symbol": "ORS",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -7.47
+      "symbol": "D2D",
+      "sector": "Bất động sản",
+      "ret3M": -17.35
     },
     {
       "symbol": "VIX",
@@ -162,9 +162,19 @@
       "ret3M": -15.6
     },
     {
-      "symbol": "NVL",
+      "symbol": "VRE",
       "sector": "Bất động sản",
-      "ret3M": -32.95
+      "ret3M": -8.53
+    },
+    {
+      "symbol": "TVS",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -25.36
+    },
+    {
+      "symbol": "VIC",
+      "sector": "Bất động sản",
+      "ret3M": 4.31
     },
     {
       "symbol": "MBS",
@@ -172,14 +182,9 @@
       "ret3M": -18.08
     },
     {
-      "symbol": "FTS",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -21.33
-    },
-    {
-      "symbol": "VIC",
+      "symbol": "PDR",
       "sector": "Bất động sản",
-      "ret3M": 4.31
+      "ret3M": -13.78
     },
     {
       "symbol": "VHM",
@@ -192,94 +197,9 @@
       "ret3M": -14.06
     },
     {
-      "symbol": "TVS",
+      "symbol": "FTS",
       "sector": "Dịch vụ tài chính",
-      "ret3M": -25.36
-    },
-    {
-      "symbol": "SIP",
-      "sector": "Bất động sản",
-      "ret3M": -7.22
-    },
-    {
-      "symbol": "CEO",
-      "sector": "Bất động sản",
-      "ret3M": -21.8
-    },
-    {
-      "symbol": "PDR",
-      "sector": "Bất động sản",
-      "ret3M": -13.78
-    },
-    {
-      "symbol": "TCH",
-      "sector": "Bất động sản",
-      "ret3M": 2.08
-    },
-    {
-      "symbol": "BCM",
-      "sector": "Bất động sản",
-      "ret3M": -18.89
-    },
-    {
-      "symbol": "DXG",
-      "sector": "Bất động sản",
-      "ret3M": -13.98
-    },
-    {
-      "symbol": "SZC",
-      "sector": "Bất động sản",
-      "ret3M": -6.9
-    },
-    {
-      "symbol": "LHG",
-      "sector": "Bất động sản",
-      "ret3M": -0.58
-    },
-    {
-      "symbol": "DXS",
-      "sector": "Bất động sản",
-      "ret3M": -29.76
-    },
-    {
-      "symbol": "VGC",
-      "sector": "Bất động sản",
-      "ret3M": -9.15
-    },
-    {
-      "symbol": "HDG",
-      "sector": "Bất động sản",
-      "ret3M": -3.61
-    },
-    {
-      "symbol": "VPI",
-      "sector": "Bất động sản",
-      "ret3M": 5.58
-    },
-    {
-      "symbol": "NTL",
-      "sector": "Bất động sản",
-      "ret3M": -10.16
-    },
-    {
-      "symbol": "D2D",
-      "sector": "Bất động sản",
-      "ret3M": -17.35
-    },
-    {
-      "symbol": "KDH",
-      "sector": "Bất động sản",
-      "ret3M": -15.41
-    },
-    {
-      "symbol": "IDC",
-      "sector": "Bất động sản",
-      "ret3M": 4.62
-    },
-    {
-      "symbol": "DIG",
-      "sector": "Bất động sản",
-      "ret3M": -12.23
+      "ret3M": -21.33
     },
     {
       "symbol": "NLG",
@@ -287,44 +207,89 @@
       "ret3M": -8.96
     },
     {
+      "symbol": "CEO",
+      "sector": "Bất động sản",
+      "ret3M": -21.8
+    },
+    {
+      "symbol": "KDH",
+      "sector": "Bất động sản",
+      "ret3M": -15.41
+    },
+    {
+      "symbol": "VPI",
+      "sector": "Bất động sản",
+      "ret3M": 5.58
+    },
+    {
+      "symbol": "DIG",
+      "sector": "Bất động sản",
+      "ret3M": -12.23
+    },
+    {
+      "symbol": "DXG",
+      "sector": "Bất động sản",
+      "ret3M": -13.98
+    },
+    {
+      "symbol": "NVL",
+      "sector": "Bất động sản",
+      "ret3M": -32.95
+    },
+    {
+      "symbol": "BCM",
+      "sector": "Bất động sản",
+      "ret3M": -18.89
+    },
+    {
       "symbol": "KBC",
       "sector": "Bất động sản",
       "ret3M": -4.36
     },
     {
-      "symbol": "BWE",
-      "sector": "Tiện ích",
-      "ret3M": -3.99
+      "symbol": "NTL",
+      "sector": "Bất động sản",
+      "ret3M": -10.16
     },
     {
-      "symbol": "HSG",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -7.93
+      "symbol": "VGC",
+      "sector": "Bất động sản",
+      "ret3M": -9.15
     },
     {
-      "symbol": "DGC",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -19.22
+      "symbol": "TCH",
+      "sector": "Bất động sản",
+      "ret3M": 2.08
     },
     {
-      "symbol": "POW",
-      "sector": "Tiện ích",
-      "ret3M": -0.75
+      "symbol": "HDG",
+      "sector": "Bất động sản",
+      "ret3M": -3.61
     },
     {
-      "symbol": "MSR",
-      "sector": "Nguyên vật liệu",
-      "ret3M": 31.31
+      "symbol": "SIP",
+      "sector": "Bất động sản",
+      "ret3M": -7.22
     },
     {
-      "symbol": "TVN",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -7.51
+      "symbol": "SZC",
+      "sector": "Bất động sản",
+      "ret3M": -6.9
     },
     {
-      "symbol": "DDV",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -24.18
+      "symbol": "DXS",
+      "sector": "Bất động sản",
+      "ret3M": -29.76
+    },
+    {
+      "symbol": "LHG",
+      "sector": "Bất động sản",
+      "ret3M": -0.58
+    },
+    {
+      "symbol": "IDC",
+      "sector": "Bất động sản",
+      "ret3M": 4.62
     },
     {
       "symbol": "LAS",
@@ -332,34 +297,9 @@
       "ret3M": -9.09
     },
     {
-      "symbol": "GAS",
-      "sector": "Năng lượng",
-      "ret3M": -16.19
-    },
-    {
-      "symbol": "PC1",
-      "sector": "Tiện ích",
-      "ret3M": -10.01
-    },
-    {
-      "symbol": "PVD",
-      "sector": "Năng lượng",
-      "ret3M": -19.27
-    },
-    {
-      "symbol": "BMP",
+      "symbol": "TVN",
       "sector": "Nguyên vật liệu",
-      "ret3M": -4.78
-    },
-    {
-      "symbol": "MSN",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": -2.16
-    },
-    {
-      "symbol": "GEE",
-      "sector": "Tiện ích",
-      "ret3M": -10.83
+      "ret3M": -7.51
     },
     {
       "symbol": "BFC",
@@ -367,9 +307,39 @@
       "ret3M": 25.13
     },
     {
-      "symbol": "NT2",
-      "sector": "Tiện ích",
-      "ret3M": 15.16
+      "symbol": "HPG",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -10.09
+    },
+    {
+      "symbol": "HT1",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -3.28
+    },
+    {
+      "symbol": "PHR",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -16.94
+    },
+    {
+      "symbol": "HSG",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -7.93
+    },
+    {
+      "symbol": "DCM",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -4.05
+    },
+    {
+      "symbol": "CSV",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -6.99
+    },
+    {
+      "symbol": "NTP",
+      "sector": "Nguyên vật liệu",
+      "ret3M": 4.17
     },
     {
       "symbol": "DPR",
@@ -377,14 +347,164 @@
       "ret3M": -10.19
     },
     {
-      "symbol": "PAN",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": -26.68
+      "symbol": "GVR",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -17.32
     },
     {
-      "symbol": "DCM",
+      "symbol": "GEG",
+      "sector": "Tiện ích",
+      "ret3M": -11.02
+    },
+    {
+      "symbol": "PGV",
+      "sector": "Tiện ích",
+      "ret3M": -6.7
+    },
+    {
+      "symbol": "NKG",
       "sector": "Nguyên vật liệu",
-      "ret3M": -4.05
+      "ret3M": 2.27
+    },
+    {
+      "symbol": "PVP",
+      "sector": "Vận tải",
+      "ret3M": -6.76
+    },
+    {
+      "symbol": "GAS",
+      "sector": "Năng lượng",
+      "ret3M": -16.19
+    },
+    {
+      "symbol": "DPM",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -21.27
+    },
+    {
+      "symbol": "BAF",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": -3.24
+    },
+    {
+      "symbol": "DDV",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -24.18
+    },
+    {
+      "symbol": "SMC",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -12.59
+    },
+    {
+      "symbol": "GEE",
+      "sector": "Tiện ích",
+      "ret3M": -10.83
+    },
+    {
+      "symbol": "PVB",
+      "sector": "Năng lượng",
+      "ret3M": -23.19
+    },
+    {
+      "symbol": "NT2",
+      "sector": "Tiện ích",
+      "ret3M": 15.16
+    },
+    {
+      "symbol": "PVD",
+      "sector": "Năng lượng",
+      "ret3M": -19.27
+    },
+    {
+      "symbol": "PLX",
+      "sector": "Năng lượng",
+      "ret3M": -22.13
+    },
+    {
+      "symbol": "KDC",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": -3.85
+    },
+    {
+      "symbol": "BWE",
+      "sector": "Tiện ích",
+      "ret3M": -3.99
+    },
+    {
+      "symbol": "VGS",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -2.17
+    },
+    {
+      "symbol": "PVC",
+      "sector": "Năng lượng",
+      "ret3M": -23.58
+    },
+    {
+      "symbol": "BMP",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -4.78
+    },
+    {
+      "symbol": "HAG",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": -3.15
+    },
+    {
+      "symbol": "VSH",
+      "sector": "Tiện ích",
+      "ret3M": -5.03
+    },
+    {
+      "symbol": "QTP",
+      "sector": "Tiện ích",
+      "ret3M": -3.01
+    },
+    {
+      "symbol": "PVT",
+      "sector": "Vận tải",
+      "ret3M": -11.39
+    },
+    {
+      "symbol": "MSR",
+      "sector": "Nguyên vật liệu",
+      "ret3M": 31.31
+    },
+    {
+      "symbol": "ASM",
+      "sector": "Bất động sản",
+      "ret3M": -33.05
+    },
+    {
+      "symbol": "VNM",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": -12.02
+    },
+    {
+      "symbol": "PVS",
+      "sector": "Năng lượng",
+      "ret3M": -21.06
+    },
+    {
+      "symbol": "DGC",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -19.22
+    },
+    {
+      "symbol": "OIL",
+      "sector": "Năng lượng",
+      "ret3M": -16.73
+    },
+    {
+      "symbol": "POW",
+      "sector": "Tiện ích",
+      "ret3M": -0.75
+    },
+    {
+      "symbol": "TV2",
+      "sector": "Dịch vụ thương mại",
+      "ret3M": -0.77
     },
     {
       "symbol": "VHC",
@@ -397,59 +517,9 @@
       "ret3M": -9.94
     },
     {
-      "symbol": "PVT",
-      "sector": "Vận tải",
-      "ret3M": -11.39
-    },
-    {
-      "symbol": "FMC",
+      "symbol": "DBC",
       "sector": "Thực phẩm, đồ uống",
-      "ret3M": -5.47
-    },
-    {
-      "symbol": "VNM",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": -12.02
-    },
-    {
-      "symbol": "HAG",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": -3.15
-    },
-    {
-      "symbol": "QTP",
-      "sector": "Tiện ích",
-      "ret3M": -3.01
-    },
-    {
-      "symbol": "MCH",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": -6.91
-    },
-    {
-      "symbol": "IDI",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": -11.22
-    },
-    {
-      "symbol": "OIL",
-      "sector": "Năng lượng",
-      "ret3M": -16.73
-    },
-    {
-      "symbol": "BSR",
-      "sector": "Năng lượng",
-      "ret3M": -15.54
-    },
-    {
-      "symbol": "PLX",
-      "sector": "Năng lượng",
-      "ret3M": -22.13
-    },
-    {
-      "symbol": "BAF",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": -3.24
+      "ret3M": -12.43
     },
     {
       "symbol": "SAB",
@@ -457,64 +527,14 @@
       "ret3M": -4.88
     },
     {
-      "symbol": "HT1",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -3.28
-    },
-    {
-      "symbol": "SMC",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -12.59
-    },
-    {
-      "symbol": "PVP",
-      "sector": "Vận tải",
-      "ret3M": -6.76
-    },
-    {
-      "symbol": "TV2",
-      "sector": "Dịch vụ thương mại",
-      "ret3M": -0.77
-    },
-    {
-      "symbol": "VSH",
-      "sector": "Tiện ích",
-      "ret3M": -5.03
-    },
-    {
-      "symbol": "DBC",
+      "symbol": "FMC",
       "sector": "Thực phẩm, đồ uống",
-      "ret3M": -12.43
+      "ret3M": -5.47
     },
     {
-      "symbol": "ASM",
-      "sector": "Bất động sản",
-      "ret3M": -33.05
-    },
-    {
-      "symbol": "CSV",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -6.99
-    },
-    {
-      "symbol": "PGV",
-      "sector": "Tiện ích",
-      "ret3M": -6.7
-    },
-    {
-      "symbol": "PVB",
-      "sector": "Năng lượng",
-      "ret3M": -23.19
-    },
-    {
-      "symbol": "KDC",
+      "symbol": "IDI",
       "sector": "Thực phẩm, đồ uống",
-      "ret3M": -3.85
-    },
-    {
-      "symbol": "DPM",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -21.27
+      "ret3M": -11.22
     },
     {
       "symbol": "REE",
@@ -522,19 +542,19 @@
       "ret3M": 0.88
     },
     {
-      "symbol": "NKG",
-      "sector": "Nguyên vật liệu",
-      "ret3M": 2.27
+      "symbol": "BSR",
+      "sector": "Năng lượng",
+      "ret3M": -15.54
     },
     {
-      "symbol": "VGS",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -2.17
+      "symbol": "MSN",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": -2.16
     },
     {
-      "symbol": "NTP",
-      "sector": "Nguyên vật liệu",
-      "ret3M": 4.17
+      "symbol": "PC1",
+      "sector": "Tiện ích",
+      "ret3M": -10.01
     },
     {
       "symbol": "QNS",
@@ -542,114 +562,14 @@
       "ret3M": 1.5
     },
     {
-      "symbol": "GVR",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -17.32
-    },
-    {
-      "symbol": "PHR",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -16.94
-    },
-    {
-      "symbol": "HPG",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -10.09
-    },
-    {
-      "symbol": "GEG",
-      "sector": "Tiện ích",
-      "ret3M": -11.02
-    },
-    {
-      "symbol": "PVS",
-      "sector": "Năng lượng",
-      "ret3M": -21.06
-    },
-    {
-      "symbol": "PVC",
-      "sector": "Năng lượng",
-      "ret3M": -23.58
-    },
-    {
-      "symbol": "PNJ",
-      "sector": "Phân phối, bán lẻ",
-      "ret3M": -71.63
-    },
-    {
-      "symbol": "MSH",
-      "sector": "Hàng tiêu dùng",
-      "ret3M": 7.47
-    },
-    {
-      "symbol": "HAX",
-      "sector": "Ô tô, linh kiện",
-      "ret3M": -16.03
-    },
-    {
-      "symbol": "VSC",
-      "sector": "Vận tải",
-      "ret3M": -19.4
-    },
-    {
-      "symbol": "PET",
-      "sector": "Phân phối, bán lẻ",
-      "ret3M": 17.5
-    },
-    {
-      "symbol": "HHV",
-      "sector": "Vận tải",
-      "ret3M": -13.92
-    },
-    {
-      "symbol": "C4G",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -24.56
-    },
-    {
-      "symbol": "FRT",
-      "sector": "Phân phối, bán lẻ",
-      "ret3M": -4.14
-    },
-    {
-      "symbol": "GIL",
-      "sector": "Hàng tiêu dùng",
-      "ret3M": 7.38
-    },
-    {
-      "symbol": "VCG",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -15.48
-    },
-    {
-      "symbol": "HNG",
+      "symbol": "MCH",
       "sector": "Thực phẩm, đồ uống",
-      "ret3M": -15.15
+      "ret3M": -6.91
     },
     {
-      "symbol": "MWG",
-      "sector": "Phân phối, bán lẻ",
-      "ret3M": -8.13
-    },
-    {
-      "symbol": "VJC",
-      "sector": "Vận tải",
-      "ret3M": 7.54
-    },
-    {
-      "symbol": "GMD",
-      "sector": "Vận tải",
-      "ret3M": -6.9
-    },
-    {
-      "symbol": "CTR",
-      "sector": "Viễn thông",
-      "ret3M": -24.64
-    },
-    {
-      "symbol": "CII",
-      "sector": "Bất động sản",
-      "ret3M": -12.33
+      "symbol": "PAN",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": -26.68
     },
     {
       "symbol": "CTD",
@@ -657,19 +577,29 @@
       "ret3M": 7.97
     },
     {
-      "symbol": "DCL",
-      "sector": "Dược phẩm",
-      "ret3M": -25.33
+      "symbol": "CII",
+      "sector": "Bất động sản",
+      "ret3M": -12.33
     },
     {
-      "symbol": "VGI",
+      "symbol": "GMD",
+      "sector": "Vận tải",
+      "ret3M": -6.9
+    },
+    {
+      "symbol": "PHP",
+      "sector": "Vận tải",
+      "ret3M": -9.46
+    },
+    {
+      "symbol": "PNJ",
+      "sector": "Phân phối, bán lẻ",
+      "ret3M": -71.63
+    },
+    {
+      "symbol": "CTR",
       "sector": "Viễn thông",
-      "ret3M": -18.5
-    },
-    {
-      "symbol": "DVN",
-      "sector": "Dược phẩm",
-      "ret3M": 3.39
+      "ret3M": -24.64
     },
     {
       "symbol": "HAH",
@@ -682,29 +612,19 @@
       "ret3M": -28.19
     },
     {
-      "symbol": "DGW",
-      "sector": "Phân phối, bán lẻ",
-      "ret3M": -12.5
-    },
-    {
-      "symbol": "PHP",
-      "sector": "Vận tải",
-      "ret3M": -9.46
-    },
-    {
-      "symbol": "LCG",
+      "symbol": "FCN",
       "sector": "Hàng hóa công nghiệp",
-      "ret3M": -17.33
+      "ret3M": -12.55
     },
     {
-      "symbol": "VTP",
-      "sector": "Vận tải",
-      "ret3M": -25.56
+      "symbol": "PET",
+      "sector": "Phân phối, bán lẻ",
+      "ret3M": 17.5
     },
     {
-      "symbol": "VGT",
-      "sector": "Hàng tiêu dùng",
-      "ret3M": -10.43
+      "symbol": "FRT",
+      "sector": "Phân phối, bán lẻ",
+      "ret3M": -4.14
     },
     {
       "symbol": "SAM",
@@ -712,44 +632,14 @@
       "ret3M": 1.16
     },
     {
-      "symbol": "ELC",
-      "sector": "Phần mềm",
-      "ret3M": -29.39
+      "symbol": "DCL",
+      "sector": "Dược phẩm",
+      "ret3M": -25.33
     },
     {
-      "symbol": "CMG",
-      "sector": "Phần mềm",
-      "ret3M": -34.02
-    },
-    {
-      "symbol": "FPT",
-      "sector": "Phần mềm",
-      "ret3M": -30.77
-    },
-    {
-      "symbol": "FCN",
+      "symbol": "LCG",
       "sector": "Hàng hóa công nghiệp",
-      "ret3M": -12.55
-    },
-    {
-      "symbol": "DHG",
-      "sector": "Dược phẩm",
-      "ret3M": -7.27
-    },
-    {
-      "symbol": "TCM",
-      "sector": "Hàng tiêu dùng",
-      "ret3M": -21.47
-    },
-    {
-      "symbol": "DBD",
-      "sector": "Dược phẩm",
-      "ret3M": -13.32
-    },
-    {
-      "symbol": "VTO",
-      "sector": "Vận tải",
-      "ret3M": -3.35
+      "ret3M": -17.33
     },
     {
       "symbol": "HVN",
@@ -757,9 +647,84 @@
       "ret3M": 2.21
     },
     {
-      "symbol": "VOS",
+      "symbol": "TNG",
+      "sector": "Hàng tiêu dùng",
+      "ret3M": -7.3
+    },
+    {
+      "symbol": "VJC",
       "sector": "Vận tải",
-      "ret3M": -3.1
+      "ret3M": 7.54
+    },
+    {
+      "symbol": "HNG",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": -15.15
+    },
+    {
+      "symbol": "VTO",
+      "sector": "Vận tải",
+      "ret3M": -3.35
+    },
+    {
+      "symbol": "TCM",
+      "sector": "Hàng tiêu dùng",
+      "ret3M": -21.47
+    },
+    {
+      "symbol": "VSC",
+      "sector": "Vận tải",
+      "ret3M": -19.4
+    },
+    {
+      "symbol": "DBD",
+      "sector": "Dược phẩm",
+      "ret3M": -13.32
+    },
+    {
+      "symbol": "FPT",
+      "sector": "Phần mềm",
+      "ret3M": -30.77
+    },
+    {
+      "symbol": "DGW",
+      "sector": "Phân phối, bán lẻ",
+      "ret3M": -12.5
+    },
+    {
+      "symbol": "MSH",
+      "sector": "Hàng tiêu dùng",
+      "ret3M": 7.47
+    },
+    {
+      "symbol": "HAX",
+      "sector": "Ô tô, linh kiện",
+      "ret3M": -16.03
+    },
+    {
+      "symbol": "VGI",
+      "sector": "Viễn thông",
+      "ret3M": -18.5
+    },
+    {
+      "symbol": "VGT",
+      "sector": "Hàng tiêu dùng",
+      "ret3M": -10.43
+    },
+    {
+      "symbol": "MWG",
+      "sector": "Phân phối, bán lẻ",
+      "ret3M": -8.13
+    },
+    {
+      "symbol": "GIL",
+      "sector": "Hàng tiêu dùng",
+      "ret3M": 7.38
+    },
+    {
+      "symbol": "VCG",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -15.48
     },
     {
       "symbol": "SGP",
@@ -767,9 +732,19 @@
       "ret3M": -17.48
     },
     {
-      "symbol": "TNG",
-      "sector": "Hàng tiêu dùng",
-      "ret3M": -7.3
+      "symbol": "ELC",
+      "sector": "Phần mềm",
+      "ret3M": -29.39
+    },
+    {
+      "symbol": "HHV",
+      "sector": "Vận tải",
+      "ret3M": -13.92
+    },
+    {
+      "symbol": "C4G",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -24.56
     },
     {
       "symbol": "FOX",
@@ -777,34 +752,34 @@
       "ret3M": -16.48
     },
     {
+      "symbol": "DHG",
+      "sector": "Dược phẩm",
+      "ret3M": -7.27
+    },
+    {
+      "symbol": "DVN",
+      "sector": "Dược phẩm",
+      "ret3M": 3.39
+    },
+    {
       "symbol": "TNH",
       "sector": "Dịch vụ chăm sóc sức khỏe",
       "ret3M": -26.37
     },
     {
-      "symbol": "BVH",
-      "sector": "Bảo hiểm",
-      "ret3M": -14.04
+      "symbol": "CMG",
+      "sector": "Phần mềm",
+      "ret3M": -34.02
     },
     {
-      "symbol": "CSM",
-      "sector": "Ô tô, linh kiện",
-      "ret3M": -17.92
+      "symbol": "VTP",
+      "sector": "Vận tải",
+      "ret3M": -25.56
     },
     {
-      "symbol": "VEA",
-      "sector": "Ô tô, linh kiện",
-      "ret3M": 0.72
-    },
-    {
-      "symbol": "CTF",
-      "sector": "Phân phối, bán lẻ",
-      "ret3M": -4.88
-    },
-    {
-      "symbol": "HHS",
-      "sector": "Ô tô, linh kiện",
-      "ret3M": -20.18
+      "symbol": "VOS",
+      "sector": "Vận tải",
+      "ret3M": -3.1
     },
     {
       "symbol": "LPS",
@@ -812,39 +787,19 @@
       "ret3M": -47.14
     },
     {
-      "symbol": "DVM",
-      "sector": "Dược phẩm",
-      "ret3M": -60.66
-    },
-    {
-      "symbol": "DAH",
-      "sector": "Dịch vụ tiêu dùng",
-      "ret3M": 0.84
-    },
-    {
-      "symbol": "BMI",
-      "sector": "Bảo hiểm",
-      "ret3M": 2.11
-    },
-    {
-      "symbol": "OCH",
-      "sector": "Bất động sản",
-      "ret3M": 7.69
-    },
-    {
-      "symbol": "MIG",
-      "sector": "Bảo hiểm",
-      "ret3M": -9.63
-    },
-    {
       "symbol": "VNZ",
       "sector": "Truyền thông, giải trí",
       "ret3M": -6.03
     },
     {
-      "symbol": "TOS",
-      "sector": "Vận tải",
-      "ret3M": -21.05
+      "symbol": "CSM",
+      "sector": "Ô tô, linh kiện",
+      "ret3M": -17.92
+    },
+    {
+      "symbol": "DRC",
+      "sector": "Ô tô, linh kiện",
+      "ret3M": -20.19
     },
     {
       "symbol": "YEG",
@@ -857,34 +812,54 @@
       "ret3M": -13.36
     },
     {
-      "symbol": "DRC",
-      "sector": "Ô tô, linh kiện",
-      "ret3M": -20.19
-    },
-    {
-      "symbol": "TT6",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": -50.46
-    },
-    {
-      "symbol": "SJD",
-      "sector": "Tiện ích",
-      "ret3M": -5.34
-    },
-    {
-      "symbol": "SAS",
+      "symbol": "TOS",
       "sector": "Vận tải",
-      "ret3M": -14.37
+      "ret3M": -21.05
     },
     {
-      "symbol": "HTG",
-      "sector": "Hàng tiêu dùng",
-      "ret3M": -0.87
+      "symbol": "HHS",
+      "sector": "Ô tô, linh kiện",
+      "ret3M": -20.18
     },
     {
-      "symbol": "NBC",
-      "sector": "Nguyên vật liệu",
-      "ret3M": 2.67
+      "symbol": "BVH",
+      "sector": "Bảo hiểm",
+      "ret3M": -14.04
+    },
+    {
+      "symbol": "OCH",
+      "sector": "Bất động sản",
+      "ret3M": 7.69
+    },
+    {
+      "symbol": "DVM",
+      "sector": "Dược phẩm",
+      "ret3M": -60.66
+    },
+    {
+      "symbol": "CTF",
+      "sector": "Phân phối, bán lẻ",
+      "ret3M": -4.88
+    },
+    {
+      "symbol": "VEA",
+      "sector": "Ô tô, linh kiện",
+      "ret3M": 0.72
+    },
+    {
+      "symbol": "BMI",
+      "sector": "Bảo hiểm",
+      "ret3M": 2.11
+    },
+    {
+      "symbol": "DAH",
+      "sector": "Dịch vụ tiêu dùng",
+      "ret3M": 0.84
+    },
+    {
+      "symbol": "MIG",
+      "sector": "Bảo hiểm",
+      "ret3M": -9.63
     },
     {
       "symbol": "TCD",
@@ -892,9 +867,9 @@
       "ret3M": -67.51
     },
     {
-      "symbol": "DRI",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -5.91
+      "symbol": "SAS",
+      "sector": "Vận tải",
+      "ret3M": -14.37
     },
     {
       "symbol": "PDN",
@@ -902,24 +877,34 @@
       "ret3M": -17.39
     },
     {
+      "symbol": "DRI",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -5.91
+    },
+    {
+      "symbol": "TT6",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": -50.46
+    },
+    {
+      "symbol": "NBC",
+      "sector": "Nguyên vật liệu",
+      "ret3M": 2.67
+    },
+    {
+      "symbol": "HTG",
+      "sector": "Hàng tiêu dùng",
+      "ret3M": -0.87
+    },
+    {
+      "symbol": "SJD",
+      "sector": "Tiện ích",
+      "ret3M": -5.34
+    },
+    {
       "symbol": "ABW",
       "sector": "Dịch vụ tài chính",
       "ret3M": -4.83
-    },
-    {
-      "symbol": "F88",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -24.83
-    },
-    {
-      "symbol": "QTC",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": 85.68
-    },
-    {
-      "symbol": "KSF",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -16.99
     },
     {
       "symbol": "KLB",
@@ -927,14 +912,9 @@
       "ret3M": -6.15
     },
     {
-      "symbol": "MAC",
+      "symbol": "QTC",
       "sector": "Hàng hóa công nghiệp",
-      "ret3M": 4.84
-    },
-    {
-      "symbol": "CTP",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": 16.36
+      "ret3M": 85.68
     },
     {
       "symbol": "TDP",
@@ -942,39 +922,29 @@
       "ret3M": -3.91
     },
     {
+      "symbol": "CTP",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": 16.36
+    },
+    {
+      "symbol": "F88",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -24.83
+    },
+    {
+      "symbol": "MAC",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": 4.84
+    },
+    {
+      "symbol": "KSF",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -16.99
+    },
+    {
       "symbol": "AAN",
       "sector": "Thực phẩm, đồ uống",
       "ret3M": -8.64
-    },
-    {
-      "symbol": "NHA",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -21.31
-    },
-    {
-      "symbol": "DST",
-      "sector": "Phân phối, bán lẻ",
-      "ret3M": -62.5
-    },
-    {
-      "symbol": "L40",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -6.61
-    },
-    {
-      "symbol": "VGR",
-      "sector": "Vận tải",
-      "ret3M": 59.54
-    },
-    {
-      "symbol": "THD",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -59.91
-    },
-    {
-      "symbol": "VGP",
-      "sector": "Vận tải",
-      "ret3M": 10.1
     },
     {
       "symbol": "DHA",
@@ -982,9 +952,54 @@
       "ret3M": 14.42
     },
     {
+      "symbol": "L40",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -6.61
+    },
+    {
+      "symbol": "VGP",
+      "sector": "Vận tải",
+      "ret3M": 10.1
+    },
+    {
+      "symbol": "DST",
+      "sector": "Phân phối, bán lẻ",
+      "ret3M": -62.5
+    },
+    {
+      "symbol": "THD",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -59.91
+    },
+    {
       "symbol": "SBB",
       "sector": "Hàng hóa công nghiệp",
       "ret3M": -27.72
+    },
+    {
+      "symbol": "VGR",
+      "sector": "Vận tải",
+      "ret3M": 59.54
+    },
+    {
+      "symbol": "NHA",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -21.31
+    },
+    {
+      "symbol": "SCG",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -1.54
+    },
+    {
+      "symbol": "NTC",
+      "sector": "Bất động sản",
+      "ret3M": 3.7
+    },
+    {
+      "symbol": "PCB",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -6.32
     },
     {
       "symbol": "NCT",
@@ -1002,29 +1017,14 @@
       "ret3M": -26.25
     },
     {
-      "symbol": "NTC",
-      "sector": "Bất động sản",
-      "ret3M": 3.7
-    },
-    {
-      "symbol": "PCB",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -6.32
-    },
-    {
       "symbol": "VCP",
       "sector": "Tiện ích",
       "ret3M": 43.11
     },
     {
-      "symbol": "SCG",
+      "symbol": "TAB",
       "sector": "Hàng hóa công nghiệp",
-      "ret3M": -1.54
-    },
-    {
-      "symbol": "PSD",
-      "sector": "Phân phối, bán lẻ",
-      "ret3M": -0.84
+      "ret3M": 183.33
     },
     {
       "symbol": "HDC",
@@ -1032,14 +1032,14 @@
       "ret3M": -9.72
     },
     {
-      "symbol": "MML",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": -20.83
-    },
-    {
       "symbol": "SBS",
       "sector": "Dịch vụ tài chính",
       "ret3M": -15.56
+    },
+    {
+      "symbol": "VIW",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -42.45
     },
     {
       "symbol": "HQC",
@@ -1047,14 +1047,9 @@
       "ret3M": -21.92
     },
     {
-      "symbol": "VTZ",
-      "sector": "Hàng tiêu dùng",
-      "ret3M": -0.98
-    },
-    {
-      "symbol": "VIW",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -42.45
+      "symbol": "MML",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": -20.83
     },
     {
       "symbol": "DHC",
@@ -1067,49 +1062,19 @@
       "ret3M": -25.84
     },
     {
-      "symbol": "TAB",
+      "symbol": "VTZ",
+      "sector": "Hàng tiêu dùng",
+      "ret3M": -0.98
+    },
+    {
+      "symbol": "PSD",
+      "sector": "Phân phối, bán lẻ",
+      "ret3M": -0.84
+    },
+    {
+      "symbol": "VC3",
       "sector": "Hàng hóa công nghiệp",
-      "ret3M": 183.33
-    },
-    {
-      "symbol": "TNI",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -31.83
-    },
-    {
-      "symbol": "HDA",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": 44.62
-    },
-    {
-      "symbol": "AAS",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": 22.97
-    },
-    {
-      "symbol": "BIG",
-      "sector": "Bất động sản",
-      "ret3M": -12.77
-    },
-    {
-      "symbol": "SZL",
-      "sector": "Bất động sản",
-      "ret3M": -6.02
-    },
-    {
-      "symbol": "AMS",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": 28.17
-    },
-    {
-      "symbol": "DL1",
-      "sector": "Vận tải",
-      "ret3M": -11.36
-    },
-    {
-      "symbol": "HSL",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": -48.32
+      "ret3M": 0.17
     },
     {
       "symbol": "BGE",
@@ -1122,14 +1087,49 @@
       "ret3M": 3.98
     },
     {
+      "symbol": "AAS",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": 22.97
+    },
+    {
+      "symbol": "BIG",
+      "sector": "Bất động sản",
+      "ret3M": -12.77
+    },
+    {
+      "symbol": "HDA",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": 44.62
+    },
+    {
+      "symbol": "HSL",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": -48.32
+    },
+    {
+      "symbol": "TNI",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -31.83
+    },
+    {
+      "symbol": "SZL",
+      "sector": "Bất động sản",
+      "ret3M": -6.02
+    },
+    {
+      "symbol": "DL1",
+      "sector": "Vận tải",
+      "ret3M": -11.36
+    },
+    {
+      "symbol": "AMS",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": 28.17
+    },
+    {
       "symbol": "CDC",
       "sector": "Hàng hóa công nghiệp",
       "ret3M": 8.12
-    },
-    {
-      "symbol": "VC3",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": 0.17
     },
     {
       "symbol": "DPG",
@@ -1137,9 +1137,9 @@
       "ret3M": -3.14
     },
     {
-      "symbol": "BMS",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -6.02
+      "symbol": "KSB",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -14.96
     },
     {
       "symbol": "NRC",
@@ -1147,24 +1147,9 @@
       "ret3M": -16.67
     },
     {
-      "symbol": "SJS",
-      "sector": "Bất động sản",
-      "ret3M": -0.39
-    },
-    {
-      "symbol": "TCO",
-      "sector": "Vận tải",
-      "ret3M": -15.04
-    },
-    {
-      "symbol": "KSB",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -14.96
-    },
-    {
-      "symbol": "ACV",
-      "sector": "Vận tải",
-      "ret3M": -15.99
+      "symbol": "BMS",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -6.02
     },
     {
       "symbol": "FIT",
@@ -1172,9 +1157,24 @@
       "ret3M": -16.77
     },
     {
+      "symbol": "ACV",
+      "sector": "Vận tải",
+      "ret3M": -15.99
+    },
+    {
+      "symbol": "SJS",
+      "sector": "Bất động sản",
+      "ret3M": -0.39
+    },
+    {
       "symbol": "AIG",
       "sector": "Hàng hóa công nghiệp",
       "ret3M": -19
+    },
+    {
+      "symbol": "TCO",
+      "sector": "Vận tải",
+      "ret3M": -15.04
     },
     {
       "symbol": "ACC",
@@ -1187,9 +1187,9 @@
       "ret3M": 14.83
     },
     {
-      "symbol": "TV1",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": 15.65
+      "symbol": "BWS",
+      "sector": "Tiện ích",
+      "ret3M": -11.55
     },
     {
       "symbol": "EVG",
@@ -1197,9 +1197,9 @@
       "ret3M": -25.93
     },
     {
-      "symbol": "KHG",
-      "sector": "Bất động sản",
-      "ret3M": -13.99
+      "symbol": "CST",
+      "sector": "Nguyên vật liệu",
+      "ret3M": 35.29
     },
     {
       "symbol": "BVS",
@@ -1207,24 +1207,29 @@
       "ret3M": -6.82
     },
     {
-      "symbol": "TIN",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -14.82
-    },
-    {
-      "symbol": "CST",
-      "sector": "Nguyên vật liệu",
-      "ret3M": 35.29
-    },
-    {
       "symbol": "HVT",
       "sector": "Nguyên vật liệu",
       "ret3M": -25.53
     },
     {
-      "symbol": "BWS",
-      "sector": "Tiện ích",
-      "ret3M": -11.55
+      "symbol": "KHG",
+      "sector": "Bất động sản",
+      "ret3M": -13.99
+    },
+    {
+      "symbol": "TV1",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": 15.65
+    },
+    {
+      "symbol": "TIN",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -14.82
+    },
+    {
+      "symbol": "IPA",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -8.21
     },
     {
       "symbol": "NNC",
@@ -1237,39 +1242,14 @@
       "ret3M": 12.59
     },
     {
-      "symbol": "AFX",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": -4.24
-    },
-    {
-      "symbol": "IPA",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -8.21
-    },
-    {
       "symbol": "POS",
       "sector": "Năng lượng",
       "ret3M": 4.59
     },
     {
-      "symbol": "MVN",
-      "sector": "Vận tải",
-      "ret3M": -31.28
-    },
-    {
-      "symbol": "TAL",
-      "sector": "Bất động sản",
-      "ret3M": -5.23
-    },
-    {
-      "symbol": "PTB",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -4.85
-    },
-    {
-      "symbol": "LSG",
-      "sector": "Bất động sản",
-      "ret3M": 1.16
+      "symbol": "AFX",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": -4.24
     },
     {
       "symbol": "DMX",
@@ -1282,14 +1262,44 @@
       "ret3M": -36.11
     },
     {
+      "symbol": "LSG",
+      "sector": "Bất động sản",
+      "ret3M": 1.16
+    },
+    {
+      "symbol": "TAL",
+      "sector": "Bất động sản",
+      "ret3M": -5.23
+    },
+    {
+      "symbol": "MVN",
+      "sector": "Vận tải",
+      "ret3M": -31.28
+    },
+    {
       "symbol": "MST",
       "sector": "Hàng hóa công nghiệp",
       "ret3M": -23.76
     },
     {
-      "symbol": "PCH",
+      "symbol": "PTB",
       "sector": "Hàng hóa công nghiệp",
-      "ret3M": -0.55
+      "ret3M": -4.85
+    },
+    {
+      "symbol": "DTD",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -21.93
+    },
+    {
+      "symbol": "HNM",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": 2.83
+    },
+    {
+      "symbol": "VMS",
+      "sector": "Vận tải",
+      "ret3M": -26.39
     },
     {
       "symbol": "CLI",
@@ -1297,19 +1307,14 @@
       "ret3M": 13.75
     },
     {
-      "symbol": "C69",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -9.88
-    },
-    {
-      "symbol": "MZG",
+      "symbol": "CAP",
       "sector": "Nguyên vật liệu",
-      "ret3M": -27.06
+      "ret3M": -21.3
     },
     {
-      "symbol": "VLB",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": 4.5
+      "symbol": "TLG",
+      "sector": "Hàng tiêu dùng",
+      "ret3M": 0.38
     },
     {
       "symbol": "VCK",
@@ -1317,14 +1322,24 @@
       "ret3M": -18.74
     },
     {
-      "symbol": "CAP",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -21.3
+      "symbol": "VLB",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": 4.5
     },
     {
-      "symbol": "VMS",
-      "sector": "Vận tải",
-      "ret3M": -26.39
+      "symbol": "MZG",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -27.06
+    },
+    {
+      "symbol": "PCH",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -0.55
+    },
+    {
+      "symbol": "C69",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -9.88
     },
     {
       "symbol": "BKC",
@@ -1337,19 +1352,9 @@
       "ret3M": 2.14
     },
     {
-      "symbol": "TLG",
-      "sector": "Hàng tiêu dùng",
-      "ret3M": 0.38
-    },
-    {
-      "symbol": "HNM",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": 2.83
-    },
-    {
-      "symbol": "DTD",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -21.93
+      "symbol": "PPT",
+      "sector": "Tiện ích",
+      "ret3M": -73.51
     },
     {
       "symbol": "VTD",
@@ -1362,9 +1367,9 @@
       "ret3M": -21.23
     },
     {
-      "symbol": "TLD",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -5.56
+      "symbol": "DLG",
+      "sector": "Hàng tiêu dùng",
+      "ret3M": -22.47
     },
     {
       "symbol": "NAG",
@@ -1372,24 +1377,14 @@
       "ret3M": -9.86
     },
     {
-      "symbol": "PPT",
-      "sector": "Tiện ích",
-      "ret3M": -73.51
-    },
-    {
-      "symbol": "DLG",
-      "sector": "Hàng tiêu dùng",
-      "ret3M": -22.47
+      "symbol": "TLD",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -5.56
     },
     {
       "symbol": "SPV",
       "sector": "Thực phẩm, đồ uống",
       "ret3M": 95.85
-    },
-    {
-      "symbol": "HPA",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": -12.46
     },
     {
       "symbol": "DDG",
@@ -1407,9 +1402,14 @@
       "ret3M": -15.88
     },
     {
-      "symbol": "VC7",
+      "symbol": "SJE",
       "sector": "Hàng hóa công nghiệp",
-      "ret3M": -6.85
+      "ret3M": -44
+    },
+    {
+      "symbol": "HPA",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": -12.46
     },
     {
       "symbol": "POM",
@@ -1417,14 +1417,9 @@
       "ret3M": 12.5
     },
     {
-      "symbol": "SJE",
+      "symbol": "VC7",
       "sector": "Hàng hóa công nghiệp",
-      "ret3M": -44
-    },
-    {
-      "symbol": "TTA",
-      "sector": "Tiện ích",
-      "ret3M": -13.98
+      "ret3M": -6.85
     },
     {
       "symbol": "GEL",
@@ -1432,24 +1427,14 @@
       "ret3M": -22.57
     },
     {
-      "symbol": "TTF",
-      "sector": "Hàng tiêu dùng",
-      "ret3M": -38.6
-    },
-    {
-      "symbol": "TIG",
-      "sector": "Bất động sản",
-      "ret3M": -54.39
-    },
-    {
       "symbol": "GCF",
       "sector": "Phân phối, bán lẻ",
       "ret3M": 2.81
     },
     {
-      "symbol": "OGC",
-      "sector": "Bất động sản",
-      "ret3M": -12.84
+      "symbol": "TTA",
+      "sector": "Tiện ích",
+      "ret3M": -13.98
     },
     {
       "symbol": "PIA",
@@ -1457,14 +1442,24 @@
       "ret3M": 4.99
     },
     {
+      "symbol": "TIG",
+      "sector": "Bất động sản",
+      "ret3M": -54.39
+    },
+    {
       "symbol": "PPC",
       "sector": "Tiện ích",
       "ret3M": -5.66
     },
     {
-      "symbol": "AGG",
+      "symbol": "TTF",
+      "sector": "Hàng tiêu dùng",
+      "ret3M": -38.6
+    },
+    {
+      "symbol": "OGC",
       "sector": "Bất động sản",
-      "ret3M": -19.13
+      "ret3M": -12.84
     },
     {
       "symbol": "TRC",
@@ -1472,29 +1467,9 @@
       "ret3M": -19.18
     },
     {
-      "symbol": "SGR",
+      "symbol": "AGG",
       "sector": "Bất động sản",
-      "ret3M": -12.45
-    },
-    {
-      "symbol": "FIR",
-      "sector": "Bất động sản",
-      "ret3M": -30.5
-    },
-    {
-      "symbol": "HIO",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": 3.89
-    },
-    {
-      "symbol": "IJC",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -10.07
-    },
-    {
-      "symbol": "DSE",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -15.84
+      "ret3M": -19.13
     },
     {
       "symbol": "AAV",
@@ -1502,9 +1477,24 @@
       "ret3M": -49.18
     },
     {
+      "symbol": "DSE",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -15.84
+    },
+    {
+      "symbol": "IJC",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -10.07
+    },
+    {
       "symbol": "GDA",
       "sector": "Hàng hóa công nghiệp",
       "ret3M": 6.97
+    },
+    {
+      "symbol": "HIO",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": 3.89
     },
     {
       "symbol": "L14",
@@ -1512,19 +1502,24 @@
       "ret3M": -26.07
     },
     {
+      "symbol": "FIR",
+      "sector": "Bất động sản",
+      "ret3M": -30.5
+    },
+    {
       "symbol": "DSH",
       "sector": "Hàng hóa công nghiệp",
       "ret3M": -8.42
     },
     {
-      "symbol": "TMB",
-      "sector": "Nguyên vật liệu",
-      "ret3M": 55.32
+      "symbol": "SGR",
+      "sector": "Bất động sản",
+      "ret3M": -12.45
     },
     {
-      "symbol": "APH",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -1.86
+      "symbol": "CRE",
+      "sector": "Bất động sản",
+      "ret3M": -52.03
     },
     {
       "symbol": "CAT",
@@ -1537,9 +1532,14 @@
       "ret3M": -13.85
     },
     {
-      "symbol": "CRE",
-      "sector": "Bất động sản",
-      "ret3M": -52.03
+      "symbol": "APH",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -1.86
+    },
+    {
+      "symbol": "TMB",
+      "sector": "Nguyên vật liệu",
+      "ret3M": 55.32
     },
     {
       "symbol": "PVX",
@@ -1552,6 +1552,16 @@
       "ret3M": -12.06
     },
     {
+      "symbol": "HPP",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -20.23
+    },
+    {
+      "symbol": "MVC",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": 5.01
+    },
+    {
       "symbol": "DXP",
       "sector": "Vận tải",
       "ret3M": -10.54
@@ -1562,54 +1572,9 @@
       "ret3M": 14.67
     },
     {
-      "symbol": "MVC",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": 5.01
-    },
-    {
-      "symbol": "HPP",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -20.23
-    },
-    {
-      "symbol": "HVH",
-      "sector": "Hàng tiêu dùng",
-      "ret3M": -4.67
-    },
-    {
-      "symbol": "VAB",
-      "sector": "Ngân hàng",
-      "ret3M": -2.7
-    },
-    {
       "symbol": "SBT",
       "sector": "Thực phẩm, đồ uống",
       "ret3M": -9.98
-    },
-    {
-      "symbol": "CAR",
-      "sector": "Dịch vụ thương mại",
-      "ret3M": 742.5
-    },
-    {
-      "symbol": "APS",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -33.33
-    },
-    {
-      "symbol": "ODE",
-      "sector": "Truyền thông, giải trí",
-      "ret3M": -3.85
-    },
-    {
-      "symbol": "ITC",
-      "sector": "Bất động sản",
-      "ret3M": -10.13
-    },
-    {
-      "symbol": "KSV",
-      "sector": "Nguyên vật liệu",
-      "ret3M": -14.8
     },
     {
       "symbol": "DC4",
@@ -1617,19 +1582,44 @@
       "ret3M": -19.91
     },
     {
+      "symbol": "VAB",
+      "sector": "Ngân hàng",
+      "ret3M": -2.7
+    },
+    {
+      "symbol": "ITC",
+      "sector": "Bất động sản",
+      "ret3M": -10.13
+    },
+    {
       "symbol": "VPX",
       "sector": "Dịch vụ tài chính",
       "ret3M": -16.39
     },
     {
-      "symbol": "HID",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": 17.61
+      "symbol": "APS",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -33.33
     },
     {
-      "symbol": "QCG",
-      "sector": "Bất động sản",
-      "ret3M": -10.45
+      "symbol": "HVH",
+      "sector": "Hàng tiêu dùng",
+      "ret3M": -4.67
+    },
+    {
+      "symbol": "KSV",
+      "sector": "Nguyên vật liệu",
+      "ret3M": -14.8
+    },
+    {
+      "symbol": "ODE",
+      "sector": "Truyền thông, giải trí",
+      "ret3M": -3.85
+    },
+    {
+      "symbol": "CAR",
+      "sector": "Dịch vụ thương mại",
+      "ret3M": 742.5
     },
     {
       "symbol": "VDS",
@@ -1637,9 +1627,29 @@
       "ret3M": -22
     },
     {
+      "symbol": "QCG",
+      "sector": "Bất động sản",
+      "ret3M": -10.45
+    },
+    {
+      "symbol": "HID",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": 17.61
+    },
+    {
       "symbol": "HUT",
       "sector": "Hàng hóa công nghiệp",
       "ret3M": -8.89
+    },
+    {
+      "symbol": "CRC",
+      "sector": "Phân phối, bán lẻ",
+      "ret3M": -16.79
+    },
+    {
+      "symbol": "NAF",
+      "sector": "Thực phẩm, đồ uống",
+      "ret3M": 3.83
     },
     {
       "symbol": "DVP",
@@ -1647,24 +1657,19 @@
       "ret3M": 1.46
     },
     {
-      "symbol": "PAC",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": -15.96
-    },
-    {
       "symbol": "VCS",
       "sector": "Hàng hóa công nghiệp",
       "ret3M": -12.62
     },
     {
+      "symbol": "PAC",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": -15.96
+    },
+    {
       "symbol": "HBC",
       "sector": "Hàng hóa công nghiệp",
       "ret3M": -32.5
-    },
-    {
-      "symbol": "CRC",
-      "sector": "Phân phối, bán lẻ",
-      "ret3M": -16.79
     },
     {
       "symbol": "LDG",
@@ -1677,24 +1682,14 @@
       "ret3M": 20.83
     },
     {
-      "symbol": "NAF",
-      "sector": "Thực phẩm, đồ uống",
-      "ret3M": 3.83
-    },
-    {
       "symbol": "HHP",
       "sector": "Nguyên vật liệu",
       "ret3M": -42.52
     },
     {
-      "symbol": "LLM",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": 3.82
-    },
-    {
-      "symbol": "CQN",
-      "sector": "Vận tải",
-      "ret3M": 0.99
+      "symbol": "EVF",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -14.4
     },
     {
       "symbol": "VPL",
@@ -1702,9 +1697,9 @@
       "ret3M": 22.35
     },
     {
-      "symbol": "EVF",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -14.4
+      "symbol": "ASP",
+      "sector": "Tiện ích",
+      "ret3M": -4.82
     },
     {
       "symbol": "SBG",
@@ -1717,19 +1712,19 @@
       "ret3M": -17.86
     },
     {
-      "symbol": "ASP",
-      "sector": "Tiện ích",
-      "ret3M": -4.82
-    },
-    {
       "symbol": "APG",
       "sector": "Dịch vụ tài chính",
       "ret3M": -33.47
     },
     {
-      "symbol": "VFS",
-      "sector": "Dịch vụ tài chính",
-      "ret3M": -10.78
+      "symbol": "CQN",
+      "sector": "Vận tải",
+      "ret3M": 0.99
+    },
+    {
+      "symbol": "LLM",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": 3.82
     },
     {
       "symbol": "VLC",
@@ -1742,14 +1737,19 @@
       "ret3M": -38.85
     },
     {
-      "symbol": "CTI",
-      "sector": "Hàng hóa công nghiệp",
-      "ret3M": 7.06
-    },
-    {
       "symbol": "SCR",
       "sector": "Bất động sản",
       "ret3M": -24.57
+    },
+    {
+      "symbol": "VFS",
+      "sector": "Dịch vụ tài chính",
+      "ret3M": -10.78
+    },
+    {
+      "symbol": "CTI",
+      "sector": "Hàng hóa công nghiệp",
+      "ret3M": 7.06
     },
     {
       "symbol": "KOS",
@@ -1785,11 +1785,15 @@
       "q2Perf": 45.2,
       "q3Perf": 39.9,
       "q4Perf": 153.5,
+      "sma20": 57.33,
       "sma50": 58.1,
       "sma150": 44.79,
       "sma200": 44.31,
       "sma200Past": 41.04,
       "sma200SlopeUp": true,
+      "pivot20": 67.14,
+      "swingLow15": 45.6,
+      "maxDownVol10": 3279400,
       "high52W": 67.91,
       "low52W": 20.99,
       "distHigh": -19.2,
@@ -1840,11 +1844,15 @@
       "q2Perf": 36.5,
       "q3Perf": 85,
       "q4Perf": 105.8,
+      "sma20": 49.55,
       "sma50": 49.5,
       "sma150": 40.6,
       "sma200": 37.68,
       "sma200Past": 34.78,
       "sma200SlopeUp": true,
+      "pivot20": 53.8,
+      "swingLow15": 45.5,
+      "maxDownVol10": 412800,
       "high52W": 58,
       "low52W": 19.57,
       "distHigh": -20.7,
@@ -1895,11 +1903,15 @@
       "q2Perf": 30.4,
       "q3Perf": 61.3,
       "q4Perf": 62.1,
+      "sma20": 16.29,
       "sma50": 15.21,
       "sma150": 13.51,
       "sma200": 12.58,
       "sma200Past": 11.94,
       "sma200SlopeUp": true,
+      "pivot20": 16.65,
+      "swingLow15": 15.3,
+      "maxDownVol10": 11070500,
       "high52W": 16.65,
       "low52W": 9,
       "distHigh": -1.5,
@@ -1948,11 +1960,15 @@
       "q2Perf": 40.1,
       "q3Perf": 38.4,
       "q4Perf": 30.8,
+      "sma20": 34.8,
       "sma50": 27.52,
       "sma150": 24.33,
       "sma200": 24.04,
       "sma200Past": 22.89,
       "sma200SlopeUp": true,
+      "pivot20": 48.8,
+      "swingLow15": 30.3,
+      "maxDownVol10": 476900,
       "high52W": 48.8,
       "low52W": 20.67,
       "distHigh": -34,
@@ -2003,11 +2019,15 @@
       "q2Perf": 9.1,
       "q3Perf": 45.6,
       "q4Perf": 108.6,
+      "sma20": 240.8,
       "sma50": 233.52,
       "sma150": 222.91,
       "sma200": 204.79,
       "sma200Past": 195.73,
       "sma200SlopeUp": true,
+      "pivot20": 251,
+      "swingLow15": 227,
+      "maxDownVol10": 1799100,
       "high52W": 265,
       "low52W": 110,
       "distHigh": -13.2,
@@ -2058,11 +2078,15 @@
       "q2Perf": 23.9,
       "q3Perf": 37.2,
       "q4Perf": 46,
+      "sma20": 17.02,
       "sma50": 17.4,
       "sma150": 16.18,
       "sma200": 15.2,
       "sma200Past": 14.69,
       "sma200SlopeUp": true,
+      "pivot20": 17.7,
+      "swingLow15": 16,
+      "maxDownVol10": 428800,
       "high52W": 18.9,
       "low52W": 10.7,
       "distHigh": -11.6,
@@ -2113,11 +2137,14 @@
       "q2Perf": 2,
       "q3Perf": 15.6,
       "q4Perf": 30,
+      "sma20": 93.23,
       "sma50": 85.86,
       "sma150": 84.91,
       "sma200": 84,
       "sma200Past": 84.07,
       "sma200SlopeUp": false,
+      "pivot20": 97.5,
+      "swingLow15": 90.4,
       "high52W": 111,
       "low52W": 67,
       "distHigh": -15.7,
@@ -2168,11 +2195,15 @@
       "q2Perf": 28.3,
       "q3Perf": 16.9,
       "q4Perf": 2.8,
+      "sma20": 15.11,
       "sma50": 14.65,
       "sma150": 12.87,
       "sma200": 12.48,
       "sma200Past": 12.28,
       "sma200SlopeUp": true,
+      "pivot20": 16.4,
+      "swingLow15": 14.2,
+      "maxDownVol10": 2012800,
       "high52W": 17.9,
       "low52W": 10.1,
       "distHigh": -19,
@@ -2223,11 +2254,15 @@
       "q2Perf": 20.2,
       "q3Perf": 20.2,
       "q4Perf": 20.2,
+      "sma20": 28.65,
       "sma50": 27.65,
       "sma150": 0,
       "sma200": 0,
       "sma200Past": 0,
       "sma200SlopeUp": false,
+      "pivot20": 30.4,
+      "swingLow15": 26.8,
+      "maxDownVol10": 433100,
       "high52W": 31,
       "low52W": 22.18,
       "distHigh": -7.4,
@@ -2282,11 +2317,15 @@
       "q2Perf": -5.8,
       "q3Perf": 16.5,
       "q4Perf": 47.6,
+      "sma20": 48.2,
       "sma50": 48.07,
       "sma150": 48.99,
       "sma200": 48.27,
       "sma200Past": 47.3,
       "sma200SlopeUp": true,
+      "pivot20": 48.9,
+      "swingLow15": 47.85,
+      "maxDownVol10": 225100,
       "high52W": 53.9,
       "low52W": 31,
       "distHigh": -7.1,
@@ -2337,11 +2376,15 @@
       "q2Perf": 10.7,
       "q3Perf": 14.5,
       "q4Perf": 26.6,
+      "sma20": 56.65,
       "sma50": 53.74,
       "sma150": 52.3,
       "sma200": 51.25,
       "sma200Past": 50.03,
       "sma200SlopeUp": true,
+      "pivot20": 59.9,
+      "swingLow15": 53.91,
+      "maxDownVol10": 1359300,
       "high52W": 59.9,
       "low52W": 43.05,
       "distHigh": -5.2,
@@ -2390,11 +2433,15 @@
       "q2Perf": 2.4,
       "q3Perf": 30.4,
       "q4Perf": 11.6,
+      "sma20": 22.49,
       "sma50": 21.9,
       "sma150": 20.22,
       "sma200": 19.16,
       "sma200Past": 18.51,
       "sma200SlopeUp": true,
+      "pivot20": 23.25,
+      "swingLow15": 21.2,
+      "maxDownVol10": 348100,
       "high52W": 23.95,
       "low52W": 14.42,
       "distHigh": -11.1,
@@ -2445,11 +2492,15 @@
       "q2Perf": 7.1,
       "q3Perf": -12.5,
       "q4Perf": 2.2,
+      "sma20": 10.07,
       "sma50": 9.94,
       "sma150": 8.74,
       "sma200": 8.82,
       "sma200Past": 8.82,
       "sma200SlopeUp": false,
+      "pivot20": 10.9,
+      "swingLow15": 9.1,
+      "maxDownVol10": 1024500,
       "high52W": 12,
       "low52W": 6.8,
       "distHigh": -24.2,
@@ -2502,11 +2553,15 @@
       "q2Perf": 17,
       "q3Perf": 13.7,
       "q4Perf": 24.2,
+      "sma20": 43.83,
       "sma50": 45.63,
       "sma150": 41.17,
       "sma200": 39.42,
       "sma200Past": 38.4,
       "sma200SlopeUp": true,
+      "pivot20": 47.4,
+      "swingLow15": 42,
+      "maxDownVol10": 533900,
       "high52W": 51.9,
       "low52W": 28.05,
       "distHigh": -18.9,
@@ -2557,11 +2612,15 @@
       "q2Perf": 4.1,
       "q3Perf": 7.7,
       "q4Perf": 4.8,
+      "sma20": 12.77,
       "sma50": 12.48,
       "sma150": 12.29,
       "sma200": 12,
       "sma200Past": 11.93,
       "sma200SlopeUp": true,
+      "pivot20": 13.2,
+      "swingLow15": 12.35,
+      "maxDownVol10": 2595000,
       "high52W": 13.5,
       "low52W": 10.08,
       "distHigh": -5.9,
@@ -2612,11 +2671,15 @@
       "q2Perf": 11.2,
       "q3Perf": 4.3,
       "q4Perf": 19.4,
+      "sma20": 36.31,
       "sma50": 37.12,
       "sma150": 33.92,
       "sma200": 33.26,
       "sma200Past": 32.54,
       "sma200SlopeUp": true,
+      "pivot20": 37.8,
+      "swingLow15": 34.4,
+      "maxDownVol10": 513700,
       "high52W": 39.85,
       "low52W": 27.6,
       "distHigh": -12.4,
@@ -2668,11 +2731,15 @@
       "q2Perf": 8.6,
       "q3Perf": 3.9,
       "q4Perf": 18,
+      "sma20": 53.18,
       "sma50": 53.95,
       "sma150": 50.65,
       "sma200": 50.22,
       "sma200Past": 49.67,
       "sma200SlopeUp": true,
+      "pivot20": 55.8,
+      "swingLow15": 51.2,
+      "maxDownVol10": 205900,
       "high52W": 58.27,
       "low52W": 43.41,
       "distHigh": -10.4,
@@ -2724,11 +2791,15 @@
       "q2Perf": 1,
       "q3Perf": 3,
       "q4Perf": 38.8,
+      "sma20": 68.97,
       "sma50": 69.32,
       "sma150": 71.14,
       "sma200": 69.29,
       "sma200Past": 68.19,
       "sma200SlopeUp": true,
+      "pivot20": 73,
+      "swingLow15": 68,
+      "maxDownVol10": 1470400,
       "high52W": 79,
       "low52W": 45.95,
       "distHigh": -13,
@@ -2781,11 +2852,15 @@
       "q2Perf": 7.6,
       "q3Perf": -2.2,
       "q4Perf": 15.3,
+      "sma20": 22.2,
       "sma50": 22.04,
       "sma150": 20.91,
       "sma200": 20.73,
       "sma200Past": 20.7,
       "sma200SlopeUp": true,
+      "pivot20": 22.9,
+      "swingLow15": 21.1,
+      "maxDownVol10": 20050300,
       "high52W": 23.45,
       "low52W": 17.71,
       "distHigh": -8.7,
@@ -2837,11 +2912,15 @@
       "q2Perf": 6.2,
       "q3Perf": -12.2,
       "q4Perf": 0.9,
+      "sma20": 23.15,
       "sma50": 22.2,
       "sma150": 21.56,
       "sma200": 22.58,
       "sma200Past": 22.75,
       "sma200SlopeUp": false,
+      "pivot20": 24.5,
+      "swingLow15": 21.85,
+      "maxDownVol10": 1035300,
       "high52W": 28.23,
       "low52W": 19.36,
       "distHigh": -17.1,
@@ -2895,11 +2974,15 @@
       "q2Perf": 9.2,
       "q3Perf": -0.4,
       "q4Perf": 18.1,
+      "sma20": 30.81,
       "sma50": 30.19,
       "sma150": 29.14,
       "sma200": 28.97,
       "sma200Past": 28.86,
       "sma200SlopeUp": true,
+      "pivot20": 31.4,
+      "swingLow15": 29.85,
+      "maxDownVol10": 1981600,
       "high52W": 31.4,
       "low52W": 24.65,
       "distHigh": -4.8,
@@ -2951,11 +3034,15 @@
       "q2Perf": 4.8,
       "q3Perf": -0.3,
       "q4Perf": 3.3,
+      "sma20": 53.89,
       "sma50": 53.17,
       "sma150": 50.96,
       "sma200": 50.3,
       "sma200Past": 50.24,
       "sma200SlopeUp": true,
+      "pivot20": 56.8,
+      "swingLow15": 52.2,
+      "maxDownVol10": 286100,
       "high52W": 65.67,
       "low52W": 41.37,
       "distHigh": -20.1,
@@ -3007,11 +3094,15 @@
       "q2Perf": -2.7,
       "q3Perf": 12,
       "q4Perf": 19.5,
+      "sma20": 17.53,
       "sma50": 19.97,
       "sma150": 17.96,
       "sma200": 17.12,
       "sma200Past": 16.71,
       "sma200SlopeUp": true,
+      "pivot20": 20.7,
+      "swingLow15": 16.15,
+      "maxDownVol10": 1226600,
       "high52W": 25.55,
       "low52W": 13,
       "distHigh": -36.8,
@@ -3065,11 +3156,15 @@
       "q2Perf": 2.3,
       "q3Perf": -2.3,
       "q4Perf": -2.1,
+      "sma20": 135.76,
       "sma50": 132.46,
       "sma150": 132.09,
       "sma200": 130.7,
       "sma200Past": 131.58,
       "sma200SlopeUp": false,
+      "pivot20": 140,
+      "swingLow15": 131.2,
+      "maxDownVol10": 851300,
       "high52W": 169.23,
       "low52W": 111.92,
       "distHigh": -20.8,
@@ -3121,11 +3216,15 @@
       "q2Perf": -0.5,
       "q3Perf": 0,
       "q4Perf": 11.5,
+      "sma20": 20.29,
       "sma50": 20.28,
       "sma150": 20.34,
       "sma200": 20.29,
       "sma200Past": 20.25,
       "sma200SlopeUp": true,
+      "pivot20": 21.2,
+      "swingLow15": 20,
+      "maxDownVol10": 654000,
       "high52W": 22.8,
       "low52W": 17.9,
       "distHigh": -11,
@@ -3178,11 +3277,15 @@
       "q2Perf": 4.1,
       "q3Perf": -3.2,
       "q4Perf": 15.8,
+      "sma20": 27.71,
       "sma50": 28.21,
       "sma150": 27.33,
       "sma200": 27.36,
       "sma200Past": 27.3,
       "sma200SlopeUp": false,
+      "pivot20": 29.3,
+      "swingLow15": 25.3,
+      "maxDownVol10": 367900,
       "high52W": 32.59,
       "low52W": 21.41,
       "distHigh": -16.4,
@@ -3237,11 +3340,15 @@
       "q2Perf": 2.2,
       "q3Perf": 0.7,
       "q4Perf": -1.2,
+      "sma20": 31.55,
       "sma50": 32.2,
       "sma150": 30.69,
       "sma200": 30.34,
       "sma200Past": 30.28,
       "sma200SlopeUp": true,
+      "pivot20": 34,
+      "swingLow15": 29.8,
+      "maxDownVol10": 946100,
       "high52W": 37.18,
       "low52W": 25.22,
       "distHigh": -17.7,
@@ -3294,11 +3401,15 @@
       "q2Perf": 3.1,
       "q3Perf": 6,
       "q4Perf": 4.4,
+      "sma20": 15.04,
       "sma50": 16.73,
       "sma150": 15.84,
       "sma200": 15.37,
       "sma200Past": 15.31,
       "sma200SlopeUp": true,
+      "pivot20": 15.95,
+      "swingLow15": 14.3,
+      "maxDownVol10": 2649700,
       "high52W": 24.8,
       "low52W": 13.23,
       "distHigh": -39.9,
@@ -3352,11 +3463,15 @@
       "q2Perf": 1.1,
       "q3Perf": -5.7,
       "q4Perf": 19.3,
+      "sma20": 52.08,
       "sma50": 52.72,
       "sma150": 51.37,
       "sma200": 50.75,
       "sma200Past": 49.67,
       "sma200SlopeUp": true,
+      "pivot20": 55,
+      "swingLow15": 48.85,
+      "maxDownVol10": 2960000,
       "high52W": 57.98,
       "low52W": 36.86,
       "distHigh": -15.7,
@@ -3408,11 +3523,15 @@
       "q2Perf": -4.7,
       "q3Perf": -7.7,
       "q4Perf": 7.1,
+      "sma20": 12.8,
       "sma50": 12.66,
       "sma150": 13.34,
       "sma200": 13.38,
       "sma200Past": 13.52,
       "sma200SlopeUp": false,
+      "pivot20": 13.85,
+      "swingLow15": 12.25,
+      "maxDownVol10": 8565300,
       "high52W": 16.85,
       "low52W": 11.5,
       "distHigh": -21.7,
@@ -3467,11 +3586,15 @@
       "q2Perf": 1.8,
       "q3Perf": 1.4,
       "q4Perf": -3.2,
+      "sma20": 10.64,
       "sma50": 10.4,
       "sma150": 10.45,
       "sma200": 10.29,
       "sma200Past": 10.26,
       "sma200SlopeUp": true,
+      "pivot20": 11,
+      "swingLow15": 10.35,
+      "maxDownVol10": 1699500,
       "high52W": 11.6,
       "low52W": 9.04,
       "distHigh": -10.3,
@@ -3525,11 +3648,15 @@
       "q2Perf": -0.7,
       "q3Perf": -4.7,
       "q4Perf": 4,
+      "sma20": 42.71,
       "sma50": 43.04,
       "sma150": 44.13,
       "sma200": 43.84,
       "sma200Past": 44.24,
       "sma200SlopeUp": false,
+      "pivot20": 44.35,
+      "swingLow15": 41.9,
+      "maxDownVol10": 358000,
       "high52W": 53.42,
       "low52W": 39.34,
       "distHigh": -17.9,
@@ -3583,11 +3710,15 @@
       "q2Perf": 11.4,
       "q3Perf": -14.7,
       "q4Perf": -0.7,
+      "sma20": 145.31,
       "sma50": 144.44,
       "sma150": 133.29,
       "sma200": 137.43,
       "sma200Past": 137.57,
       "sma200SlopeUp": false,
+      "pivot20": 153.3,
+      "swingLow15": 138,
+      "maxDownVol10": 338800,
       "high52W": 172.38,
       "low52W": 100.2,
       "distHigh": -19.4,
@@ -3640,11 +3771,15 @@
       "q2Perf": -6.3,
       "q3Perf": 6.9,
       "q4Perf": 15.9,
+      "sma20": 23.21,
       "sma50": 23.71,
       "sma150": 24.33,
       "sma200": 23.31,
       "sma200Past": 22.98,
       "sma200SlopeUp": true,
+      "pivot20": 25,
+      "swingLow15": 22.25,
+      "maxDownVol10": 3500900,
       "high52W": 27.35,
       "low52W": 16.47,
       "distHigh": -18.6,
@@ -3697,11 +3832,15 @@
       "q2Perf": -2.8,
       "q3Perf": -2.8,
       "q4Perf": -2.8,
+      "sma20": 75.73,
       "sma50": 75.97,
       "sma150": 0,
       "sma200": 0,
       "sma200Past": 0,
       "sma200SlopeUp": false,
+      "pivot20": 77.9,
+      "swingLow15": 73.8,
+      "maxDownVol10": 181900,
       "high52W": 86.51,
       "low52W": 69.3,
       "distHigh": -13,
@@ -3757,11 +3896,15 @@
       "q2Perf": -3.3,
       "q3Perf": -8.3,
       "q4Perf": -8.3,
+      "sma20": 23.35,
       "sma50": 23.34,
       "sma150": 23.88,
       "sma200": 24.06,
       "sma200Past": 24.28,
       "sma200SlopeUp": false,
+      "pivot20": 23.8,
+      "swingLow15": 22.5,
+      "maxDownVol10": 1673900,
       "high52W": 26.33,
       "low52W": 21.1,
       "distHigh": -11.5,
@@ -3817,11 +3960,15 @@
       "q2Perf": -22.3,
       "q3Perf": 14.5,
       "q4Perf": 26.4,
+      "sma20": 61.72,
       "sma50": 64.13,
       "sma150": 69.66,
       "sma200": 65.28,
       "sma200Past": 64.96,
       "sma200SlopeUp": true,
+      "pivot20": 64.9,
+      "swingLow15": 58.9,
+      "maxDownVol10": 5014500,
       "high52W": 83.44,
       "low52W": 41.89,
       "distHigh": -29.3,
@@ -3875,11 +4022,15 @@
       "q2Perf": -6.2,
       "q3Perf": -18.1,
       "q4Perf": -12.9,
+      "sma20": 69.83,
       "sma50": 64.99,
       "sma150": 67.4,
       "sma200": 70.25,
       "sma200Past": 70.54,
       "sma200SlopeUp": false,
+      "pivot20": 76,
+      "swingLow15": 66.9,
+      "maxDownVol10": 1112300,
       "high52W": 90.3,
       "low52W": 54.7,
       "distHigh": -25,
@@ -3934,11 +4085,15 @@
       "q2Perf": -2.1,
       "q3Perf": -18.1,
       "q4Perf": -15.7,
+      "sma20": 17.57,
       "sma50": 16.54,
       "sma150": 17.49,
       "sma200": 18.43,
       "sma200Past": 18.8,
       "sma200SlopeUp": false,
+      "pivot20": 18.75,
+      "swingLow15": 16.6,
+      "maxDownVol10": 403800,
       "high52W": 24,
       "low52W": 14.85,
       "distHigh": -24.2,
@@ -3993,11 +4148,15 @@
       "q2Perf": -10.2,
       "q3Perf": -21.3,
       "q4Perf": -2.4,
+      "sma20": 34.7,
       "sma50": 34.44,
       "sma150": 35.03,
       "sma200": 36.44,
       "sma200Past": 36.72,
       "sma200SlopeUp": false,
+      "pivot20": 36.3,
+      "swingLow15": 33.4,
+      "maxDownVol10": 914600,
       "high52W": 45.73,
       "low52W": 28.8,
       "distHigh": -25.7,
@@ -4054,11 +4213,15 @@
       "q2Perf": 7.4,
       "q3Perf": -16.9,
       "q4Perf": -22.7,
+      "sma20": 22.19,
       "sma50": 21.27,
       "sma150": 22.15,
       "sma200": 22.53,
       "sma200Past": 23.11,
       "sma200SlopeUp": false,
+      "pivot20": 24.55,
+      "swingLow15": 21.3,
+      "maxDownVol10": 1404700,
       "high52W": 31.4,
       "low52W": 19.3,
       "distHigh": -26.4,
@@ -4113,11 +4276,15 @@
       "q2Perf": -0.8,
       "q3Perf": -6.8,
       "q4Perf": -7.8,
+      "sma20": 14.01,
       "sma50": 13.86,
       "sma150": 13.64,
       "sma200": 13.6,
       "sma200Past": 13.53,
       "sma200SlopeUp": true,
+      "pivot20": 15.4,
+      "swingLow15": 12.6,
+      "maxDownVol10": 2772900,
       "high52W": 16,
       "low52W": 11.9,
       "distHigh": -18.7,
@@ -4170,11 +4337,15 @@
       "q2Perf": -0.5,
       "q3Perf": -10.2,
       "q4Perf": -10.8,
+      "sma20": 130.03,
       "sma50": 132.93,
       "sma150": 136.41,
       "sma200": 134.56,
       "sma200Past": 136.82,
       "sma200SlopeUp": false,
+      "pivot20": 133.6,
+      "swingLow15": 127,
+      "maxDownVol10": 45800,
       "high52W": 172.14,
       "low52W": 109.23,
       "distHigh": -23.8,
@@ -4229,11 +4400,15 @@
       "q2Perf": -20,
       "q3Perf": -22.3,
       "q4Perf": 40.8,
+      "sma20": 25.27,
       "sma50": 28.28,
       "sma150": 27.06,
       "sma200": 27.36,
       "sma200Past": 26.8,
       "sma200SlopeUp": true,
+      "pivot20": 29.3,
+      "swingLow15": 22.5,
+      "maxDownVol10": 11105200,
       "high52W": 39.16,
       "low52W": 13.35,
       "distHigh": -42.4,
@@ -4287,11 +4462,15 @@
       "q2Perf": -10.1,
       "q3Perf": -9.3,
       "q4Perf": 7.3,
+      "sma20": 20.11,
       "sma50": 22.35,
       "sma150": 20.7,
       "sma200": 20.74,
       "sma200Past": 20.55,
       "sma200SlopeUp": true,
+      "pivot20": 23.25,
+      "swingLow15": 17.5,
+      "maxDownVol10": 6814900,
       "high52W": 29.73,
       "low52W": 15.73,
       "distHigh": -39.8,
@@ -4346,11 +4525,15 @@
       "q2Perf": 2.2,
       "q3Perf": -7.1,
       "q4Perf": -11.4,
+      "sma20": 21.04,
       "sma50": 21.81,
       "sma150": 21.56,
       "sma200": 21.52,
       "sma200Past": 21.72,
       "sma200SlopeUp": false,
+      "pivot20": 21.25,
+      "swingLow15": 20.7,
+      "maxDownVol10": 1129300,
       "high52W": 24.15,
       "low52W": 19.15,
       "distHigh": -12.2,
@@ -4404,11 +4587,15 @@
       "q2Perf": -9.9,
       "q3Perf": -15.3,
       "q4Perf": -13.7,
+      "sma20": 70.79,
       "sma50": 71.25,
       "sma150": 71.22,
       "sma200": 72.46,
       "sma200Past": 73.42,
       "sma200SlopeUp": false,
+      "pivot20": 74.5,
+      "swingLow15": 67.3,
+      "maxDownVol10": 4598800,
       "high52W": 85.5,
       "low52W": 61.7,
       "distHigh": -20.5,
@@ -4464,11 +4651,15 @@
       "q2Perf": -9,
       "q3Perf": -12.4,
       "q4Perf": -10.1,
+      "sma20": 21.61,
       "sma50": 22.66,
       "sma150": 21.55,
       "sma200": 21.4,
       "sma200Past": 21.47,
       "sma200SlopeUp": false,
+      "pivot20": 23.55,
+      "swingLow15": 19.7,
+      "maxDownVol10": 17274800,
       "high52W": 24.95,
       "low52W": 18.63,
       "distHigh": -21,
@@ -4523,11 +4714,15 @@
       "q2Perf": 2.7,
       "q3Perf": -8.9,
       "q4Perf": -23.8,
+      "sma20": 130.72,
       "sma50": 136.89,
       "sma150": 134.97,
       "sma200": 137.21,
       "sma200Past": 140.61,
       "sma200SlopeUp": false,
+      "pivot20": 140,
+      "swingLow15": 121.6,
+      "maxDownVol10": 472200,
       "high52W": 184.43,
       "low52W": 121.6,
       "distHigh": -28.4,
@@ -4585,11 +4780,15 @@
       "q2Perf": -17,
       "q3Perf": -15.2,
       "q4Perf": 65.7,
+      "sma20": 68.2,
       "sma50": 77.12,
       "sma150": 81.07,
       "sma200": 78.98,
       "sma200Past": 75.75,
       "sma200SlopeUp": true,
+      "pivot20": 80.5,
+      "swingLow15": 52.5,
+      "maxDownVol10": 439200,
       "high52W": 109.8,
       "low52W": 31.92,
       "distHigh": -46.5,
@@ -4644,11 +4843,15 @@
       "q2Perf": 0.6,
       "q3Perf": -12.5,
       "q4Perf": -22.1,
+      "sma20": 22.72,
       "sma50": 21.6,
       "sma150": 22.52,
       "sma200": 22.47,
       "sma200Past": 22.77,
       "sma200SlopeUp": false,
+      "pivot20": 24.4,
+      "swingLow15": 21.7,
+      "maxDownVol10": 3039000,
       "high52W": 29.4,
       "low52W": 18.8,
       "distHigh": -26.2,
@@ -4704,11 +4907,15 @@
       "q2Perf": -8.2,
       "q3Perf": -7.5,
       "q4Perf": -9.1,
+      "sma20": 20.33,
       "sma50": 20.75,
       "sma150": 21.49,
       "sma200": 21.19,
       "sma200Past": 21.27,
       "sma200SlopeUp": false,
+      "pivot20": 21.45,
+      "swingLow15": 19.35,
+      "maxDownVol10": 10119400,
       "high52W": 23.85,
       "low52W": 18.7,
       "distHigh": -18.2,
@@ -4764,11 +4971,15 @@
       "q2Perf": -14,
       "q3Perf": -15.4,
       "q4Perf": -21.6,
+      "sma20": 46.95,
       "sma50": 46.45,
       "sma150": 48.07,
       "sma200": 49.99,
       "sma200Past": 50.69,
       "sma200SlopeUp": false,
+      "pivot20": 49.9,
+      "swingLow15": 45,
+      "maxDownVol10": 1049900,
       "high52W": 64.52,
       "low52W": 42.5,
       "distHigh": -29.3,
@@ -4826,11 +5037,15 @@
       "q2Perf": -9.6,
       "q3Perf": -16.4,
       "q4Perf": -13.5,
+      "sma20": 21.36,
       "sma50": 21.72,
       "sma150": 21.41,
       "sma200": 21.3,
       "sma200Past": 21.52,
       "sma200SlopeUp": false,
+      "pivot20": 22.8,
+      "swingLow15": 19.65,
+      "maxDownVol10": 14036700,
       "high52W": 24.94,
       "low52W": 18.51,
       "distHigh": -21.2,
@@ -4885,11 +5100,15 @@
       "q2Perf": -12.7,
       "q3Perf": -13.7,
       "q4Perf": -19.7,
+      "sma20": 13.76,
       "sma50": 13.71,
       "sma150": 14.02,
       "sma200": 14.19,
       "sma200Past": 14.38,
       "sma200SlopeUp": false,
+      "pivot20": 14.35,
+      "swingLow15": 13,
+      "maxDownVol10": 6022800,
       "high52W": 16.45,
       "low52W": 12.83,
       "distHigh": -21,
@@ -4946,11 +5165,15 @@
       "q2Perf": -10.1,
       "q3Perf": -23.3,
       "q4Perf": -16.7,
+      "sma20": 12.61,
       "sma50": 12.3,
       "sma150": 12.7,
       "sma200": 13.01,
       "sma200Past": 13.22,
       "sma200SlopeUp": false,
+      "pivot20": 13.35,
+      "swingLow15": 11.85,
+      "maxDownVol10": 15377900,
       "high52W": 15.78,
       "low52W": 11.25,
       "distHigh": -24,
@@ -5007,11 +5230,15 @@
       "q2Perf": -10.6,
       "q3Perf": -15.5,
       "q4Perf": -21.5,
+      "sma20": 13.77,
       "sma50": 14.12,
       "sma150": 14.63,
       "sma200": 14.96,
       "sma200Past": 15.34,
       "sma200SlopeUp": false,
+      "pivot20": 14.5,
+      "swingLow15": 13.25,
+      "maxDownVol10": 1535000,
       "high52W": 19.25,
       "low52W": 13.25,
       "distHigh": -28.1,
@@ -5069,11 +5296,15 @@
       "q2Perf": -3.6,
       "q3Perf": -21.3,
       "q4Perf": -6.6,
+      "sma20": 53.66,
       "sma50": 55.16,
       "sma150": 55.82,
       "sma200": 56.66,
       "sma200Past": 57.6,
       "sma200SlopeUp": false,
+      "pivot20": 55.88,
+      "swingLow15": 50.6,
+      "maxDownVol10": 3079600,
       "high52W": 69.94,
       "low52W": 50.6,
       "distHigh": -24.6,
@@ -5130,11 +5361,15 @@
       "q2Perf": -9.6,
       "q3Perf": -23.4,
       "q4Perf": -28.1,
+      "sma20": 12.12,
       "sma50": 11,
       "sma150": 11.48,
       "sma200": 11.89,
       "sma200Past": 12.08,
       "sma200SlopeUp": false,
+      "pivot20": 12.8,
+      "swingLow15": 11.2,
+      "maxDownVol10": 10200700,
       "high52W": 15.64,
       "low52W": 9,
       "distHigh": -28.1,
@@ -5191,11 +5426,15 @@
       "q2Perf": -12.8,
       "q3Perf": -15.2,
       "q4Perf": -34.9,
+      "sma20": 12.99,
       "sma50": 12.02,
       "sma150": 12.61,
       "sma200": 13.04,
       "sma200Past": 13.21,
       "sma200SlopeUp": false,
+      "pivot20": 13.9,
+      "swingLow15": 12.2,
+      "maxDownVol10": 10581100,
       "high52W": 19,
       "low52W": 9.59,
       "distHigh": -35.5,
@@ -5252,11 +5491,15 @@
       "q2Perf": -10.5,
       "q3Perf": -21.7,
       "q4Perf": -14.8,
+      "sma20": 44.42,
       "sma50": 44.6,
       "sma150": 45.62,
       "sma200": 46.83,
       "sma200Past": 47.26,
       "sma200SlopeUp": false,
+      "pivot20": 46.45,
+      "swingLow15": 41.6,
+      "maxDownVol10": 247600,
       "high52W": 56.78,
       "low52W": 41.05,
       "distHigh": -26.5,
@@ -5314,11 +5557,15 @@
       "q2Perf": -14.3,
       "q3Perf": -22.5,
       "q4Perf": -12.5,
+      "sma20": 30.81,
       "sma50": 30.43,
       "sma150": 31.95,
       "sma200": 32.72,
       "sma200Past": 33.58,
       "sma200SlopeUp": false,
+      "pivot20": 31.95,
+      "swingLow15": 29.4,
+      "maxDownVol10": 6538800,
       "high52W": 42.84,
       "low52W": 28.4,
       "distHigh": -31.4,
@@ -5376,11 +5623,15 @@
       "q2Perf": -11.6,
       "q3Perf": -28.5,
       "q4Perf": -10,
+      "sma20": 17.12,
       "sma50": 17.19,
       "sma150": 17.17,
       "sma200": 18.19,
       "sma200Past": 18.22,
       "sma200SlopeUp": false,
+      "pivot20": 19.44,
+      "swingLow15": 15.5,
+      "maxDownVol10": 854600,
       "high52W": 25.09,
       "low52W": 13.86,
       "distHigh": -38.2,
@@ -5438,11 +5689,15 @@
       "q2Perf": -22.1,
       "q3Perf": -23.9,
       "q4Perf": -11.4,
+      "sma20": 31.17,
       "sma50": 32.93,
       "sma150": 33.94,
       "sma200": 35.98,
       "sma200Past": 36.23,
       "sma200SlopeUp": false,
+      "pivot20": 34.9,
+      "swingLow15": 29.1,
+      "maxDownVol10": 1406800,
       "high52W": 50.01,
       "low52W": 28.5,
       "distHigh": -40.8,
@@ -5500,11 +5755,15 @@
       "q2Perf": -6.8,
       "q3Perf": -20.4,
       "q4Perf": -25,
+      "sma20": 26.52,
       "sma50": 26.74,
       "sma150": 27.2,
       "sma200": 27.4,
       "sma200Past": 27.84,
       "sma200SlopeUp": false,
+      "pivot20": 28.8,
+      "swingLow15": 24.5,
+      "maxDownVol10": 708400,
       "high52W": 37.8,
       "low52W": 22,
       "distHigh": -34.9,
@@ -5562,11 +5821,15 @@
       "q2Perf": -8.6,
       "q3Perf": -25.3,
       "q4Perf": -14.8,
+      "sma20": 39.67,
       "sma50": 41.93,
       "sma150": 40.59,
       "sma200": 41.57,
       "sma200Past": 42.04,
       "sma200SlopeUp": false,
+      "pivot20": 44.85,
+      "swingLow15": 36.7,
+      "maxDownVol10": 636900,
       "high52W": 55.13,
       "low52W": 34,
       "distHigh": -33.3,
@@ -5623,11 +5886,15 @@
       "q2Perf": -11.6,
       "q3Perf": -23.1,
       "q4Perf": -6,
+      "sma20": 18.94,
       "sma50": 19.35,
       "sma150": 19.86,
       "sma200": 20.26,
       "sma200Past": 20.54,
       "sma200SlopeUp": false,
+      "pivot20": 19.8,
+      "swingLow15": 17.7,
+      "maxDownVol10": 14052000,
       "high52W": 23.63,
       "low52W": 17.7,
       "distHigh": -25.1,
@@ -5685,11 +5952,15 @@
       "q2Perf": -11.3,
       "q3Perf": -25.9,
       "q4Perf": -16.3,
+      "sma20": 72.69,
       "sma50": 73.28,
       "sma150": 74.29,
       "sma200": 76.24,
       "sma200Past": 77.56,
       "sma200SlopeUp": false,
+      "pivot20": 77.2,
+      "swingLow15": 67,
+      "maxDownVol10": 3188400,
       "high52W": 91.73,
       "low52W": 60.73,
       "distHigh": -27,
@@ -5747,11 +6018,15 @@
       "q2Perf": -3.4,
       "q3Perf": -30.3,
       "q4Perf": -16.8,
+      "sma20": 16.37,
       "sma50": 16.76,
       "sma150": 17.48,
       "sma200": 18.98,
       "sma200Past": 19.48,
       "sma200SlopeUp": false,
+      "pivot20": 17,
+      "swingLow15": 15.3,
+      "maxDownVol10": 785400,
       "high52W": 28,
       "low52W": 14.48,
       "distHigh": -42.9,
@@ -5809,11 +6084,15 @@
       "q2Perf": -14.3,
       "q3Perf": -36.4,
       "q4Perf": 12.5,
+      "sma20": 72.82,
       "sma50": 77.4,
       "sma150": 77.17,
       "sma200": 80.7,
       "sma200Past": 83.72,
       "sma200SlopeUp": false,
+      "pivot20": 79.1,
+      "swingLow15": 68,
+      "maxDownVol10": 1123700,
       "high52W": 127.79,
       "low52W": 58.99,
       "distHigh": -46.8,
@@ -5871,11 +6150,15 @@
       "q2Perf": -8.3,
       "q3Perf": -19.7,
       "q4Perf": -21,
+      "sma20": 6.86,
       "sma50": 7.09,
       "sma150": 7.01,
       "sma200": 7.01,
       "sma200Past": 7.08,
       "sma200SlopeUp": false,
+      "pivot20": 7.43,
+      "swingLow15": 6.2,
+      "maxDownVol10": 1224800,
       "high52W": 8.59,
       "low52W": 6.2,
       "distHigh": -27.8,
@@ -5932,11 +6215,15 @@
       "q2Perf": -14.1,
       "q3Perf": -26.7,
       "q4Perf": -23.7,
+      "sma20": 26.64,
       "sma50": 26.23,
       "sma150": 28.39,
       "sma200": 29.49,
       "sma200Past": 30.49,
       "sma200SlopeUp": false,
+      "pivot20": 27.65,
+      "swingLow15": 25,
+      "maxDownVol10": 826600,
       "high52W": 38.2,
       "low52W": 24.15,
       "distHigh": -31.2,
@@ -5993,11 +6280,15 @@
       "q2Perf": -13.5,
       "q3Perf": -35.1,
       "q4Perf": -25.1,
+      "sma20": 27.52,
       "sma50": 26.41,
       "sma150": 27.76,
       "sma200": 30.22,
       "sma200Past": 31.03,
       "sma200SlopeUp": false,
+      "pivot20": 30,
+      "swingLow15": 25.5,
+      "maxDownVol10": 431900,
       "high52W": 44.2,
       "low52W": 23,
       "distHigh": -41.5,
@@ -6055,11 +6346,15 @@
       "q2Perf": -22.2,
       "q3Perf": -17.6,
       "q4Perf": -5.1,
+      "sma20": 5.76,
       "sma50": 5.88,
       "sma150": 6.56,
       "sma200": 6.48,
       "sma200Past": 6.57,
       "sma200SlopeUp": false,
+      "pivot20": 6.4,
+      "swingLow15": 5,
+      "maxDownVol10": 3071400,
       "high52W": 8.5,
       "low52W": 5,
       "distHigh": -34.1,
@@ -6116,11 +6411,15 @@
       "q2Perf": -11,
       "q3Perf": -27.5,
       "q4Perf": -12.9,
+      "sma20": 39.39,
       "sma50": 42.98,
       "sma150": 40.7,
       "sma200": 41.63,
       "sma200Past": 42.02,
       "sma200SlopeUp": false,
+      "pivot20": 46.4,
+      "swingLow15": 36.2,
+      "maxDownVol10": 765800,
       "high52W": 55.29,
       "low52W": 30.76,
       "distHigh": -34.5,
@@ -6177,11 +6476,15 @@
       "q2Perf": -20.2,
       "q3Perf": -22.7,
       "q4Perf": -14,
+      "sma20": 35.17,
       "sma50": 35.93,
       "sma150": 36.97,
       "sma200": 37.59,
       "sma200Past": 38.05,
       "sma200SlopeUp": false,
+      "pivot20": 38.22,
+      "swingLow15": 31.9,
+      "maxDownVol10": 603600,
       "high52W": 46.69,
       "low52W": 31.9,
       "distHigh": -31.7,
@@ -6239,11 +6542,15 @@
       "q2Perf": -18.4,
       "q3Perf": -23.4,
       "q4Perf": -17.7,
+      "sma20": 49.88,
       "sma50": 50.37,
       "sma150": 54.48,
       "sma200": 55.91,
       "sma200Past": 57.07,
       "sma200SlopeUp": false,
+      "pivot20": 52,
+      "swingLow15": 48,
+      "maxDownVol10": 242200,
       "high52W": 69.9,
       "low52W": 47.5,
       "distHigh": -31.3,
@@ -6301,11 +6608,15 @@
       "q2Perf": -21.6,
       "q3Perf": -17.1,
       "q4Perf": -13,
+      "sma20": 11.56,
       "sma50": 11.56,
       "sma150": 12.46,
       "sma200": 12.7,
       "sma200Past": 12.69,
       "sma200SlopeUp": true,
+      "pivot20": 12.05,
+      "swingLow15": 10.6,
+      "maxDownVol10": 1292300,
       "high52W": 15.25,
       "low52W": 10.6,
       "distHigh": -29.8,
@@ -6362,11 +6673,15 @@
       "q2Perf": -14.2,
       "q3Perf": -19.7,
       "q4Perf": -16.3,
+      "sma20": 19.76,
       "sma50": 20.64,
       "sma150": 21.83,
       "sma200": 22.3,
       "sma200Past": 22.76,
       "sma200SlopeUp": false,
+      "pivot20": 20.2,
+      "swingLow15": 19.2,
+      "maxDownVol10": 551800,
       "high52W": 26,
       "low52W": 19.1,
       "distHigh": -25.4,
@@ -6424,11 +6739,15 @@
       "q2Perf": -18.4,
       "q3Perf": -36.4,
       "q4Perf": 0.9,
+      "sma20": 61.53,
       "sma50": 67.23,
       "sma150": 65.26,
       "sma200": 68.22,
       "sma200Past": 68.94,
       "sma200SlopeUp": false,
+      "pivot20": 69,
+      "swingLow15": 53.9,
+      "maxDownVol10": 763800,
       "high52W": 87.24,
       "low52W": 49.68,
       "distHigh": -38.2,
@@ -6486,11 +6805,15 @@
       "q2Perf": -20.4,
       "q3Perf": -20.8,
       "q4Perf": -24.9,
+      "sma20": 10.66,
       "sma50": 10.45,
       "sma150": 11.12,
       "sma200": 11.27,
       "sma200Past": 11.46,
       "sma200SlopeUp": false,
+      "pivot20": 11.4,
+      "swingLow15": 9.83,
+      "maxDownVol10": 3312800,
       "high52W": 13.42,
       "low52W": 9.7,
       "distHigh": -25.6,
@@ -6548,11 +6871,15 @@
       "q2Perf": -13.7,
       "q3Perf": -29.3,
       "q4Perf": -0.7,
+      "sma20": 16.72,
       "sma50": 17.73,
       "sma150": 18.46,
       "sma200": 19.21,
       "sma200Past": 19.31,
       "sma200SlopeUp": false,
+      "pivot20": 18.8,
+      "swingLow15": 14.65,
+      "maxDownVol10": 4819700,
       "high52W": 27.26,
       "low52W": 14.11,
       "distHigh": -43.1,
@@ -6610,11 +6937,15 @@
       "q2Perf": -14.2,
       "q3Perf": -25.9,
       "q4Perf": -30.1,
+      "sma20": 47.39,
       "sma50": 49.03,
       "sma150": 49.4,
       "sma200": 50.86,
       "sma200Past": 51.73,
       "sma200SlopeUp": false,
+      "pivot20": 51.7,
+      "swingLow15": 44.5,
+      "maxDownVol10": 541500,
       "high52W": 68.88,
       "low52W": 42.9,
       "distHigh": -35.4,
@@ -6672,11 +7003,15 @@
       "q2Perf": -26,
       "q3Perf": -16.4,
       "q4Perf": -24.5,
+      "sma20": 23.8,
       "sma50": 23.92,
       "sma150": 26.42,
       "sma200": 26.41,
       "sma200Past": 27.22,
       "sma200SlopeUp": false,
+      "pivot20": 24.7,
+      "swingLow15": 22.8,
+      "maxDownVol10": 4300500,
       "high52W": 38.15,
       "low52W": 20.9,
       "distHigh": -39.6,
@@ -6733,11 +7068,15 @@
       "q2Perf": -18.3,
       "q3Perf": -25,
       "q4Perf": -20.5,
+      "sma20": 20.87,
       "sma50": 20.77,
       "sma150": 22.19,
       "sma200": 22.73,
       "sma200Past": 23.07,
       "sma200SlopeUp": false,
+      "pivot20": 21.9,
+      "swingLow15": 19.6,
+      "maxDownVol10": 21967200,
       "high52W": 26.52,
       "low52W": 19.6,
       "distHigh": -26.1,
@@ -6795,11 +7134,15 @@
       "q2Perf": -22.4,
       "q3Perf": -34.1,
       "q4Perf": 5.6,
+      "sma20": 12.33,
       "sma50": 12.98,
       "sma150": 13.51,
       "sma200": 14.31,
       "sma200Past": 14.47,
       "sma200SlopeUp": false,
+      "pivot20": 13.2,
+      "swingLow15": 11,
+      "maxDownVol10": 2190300,
       "high52W": 25.63,
       "low52W": 10.02,
       "distHigh": -56.3,
@@ -6857,11 +7200,15 @@
       "q2Perf": -24,
       "q3Perf": -28,
       "q4Perf": -24.7,
+      "sma20": 23.44,
       "sma50": 22.77,
       "sma150": 25.19,
       "sma200": 26.73,
       "sma200Past": 27.86,
       "sma200SlopeUp": false,
+      "pivot20": 25.4,
+      "swingLow15": 21.5,
+      "maxDownVol10": 568300,
       "high52W": 39.26,
       "low52W": 19.5,
       "distHigh": -40,
@@ -6918,11 +7265,15 @@
       "q2Perf": -14.2,
       "q3Perf": -26.5,
       "q4Perf": -25.1,
+      "sma20": 19.82,
       "sma50": 19.91,
       "sma150": 20.62,
       "sma200": 21.32,
       "sma200Past": 21.9,
       "sma200SlopeUp": false,
+      "pivot20": 21,
+      "swingLow15": 18.8,
+      "maxDownVol10": 15262700,
       "high52W": 27.98,
       "low52W": 17.35,
       "distHigh": -32.5,
@@ -6980,11 +7331,15 @@
       "q2Perf": -24.7,
       "q3Perf": -20.6,
       "q4Perf": -10.3,
+      "sma20": 29.1,
       "sma50": 31.13,
       "sma150": 32.95,
       "sma200": 33.07,
       "sma200Past": 33.61,
       "sma200SlopeUp": false,
+      "pivot20": 32.85,
+      "swingLow15": 26.5,
+      "maxDownVol10": 447500,
       "high52W": 40.54,
       "low52W": 26.5,
       "distHigh": -32.3,
@@ -7042,11 +7397,15 @@
       "q2Perf": -17.4,
       "q3Perf": -21.9,
       "q4Perf": -22.4,
+      "sma20": 10.27,
       "sma50": 10.45,
       "sma150": 11.64,
       "sma200": 11.85,
       "sma200Past": 12.17,
       "sma200SlopeUp": false,
+      "pivot20": 10.75,
+      "swingLow15": 9.85,
+      "maxDownVol10": 895600,
       "high52W": 14.71,
       "low52W": 9.85,
       "distHigh": -31.7,
@@ -7104,11 +7463,15 @@
       "q2Perf": -16.1,
       "q3Perf": -20.6,
       "q4Perf": -38.6,
+      "sma20": 23.03,
       "sma50": 22.62,
       "sma150": 24.14,
       "sma200": 24.97,
       "sma200Past": 25.66,
       "sma200SlopeUp": false,
+      "pivot20": 25,
+      "swingLow15": 21.85,
+      "maxDownVol10": 1744600,
       "high52W": 35.96,
       "low52W": 19.15,
       "distHigh": -39.2,
@@ -7166,11 +7529,15 @@
       "q2Perf": -20.4,
       "q3Perf": -32.9,
       "q4Perf": -36.1,
+      "sma20": 19.13,
       "sma50": 17.33,
       "sma150": 19.26,
       "sma200": 20.43,
       "sma200Past": 21.09,
       "sma200SlopeUp": false,
+      "pivot20": 20.9,
+      "swingLow15": 17.8,
+      "maxDownVol10": 539500,
       "high52W": 28.44,
       "low52W": 13.8,
       "distHigh": -36.7,
@@ -7226,11 +7593,15 @@
       "q2Perf": -20.6,
       "q3Perf": -25,
       "q4Perf": -30.9,
+      "sma20": 12.54,
       "sma50": 12.51,
       "sma150": 14.04,
       "sma200": 14.63,
       "sma200Past": 14.99,
       "sma200SlopeUp": false,
+      "pivot20": 13,
+      "swingLow15": 11.9,
+      "maxDownVol10": 3053000,
       "high52W": 18.3,
       "low52W": 11.5,
       "distHigh": -32.8,
@@ -7288,11 +7659,15 @@
       "q2Perf": -21.8,
       "q3Perf": -36.3,
       "q4Perf": -4.1,
+      "sma20": 28.77,
       "sma50": 30.62,
       "sma150": 31.58,
       "sma200": 32.34,
       "sma200Past": 33.07,
       "sma200SlopeUp": false,
+      "pivot20": 32.45,
+      "swingLow15": 26.4,
+      "maxDownVol10": 1639300,
       "high52W": 45.86,
       "low52W": 24.76,
       "distHigh": -42.2,
@@ -7350,11 +7725,15 @@
       "q2Perf": -21.4,
       "q3Perf": -24.2,
       "q4Perf": -16.9,
+      "sma20": 52.94,
       "sma50": 55.57,
       "sma150": 58.42,
       "sma200": 58.95,
       "sma200Past": 60.66,
       "sma200SlopeUp": false,
+      "pivot20": 58.4,
+      "swingLow15": 48.95,
+      "maxDownVol10": 8194000,
       "high52W": 78.15,
       "low52W": 48.95,
       "distHigh": -37.4,
@@ -7412,11 +7791,15 @@
       "q2Perf": -26.4,
       "q3Perf": -35.4,
       "q4Perf": -33.5,
+      "sma20": 31.65,
       "sma50": 29.38,
       "sma150": 33.09,
       "sma200": 35.41,
       "sma200Past": 36.45,
       "sma200SlopeUp": false,
+      "pivot20": 34.6,
+      "swingLow15": 29.35,
+      "maxDownVol10": 1229600,
       "high52W": 48.31,
       "low52W": 25.5,
       "distHigh": -39.2,
@@ -7474,11 +7857,15 @@
       "q2Perf": -20.1,
       "q3Perf": 0.4,
       "q4Perf": -28.2,
+      "sma20": 10.41,
       "sma50": 11.1,
       "sma150": 11.33,
       "sma200": 11.12,
       "sma200Past": 11.04,
       "sma200SlopeUp": true,
+      "pivot20": 11.25,
+      "swingLow15": 9.3,
+      "maxDownVol10": 3313300,
       "high52W": 14.89,
       "low52W": 7.41,
       "distHigh": -37.5,
@@ -7534,11 +7921,15 @@
       "q2Perf": -25.8,
       "q3Perf": -19.2,
       "q4Perf": -22.8,
+      "sma20": 27.35,
       "sma50": 27.68,
       "sma150": 30.56,
       "sma200": 31.14,
       "sma200Past": 31.36,
       "sma200SlopeUp": false,
+      "pivot20": 29.25,
+      "swingLow15": 24.5,
+      "maxDownVol10": 2394200,
       "high52W": 38.1,
       "low52W": 24.5,
       "distHigh": -35.7,
@@ -7596,11 +7987,15 @@
       "q2Perf": -21.7,
       "q3Perf": -27.1,
       "q4Perf": -33.4,
+      "sma20": 10.87,
       "sma50": 10.73,
       "sma150": 11.47,
       "sma200": 11.87,
       "sma200Past": 12.26,
       "sma200SlopeUp": false,
+      "pivot20": 11.45,
+      "swingLow15": 9.9,
+      "maxDownVol10": 760300,
       "high52W": 16.7,
       "low52W": 9.9,
       "distHigh": -39.5,
@@ -7658,11 +8053,15 @@
       "q2Perf": -22.5,
       "q3Perf": -36.2,
       "q4Perf": -7.2,
+      "sma20": 28.4,
       "sma50": 31.08,
       "sma150": 31.3,
       "sma200": 32.44,
       "sma200Past": 32.95,
       "sma200SlopeUp": false,
+      "pivot20": 32.1,
+      "swingLow15": 25,
+      "maxDownVol10": 4019900,
       "high52W": 47,
       "low52W": 23.5,
       "distHigh": -46.8,
@@ -7720,11 +8119,15 @@
       "q2Perf": -21.5,
       "q3Perf": -35.3,
       "q4Perf": -37.7,
+      "sma20": 21.8,
       "sma50": 21.77,
       "sma150": 22.86,
       "sma200": 24.31,
       "sma200Past": 25.14,
       "sma200SlopeUp": false,
+      "pivot20": 24.45,
+      "swingLow15": 19.95,
+      "maxDownVol10": 547200,
       "high52W": 34.5,
       "low52W": 19.25,
       "distHigh": -42.2,
@@ -7782,11 +8185,15 @@
       "q2Perf": -24.8,
       "q3Perf": -38.2,
       "q4Perf": -9.6,
+      "sma20": 72.38,
       "sma50": 76.23,
       "sma150": 81.41,
       "sma200": 84.26,
       "sma200Past": 88.25,
       "sma200SlopeUp": false,
+      "pivot20": 78,
+      "swingLow15": 66.1,
+      "maxDownVol10": 293000,
       "high52W": 136.47,
       "low52W": 62.47,
       "distHigh": -50.5,
@@ -7844,11 +8251,15 @@
       "q2Perf": -21.9,
       "q3Perf": -26.8,
       "q4Perf": -33.7,
+      "sma20": 9.42,
       "sma50": 9.31,
       "sma150": 10.22,
       "sma200": 10.57,
       "sma200Past": 10.85,
       "sma200SlopeUp": false,
+      "pivot20": 10.1,
+      "swingLow15": 8.78,
+      "maxDownVol10": 3708200,
       "high52W": 13.86,
       "low52W": 8.56,
       "distHigh": -36.7,
@@ -7906,11 +8317,15 @@
       "q2Perf": -26.1,
       "q3Perf": -33.4,
       "q4Perf": -44,
+      "sma20": 16.04,
       "sma50": 15.56,
       "sma150": 18.07,
       "sma200": 19.87,
       "sma200Past": 20.72,
       "sma200SlopeUp": false,
+      "pivot20": 17.2,
+      "swingLow15": 15.05,
+      "maxDownVol10": 3965300,
       "high52W": 29.59,
       "low52W": 14.15,
       "distHigh": -45.9,
@@ -7967,11 +8382,15 @@
       "q2Perf": -22,
       "q3Perf": -29.9,
       "q4Perf": -33.7,
+      "sma20": 27.81,
       "sma50": 26.7,
       "sma150": 29.56,
       "sma200": 30.49,
       "sma200Past": 31.4,
       "sma200SlopeUp": false,
+      "pivot20": 29.85,
+      "swingLow15": 24.65,
+      "maxDownVol10": 956100,
       "high52W": 39.64,
       "low52W": 23.3,
       "distHigh": -36.9,
@@ -8029,11 +8448,15 @@
       "q2Perf": -18.7,
       "q3Perf": -34.9,
       "q4Perf": -35.3,
+      "sma20": 16.01,
       "sma50": 15.82,
       "sma150": 17.27,
       "sma200": 18.32,
       "sma200Past": 19.24,
       "sma200SlopeUp": false,
+      "pivot20": 17.25,
+      "swingLow15": 15.35,
+      "maxDownVol10": 4983900,
       "high52W": 26.11,
       "low52W": 14.9,
       "distHigh": -40.6,
@@ -8091,11 +8514,15 @@
       "q2Perf": -28.8,
       "q3Perf": -33.5,
       "q4Perf": -32,
+      "sma20": 12.41,
       "sma50": 12.15,
       "sma150": 13.88,
       "sma200": 14.48,
       "sma200Past": 15.09,
       "sma200SlopeUp": false,
+      "pivot20": 13.55,
+      "swingLow15": 11.5,
+      "maxDownVol10": 957700,
       "high52W": 19.8,
       "low52W": 11,
       "distHigh": -41.9,
@@ -8153,11 +8580,15 @@
       "q2Perf": -25.4,
       "q3Perf": -21.8,
       "q4Perf": -37.3,
+      "sma20": 15,
       "sma50": 14.62,
       "sma150": 16.39,
       "sma200": 16.94,
       "sma200Past": 17.41,
       "sma200SlopeUp": false,
+      "pivot20": 15.95,
+      "swingLow15": 13.5,
+      "maxDownVol10": 6627800,
       "high52W": 22.12,
       "low52W": 13.15,
       "distHigh": -38.3,
@@ -8215,11 +8646,15 @@
       "q2Perf": -24,
       "q3Perf": -26.8,
       "q4Perf": -39.3,
+      "sma20": 10.73,
       "sma50": 10.41,
       "sma150": 11.61,
       "sma200": 11.91,
       "sma200Past": 12.25,
       "sma200SlopeUp": false,
+      "pivot20": 11.45,
+      "swingLow15": 10.15,
+      "maxDownVol10": 14299900,
       "high52W": 16.97,
       "low52W": 9.3,
       "distHigh": -40.2,
@@ -8277,11 +8712,15 @@
       "q2Perf": -24.8,
       "q3Perf": -34.2,
       "q4Perf": -37.8,
+      "sma20": 9.42,
       "sma50": 9.68,
       "sma150": 10.36,
       "sma200": 10.99,
       "sma200Past": 11.49,
       "sma200SlopeUp": false,
+      "pivot20": 9.8,
+      "swingLow15": 8.7,
+      "maxDownVol10": 1545800,
       "high52W": 15.27,
       "low52W": 8.7,
       "distHigh": -40.4,
@@ -8339,11 +8778,15 @@
       "q2Perf": -22.5,
       "q3Perf": -31.9,
       "q4Perf": -31.3,
+      "sma20": 15.79,
       "sma50": 16.19,
       "sma150": 17.61,
       "sma200": 18.33,
       "sma200Past": 18.8,
       "sma200SlopeUp": false,
+      "pivot20": 16.55,
+      "swingLow15": 14.59,
+      "maxDownVol10": 591800,
       "high52W": 23.79,
       "low52W": 14.59,
       "distHigh": -38.7,
@@ -8401,11 +8844,15 @@
       "q2Perf": -24.1,
       "q3Perf": -37.9,
       "q4Perf": -14.5,
+      "sma20": 27.88,
       "sma50": 28.45,
       "sma150": 32.46,
       "sma200": 33.68,
       "sma200Past": 34.6,
       "sma200SlopeUp": false,
+      "pivot20": 29.4,
+      "swingLow15": 26.45,
+      "maxDownVol10": 2665500,
       "high52W": 44.54,
       "low52W": 26.1,
       "distHigh": -40.6,
@@ -8463,11 +8910,15 @@
       "q2Perf": -22.8,
       "q3Perf": -27.3,
       "q4Perf": -29.2,
+      "sma20": 14.14,
       "sma50": 13.92,
       "sma150": 15.85,
       "sma200": 16.01,
       "sma200Past": 16.54,
       "sma200SlopeUp": false,
+      "pivot20": 15.1,
+      "swingLow15": 13.35,
+      "maxDownVol10": 11913300,
       "high52W": 20.85,
       "low52W": 12.6,
       "distHigh": -36,
@@ -8525,11 +8976,15 @@
       "q2Perf": -26,
       "q3Perf": -35.1,
       "q4Perf": -17.4,
+      "sma20": 31.55,
       "sma50": 33.42,
       "sma150": 36.15,
       "sma200": 37.05,
       "sma200Past": 38.63,
       "sma200SlopeUp": false,
+      "pivot20": 34.8,
+      "swingLow15": 29.1,
+      "maxDownVol10": 5435000,
       "high52W": 52.37,
       "low52W": 29.1,
       "distHigh": -44.4,
@@ -8587,11 +9042,15 @@
       "q2Perf": -26.2,
       "q3Perf": -31.3,
       "q4Perf": -28.9,
+      "sma20": 19.28,
       "sma50": 19.3,
       "sma150": 22,
       "sma200": 23.25,
       "sma200Past": 23.99,
       "sma200SlopeUp": false,
+      "pivot20": 20.85,
+      "swingLow15": 18.05,
+      "maxDownVol10": 7895900,
       "high52W": 31.18,
       "low52W": 18.05,
       "distHigh": -40.8,
@@ -8649,11 +9108,15 @@
       "q2Perf": -19.8,
       "q3Perf": -36.7,
       "q4Perf": -35.9,
+      "sma20": 38.6,
       "sma50": 39.71,
       "sma150": 41.55,
       "sma200": 43.39,
       "sma200Past": 45.27,
       "sma200SlopeUp": false,
+      "pivot20": 41.6,
+      "swingLow15": 35,
+      "maxDownVol10": 845900,
       "high52W": 64.8,
       "low52W": 35,
       "distHigh": -45.7,
@@ -8711,11 +9174,15 @@
       "q2Perf": -28.1,
       "q3Perf": -30.6,
       "q4Perf": -24,
+      "sma20": 19.19,
       "sma50": 20.88,
       "sma150": 22.16,
       "sma200": 23.34,
       "sma200Past": 23.68,
       "sma200SlopeUp": false,
+      "pivot20": 21.45,
+      "swingLow15": 17.35,
+      "maxDownVol10": 3198700,
       "high52W": 33.52,
       "low52W": 17.35,
       "distHigh": -48.1,
@@ -8773,11 +9240,15 @@
       "q2Perf": -23,
       "q3Perf": -30.5,
       "q4Perf": -35.7,
+      "sma20": 15.66,
       "sma50": 15.61,
       "sma150": 17.42,
       "sma200": 17.9,
       "sma200Past": 18.4,
       "sma200SlopeUp": false,
+      "pivot20": 16.7,
+      "swingLow15": 14.5,
+      "maxDownVol10": 3754000,
       "high52W": 22.85,
       "low52W": 13.4,
       "distHigh": -36.5,
@@ -8835,11 +9306,15 @@
       "q2Perf": -17.2,
       "q3Perf": -36.2,
       "q4Perf": -44.8,
+      "sma20": 4.52,
       "sma50": 4.55,
       "sma150": 4.83,
       "sma200": 5.07,
       "sma200Past": 5.34,
       "sma200SlopeUp": false,
+      "pivot20": 4.69,
+      "swingLow15": 4.18,
+      "maxDownVol10": 9170500,
       "high52W": 7.8,
       "low52W": 4.18,
       "distHigh": -46.4,
@@ -8897,11 +9372,15 @@
       "q2Perf": -23.1,
       "q3Perf": -35.1,
       "q4Perf": -39.2,
+      "sma20": 12.35,
       "sma50": 12.83,
       "sma150": 13.92,
       "sma200": 14.61,
       "sma200Past": 15.13,
       "sma200SlopeUp": false,
+      "pivot20": 13.85,
+      "swingLow15": 11.4,
+      "maxDownVol10": 1786000,
       "high52W": 19.2,
       "low52W": 11.4,
       "distHigh": -39.3,
@@ -8959,11 +9438,15 @@
       "q2Perf": -27.9,
       "q3Perf": -36,
       "q4Perf": -43.3,
+      "sma20": 6.96,
       "sma50": 6.87,
       "sma150": 7.87,
       "sma200": 8.35,
       "sma200Past": 8.71,
       "sma200SlopeUp": false,
+      "pivot20": 7.39,
+      "swingLow15": 6.6,
+      "maxDownVol10": 1380700,
       "high52W": 11.75,
       "low52W": 6.18,
       "distHigh": -43.7,
@@ -9021,11 +9504,15 @@
       "q2Perf": -23.3,
       "q3Perf": -47.8,
       "q4Perf": -12.8,
+      "sma20": 32.38,
       "sma50": 34.55,
       "sma150": 35.86,
       "sma200": 38.63,
       "sma200Past": 40.54,
       "sma200SlopeUp": false,
+      "pivot20": 35.6,
+      "swingLow15": 29.2,
+      "maxDownVol10": 2707900,
       "high52W": 67.97,
       "low52W": 29.2,
       "distHigh": -57,
@@ -9083,11 +9570,15 @@
       "q2Perf": -24.5,
       "q3Perf": -48.6,
       "q4Perf": -42.9,
+      "sma20": 19.67,
       "sma50": 18.61,
       "sma150": 20.09,
       "sma200": 22.35,
       "sma200Past": 23.46,
       "sma200SlopeUp": false,
+      "pivot20": 21.5,
+      "swingLow15": 17.4,
+      "maxDownVol10": 1004800,
       "high52W": 35.48,
       "low52W": 16.03,
       "distHigh": -51,
@@ -9145,11 +9636,15 @@
       "q2Perf": -23.7,
       "q3Perf": -28.4,
       "q4Perf": -38.3,
+      "sma20": 9.66,
       "sma50": 9.43,
       "sma150": 10.56,
       "sma200": 10.95,
       "sma200Past": 11.15,
       "sma200SlopeUp": false,
+      "pivot20": 10.2,
+      "swingLow15": 8.7,
+      "maxDownVol10": 1270900,
       "high52W": 14.6,
       "low52W": 8.35,
       "distHigh": -40.4,
@@ -9207,11 +9702,15 @@
       "q2Perf": -30.9,
       "q3Perf": -37.5,
       "q4Perf": -34.4,
+      "sma20": 16.08,
       "sma50": 16.36,
       "sma150": 18.52,
       "sma200": 19.49,
       "sma200Past": 20.13,
       "sma200SlopeUp": false,
+      "pivot20": 17,
+      "swingLow15": 14.75,
+      "maxDownVol10": 4665400,
       "high52W": 24.55,
       "low52W": 14.75,
       "distHigh": -39.9,
@@ -9269,11 +9768,15 @@
       "q2Perf": -26.6,
       "q3Perf": -29.7,
       "q4Perf": -51.1,
+      "sma20": 13.56,
       "sma50": 13.06,
       "sma150": 15.13,
       "sma200": 15.75,
       "sma200Past": 16.32,
       "sma200SlopeUp": false,
+      "pivot20": 14.7,
+      "swingLow15": 12.8,
+      "maxDownVol10": 14207600,
       "high52W": 27.7,
       "low52W": 11.35,
       "distHigh": -53.8,
@@ -9331,11 +9834,15 @@
       "q2Perf": -26.8,
       "q3Perf": -36.8,
       "q4Perf": -37.7,
+      "sma20": 10.65,
       "sma50": 10.84,
       "sma150": 12.25,
       "sma200": 12.96,
       "sma200Past": 13.55,
       "sma200SlopeUp": false,
+      "pivot20": 11.3,
+      "swingLow15": 10.05,
+      "maxDownVol10": 30961400,
       "high52W": 17.15,
       "low52W": 9.55,
       "distHigh": -41.1,
@@ -9393,11 +9900,15 @@
       "q2Perf": -29,
       "q3Perf": -34.9,
       "q4Perf": -40.5,
+      "sma20": 12.67,
       "sma50": 12.42,
       "sma150": 14.17,
       "sma200": 14.77,
       "sma200Past": 15.43,
       "sma200SlopeUp": false,
+      "pivot20": 13.7,
+      "swingLow15": 11.9,
+      "maxDownVol10": 32337400,
       "high52W": 21.12,
       "low52W": 11,
       "distHigh": -43.7,
@@ -9455,11 +9966,15 @@
       "q2Perf": -28.3,
       "q3Perf": -31.3,
       "q4Perf": -41.8,
+      "sma20": 13.02,
       "sma50": 12.78,
       "sma150": 15.08,
       "sma200": 15.52,
       "sma200Past": 16.15,
       "sma200SlopeUp": false,
+      "pivot20": 13.8,
+      "swingLow15": 12.4,
+      "maxDownVol10": 14607300,
       "high52W": 21.51,
       "low52W": 10.8,
       "distHigh": -42.4,
@@ -9517,11 +10032,15 @@
       "q2Perf": -43.3,
       "q3Perf": -52,
       "q4Perf": 8.1,
+      "sma20": 48.61,
       "sma50": 51.07,
       "sma150": 66.18,
       "sma200": 68.45,
       "sma200Past": 71.8,
       "sma200SlopeUp": false,
+      "pivot20": 51.9,
+      "swingLow15": 44.8,
+      "maxDownVol10": 190300,
       "high52W": 157.1,
       "low52W": 41.93,
       "distHigh": -71.3,
@@ -9579,11 +10098,15 @@
       "q2Perf": -26.2,
       "q3Perf": -35.1,
       "q4Perf": -52.8,
+      "sma20": 10.04,
       "sma50": 9.82,
       "sma150": 10.99,
       "sma200": 11.63,
       "sma200Past": 12.22,
       "sma200SlopeUp": false,
+      "pivot20": 10.7,
+      "swingLow15": 9.3,
+      "maxDownVol10": 6507800,
       "high52W": 20.05,
       "low52W": 8.71,
       "distHigh": -53.1,
@@ -9641,11 +10164,15 @@
       "q2Perf": -27.9,
       "q3Perf": -32.7,
       "q4Perf": -29.9,
+      "sma20": 62.57,
       "sma50": 67.16,
       "sma150": 72.41,
       "sma200": 73.43,
       "sma200Past": 75.92,
       "sma200SlopeUp": false,
+      "pivot20": 68.9,
+      "swingLow15": 55.8,
+      "maxDownVol10": 428300,
       "high52W": 99.12,
       "low52W": 55.8,
       "distHigh": -42.6,
@@ -9703,11 +10230,15 @@
       "q2Perf": -28.3,
       "q3Perf": -43.8,
       "q4Perf": -48.4,
+      "sma20": 16.66,
       "sma50": 16.56,
       "sma150": 18,
       "sma200": 19.38,
       "sma200Past": 20.32,
       "sma200SlopeUp": false,
+      "pivot20": 18.2,
+      "swingLow15": 14.95,
+      "maxDownVol10": 1155800,
       "high52W": 29.04,
       "low52W": 14.28,
       "distHigh": -48.5,
@@ -9765,11 +10296,15 @@
       "q2Perf": -28.4,
       "q3Perf": -39.7,
       "q4Perf": -54.2,
+      "sma20": 12.48,
       "sma50": 11.5,
       "sma150": 13.17,
       "sma200": 14.03,
       "sma200Past": 14.73,
       "sma200SlopeUp": false,
+      "pivot20": 13.6,
+      "swingLow15": 11.15,
+      "maxDownVol10": 4050000,
       "high52W": 24.52,
       "low52W": 9.6,
       "distHigh": -54.5,
@@ -9827,11 +10362,15 @@
       "q2Perf": -46,
       "q3Perf": -38.6,
       "q4Perf": -38.7,
+      "sma20": 62.83,
       "sma50": 66.68,
       "sma150": 79.51,
       "sma200": 84.14,
       "sma200Past": 89.76,
       "sma200SlopeUp": false,
+      "pivot20": 72,
+      "swingLow15": 57,
+      "maxDownVol10": 1524900,
       "high52W": 136.64,
       "low52W": 56.55,
       "distHigh": -57.9,
@@ -9889,11 +10428,15 @@
       "q2Perf": -33.6,
       "q3Perf": -35.6,
       "q4Perf": -52,
+      "sma20": 11.4,
       "sma50": 11.41,
       "sma150": 13.17,
       "sma200": 13.92,
       "sma200Past": 14.62,
       "sma200SlopeUp": false,
+      "pivot20": 12.15,
+      "swingLow15": 10.3,
+      "maxDownVol10": 4963500,
       "high52W": 22.9,
       "low52W": 10.3,
       "distHigh": -52.2,
@@ -9951,11 +10494,15 @@
       "q2Perf": -25.6,
       "q3Perf": -39.8,
       "q4Perf": -41.4,
+      "sma20": 18.86,
       "sma50": 18.99,
       "sma150": 22.08,
       "sma200": 23.01,
       "sma200Past": 24.17,
       "sma200SlopeUp": false,
+      "pivot20": 20.35,
+      "swingLow15": 17.55,
+      "maxDownVol10": 944100,
       "high52W": 31.57,
       "low52W": 17.25,
       "distHigh": -43.9,
@@ -10013,11 +10560,15 @@
       "q2Perf": -28.2,
       "q3Perf": -41.5,
       "q4Perf": -40.5,
+      "sma20": 44.52,
       "sma50": 47.17,
       "sma150": 51.57,
       "sma200": 54.06,
       "sma200Past": 57,
       "sma200SlopeUp": false,
+      "pivot20": 48.2,
+      "swingLow15": 39.55,
+      "maxDownVol10": 832700,
       "high52W": 82.42,
       "low52W": 39.55,
       "distHigh": -51.6,
@@ -10075,11 +10626,15 @@
       "q2Perf": -39.6,
       "q3Perf": -19.9,
       "q4Perf": -31.6,
+      "sma20": 35.42,
       "sma50": 39.32,
       "sma150": 46.74,
       "sma200": 45.3,
       "sma200Past": 45.73,
       "sma200SlopeUp": false,
+      "pivot20": 38.8,
+      "swingLow15": 32,
+      "maxDownVol10": 3081700,
       "high52W": 58.5,
       "low52W": 32,
       "distHigh": -45.3,
@@ -10136,11 +10691,15 @@
       "q2Perf": -33,
       "q3Perf": -44.9,
       "q4Perf": -55.5,
+      "sma20": 14.88,
       "sma50": 14.4,
       "sma150": 17.29,
       "sma200": 18.95,
       "sma200Past": 20.22,
       "sma200SlopeUp": false,
+      "pivot20": 16.3,
+      "swingLow15": 13.85,
+      "maxDownVol10": 11645800,
       "high52W": 32.91,
       "low52W": 12.75,
       "distHigh": -57.5,
@@ -10198,11 +10757,15 @@
       "q2Perf": -41,
       "q3Perf": -39.7,
       "q4Perf": -30.7,
+      "sma20": 16.65,
       "sma50": 17.73,
       "sma150": 20.63,
       "sma200": 21.45,
       "sma200Past": 21.98,
       "sma200SlopeUp": false,
+      "pivot20": 18.3,
+      "swingLow15": 14.7,
+      "maxDownVol10": 1778600,
       "high52W": 26.62,
       "low52W": 14.7,
       "distHigh": -44.8,
@@ -10260,11 +10823,15 @@
       "q2Perf": -29.7,
       "q3Perf": -45.1,
       "q4Perf": -45.1,
+      "sma20": 25.63,
       "sma50": 27.26,
       "sma150": 29.12,
       "sma200": 0,
       "sma200Past": 0,
       "sma200SlopeUp": false,
+      "pivot20": 28.7,
+      "swingLow15": 21.95,
+      "maxDownVol10": 2274500,
       "high52W": 42.6,
       "low52W": 21.95,
       "distHigh": -47.7,
@@ -10322,11 +10889,15 @@
       "q2Perf": -36.3,
       "q3Perf": -24.2,
       "q4Perf": -38.8,
+      "sma20": 10.24,
       "sma50": 10.71,
       "sma150": 12.6,
       "sma200": 12.6,
       "sma200Past": 12.76,
       "sma200SlopeUp": false,
+      "pivot20": 11,
+      "swingLow15": 8.85,
+      "maxDownVol10": 21014900,
       "high52W": 19.39,
       "low52W": 8.85,
       "distHigh": -54.4,
@@ -10384,11 +10955,15 @@
       "q2Perf": -42.4,
       "q3Perf": -30.4,
       "q4Perf": -38.4,
+      "sma20": 21.33,
       "sma50": 22.47,
       "sma150": 26.2,
       "sma200": 25.97,
       "sma200Past": 26.61,
       "sma200SlopeUp": false,
+      "pivot20": 23.6,
+      "swingLow15": 18.6,
+      "maxDownVol10": 13275900,
       "high52W": 37.45,
       "low52W": 18.6,
       "distHigh": -50.3,
@@ -10445,11 +11020,15 @@
       "q2Perf": -34.3,
       "q3Perf": -43.6,
       "q4Perf": -47.1,
+      "sma20": 14.9,
       "sma50": 15.19,
       "sma150": 17.81,
       "sma200": 19.04,
       "sma200Past": 20.17,
       "sma200SlopeUp": false,
+      "pivot20": 16.3,
+      "swingLow15": 13.9,
+      "maxDownVol10": 1049800,
       "high52W": 26.23,
       "low52W": 13.9,
       "distHigh": -47,
@@ -10507,11 +11086,15 @@
       "q2Perf": -37.7,
       "q3Perf": -49.7,
       "q4Perf": -48.1,
+      "sma20": 37.18,
       "sma50": 38.64,
       "sma150": 44.62,
       "sma200": 47.88,
       "sma200Past": 51.43,
       "sma200SlopeUp": false,
+      "pivot20": 40.95,
+      "swingLow15": 33.7,
+      "maxDownVol10": 565200,
       "high52W": 82.27,
       "low52W": 33.7,
       "distHigh": -59,
@@ -10569,11 +11152,15 @@
       "q2Perf": -23.7,
       "q3Perf": -52.2,
       "q4Perf": -60.8,
+      "sma20": 32.34,
       "sma50": 33.5,
       "sma150": 36.63,
       "sma200": 40.54,
       "sma200Past": 43.05,
       "sma200SlopeUp": false,
+      "pivot20": 33.95,
+      "swingLow15": 30.05,
+      "maxDownVol10": 333200,
       "high52W": 77.99,
       "low52W": 29.72,
       "distHigh": -61.4,
@@ -10631,11 +11218,15 @@
       "q2Perf": -33,
       "q3Perf": -41.9,
       "q4Perf": -56.8,
+      "sma20": 11.68,
       "sma50": 11.28,
       "sma150": 13.15,
       "sma200": 13.89,
       "sma200Past": 14.64,
       "sma200SlopeUp": false,
+      "pivot20": 12.7,
+      "swingLow15": 10.4,
+      "maxDownVol10": 11887400,
       "high52W": 25.52,
       "low52W": 9.6,
       "distHigh": -59.2,
@@ -10693,11 +11284,15 @@
       "q2Perf": -40.3,
       "q3Perf": -51.2,
       "q4Perf": -46.2,
+      "sma20": 13.24,
       "sma50": 13.35,
       "sma150": 16.04,
       "sma200": 18.1,
       "sma200Past": 18.96,
       "sma200SlopeUp": false,
+      "pivot20": 14.75,
+      "swingLow15": 12.05,
+      "maxDownVol10": 7724900,
       "high52W": 27.9,
       "low52W": 12.05,
       "distHigh": -56.8,
@@ -10755,11 +11350,15 @@
       "q2Perf": -31.3,
       "q3Perf": -44.3,
       "q4Perf": -48.8,
+      "sma20": 48.34,
       "sma50": 54.81,
       "sma150": 60.5,
       "sma200": 63.41,
       "sma200Past": 67.8,
       "sma200SlopeUp": false,
+      "pivot20": 54.84,
+      "swingLow15": 43.06,
+      "maxDownVol10": 18437700,
       "high52W": 95.28,
       "low52W": 43.06,
       "distHigh": -54.3,
@@ -10817,11 +11416,15 @@
       "q2Perf": -34.3,
       "q3Perf": -49.6,
       "q4Perf": -48.9,
+      "sma20": 10.41,
       "sma50": 11.48,
       "sma150": 13.77,
       "sma200": 14.81,
       "sma200Past": 16.17,
       "sma200SlopeUp": false,
+      "pivot20": 11.3,
+      "swingLow15": 9.25,
+      "maxDownVol10": 987800,
       "high52W": 25.05,
       "low52W": 9.25,
       "distHigh": -60.9,
@@ -10879,11 +11482,15 @@
       "q2Perf": -42.5,
       "q3Perf": -39.9,
       "q4Perf": -57,
+      "sma20": 4.79,
       "sma50": 4.99,
       "sma150": 6.23,
       "sma200": 6.4,
       "sma200Past": 6.75,
       "sma200SlopeUp": false,
+      "pivot20": 5.12,
+      "swingLow15": 4.37,
+      "maxDownVol10": 4153500,
       "high52W": 10.7,
       "low52W": 4.37,
       "distHigh": -59,
@@ -10941,11 +11548,15 @@
       "q2Perf": -47.1,
       "q3Perf": -47.1,
       "q4Perf": -47.1,
+      "sma20": 15.37,
       "sma50": 17.35,
       "sma150": 0,
       "sma200": 0,
       "sma200Past": 0,
       "sma200SlopeUp": false,
+      "pivot20": 16.9,
+      "swingLow15": 14.5,
+      "maxDownVol10": 718500,
       "high52W": 35.2,
       "low52W": 14.5,
       "distHigh": -58,
@@ -11003,11 +11614,15 @@
       "q2Perf": -81.6,
       "q3Perf": -84.8,
       "q4Perf": -79.5,
+      "sma20": 14.38,
       "sma50": 20.11,
       "sma150": 41.72,
       "sma200": 50.19,
       "sma200Past": 56.65,
       "sma200SlopeUp": false,
+      "pivot20": 17.3,
+      "swingLow15": 12.1,
+      "maxDownVol10": 16162800,
       "high52W": 84.67,
       "low52W": 12.1,
       "distHigh": -85.7,

@@ -239,11 +239,15 @@ export interface MinerviniScreenerItem {
   isStage2Eligible?: boolean;
   criteriaPassed?: number;
   failedCriteria?: string[];
+  sma20?: number;
   sma50?: number;
   sma150?: number;
   sma200?: number;
   sma200Past?: number;
   sma200SlopeUp?: boolean;
+  pivot20?: number;           // Đỉnh kháng cự nền 20 phiên liền trước (nghìn VND)
+  swingLow15?: number;        // Đáy hỗ trợ 15 phiên gần nhất (nghìn VND)
+  maxDownVol10?: number;      // Khối lượng phiên giảm cao nhất 10 phiên trước (cổ phiếu)
   high52W?: number;
   low52W?: number;
   distHigh?: number;
