@@ -1520,23 +1520,10 @@
     "currentPrice": 26.75,
     "calculatedDate": "2026-11-27"
   },
-  "MBS": {
-    "symbol": "MBS",
-    "rsRating": 24,
-    "rank": 118,
-    "totalStocks": 153,
-    "rawScore": -0.245,
-    "q1Perf": -18,
-    "q2Perf": -22.4,
-    "q3Perf": -29.5,
-    "q4Perf": -34.8,
-    "currentPrice": 14.6,
-    "calculatedDate": "2026-11-27"
-  },
   "SZC": {
     "symbol": "SZC",
     "rsRating": 24,
-    "rank": 119,
+    "rank": 118,
     "totalStocks": 153,
     "rawScore": -0.245,
     "q1Perf": -7.1,
@@ -1544,6 +1531,19 @@
     "q3Perf": -46.8,
     "q4Perf": -43.1,
     "currentPrice": 17.5,
+    "calculatedDate": "2026-11-27"
+  },
+  "MBS": {
+    "symbol": "MBS",
+    "rsRating": 24,
+    "rank": 119,
+    "totalStocks": 153,
+    "rawScore": -0.245,
+    "q1Perf": -18,
+    "q2Perf": -22.4,
+    "q3Perf": -29.5,
+    "q4Perf": -34.8,
+    "currentPrice": 14.6,
     "calculatedDate": "2026-11-27"
   },
   "KSB": {
