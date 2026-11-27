@@ -339,10 +339,16 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
     us10Y: number;
     dxy: number;
     vix: number;
+    brent: number;
+    usCoreCpi: number | null;
+    usCpi: number | null;
   }>({
     us10Y: Number.NaN,
     dxy: Number.NaN,
     vix: Number.NaN,
+    brent: Number.NaN,
+    usCoreCpi: null,
+    usCpi: null,
   });
 
   // % thay đổi USD/VND trong 1 tháng (dương = VND mất giá) — đo áp lực tỷ giá, thay cho biến động 1 phiên
@@ -410,13 +416,24 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
       if (resGlobal.ok) {
         const gJson = await resGlobal.json();
         if (gJson.success && Array.isArray(gJson.indices)) {
-          const tnx = gJson.indices.find((i: any) => i.symbol === '^TNX');
-          const dxyItem = gJson.indices.find((i: any) => i.symbol === 'DX-Y.NYB');
-          const vixItem = gJson.indices.find((i: any) => i.symbol === '^VIX');
+          const list = gJson.indices as Array<{ symbol?: string; price?: number }>;
+          const tnx = list.find((i) => i.symbol === '^TNX');
+          const dxyItem = list.find((i) => i.symbol === 'DX-Y.NYB');
+          const vixItem = list.find((i) => i.symbol === '^VIX');
+          const brentItem = list.find((i) => i.symbol === 'BZ=F');
+          const usCore = Number(gJson.usInflation?.coreCpiYoY);
+          const usCpiVal = Number(gJson.usInflation?.cpiYoY);
+          const toNum = (v: unknown) => {
+            const n = Number(v);
+            return Number.isFinite(n) ? n : Number.NaN;
+          };
           setGlobalMacro({
-            us10Y: Number.isFinite(tnx?.price) ? tnx.price : Number.NaN,
-            dxy: Number.isFinite(dxyItem?.price) ? dxyItem.price : Number.NaN,
-            vix: Number.isFinite(vixItem?.price) ? vixItem.price : Number.NaN,
+            us10Y: toNum(tnx?.price),
+            dxy: toNum(dxyItem?.price),
+            vix: toNum(vixItem?.price),
+            brent: toNum(brentItem?.price),
+            usCoreCpi: Number.isFinite(usCore) ? usCore : null,
+            usCpi: Number.isFinite(usCpiVal) ? usCpiVal : null,
           });
         }
       }
@@ -1949,6 +1966,143 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
             </div>
           </div>
         </div>
+
+        {/* ── 5 CHỈ BÁO XÁC NHẬN LÃI SUẤT ĐẢO CHIỀU (CHUỖI TRUYỀN DẪN VĨ MÔ) ── */}
+        {(() => {
+          const brentVal = Number.isFinite(globalMacro.brent) ? globalMacro.brent : null;
+          const brentPass = brentVal !== null && brentVal < 90;
+
+          const us10YVal = Number.isFinite(globalMacro.us10Y) ? globalMacro.us10Y : null;
+          const usInflVal = globalMacro.usCoreCpi ?? globalMacro.usCpi;
+          const usInflLabel = globalMacro.usCoreCpi !== null ? 'Core CPI Mỹ' : 'CPI Mỹ';
+          const usInflPass = usInflVal !== null && usInflVal < 2.8;
+          const us10YPass = us10YVal !== null && us10YVal < 4.5;
+          const usPassCount = (usInflPass ? 1 : 0) + (us10YPass ? 1 : 0);
+
+          const vnCpiVal = vnLive?.cpiYoY?.value ?? (macroData.cpi[macroData.cpi.length - 1]?.yoy ?? null);
+          const vnCpiPass = vnCpiVal !== null && vnCpiVal < 4.5;
+
+          const ib1M = vnLive?.daily?.rates?.m1 ?? null;
+          const ib1W = vnLive?.daily?.rates?.w1 ?? vnLive?.interbank1W?.value ?? null;
+          const ibRate = ib1M ?? ib1W ?? vnLive?.interbankRate?.value ?? null;
+          const ibLabel = ib1M !== null ? 'Liên NH 1M (VIRA)' : ib1W !== null ? 'Liên NH 1W (VIRA)' : 'Liên NH (VNINBR)';
+          const ibPass = ibRate !== null && ibRate < 6.0;
+
+          const dep12MVal = vnLive?.deposit12M?.value ?? null;
+          const depBanks = vnLive?.deposit12M?.banks ?? null;
+          const depReady = vnCpiPass && ibPass;
+
+          const totalPassed =
+            (brentPass ? 1 : 0) +
+            (usInflPass && us10YPass ? 1 : 0) +
+            (vnCpiPass ? 1 : 0) +
+            (ibPass ? 1 : 0) +
+            (depReady && dep12MVal !== null && dep12MVal <= 5.5 ? 1 : 0);
+
+          const signals = [
+            {
+              name: '1. Giá dầu Brent',
+              current: brentVal !== null ? `${brentVal.toFixed(2)} USD/thùng` : 'Đang cập nhật...',
+              threshold: '< 90 USD/thùng (duy trì 2 tháng liên tiếp)',
+              status: brentVal === null ? 'WAIT' : brentPass ? 'PASS' : 'FAIL',
+              statusText: brentVal === null ? 'Chờ dữ liệu' : brentPass ? 'Đạt ngưỡng' : 'Chưa đạt',
+            },
+            {
+              name: `2. ${usInflLabel} & UST 10 năm`,
+              current: `${usInflVal !== null ? `${usInflVal.toFixed(2)}%` : '--'} · UST 10Y: ${us10YVal !== null ? `${us10YVal.toFixed(2)}%` : '--'}`,
+              threshold: 'Lạm phát lõi < 2,8% & UST 10 năm < 4,5%',
+              status: usPassCount === 2 ? 'PASS' : usPassCount === 1 ? 'PARTIAL' : 'FAIL',
+              statusText: usPassCount === 2 ? 'Đạt cả 2' : usPassCount === 1 ? 'Đạt 1/2' : 'Chưa đạt',
+            },
+            {
+              name: '3. CPI Việt Nam (YoY)',
+              current: vnCpiVal !== null ? `${vnCpiVal.toFixed(2)}%` : 'Đang cập nhật...',
+              threshold: 'CPI < 4,5% (lạm phát cơ bản < 4,0% 3 tháng liên tiếp)',
+              status: vnCpiVal === null ? 'WAIT' : vnCpiPass ? 'PASS' : 'FAIL',
+              statusText: vnCpiVal === null ? 'Chờ dữ liệu' : vnCpiPass ? 'Đạt ngưỡng' : 'Chưa đạt',
+            },
+            {
+              name: `4. ${ibLabel}`,
+              current: ibRate !== null ? `${ibRate.toFixed(2)}%` : 'Đang cập nhật...',
+              threshold: '< 6,0% ổn định qua mốc cuối quý (ngưỡng tham chiếu 3M–6M)',
+              status: ibRate === null ? 'WAIT' : ibPass ? 'PASS' : 'FAIL',
+              statusText: ibRate === null ? 'Chờ dữ liệu' : ibPass ? 'Đạt ngưỡng' : 'Chưa đạt',
+            },
+            {
+              name: '5. Huy động 12 tháng (Trung vị NH)',
+              current: dep12MVal !== null ? `${dep12MVal.toFixed(2)}%${depBanks ? ` (${depBanks} NH)` : ''}` : 'Đang cập nhật...',
+              threshold: 'Giảm thêm khi CPI và Liên ngân hàng đã đạt ngưỡng',
+              status: dep12MVal === null ? 'WAIT' : depReady ? 'PASS' : 'FAIL',
+              statusText: dep12MVal === null ? 'Chờ dữ liệu' : depReady ? 'Đủ điều kiện giảm' : 'Chờ CPI & Liên NH',
+            },
+          ] as const;
+
+          return (
+            <div className="mt-6 rounded-2xl bg-zinc-950/90 border border-zinc-800/80 overflow-hidden">
+              <div className="px-5 py-3.5 border-b border-zinc-800/80 flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <h4 className="text-xs font-mono font-bold text-zinc-100 uppercase">
+                      Các Chỉ Báo Xác Nhận Lãi Suất Đảo Chiều (Chuỗi Truyền Dẫn Vĩ Mô)
+                    </h4>
+                  </div>
+                  <p className="text-[11px] text-zinc-400 mt-0.5">
+                    Giá năng lượng → Lạm phát → Chi phí vốn liên ngân hàng → Lãi suất huy động → Lãi suất cho vay (Ngưỡng tham khảo VPBankS · Dữ liệu sống 100%)
+                  </p>
+                </div>
+                <span
+                  className={`px-2.5 py-1 rounded-lg border font-mono text-[11px] font-bold tabular-nums ${
+                    totalPassed >= 4
+                      ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/35'
+                      : totalPassed >= 2
+                      ? 'bg-amber-500/15 text-amber-300 border-amber-500/35'
+                      : 'bg-rose-500/15 text-rose-300 border-rose-500/35'
+                  }`}
+                >
+                  {totalPassed}/5 điều kiện đạt ngưỡng
+                </span>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left font-mono text-xs">
+                  <thead className="bg-zinc-900/70 text-zinc-400 text-[10px] uppercase border-b border-zinc-800/80">
+                    <tr>
+                      <th className="py-2.5 px-4">Tín hiệu</th>
+                      <th className="py-2.5 px-4">Mức hiện tại (Realtime)</th>
+                      <th className="py-2.5 px-4">Ngưỡng xác nhận đảo chiều</th>
+                      <th className="py-2.5 px-4 text-right">Trạng thái</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-900">
+                    {signals.map((sig) => (
+                      <tr key={sig.name} className="hover:bg-zinc-900/40 transition-colors">
+                        <td className="py-2.5 px-4 font-bold text-zinc-200">{sig.name}</td>
+                        <td className="py-2.5 px-4 text-zinc-100 font-semibold tabular-nums">{sig.current}</td>
+                        <td className="py-2.5 px-4 text-zinc-400 font-sans text-[11px]">{sig.threshold}</td>
+                        <td className="py-2.5 px-4 text-right">
+                          <span
+                            className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold border whitespace-nowrap ${
+                              sig.status === 'PASS'
+                                ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/35'
+                                : sig.status === 'PARTIAL'
+                                ? 'bg-amber-500/15 text-amber-300 border-amber-500/35'
+                                : sig.status === 'WAIT'
+                                ? 'bg-zinc-800 text-zinc-400 border-zinc-700'
+                                : 'bg-rose-500/15 text-rose-300 border-rose-500/35'
+                            }`}
+                          >
+                            {sig.statusText}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          );
+        })()}
       </div>
     </div>
   );

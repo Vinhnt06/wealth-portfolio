@@ -307,7 +307,7 @@ export const UnifiedMacroMatrix: React.FC = () => {
   const [hasLoaded, setHasLoaded] = useState(false);
   const [loading, setLoading] = useState(false);
   const [lastRefreshed, setLastRefreshed] = useState('');
-  const [showCycleDeepDive, setShowCycleDeepDive] = useState(false);
+  const [showCycleDeepDive, setShowCycleDeepDive] = useState(true);
   const [activeChartIndicator, setActiveChartIndicator] = useState<MacroIndicatorTarget | null>(null);
   const [goldTab, setGoldTab] = useState<'vn_gold' | 'world_comm'>('vn_gold');
 
