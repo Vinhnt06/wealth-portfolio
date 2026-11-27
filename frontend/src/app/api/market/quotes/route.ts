@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { isPreMarketResetWindow } from '../../../../features/market/utils/marketHours';
+import { isMarketTradingSession, isPreMarketResetWindow } from '../../../../features/market/utils/marketHours';
+import { fetchEntradeSnapshot } from '../../../../features/market/utils/entradeSnapshot';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -86,52 +87,34 @@ async function fetchVietcapIndex(cfg: IndexMeta): Promise<any | null> {
 }
 
 async function fetchEntradeIndex(cfg: IndexMeta): Promise<any | null> {
-  try {
-    const now = Math.floor(Date.now() / 1000);
-    const from = now - 30 * 86400;
+  const snap = await fetchEntradeSnapshot(cfg.symbol, 'index', isMarketTradingSession());
+  if (!snap) return null;
 
-    const res = await fetch(
-      `https://services.entrade.com.vn/chart-api/v2/ohlcs/index?from=${from}&to=${now}&resolution=1D&symbol=${cfg.symbol}`,
-      {
-        headers: { 'User-Agent': 'Mozilla/5.0' },
-      }
-    );
+  const isPreMarket = isPreMarketResetWindow(cfg.exchange || cfg.symbol);
 
-    if (!res.ok) return null;
-    const j = await res.json();
-    const len = j.c ? j.c.length : 0;
-    if (len === 0) return null;
-    const last = len - 1;
-    const prev = last > 0 ? last - 1 : last;
-    const close = j.c[last];
-    const ref = j.c[prev];
+  const value = isPreMarket ? snap.previousClose : snap.price;
+  const ref = isPreMarket ? snap.previousClose : snap.referencePrice;
+  const chg = value - ref;
+  const pct = ref ? (chg / ref) * 100 : 0;
+  const vol = isPreMarket ? 0 : snap.volume;
 
-    const isPreMarket = isPreMarketResetWindow(cfg.exchange || cfg.symbol);
-
-    const chg = isPreMarket ? 0 : close - ref;
-    const pct = isPreMarket ? 0 : (ref ? (chg / ref) * 100 : 0);
-    const vol = isPreMarket ? 0 : (j.v[last] || 0);
-
-    return {
-      symbol: cfg.symbol,
-      name: cfg.name,
-      exchange: cfg.exchange,
-      value: Number(close.toFixed(2)),
-      change: Number(chg.toFixed(2)),
-      percentChange: Number(pct.toFixed(2)),
-      open: Number((isPreMarket ? close : j.o[last]).toFixed(2)),
-      high: Number((isPreMarket ? close : j.h[last]).toFixed(2)),
-      low: Number((isPreMarket ? close : j.l[last]).toFixed(2)),
-      volume: vol,
-      matchedVolume: vol,
-      totalVolume: vol,
-      totalValue: 0,
-      sparkline: j.c.slice(-15),
-      isPreMarket,
-    };
-  } catch {
-    return null;
-  }
+  return {
+    symbol: cfg.symbol,
+    name: cfg.name,
+    exchange: cfg.exchange,
+    value: Number(value.toFixed(2)),
+    change: Number(chg.toFixed(2)),
+    percentChange: Number(pct.toFixed(2)),
+    open: Number((isPreMarket ? value : snap.open).toFixed(2)),
+    high: Number((isPreMarket ? value : snap.high).toFixed(2)),
+    low: Number((isPreMarket ? value : snap.low).toFixed(2)),
+    volume: vol,
+    matchedVolume: vol,
+    totalVolume: vol,
+    totalValue: 0,
+    sparkline: snap.closes.slice(-15),
+    isPreMarket,
+  };
 }
 
 export async function GET() {

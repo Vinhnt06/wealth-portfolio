@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import stockDatabase from '../../../../features/market/data/stockDatabase.json';
 import { calculateExchangeCeilFloor } from '../../../../features/market/utils/priceColors';
 import { isMarketTradingSession, isPreMarketResetWindow } from '../../../../features/market/utils/marketHours';
+import { fetchEntradeSnapshot } from '../../../../features/market/utils/entradeSnapshot';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -162,89 +163,37 @@ async function fetchIndexFromVietcap(symbol: string): Promise<any | null> {
   return null;
 }
 
-// Fallback: Fetch price from Entrade (checking resolution 1 for live intraday price)
+// Fallback: giá từ API biểu đồ Entrade (xem utils/entradeSnapshot.ts)
 async function fetchFromEntrade(symbol: string): Promise<any | null> {
-  try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 3500);
+  const isIndex = ['VNINDEX', 'VN30', 'HNX', 'HNX30', 'UPCOM'].includes(symbol);
+  const snap = await fetchEntradeSnapshot(symbol, isIndex ? 'index' : 'stock', isMarketTradingSession());
+  if (!snap) return null;
 
-    const nowSec = Math.floor(Date.now() / 1000);
-    const fromSec = nowSec - 30 * 86400;
-    const isIndex = ['VNINDEX', 'VN30', 'HNX', 'HNX30', 'UPCOM'].includes(symbol);
+  const mult = isIndex ? 1 : 1000;
+  const px = (v: number) => Number((v * mult).toFixed(2));
+  const isPreMarket = isPreMarketResetWindow(symbol);
 
-    // 1. Fetch 1D for official previous close reference
-    const url1D = isIndex
-      ? `https://services.entrade.com.vn/chart-api/v2/ohlcs/index?from=${fromSec}&to=${nowSec}&resolution=1D&symbol=${encodeURIComponent(symbol)}`
-      : `https://services.entrade.com.vn/chart-api/v2/ohlcs/stock?from=${fromSec}&to=${nowSec}&resolution=1D&symbol=${encodeURIComponent(symbol)}`;
+  // Pre-market: mọi giá về tham chiếu của phiên hôm nay (giá đóng cửa phiên trước)
+  const price = px(isPreMarket ? snap.previousClose : snap.price);
+  const ref = px(isPreMarket ? snap.previousClose : snap.referencePrice);
+  const chg = price - ref;
+  const chgPct = ref > 0 ? (chg / ref) * 100 : 0;
+  const volume = isPreMarket ? 0 : snap.volume;
 
-    // 2. Fetch 1-min for latest live price of today
-    const url1M = isIndex
-      ? `https://services.entrade.com.vn/chart-api/v2/ohlcs/index?from=${nowSec - 86400}&to=${nowSec}&resolution=1&symbol=${encodeURIComponent(symbol)}`
-      : `https://services.entrade.com.vn/chart-api/v2/ohlcs/stock?from=${nowSec - 86400}&to=${nowSec}&resolution=1&symbol=${encodeURIComponent(symbol)}`;
-
-    const [res1D, res1M] = await Promise.all([
-      fetch(url1D, { signal: controller.signal, headers: { 'User-Agent': 'Mozilla/5.0' } }),
-      fetch(url1M, { signal: controller.signal, headers: { 'User-Agent': 'Mozilla/5.0' } }),
-    ]);
-    clearTimeout(timeout);
-
-    if (res1D.ok) {
-      const json1D = await res1D.json();
-      const mult = isIndex ? 1 : 1000;
-      if (json1D?.c?.length > 0) {
-        const len = json1D.c.length;
-        const last1D = len - 1;
-        // In Vietnam stock market, official reference price (giá tham chiếu) is previous trading session close
-        const prev1D = len > 1 ? len - 2 : last1D;
-        const ref = json1D.c[prev1D] * mult;
-
-        let livePrice = json1D.c[last1D] * mult;
-        let liveOpen = (json1D.o?.[last1D] ?? json1D.c[last1D]) * mult;
-        let liveHigh = (json1D.h?.[last1D] ?? json1D.c[last1D]) * mult;
-        let liveLow = (json1D.l?.[last1D] ?? json1D.c[last1D]) * mult;
-        let liveVol = json1D.v?.[last1D] || 0;
-
-        if (res1M.ok && isMarketTradingSession()) {
-          const json1M = await res1M.json();
-          if (json1M?.c?.length > 0) {
-            const last1M = json1M.c.length - 1;
-            const mPrice = json1M.c[last1M] * mult;
-            if (mPrice > 0) livePrice = mPrice;
-            // Aggregate today's high, low, volume
-            const hs = json1M.h as number[];
-            const ls = json1M.l as number[];
-            const vs = json1M.v as number[];
-            if (hs.length > 0) liveHigh = Math.max(...hs) * mult;
-            if (ls.length > 0) liveLow = Math.min(...ls) * mult;
-            if (json1M.o?.length > 0) liveOpen = json1M.o[0] * mult;
-            if (vs.length > 0) liveVol = vs.reduce((a: number, b: number) => a + b, 0);
-          }
-        }
-
-        const isPreMarket = isPreMarketResetWindow(symbol);
-        const chg = isPreMarket ? 0 : livePrice - ref;
-        const chgPct = isPreMarket ? 0 : (ref > 0 ? (chg / ref) * 100 : 0);
-        const finalVol = isPreMarket ? 0 : liveVol;
-
-        return {
-          price: livePrice,
-          referencePrice: ref,
-          open: isPreMarket ? livePrice : liveOpen,
-          high: isPreMarket ? livePrice : liveHigh,
-          low: isPreMarket ? livePrice : liveLow,
-          change: Number(chg.toFixed(2)),
-          changePercent: Number(chgPct.toFixed(2)),
-          volume: finalVol,
-          totalVolume: finalVol,
-          totalValue: isPreMarket ? 0 : livePrice * finalVol,
-          dataSource: 'entrade',
-        };
-      }
-    }
-  } catch {
-    // Entrade failed
-  }
-  return null;
+  return {
+    price,
+    referencePrice: ref,
+    open: isPreMarket ? price : px(snap.open),
+    high: isPreMarket ? price : px(snap.high),
+    low: isPreMarket ? price : px(snap.low),
+    change: Number(chg.toFixed(2)),
+    changePercent: Number(chgPct.toFixed(2)),
+    volume,
+    totalVolume: volume,
+    // Chỉ số tính bằng điểm nên không suy ra giá trị giao dịch từ giá × khối lượng được
+    totalValue: isIndex ? 0 : price * volume,
+    dataSource: 'entrade',
+  };
 }
 
 export async function GET(req: NextRequest) {
