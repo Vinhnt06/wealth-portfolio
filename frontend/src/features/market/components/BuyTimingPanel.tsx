@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import type { TimingVerdict, Valuation, YieldTrend } from '../utils/buyTiming';
+import type { CapitalTrend, DepositInfo, TimingVerdict, Valuation, YieldTrend } from '../utils/buyTiming';
 
 interface TimingData {
   verdict: TimingVerdict;
@@ -15,8 +15,10 @@ interface TimingData {
   } | null;
   capital: YieldTrend | null;
   valuation: Valuation | null;
-  carry: { depositRate: number; sessions: number; pct: number } | null;
+  deposit: DepositInfo | null;
 }
+
+const TREND_TEXT: Record<CapitalTrend, string> = { RISING: 'đang tăng', FALLING: 'đang giảm', FLAT: 'đi ngang' };
 
 const HEAD: Record<TimingVerdict, { text: string; tone: string }> = {
   OK: { text: 'Được mua mới: chọn mã đạt chuẩn trong bộ lọc', tone: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300' },
@@ -67,7 +69,7 @@ export const BuyTimingPanel: React.FC = () => {
   if (failed) return <div className="rounded-xl border border-zinc-800 bg-zinc-950/90 p-4 text-xs text-zinc-400">Chưa tải được điều kiện mua. Thử tải lại trang.</div>;
   if (!data) return <div className="rounded-xl border border-zinc-800 bg-zinc-950/90 p-4 text-xs text-zinc-500">Đang kiểm tra điều kiện mua…</div>;
 
-  const { market: m, capital: c, valuation: v, carry } = data;
+  const { market: m, capital: c, valuation: v, deposit: dep } = data;
   const head = HEAD[data.verdict];
 
   let marketNow = 'Chưa lấy được trạng thái VN-Index.';
@@ -95,23 +97,23 @@ export const BuyTimingPanel: React.FC = () => {
           title="2. Chi phí vốn (lợi suất TPCP 10 năm)"
           now={
             c
-              ? `${n(c.value)}% ngày ${day(c.date)}, 6 tháng trước ${n(c.past)}% (${signed(c.change)} điểm): ${c.trend === 'RISING' ? 'đang tăng' : c.trend === 'FALLING' ? 'đang giảm' : 'đi ngang'}`
+              ? `${n(c.value)}% ngày ${day(c.date)}, 6 tháng trước ${n(c.past)}% (${signed(c.change)} điểm): ${TREND_TEXT[c.trend]}`
               : 'Chưa có số lợi suất đủ mới.'
           }
           next={c ? (c.trend === 'RISING' ? `Xanh lại khi lợi suất xuống dưới ${n(c.tightFrom)}%.` : `Chuyển đỏ khi lợi suất từ ${n(c.tightFrom)}% trở lên.`) : ''}
         />
       </div>
 
-      {(v || carry) && (
+      {(v || dep) && (
         <div className="grid gap-2 md:grid-cols-2">
           {v && (
             <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-3 text-[11px] text-zinc-400">
               <div className="text-xs font-semibold text-zinc-100">Cổ phiếu so với chi phí vốn (tham khảo)</div>
               <div className="mt-1">
                 Lợi nhuận trên giá <b className="text-zinc-100">{n(v.earningsYield, 1)}%/năm</b> (P/E {n(v.pe, 1)})
-                {v.overDeposit !== null && carry && (
+                {v.overDeposit !== null && dep && (
                   <>
-                    , hơn lãi gửi {n(carry.depositRate)}% là <b className="text-zinc-100">{signed(v.overDeposit)} điểm</b>
+                    , hơn lãi gửi {n(dep.value)}% là <b className="text-zinc-100">{signed(v.overDeposit)} điểm</b>
                   </>
                 )}
                 .
@@ -123,13 +125,25 @@ export const BuyTimingPanel: React.FC = () => {
               )}
             </div>
           )}
-          {carry && (
+          {dep && (
             <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-3 text-[11px] text-zinc-400">
-              <div className="text-xs font-semibold text-zinc-100">Chi phí vốn mỗi lệnh</div>
+              <div className="text-xs font-semibold text-zinc-100">Lãi gửi tiết kiệm 12 tháng (để so sánh)</div>
               <div className="mt-1">
-                Giữ khoảng {carry.sessions} phiên bằng tiền của mình: mất cơ hội lãi gửi <b className="text-zinc-100">{n(carry.pct)}%</b> giá trị lệnh.
+                <b className="text-sm text-zinc-100">{n(dep.value)}%/năm</b>
+                {dep.banks ? ` · trung vị ${dep.banks} ngân hàng` : ''}
+                {dep.updatedOn ? ` · cập nhật ${dep.updatedOn}` : ''}
               </div>
-              <div className="mt-1">Nếu vay ký quỹ, nhập lãi vay ở máy tính Kỳ vọng R:R để trừ đúng mức.</div>
+              <div className="mt-1">
+                {dep.trend
+                  ? `6 tháng trước ${n(dep.trend.past)}% (${signed(dep.trend.change)} điểm): ${TREND_TEXT[dep.trend.trend]}.`
+                  : dep.since && dep.readyFrom
+                    ? `Xu hướng 6 tháng: đang ghi từ ${day(dep.since)}, đủ số khoảng ${day(dep.readyFrom)}.`
+                    : 'Chưa có xu hướng 6 tháng.'}
+              </div>
+              <div className="mt-1">
+                Giữ một lệnh khoảng {dep.sessions} phiên bằng tiền của mình: mất cơ hội lãi gửi <b className="text-zinc-100">{n(dep.carryPct)}%</b> giá trị lệnh. Vay ký quỹ thì nhập lãi vay ở máy tính Kỳ vọng R:R.
+              </div>
+              <div className="mt-1 text-zinc-500">Không dùng làm đèn mua: lãi gửi đổi chậm hơn lợi suất trái phiếu.</div>
             </div>
           )}
         </div>

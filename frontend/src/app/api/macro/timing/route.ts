@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
 import bondDb from '../../../../features/market/data/bondYield10Y.json';
+import macroDb from '../../../../features/market/data/macroDatabase.json';
 import {
-  carryCostPct,
+  depositInfo,
   mergeYield,
   timingVerdict,
-  TYPICAL_HOLD_SESSIONS,
   valuationVsCapital,
   yieldTrend,
   YieldPoint,
@@ -14,7 +14,8 @@ import {
  * "Khi nào được mua mới" — xem utils/buyTiming.ts.
  *  - Thị trường: /api/market/state (cùng cổng với bộ lọc).
  *  - Chi phí vốn: lịch sử TPCP 10N đã lưu + số sống hôm nay (/api/macro/vn).
- *  - Định giá: P/E VN-Index theo ngày (VNDirect). Lãi gửi 12T: /api/macro/vn.
+ *  - Định giá: P/E VN-Index theo ngày (VNDirect).
+ *  - Lãi gửi 12T (chỉ để so sánh): số sống /api/macro/vn, lịch sử macroDatabase.json → capitalHistory.
  * Nguồn nào lỗi thì phần đó là null, không thay bằng số giả.
  */
 export const runtime = 'nodejs';
@@ -76,8 +77,24 @@ export async function GET(req: Request) {
   const bonds = mergeYield(bondDb.points as YieldPoint[], live);
   const capital = yieldTrend(bonds);
 
-  const deposit: number | null = Number.isFinite(vn?.data?.deposit12M?.value) ? Number(vn.data.deposit12M.value) : null;
-  const valuation = valuationVsCapital({ peHistory, bonds, deposit });
+  const d = vn?.data?.deposit12M;
+  const rate: number | null = Number.isFinite(d?.value) ? Number(d.value) : null;
+  const valuation = valuationVsCapital({ peHistory, bonds, deposit: rate });
+
+  const saved: YieldPoint[] = (macroDb.capitalHistory as { date: string; deposit12M: number | null }[])
+    .filter((p) => typeof p.deposit12M === 'number')
+    .map((p) => [p.date, p.deposit12M as number]);
+  const today = new Date(Date.now() + 7 * 3600_000).toISOString().slice(0, 10);
+  const deposit =
+    rate === null
+      ? null
+      : depositInfo({
+          value: rate,
+          banks: Number.isFinite(d?.banks) ? Number(d.banks) : null,
+          // nguồn trả "HH:mm dd/mm/yyyy"
+          updatedOn: typeof d?.updatedAt === 'string' ? d.updatedAt.split(' ').pop() ?? null : null,
+          history: mergeYield(saved, [today, rate]),
+        });
 
   return NextResponse.json({
     success: true,
@@ -86,7 +103,7 @@ export async function GET(req: Request) {
       market,
       capital,
       valuation,
-      carry: deposit === null ? null : { depositRate: deposit, sessions: TYPICAL_HOLD_SESSIONS, pct: carryCostPct(deposit) },
+      deposit,
     },
   });
 }

@@ -16,6 +16,12 @@
  * Định giá (lợi suất lợi nhuận E/P trừ lãi) chỉ hiển thị: mẫu "đắt" mới có khoảng 14 tháng và thứ hạng
  * lịch sử đổi nhiều theo độ trễ công bố lợi nhuận, nên không dùng làm đèn mua.
  * Lãi suất điều hành không dùng: 95% thời gian 2015–2026 ở trạng thái "lần đổi gần nhất là giảm".
+ *
+ * Lãi gửi tiết kiệm cũng chỉ hiển thị để so sánh (đo 28/11/2026, 2015–2023, lãi gửi trung bình tháng của IMF,
+ * cùng quy tắc 6 tháng ±0,25): VN-Index 6 tháng sau +5,9% khi lãi gửi đang tăng so với +5,5% khi không tăng;
+ * nắm VN-Index theo đèn lãi gửi +4,5%/năm so với +8,1% khi luôn nắm; ghép thêm vào cổng thị trường + lợi suất
+ * làm giảm từ +14,2% còn +10,7%/năm. Lãi gửi đổi chậm: năm 2022 chuyển sang "đang tăng" cuối tháng 10,
+ * lợi suất TPCP đã chuyển từ cuối tháng 2.
  */
 
 export const YIELD_WINDOW_DAYS = 182;
@@ -115,6 +121,42 @@ export function valuationVsCapital(p: {
 /** Chi phí vốn cho một lệnh, % giá trị lệnh (lãi %/năm × số phiên giữ) */
 export const carryCostPct = (annualRatePct: number, sessions = TYPICAL_HOLD_SESSIONS): number =>
   r2((annualRatePct * sessions) / SESSIONS_PER_YEAR);
+
+export interface DepositInfo {
+  value: number;
+  banks: number | null;
+  /** Ngày nguồn cập nhật, dd/mm/yyyy */
+  updatedOn: string | null;
+  /** Xu hướng 6 tháng; null khi lịch sử tự ghi chưa đủ dài */
+  trend: YieldTrend | null;
+  /** Ngày bắt đầu ghi và ngày dự kiến đủ 6 tháng để có xu hướng */
+  since: string | null;
+  readyFrom: string | null;
+  /** Chi phí cơ hội của một lệnh nếu mua bằng tiền của mình */
+  sessions: number;
+  carryPct: number;
+}
+
+/** Lãi gửi 12 tháng hiện tại và xu hướng, từ lịch sử ghi hằng ngày (chỉ để so sánh) */
+export function depositInfo(p: {
+  value: number;
+  banks: number | null;
+  updatedOn: string | null;
+  history: YieldPoint[];
+  nowMs?: number;
+}): DepositInfo {
+  const since = p.history[0]?.[0] ?? null;
+  return {
+    value: p.value,
+    banks: p.banks,
+    updatedOn: p.updatedOn,
+    trend: yieldTrend(p.history, p.nowMs),
+    since,
+    readyFrom: since ? new Date(toMs(since) + YIELD_WINDOW_DAYS * DAY).toISOString().slice(0, 10) : null,
+    sessions: TYPICAL_HOLD_SESSIONS,
+    carryPct: carryCostPct(p.value),
+  };
+}
 
 export type TimingVerdict = 'OK' | 'WAIT_MARKET' | 'WAIT_CAPITAL' | 'WAIT_BOTH' | 'UNKNOWN';
 

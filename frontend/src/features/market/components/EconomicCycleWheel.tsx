@@ -22,6 +22,8 @@ import { MinerviniScreenerItem } from '../types/minervini.types';
 import { SECTOR_MAPPING } from '../data/sectorMapping';
 import { CapitalContextPanel } from './CapitalContextPanel';
 import { BuyTimingPanel } from './BuyTimingPanel';
+import { CycleShiftPanel } from './CycleShiftPanel';
+import { scorePhases, type CycleInputs, type CyclePhaseKey, type ShiftContext } from '../utils/cyclePhase';
 import macroDatabase from '../data/macroDatabase.json';
 
 export type RiskAppetite = 'aggressive' | 'balanced' | 'conservative';
@@ -73,7 +75,7 @@ export interface MacroExchangeRecord {
   [key: string]: unknown;
 }
 
-export type CyclePhaseKey = 'recovery' | 'expansion' | 'late' | 'recession';
+export type { CyclePhaseKey };
 
 export interface AssetPriorityItem {
   asset: string;
@@ -296,11 +298,16 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
   type VnInd = { value: number; change: number | null; updatedAt: string | null; source: string };
   // Hướng điều kiện vốn (nới / thắt / đi ngang) theo lợi suất TPCP 10 năm — dùng cho trụ lãi suất
   const [capitalDir, setCapitalDir] = useState<'UP' | 'DOWN' | 'UNCLEAR' | null>(null);
+  const [bondPast, setBondPast] = useState<number | null>(null);
   useEffect(() => {
     let alive = true;
     fetch('/api/macro/context')
       .then((r) => r.json())
-      .then((j) => alive && setCapitalDir(j?.data?.capital?.direction ?? null))
+      .then((j) => {
+        if (!alive) return;
+        setCapitalDir(j?.data?.capital?.direction ?? null);
+        setBondPast(j?.data?.capital?.yield10Y?.past ?? null);
+      })
       .catch(() => {});
     return () => {
       alive = false;
@@ -747,108 +754,29 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
     ? 'easing'
     : 'hold';
   const vndUsdGap = fed && Number.isFinite(overnightRate) ? Number((overnightRate - fed.effr).toFixed(2)) : null; // VND liên NH 1 tuần − USD (EFFR)
-  const dxyStrong = globalMacro.dxy >= 105;
-  const globalTightness =
-    fedStance === 'unknown'
-      ? null
-      : (fedStance === 'tightening' ? 1 : fedStance === 'easing' ? -1 : 0) +
-        (dxyStrong ? 1 : 0) +
-        (vndUsdGap !== null && vndUsdGap < 0 ? 1 : 0);
 
-  const macroPillarScores: Record<
-    CyclePhaseKey,
-    { gdp: number; cpi: number; rate: number; fx: number; yield: number; global: number; composite: number }
-  > = useMemo(() => {
-    // Đồng hồ đầu tư (Merrill Lynch): Phục hồi = tăng trưởng ↑ & lạm phát ↓ · Mở rộng = tăng trưởng ↑ & lạm phát ↑
-    //                                  Cuối chu kỳ = tăng trưởng ↓ & lạm phát ↑ · Suy thoái = tăng trưởng ↓ & lạm phát ↓
-    // Xu hướng quyết định chính (±35 điểm), mức so với mục tiêu chỉ điều chỉnh (±15 điểm).
-    const clamp = (v: number) => Math.max(0, Math.min(100, Math.round(v)));
-    const wantsGrowthUp: Record<CyclePhaseKey, 1 | -1> = { recovery: 1, expansion: 1, late: -1, recession: -1 };
-    const wantsInflationUp: Record<CyclePhaseKey, 1 | -1> = { recovery: -1, expansion: 1, late: 1, recession: -1 };
-    // Thiếu số → 0 (không nghiêng pha nào)
-    const growthLevel = !Number.isFinite(gdpGrowth) || !Number.isFinite(gdpTarget) ? 0 : gdpGrowth >= gdpTarget ? 1 : -1;
-    const inflationLevel = !Number.isFinite(cpiYoy) || !Number.isFinite(cpiTarget) ? 0 : cpiYoy >= cpiTarget ? 1 : -1;
-
-    // A. Tăng trưởng (25%): GDP đang tăng tốc hay giảm tốc so với quý trước
-    const gdpScores = {} as Record<CyclePhaseKey, number>;
-    // B. Lạm phát (20%): CPI đang tăng hay giảm so với 2-3 tháng trước
-    const cpiScores = {} as Record<CyclePhaseKey, number>;
-    (Object.keys(wantsGrowthUp) as CyclePhaseKey[]).forEach((k) => {
-      gdpScores[k] = clamp(50 + 35 * growthDir * wantsGrowthUp[k] + 15 * growthLevel * wantsGrowthUp[k]);
-      cpiScores[k] = clamp(50 + 35 * inflDir * wantsInflationUp[k] + 15 * inflationLevel * wantsInflationUp[k]);
-    });
-
-    // C. Lãi suất (25%): CHIỀU của điều kiện vốn, không phải mức (khung Lợi nhuận × Vốn, utils/capitalContext.ts).
-    //    Nới lỏng (lợi suất TPCP 10N giảm trong 6 tháng) → phục hồi; thắt chặt (tăng) → cuối chu kỳ.
-    //    Đi ngang hoặc thiếu số → trung tính, không nghiêng pha nào.
-    const rateScores: Record<CyclePhaseKey, number> =
-      capitalDir === 'UP'
-        ? { recovery: 92, expansion: 75, recession: 60, late: 25 }
-        : capitalDir === 'DOWN'
-        ? { late: 92, expansion: 55, recession: 45, recovery: 20 }
-        : { recovery: 50, expansion: 50, late: 50, recession: 50 };
-
-    // D. Tỷ giá USD/VND (15%): mức mất giá của VND trong 1 tháng
-    const fxScores: Record<CyclePhaseKey, number> =
-      usdVnd1MPct === null
-        ? { expansion: 50, recovery: 50, late: 50, recession: 50 }
-        : !fxStressed
-        ? { expansion: 90, recovery: 85, late: 30, recession: 30 }
-        : { late: 85, recession: 75, expansion: 45, recovery: 40 };
-
-    // F. Thế giới (15%): Fed + chênh lệch VND−USD + DXY
-    const globalScores: Record<CyclePhaseKey, number> =
-      globalTightness === null
-        ? { recovery: 50, expansion: 50, late: 50, recession: 50 }
-        : globalTightness <= 0
-        ? { recovery: 90, expansion: 85, late: 30, recession: 35 }
-        : globalTightness === 1
-        ? { expansion: 70, recovery: 60, late: 55, recession: 45 }
-        : { late: 85, recession: 70, expansion: 40, recovery: 30 };
-
-    // E. Chênh lệch kỳ hạn VN dài hạn − liên NH 1 tuần (20%)
-    const yieldScores: Record<CyclePhaseKey, number> =
-      !Number.isFinite(yieldCurveData.spread)
-        ? { recovery: 50, expansion: 50, late: 50, recession: 50 }
-        : yieldCurveData.spread >= 0.75
-        ? { expansion: 96, recovery: 88, late: 35, recession: 15 }
-        : yieldCurveData.spread >= 0.2
-        ? { recovery: 92, expansion: 82, late: 55, recession: 25 }
-        : yieldCurveData.spread >= -0.1
-        ? { late: 94, recession: 72, expansion: 40, recovery: 30 }
-        : { recession: 96, late: 80, expansion: 20, recovery: 20 };
-
-    const res: Record<
-      CyclePhaseKey,
-      { gdp: number; cpi: number; rate: number; fx: number; yield: number; global: number; composite: number }
-    > = {
-      recovery: { gdp: 0, cpi: 0, rate: 0, fx: 0, yield: 0, global: 0, composite: 0 },
-      expansion: { gdp: 0, cpi: 0, rate: 0, fx: 0, yield: 0, global: 0, composite: 0 },
-      late: { gdp: 0, cpi: 0, rate: 0, fx: 0, yield: 0, global: 0, composite: 0 },
-      recession: { gdp: 0, cpi: 0, rate: 0, fx: 0, yield: 0, global: 0, composite: 0 },
-    };
-
-    (Object.keys(res) as CyclePhaseKey[]).forEach((k) => {
-      res[k].gdp = gdpScores[k];
-      res[k].cpi = cpiScores[k];
-      res[k].rate = rateScores[k];
-      res[k].fx = fxScores[k];
-      res[k].yield = yieldScores[k];
-      res[k].global = globalScores[k];
-      // Điều kiện vốn quyết định định giá hơn GDP (khung Lợi nhuận × Vốn): giảm GDP, tăng các trụ cột vốn.
-      // 10% tăng trưởng + 15% lạm phát + 25% lãi suất VN + 12% tỷ giá + 20% đường cong VN + 18% Fed & thế giới
-      res[k].composite = Math.round(
-        gdpScores[k] * 0.1 +
-        cpiScores[k] * 0.15 +
-        rateScores[k] * 0.25 +
-        fxScores[k] * 0.12 +
-        yieldScores[k] * 0.2 +
-        globalScores[k] * 0.18
-      );
-    });
-
-    return res;
-  }, [gdpGrowth, gdpTarget, cpiYoy, cpiTarget, growthDir, inflDir, capitalDir, usdVnd1MPct, fxStressed, yieldCurveData.spread, globalTightness]);
+  // 4. Chấm 6 trụ cột & điểm từng pha: utils/cyclePhase.ts (dùng chung với phần "Khi nào chuyển pha")
+  const effr = fed ? fed.effr : null;
+  const cycleInputs: CycleInputs = useMemo(
+    () => ({
+      gdp: gdpGrowth,
+      gdpTrend,
+      gdpTarget,
+      cpi: cpiYoy,
+      cpiTrend,
+      cpiTarget,
+      capital: capitalDir,
+      usdVnd1MPct,
+      longRate,
+      shortRate: overnightRate,
+      fedStance,
+      effr,
+      dxy: globalMacro.dxy,
+    }),
+    [gdpGrowth, gdpTrend, gdpTarget, cpiYoy, cpiTrend, cpiTarget, capitalDir, usdVnd1MPct, longRate, overnightRate, fedStance, effr, globalMacro.dxy]
+  );
+  const shiftContext: ShiftContext = useMemo(() => ({ bondPast, longIsBond: bond10Y !== null }), [bondPast, bond10Y]);
+  const macroPillarScores = useMemo(() => scorePhases(cycleInputs), [cycleInputs]);
 
   // 5. Quantitative Dual-Engine Scoring: 70% Macro Fundamentals + 30% Sector Momentum (RS & Stage 2)
   const phaseScores = useMemo(() => {
@@ -935,36 +863,6 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
   const activeCfg = CYCLE_PHASES[activePhaseKey];
   const detectedCfg = CYCLE_PHASES[detectedActivePhaseKey];
   const topLeadingSectors = sectorLiveStats.slice(0, 5);
-
-  // 7. Các chỉ số cần theo dõi (ngưỡng cảnh báo)
-  const watchList = useMemo(() => {
-    const triggers = [
-      {
-        factor: `Đường cong VN (${longLabel === 'TPCP 10 năm' ? '10N' : '12T'} − liên NH)`,
-        status: Number.isFinite(yieldCurveData.spread)
-          ? `${yieldCurveData.spread >= 0 ? '+' : ''}${yieldCurveData.spread}% (${yieldCurveData.slopeLabel.split(' (')[0]})`
-          : 'Chưa có lãi ngắn hạn',
-        isTriggered: Number.isFinite(yieldCurveData.spread) && yieldCurveData.spread <= 0.75,
-      },
-      {
-        factor: 'Lạm phát (CPI)',
-        status: cpiYoy < 4.0 ? `${nf(cpiYoy)}% (Ổn định)` : 'Căng (>4.0%)',
-        isTriggered: cpiYoy >= 4.0,
-      },
-      {
-        factor: dailyFresh ? `Liên NH qua đêm (${(daily?.sessionDate ?? '').slice(0, 5)})` : `Liên NH 1 tuần${short1W ? ` (T${short1W.period.slice(0, 2)})` : ''}`,
-        status: !Number.isFinite(overnightRate) ? 'Chưa có nguồn' : overnightRate < 4.5 ? `${nf(overnightRate)}% (Dồi dào)` : 'Thắt chặt (>4.5%)',
-        isTriggered: Number.isFinite(overnightRate) && overnightRate >= 4.5,
-      },
-      {
-        factor: 'Tâm lý (VIX)',
-        status: !Number.isFinite(globalMacro.vix) ? 'Chưa có dữ liệu' : globalMacro.vix < 22 ? `${nf(globalMacro.vix)} (Bình ổn)` : `${nf(globalMacro.vix)} (Biến động)`,
-        isTriggered: Number.isFinite(globalMacro.vix) && globalMacro.vix >= 22,
-      },
-    ];
-
-    return triggers;
-  }, [yieldCurveData, globalMacro.vix, cpiYoy, overnightRate, longLabel, dailyFresh, daily, short1W]);
 
   const [showCycleGuide, setShowCycleGuide] = useState<boolean>(false);
   const [needleDisplayAngle, setNeedleDisplayAngle] = useState<number>(() => {
@@ -1377,24 +1275,17 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
               })}
             </div>
 
-            {/* ── Chỉ số cần theo dõi ── */}
-            <div className="p-3.5 rounded-xl bg-zinc-900/70 border border-zinc-800/80 text-xs font-mono space-y-2.5 shadow-md">
-              <div className="flex items-center gap-1.5 pb-1.5 border-b border-zinc-800/80 text-zinc-200 font-bold text-[11px]">
-                <Waveform className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                <span>CHỈ SỐ CẦN THEO DÕI</span>
-              </div>
-
-              <div className="grid grid-cols-2 gap-1.5 text-[10px]">
-                {watchList.map((trig, idx) => (
-                  <div key={idx} className="p-1.5 px-2 rounded-lg bg-zinc-950/70 border border-zinc-800/60 flex items-center justify-between gap-1">
-                    <span className="text-zinc-400 font-sans text-[9px]">{trig.factor}</span>
-                    <span className={`font-mono font-semibold text-[9px] shrink-0 ${trig.isTriggered ? 'text-rose-400' : 'text-emerald-400'}`}>
-                      {trig.status}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
+            {/* ── Khi nào chuyển pha ── */}
+            <CycleShiftPanel
+              inputs={cycleInputs}
+              context={shiftContext}
+              names={{
+                recovery: CYCLE_PHASES.recovery.title,
+                expansion: CYCLE_PHASES.expansion.title,
+                late: CYCLE_PHASES.late.title,
+                recession: CYCLE_PHASES.recession.title,
+              }}
+            />
 
             {/* ── Real Macroeconomic Quantitative Indicators (6 Trụ Cột Vĩ Mô & Thanh Khoản Thực Tế) ── */}
             <div className="p-3.5 rounded-xl bg-zinc-900/60 border border-zinc-800/80 space-y-3 text-xs font-mono shadow-md">
