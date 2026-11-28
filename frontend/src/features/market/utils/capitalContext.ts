@@ -2,10 +2,12 @@
  * Bối cảnh "Lợi nhuận × Vốn" (khung của Dragon Capital, DNSE 11/2026):
  *   Giá cổ phiếu = lợi nhuận × định giá; định giá đi theo ĐIỀU KIỆN VỐN, không theo GDP.
  *   Câu hỏi 1 — Lợi nhuận đang cải thiện hay suy yếu?
- *   Câu hỏi 2 — Vốn đang nới lỏng hay thắt chặt? (lãi gửi 12T trong ~30 phiên, liên ngân hàng trong ~20 phiên)
- *   Chỉ kết luận khi tín hiệu cùng chiều đủ ~3 tháng; chưa rõ thì giữ mức gốc 50/35/15.
+ *   Câu hỏi 2 — Vốn đang nới lỏng hay thắt chặt? (lợi suất TPCP 10 năm trong 6 tháng, utils/buyTiming.ts)
+ *   Đi ngang hoặc chưa rõ thì giữ mức gốc 50/35/15.
  * Tỷ trọng là số minh hoạ của Dragon Capital (họ ghi rõ chưa kiểm định ngoài mẫu).
  */
+
+import { yieldTrend, YIELD_BAND, type YieldPoint, type YieldTrend } from './buyTiming';
 
 export type Direction = 'UP' | 'DOWN' | 'UNCLEAR';
 export type ContextKey = 'IMPROVE_EASY' | 'WEAK_EASY' | 'BASE' | 'IMPROVE_TIGHT' | 'WEAK_TIGHT';
@@ -116,69 +118,19 @@ export function answerEarnings(companies: QuarterRow[][]): EarningsAnswer {
   };
 }
 
-// ─── Câu hỏi 2: Vốn (lịch sử lãi suất ghi hằng ngày bởi scripts/cron_update_macro.js) ───
-export interface CapitalPoint {
-  date: string; // YYYY-MM-DD
-  interbank: number | null;
-  deposit12M: number | null;
-}
-
+// ─── Câu hỏi 2: Vốn (cùng quy tắc đã kiểm chứng ở utils/buyTiming.ts) ───
 export interface CapitalAnswer {
+  /** UP = nới lỏng (lợi suất giảm) · DOWN = thắt chặt (lợi suất tăng) · UNCLEAR = đi ngang hoặc thiếu số */
   direction: Direction;
-  depositChange: number | null; // điểm %, ~30 phiên (42 ngày lịch)
-  interbankChange: number | null; // điểm %, ~20 phiên (28 ngày lịch)
-  historyDays: number;
-  needDays: number;
-  monthly: { date: string; direction: Direction }[];
+  yield10Y: YieldTrend | null;
   note: string;
 }
 
-const DAY = 86_400_000;
-const toMs = (d: string) => Date.parse(`${d}T00:00:00Z`);
-
-function valueAt(points: CapitalPoint[], key: 'interbank' | 'deposit12M', atMs: number): number | null {
-  // giá trị gần nhất KHÔNG sau thời điểm atMs
-  let best: number | null = null;
-  for (const p of points) {
-    if (toMs(p.date) <= atMs && typeof p[key] === 'number') best = p[key] as number;
-  }
-  return best;
-}
-
-function directionAt(points: CapitalPoint[], atMs: number): { dir: Direction; dep: number | null; ib: number | null } {
-  const dep0 = valueAt(points, 'deposit12M', atMs);
-  const depPast = valueAt(points, 'deposit12M', atMs - 42 * DAY);
-  const ib0 = valueAt(points, 'interbank', atMs);
-  const ibPast = valueAt(points, 'interbank', atMs - 28 * DAY);
-  const dep = dep0 !== null && depPast !== null ? Number((dep0 - depPast).toFixed(2)) : null;
-  const ib = ib0 !== null && ibPast !== null ? Number((ib0 - ibPast).toFixed(2)) : null;
-  if (dep === null || ib === null) return { dir: 'UNCLEAR', dep, ib };
-  // Lãi suất GIẢM = vốn NỚI (UP); TĂNG = THẮT (DOWN)
-  const depDir = dep <= -0.1 ? 'UP' : dep >= 0.1 ? 'DOWN' : 'UNCLEAR';
-  const ibDir = ib <= -0.25 ? 'UP' : ib >= 0.25 ? 'DOWN' : 'UNCLEAR';
-  return { dir: depDir !== 'UNCLEAR' && depDir === ibDir ? depDir : 'UNCLEAR', dep, ib };
-}
-
-export function answerCapital(points: CapitalPoint[], nowMs = Date.now()): CapitalAnswer {
-  const sorted = [...points].sort((a, b) => toMs(a.date) - toMs(b.date));
-  const historyDays = sorted.length ? Math.round((nowMs - toMs(sorted[0].date)) / DAY) : 0;
-  const needDays = 42 + 60; // 30 phiên cho lãi gửi + 3 mốc tháng để xác nhận cùng chiều
-  const now = directionAt(sorted, nowMs);
-  const monthly = [0, 30, 60].map((d) => ({
-    date: new Date(nowMs - d * DAY).toISOString().slice(0, 10),
-    direction: directionAt(sorted, nowMs - d * DAY).dir,
-  }));
-  const consistent = historyDays >= needDays && monthly.every((m) => m.direction !== 'UNCLEAR' && m.direction === monthly[0].direction);
+export function answerCapital(points: YieldPoint[], nowMs = Date.now()): CapitalAnswer {
+  const t = yieldTrend(points, nowMs);
   return {
-    direction: consistent ? monthly[0].direction : 'UNCLEAR',
-    depositChange: now.dep,
-    interbankChange: now.ib,
-    historyDays,
-    needDays,
-    monthly,
-    note:
-      historyDays < needDays
-        ? `Đang tích luỹ lịch sử lãi suất: có ${historyDays}/${needDays} ngày. Chưa đủ để kết luận.`
-        : 'Nới lỏng khi lãi gửi 12T giảm ≥0,1 điểm (30 phiên) VÀ liên ngân hàng giảm ≥0,25 điểm (20 phiên); thắt chặt khi ngược lại; phải cùng chiều ở 3 mốc tháng.',
+    direction: t?.trend === 'FALLING' ? 'UP' : t?.trend === 'RISING' ? 'DOWN' : 'UNCLEAR',
+    yield10Y: t,
+    note: `Nới lỏng khi lợi suất TPCP 10 năm giảm từ ${YIELD_BAND} điểm trong 6 tháng; thắt chặt khi tăng từ ${YIELD_BAND} điểm; còn lại là đi ngang.`,
   };
 }

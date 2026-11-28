@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { EXIT_RULE_TEXT, EXIT_STOP_PCT, exitStopPrice } from '../utils/exitPlan';
+import { EXIT_BAD_LOSS_PCT, EXIT_RULE_TEXT, EXIT_STOP_PCT, badCaseSizing, exitStopPrice } from '../utils/exitPlan';
+import { TYPICAL_HOLD_SESSIONS, carryCostPct } from '../utils/buyTiming';
 import {
   Target,
   ShieldCheck,
@@ -391,8 +392,10 @@ const EmpiricalCard: React.FC<{
 };
 
 /** Quy tắc bán đã kiểm chứng; con số mục tiêu ở các ô khác chỉ để tính R:R, không phải lệnh bán */
-const SellRuleCard: React.FC<{ entry: number; stop: number; shares: number; lang: 'vi' | 'en'; pyramid?: boolean }> = ({ entry, stop, shares, lang, pyramid }) => {
+const SellRuleCard: React.FC<{ entry: number; stop: number; shares: number; capital: number; riskPct: number; lang: 'vi' | 'en'; pyramid?: boolean }> = ({ entry, stop, shares, capital, riskPct, lang, pyramid }) => {
   const vi = lang === 'vi';
+  const bad = entry > 0 && shares > 0 ? badCaseSizing({ entry, shares, capital, riskPct }) : null;
+  const num = (v: number) => v.toLocaleString(vi ? 'vi-VN' : 'en-US', { maximumFractionDigits: 1 });
   return (
     <div className="rounded-xl border border-zinc-700/80 bg-zinc-900/60 p-4 space-y-2">
       <div className="text-sm font-bold text-zinc-100">{vi ? 'Cách bán' : 'How to sell'}</div>
@@ -415,6 +418,30 @@ const SellRuleCard: React.FC<{ entry: number; stop: number; shares: number; lang
         </li>
         <li>{EXIT_RULE_TEXT.takeProfit[lang]}</li>
       </ol>
+      {bad && (
+        <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-zinc-300">
+          <p>
+            <span className="font-semibold text-amber-300">{vi ? 'Nếu lỗ xấu' : 'Bad case'} −{EXIT_BAD_LOSS_PCT}%</span>
+            {vi ? ' (giá rơi qua điểm cắt, chưa bán kịp): lỗ khoảng ' : ' (price gaps past the stop): a loss of about '}
+            <span className="font-mono font-bold text-zinc-100">{Math.round(bad.loss).toLocaleString('vi-VN')} đ</span>
+            {' = '}{num(bad.lossPctOfCapital)}% {vi ? 'vốn' : 'of capital'}.
+          </p>
+          {bad.overBudget && (
+            <p className="mt-1">
+              {bad.maxShares > 0 ? (
+                <>
+                  {vi ? `Muốn không mất quá ${num(riskPct)}% vốn: mua tối đa ` : `To lose no more than ${num(riskPct)}% of capital: buy at most `}
+                  <span className="font-mono font-bold text-emerald-300">{bad.maxShares.toLocaleString('vi-VN')} CP</span>.
+                </>
+              ) : vi ? (
+                `Một lô 100 CP đã vượt mức ${num(riskPct)}% vốn.`
+              ) : (
+                `One 100-share lot already exceeds ${num(riskPct)}% of capital.`
+              )}
+            </p>
+          )}
+        </div>
+      )}
       {pyramid && (
         <p className="text-[11px] text-zinc-500">
           {vi
@@ -476,6 +503,22 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
   const [autoWinRateLoading, setAutoWinRateLoading] = useState<boolean>(false);
   const [autoWinRateData, setAutoWinRateData] = useState<AutoWinRateData | null>(null);
   const [showFactorBreakdown, setShowFactorBreakdown] = useState<boolean>(true);
+
+  // Chi phí vốn (%/năm): mặc định là lãi gửi 12 tháng đang áp dụng; người vay ký quỹ tự nhập lãi vay
+  const [capitalRate, setCapitalRate] = useState<string>('');
+  useEffect(() => {
+    let alive = true;
+    fetch('/api/macro/vn')
+      .then((res) => res.json())
+      .then((json) => {
+        const dep = json?.data?.deposit12M?.value;
+        if (alive && Number.isFinite(dep)) setCapitalRate((cur) => cur || String(dep));
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   // Position Plan Mode: 'pyramid' (Scale-in & Staged defense) or 'classic' (Single exit)
   const [positionPlanMode, setPositionPlanMode] = useState<'pyramid' | 'classic'>('pyramid');
@@ -1073,6 +1116,40 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
                     {math.nominalExpectancyPct}% · {tr('đã trừ', 'after')}{' '}
                     {hasEmp ? tr('gap giá, T+2 & chi phí', 'gaps, T+2 & costs') : tr('chi phí giao dịch', 'trading costs')}
                   </div>
+                  {(() => {
+                    const rate = Number(capitalRate);
+                    const cost = capitalRate !== '' && rate >= 0 ? carryCostPct(rate) : null;
+                    const net = cost === null ? null : Number((math.expectancyPct - cost).toFixed(2));
+                    return (
+                      <div className="mt-3 rounded-lg border border-zinc-800 bg-zinc-900/60 p-3 text-xs text-zinc-400 max-w-md">
+                        <label className="flex flex-wrap items-center gap-2">
+                          <span className="font-semibold text-zinc-200">{tr('Chi phí vốn', 'Cost of capital')}</span>
+                          <input
+                            type="number"
+                            step="0.1"
+                            min="0"
+                            max="30"
+                            value={capitalRate}
+                            onChange={(e) => setCapitalRate(e.target.value)}
+                            aria-label={tr('Chi phí vốn, phần trăm mỗi năm', 'Cost of capital, percent per year')}
+                            className="w-20 px-2 py-1 rounded bg-zinc-950 border border-zinc-700 font-mono text-zinc-100 focus:outline-none"
+                          />
+                          <span>%/{tr('năm (lãi gửi; nếu vay ký quỹ thì nhập lãi vay)', 'year (deposit rate, or your margin rate)')}</span>
+                        </label>
+                        {net !== null && (
+                          <p className="mt-2">
+                            {tr(`Giữ khoảng ${TYPICAL_HOLD_SESSIONS} phiên tốn`, `Holding about ${TYPICAL_HOLD_SESSIONS} sessions costs`)} {cost}% →{' '}
+                            {tr('kỳ vọng còn', 'expectancy left')}{' '}
+                            <b className={`font-mono ${net > 0 ? 'text-emerald-300' : 'text-rose-300'}`}>
+                              {net > 0 ? '+' : ''}
+                              {net}%
+                            </b>{' '}
+                            / {tr('lệnh', 'trade')}.
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })()}
                   <p className="text-sm text-zinc-400 mt-3 leading-relaxed max-w-md">{verdictNote}</p>
                 </div>
 
@@ -1835,7 +1912,7 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
                 </div>
 
                 {/* 3. Quy tắc bán đã kiểm chứng (utils/exitPlan.ts) */}
-                <SellRuleCard entry={entryPrice} stop={roundTick(exitStopPrice(entryPrice), exchange, 'down')} shares={math.maxShares} lang={language} pyramid />
+                <SellRuleCard entry={entryPrice} stop={roundTick(exitStopPrice(entryPrice), exchange, 'down')} shares={math.maxShares} capital={totalCapital} riskPct={riskPerTradePct} lang={language} pyramid />
               </div>
             ) : (
               /* Classic Single Entry / Exit Payoff Scale */
@@ -1882,7 +1959,7 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
                   </div>
                 </div>
 
-                <SellRuleCard entry={entryPrice} stop={roundTick(exitStopPrice(entryPrice), exchange, 'down')} shares={math.maxShares} lang={language} />
+                <SellRuleCard entry={entryPrice} stop={roundTick(exitStopPrice(entryPrice), exchange, 'down')} shares={math.maxShares} capital={totalCapital} riskPct={riskPerTradePct} lang={language} />
 
                 {/* Visual Risk vs Reward Gauge Bar */}
                 <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/80 space-y-2">

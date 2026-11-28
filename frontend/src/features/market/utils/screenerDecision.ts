@@ -26,6 +26,8 @@ export interface FetchedDecision {
   size: 'FULL' | 'HALF' | 'NONE';
   /** Pivot (nghìn đồng) nếu đang chờ điểm vào */
   pivotK: number | null;
+  /** false = thị trường đang Bất lợi, chưa mở vị thế mới dù mã tới điểm vào */
+  marketUp?: boolean | null;
 }
 
 export interface ScreenerDecision {
@@ -43,7 +45,7 @@ const fmtVnd = (priceK: number) => Math.round(priceK * 1000).toLocaleString('vi-
 
 /** Rút gọn phản hồi của API phân tích; trả null nếu thiếu dữ liệu quyết định */
 export function pickDecision(data: unknown): FetchedDecision | null {
-  const d = (data as { decision?: { headline?: string; newBuyer?: { action?: EntryAction; size?: FetchedDecision['size'] }; triggersUp?: Trigger[] } })?.decision;
+  const d = (data as { decision?: { headline?: string; newBuyer?: { action?: EntryAction; size?: FetchedDecision['size'] }; triggersUp?: Trigger[]; marketUp?: boolean | null } })?.decision;
   if (!d?.headline || !d.newBuyer?.action) return null;
   const pivot = d.triggersUp?.find((t) => t.code === 'BREAK_PIVOT_WITH_VOLUME')?.value;
   return {
@@ -51,6 +53,7 @@ export function pickDecision(data: unknown): FetchedDecision | null {
     entry: d.newBuyer.action,
     size: d.newBuyer.size ?? 'NONE',
     pivotK: typeof pivot === 'number' && pivot > 0 ? pivot : null,
+    marketUp: d.marketUp ?? null,
   };
 }
 
@@ -83,7 +86,11 @@ export function toScreenerDecision(
       return {
         status: 'WAIT_PIVOT',
         label: 'Chờ điểm vào',
-        detail: fetched.pivotK ? `Mua khi vượt ${fmtVnd(fetched.pivotK)} kèm khối lượng lớn` : 'Chưa tới điểm vào',
+        detail: !fetched.pivotK
+          ? 'Chưa tới điểm vào'
+          : fetched.marketUp === false
+          ? `Chờ thị trường mở, rồi mua khi vượt ${fmtVnd(fetched.pivotK)} kèm khối lượng lớn`
+          : `Mua khi vượt ${fmtVnd(fetched.pivotK)} kèm khối lượng lớn`,
         priority: 80,
       };
     case 'WAIT_NO_CHASE':

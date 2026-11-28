@@ -11,7 +11,7 @@ interface ContextData {
 }
 
 const EARN_TEXT: Record<Direction, string> = { UP: 'cải thiện', DOWN: 'suy yếu', UNCLEAR: 'chưa rõ' };
-const CAP_TEXT: Record<Direction, string> = { UP: 'nới lỏng', DOWN: 'thắt chặt', UNCLEAR: 'chưa rõ' };
+const CAP_TEXT: Record<Direction, string> = { UP: 'nới lỏng', DOWN: 'thắt chặt', UNCLEAR: 'đi ngang' };
 const tone = (d: Direction) => (d === 'UP' ? 'text-emerald-300' : d === 'DOWN' ? 'text-rose-300' : 'text-zinc-400');
 
 /** Kết luận "Lợi nhuận × Vốn" → tỷ trọng. Thuật toán nằm ở utils/capitalContext.ts, ở đây chỉ hiện kết quả. */

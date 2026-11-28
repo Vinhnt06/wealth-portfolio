@@ -41,7 +41,7 @@ jobs:
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add frontend/src/features/market/data/macroDatabase.json
+          git add frontend/src/features/market/data/macroDatabase.json frontend/src/features/market/data/bondYield10Y.json
           if git diff --staged --quiet; then
             echo "Không có số liệu vĩ mô mới."
           else

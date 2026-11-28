@@ -193,7 +193,10 @@ async function fetchTvIndicator(symbol) {
     const value = Number(j && j.close);
     if (!Number.isFinite(value)) return null;
     const change = Number(j.change_abs);
-    return { value: Number(value.toFixed(4)), change: Number.isFinite(change) ? Number(change.toFixed(2)) : null };
+    // Ngày (giờ VN) mà nguồn cập nhật số này
+    const ts = Number(j.update_time || j.last_bar_update_time);
+    const updatedAt = Number.isFinite(ts) && ts > 0 ? new Date((ts + 7 * 3600) * 1000).toISOString().slice(0, 10) : null;
+    return { value: Number(value.toFixed(4)), change: Number.isFinite(change) ? Number(change.toFixed(2)) : null, updatedAt };
   } catch (e) {
     console.log(`  - Lỗi TradingView ${symbol}:`, e.message);
     return null;
@@ -530,6 +533,24 @@ async function crawlSbvInterestRates() {
         hist.sort((a, b) => a.date.localeCompare(b.date));
         macroData.capitalHistory = hist.slice(-500);
         console.log(`  ✓ Lịch sử vốn: ${macroData.capitalHistory.length} ngày (liên NH ${point.interbank}%, gửi 12T ${point.deposit12M}%)`);
+      }
+
+      // Lợi suất TPCP 10 năm theo ngày — điều kiện "chi phí vốn" ở vòng tròn vĩ mô (utils/buyTiming.ts)
+      try {
+        const y = await fetchTvIndicator('TVC:VN10Y');
+        if (y) {
+          const bondPath = path.resolve(__dirname, '../frontend/src/features/market/data/bondYield10Y.json');
+          const bond = JSON.parse(fs.readFileSync(bondPath, 'utf8'));
+          const date = y.updatedAt || vnToday;
+          const points = bond.points.filter((p) => p[0] !== date);
+          points.push([date, y.value]);
+          points.sort((a, b) => a[0].localeCompare(b[0]));
+          const body = points.map((p) => JSON.stringify(p)).join(',\n');
+          fs.writeFileSync(bondPath, `{\n"source": ${JSON.stringify(bond.source)},\n"points": [\n${body}\n]\n}\n`, 'utf8');
+          console.log(`  ✓ TPCP 10 năm: ${y.value}% ngày ${date} (${points.length} điểm)`);
+        }
+      } catch (e) {
+        console.log('  - Giữ nguyên lịch sử TPCP 10 năm:', e.message);
       }
 
       // Động thái NHNN theo phiên (bản tin ngày VIRA): lãi liên NH ON/1W/2W/1M + bơm/hút ròng OMO

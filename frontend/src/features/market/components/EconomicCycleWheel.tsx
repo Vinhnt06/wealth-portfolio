@@ -21,7 +21,7 @@ import {
 import { MinerviniScreenerItem } from '../types/minervini.types';
 import { SECTOR_MAPPING } from '../data/sectorMapping';
 import { CapitalContextPanel } from './CapitalContextPanel';
-import { MarketStateBanner } from './MarketStateBanner';
+import { BuyTimingPanel } from './BuyTimingPanel';
 import macroDatabase from '../data/macroDatabase.json';
 
 export type RiskAppetite = 'aggressive' | 'balanced' | 'conservative';
@@ -158,7 +158,7 @@ export const CYCLE_PHASES: Record<CyclePhaseKey, CyclePhaseConfig> = {
     unfavorableReason: 'Tụ hậu sâu so với tốc độ bứt phá của thị trường; dòng tiền đầu cơ và dòng vốn tổ chức tập trung toàn lực vào nhóm sản xuất và công nghệ bứt phá.',
     description: 'Pha mạnh nhất và kéo dài nhất của chu kỳ kinh tế theo mô hình Merrill Lynch & Fidelity. Lợi nhuận EPS và doanh thu doanh nghiệp bứt phá ngoạn mục. Dòng tiền cuộn sóng vào các ngành công nghệ, sản xuất, xuất khẩu và logistic.',
     keyDrivers: ['GDP tăng trưởng 7-8% vượt kế hoạch', 'Xuất siêu kỷ lục, chuỗi cung ứng mở rộng', 'Đầu tư công và dòng vốn FDI giải ngân tăng tốc'],
-    minerviniStrategy: 'Tập trung 100% danh mục vào Siêu Cổ Phiếu Giai Đoạn 2 (Stage 2 Uptrend) có RS Rating >= 80, bứt phá mô hình VCP (Thu hẹp độ biến động) và Pivot Point.',
+    minerviniStrategy: 'Ưu tiên Siêu Cổ Phiếu Giai Đoạn 2 (Stage 2 Uptrend) có RS Rating >= 80, bứt phá mô hình VCP (Thu hẹp độ biến động) và Pivot Point.',
     fidelityAssetAlloc: 'Tập trung cổ phiếu tăng trưởng (Growth Stocks), tỷ trọng cổ phiếu tối đa.',
     topPriorityAsset: 'Cổ Phiếu Tăng Trưởng (Growth Equities) — Công Nghệ, Bán Dẫn & Sản Xuất Công Nghiệp',
     priorityAssets: [
@@ -294,7 +294,7 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
   // Vĩ mô Việt Nam lấy TỰ ĐỘNG (/api/macro/vn): GDP, CPI, lãi suất điều hành, liên ngân hàng, TPCP 5/10 năm,
   // huy động 12T. Khi nguồn lỗi mới dùng số trong macroDatabase.json.
   type VnInd = { value: number; change: number | null; updatedAt: string | null; source: string };
-  // Hướng điều kiện vốn (nới / thắt / chưa rõ) từ khung Lợi nhuận × Vốn — dùng cho trụ lãi suất
+  // Hướng điều kiện vốn (nới / thắt / đi ngang) theo lợi suất TPCP 10 năm — dùng cho trụ lãi suất
   const [capitalDir, setCapitalDir] = useState<'UP' | 'DOWN' | 'UNCLEAR' | null>(null);
   useEffect(() => {
     let alive = true;
@@ -779,8 +779,8 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
     });
 
     // C. Lãi suất (25%): CHIỀU của điều kiện vốn, không phải mức (khung Lợi nhuận × Vốn, utils/capitalContext.ts).
-    //    Nới lỏng (lãi gửi & liên ngân hàng cùng giảm đủ 3 tháng) → phục hồi; thắt chặt → cuối chu kỳ.
-    //    Chưa đủ dữ liệu để kết luận → trung tính, không nghiêng pha nào.
+    //    Nới lỏng (lợi suất TPCP 10N giảm trong 6 tháng) → phục hồi; thắt chặt (tăng) → cuối chu kỳ.
+    //    Đi ngang hoặc thiếu số → trung tính, không nghiêng pha nào.
     const rateScores: Record<CyclePhaseKey, number> =
       capitalDir === 'UP'
         ? { recovery: 92, expansion: 75, recession: 60, late: 25 }
@@ -936,47 +936,8 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
   const detectedCfg = CYCLE_PHASES[detectedActivePhaseKey];
   const topLeadingSectors = sectorLiveStats.slice(0, 5);
 
-  // 7. Cycle Transition Readiness & Imminent Phase Radar
-  const transitionRadar = useMemo(() => {
-    const sequenceMap: Record<CyclePhaseKey, CyclePhaseKey> = {
-      recovery: 'expansion',
-      expansion: 'late',
-      late: 'recession',
-      recession: 'recovery',
-    };
-    const currentKey = detectedActivePhaseKey;
-    const nextKey = sequenceMap[currentKey];
-    const currentScore = Math.round(phaseScores[currentKey]?.score ?? 70);
-    const nextScore = Math.round(phaseScores[nextKey]?.score ?? 40);
-    const scoreDiff = Math.max(0, currentScore - nextScore);
-
-    // Transition readiness probability:
-    // If diff is large (>30 pts), probability of shifting is low (<15%)
-    // If diff is close (<10 pts), probability of shifting is high (>70%)
-    let shiftProbability = Math.max(8, Math.min(95, Math.round(100 - (scoreDiff / 40) * 100)));
-    
-    // Additional stress test adjustments from Yield Spread & VIX
-    if (yieldCurveData.slopeType === 'inverted') shiftProbability = Math.min(98, shiftProbability + 25);
-    else if (yieldCurveData.slopeType === 'flat') shiftProbability = Math.min(95, shiftProbability + 15);
-    if ((globalMacro.vix || 19) >= 25) shiftProbability = Math.min(95, shiftProbability + 10);
-
-    const statusLabel = 
-      shiftProbability < 30 
-        ? 'Pha hiện tại rất vững chắc' 
-        : shiftProbability < 60 
-        ? 'Bắt đầu có tín hiệu dịch chuyển' 
-        : 'Cảnh báo: Kim chuẩn bị chuyển pha';
-
-    const statusBadge = 
-      shiftProbability < 30 
-        ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' 
-        : shiftProbability < 60 
-        ? 'bg-amber-500/15 text-amber-400 border-amber-500/30' 
-        : 'bg-rose-500/15 text-rose-400 border-rose-500/30';
-
-    const currentTitle = QUADRANTS.find((q) => q.key === currentKey)?.shortTitle || CYCLE_PHASES[currentKey].title;
-    const nextTitle = QUADRANTS.find((q) => q.key === nextKey)?.shortTitle || CYCLE_PHASES[nextKey].title;
-
+  // 7. Các chỉ số cần theo dõi (ngưỡng cảnh báo)
+  const watchList = useMemo(() => {
     const triggers = [
       {
         factor: `Đường cong VN (${longLabel === 'TPCP 10 năm' ? '10N' : '12T'} − liên NH)`,
@@ -1002,20 +963,8 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
       },
     ];
 
-    return {
-      currentKey,
-      nextKey,
-      currentTitle,
-      nextTitle,
-      currentScore,
-      nextScore,
-      scoreDiff,
-      shiftProbability,
-      statusLabel,
-      statusBadge,
-      triggers,
-    };
-  }, [detectedActivePhaseKey, phaseScores, yieldCurveData, globalMacro.vix, cpiYoy, overnightRate]);
+    return triggers;
+  }, [yieldCurveData, globalMacro.vix, cpiYoy, overnightRate, longLabel, dailyFresh, daily, short1W]);
 
   const [showCycleGuide, setShowCycleGuide] = useState<boolean>(false);
   const [needleDisplayAngle, setNeedleDisplayAngle] = useState<number>(() => {
@@ -1035,10 +984,10 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* ── 0. Quyết định chính: Lợi nhuận × Vốn (tỷ trọng) + Trạng thái thị trường (rủi ro) ── */}
+      {/* ── 0. Quyết định chính: khi nào được mua mới + tỷ trọng theo Lợi nhuận × Vốn ── */}
       <div className="space-y-2">
+        <BuyTimingPanel />
         <CapitalContextPanel />
-        <MarketStateBanner />
       </div>
       {/* ── 1. Hero Header & Macro Research Synthesis ─────────────────────── */}
       <div className="p-6 rounded-2xl bg-zinc-950/95 border border-zinc-800/80 backdrop-blur-xl shadow-2xl relative overflow-hidden">
@@ -1087,6 +1036,9 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                   </span>
                 )}
               </div>
+              <p className="text-[10px] text-amber-200/90 mt-1">
+                Pha chu kỳ chỉ mô tả nền kinh tế, không phải tín hiệu mua. Mua hay chờ xem khung “Khi nào được mua mới” ở trên.
+              </p>
               <div className="flex items-center gap-2 text-[10px] text-zinc-400 font-mono mt-1 flex-wrap">
                 <span>GDP +{nf(gdpGrowth)}%</span>
                 <span className="text-zinc-600">•</span>
@@ -1425,54 +1377,15 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
               })}
             </div>
 
-            {/* ── Cảnh Báo Sớm & Thước Đo Sắp Chuyển Pha (Cycle Transition Radar) ── */}
+            {/* ── Chỉ số cần theo dõi ── */}
             <div className="p-3.5 rounded-xl bg-zinc-900/70 border border-zinc-800/80 text-xs font-mono space-y-2.5 shadow-md">
-              <div className="flex items-center justify-between pb-1.5 border-b border-zinc-800/80 gap-2">
-                <div className="flex items-center gap-1.5 text-zinc-200 font-bold text-[11px] truncate">
-                  <Waveform className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                  <span>XÁC SUẤT & ĐIỀU KIỆN CHUYỂN PHA</span>
-                </div>
-                <span className={`text-[9px] px-2 py-0.5 rounded border font-semibold shrink-0 ${transitionRadar.statusBadge}`}>
-                  {transitionRadar.statusLabel}
-                </span>
+              <div className="flex items-center gap-1.5 pb-1.5 border-b border-zinc-800/80 text-zinc-200 font-bold text-[11px]">
+                <Waveform className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                <span>CHỈ SỐ CẦN THEO DÕI</span>
               </div>
 
-              {/* Progress meter towards next phase */}
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between text-[11px] gap-2">
-                  <div className="flex items-center gap-1.5 min-w-0">
-                    <span className="text-zinc-400 text-[10px] shrink-0 font-sans">Pha:</span>
-                    <span className="font-bold text-emerald-400 truncate">{transitionRadar.currentTitle}</span>
-                    <span className="text-zinc-500 shrink-0">→</span>
-                    <span className="font-bold text-amber-400 truncate">{transitionRadar.nextTitle}</span>
-                  </div>
-                  <span className="text-[10px] text-zinc-300 shrink-0 font-mono">
-                    Áp lực đổi pha: <strong className={transitionRadar.shiftProbability >= 50 ? 'text-rose-400' : 'text-emerald-400'}>{transitionRadar.shiftProbability}%</strong>
-                  </span>
-                </div>
-
-                <div className="h-2 w-full bg-zinc-950 rounded-full overflow-hidden border border-zinc-800 flex">
-                  <div
-                    style={{ width: `${100 - transitionRadar.shiftProbability}%` }}
-                    className="h-full bg-emerald-500 rounded-l-full transition-all duration-700"
-                    title={`Pha hiện tại vững chắc: ${100 - transitionRadar.shiftProbability}%`}
-                  />
-                  <div
-                    style={{ width: `${transitionRadar.shiftProbability}%` }}
-                    className="h-full bg-amber-500 rounded-r-full transition-all duration-700"
-                    title={`Áp lực dịch chuyển sang pha sau: ${transitionRadar.shiftProbability}%`}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between text-[9px] text-zinc-500 font-sans">
-                  <span>Cách biệt an toàn: <strong className="text-zinc-300 font-mono">+{transitionRadar.scoreDiff} điểm</strong></span>
-                  <span>Ngưỡng kích hoạt xoay kim: <strong className="text-zinc-400 font-mono">&lt; 5 điểm</strong></span>
-                </div>
-              </div>
-
-              {/* 4 Early Warning Triggers Grid - Concise & Clean */}
-              <div className="grid grid-cols-2 gap-1.5 pt-1.5 border-t border-zinc-800/60 text-[10px]">
-                {transitionRadar.triggers.map((trig, idx) => (
+              <div className="grid grid-cols-2 gap-1.5 text-[10px]">
+                {watchList.map((trig, idx) => (
                   <div key={idx} className="p-1.5 px-2 rounded-lg bg-zinc-950/70 border border-zinc-800/60 flex items-center justify-between gap-1">
                     <span className="text-zinc-400 font-sans text-[9px]">{trig.factor}</span>
                     <span className={`font-mono font-semibold text-[9px] shrink-0 ${trig.isTriggered ? 'text-rose-400' : 'text-emerald-400'}`}>
@@ -1551,7 +1464,7 @@ export const EconomicCycleWheel: React.FC<EconomicCycleWheelProps> = ({
                   </div>
                   <div className="text-[9px] text-zinc-400 mt-1 flex justify-between">
                     <span>HĐ 12T: {nf(depositRate)}% • Liên NH: {nf(onRate)}%</span>
-                    <span className="text-cyan-400/90 font-sans">{capitalDir === 'UP' ? 'Vốn nới lỏng' : capitalDir === 'DOWN' ? 'Vốn thắt chặt' : 'Vốn chưa rõ'}</span>
+                    <span className="text-cyan-400/90 font-sans">{capitalDir === 'UP' ? 'Vốn nới lỏng' : capitalDir === 'DOWN' ? 'Vốn thắt chặt' : 'Vốn đi ngang'}</span>
                   </div>
                 </div>
 

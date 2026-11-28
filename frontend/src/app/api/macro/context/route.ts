@@ -1,11 +1,10 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
+import bondDb from '../../../../features/market/data/bondYield10Y.json';
+import { mergeYield, YieldPoint } from '../../../../features/market/utils/buyTiming';
 import { readFinancialsDatabase } from '../../../../features/market/services/financialsSyncService';
 import {
   answerCapital,
   answerEarnings,
-  CapitalPoint,
   contextOf,
   CONTEXT_ALLOCATION,
   QuarterRow,
@@ -14,27 +13,10 @@ import {
 /**
  * Bối cảnh "Lợi nhuận × Vốn" — xem utils/capitalContext.ts.
  *  - Lợi nhuận: báo cáo tài chính thật trong financialsDatabase.json.
- *  - Vốn: lịch sử lãi suất ghi hằng ngày (macroDatabase.json → capitalHistory) + số sống hôm nay.
+ *  - Vốn: lịch sử lợi suất TPCP 10 năm (bondYield10Y.json) + số sống hôm nay.
  */
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-
-function readCapitalHistory(): CapitalPoint[] {
-  for (const p of [
-    path.resolve(process.cwd(), 'src/features/market/data/macroDatabase.json'),
-    path.resolve(process.cwd(), 'frontend/src/features/market/data/macroDatabase.json'),
-  ]) {
-    if (fs.existsSync(p)) {
-      try {
-        const j = JSON.parse(fs.readFileSync(p, 'utf8'));
-        return Array.isArray(j.capitalHistory) ? j.capitalHistory : [];
-      } catch {
-        return [];
-      }
-    }
-  }
-  return [];
-}
 
 export async function GET(req: Request) {
   const fin = readFinancialsDatabase();
@@ -48,20 +30,18 @@ export async function GET(req: Request) {
     : [];
   const earnings = answerEarnings(companies);
 
-  const points = readCapitalHistory();
-  // Thêm số sống hôm nay (không lưu) để mốc hiện tại luôn mới nhất
+  // Lịch sử lợi suất đã lưu + số sống hôm nay (không lưu) để mốc hiện tại luôn mới nhất
+  let live: YieldPoint | null = null;
   try {
-    const live = await fetch(`${new URL(req.url).origin}/api/macro/vn`, { cache: 'no-store', signal: AbortSignal.timeout(20_000) }).then((r) => r.json());
-    const today = new Date(Date.now() + 7 * 3600_000).toISOString().slice(0, 10);
-    const ib = live?.data?.interbankRate?.value;
-    const dep = live?.data?.deposit12M?.value;
-    if (Number.isFinite(ib) || Number.isFinite(dep)) {
-      points.push({ date: today, interbank: Number.isFinite(ib) ? ib : null, deposit12M: Number.isFinite(dep) ? dep : null });
+    const vn = await fetch(`${new URL(req.url).origin}/api/macro/vn`, { cache: 'no-store', signal: AbortSignal.timeout(20_000) }).then((r) => r.json());
+    const b = vn?.data?.bond10Y;
+    if (b && Number.isFinite(b.value) && b.updatedAt) {
+      live = [new Date(Date.parse(b.updatedAt) + 7 * 3600_000).toISOString().slice(0, 10), Number(b.value)];
     }
   } catch {
     // chỉ dùng lịch sử đã lưu
   }
-  const capital = answerCapital(points);
+  const capital = answerCapital(mergeYield(bondDb.points as YieldPoint[], live));
 
   const key = contextOf(earnings.direction, capital.direction);
   return NextResponse.json({
