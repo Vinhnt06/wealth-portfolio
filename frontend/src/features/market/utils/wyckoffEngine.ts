@@ -384,7 +384,7 @@ export function analyzeWyckoff(input: WyckoffInput) {
     phaseIndex = 4;
     wyckoffPhaseName = 'Phase E — Đẩy giá thoát nền (Markup)';
     completedPhases = ['Phase A', 'Phase B', 'Phase C', 'Phase D'];
-    nextMilestone = 'Duy trì xu hướng tăng giá Markup, chốt lời theo các mốc mục tiêu và chặn lãi theo MA20';
+    nextMilestone = 'Duy trì xu hướng tăng giá Markup, giữ tới khi có tín hiệu bán';
     phaseProgressPct = 95;
 
     const isEarlyBreakoutOrBu = distFromSMA20Pct <= 6.0 && posInBasePct <= 98;

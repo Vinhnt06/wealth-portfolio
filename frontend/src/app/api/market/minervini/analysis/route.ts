@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { EXIT_RULE_TEXT, exitStopPrice } from '../../../../../features/market/utils/exitPlan';
 import { analyzeWyckoff } from '../../../../../features/market/utils/wyckoffEngine';
 import { classifyStage, STAGE_NAME_VI, STAGE_NAME_CONFIRMED_VI } from '../../../../../features/market/utils/stageEngine';
 import { detectDistribution, buildCycleContext } from '../../../../../features/market/utils/wyckoffContext';
@@ -788,11 +789,8 @@ export async function GET(request: Request) {
     }
 
     // ── 5. Capital Allocation Plan (Scale-in Tranches & Dynamic Stoploss) ──
-    // Stoploss động: Tuân thủ nghiêm ngặt quy tắc Mark Minervini tối đa -7% đến -8%
-    let stopLossPrice = Number((currentPrice * 0.93).toFixed(1));
-    if (swingLow < currentPrice && swingLow >= currentPrice * 0.93) {
-      stopLossPrice = Number((swingLow * 0.985).toFixed(1));
-    }
+    // Cắt lỗ theo quy tắc bán đã kiểm chứng: cố định −7% từ giá mua (utils/exitPlan.ts)
+    const stopLossPrice = Number(exitStopPrice(currentPrice).toFixed(1));
     const stopLossPct = Number((((stopLossPrice - currentPrice) / currentPrice) * 100).toFixed(1));
 
     // Mục tiêu giá 1 (+12% đến +15% hoặc vượt đỉnh pivot) & Mục tiêu 2 (+25%)
@@ -880,7 +878,7 @@ export async function GET(request: Request) {
         'Tuyệt đối KHÔNG bao giờ bình quân giá xuống (Never average down on losers).',
         `Luôn đặt lệnh Dừng lỗ tự động ${stopLossPct}% (Mốc ${stopLossPrice}) ngay sau khi khớp lệnh để bảo vệ vốn.`,
         'Chỉ gia tăng tỷ trọng (Lần 2, 3) khi các vị thế trước ĐANG CÓ LÃI.',
-        `Chốt lời chủ động 1/2 vị thế khi đạt Target 1 (${targetPrice1}), phần còn lại trailing stop theo MA20.`,
+        EXIT_RULE_TEXT.takeProfit.vi,
       ],
     };
 

@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { EXIT_RULE_TEXT, EXIT_STOP_PCT, exitStopPrice } from '../utils/exitPlan';
 import {
   Target,
   ShieldCheck,
-  TrendUp,
   TrendDown,
   Scales,
   ChartLineUp,
@@ -390,6 +390,42 @@ const EmpiricalCard: React.FC<{
   );
 };
 
+/** Quy tắc bán đã kiểm chứng; con số mục tiêu ở các ô khác chỉ để tính R:R, không phải lệnh bán */
+const SellRuleCard: React.FC<{ entry: number; stop: number; shares: number; lang: 'vi' | 'en'; pyramid?: boolean }> = ({ entry, stop, shares, lang, pyramid }) => {
+  const vi = lang === 'vi';
+  return (
+    <div className="rounded-xl border border-zinc-700/80 bg-zinc-900/60 p-4 space-y-2">
+      <div className="text-sm font-bold text-zinc-100">{vi ? 'Cách bán' : 'How to sell'}</div>
+      <ol className="space-y-1.5 text-xs text-zinc-300">
+        <li>
+          <span className="font-semibold text-rose-300">1. {vi ? 'Cắt lỗ' : 'Stop'} −{EXIT_STOP_PCT}%</span>
+          {entry > 0 && (
+            <>
+              : {vi ? 'bán hết nếu giá xuống' : 'sell all if price falls to'}{' '}
+              <span className="font-mono font-bold text-zinc-100">{stop.toLocaleString('vi-VN')} đ</span>
+              {shares > 0 && (
+                <> ({vi ? 'lỗ khoảng' : 'a loss of about'} {Math.round((entry - stop) * shares).toLocaleString('vi-VN')} đ)</>
+              )}
+            </>
+          )}
+        </li>
+        <li>
+          <span className="font-semibold text-amber-300">2. {vi ? 'Bán hết khi app báo Bán' : 'Sell all when the app says Sell'}</span>
+          {vi ? ' ở tab Chiến lược (xu hướng yếu đi hoặc gãy).' : ' in the Strategy tab (trend weakening or broken).'}
+        </li>
+        <li>{EXIT_RULE_TEXT.takeProfit[lang]}</li>
+      </ol>
+      {pyramid && (
+        <p className="text-[11px] text-zinc-500">
+          {vi
+            ? 'Phần chia đợt mua và dời cắt lỗ ở trên chưa được kiểm chứng; quy tắc đã kiểm là cắt lỗ −7% từ giá mua.'
+            : 'The scale-in and trailing-stop steps above are untested; the tested rule is a −7% stop from the entry price.'}
+        </p>
+      )}
+    </div>
+  );
+};
+
 export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculatorProps> = ({
   initialSymbol,
   initialPrice,
@@ -674,32 +710,6 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
     const avgEntryPrice = totalAllocatedShares > 0 ? Math.round(totalInvestedValue / totalAllocatedShares) : entryPrice;
     const avgPricePremiumPct = entryPrice > 0 ? Number((((avgEntryPrice - entryPrice) / entryPrice) * 100).toFixed(2)) : 0;
 
-    // 9. Kế Hoạch Cắt Lỗ Bậc Thang (Staged Stop-Loss / Phòng thủ 2 nấc)
-    const halfStopLossPct = Number((stopLossPct / 2).toFixed(1));
-    const stopPriceStage1 = roundTick(entryPrice * (1 - halfStopLossPct / 100), exchange, 'down');
-    const stage1CutShares = Math.round((maxShares * 0.5) / 100) * 100;
-    const stage1Loss = stage1CutShares * (entryPrice - stopPriceStage1);
-
-    const stage2CutShares = Math.max(0, maxShares - stage1CutShares);
-    const stage2Loss = stage2CutShares * (entryPrice - stopLossPrice);
-
-    const totalStagedLoss = stage1Loss + stage2Loss;
-    const singleExitLoss = maxShares * (entryPrice - stopLossPrice);
-    const lossSavedAmt = Math.max(0, singleExitLoss - totalStagedLoss);
-    const lossSavedPct = singleExitLoss > 0 ? Number(((lossSavedAmt / singleExitLoss) * 100).toFixed(1)) : 25;
-
-    // 10. Kế Hoạch Chốt Lời Bậc Thang (Staged Profit-Taking / Tấn công 3 nấc)
-    const tp1Pct = Math.round(targetGainPct * 0.6 * 10) / 10; // ~60% target
-    const tp1Price = roundTick(entryPrice * (1 + tp1Pct / 100), exchange, 'down');
-    const tp1Shares = Math.round((maxShares * 0.35) / 100) * 100;
-    const tp1Profit = tp1Shares * (tp1Price - entryPrice);
-
-    const tp2Price = targetPrice;
-    const tp2Shares = Math.round((maxShares * 0.40) / 100) * 100;
-    const tp2Profit = tp2Shares * (tp2Price - entryPrice);
-
-    const runnerShares = Math.max(0, maxShares - tp1Shares - tp2Shares);
-
     // 11. Đánh giá chất lượng thiết lập
     const isHardStopExceeded = stopLossPct > 8; // Cấm lỗ > 8%
     const isExpectancyPositive = expectancyPct > 0;
@@ -787,26 +797,6 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
         avgPricePremiumPct,
       },
       // Staged Defense (Stop-Loss) & Offense (Take-Profit) Specs
-      stagedExit: {
-        halfStopPct: halfStopLossPct,
-        stage1Price: stopPriceStage1,
-        stage1Shares: stage1CutShares,
-        stage1Loss,
-        stage2Shares: stage2CutShares,
-        stage2Loss,
-        totalStagedLoss,
-        singleExitLoss,
-        lossSavedAmt,
-        lossSavedPct,
-        tp1Pct,
-        tp1Price,
-        tp1Shares,
-        tp1Profit,
-        tp2Price,
-        tp2Shares,
-        tp2Profit,
-        runnerShares,
-      },
     };
   }, [entryPrice, targetGainPct, stopLossPct, winRatePct, totalCapital, riskPerTradePct, exchange, adjLossF, adjWinF, costPad, hasEmp, emp]);
 
@@ -1109,7 +1099,7 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
                         </div>
                       </div>
                       <div className="p-3">
-                        <div className="text-[11px] text-zinc-500">Mục tiêu +{targetGainPct}%</div>
+                        <div className="text-[11px] text-zinc-500">Mốc tính R:R +{targetGainPct}%</div>
                         <div className="text-lg font-mono font-semibold text-emerald-400 tabular-nums mt-1">
                           {formatVND(math.targetPrice)}
                         </div>
@@ -1130,7 +1120,7 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
 
                   {setup && (
                     <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-zinc-500 font-mono">
-                      <span>Đề xuất: cắt lỗ −{setup.stopLossPct}% · mục tiêu +{setup.targetGainPct}% · R:R {setup.rrRatio}:1</span>
+                      <span>Đề xuất: cắt lỗ −{setup.stopLossPct}% · bán khi app báo Bán · không chốt lời cố định</span>
                       {typeof setup.distToHigh52WPct === 'number' && (
                         <span>Cách đỉnh 52 tuần: {setup.distToHigh52WPct}% (tham khảo)</span>
                       )}
@@ -1284,7 +1274,7 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
               {/* 2. Mục tiêu lợi nhuận (Target Gain %) */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between text-xs font-mono">
-                  <span className="text-zinc-400">Mục Tiêu Chốt Lời (Target Gain):</span>
+                  <span className="text-zinc-400" title="Chỉ dùng để tính R:R và kỳ vọng, không phải lệnh bán">Mức lãi giả định (để tính R:R):</span>
                   <div className="flex items-center gap-1.5">
                     <input
                       type="number"
@@ -1844,111 +1834,8 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
                   </div>
                 </div>
 
-                {/* 3. Kế Hoạch Cắt Lỗ & Chốt Lời Từng Phần (2 Cột Đối Xứng Tinh Gọn) */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2 border-t border-zinc-800/80">
-                  {/* Cắt Lỗ 2 Nấc */}
-                  <div className="p-3.5 rounded-xl bg-zinc-900/40 border border-zinc-800/80 space-y-2.5">
-                    <div className="flex items-center justify-between text-xs font-mono">
-                      <span className="text-rose-400 font-bold uppercase flex items-center gap-1.5">
-                        <ShieldCheck className="w-3.5 h-3.5" />
-                        Cắt Lỗ 2 Nấc
-                      </span>
-                      <span className="text-[11px] text-zinc-400">
-                        Tiết kiệm <span className="text-emerald-400 font-bold">+{formatVND(math.stagedExit.lossSavedAmt)} đ</span>
-                      </span>
-                    </div>
-
-                    <div className="space-y-1.5 text-xs font-mono">
-                      <div className="p-2 rounded-lg bg-zinc-900/70 border border-zinc-800 flex items-center justify-between">
-                        <div>
-                          <span className="text-[10px] text-zinc-500 block">Nấc 1 (-{math.stagedExit.halfStopPct}%) · 50% Vị thế</span>
-                          <span className="text-zinc-200 font-bold">
-                            {formatVND(math.stagedExit.stage1Price)} đ
-                          </span>
-                          <span className="text-[10px] text-zinc-500 ml-1.5">
-                            ({math.stagedExit.stage1Shares.toLocaleString('vi-VN')} CP)
-                          </span>
-                        </div>
-                        <span className="text-rose-400 font-bold">
-                          -{formatVND(math.stagedExit.stage1Loss)} đ
-                        </span>
-                      </div>
-
-                      <div className="p-2 rounded-lg bg-zinc-900/70 border border-zinc-800 flex items-center justify-between">
-                        <div>
-                          <span className="text-[10px] text-zinc-500 block">Nấc 2 (-{stopLossPct}%) · 50% Còn lại</span>
-                          <span className="text-zinc-200 font-bold">
-                            {formatVND(math.stopLossPrice)} đ
-                          </span>
-                          <span className="text-[10px] text-zinc-500 ml-1.5">
-                            ({math.stagedExit.stage2Shares.toLocaleString('vi-VN')} CP)
-                          </span>
-                        </div>
-                        <span className="text-rose-400 font-bold">
-                          -{formatVND(math.stagedExit.stage2Loss)} đ
-                        </span>
-                      </div>
-
-                      <div className="flex items-center justify-between text-[11px] text-zinc-400 px-1 pt-1">
-                        <span>Tổng lỗ bậc thang:</span>
-                        <span className="text-rose-300 font-bold">-{formatVND(math.stagedExit.totalStagedLoss)} đ</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Chốt Lời 3 Nấc */}
-                  <div className="p-3.5 rounded-xl bg-zinc-900/40 border border-zinc-800/80 space-y-2.5">
-                    <div className="flex items-center justify-between text-xs font-mono">
-                      <span className="text-emerald-400 font-bold uppercase flex items-center gap-1.5">
-                        <TrendUp className="w-3.5 h-3.5" />
-                        Chốt Lời 3 Nấc
-                      </span>
-                      <span className="text-[11px] text-zinc-500">Bảo toàn thành quả</span>
-                    </div>
-
-                    <div className="space-y-1.5 text-xs font-mono">
-                      <div className="p-2 rounded-lg bg-zinc-900/70 border border-zinc-800 flex items-center justify-between">
-                        <div>
-                          <span className="text-[10px] text-zinc-500 block">TP1 (+{math.stagedExit.tp1Pct}%) · 35% Vị thế</span>
-                          <span className="text-zinc-200 font-bold">
-                            {formatVND(math.stagedExit.tp1Price)} đ
-                          </span>
-                          <span className="text-[10px] text-zinc-500 ml-1.5">
-                            ({math.stagedExit.tp1Shares.toLocaleString('vi-VN')} CP)
-                          </span>
-                        </div>
-                        <span className="text-emerald-400 font-bold">
-                          +{formatVND(math.stagedExit.tp1Profit)} đ
-                        </span>
-                      </div>
-
-                      <div className="p-2 rounded-lg bg-zinc-900/70 border border-zinc-800 flex items-center justify-between">
-                        <div>
-                          <span className="text-[10px] text-zinc-500 block">TP2 (+{targetGainPct}%) · 40% Mục tiêu</span>
-                          <span className="text-zinc-200 font-bold">
-                            {formatVND(math.stagedExit.tp2Price)} đ
-                          </span>
-                          <span className="text-[10px] text-zinc-500 ml-1.5">
-                            ({math.stagedExit.tp2Shares.toLocaleString('vi-VN')} CP)
-                          </span>
-                        </div>
-                        <span className="text-emerald-400 font-bold">
-                          +{formatVND(math.stagedExit.tp2Profit)} đ
-                        </span>
-                      </div>
-
-                      <div className="p-2 rounded-lg bg-zinc-900/70 border border-zinc-800 flex items-center justify-between">
-                        <div>
-                          <span className="text-[10px] text-zinc-500 block">Runner · 25% Gồng Theo MA20</span>
-                          <span className="text-zinc-200 font-bold">
-                            {math.stagedExit.runnerShares.toLocaleString('vi-VN')} CP
-                          </span>
-                        </div>
-                        <span className="text-cyan-400 font-bold">Cắt lỗ dời</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                {/* 3. Quy tắc bán đã kiểm chứng (utils/exitPlan.ts) */}
+                <SellRuleCard entry={entryPrice} stop={roundTick(exitStopPrice(entryPrice), exchange, 'down')} shares={math.maxShares} lang={language} pyramid />
               </div>
             ) : (
               /* Classic Single Entry / Exit Payoff Scale */
@@ -1958,7 +1845,7 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
                   {/* Level 1: Target */}
                   <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30">
                     <span className="text-[10px] font-mono text-emerald-400 uppercase tracking-wider block">
-                      Giá Chốt Lời (+{targetGainPct}%)
+                      Mốc lãi giả định (+{targetGainPct}%)
                     </span>
                     <span className="text-xl sm:text-2xl font-mono font-black text-emerald-300 block mt-0.5">
                       {formatVND(math.targetPrice)}
@@ -1995,6 +1882,8 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
                   </div>
                 </div>
 
+                <SellRuleCard entry={entryPrice} stop={roundTick(exitStopPrice(entryPrice), exchange, 'down')} shares={math.maxShares} lang={language} />
+
                 {/* Visual Risk vs Reward Gauge Bar */}
                 <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/80 space-y-2">
                   <div className="flex items-center justify-between text-xs font-mono">
@@ -2004,7 +1893,7 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
                     </span>
                     <span className="text-zinc-400 font-bold">Tỷ Lệ {math.rrRatio}:1</span>
                     <span className="text-emerald-400 flex items-center gap-1.5 font-bold">
-                      Lợi Nhuận: +{targetGainPct}% (+{formatVND(math.profitAtTarget)} đ)
+                      Lãi giả định: +{targetGainPct}% (+{formatVND(math.profitAtTarget)} đ)
                       <span className="w-2.5 h-2.5 rounded bg-emerald-500" />
                     </span>
                   </div>
@@ -2025,7 +1914,7 @@ export const MinerviniExpectancyCalculator: React.FC<MinerviniExpectancyCalculat
                   <div className="flex items-center justify-between text-[10px] font-mono text-zinc-400 pt-1">
                     <span>Cắt Lỗ: {formatVND(math.stopLossPrice)} đ</span>
                     <span className="text-zinc-300">Điểm Vào: {formatVND(entryPrice)} đ</span>
-                    <span>Chốt Lời: {formatVND(math.targetPrice)} đ</span>
+                    <span>Mốc giả định: {formatVND(math.targetPrice)} đ</span>
                   </div>
                 </div>
 

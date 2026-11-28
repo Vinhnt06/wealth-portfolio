@@ -935,23 +935,17 @@ export const MinerviniStrategyPanel: React.FC<MinerviniStrategyPanelProps> = ({ 
               </div>
 
               {/* Risk/Reward & Stoploss Stats */}
-              <div className="p-2.5 rounded-lg bg-zinc-900/80 border border-zinc-800 grid grid-cols-3 gap-2 text-xs font-mono">
+              <div className="p-2.5 rounded-lg bg-zinc-900/80 border border-zinc-800 grid grid-cols-2 gap-2 text-xs font-mono">
                 <div>
-                  <span className="text-[10px] text-zinc-500 block uppercase">Cắt Lỗ Tự Động</span>
+                  <span className="text-[10px] text-zinc-500 block uppercase">Cắt lỗ</span>
                   <span className="font-bold text-rose-400">
                     {data.aiRecommendation?.allocation.stopLossPrice} ({data.aiRecommendation?.allocation.stopLossPct}%)
                   </span>
                 </div>
                 <div>
-                  <span className="text-[10px] text-zinc-500 block uppercase">Mục Tiêu 1 (+15%)</span>
-                  <span className="font-bold text-emerald-400">
-                    {data.aiRecommendation?.allocation.targetPrice1}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-[10px] text-zinc-500 block uppercase">Tỷ Lệ Lãi/Lỗ</span>
-                  <span className="font-bold text-amber-300">
-                    1 : {data.aiRecommendation?.allocation.riskRewardRatio}
+                  <span className="text-[10px] text-zinc-500 block uppercase">Chốt lãi</span>
+                  <span className="font-sans text-[11px] leading-snug text-zinc-200">
+                    Không đặt giá cố định · bán hết khi app báo Bán
                   </span>
                 </div>
               </div>

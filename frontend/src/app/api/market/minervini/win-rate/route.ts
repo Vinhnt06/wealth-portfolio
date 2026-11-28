@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { lookupEmpirical } from '../../../../../features/market/utils/setupEmpirical';
+import { EXIT_STOP_PCT, exitStopPrice } from '../../../../../features/market/utils/exitPlan';
 
 export const runtime = 'nodejs';
 export const preferredRegion = 'sin1';
@@ -358,6 +359,11 @@ export async function GET(request: Request) {
       }
     }
 
+    // Mức cắt lỗ đề xuất theo quy tắc bán đã kiểm chứng (utils/exitPlan.ts). Phần cấu trúc ở trên chỉ còn dùng để cảnh báo.
+    optimalStopLossPct = EXIT_STOP_PCT;
+    optimalStopPrice = currentPrice > 0 ? Math.round(exitStopPrice(currentPrice)) : 0;
+    optimalStopLossReason = `Cắt lỗ −${EXIT_STOP_PCT}% theo quy tắc bán của ứng dụng`;
+
     // 52-week high: kháng cự phía trên gần nhất
     const high52W = Math.round((stockData.high52W || 0) * priceUnit);
     const distToHigh52WPct =
@@ -436,7 +442,7 @@ export async function GET(request: Request) {
     // Chưa phải điểm mua (TRÁNH): mức cắt lỗ chỉ để tham khảo, không phải kế hoạch giao dịch
     const stopReasonFinal =
       decisionInfo?.newBuyer?.action === 'AVOID'
-        ? `Mốc tham khảo −${optimalStopLossPct}% theo đáy nền gần nhất — hiện chưa phải điểm mua`
+        ? `Mốc tham khảo −${optimalStopLossPct}% — hiện chưa phải điểm mua`
         : entryAtPivot
           ? `${optimalStopLossReason} · tính từ giá vào theo pivot`
           : optimalStopLossReason;

@@ -72,8 +72,9 @@ export const HOLDER_TEXT: Record<HolderAction, T> = {
   HOLD: { vi: 'GIỮ', en: 'HOLD' },
   HOLD_TIGHTEN: { vi: 'GIỮ & SIẾT CẮT LỖ', en: 'HOLD & TIGHTEN STOP' },
   HOLD_NO_ADD: { vi: 'GIỮ, KHÔNG MUA THÊM', en: 'HOLD, DO NOT ADD' },
-  REDUCE: { vi: 'GIẢM TỶ TRỌNG', en: 'REDUCE' },
-  EXIT: { vi: 'THOÁT', en: 'EXIT' },
+  // Theo quy tắc bán (utils/exitPlan.ts): cả hai đều là bán hết vị thế
+  REDUCE: { vi: 'BÁN · xu hướng yếu đi', en: 'SELL · trend weakening' },
+  EXIT: { vi: 'BÁN · xu hướng gãy', en: 'SELL · trend broken' },
 };
 
 export const REASON_TEXT: Record<string, T> = {
@@ -90,12 +91,12 @@ export const REASON_TEXT: Record<string, T> = {
   EXTENDED_NO_CHASE: { vi: 'Giá đã chạy xa khỏi nền: mua đuổi có sụt giảm tối đa lớn hơn.', en: 'Price has run far from the base: chasing carries a deeper maximum drawdown.' },
   WYCKOFF_TIMING_OK: { vi: 'Wyckoff ở Phase D/E, không có dấu hiệu phân phối: đúng thời điểm.', en: 'Wyckoff is in Phase D/E with no distribution: timing is right.' },
   WYCKOFF_TIMING_PENDING: { vi: 'Wyckoff chưa tới Phase D/E (đang xây nền hoặc chờ SOS).', en: 'Wyckoff has not reached Phase D/E (still building or waiting for an SOS).' },
-  STAGE4_EXIT: { vi: 'Stage 4: cấu trúc xu hướng đã gãy — thoát.', en: 'Stage 4: the trend structure is broken — exit.' },
-  STAGE3_WITH_DISTRIBUTION: { vi: 'Stage 3 kèm dấu hiệu phân phối rõ — thoát.', en: 'Stage 3 with clear distribution — exit.' },
-  STAGE3_REDUCE: { vi: 'Stage 3: xu hướng chững lại — giảm tỷ trọng.', en: 'Stage 3: the trend is stalling — reduce.' },
-  BASE_WITH_DISTRIBUTION: { vi: 'Nền có dấu hiệu phân phối — giảm tỷ trọng.', en: 'The base shows distribution — reduce.' },
+  STAGE4_EXIT: { vi: 'Stage 4: cấu trúc xu hướng đã gãy — bán.', en: 'Stage 4: the trend structure is broken — sell.' },
+  STAGE3_WITH_DISTRIBUTION: { vi: 'Stage 3 kèm dấu hiệu phân phối rõ — bán.', en: 'Stage 3 with clear distribution — sell.' },
+  STAGE3_REDUCE: { vi: 'Stage 3: xu hướng chững lại — bán.', en: 'Stage 3: the trend is stalling — sell.' },
+  BASE_WITH_DISTRIBUTION: { vi: 'Nền có dấu hiệu phân phối — bán.', en: 'The base shows distribution — sell.' },
   STAGE1_NO_ADD: { vi: 'Stage 1: giữ theo cắt lỗ đã đặt, không mua thêm.', en: 'Stage 1: hold within the planned stop, do not add.' },
-  WYCKOFF_WARNS_TRIM: { vi: 'Wyckoff cảnh báo phân phối: giảm bớt dù Stage còn tốt (chỉ cần một khung báo xấu là đủ).', en: 'Wyckoff warns of distribution: trim even though Stage is fine (one bearish framework is enough).' },
+  WYCKOFF_WARNS_TRIM: { vi: 'Wyckoff cảnh báo phân phối: bán dù Stage còn tốt (chỉ cần một khung báo xấu là đủ).', en: 'Wyckoff warns of distribution: sell even though Stage is fine (one framework turning bad is enough).' },
   STAGE2_NOT_CONFIRMED_TIGHTEN: { vi: 'Stage 2 chưa đủ 8/8: giữ nhưng siết cắt lỗ.', en: 'Stage 2 below 8/8: hold but tighten the stop.' },
   DISTRIBUTION_CAUTION_TIGHTEN: { vi: 'Có ≥ 2 dấu hiệu phân phối nhẹ: giữ nhưng siết cắt lỗ.', en: '2+ mild distribution signs: hold but tighten the stop.' },
   TREND_INTACT_HOLD: { vi: 'Xu hướng nguyên vẹn, không có cảnh báo: tiếp tục giữ.', en: 'Trend intact and no warnings: keep holding.' },

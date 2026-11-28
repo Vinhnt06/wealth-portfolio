@@ -23,6 +23,7 @@ import {
   QUALITY_FLAG_TEXT,
   fmtGrowth,
 } from '../i18n/decision';
+import { EXIT_RULE_TEXT, exitStopPrice } from '../utils/exitPlan';
 import { MARKET_STATE_TEXT } from '../utils/marketState';
 import {
   TREND_LABEL_EN,
@@ -451,12 +452,13 @@ const SummaryCard: React.FC<{ data: MinerviniAnalysisResult }> = ({ data }) => {
             </ul>
           </div>
         )}
-        {d.newBuyer.action === 'BUY' && d.triggersDown[0] && (
-          <p className="mt-2.5 text-[11.5px] text-zinc-400">
-            <span className="text-rose-400/70">↓ </span>
-            {tr('Thoát nếu', 'Exit if')}: {shortTrigger(d.triggersDown[0], lang)}
-          </p>
-        )}
+        <p className="mt-2.5 text-[11.5px] text-zinc-400">
+          <span className="text-rose-400/70">↓ </span>
+          {tr('Cách bán', 'How to sell')}: {EXIT_RULE_TEXT.short[lang]}
+          {typeof data.price === 'number' && data.price > 0 && d.newBuyer.action === 'BUY' && (
+            <> {tr('Mua ở giá hiện tại thì cắt lỗ tại', 'Buying now, the stop is')} {exitStopPrice(data.price).toFixed(2)}.</>
+          )}
+        </p>
       </div>
       {(data.fundamentals || data.sectorInfo || data.marketState) && (
         <div className="space-y-1.5 border-t border-white/[0.05] px-4 py-3 text-[11.5px]">
@@ -533,7 +535,7 @@ const SummaryCard: React.FC<{ data: MinerviniAnalysisResult }> = ({ data }) => {
           </ul>
           {d.triggersDown.length > 0 && (
             <div>
-              <div className="text-[10px] text-zinc-500">{tr('Hạ xuống / thoát khi', 'Downgrade / exit when')}</div>
+              <div className="text-[10px] text-zinc-500">{tr('Dấu hiệu xấu đi cần để ý', 'Warning signs to watch')}</div>
               <ul className="mt-1 space-y-0.5 text-zinc-300">
                 {d.triggersDown.map((t, i) => (
                   <li key={i} className="flex gap-1.5"><span className="text-rose-400/70">↓</span>{shortTrigger(t, lang)}</li>
@@ -542,7 +544,7 @@ const SummaryCard: React.FC<{ data: MinerviniAnalysisResult }> = ({ data }) => {
             </div>
           )}
           <p className="text-zinc-500">
-            {tr('Mua cần cả hai khung đồng ý; giảm/thoát chỉ cần một khung báo xấu.', 'Buying needs both frameworks to agree; reducing/exiting needs only one to turn bad.')}
+            {tr('Mua cần cả hai khung đồng ý; bán chỉ cần một khung báo xấu.', 'Buying needs both frameworks to agree; selling needs only one to turn bad.')}
           </p>
           <p className="text-zinc-500">
             {tr(
